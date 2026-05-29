@@ -15,6 +15,7 @@ import { ConformaGroupedTable } from './ConformaGroupedTable';
 import { ConformaResultsToolbar } from './ConformaResultsToolbar';
 import { ConformaSummaryBar } from './ConformaSummaryBar';
 import { useApplicationConformaResults } from './useApplicationConformaResults';
+import './ConformaResultsTab.scss';
 
 export const ConformaResultsTab: React.FC = () => {
   const { applicationName } = useParams();
@@ -96,7 +97,7 @@ export const ConformaResultsTab: React.FC = () => {
             validating them against a clearly defined policy.
           </Text>
         </TextContent>
-        <div style={{ marginTop: 'var(--pf-v5-global--spacer--md)' }}>
+        <div className="conforma-results-tab__summary-wrapper">
           <ConformaSummaryBar
             totalComponents={totalComponents}
             totalFailed={totalFailed}

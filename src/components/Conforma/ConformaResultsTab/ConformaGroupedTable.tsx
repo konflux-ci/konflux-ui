@@ -13,6 +13,7 @@ import { getRuleStatus } from '~/utils/conforma-utils';
 import type { GroupByMode, GroupedConformaRow } from './conforma-grouping-utils';
 import { ConformaCountBadge } from './ConformaCountBadge';
 import type { ConformaResultRow } from './useApplicationConformaResults';
+import './ConformaResultsTab.scss';
 
 type ConformaGroupedTableProps = {
   groups: GroupedConformaRow[];
@@ -40,7 +41,7 @@ const DetailSubTable: React.FC<{ rows: ConformaResultRow[] }> = ({ rows }) => (
               <strong>{row.title ?? '-'}</strong>
             </div>
             {row.description && (
-              <div style={{ fontSize: 'var(--pf-v5-global--FontSize--sm)', color: 'var(--pf-v5-global--Color--200)' }}>
+              <div className="conforma-grouped-table__secondary-text">
                 {row.description}
               </div>
             )}
@@ -57,7 +58,7 @@ const DetailSubTable: React.FC<{ rows: ConformaResultRow[] }> = ({ rows }) => (
           <Td dataLabel="Message">
             <div>{row.msg ?? '-'}</div>
             {row.solution && (
-              <div style={{ fontSize: 'var(--pf-v5-global--FontSize--sm)', color: 'var(--pf-v5-global--Color--200)' }}>
+              <div className="conforma-grouped-table__secondary-text">
                 Solution: {row.solution}
               </div>
             )}

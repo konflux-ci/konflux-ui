@@ -250,6 +250,7 @@ const mapConformaResultDataWithImage = (
         component: comp.name,
         msg: v.msg,
         collection: v.metadata?.collections,
+        solution: v.metadata?.solution,
         image,
       });
     });
@@ -273,7 +274,8 @@ export const useApplicationConformaResults = (
   applicationName: string,
 ): ApplicationConformaResults => {
   const { search } = useLocation();
-  const useMock = new URLSearchParams(search).has('mock', 'conforma');
+  const useMock =
+    process.env.NODE_ENV === 'development' && new URLSearchParams(search).has('mock', 'conforma');
 
   const namespace = useNamespace();
   const isKubearchiveLogsEnabled = useIsOnFeatureFlag('kubearchive-logs');
@@ -402,15 +404,17 @@ export const useApplicationConformaResults = (
   const batchError = React.useMemo(() => {
     const entries = Object.values(conformaByComponent);
     const errorEntries = entries.filter((v) => v?.state === 'error');
-    if (errorEntries.length > 0) {
-      for (const e of errorEntries) {
-        if (e?.state === 'error') {
-          logger.warn('Conforma aggregate: component-level fetch error', { error: e.err });
-        }
-      }
-    }
     const allFailed = entries.length > 0 && entries.every((v) => v?.state === 'error');
     return allFailed && errorEntries[0]?.state === 'error' ? errorEntries[0].err : undefined;
+  }, [conformaByComponent]);
+
+  React.useEffect(() => {
+    const errorEntries = Object.values(conformaByComponent).filter((v) => v?.state === 'error');
+    for (const e of errorEntries) {
+      if (e?.state === 'error') {
+        logger.warn('Conforma aggregate: component-level fetch error', { error: e.err });
+      }
+    }
   }, [conformaByComponent]);
 
   const aggregateError = componentsError ?? pipelinesError ?? batchError;

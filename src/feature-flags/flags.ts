@@ -86,6 +86,10 @@ const InternalFLAGS = {
     description: 'Show the Conforma Results tab on application details',
     defaultEnabled: false,
     status: 'wip',
+    guard: {
+      failureReason: '',
+      visibleInFeatureFlagPanel: true,
+    },
   },
   'taskruns-kubearchive': {
     key: 'taskruns-kubearchive',

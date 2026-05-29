@@ -2,17 +2,16 @@ import * as React from 'react';
 import {
   Button,
   ButtonVariant,
+  MenuToggle,
   SearchInput,
+  Select,
+  SelectList,
+  SelectOption,
   Toolbar,
   ToolbarContent,
   ToolbarGroup,
   ToolbarItem,
 } from '@patternfly/react-core';
-import {
-  Select,
-  SelectOption,
-  SelectVariant,
-} from '@patternfly/react-core/deprecated';
 import { CONFORMA_RESULT_STATUS } from '~/types/conforma';
 import type { GroupByMode } from './conforma-grouping-utils';
 
@@ -75,43 +74,66 @@ export const ConformaResultsToolbar: React.FC<ConformaResultsToolbarProps> = ({
 
         <ToolbarItem>
           <Select
-            variant={SelectVariant.single}
-            onToggle={() => setIsGroupByOpen((prev) => !prev)}
-            onSelect={(_e, value) => {
+            toggle={(toggleRef) => (
+              <MenuToggle
+                ref={toggleRef}
+                isExpanded={isGroupByOpen}
+                onClick={() => setIsGroupByOpen(!isGroupByOpen)}
+                data-test="conforma-group-by-select"
+              >
+                {`Group by: ${groupByLabels[groupBy]}`}
+              </MenuToggle>
+            )}
+            onSelect={(_, value) => {
               onGroupByChange(value as GroupByMode);
               setIsGroupByOpen(false);
             }}
-            selections={groupBy}
+            selected={groupBy}
             isOpen={isGroupByOpen}
-            placeholderText={`Group by: ${groupByLabels[groupBy]}`}
-            data-test="conforma-group-by-select"
+            onOpenChange={setIsGroupByOpen}
           >
-            <SelectOption value="rule">Group by: Rule</SelectOption>
-            <SelectOption value="component">Group by: Component</SelectOption>
+            <SelectList>
+              <SelectOption value="rule">Group by: Rule</SelectOption>
+              <SelectOption value="component">Group by: Component</SelectOption>
+            </SelectList>
           </Select>
         </ToolbarItem>
 
         <ToolbarItem>
           <Select
-            variant={SelectVariant.checkbox}
-            onToggle={() => setIsStatusOpen((prev) => !prev)}
-            onSelect={(_e, value) => {
+            toggle={(toggleRef) => (
+              <MenuToggle
+                ref={toggleRef}
+                isExpanded={isStatusOpen}
+                onClick={() => setIsStatusOpen(!isStatusOpen)}
+                data-test="conforma-status-filter"
+              >
+                {statusToggleText}
+              </MenuToggle>
+            )}
+            onSelect={(_, value) => {
               const strValue = value as string;
               const next = statusFilters.includes(strValue)
                 ? statusFilters.filter((s) => s !== strValue)
                 : [...statusFilters, strValue];
               onStatusFiltersChange(next);
             }}
-            selections={statusFilters}
+            selected={statusFilters}
             isOpen={isStatusOpen}
-            placeholderText={statusToggleText}
-            data-test="conforma-status-filter"
+            onOpenChange={setIsStatusOpen}
           >
-            {statusOptions.map((status) => (
-              <SelectOption key={status} value={status}>
-                {status}
-              </SelectOption>
-            ))}
+            <SelectList>
+              {statusOptions.map((status) => (
+                <SelectOption
+                  key={status}
+                  value={status}
+                  hasCheckbox
+                  isSelected={statusFilters.includes(status)}
+                >
+                  {status}
+                </SelectOption>
+              ))}
+            </SelectList>
           </Select>
         </ToolbarItem>
 

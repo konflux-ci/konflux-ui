@@ -14,6 +14,7 @@ import {
   SnapshotsListViewTab,
   snapshotsTabLoader,
 } from '~/components/Snapshots/SnapshotsListView/SnapshotsTab';
+import { ensureFeatureFlagOnLoader } from '~/feature-flags/utils';
 import { APPLICATION_DETAILS_PATH, APPLICATION_LIST_PATH } from '../paths';
 import { RouteErrorBoundry } from '../RouteErrorBoundary';
 
@@ -79,6 +80,10 @@ const applicationRoutes = [
       },
       {
         path: 'conforma-results',
+        loader: () => {
+          ensureFeatureFlagOnLoader('conforma-policy');
+          return null;
+        },
         errorElement: <RouteErrorBoundry />,
         element: <ConformaResultsTab />,
       },
