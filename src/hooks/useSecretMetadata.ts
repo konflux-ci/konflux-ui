@@ -24,7 +24,10 @@ export const useSecretMetadata = (
     [namespace, name],
   );
 
-  const k8sQueryOptions = convertToK8sQueryParams(resourceInit);
+  const k8sQueryOptions = React.useMemo(
+    () => convertToK8sQueryParams(resourceInit),
+    [resourceInit],
+  );
 
   const queryKey = React.useMemo(
     () => [
