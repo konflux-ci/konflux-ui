@@ -1,0 +1,198 @@
+name: Release Publish
+
+on:
+  issues:
+    types: [closed]
+
+jobs:
+  publish:
+    # Only run for release-tracking issues closed as "completed" (by merged PR Fixes keyword)
+    if: |
+      github.event.issue.user.login == 'github-actions[bot]' &&
+      contains(github.event.issue.labels.*.name, 'release-tracking') &&
+      github.event.issue.state_reason == 'completed'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      KONFLUX_UI_REPO: konflux-ci/konflux-ui
+      INFRA_REPO: redhat-appstudio/infra-deployments
+
+    steps:
+      # --- Parse tracking issue metadata ---
+      - name: Parse tracking issue
+        id: meta
+        run: |
+          # Read issue body from the event JSON to avoid shell injection
+          BODY=$(jq -r '.issue.body' "$GITHUB_EVENT_PATH")
+
+          # Extract YAML from the fenced code block
+          YAML_BLOCK=$(echo "$BODY" | sed -n '/^```yaml/,/^```/p' | sed '1d;$d')
+
+          parse_field() {
+            echo "$YAML_BLOCK" | grep "^${1}:" | sed "s/^${1}: //"
+          }
+
+          RELEASE_DATE=$(parse_field "release_date")
+          NEW_SHA=$(parse_field "new_sha")
+          OLD_SHA=$(parse_field "old_sha")
+          INFRA_PR=$(parse_field "infra_pr")
+          INFRA_PR_URL=$(parse_field "infra_pr_url")
+          TAG=$(parse_field "tag")
+
+          # Validate required fields
+          for field in RELEASE_DATE NEW_SHA OLD_SHA INFRA_PR TAG; do
+            if [[ -z "${!field}" ]]; then
+              echo "::error::Missing required field in tracking issue: $field"
+              exit 1
+            fi
+          done
+
+          # Validate SHA format
+          for sha_field in NEW_SHA OLD_SHA; do
+            if [[ ! "${!sha_field}" =~ ^[0-9a-fA-F]{7,40}$ ]]; then
+              echo "::error::Invalid SHA format for $sha_field: '${!sha_field}'"
+              exit 1
+            fi
+          done
+
+          echo "release_date=$RELEASE_DATE" >> "$GITHUB_OUTPUT"
+          echo "new_sha=$NEW_SHA" >> "$GITHUB_OUTPUT"
+          echo "old_sha=$OLD_SHA" >> "$GITHUB_OUTPUT"
+          echo "infra_pr=$INFRA_PR" >> "$GITHUB_OUTPUT"
+          echo "infra_pr_url=$INFRA_PR_URL" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      # --- Verify infra-deployments PR is actually merged ---
+      - name: Verify infra PR merged
+        env:
+          INFRA_PR: ${{ steps.meta.outputs.infra_pr }}
+        run: |
+          STATE=$(gh pr view "$INFRA_PR" \
+            --repo "$INFRA_REPO" --json state -q '.state')
+
+          if [[ "$STATE" != "MERGED" ]]; then
+            echo "::error::Infra-deployments PR #${INFRA_PR} is NOT merged."
+            echo "Tracking issue was closed without a valid merge. Aborting."
+            exit 1
+          fi
+          echo "Verified: infra-deployments PR is merged."
+
+      # --- Checkout and create tag ---
+      - name: Checkout konflux-ui
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create and push tag
+        id: tag
+        env:
+          META_TAG: ${{ steps.meta.outputs.tag }}
+          META_SHA: ${{ steps.meta.outputs.new_sha }}
+        run: |
+          TAG="$META_TAG"
+          SHA="$META_SHA"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Reuse existing tag if it points to the same SHA, otherwise suffix
+          BASE_TAG="$TAG"
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            if [[ "$(git rev-list -n1 "$TAG")" == "$SHA" ]]; then
+              echo "Reusing existing tag $TAG"
+            else
+              COUNTER=0
+              while git rev-parse "$TAG" >/dev/null 2>&1; do
+                COUNTER=$((COUNTER + 1))
+                TAG="${BASE_TAG}.${COUNTER}"
+              done
+              git tag -a "$TAG" "$SHA" -m "Production release $TAG"
+              git push origin "$TAG"
+            fi
+          else
+            git tag -a "$TAG" "$SHA" -m "Production release $TAG"
+            git push origin "$TAG"
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      # --- Generate changelog and create GitHub release ---
+      - name: Create GitHub release
+        env:
+          TAG: ${{ steps.tag.outputs.tag }}
+          RELEASE_DATE: ${{ steps.meta.outputs.release_date }}
+          NEW_SHA: ${{ steps.meta.outputs.new_sha }}
+          OLD_SHA: ${{ steps.meta.outputs.old_sha }}
+        run: |
+          # Generate changelog using the release script
+          chmod +x .github/scripts/generate-release-changelog.sh
+          .github/scripts/generate-release-changelog.sh \
+            -r "$KONFLUX_UI_REPO" \
+            -b "$OLD_SHA" \
+            -t "$NEW_SHA" \
+            -d "$(pwd)" \
+            -o /tmp/changelog.md
+
+          CHANGELOG=$(cat /tmp/changelog.md)
+
+          # Idempotency: skip if release already exists
+          if gh release view "$TAG" --repo "$KONFLUX_UI_REPO" >/dev/null 2>&1; then
+            echo "Release $TAG already exists — skipping creation."
+          else
+            gh release create "$TAG" \
+              --repo "$KONFLUX_UI_REPO" \
+              --title "Production release ${RELEASE_DATE}" \
+              --notes "$CHANGELOG"
+          fi
+
+      # --- Update tracking issue with completion status ---
+      - name: Update tracking issue
+        env:
+          TAG: ${{ steps.tag.outputs.tag }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          RELEASE_URL="https://github.com/${KONFLUX_UI_REPO}/releases/tag/${TAG}"
+
+          gh issue comment "$ISSUE_NUMBER" \
+            --repo "$KONFLUX_UI_REPO" \
+            --body "**Release published**
+
+          - Tag: [\`${TAG}\`](${RELEASE_URL})
+          - GitHub Release: [View release](${RELEASE_URL})
+          - Slack notification sent"
+
+      # --- Slack shipped notification ---
+      - name: Notify Slack — shipped
+        env:
+          RELEASE_DATE: ${{ steps.meta.outputs.release_date }}
+          TAG: ${{ steps.tag.outputs.tag }}
+          NEW_SHA: ${{ steps.meta.outputs.new_sha }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          RELEASE_URL="https://github.com/${KONFLUX_UI_REPO}/releases/tag/${TAG}"
+          SHORT_SHA="${NEW_SHA:0:7}"
+
+          curl -sf -X POST "$SLACK_WEBHOOK_URL" \
+            -H 'Content-Type: application/json' \
+            -d "$(jq -n \
+              --arg date "$RELEASE_DATE" \
+              --arg tag "$TAG" \
+              --arg sha "$SHORT_SHA" \
+              --arg url "$RELEASE_URL" \
+              '{
+                "blocks": [
+                  {
+                    "type": "header",
+                    "text": { "type": "plain_text", "text": ("Shipped to production — " + $date) }
+                  },
+                  {
+                    "type": "section",
+                    "text": {
+                      "type": "mrkdwn",
+                      "text": ("*Tag:* `" + $tag + "`\n*Commit:* `" + $sha + "`\n\n<" + $url + "|View GitHub Release>")
+                    }
+                  }
+                ]
+              }')" || echo "::warning::Failed to send Slack notification"

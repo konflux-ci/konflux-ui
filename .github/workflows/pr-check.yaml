@@ -23,17 +23,19 @@ jobs:
             exit 0
           fi
 
-          WHITELISTED_BOT_NAME="red-hat-konflux[bot]"
+          WHITELISTED_BOTS=("red-hat-konflux[bot]" "konflux-ci-coder[bot]" "fullsend-ai-coder[bot]")
           REQUIRED_LABEL_NAME="ok-to-test"
 
           ORG="${{ github.repository_owner }}"
           PR_AUTHOR=$(jq --raw-output .pull_request.user.login $GITHUB_EVENT_PATH)
           PR_LABELS=$(jq --raw-output .pull_request.labels[].name $GITHUB_EVENT_PATH)
 
-          if [ "$PR_AUTHOR" == "$WHITELISTED_BOT_NAME" ]; then
-            echo "PR author is "$WHITELISTED_BOT_NAME", skipping further checks."
-            exit 0
-          fi
+          for BOT in "${WHITELISTED_BOTS[@]}"; do
+            if [ "$PR_AUTHOR" == "$BOT" ]; then
+              echo "PR author is $BOT, skipping further checks."
+              exit 0
+            fi
+          done
 
           if [[ "$PR_LABELS" == *$REQUIRED_LABEL_NAME* ]]; then
             echo "PR has '$REQUIRED_LABEL_NAME' label, skipping further checks."
@@ -51,7 +53,7 @@ jobs:
           ERROR_SUMMARY=$(cat <<EOF
 
           ### ❌ Cannot run E2E tests - at least one of the following conditions must be met:
-          * PR author is '$WHITELISTED_BOT_NAME'
+          * PR author is a whitelisted bot (${WHITELISTED_BOTS[*]})
           * PR has label '$REQUIRED_LABEL_NAME'
           * PR author is a konflux-ui developer (listed in ALLOWED_USERS in this script)
           EOF

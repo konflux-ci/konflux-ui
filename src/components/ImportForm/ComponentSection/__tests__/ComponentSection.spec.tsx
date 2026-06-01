@@ -11,8 +11,12 @@ describe('ComponentSection', () => {
     formikRenderer(<ComponentSection />, {
       source: { git: { url: '' } },
     });
-    screen.getByPlaceholderText('Enter a Git repository URL');
-    expect(screen.queryByTestId('git-reference')).not.toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Enter a Git repository URL')).toBeInTheDocument();
+    expect(
+      screen.getByText('Supports GitHub, GitLab, and Forgejo repositories'),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText(/git reference/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/should the image produced be private\?/i)).toBeInTheDocument();
   });
 
   it('should render git options by default', async () => {
@@ -50,10 +54,29 @@ describe('ComponentSection', () => {
     await user.tab();
     await waitFor(() =>
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-      expect((screen.getByTestId('url-annotation') as HTMLInputElement).value).toBe(
+      expect((screen.getByLabelText(/git url annotation/i) as HTMLInputElement).value).toBe(
         'https://gitlab.com',
       ),
     );
+  });
+
+  it('should populate annotation fields for Forgejo URLs', async () => {
+    formikRenderer(<ComponentSection />, {
+      source: { git: { url: '' } },
+    });
+    const user = userEvent.setup();
+    const source = screen.getByPlaceholderText('Enter a Git repository URL');
+
+    await user.type(source, 'https://code.forgejo.org/abcd/repo.git');
+    await user.tab();
+    await waitFor(() => {
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+      expect((screen.getByLabelText(/git url annotation/i) as HTMLInputElement).value).toBe(
+        'https://code.forgejo.org',
+      );
+      // Git provider is a Select/MenuToggle; PF FormGroup does not associate the label for getByLabelText.
+      expect(screen.getByTestId('dropdown-toggle')).toHaveTextContent('forgejo');
+    });
   });
 
   it('should render helper text for component name', () => {

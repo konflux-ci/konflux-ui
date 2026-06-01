@@ -69,7 +69,7 @@ export const createFeatureFlagPanelModal = createModalLauncher(FeatureFlagPanel,
       onClick={() => {
         FeatureFlagsStore.resetAll();
       }}
-      data-testid="reset-feature-overrides-button"
+      data-test="reset-feature-overrides-button"
     >
       Reset to Defaults
     </Button>,

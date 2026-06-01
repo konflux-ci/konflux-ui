@@ -8,7 +8,6 @@ import {
   useKubearchiveListResourceQuery,
 } from '~/kubearchive/hooks';
 import { PipelineRunKind } from '~/types';
-import { WatchK8sResource } from '~/types/k8s';
 import { PipelineRunModel } from '../../models';
 import {
   createK8sWatchResourceMock,
@@ -405,7 +404,7 @@ describe('usePipelineRunsV2', () => {
 
   const renderHookWithQueryClient = (
     namespace: string,
-    options?: Partial<Pick<WatchK8sResource, 'watch' | 'limit' | 'selector' | 'fieldSelector'>>,
+    options?: Parameters<typeof usePipelineRunsV2>[1],
   ) => {
     return renderHook(() => usePipelineRunsV2(namespace, options), {
       wrapper: ({ children }) =>
@@ -502,6 +501,39 @@ describe('usePipelineRunsV2', () => {
         selector: { matchLabels: { 'tekton.dev/pipelineRun': 'test-pr' } },
         limit: 5,
       });
+    });
+
+    it('should pass commitSearchFilter to useTRPipelineRuns when commitSearchTerm is set', async () => {
+      mockUseK8sWatchResource.mockReturnValue({
+        data: [],
+        isLoading: false,
+        error: null,
+      });
+      mockUseTRPipelineRuns.mockReturnValue([
+        [],
+        true,
+        null,
+        null,
+        { hasNextPage: false, isFetchingNextPage: false },
+      ]);
+
+      renderHookWithQueryClient('default', {
+        selector: { matchLabels: { 'appstudio.openshift.io/application': 'my-app' } },
+        commitSearchTerm: 'abc123',
+      });
+
+      await waitFor(() => {
+        expect(mockUseTRPipelineRuns).toHaveBeenCalled();
+      });
+
+      expect(mockUseTRPipelineRuns).toHaveBeenCalledWith(
+        'default',
+        expect.objectContaining({
+          selector: { matchLabels: { 'appstudio.openshift.io/application': 'my-app' } },
+          filter: expect.stringContaining('abc123'),
+        }),
+      );
+      expect(mockUseTRPipelineRuns.mock.calls[0][1]).not.toHaveProperty('commitSearchTerm');
     });
 
     it('should deduplicate between cluster and Tekton Results by name', async () => {

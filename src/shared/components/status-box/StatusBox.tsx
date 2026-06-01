@@ -1,6 +1,13 @@
 import * as React from 'react';
 import { useTranslation, Trans } from 'react-i18next';
-import { Alert, Button, HelperText, HelperTextItem } from '@patternfly/react-core';
+import {
+  Alert,
+  Button,
+  HelperText,
+  HelperTextItem,
+  Stack,
+  StackItem,
+} from '@patternfly/react-core';
 import classNames from 'classnames';
 import get from 'lodash/get';
 import isEmpty from 'lodash/isEmpty';
@@ -147,6 +154,7 @@ const Data: React.FC<React.PropsWithChildren<DataProps>> = ({
   if (NoDataEmptyMsg && isEmpty(unfilteredData)) {
     return (
       <div className="loading-box loading-box__loaded">
+        {Toolbar}
         {NoDataEmptyMsg ? <NoDataEmptyMsg /> : <EmptyBox label={label} />}
       </div>
     );
@@ -208,6 +216,16 @@ export const StatusBox: React.FC<React.PropsWithChildren<StatusBoxProps>> = (pro
   }
 
   if (!loaded) {
+    if (props.Toolbar) {
+      return (
+        <Stack>
+          <StackItem>{props.Toolbar}</StackItem>
+          <StackItem>
+            {skeleton ?? <LoadingBox className="loading-box loading-box__loading" />}
+          </StackItem>
+        </Stack>
+      );
+    }
     return skeleton ? <>{skeleton}</> : <LoadingBox className="loading-box loading-box__loading" />;
   }
   return <Data {...dataProps} />;
