@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-MIN_NODE_VERSION=20
+MIN_NODE_VERSION=22
 
 if ! command -v node &>/dev/null; then
   echo "Error: Node.js >= ${MIN_NODE_VERSION} is required. Install from https://nodejs.org/"

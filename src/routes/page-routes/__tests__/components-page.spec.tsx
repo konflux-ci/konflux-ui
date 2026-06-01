@@ -29,12 +29,12 @@ type PathRoute = BaseRoute & {
 type ChildRoute = IndexRoute | PathRoute;
 
 jest.mock('../../RouteErrorBoundary', () => ({
-  RouteErrorBoundry: () => <div data-testid="error-boundary">Error Boundary</div>,
+  RouteErrorBoundry: () => <div data-test="error-boundary">Error Boundary</div>,
 }));
 
 jest.mock('~/components/ComponentsPage/ComponentDetails', () => ({
-  ComponentDetailsTab: () => <div data-testid="component-details-tab">Details tab</div>,
-  ComponentDetailsViewLayout: () => <div data-testid="component-details-layout">Layout</div>,
+  ComponentDetailsTab: () => <div data-test="component-details-tab">Details tab</div>,
+  ComponentDetailsViewLayout: () => <div data-test="component-details-layout">Layout</div>,
   componentDetailsViewLoader: jest.fn(() => ({ data: 'test-data' })),
 }));
 
