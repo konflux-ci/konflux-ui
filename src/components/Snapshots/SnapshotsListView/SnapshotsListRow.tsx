@@ -74,7 +74,7 @@ const SnapshotsListRow: React.FC<React.PropsWithChildren<SnapshotsListRowProps>>
             header: 'More snapshot components',
             ariaLabel: 'More snapshot components',
             moreText: (count: number) => `${count} more`,
-            dataTestIdPrefix: 'more-snapshot-components-popover',
+            dataTestPrefix: 'more-snapshot-components-popover',
           }}
         />
       </TableData>

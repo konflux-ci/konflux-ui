@@ -7,7 +7,7 @@ describe('TruncatedLinkListWithPopover', () => {
     header: 'More items',
     ariaLabel: 'More items',
     moreText: (count: number) => `${count} more`,
-    dataTestIdPrefix: 'more-items-popover',
+    dataTestPrefix: 'more-items-popover',
   };
 
   it('renders "-" when items are empty', () => {

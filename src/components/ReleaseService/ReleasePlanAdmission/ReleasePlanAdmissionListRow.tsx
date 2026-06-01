@@ -11,13 +11,9 @@ import { releasesPlanAdmissionTableColumnClasses } from './ReleasePlanAdmissionL
 
 export interface ReleasePlanAdmissionRowProps {
   obj: ReleasePlanAdmissionKind;
-  customData: { namespace: string };
 }
 
-const ReleasePlanAdmissionListRow: React.FC<ReleasePlanAdmissionRowProps> = ({
-  obj,
-  customData: { namespace },
-}) => {
+const ReleasePlanAdmissionListRow: React.FC<ReleasePlanAdmissionRowProps> = ({ obj }) => {
   const actions = useReleasePlanAdmissionActions(obj);
 
   const getApplicationLink = React.useCallback(
@@ -25,14 +21,14 @@ const ReleasePlanAdmissionListRow: React.FC<ReleasePlanAdmissionRowProps> = ({
       <Link
         key={applicationName}
         to={APPLICATION_DETAILS_PATH.createPath({
-          workspaceName: namespace,
+          workspaceName: obj.spec.origin,
           applicationName,
         })}
       >
         {applicationName.trim()}
       </Link>
     ),
-    [namespace],
+    [obj.spec.origin],
   );
 
   return (
@@ -48,7 +44,7 @@ const ReleasePlanAdmissionListRow: React.FC<ReleasePlanAdmissionRowProps> = ({
             header: 'More applications',
             ariaLabel: 'More applications',
             moreText: (count: number) => `${count} more`,
-            dataTestIdPrefix: 'more-applications-popover',
+            dataTestPrefix: 'more-applications-popover',
           }}
         />
       </TableData>
