@@ -1,9 +1,10 @@
 import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bullseye, Form, PageSection, PageSectionVariants, Spinner } from '@patternfly/react-core';
-import { Formik, FormikProps } from 'formik';
+import { Formik } from 'formik';
 import { isEmpty } from 'lodash-es';
 import PageLayout from '~/components/PageLayout/PageLayout';
+import { secretFormValidationSchema } from '~/components/Secrets/utils/secret-validation';
 import { LEARN_MORE_ABOUT_SECRETS_CREATION } from '~/consts/documentation';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { useSearchParam } from '~/hooks/useSearchParam';
@@ -33,11 +34,7 @@ import {
   getSecretBreadcrumbs,
   typeToDropdownLabel,
 } from '~/utils/secrets/secret-utils';
-import { secretFormValidationSchema } from '../utils/secret-validation';
-import {
-  SecretEditSensitiveContextValue,
-  SecretEditSensitiveProvider,
-} from './SecretEditSensitiveContext';
+import { EditSecretSensitiveContextProvider } from './EditSecretSensitiveContextProvider';
 import { SecretTypeSubForm } from './SecretTypeSubForm';
 
 const isUnset = (value: unknown): boolean => value === '' || value === undefined;
@@ -109,62 +106,6 @@ function editRequiresFullSecretPayload(
       return false;
   }
 }
-
-type EditSecretSensitiveContextProviderProps = React.PropsWithChildren<{
-  formik: FormikProps<AddSecretFormValues>;
-  fullSecret: SecretKind | null;
-  isLoadingFullSecret: boolean;
-  requestFullSecret: () => Promise<SecretKind | undefined>;
-  clearSensitiveMemory: () => void;
-}>;
-
-const EditSecretSensitiveContextProvider: React.FC<EditSecretSensitiveContextProviderProps> = ({
-  formik,
-  fullSecret,
-  isLoadingFullSecret,
-  requestFullSecret,
-  clearSensitiveMemory,
-  children,
-}) => {
-  const formikRef = React.useRef(formik);
-  formikRef.current = formik;
-
-  const clearFullSecretAndSensitiveFields = React.useCallback(() => {
-    clearSensitiveMemory();
-    const { setFieldValue, values: v } = formikRef.current;
-    void setFieldValue('source.password', '');
-    void setFieldValue('source.ssh-privatekey', '');
-    void setFieldValue('image.dockerconfig', undefined);
-    v.image?.registryCreds?.forEach((_c, idx) => {
-      void setFieldValue(`image.registryCreds.${idx}.password`, '');
-    });
-    v.opaque?.keyValues?.forEach((_kv, idx) => {
-      void setFieldValue(`opaque.keyValues.${idx}.value`, '');
-    });
-  }, [clearSensitiveMemory]);
-
-  React.useEffect(() => {
-    const onVisibility = () => {
-      if (document.visibilityState === 'hidden') {
-        clearFullSecretAndSensitiveFields();
-      }
-    };
-    document.addEventListener('visibilitychange', onVisibility);
-    return () => document.removeEventListener('visibilitychange', onVisibility);
-  }, [clearFullSecretAndSensitiveFields]);
-
-  const contextValue = React.useMemo(
-    (): SecretEditSensitiveContextValue => ({
-      fullSecret,
-      isLoadingFullSecret,
-      requestFullSecret,
-      clearFullSecretAndSensitiveFields,
-    }),
-    [fullSecret, isLoadingFullSecret, requestFullSecret, clearFullSecretAndSensitiveFields],
-  );
-
-  return <SecretEditSensitiveProvider value={contextValue}>{children}</SecretEditSensitiveProvider>;
-};
 
 const EditSecretForm: React.FC = () => {
   const namespace = useNamespace();

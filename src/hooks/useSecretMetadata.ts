@@ -1,13 +1,11 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { K8S_QUERY_KEY_SECRET_TABLE } from '~/k8s/consts/k8s-accept';
+import { K8S_QUERY_KEY_SECRET_TABLE, SECRET_POLLING_INTERVAL } from '~/k8s/consts/k8s-accept';
 import { convertToK8sQueryParams } from '~/k8s/k8s-utils';
 import { createQueryKeys } from '~/k8s/query/utils';
 import { fetchSecretGetTable } from '~/k8s/secret-table';
 import { SecretGroupVersionKind, SecretModel } from '~/models';
 import { SecretKind } from '~/types';
-
-const POLLING_INTERVAL = 10_000;
 
 /** Fetches a single Secret using `as=Table` (no `data` / `stringData`; includes **type** from table columns). */
 export const useSecretMetadata = (
@@ -45,7 +43,7 @@ export const useSecretMetadata = (
     queryKey,
     queryFn: () => fetchSecretGetTable(namespace, name),
     enabled: !!namespace && !!name,
-    refetchInterval: POLLING_INTERVAL,
+    refetchInterval: SECRET_POLLING_INTERVAL,
   });
 
   return [secret, !isLoading, error];

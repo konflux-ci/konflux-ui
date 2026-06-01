@@ -1,5 +1,5 @@
 import React from 'react';
-import { Alert, AlertActionLink } from '@patternfly/react-core';
+import { Alert, AlertActionLink, Spinner } from '@patternfly/react-core';
 import {
   useAreSecretSensitiveFieldsHidden,
   useOptionalSecretEditSensitive,
@@ -19,7 +19,24 @@ export const SensitiveValuesRevealBanner: React.FC<SensitiveValuesRevealBannerPr
     return null;
   }
 
+  const isLoadingReveal = sensitive.isLoadingFullSecret && sensitiveFieldsHidden;
+
+  const actionLabel = isLoadingReveal
+    ? 'Loading...'
+    : sensitiveFieldsHidden
+      ? 'Show values'
+      : 'Hide values';
+
+  const title = isLoadingReveal
+    ? 'Loading sensitive values...'
+    : sensitiveFieldsHidden
+      ? 'Sensitive values are hidden'
+      : 'Sensitive values are visible';
+
   const handleToggle = () => {
+    if (isLoadingReveal) {
+      return;
+    }
     if (sensitiveFieldsHidden) {
       void onReveal();
       return;
@@ -32,17 +49,24 @@ export const SensitiveValuesRevealBanner: React.FC<SensitiveValuesRevealBannerPr
       <Alert
         variant="info"
         isInline
-        title={
-          sensitiveFieldsHidden ? 'Sensitive values are hidden' : 'Sensitive values are visible'
-        }
+        title={title}
         actionLinks={
-          <AlertActionLink onClick={handleToggle}>
-            {sensitiveFieldsHidden ? 'Show values' : 'Hide values'}
+          <AlertActionLink onClick={handleToggle} isDisabled={isLoadingReveal}>
+            {actionLabel}
           </AlertActionLink>
         }
       >
-        For security, secret values are hidden by default. Click &quot;
-        {sensitiveFieldsHidden ? 'Show values' : 'Hide values'}&quot; to toggle visibility.
+        {isLoadingReveal ? (
+          <>
+            <Spinner size="sm" className="pf-v5-u-mr-sm" aria-label="Loading secret values" />
+            Loading secret values from the cluster.
+          </>
+        ) : (
+          <>
+            For security, secret values are hidden by default. Click &quot;{actionLabel}&quot; to
+            toggle visibility.
+          </>
+        )}
       </Alert>
     </div>
   );

@@ -271,6 +271,49 @@ describe('EditSecretForm', () => {
   });
 
   describe('sensitive values toggle', () => {
+    it('shows loading state while fetching secret values', async () => {
+      let resolveFetch: (value: SecretKind) => void = () => undefined;
+
+      const user = userEvent.setup();
+      useLocationMock.mockReturnValue({
+        search: `?secretName=${mockOpaqueSecretForEdit.metadata.name}`,
+      });
+      useSecretMetadataMock.mockReturnValue([
+        stripSecretToMetadataOnly(mockOpaqueSecretForEdit),
+        true,
+        null,
+      ]);
+      (fetchFullSecret as jest.Mock).mockImplementation(
+        () =>
+          new Promise<SecretKind>((resolve) => {
+            resolveFetch = resolve;
+          }),
+      );
+      render(<EditSecretForm />);
+
+      await waitFor(() => {
+        expect(screen.getByRole('heading', { name: 'Edit secret' })).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByRole('button', { name: 'Show values' }));
+
+      await waitFor(() => {
+        expect(screen.getByText('Loading sensitive values...')).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Loading...' })).toHaveAttribute(
+          'aria-disabled',
+          'true',
+        );
+        expect(screen.getByLabelText('Loading secret values')).toBeInTheDocument();
+      });
+
+      resolveFetch(mockOpaqueSecretForEdit);
+
+      await waitFor(() => {
+        expectSensitiveValuesBannerVisible();
+        expect(screen.getByDisplayValue('key1')).toBeInTheDocument();
+      });
+    });
+
     it('shows hidden banner by default and toggles opaque secret values', async () => {
       const user = userEvent.setup();
       renderWithSecret(mockOpaqueSecretForEdit);

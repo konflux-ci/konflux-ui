@@ -50,8 +50,10 @@ export const parseSecretTableToSecretKinds = (
   ];
   const colIndex = (label: string) => colNames.indexOf(label.toLowerCase());
 
-  const nameI = colIndex('name') >= 0 ? colIndex('name') : 0;
-  const typeI = colIndex('type') >= 0 ? colIndex('type') : 1;
+  const rawNameI = colIndex('name');
+  const rawTypeI = colIndex('type');
+  const nameI = rawNameI >= 0 ? rawNameI : 0;
+  const typeI = rawTypeI >= 0 ? rawTypeI : 1;
 
   return table.rows.map((row): SecretKind => {
     const cells = (row.cells ?? []).map(cellString);

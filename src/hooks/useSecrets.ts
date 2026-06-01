@@ -1,7 +1,7 @@
 import React from 'react';
 import type { UseQueryOptions } from '@tanstack/react-query';
 import { useK8sWatchResource } from '~/k8s';
-import { K8S_QUERY_KEY_SECRET_TABLE } from '~/k8s/consts/k8s-accept';
+import { K8S_QUERY_KEY_SECRET_TABLE, SECRET_POLLING_INTERVAL } from '~/k8s/consts/k8s-accept';
 import { convertToK8sQueryParams } from '~/k8s/k8s-utils';
 import { createQueryKeys } from '~/k8s/query/utils';
 import { fetchSecretListTable } from '~/k8s/secret-table';
@@ -54,7 +54,7 @@ export const useSecrets = (
       ? ({
           queryKey: listQueryKey,
           queryFn: () => fetchSecretListTable(namespace),
-          refetchInterval: 10_000,
+          refetchInterval: SECRET_POLLING_INTERVAL,
         } as UseQueryOptions<SecretKind[]>)
       : undefined,
     {},

@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
-import { act, fireEvent, render, screen, waitFor, configure } from '@testing-library/react';
+import { render, screen, waitFor, configure } from '@testing-library/react';
+import { userEvent, type UserEvent } from '@testing-library/user-event';
 import { useApplications } from '~/hooks/useApplications';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import AddSecretForm from '../SecretsForm/AddSecretForm';
@@ -33,10 +34,12 @@ const useNavigateMock = useNavigate as jest.Mock;
 window.ResizeObserver = MockResizeObserver;
 
 describe('AddSecretForm', () => {
-  let navigateMock;
+  let navigateMock: jest.Mock;
+  let user: UserEvent;
   mockUseNamespaceHook('test-ns');
 
   beforeEach(() => {
+    user = userEvent.setup();
     navigateMock = jest.fn();
     useNavigateMock.mockImplementation(() => navigateMock);
     useApplicationsMock.mockReturnValue([[], true]);
@@ -48,9 +51,9 @@ describe('AddSecretForm', () => {
     render(<AddSecretForm />);
 
     await waitFor(() => {
-      screen.getByText('Secret type');
-      screen.getByText('Select or enter secret name');
-      screen.getByText('Labels');
+      expect(screen.getByText('Secret type')).toBeInTheDocument();
+      expect(screen.getByText('Select or enter secret name')).toBeInTheDocument();
+      expect(screen.getByText('Labels')).toBeInTheDocument();
     });
   });
 
@@ -59,15 +62,13 @@ describe('AddSecretForm', () => {
 
     render(<AddSecretForm />);
 
-    fireEvent.click(screen.getByLabelText('Select or enter secret name'));
-    fireEvent.blur(screen.getByLabelText('Select or enter secret name'));
+    const secretNameInput = screen.getByLabelText('Select or enter secret name');
+    await user.click(secretNameInput);
+    await user.tab();
+    await user.click(screen.getByTestId('submit-button'));
 
     await waitFor(() => {
-      fireEvent.click(screen.getByTestId('submit-button'));
-    });
-
-    await waitFor(() => {
-      screen.getByText('Required');
+      expect(screen.getByText('Required')).toBeInTheDocument();
     });
   });
 
@@ -79,7 +80,7 @@ describe('AddSecretForm', () => {
       expect(screen.getByTestId('dropdown-toggle')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByTestId('dropdown-toggle'));
+    await user.click(screen.getByTestId('dropdown-toggle'));
     await waitFor(() => {
       expect(screen.getByText('Image pull secret')).toBeInTheDocument();
       expect(screen.getByText('Source secret')).toBeInTheDocument();
@@ -94,13 +95,13 @@ describe('AddSecretForm', () => {
       expect(screen.getByTestId('dropdown-toggle')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByTestId('dropdown-toggle'));
+    await user.click(screen.getByTestId('dropdown-toggle'));
 
     await waitFor(() => {
       expect(screen.getByText('Source secret')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByText('Source secret'));
+    await user.click(screen.getByText('Source secret'));
 
     await waitFor(() => {
       expect(screen.getByText('Username')).toBeInTheDocument();
@@ -116,12 +117,12 @@ describe('AddSecretForm', () => {
       expect(screen.getByTestId('dropdown-toggle')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByTestId('dropdown-toggle'));
-    fireEvent.click(screen.getByText('Source secret'));
+    await user.click(screen.getByTestId('dropdown-toggle'));
+    await user.click(screen.getByText('Source secret'));
 
     const passwordInput = await screen.findByTestId('secret-source-password');
-    fireEvent.input(passwordInput, { target: { value: '' } });
-    fireEvent.blur(passwordInput);
+    await user.click(passwordInput);
+    await user.tab();
 
     await waitFor(() => {
       expect(screen.getByText('Required')).toBeInTheDocument();
@@ -131,9 +132,9 @@ describe('AddSecretForm', () => {
   it('should navigate back when cancel button is clicked', async () => {
     useApplicationsMock.mockReturnValue([[], false]);
     render(<AddSecretForm />);
-    act(() => {
-      fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
-    });
+
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+
     await waitFor(() => {
       expect(useNavigateMock).toHaveBeenCalled();
     });
