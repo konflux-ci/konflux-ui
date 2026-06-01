@@ -44,7 +44,7 @@ const ReleasePlanAdmissionListRow: React.FC<ReleasePlanAdmissionRowProps> = ({ o
             header: 'More applications',
             ariaLabel: 'More applications',
             moreText: (count: number) => `${count} more`,
-            dataTestIdPrefix: 'more-applications-popover',
+            dataTestPrefix: 'more-applications-popover',
           }}
         />
       </TableData>
