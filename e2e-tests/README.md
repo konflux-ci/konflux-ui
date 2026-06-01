@@ -57,7 +57,7 @@ $ yarn run cy:run
 ```
 Runs `tests/basic-happy-path.spec.ts` in the Chrome browser (as defined in `package.json`). To run other specs or choose a different browser, invoke Cypress directly. For example, running all specs in Electron:
 ```
-$ yarn cypress run -b electron --spec 'tests/**/*.spec.ts'
+ yarn cypress run -b electron --spec 'tests/**/*.spec.ts'
 ```
 
 ### Running test from source against local Konflux UI and local Konflux backend
