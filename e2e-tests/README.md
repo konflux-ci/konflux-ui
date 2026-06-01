@@ -142,7 +142,7 @@ Test automation allows us to test early in the process and discover bugs before 
 ### PR checks
 Cypress E2E tests run on pull requests using a [GitHub Action](https://github.com/konflux-ci/konflux-ui/blob/main/.github/workflows/pr-check.yaml). PR checks are allowed when at least one of the following conditions is met:
 
-- PR author is `red-hat-konflux[bot]`
+- PR author is `PR author `
 - PR has the `ok-to-test` label
 - PR author is listed in the workflow `ALLOWED_USERS`
 
