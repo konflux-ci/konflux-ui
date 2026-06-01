@@ -21,6 +21,7 @@ type FeatureFlagIndicatorProps = {
 };
 
 const warningColor = 'var(--pf-v5-global--warning-color--100)';
+const readyColor = 'var(--pf-v5-global--success-color--100)';
 
 export const FeatureFlagIndicator: React.FC<FeatureFlagIndicatorProps> = ({
   flags,
@@ -35,11 +36,12 @@ export const FeatureFlagIndicator: React.FC<FeatureFlagIndicatorProps> = ({
   const anyWip = metas.some((m) => m.status === 'wip');
   const statusText = anyWip ? FLAGS_STATUS.wip : FLAGS_STATUS.ready;
   const labelColor = anyWip ? 'orange' : 'green';
+  const iconColor = anyWip ? warningColor : readyColor;
 
   const header = (
     <Flex spaceItems={{ default: 'spaceItemsSm' }} alignItems={{ default: 'alignItemsCenter' }}>
       <FlexItem>
-        <FlaskIcon style={{ color: warningColor }} />
+        <FlaskIcon style={{ color: iconColor }} />
       </FlexItem>
       <FlexItem>
         <Text component={TextVariants.h6}>Experimental feature</Text>
@@ -64,10 +66,7 @@ export const FeatureFlagIndicator: React.FC<FeatureFlagIndicatorProps> = ({
       aria-label="Feature flag information"
       data-test={dataTest ?? `ff-indicator-${flags.join('-')}`}
     >
-      <Label
-        icon={<FlaskIcon style={{ color: warningColor }} />}
-        color={labelColor}
-      >
+      <Label icon={<FlaskIcon style={{ color: iconColor }} />} color={labelColor}>
         {statusText}
       </Label>
     </Button>
@@ -78,16 +77,12 @@ export const FeatureFlagIndicator: React.FC<FeatureFlagIndicatorProps> = ({
       aria-label="Feature flag information"
       data-test={dataTest ?? `ff-indicator-${flags.join('-')}`}
     >
-      <FlaskIcon style={{ color: warningColor }} />
+      <FlaskIcon style={{ color: iconColor }} />
     </Button>
   );
 
   return (
-    <Popover
-      position="right"
-      headerContent={header}
-      bodyContent={body}
-    >
+    <Popover position="right" headerContent={header} bodyContent={body}>
       {trigger}
     </Popover>
   );
