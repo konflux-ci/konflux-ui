@@ -105,4 +105,31 @@ describe('ConformaResultsToolbar', () => {
     expect(screen.getByTestId('conforma-expand-all')).toHaveTextContent('Expand all');
     expect(screen.getByTestId('conforma-collapse-all')).toHaveTextContent('Collapse all');
   });
+
+  it('calls onGroupByChange when a group-by option is selected', () => {
+    renderToolbar();
+
+    fireEvent.click(screen.getByTestId('conforma-group-by-select'));
+    fireEvent.click(screen.getByText('Group by: Component'));
+
+    expect(onGroupByChange).toHaveBeenCalledWith('component');
+  });
+
+  it('calls onStatusFiltersChange when a status option is selected', () => {
+    renderToolbar();
+
+    fireEvent.click(screen.getByTestId('conforma-status-filter'));
+    fireEvent.click(screen.getByText('Failed'));
+
+    expect(onStatusFiltersChange).toHaveBeenCalledWith(['Failed']);
+  });
+
+  it('toggles status filter off when already selected', () => {
+    renderToolbar({ statusFilters: ['Failed'] });
+
+    fireEvent.click(screen.getByTestId('conforma-status-filter'));
+    fireEvent.click(screen.getByText('Failed'));
+
+    expect(onStatusFiltersChange).toHaveBeenCalledWith([]);
+  });
 });

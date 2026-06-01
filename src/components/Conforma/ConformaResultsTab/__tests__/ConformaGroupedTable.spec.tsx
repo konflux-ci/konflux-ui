@@ -125,4 +125,29 @@ describe('ConformaGroupedTable', () => {
     expect(screen.getAllByText('Status').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText('Message').length).toBeGreaterThanOrEqual(1);
   });
+
+  it('shows dash when row has no image', () => {
+    const groupsWithImage: GroupedConformaRow[] = [
+      {
+        groupKey: 'Has image rule',
+        violations: 1,
+        warnings: 0,
+        successes: 0,
+        rows: [
+          createRow({ image: 'quay.io/test/img@sha256:abc' }),
+          createRow({ image: undefined }),
+        ],
+      },
+    ];
+    const expandedGroups = new Set(['Has image rule']);
+    routerRenderer(
+      <ConformaGroupedTable
+        {...defaultProps}
+        groups={groupsWithImage}
+        expandedGroups={expandedGroups}
+      />,
+    );
+
+    expect(screen.getAllByText('-').length).toBeGreaterThanOrEqual(1);
+  });
 });

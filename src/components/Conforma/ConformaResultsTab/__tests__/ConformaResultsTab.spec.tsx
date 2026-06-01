@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react';
+import { fireEvent, screen } from '@testing-library/react';
 import { CONFORMA_RESULT_STATUS } from '~/types/conforma';
 import { routerRenderer } from '~/unit-test-utils/mock-react-router';
 import { ConformaResultsTab } from '../ConformaResultsTab';
@@ -155,5 +155,45 @@ describe('ConformaResultsTab', () => {
     expect(screen.getAllByText('Missing CVE scan').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText('Deprecated API').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText('Base image allowed').length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('expands and collapses groups via Expand all / Collapse all', () => {
+    mockUseApplicationConformaResults.mockReturnValue(populatedResults);
+
+    routerRenderer(<ConformaResultsTab />);
+
+    fireEvent.click(screen.getByTestId('conforma-expand-all'));
+
+    expect(screen.getAllByText('api-gateway').length).toBeGreaterThanOrEqual(1);
+
+    fireEvent.click(screen.getByTestId('conforma-collapse-all'));
+  });
+
+  it('toggles individual group expansion', () => {
+    mockUseApplicationConformaResults.mockReturnValue(populatedResults);
+
+    routerRenderer(<ConformaResultsTab />);
+
+    const toggleButtons = screen.getAllByRole('button', { name: /details/i });
+    fireEvent.click(toggleButtons[0]);
+
+    expect(screen.getAllByText('api-gateway').length).toBeGreaterThanOrEqual(1);
+
+    fireEvent.click(toggleButtons[0]);
+  });
+
+  it('shows "no results match" when filters exclude all results', () => {
+    mockUseApplicationConformaResults.mockReturnValue(populatedResults);
+
+    routerRenderer(<ConformaResultsTab />);
+
+    const searchInput = screen.getByTestId('conforma-search-input');
+    const textInput = searchInput.querySelector('.pf-v5-c-text-input-group__text-input');
+
+    fireEvent.change(textInput, { target: { value: 'zzz-no-match-zzz' } });
+
+    expect(
+      screen.getByText('No results match the current filters.'),
+    ).toBeInTheDocument();
   });
 });
