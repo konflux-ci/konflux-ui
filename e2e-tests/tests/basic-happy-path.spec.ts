@@ -178,13 +178,7 @@ describe('Basic Happy Path', () => {
 
     it('Verify Enterprise contract Test pipeline run Details', () => {
       UIhelper.clickRowCellInTable('Pipeline run List', 'Test', `${applicationName}-`);
-      // We encountered problems with EC checks on a local deployment,
-      // so we only check for Succeeded status on the stage job
-      if (Cypress.env('PERIODIC_RUN_STAGE') === 'true') {
-        DetailsTab.waitForPLRAndDownloadAllLogs(false, 'Succeeded');
-      } else {
-        DetailsTab.waitForPLRAndDownloadAllLogs(false, '(Succeeded|Failed)');
-      }
+      DetailsTab.waitForPLRAndDownloadAllLogs(false);
     });
 
     it('Verify vulnerabilities column exists in Pipeline runs table', () => {

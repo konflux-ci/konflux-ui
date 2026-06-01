@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { useParams } from 'react-router-dom';
 import { screen } from '@testing-library/react';
+import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useApplication, useApplications } from '../../../hooks/useApplications';
 import { ComponentGroupVersionKind, PipelineRunGroupVersionKind } from '../../../models';
 import { WatchK8sResource } from '../../../types/k8s';
@@ -36,6 +37,13 @@ jest.mock('../../../hooks/useApplications', () => ({
 jest.mock('../../../utils/rbac', () => ({
   useAccessReviewForModel: jest.fn(() => [true, true]),
 }));
+
+jest.mock('~/feature-flags/hooks', () => ({
+  ...jest.requireActual('~/feature-flags/hooks'),
+  useIsOnFeatureFlag: jest.fn(() => false),
+}));
+
+const mockUseIsOnFeatureFlag = useIsOnFeatureFlag as jest.Mock;
 
 const useParamsMock = useParams as jest.Mock;
 const useApplicationMock = useApplication as jest.Mock;
@@ -108,5 +116,17 @@ describe('ApplicationDetails', () => {
     watchResourceMock.mockReturnValueOnce([mockApplication, true]);
     renderWithQueryClientAndRouter(<ApplicationDetails />);
     expect(screen.queryByTestId('applications-breadcrumb-link')).toBeInTheDocument();
+  });
+
+  it('should show Conforma Results tab when conforma-policy flag is enabled', () => {
+    mockUseIsOnFeatureFlag.mockReturnValue(true);
+    renderWithQueryClientAndRouter(<ApplicationDetails />);
+    expect(screen.getByText('Conforma Results')).toBeInTheDocument();
+  });
+
+  it('should not show Conforma Results tab when conforma-policy flag is disabled', () => {
+    mockUseIsOnFeatureFlag.mockReturnValue(false);
+    renderWithQueryClientAndRouter(<ApplicationDetails />);
+    expect(screen.queryByText('Conforma Results')).not.toBeInTheDocument();
   });
 });

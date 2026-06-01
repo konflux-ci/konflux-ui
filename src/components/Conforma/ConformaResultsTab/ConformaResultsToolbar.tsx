@@ -54,13 +54,7 @@ export const ConformaResultsToolbar: React.FC<ConformaResultsToolbarProps> = ({
     statusFilters.length > 0 ? `Status (${statusFilters.length})` : 'Status';
 
   return (
-    <Toolbar
-      clearAllFilters={() => {
-        onSearchChange('');
-        onStatusFiltersChange([]);
-      }}
-      data-test="conforma-results-toolbar"
-    >
+    <Toolbar data-test="conforma-results-toolbar">
       <ToolbarContent>
         <ToolbarItem>
           <SearchInput
