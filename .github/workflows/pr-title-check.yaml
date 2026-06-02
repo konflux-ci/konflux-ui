@@ -2,11 +2,15 @@ name: PR Title Check
 
 on:
   pull_request_target:
-    types: [opened, edited, synchronize, reopened]
+    types: [opened, edited, reopened]
 
 jobs:
   check-pr-title:
     runs-on: ubuntu-latest
+    if: >-
+      github.event.action == 'opened' ||
+      github.event.action == 'reopened' ||
+      (github.event.action == 'edited' && github.event.changes.title)
     permissions:
       pull-requests: write
     steps:
