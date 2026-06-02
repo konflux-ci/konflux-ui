@@ -55,10 +55,12 @@ describe('SecretTypeSubForm', () => {
     expect(screen.getByText('Image pull sub form')).toBeVisible();
   });
 
-  it('should render correct variant of name field', () => {
+  it('should render correct variant of name field', async () => {
     expect(screen.getByRole('button', { name: 'Select or enter secret name' })).toBeVisible();
     fireEvent.click(screen.getByRole('button', { name: 'Select or enter secret name' }));
-    expect(screen.getByText('snyk-secret')).toBeVisible();
+    await waitFor(() => {
+      expect(screen.getByText('snyk-secret')).toBeVisible();
+    });
   });
 
   it('should render secret name field with required indicator for non-opaque types', () => {
