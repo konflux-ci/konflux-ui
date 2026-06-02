@@ -44,7 +44,7 @@ export const GettingStartedCard: React.FC<React.PropsWithChildren<GettingStarted
 
   return (
     !isDismissed && (
-      <PageSection variant={isLight ? 'light' : 'default'}>
+      <PageSection hasBodyWrapper={false} variant={isLight ? 'light' : 'default'}>
         <Card>
           <Split>
             {imgSrc && (
@@ -60,12 +60,11 @@ export const GettingStartedCard: React.FC<React.PropsWithChildren<GettingStarted
                   actions: (
                     <>
                       <Button
+                        icon={<CloseIcon />}
                         variant="plain"
                         aria-label="Hide card"
                         onClick={() => setStorageKeys({ ...keys, [localStorageKey]: true })}
-                      >
-                        <CloseIcon />
-                      </Button>
+                      />
                     </>
                   ),
                   hasNoOffset: false,

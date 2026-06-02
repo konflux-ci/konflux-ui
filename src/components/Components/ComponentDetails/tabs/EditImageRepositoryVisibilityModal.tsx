@@ -7,13 +7,13 @@ import {
   ButtonVariant,
   Flex,
   Form,
-  ModalVariant,
   Stack,
   StackItem,
   Switch,
-  TextVariants,
-  Text,
+  ContentVariants,
+  Content,
 } from '@patternfly/react-core';
+import { ModalVariant } from '@patternfly/react-core/deprecated';
 import { Formik } from 'formik';
 import { ComponentProps, createModalLauncher } from '~/components/modal/createModalLauncher';
 import { ImageRepositoryKind, ImageRepositoryVisibility } from '~/types';
@@ -59,7 +59,9 @@ export const EditImageRepositoryVisibilityModal: React.FC<
             <Stack hasGutter>
               <StackItem>
                 <Flex alignItems={{ default: 'alignItemsCenter' }}>
-                  <Text component={TextVariants.p}>Should the image produced be private?</Text>
+                  <Content component={ContentVariants.p}>
+                    Should the image produced be private?
+                  </Content>
 
                   <Switch
                     id="visibility-switch"

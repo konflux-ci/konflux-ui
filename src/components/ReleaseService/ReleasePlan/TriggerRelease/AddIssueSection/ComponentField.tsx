@@ -6,9 +6,8 @@ import {
   InputGroup,
   Stack,
   StackItem,
-  Text,
-  TextContent,
-  TextVariants,
+  Content,
+  ContentVariants,
 } from '@patternfly/react-core';
 import { MinusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/minus-circle-icon';
 import { PlusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/plus-circle-icon';
@@ -34,9 +33,9 @@ const ComponentField: React.FC<React.PropsWithChildren<ComponentFieldProps>> = (
       render={(arrayHelpers) => {
         return (
           <FormGroup label="Components and packages" data-test="component-field">
-            <TextContent>
-              <Text component={TextVariants.p}>Which component affects this CVE?</Text>
-            </TextContent>
+            <Content>
+              <Content component={ContentVariants.p}>Which component affects this CVE?</Content>
+            </Content>
             <Stack>
               {Array.isArray(components) &&
                 components.length > 0 &&
@@ -51,13 +50,12 @@ const ComponentField: React.FC<React.PropsWithChildren<ComponentFieldProps>> = (
                         <CVEComponentDropDown name={`${name}[${i}].name`} />
 
                         <Button
+                          icon={<MinusCircleIcon />}
                           variant={ButtonVariant.plain}
                           onClick={() => arrayHelpers.remove(i)}
                           data-test={`remove-component-${i}`}
                           isDisabled={components.length === 1}
-                        >
-                          <MinusCircleIcon />
-                        </Button>
+                        />
                       </InputGroup>
 
                       <FieldArray
@@ -79,12 +77,11 @@ const ComponentField: React.FC<React.PropsWithChildren<ComponentFieldProps>> = (
                                         name={`${name}[${i}].packages[${j}]`}
                                       />
                                       <Button
+                                        icon={<MinusCircleIcon />}
                                         variant={ButtonVariant.plain}
                                         onClick={() => packageArrayHelper.remove(j)}
                                         data-test={`remove-cmp-${i}-pac-${j}`}
-                                      >
-                                        <MinusCircleIcon />
-                                      </Button>
+                                      />
                                     </InputGroup>
                                   </StackItem>
                                 ))}

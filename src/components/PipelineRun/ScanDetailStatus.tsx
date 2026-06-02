@@ -6,11 +6,21 @@ import {
   EqualsIcon,
   UnknownIcon as PFUnknownIcon,
 } from '@patternfly/react-icons/dist/esm/icons';
-import { global_palette_black_400 as blackColor } from '@patternfly/react-tokens/dist/js/global_palette_black_400';
-import { global_palette_blue_300 as blueColor } from '@patternfly/react-tokens/dist/js/global_palette_blue_300';
-import { global_palette_gold_400 as goldColor } from '@patternfly/react-tokens/dist/js/global_palette_gold_400';
-import { global_palette_orange_300 as orangeColor } from '@patternfly/react-tokens/dist/js/global_palette_orange_300';
-import { global_palette_red_200 as redColor } from '@patternfly/react-tokens/dist/js/global_palette_red_200';
+import {
+  t_temp_dev_tbd as blackColor /* CODEMODS: you should update this color token, original v5 token was global_palette_black_400 */,
+} from '@patternfly/react-tokens/dist/js/t_temp_dev_tbd';
+import {
+  t_temp_dev_tbd as blueColor /* CODEMODS: you should update this color token, original v5 token was global_palette_blue_300 */,
+} from '@patternfly/react-tokens/dist/js/t_temp_dev_tbd';
+import {
+  t_temp_dev_tbd as goldColor /* CODEMODS: you should update this color token, original v5 token was global_palette_gold_400 */,
+} from '@patternfly/react-tokens/dist/js/t_temp_dev_tbd';
+import {
+  t_temp_dev_tbd as orangeColor /* CODEMODS: you should update this color token, original v5 token was global_palette_orange_300 */,
+} from '@patternfly/react-tokens/dist/js/t_temp_dev_tbd';
+import {
+  t_temp_dev_tbd as redColor /* CODEMODS: you should update this color token, original v5 token was global_palette_red_200 */,
+} from '@patternfly/react-tokens/dist/js/t_temp_dev_tbd';
 import { ScanResults } from '../../utils/scan/scan-utils';
 
 import './ScanDetailStatus.scss';

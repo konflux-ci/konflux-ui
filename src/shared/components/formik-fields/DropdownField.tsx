@@ -78,7 +78,7 @@ const DropdownField: React.FC<React.PropsWithChildren<DropdownFieldProps>> = ({
     <FormGroup
       fieldId={fieldId}
       label={label}
-      labelIcon={labelIcon}
+      labelHelp={labelIcon}
       isRequired={required}
       className={className}
     >

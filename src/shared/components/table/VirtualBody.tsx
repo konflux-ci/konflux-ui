@@ -51,9 +51,11 @@ const RowMemo = React.memo<
     return (
       <>
         <TableData data-test="virtual-body-expand-row">
-          <Button variant="plain" onClick={() => onToggle?.(index)}>
-            {isExpanded ? <AngleDownIcon /> : <AngleRightIcon />}
-          </Button>
+          <Button
+            icon={isExpanded ? <AngleDownIcon /> : <AngleRightIcon />}
+            variant="plain"
+            onClick={() => onToggle?.(index)}
+          />
         </TableData>
         <Row {...props} index={index} />
       </>

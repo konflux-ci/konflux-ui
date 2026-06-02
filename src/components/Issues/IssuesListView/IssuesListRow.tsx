@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { Button, Flex, FlexItem, ModalVariant, capitalize } from '@patternfly/react-core';
+import { Button, Flex, FlexItem, capitalize } from '@patternfly/react-core';
+import { ModalVariant } from '@patternfly/react-core/deprecated';
 import { createModalLauncher } from '~/components/modal/createModalLauncher';
 import { useModalLauncher } from '~/components/modal/ModalProvider';
 import { Issue, IssueState } from '~/kite/issue-type';
@@ -41,7 +42,7 @@ const IssuesListRow: React.FC<RowFunctionArgs<Issue>> = ({ obj: issue }) => {
         <Flex direction={{ default: 'row' }}>
           <FlexItem
             data-test="issues-list-item-severity"
-            style={{ marginRight: 'var(--pf-v5-global--spacer--sm)' }}
+            style={{ marginRight: 'var(--pf-t--global--spacer--sm)' }}
           >
             {severityIcon(issue.severity)}
           </FlexItem>

@@ -156,6 +156,7 @@ const SecretSection: React.FC<SecretSectionProps> = ({ currentComponent }) => {
                     <IfFeature flag="edit-secret-page">
                       <Tooltip content="Edit">
                         <Button
+                          icon={<PencilAltIcon />}
                           type={ButtonType.button}
                           variant={ButtonVariant.plain}
                           data-test={editTestId}
@@ -163,9 +164,7 @@ const SecretSection: React.FC<SecretSectionProps> = ({ currentComponent }) => {
                           isDisabled={!canCreateSecret}
                           onClick={() => openEditSecretModal(rowIndex)}
                           style={{ paddingRight: 0 }}
-                        >
-                          <PencilAltIcon />
-                        </Button>
+                        />
                       </Tooltip>
                     </IfFeature>
                   </FlexItem>

@@ -463,13 +463,13 @@ const PipelineRunDetailsTab: React.FC = () => {
 
           {patchedResultsForProxy?.length ? (
             <>
-              <Divider style={{ padding: 'var(--pf-v5-global--spacer--lg) 0' }} />
+              <Divider style={{ padding: 'var(--pf-t--global--spacer--lg)' }} />
               <RunResultsList results={patchedResultsForProxy} status={pipelineStatus} />
             </>
           ) : null}
 
           {patchedSpecParamsForProxy?.length && (
-            <div style={{ marginTop: 'var(--pf-v5-global--spacer--lg)' }}>
+            <div style={{ marginTop: 'var(--pf-t--global--spacer--lg)' }}>
               <RunParamsList params={patchedSpecParamsForProxy} />
             </div>
           )}

@@ -10,9 +10,8 @@ import {
   Flex,
   FlexItem,
   pluralize,
-  Text,
-  TextContent,
-  TextVariants,
+  Content,
+  ContentVariants,
   Title,
 } from '@patternfly/react-core';
 import { capitalize } from 'lodash-es';
@@ -253,12 +252,12 @@ const ComponentListView: React.FC<React.PropsWithChildren<ComponentListViewProps
       <Title headingLevel="h3" className="pf-v5-u-mt-lg pf-v5-u-mb-sm">
         Components
       </Title>
-      <TextContent>
-        <Text component={TextVariants.p}>
+      <Content>
+        <Content component={ContentVariants.p}>
           A component is an image built from source code in a repository. One or more components
           that run together form an application.
-        </Text>
-      </TextContent>
+        </Content>
+      </Content>
       {pipelineRunsLoaded && pipelineRunsError ? (
         <Alert
           className="pf-v5-u-mt-md"

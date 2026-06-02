@@ -1,5 +1,6 @@
 import React from 'react';
-import { Modal, ModalVariant, Stack, StackItem, Text } from '@patternfly/react-core';
+import { Stack, StackItem, Content } from '@patternfly/react-core';
+import { Modal, ModalVariant } from '@patternfly/react-core/deprecated';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import { createRawModalLauncher, RawComponentProps } from '~/components/modal/createModalLauncher';
 import ExternalLink from '~/shared/components/links/ExternalLink';
@@ -28,7 +29,9 @@ const PipelineRunSBOMsModal: React.FC<PipelineRunSBOMsModalProps> = ({ modalProp
                 <Tr key={`${sbom.url}-${i}`}>
                   <Td>
                     {sbom.isIndex ? (
-                      <Text style={{ fontWeight: 'bold' }}>Index</Text>
+                      <Content component="p" style={{ fontWeight: 'bold' }}>
+                        Index
+                      </Content>
                     ) : (
                       sbom.platform || '-'
                     )}

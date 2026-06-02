@@ -64,7 +64,7 @@ const TaskRunDetails: React.FC<React.PropsWithChildren<Props>> = ({ taskRun, sta
 
       {specParams?.length && (
         <>
-          <Divider style={{ padding: 'var(--pf-v5-global--spacer--lg) 0' }} />
+          <Divider style={{ padding: 'var(--pf-t--global--spacer--lg)' }} />
           <RunParamsList params={specParams} compressed />
         </>
       )}

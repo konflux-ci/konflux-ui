@@ -45,7 +45,7 @@ const KeyValueField: React.FC<React.PropsWithChildren<KeyValueFieldProps>> = ({
   }, [values.formReloadCount]);
 
   return (
-    <FormGroup fieldId={fieldId} label={label} labelIcon={labelIcon} isRequired={required}>
+    <FormGroup fieldId={fieldId} label={label} labelHelp={labelIcon} isRequired={required}>
       {description && <div className="pf-v5-c-form__helper-text">{description}</div>}
       <BasicNameValueEditor
         nameValuePairs={keyValue}

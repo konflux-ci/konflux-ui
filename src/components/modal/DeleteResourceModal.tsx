@@ -7,14 +7,13 @@ import {
   ButtonVariant,
   Form,
   FormHelperText,
-  ModalVariant,
   Stack,
   StackItem,
-  Text,
-  TextContent,
-  TextVariants,
+  Content,
+  ContentVariants,
   ValidatedOptions,
 } from '@patternfly/react-core';
+import { ModalVariant } from '@patternfly/react-core/deprecated';
 import { Formik } from 'formik';
 import { InputField } from 'formik-pf';
 import { useNamespace } from '~/shared/providers/Namespace';
@@ -91,8 +90,8 @@ export const DeleteResourceModal: React.FC<React.PropsWithChildren<DeleteResourc
           <Form>
             <Stack hasGutter>
               <StackItem>
-                <TextContent>
-                  <Text component={TextVariants.p}>
+                <Content>
+                  <Content component={ContentVariants.p}>
                     {description ? (
                       description
                     ) : (
@@ -100,8 +99,8 @@ export const DeleteResourceModal: React.FC<React.PropsWithChildren<DeleteResourc
                         The {obj.kind} <strong>{resourceName}</strong> will be deleted.
                       </>
                     )}
-                  </Text>
-                </TextContent>
+                  </Content>
+                </Content>
               </StackItem>
               {!isEntryNotRequired && (
                 <StackItem>

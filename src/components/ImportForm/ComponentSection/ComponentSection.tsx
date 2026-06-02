@@ -2,9 +2,8 @@ import {
   FormSection,
   HelperText,
   HelperTextItem,
-  Text,
-  TextContent,
-  TextVariants,
+  Content,
+  ContentVariants,
 } from '@patternfly/react-core';
 import { useFormikContext } from 'formik';
 import { InputField } from 'formik-pf';
@@ -20,12 +19,12 @@ export const ComponentSection = () => {
   const namespace = useNamespace();
   return (
     <FormSection>
-      <TextContent>
-        <Text component={TextVariants.h3}>Component details</Text>
-        <Text component={TextVariants.p}>
+      <Content>
+        <Content component={ContentVariants.h3}>Component details</Content>
+        <Content component={ContentVariants.p}>
           A component is an image built from source code repository.
-        </Text>
-      </TextContent>
+        </Content>
+      </Content>
       <SourceSection />
       <InputField
         name="source.git.dockerfileUrl"

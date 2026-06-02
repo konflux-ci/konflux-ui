@@ -4,16 +4,17 @@ import {
   AlertVariant,
   Button,
   ButtonVariant,
+  pluralize,
+  Content,
+  ContentVariants,
+  Truncate,
+} from '@patternfly/react-core';
+import {
   Modal,
   ModalBoxBody,
   ModalBoxFooter,
   ModalBoxHeader,
-  pluralize,
-  Text,
-  TextContent,
-  TextVariants,
-  Truncate,
-} from '@patternfly/react-core';
+} from '@patternfly/react-core/deprecated';
 import { Tbody, Thead, Th, Tr, Td, Table /* data-codemods */ } from '@patternfly/react-table';
 import SendIconUrl from '../../assets/send.svg';
 import SuccessIconUrl from '../../assets/success.svg';
@@ -300,29 +301,29 @@ const CustomizePipeline: React.FC<React.PropsWithChildren<Props>> = ({
       <ModalBoxHeader />
       <ModalBoxBody>
         <>
-          <TextContent
+          <Content
             className="pf-v5-u-pt-lg"
             style={{ visibility: allLoading ? 'hidden' : undefined, textAlign: 'center' }}
           >
-            <Text component={TextVariants.p}>
+            <Content component={ContentVariants.p}>
               {completed ? (
                 <SuccessIconUrl style={{ width: 100 }} />
               ) : (
                 <SendIconUrl style={{ width: 100 }} />
               )}
-            </Text>
-            <Text component={TextVariants.h2}>{'Manage build pipeline'}</Text>
-            <Text component={TextVariants.p}>
+            </Content>
+            <Content component={ContentVariants.h2}>{'Manage build pipeline'}</Content>
+            <Content component={ContentVariants.p}>
               Konflux build pipelines are Pipelines as Code that are committed to your
               component&apos;s repository. To automatically build on future changes, merge the
               initial pull request sent to your connected repository. You must provide permission to
               your repository in the Konflux Git application. If you&apos;re using GitLab or
               Forgejo, you must grant permission by uploading a repository access token.
-            </Text>
-            <Text component={TextVariants.p}>
+            </Content>
+            <Content component={ContentVariants.p}>
               {applicationUrl ? (
                 <ExternalLink
-                  style={{ paddingLeft: 'var(--pf-v5-global--spacer--2xl)' }}
+                  style={{ paddingLeft: 'var(--pf-t--global--spacer--2xl)' }}
                   href={applicationUrl}
                   analytics={{
                     link_name: 'install-github-app',
@@ -334,7 +335,7 @@ const CustomizePipeline: React.FC<React.PropsWithChildren<Props>> = ({
                 </ExternalLink>
               ) : null}
               <ExternalLink
-                style={{ paddingLeft: 'var(--pf-v5-global--spacer--2xl)' }}
+                style={{ paddingLeft: 'var(--pf-t--global--spacer--2xl)' }}
                 href={LEARN_MORE_GITLAB_OR_FORGEJO_URL}
                 analytics={{
                   link_name: 'learn-more-gitlab-or-forgejo-token',
@@ -344,8 +345,8 @@ const CustomizePipeline: React.FC<React.PropsWithChildren<Props>> = ({
               >
                 Learn more about GitLab or Forgejo repository access token
               </ExternalLink>
-            </Text>
-          </TextContent>
+            </Content>
+          </Content>
           <div className="pf-v5-u-mt-lg" />
           {alert}
           <Table>

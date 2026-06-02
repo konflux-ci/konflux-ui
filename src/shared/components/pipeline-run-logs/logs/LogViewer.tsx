@@ -203,7 +203,7 @@ const LogViewer: React.FC<Props> = ({
                     </ToolbarItem>
                   </ToolbarGroup>
                 )}
-                <ToolbarGroup align={{ default: 'alignRight' }}>
+                <ToolbarGroup align={{ default: 'alignEnd' }}>
                   <ToolbarItem>
                     <Checkbox
                       id={themeCheckboxId}
@@ -238,7 +238,7 @@ const LogViewer: React.FC<Props> = ({
                     </>
                   )}
                   {fullscreenToggle && isFullscreenSupported && (
-                    <ToolbarItem spacer={{ default: 'spacerMd' }}>
+                    <ToolbarItem gap={{ default: 'gapMd' }}>
                       <Button variant="link" onClick={fullscreenToggle} isInline>
                         {isFullscreen ? (
                           <>
@@ -270,12 +270,11 @@ const LogViewer: React.FC<Props> = ({
                       hasAutoWidth
                     >
                       <Button
+                        icon={<OutlinedKeyboardIcon />}
                         variant="plain"
                         aria-label="Show keyboard shortcuts"
                         onClick={() => setShowShortcutHint((prev) => !prev)}
-                      >
-                        <OutlinedKeyboardIcon />
-                      </Button>
+                      />
                     </Popover>
                   </ToolbarItem>
                 </ToolbarGroup>

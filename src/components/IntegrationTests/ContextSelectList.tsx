@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
 import {
+  Label,
+  LabelGroup,
   Select,
   SelectOption,
   SelectList,
   MenuToggle,
   MenuToggleElement,
-  ChipGroup,
-  Chip,
   TextInputGroup,
   TextInputGroupMain,
   TextInputGroupUtilities,
   Button,
 } from '@patternfly/react-core';
+
 import { TimesIcon } from '@patternfly/react-icons/dist/esm/icons/times-icon';
 import { ContextOption } from './utils/creation-utils';
 
@@ -162,25 +163,29 @@ export const ContextSelectList: React.FC<ContextSelectListProps> = ({
           isExpanded={isOpen}
           aria-controls="select-multi-typeahead-listbox"
         >
-          <ChipGroup>
+          <LabelGroup>
             {allContexts
               .filter((ctx) => ctx.selected)
               .map((ctx) => (
-                <Chip
+                <Label
+                  variant="outline"
                   key={ctx.name}
-                  onClick={() => handleSelect(ctx.name)}
+                  onClose={() => handleSelect(ctx.name)}
                   data-test={`context-chip-${ctx.name}`}
                 >
                   {ctx.name}
-                </Chip>
+                </Label>
               ))}
-          </ChipGroup>
+          </LabelGroup>
         </TextInputGroupMain>
         {filteredContexts.some((ctx) => ctx.selected) && (
           <TextInputGroupUtilities>
-            <Button variant="plain" onClick={onRemoveAll} data-test={'clear-button'}>
-              <TimesIcon aria-hidden />
-            </Button>
+            <Button
+              icon={<TimesIcon aria-hidden />}
+              variant="plain"
+              onClick={onRemoveAll}
+              data-test={'clear-button'}
+            />
           </TextInputGroupUtilities>
         )}
       </TextInputGroup>

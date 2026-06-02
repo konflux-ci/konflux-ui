@@ -40,7 +40,7 @@ export const AppRoot: React.FC = () => {
       <KonfluxBanner />
       <Page
         sidebar={<AppSideBar isOpen={isSideBarOpen} />}
-        header={
+        masthead={
           <AppHeader
             toggleDrawer={toggleDrawer}
             isSideBarOpen={isSideBarOpen}
@@ -52,7 +52,7 @@ export const AppRoot: React.FC = () => {
         <ActivePageAlert />
         <SidePanelHost>
           {!showSwitcher ? (
-            <PageSection variant="light" style={{ paddingBlock: 0 }} hasShadowBottom>
+            <PageSection hasBodyWrapper={false} style={{ paddingBlock: 0 }} hasShadowBottom>
               <NamespaceSwitcher />
             </PageSection>
           ) : null}

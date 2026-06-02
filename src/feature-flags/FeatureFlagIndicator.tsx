@@ -3,8 +3,8 @@ import {
   Button,
   Label,
   Popover,
-  Text,
-  TextVariants,
+  Content,
+  ContentVariants,
   Flex,
   FlexItem,
   List,
@@ -20,7 +20,8 @@ type FeatureFlagIndicatorProps = {
   'data-test'?: string;
 };
 
-const warningColor = 'var(--pf-v5-global--warning-color--100)';
+const warningColor =
+  'var(--pf-t--temp--dev--tbd)'; /* CODEMODS: original v5 color was --pf-v5-global--warning-color--100 */
 
 export const FeatureFlagIndicator: React.FC<FeatureFlagIndicatorProps> = ({
   flags,
@@ -42,7 +43,7 @@ export const FeatureFlagIndicator: React.FC<FeatureFlagIndicatorProps> = ({
         <FlaskIcon style={{ color: warningColor }} />
       </FlexItem>
       <FlexItem>
-        <Text component={TextVariants.h6}>Experimental feature</Text>
+        <Content component={ContentVariants.h6}>Experimental feature</Content>
       </FlexItem>
     </Flex>
   );
@@ -51,7 +52,7 @@ export const FeatureFlagIndicator: React.FC<FeatureFlagIndicatorProps> = ({
     <List isPlain>
       {metas.map((m) => (
         <ListItem key={m.key}>
-          <Text component={TextVariants.small}>{m.description}</Text>
+          <Content component={ContentVariants.small}>{m.description}</Content>
         </ListItem>
       ))}
     </List>
@@ -59,35 +60,28 @@ export const FeatureFlagIndicator: React.FC<FeatureFlagIndicatorProps> = ({
 
   const trigger = fullLabel ? (
     <Button
+      icon={
+        <Label icon={<FlaskIcon style={{ color: warningColor }} />} color={labelColor}>
+          {statusText}
+        </Label>
+      }
       isInline
       variant="plain"
       aria-label="Feature flag information"
       data-test={dataTest ?? `ff-indicator-${flags.join('-')}`}
-    >
-      <Label
-        icon={<FlaskIcon style={{ color: warningColor }} />}
-        color={labelColor}
-      >
-        {statusText}
-      </Label>
-    </Button>
+    />
   ) : (
     <Button
+      icon={<FlaskIcon style={{ color: warningColor }} />}
       isInline
       variant="plain"
       aria-label="Feature flag information"
       data-test={dataTest ?? `ff-indicator-${flags.join('-')}`}
-    >
-      <FlaskIcon style={{ color: warningColor }} />
-    </Button>
+    />
   );
 
   return (
-    <Popover
-      position="right"
-      headerContent={header}
-      bodyContent={body}
-    >
+    <Popover position="right" headerContent={header} bodyContent={body}>
       {trigger}
     </Popover>
   );

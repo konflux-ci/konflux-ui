@@ -55,8 +55,9 @@ export const ThemeDropdown: React.FC<ThemeDropdownProps> = ({ className, showTex
   const toggle = (toggleRef: React.Ref<MenuToggleElement>) => (
     <MenuToggle
       style={{
-        border: '1px solid var(--pf-v5-global--Color--200)',
-        borderRadius: 'var(--pf-v5-global--BorderRadius--lg)',
+        border:
+          'var(--pf-t--temp--dev--tbd)' /* CODEMODS: original v5 color was --pf-v5-global--Color--200 */,
+        borderRadius: 'var(--pf-t--global--border--radius--large)',
       }}
       variant="plainText"
       ref={toggleRef}

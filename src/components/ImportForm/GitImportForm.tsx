@@ -105,7 +105,7 @@ export const GitImportForm: React.FC<{ applicationName: string }> = ({ applicati
       {(formikProps) => {
         return (
           <Form onSubmit={formikProps.handleSubmit} onReset={formikProps.handleReset}>
-            <PageSection className="git-import-form">
+            <PageSection hasBodyWrapper={false} className="git-import-form">
               <ApplicationSection />
               {formikProps.values.showComponent ? (
                 <>

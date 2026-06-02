@@ -2,13 +2,11 @@ import * as React from 'react';
 import {
   Bullseye,
   EmptyStateBody,
-  PageSectionVariants,
   PageSection,
   Spinner,
   Title,
-  TextContent,
-  Text,
-  TextVariants,
+  Content,
+  ContentVariants,
   Flex,
   FlexItem,
   Switch,
@@ -144,7 +142,7 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
   const isFiltered = nameFilter || releasableFilter || commitMessageFilter || showMergedOnly;
 
   return (
-    <PageSection padding={{ default: 'noPadding' }} variant={PageSectionVariants.light} isFilled>
+    <PageSection hasBodyWrapper={false} padding={{ default: 'noPadding' }} isFilled>
       <Flex
         justifyContent={{ default: 'justifyContentSpaceBetween' }}
         alignItems={{ default: 'alignItemsCenter' }}
@@ -156,12 +154,12 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
         </FlexItem>
       </Flex>
 
-      <TextContent>
-        <Text component={TextVariants.p}>
+      <Content>
+        <Content component={ContentVariants.p}>
           A snapshot is a point-in-time, immutable record of an application&apos;s container images.{' '}
           <ExternalLink href={LEARN_MORE_SNAPSHOTS}>Learn more</ExternalLink>
-        </Text>
-      </TextContent>
+        </Content>
+      </Content>
       {(!snapshots || snapshots.length === 0) && !isFiltered ? (
         <AppEmptyState
           emptyStateImg={emptySnapshotImgUrl}

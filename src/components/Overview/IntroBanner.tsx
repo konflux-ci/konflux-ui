@@ -8,7 +8,7 @@ import {
   FlexItem,
   Bullseye,
   Title,
-  Text,
+  Content,
   Button,
 } from '@patternfly/react-core';
 import OverviewBannerSvg from '../../assets/overview/overview-banner.svg';
@@ -37,10 +37,10 @@ const IntroBanner: React.FC = () => {
             </Title>
           </CardTitle>
           <CardBody>
-            <Text>
+            <Content component="p">
               Konflux makes it easy to securely build, test and release your software projects to a
               wide variety of targets.
-            </Text>
+            </Content>
           </CardBody>
           <CardBody>
             <Button

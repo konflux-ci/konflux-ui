@@ -1,4 +1,4 @@
-import { ModalVariant } from '@patternfly/react-core';
+import { ModalVariant } from '@patternfly/react-core/deprecated';
 import { SecretFormValues, BuildTimeSecret, CurrentComponentRef, ImportSecret } from '../../types';
 import { createRawModalLauncher } from '../modal/createModalLauncher';
 import SecretModal from './SecretModal';

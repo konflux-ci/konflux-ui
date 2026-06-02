@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Bullseye, Spinner, Text, TextVariants } from '@patternfly/react-core';
+import { Bullseye, Spinner, Content, ContentVariants } from '@patternfly/react-core';
 import { ReleaseModel } from '~/models';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { TrackEvents, useTrackEvent } from '~/utils/analytics';
@@ -67,9 +67,9 @@ const ReleaseDetailsView: React.FC = () => {
         },
       ]}
       title={
-        <Text component={TextVariants.h2}>
+        <Content component={ContentVariants.h2}>
           <b data-test="release-name">{release.metadata.name}</b>
-        </Text>
+        </Content>
       }
       baseURL={APPLICATION_RELEASE_DETAILS_PATH.createPath({
         workspaceName: namespace,

@@ -1,11 +1,5 @@
 import * as React from 'react';
-import {
-  EmptyState,
-  EmptyStateIcon,
-  EmptyStateProps,
-  EmptyStateHeader,
-  EmptyStateFooter,
-} from '@patternfly/react-core';
+import { EmptyState, EmptyStateProps, EmptyStateFooter } from '@patternfly/react-core';
 import { css } from '@patternfly/react-styles';
 
 import './EmptyState.scss';
@@ -24,30 +18,12 @@ const AppEmptyState: React.FC<React.PropsWithChildren<AppEmptyStateProps>> = ({
   children,
   ...props
 }) => (
-  <EmptyState className={css('app-empty-state m-is-top-level', className)} {...props}>
-    <EmptyStateHeader
-      titleText={<>{title}</>}
-      icon={
-        typeof emptyStateImg === 'string' ? (
-          <EmptyStateIcon
-            icon={() => (
-              <img
-                className={css('app-empty-state__icon', isXl && 'm-is-xl')}
-                src={emptyStateImg}
-                alt=""
-              />
-            )}
-          />
-        ) : (
-          <EmptyStateIcon
-            className={css('app-empty-state__icon', isXl && 'm-is-xl')}
-            icon={emptyStateImg}
-            alt=""
-          />
-        )
-      }
-      headingLevel="h3"
-    />
+  <EmptyState
+    headingLevel="h3"
+    titleText={<>{title}</>}
+    className={css('app-empty-state m-is-top-level', className)}
+    {...props}
+  >
     <EmptyStateFooter>{children}</EmptyStateFooter>
   </EmptyState>
 );

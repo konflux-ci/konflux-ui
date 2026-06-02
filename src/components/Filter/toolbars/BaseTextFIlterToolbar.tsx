@@ -34,7 +34,7 @@ export const BaseTextFilterToolbar: React.FC<BaseTextFilterToolbarProps> = ({
   }, 600);
 
   return (
-    <Toolbar data-test={dataTest} usePageInsets clearAllFilters={onClearFilters}>
+    <Toolbar data-test={dataTest} clearAllFilters={onClearFilters}>
       <ToolbarContent style={{ paddingLeft: noLeftPadding ? '0' : undefined }}>
         {showSearchInput && (
           <ToolbarItem className="pf-v5-u-ml-0">

@@ -1,13 +1,6 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
-import {
-  Card,
-  HelperText,
-  PageSection,
-  PageSectionVariants,
-  SplitItem,
-  Title,
-} from '@patternfly/react-core';
+import { Card, HelperText, PageSection, SplitItem, Title } from '@patternfly/react-core';
 import { useLocalStorage } from '~/shared/hooks/useLocalStorage';
 import { CloseButton } from '../../shared';
 import ExternalLink from '../../shared/components/links/ExternalLink';
@@ -58,7 +51,7 @@ const WhatsNextSection: React.FunctionComponent<React.PropsWithChildren<WhatsNex
 
   if (localStorageItem?.length === whatsNextItems.length) return null;
   return (
-    <PageSection padding={{ default: 'noPadding' }} variant={PageSectionVariants.light} isFilled>
+    <PageSection hasBodyWrapper={false} padding={{ default: 'noPadding' }} isFilled>
       <Title size="lg" headingLevel="h3" className="pf-v5-u-mt-lg pf-v5-u-mb-sm">
         What&apos;s next?
       </Title>
@@ -67,7 +60,7 @@ const WhatsNextSection: React.FunctionComponent<React.PropsWithChildren<WhatsNex
 
         return (
           !localStorageItem?.includes(item?.id) && (
-            <Card className="whats-next-card" key={item.id} isFlat>
+            <Card className="whats-next-card" key={item.id}>
               <SplitItem>
                 <ItemIcon aria-label={item.title} role="img" className="whats-next-card__icon" />
               </SplitItem>

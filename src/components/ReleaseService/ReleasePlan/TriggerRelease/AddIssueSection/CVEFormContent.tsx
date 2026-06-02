@@ -7,9 +7,8 @@ import {
   InputGroup,
   Stack,
   StackItem,
-  Text,
-  TextContent,
-  TextVariants,
+  Content,
+  ContentVariants,
 } from '@patternfly/react-core';
 import { MinusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/minus-circle-icon';
 import { PlusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/plus-circle-icon';
@@ -32,12 +31,12 @@ const CVEFormContent: React.FC<CVEFormContentProps> = ({ modalToggle }) => {
     <Form>
       <Stack hasGutter>
         <StackItem>
-          <TextContent>
-            <Text component={TextVariants.p}>
+          <Content>
+            <Content component={ContentVariants.p}>
               Provide information about a Common Vulnerabilities and Exposures (CVE) entry that has
               already been addressed.
-            </Text>
-          </TextContent>
+            </Content>
+          </Content>
         </StackItem>
         <StackItem>
           <InputField data-test="cve-issue-id" label="CVE key" name="key" required />
@@ -64,12 +63,11 @@ const CVEFormContent: React.FC<CVEFormContentProps> = ({ modalToggle }) => {
                             name={`packages[${j}]`}
                           />
                           <Button
+                            icon={<MinusCircleIcon />}
                             variant={ButtonVariant.plain}
                             onClick={() => packageArrayHelper.remove(j)}
                             data-test={`pac-${j}`}
-                          >
-                            <MinusCircleIcon />
-                          </Button>
+                          />
                         </InputGroup>
                       </StackItem>
                     ))}

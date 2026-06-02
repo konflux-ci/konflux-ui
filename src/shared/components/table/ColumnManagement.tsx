@@ -1,17 +1,15 @@
 import React from 'react';
 import {
-  Modal,
-  ModalVariant,
   Button,
   Form,
   FormGroup,
   Checkbox,
-  Text,
-  TextContent,
-  TextVariants,
+  Content,
+  ContentVariants,
   Flex,
   FlexItem,
 } from '@patternfly/react-core';
+import { Modal, ModalVariant } from '@patternfly/react-core/deprecated';
 
 export interface ColumnDefinition<T extends string> {
   key: T;
@@ -93,9 +91,9 @@ function ColumnManagement<T extends string>({
         </Button>,
       ]}
     >
-      <TextContent>
-        <Text component={TextVariants.p}>{description}</Text>
-      </TextContent>
+      <Content>
+        <Content component={ContentVariants.p}>{description}</Content>
+      </Content>
       <Form>
         <FormGroup>
           <Flex direction={{ default: 'column' }}>

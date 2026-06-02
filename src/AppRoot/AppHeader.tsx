@@ -2,13 +2,14 @@ import * as React from 'react';
 import {
   Brand,
   Masthead,
-  MastheadBrand,
+  MastheadLogo,
   MastheadContent,
   MastheadMain,
   MastheadToggle,
+  MastheadBrand,
   PageToggleButton,
 } from '@patternfly/react-core';
-import { BarsIcon } from '@patternfly/react-icons/dist/esm/icons/bars-icon';
+
 import konfluxLogo from '../assets/iconsUrl/konflux.svg';
 import { Header } from '../components/Header/Header';
 
@@ -26,20 +27,21 @@ const AppHeaderComponent: React.FC<AppHeaderPros> = ({
 }) => {
   return (
     <Masthead>
-      <MastheadToggle>
-        <PageToggleButton
-          variant="plain"
-          aria-label="Sidebar toggle"
-          data-test="sidebar-toggle"
-          onSidebarToggle={onSideBarOpen}
-          isSidebarOpen={isSideBarOpen}
-        >
-          <BarsIcon />
-        </PageToggleButton>
-      </MastheadToggle>
       <MastheadMain>
-        <MastheadBrand>
-          <Brand src={konfluxLogo} alt="konflux" heights={{ default: '36px' }} />
+        <MastheadToggle>
+          <PageToggleButton
+            isHamburgerButton
+            variant="plain"
+            aria-label="Sidebar toggle"
+            data-test="sidebar-toggle"
+            onSidebarToggle={onSideBarOpen}
+            isSidebarOpen={isSideBarOpen}
+          ></PageToggleButton>
+        </MastheadToggle>
+        <MastheadBrand data-codemods>
+          <MastheadLogo data-codemods>
+            <Brand src={konfluxLogo} alt="konflux" heights={{ default: '36px' }} />
+          </MastheadLogo>
         </MastheadBrand>
       </MastheadMain>
       <MastheadContent>

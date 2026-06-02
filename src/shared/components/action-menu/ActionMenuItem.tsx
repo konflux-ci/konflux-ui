@@ -80,7 +80,7 @@ const ActionItem: React.FC<
           variant="plain"
           style={{
             color: isDisabled
-              ? 'var(--pf-v5-global--disabled-color--100)'
+              ? 'var(--pf-t--temp--dev--tbd)' /* CODEMODS: original v5 color was --pf-v5-global--disabled-color--100 */
               : 'var(--pf-v5-c-content--Color)',
           }}
           isAriaDisabled={isDisabled}

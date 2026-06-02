@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Tab, Tabs, TabTitleText, Text, Title } from '@patternfly/react-core';
+import { Tab, Tabs, TabTitleText, Content, Title } from '@patternfly/react-core';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { APPLICATION_ACTIVITY_PATH } from '../../routes/paths';
 import { RouterParams } from '../../routes/utils';
@@ -42,13 +42,13 @@ export const ActivityTab: React.FC = () => {
       <Title size="xl" headingLevel="h3" className="pf-v5-c-title pf-v5-u-mt-lg pf-v5-u-mb-sm">
         Activity by <FeatureFlagIndicator flags={['pipelineruns-kubearchive']} />
       </Title>
-      <Text className="pf-v5-u-mb-sm">
+      <Content component="p" className="pf-v5-u-mb-sm">
         Monitor your commits and their pipeline progression across all components.
-      </Text>
+      </Content>
       <Tabs
         style={{
           width: 'fit-content',
-          marginBottom: 'var(--pf-v5-global--spacer--md)',
+          marginBottom: 'var(--pf-t--global--spacer--md)',
         }}
         activeKey={currentTab}
         onSelect={(_, k: string) => {

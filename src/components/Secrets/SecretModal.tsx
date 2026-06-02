@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { Button, Modal, ModalBoxBody, ModalVariant } from '@patternfly/react-core';
+import { Button } from '@patternfly/react-core';
+import { Modal, ModalBoxBody, ModalVariant } from '@patternfly/react-core/deprecated';
 import { Formik } from 'formik';
 import { isEmpty, merge } from 'lodash-es';
 import {

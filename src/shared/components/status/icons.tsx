@@ -1,6 +1,8 @@
 import * as React from 'react';
 import { PencilAltIcon } from '@patternfly/react-icons/dist/esm/icons/pencil-alt-icon';
-import { global_palette_black_600 as grayColor } from '@patternfly/react-tokens/dist/js/global_palette_black_600';
+import {
+  t_temp_dev_tbd as grayColor /* CODEMODS: you should update this color token, original v5 token was global_palette_black_600 */,
+} from '@patternfly/react-tokens/dist/js/t_temp_dev_tbd';
 
 export type ColoredIconProps = {
   className?: string;

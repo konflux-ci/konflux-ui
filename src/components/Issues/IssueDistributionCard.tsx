@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChartPie } from '@patternfly/react-charts';
+import { ChartPie } from '@patternfly/react-charts/victory';
 import {
   Bullseye,
   Button,
@@ -9,15 +9,27 @@ import {
   Flex,
   FlexItem,
   Skeleton,
-  Text,
+  Content,
   Title,
 } from '@patternfly/react-core';
-import { global_palette_gold_200 as gold200 } from '@patternfly/react-tokens/dist/js/global_palette_gold_200';
-import { global_palette_gold_300 as gold300 } from '@patternfly/react-tokens/dist/js/global_palette_gold_300';
-import { global_palette_gold_400 as gold400 } from '@patternfly/react-tokens/dist/js/global_palette_gold_400';
-import { global_palette_gold_500 as gold500 } from '@patternfly/react-tokens/dist/js/global_palette_gold_500';
-import { global_palette_gold_600 as gold600 } from '@patternfly/react-tokens/dist/js/global_palette_gold_600';
-import { global_palette_gold_700 as gold700 } from '@patternfly/react-tokens/dist/js/global_palette_gold_700';
+import {
+  t_temp_dev_tbd as gold200 /* CODEMODS: you should update this color token, original v5 token was global_palette_gold_200 */,
+} from '@patternfly/react-tokens/dist/js/t_temp_dev_tbd';
+import {
+  t_temp_dev_tbd as gold300 /* CODEMODS: you should update this color token, original v5 token was global_palette_gold_300 */,
+} from '@patternfly/react-tokens/dist/js/t_temp_dev_tbd';
+import {
+  t_temp_dev_tbd as gold400 /* CODEMODS: you should update this color token, original v5 token was global_palette_gold_400 */,
+} from '@patternfly/react-tokens/dist/js/t_temp_dev_tbd';
+import {
+  t_temp_dev_tbd as gold500 /* CODEMODS: you should update this color token, original v5 token was global_palette_gold_500 */,
+} from '@patternfly/react-tokens/dist/js/t_temp_dev_tbd';
+import {
+  t_temp_dev_tbd as gold600 /* CODEMODS: you should update this color token, original v5 token was global_palette_gold_600 */,
+} from '@patternfly/react-tokens/dist/js/t_temp_dev_tbd';
+import {
+  t_temp_dev_tbd as gold700 /* CODEMODS: you should update this color token, original v5 token was global_palette_gold_700 */,
+} from '@patternfly/react-tokens/dist/js/t_temp_dev_tbd';
 import { capitalize } from 'lodash-es';
 import { IssueSeverity } from '~/kite/issue-type';
 import { useIssueCountsBySeverity, useIssueCountsByType } from '~/kite/kite-hooks';
@@ -90,9 +102,9 @@ const SeverityDistributionSection: React.FC<{ namespace: string }> = ({ namespac
                       className="issue-distribution-card__severity-count"
                     />
                   )}
-                  <Text className="issue-distribution-card__severity-label">
+                  <Content component="p" className="issue-distribution-card__severity-label">
                     {capitalize(severity)}
-                  </Text>
+                  </Content>
                 </Flex>
               </FlexItem>
             ))}
@@ -147,7 +159,7 @@ const TypeDistributionSection: React.FC<{ namespace: string }> = ({ namespace })
                       justifyContent={{ default: 'justifyContentCenter' }}
                       alignItems={{ default: 'alignItemsCenter' }}
                     >
-                      <Text>No issues found</Text>
+                      <Content component="p">No issues found</Content>
                     </Flex>
                   )
                 ) : (
@@ -178,13 +190,13 @@ const TypeDistributionSection: React.FC<{ namespace: string }> = ({ namespace })
                           style={{ backgroundColor: LEGEND_COLORS[index] }}
                           aria-hidden="true"
                         />
-                        <Text>
+                        <Content component="p">
                           {capitalize(item.x)}: {item.y}
-                        </Text>
+                        </Content>
                       </Flex>
                     ))
                   ) : (
-                    <Text>No data to display</Text>
+                    <Content component="p">No data to display</Content>
                   )
                 ) : (
                   Array.from({ length: 5 }).map((_, index) => (

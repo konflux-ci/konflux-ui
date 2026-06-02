@@ -2,7 +2,7 @@ import * as React from 'react';
 import {
   Flex,
   FlexItem,
-  TextContent,
+  Content,
   DataList,
   DataListItem,
   DataListToggle,
@@ -120,7 +120,7 @@ const FormikParamsField: React.FC<React.PropsWithChildren<IntegrationTestParamsP
                               <DataListItemCells
                                 dataListCells={[
                                   <DataListCell key="param-title" width={5}>
-                                    <TextContent>{p.name}</TextContent>
+                                    <Content>{p.name}</Content>
                                   </DataListCell>,
 
                                   <DataListCell key="remove-param-button" width={3}>

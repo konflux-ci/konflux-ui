@@ -137,10 +137,10 @@ const PipelineRunAttestation = ({ pipelineRun }: { pipelineRun: PipelineRunKind 
         data-test={hasAttestation ? 'attestation-signed' : 'attestation-unsigned'}
         color={
           hasAttestation
-            ? 'var(--pf-v5-global--success-color--100)'
-            : 'var(--pf-v5-global--warning-color--100)'
+            ? 'var(--pf-t--temp--dev--tbd)' /* CODEMODS: original v5 color was --pf-v5-global--success-color--100 */
+            : 'var(--pf-t--temp--dev--tbd)' /* CODEMODS: original v5 color was --pf-v5-global--warning-color--100 */
         }
-        style={{ marginRight: 'var(--pf-v5-global--spacer--sm)' }}
+        style={{ marginRight: 'var(--pf-t--global--spacer--sm)' }}
       />
     </Tooltip>
   );

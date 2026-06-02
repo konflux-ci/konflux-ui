@@ -38,9 +38,9 @@ export const ReleasesFilterToolbar: React.FC<Props> = ({
   const [filterType, setFilterType] = React.useState(dropdownItems[0]);
 
   return (
-    <Toolbar data-test="releases-filter-toolbar" usePageInsets>
+    <Toolbar data-test="releases-filter-toolbar">
       <ToolbarContent className="pf-v5-u-pl-0">
-        <ToolbarGroup align={{ default: 'alignLeft' }}>
+        <ToolbarGroup align={{ default: 'alignStart' }}>
           <ToolbarItem>
             <InputGroup>
               <InputGroupItem>

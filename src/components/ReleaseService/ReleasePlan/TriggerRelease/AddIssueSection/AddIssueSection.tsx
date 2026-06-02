@@ -2,9 +2,8 @@ import * as React from 'react';
 import {
   EmptyState,
   EmptyStateBody,
-  TextContent,
-  TextVariants,
-  Text,
+  Content,
+  ContentVariants,
   EmptyStateVariant,
 } from '@patternfly/react-core';
 import { Table, Tbody } from '@patternfly/react-table';
@@ -72,13 +71,13 @@ export const AddIssueSection: React.FC<React.PropsWithChildren<AddIssueSectionPr
 
         return (
           <>
-            <TextContent className="pf-v5-u-mt-xs">
-              <Text component={TextVariants.h4} className="pf-v5-u-mt-0 pf-v5-u-pt-0">
+            <Content className="pf-v5-u-mt-xs">
+              <Content component={ContentVariants.h4} className="pf-v5-u-mt-0 pf-v5-u-pt-0">
                 {isBug
                   ? 'Are there any Jira issues you would like to add to this release?'
                   : 'Are there any CVEs you would like to add to this release?'}
-              </Text>
-            </TextContent>
+              </Content>
+            </Content>
             <BaseTextFilterToolbar
               text={nameFilter}
               label="name"

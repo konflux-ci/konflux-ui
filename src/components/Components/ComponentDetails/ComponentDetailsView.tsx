@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Bullseye, ButtonVariant, Spinner, Text, TextVariants } from '@patternfly/react-core';
+import { Bullseye, ButtonVariant, Spinner, Content, ContentVariants } from '@patternfly/react-core';
 import isFunction from 'lodash/isFunction';
 import isObject from 'lodash/isObject';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
@@ -121,12 +121,12 @@ const ComponentDetailsView: React.FC = () => {
           },
         ]}
         title={
-          <Text component={TextVariants.h2}>
+          <Content component={ContentVariants.h2}>
             <span className="pf-u-mr-sm">
               <b>{component.spec.componentName}</b>
             </span>
             <FeatureFlagIndicator flags={['taskruns-kubearchive']} />
-          </Text>
+          </Content>
         }
         actions={actions}
         baseURL={COMPONENT_DETAILS_PATH.createPath({

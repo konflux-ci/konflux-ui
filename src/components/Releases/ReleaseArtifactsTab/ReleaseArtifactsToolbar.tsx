@@ -8,7 +8,7 @@ type Props = {
 
 export const ReleaseArtifactsToolbar: React.FC<Props> = ({ value, onSearchInputChange }) => {
   return (
-    <Toolbar usePageInsets>
+    <Toolbar>
       <ToolbarContent>
         <ToolbarItem className="pf-v5-u-ml-0">
           <SearchInput

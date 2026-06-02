@@ -4,7 +4,6 @@ import {
   EmptyStateBody,
   Flex,
   PageSection,
-  PageSectionVariants,
   Spinner,
   Tooltip,
 } from '@patternfly/react-core';
@@ -71,11 +70,7 @@ const NamespaceListView: React.FC<React.PropsWithChildren<unknown>> = () => {
   return (
     <>
       <PageLayout title="Namespaces" description="A namespace contains 1 or more applications">
-        <PageSection
-          padding={{ default: 'noPadding' }}
-          variant={PageSectionVariants.light}
-          isFilled
-        >
+        <PageSection hasBodyWrapper={false} padding={{ default: 'noPadding' }} isFilled>
           {!namespaces || namespaces.length === 0 ? (
             <AppEmptyState
               className="pf-v5-u-mx-lg"

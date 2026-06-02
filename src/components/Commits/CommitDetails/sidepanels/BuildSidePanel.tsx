@@ -177,7 +177,7 @@ const BuildSidePanel: React.FC<React.PropsWithChildren<PipelineSidePanelBodyProp
 
           {specParams?.length && (
             <>
-              <Divider style={{ padding: 'var(--pf-v5-global--spacer--lg) 0' }} />
+              <Divider style={{ padding: 'var(--pf-t--global--spacer--lg)' }} />
               <RunParamsList params={specParams} compressed />
             </>
           )}

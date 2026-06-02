@@ -332,7 +332,7 @@ const CommitsListViewV2: React.FC<React.PropsWithChildren<CommitsListViewPropsV2
         description="Selected columns will be displayed in the commits table."
       />
       {isFetchingNextPage ? (
-        <Stack style={{ marginTop: 'var(--pf-v5-global--spacer--md)' }} hasGutter>
+        <Stack style={{ marginTop: 'var(--pf-t--global--spacer--md)' }} hasGutter>
           <Bullseye>
             <Spinner
               size="lg"

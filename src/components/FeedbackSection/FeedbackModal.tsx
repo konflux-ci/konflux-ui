@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
-import { ModalVariant, Flex, FlexItem, Panel } from '@patternfly/react-core';
+import { Flex, FlexItem, Panel } from '@patternfly/react-core';
+import { ModalVariant } from '@patternfly/react-core/deprecated';
 import { TrackEvents } from '~/analytics/gen/analytics-types';
 import { useTrackAnalyticsEvent } from '~/analytics/hooks';
 import { ComponentProps, createModalLauncher } from '~/components/modal/createModalLauncher';

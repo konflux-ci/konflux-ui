@@ -21,7 +21,7 @@ const GitOptions: React.FC<React.PropsWithChildren<GitOptionProps>> = ({
       isExpanded={isGitAdvancedOpen}
       onToggle={() => setGitAdvancedOpen((x) => !x)}
     >
-      <PageSection>
+      <PageSection hasBodyWrapper={false}>
         <FormSection>
           <InputField
             name="source.git.revision"

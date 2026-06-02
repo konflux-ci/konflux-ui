@@ -1,5 +1,5 @@
 import React from 'react';
-import { Divider, PageSection, PageSectionVariants } from '@patternfly/react-core';
+import { Divider, PageSection } from '@patternfly/react-core';
 import { USER_ACCESS_GRANT_PAGE } from '@routes/paths';
 import { FULL_APPLICATION_TITLE } from '../../consts/labels';
 import { useDocumentTitle } from '../../hooks/useDocumentTitle';
@@ -33,8 +33,8 @@ const UserAccessPage: React.FunctionComponent = () => {
         },
       ]}
     >
-      <Divider style={{ paddingTop: 'var(--pf-v5-global--spacer--md)' }} />
-      <PageSection variant={PageSectionVariants.light} isFilled>
+      <Divider style={{ paddingTop: 'var(--pf-t--global--spacer--md)' }} />
+      <PageSection hasBodyWrapper={false} isFilled>
         <FilterContextProvider filterParams={['username']}>
           <UserAccessListView />
         </FilterContextProvider>

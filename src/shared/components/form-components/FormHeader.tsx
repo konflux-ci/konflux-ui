@@ -26,7 +26,7 @@ const FormHeader: React.FC<React.PropsWithChildren<FormHeaderProps>> = ({
       <Title headingLevel="h1" size="2xl">
         {title}
       </Title>
-      <FormHelperText style={{ marginTop: 'var(--pf-v5-global--spacer--xs)' }}>
+      <FormHelperText style={{ marginTop: 'var(--pf-t--global--spacer--xs)' }}>
         {helpText}
       </FormHelperText>
     </div>
