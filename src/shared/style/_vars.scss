@@ -1,4 +1,6 @@
-@import '~@patternfly/patternfly/sass-utilities/colors';
+$pf-v6-global--breakpoint--md: 48rem;
+$pf-v6-global--breakpoint--lg: 62rem;
+$pf-v6-global--breakpoint--xl: 75rem;
 
 $color-grey-background-border: #ccc;
 $grid-gutter-width: 30px !default;

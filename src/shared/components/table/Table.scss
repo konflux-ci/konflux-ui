@@ -1,4 +1,4 @@
-@import '~@patternfly/patternfly/sass-utilities/all';
+@import '../../style/vars';
 
 .table .pf-v6-c-window-scroller.ReactVirtualized__VirtualGrid,
 .table .pf-v6-c-window-scroller .ReactVirtualized__VirtualGrid,
@@ -34,7 +34,7 @@
   padding-right: 0 !important;
 }
 
-@media screen and (min-width: $pf-v5-global--breakpoint--md) {
+@media screen and (min-width: $pf-v6-global--breakpoint--md) {
   .table .pf-v6-c-table .pf-m-width-10-on-md {
     --pf-v6-c-table--cell--Width: 10% !important;
   }
@@ -91,7 +91,7 @@
     --pf-v6-c-table--cell--Width: 100% !important;
   }
 }
-@media screen and (min-width: $pf-v5-global--breakpoint--lg) {
+@media screen and (min-width: $pf-v6-global--breakpoint--lg) {
   .table .pf-v6-c-table .pf-m-width-10-on-lg {
     --pf-v6-c-table--cell--Width: 10% !important;
   }
@@ -148,7 +148,7 @@
     --pf-v6-c-table--cell--Width: 100% !important;
   }
 }
-@media screen and (min-width: $pf-v5-global--breakpoint--xl) {
+@media screen and (min-width: $pf-v6-global--breakpoint--xl) {
   .table .pf-v6-c-table .pf-m-width-10-on-xl {
     --pf-v6-c-table--cell--Width: 10% !important;
   }
