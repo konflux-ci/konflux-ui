@@ -1,5 +1,4 @@
 import React from 'react';
-import { TextInputTypes } from '@patternfly/react-core';
 import { useField, useFormikContext } from 'formik';
 import { InputField } from 'formik-pf';
 import DropdownField from '~/shared/components/formik-fields/DropdownField';
@@ -9,6 +8,7 @@ import {
   useAreSecretSensitiveFieldsHidden,
   useOptionalSecretEditSensitive,
 } from './SecretEditSensitiveContext';
+import { SecretPasswordInputField } from './SecretPasswordInputField';
 import { SensitiveValuesRevealBanner } from './SensitiveValuesRevealBanner';
 
 type SourceSecretFormProps = {
@@ -87,11 +87,10 @@ export const SourceSecretForm: React.FC<SourceSecretFormProps> = ({
                 label="Username"
                 helperText="For Git authentication"
               />
-              <InputField
+              <SecretPasswordInputField
                 name="source.password"
                 data-test="secret-source-password"
                 label="Password"
-                type={TextInputTypes.password}
                 helperText="For Git authentication"
                 placeholder={isEditMode ? 'To keep the same password, leave this field blank' : ''}
                 required={!isEditMode}

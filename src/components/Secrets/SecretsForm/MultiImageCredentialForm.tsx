@@ -15,6 +15,7 @@ import {
   useAreSecretSensitiveFieldsHidden,
   useOptionalSecretEditSensitive,
 } from './SecretEditSensitiveContext';
+import { SecretPasswordInputField } from './SecretPasswordInputField';
 import { SensitiveValuesRevealBanner } from './SensitiveValuesRevealBanner';
 
 type MultiImageCredentialFormProps = {
@@ -109,10 +110,9 @@ export const MultiImageCredentialForm: React.FC<
                     helperText="For image registry authentication"
                     isRequired
                   />
-                  <InputField
+                  <SecretPasswordInputField
                     name={`${name}.${idx.toString()}.password`}
                     label="Password"
-                    type={TextInputTypes.password}
                     helperText="For image registry authentication"
                     placeholder={
                       isEditMode ? 'To keep the same password, leave this field blank' : ''
