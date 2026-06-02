@@ -1,19 +1,19 @@
 .log-viewer {
   &--fullscreen {
-    padding: var(--pf-v5-global--spacer--sm);
+    padding: var(--pf-t--global--spacer--sm);
   }
 
   &__icon {
-    margin-right: var(--pf-v5-global--spacer--xs);
+    margin-right: var(--pf-t--global--spacer--xs);
   }
 
   &__divider {
-    color: var(--pf-v5-global--palette--black-600);
-    margin: 0 var(--pf-v5-global--spacer--sm);
+    color: var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--palette--black-600 */);
+    margin: 0 var(--pf-t--global--spacer--sm);
     align-self: center;
   }
   &__divider.pf-v6-c-divider {
-    height: var(--pf-v5-global--spacer--md);
+    height: var(--pf-t--global--spacer--md);
   }
 
   &__button {
@@ -48,18 +48,18 @@
   }
 
   &__bullseye {
-    padding-top: var(--pf-v5-global--spacer--md);
-    padding-bottom: var(--pf-v5-global--spacer--md);
+    padding-top: var(--pf-t--global--spacer--md);
+    padding-bottom: var(--pf-t--global--spacer--md);
   }
 }
 
 // Force light theme on the log content when user selects "Light theme" (e.g. when main app theme is dark)
 .pf-v6-c-log-viewer.log-viewer--light {
-  --pf-v5-c-log-viewer__main--BackgroundColor: var(--pf-v5-global--palette--white);
-  --pf-v5-c-log-viewer__main--BorderColor: var(--pf-v5-global--palette--black-300);
-  --pf-v5-c-log-viewer__text--Color: var(--pf-v5-global--palette--black-900);
-  --pf-v5-c-log-viewer__index--Color: var(--pf-v5-global--palette--black-600);
-  --pf-v5-c-log-viewer--m-line-numbers__main--before--BackgroundColor: var(
-    --pf-v5-global--palette--black-300
+  --pf-v6-c-log-viewer__main--BackgroundColor: var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--palette--white */);
+  --pf-v6-c-log-viewer__main--BorderColor: var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--palette--black-300 */);
+  --pf-v6-c-log-viewer__text--Color: var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--palette--black-900 */);
+  --pf-v6-c-log-viewer__index--Color: var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--palette--black-600 */);
+  --pf-v6-c-log-viewer--m-line-numbers__main--before--BackgroundColor: var(
+    --pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--palette--black-300 */
   );
 }

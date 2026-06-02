@@ -1,11 +1,11 @@
 .issue-distribution-card {
   &__severity-count {
-    margin-bottom: var(--pf-v5-global--spacer--xs);
+    margin-bottom: var(--pf-t--global--spacer--xs);
   }
 
   &__severity-label {
-    color: var(--pf-v5-global--Color--200);
-    width: var(--pf-v5-global--spacer--2xl);
+    color: var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--Color--200 */);
+    width: var(--pf-t--global--spacer--2xl);
   }
 
   &__chart-wrapper {
@@ -26,9 +26,9 @@
   &__chart-empty-state {
     width: 300px;
     height: 300px;
-    border: 1px dashed var(--pf-v5-global--BorderColor--200);
-    border-radius: var(--pf-v5-global--BorderRadius--sm);
-    color: var(--pf-v5-global--Color--200);
+    border: 1px dashed var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--BorderColor--200 */);
+    border-radius: var(--pf-t--global--border--radius--small);
+    color: var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--Color--200 */);
   }
 
   &__chart-loading-state {
@@ -37,7 +37,7 @@
   }
 
   &__legend {
-    margin-left: var(--pf-v5-global--spacer--lg);
+    margin-left: var(--pf-t--global--spacer--lg);
   }
 
   &__legend-color {

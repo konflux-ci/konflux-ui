@@ -1,8 +1,8 @@
 .conforma-expanded-row {
   display: flex;
-  padding-top: var(--pf-v5-global--spacer--md);
-  padding-bottom: var(--pf-v5-global--spacer--md);
-  padding-right: var(--pf-v5-global--spacer--md);
+  padding-top: var(--pf-t--global--spacer--md);
+  padding-bottom: var(--pf-t--global--spacer--md);
+  padding-right: var(--pf-t--global--spacer--md);
   padding-left: 4%; // to align with the "first content" column
 }
 

@@ -2,7 +2,7 @@
 // Overrides PatternFly's default styles to support virtualization
 
 .pf-v6-c-log-viewer__main {
-  margin-bottom: var(--pf-v5-global--spacer--md) !important;
+  margin-bottom: var(--pf-t--global--spacer--md) !important;
   height: 100%;
   width: 100%;
   display: flex;

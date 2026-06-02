@@ -2,7 +2,7 @@
   &__head {
     &-title {
       display: flex;
-      gap: var(--pf-v5-global--spacer--sm);
+      gap: var(--pf-t--global--spacer--sm);
       .pf-v6-c-label {
         height: fit-content;
       }
@@ -12,6 +12,6 @@
     }
   }
   &__subtext {
-    color: var(--pf-v5-global--Color--200);
+    color: var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--Color--200 */);
   }
 }

@@ -9,34 +9,34 @@
   // ERROR/FATAL/FAIL - use PatternFly danger color
   .token.error,
   .token.log-level-error {
-    color: var(--pf-v5-global--danger-color--100);
+    color: var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--danger-color--100 */);
     font-weight: 700;
   }
 
   // WARN - use PatternFly warning color
   .token.warning,
   .token.log-level-warn {
-    color: var(--pf-v5-global--warning-color--100);
+    color: var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--warning-color--100 */);
     font-weight: 600;
   }
 
   // INFO - use PatternFly info color
   .token.info,
   .token.log-level-info {
-    color: var(--pf-v5-global--info-color--100);
+    color: var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--info-color--100 */);
   }
 
   // DEBUG/TRACE - use PatternFly disabled text color
   .token.comment,
   .token.log-level-debug {
-    color: var(--pf-v5-global--disabled-color--100);
+    color: var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--disabled-color--100 */);
     font-style: italic;
   }
 
   // PASSED/SUCCESS - use PatternFly success color
   .token.success,
   .token.result {
-    color: var(--pf-v5-global--success-color--100);
+    color: var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--success-color--100 */);
     font-weight: 600;
   }
 
@@ -44,7 +44,7 @@
 
   .token.url,
   .token.email {
-    color: var(--pf-v5-global--link--Color);
+    color: var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--link--Color */);
     text-decoration: underline;
     cursor: pointer;
   }
@@ -53,49 +53,49 @@
   .token.mime-type,
   .token.filename,
   .token.file-path {
-    color: var(--pf-v5-global--palette--light-blue-300);
+    color: var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--palette--light-blue-300 */);
   }
 
   /* ================= Date and Time ================= */
 
   .token.date,
   .token.time {
-    color: var(--pf-v5-global--palette--cyan-600);
+    color: var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--palette--cyan-600 */);
   }
 
   /* ================= Strings ================= */
 
   .token.string {
-    color: var(--pf-v5-global--palette--light-green-500);
+    color: var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--palette--light-green-500 */);
   }
 
   /* ================= Operators and Punctuation ================= */
 
   .token.operator {
-    color: var(--pf-v5-global--Color--200);
+    color: var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--Color--200 */);
   }
 
   .token.punctuation {
-    color: var(--pf-v5-global--disabled-color--100);
+    color: var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--disabled-color--100 */);
   }
 
   /* ================= Exceptions and Stacktraces ================= */
 
   .token.exception,
   .token.javastacktrace {
-    color: var(--pf-v5-global--danger-color--200);
+    color: var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--danger-color--200 */);
 
     .token.keyword {
-      color: var(--pf-v5-global--danger-color--100);
+      color: var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--danger-color--100 */);
       font-weight: 600;
     }
 
     .token.function {
-      color: var(--pf-v5-global--palette--red-300);
+      color: var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--palette--red-300 */);
     }
 
     .token.punctuation {
-      color: var(--pf-v5-global--palette--red-200);
+      color: var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--palette--red-200 */);
     }
   }
 
@@ -106,17 +106,17 @@
   .token.cli-arg {
     .token.key,
     .token.attr-name {
-      color: var(--pf-v5-global--palette--orange-400);
+      color: var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--palette--orange-400 */);
       font-weight: 500;
     }
 
     .token.operator {
-      color: var(--pf-v5-global--Color--200);
+      color: var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--Color--200 */);
     }
 
     .token.value,
     .token.attr-value {
-      color: var(--pf-v5-global--Color--200);
+      color: var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--Color--200 */);
     }
   }
 
@@ -127,34 +127,34 @@
   .token.mac-address,
   .token.domain,
   .token.uuid {
-    color: var(--pf-v5-global--palette--purple-300);
+    color: var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--palette--purple-300 */);
   }
 
   .token.hash {
-    color: var(--pf-v5-global--palette--gold-500);
+    color: var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--palette--gold-500 */);
     font-family: monospace;
   }
 
   .token.pid {
-    color: var(--pf-v5-global--palette--cyan-400);
+    color: var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--palette--cyan-400 */);
   }
 
   // Generic numbers (not dates/times)
   .token.number {
-    color: var(--pf-v5-global--palette--cyan-300);
+    color: var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--palette--cyan-300 */);
   }
 
   /* ================= Booleans ================= */
 
   .token.boolean {
-    color: var(--pf-v5-global--palette--blue-400);
+    color: var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--palette--blue-400 */);
     font-weight: 600;
   }
 
   /* ================= Separators ================= */
 
   .token.separator {
-    color: var(--pf-v5-global--disabled-color--200);
+    color: var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--disabled-color--200 */);
     opacity: 0.6;
   }
 }
