@@ -189,7 +189,7 @@ export const usePipelinererunAction = (pipelineRun: PipelineRunKind): RerunActio
     isIntegrationTestsPage,
     isSnapshotsPage,
     isPR,
-    status,
+    isCancelling,
   ]);
 };
 
