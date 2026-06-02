@@ -1,6 +1,5 @@
 import React from 'react';
 import { ValidatedOptions, TextInputTypes, gridItemSpanValueShape } from '@patternfly/react-core';
-import { SelectVariant } from '@patternfly/react-core/deprecated';
 import { DropdownItemObject } from '../dropdown/BasicDropdown';
 
 export interface FieldProps {
@@ -171,15 +170,14 @@ export interface SelectInputOption {
 }
 
 export interface SelectInputFieldProps extends FieldProps {
-  variant?: SelectVariant;
+  variant?: 'typeahead' | 'typeaheadMulti';
   toggleId?: string;
   toggleAriaLabel?: string;
-  onSelect?: (e: React.SyntheticEvent<HTMLElement>, selectedValue: unknown) => void;
+  onSelect?: (e: React.MouseEvent<Element> | undefined, selectedValue: unknown) => void;
   onClear?: () => void;
   options: SelectInputOption[];
-  placeholderText?: React.ReactNode;
+  placeholderText?: string;
   isCreatable?: boolean;
-  isInputValuePersisted?: boolean;
   hasOnCreateOption?: boolean;
 }
 

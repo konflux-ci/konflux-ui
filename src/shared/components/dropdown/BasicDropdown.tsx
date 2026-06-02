@@ -14,7 +14,6 @@ import {
   TextInputGroupUtilities,
   Button,
 } from '@patternfly/react-core';
-import './BasicDropdown.scss';
 import { TimesIcon } from '@patternfly/react-icons/dist/esm/icons/times-icon';
 import { NO_RESULTS } from '~/consts/constants';
 import { filterByText } from '~/utils/text-filter-utils';
@@ -198,19 +197,16 @@ const BasicDropdown: React.FC<BasicDropdownProps> = ({
                 key={key}
                 value={value}
                 role="menuitem"
-                description={value}
+                description={description}
                 ref={null}
                 isDisabled={isDisabled}
               >
-                <div>
-                  {label}
-                  {value === recommended && (
-                    <>
-                      &nbsp;<Badge isRead>Recommended</Badge>
-                    </>
-                  )}
-                </div>
-                {description && <div className="dropdown-item-description">{description}</div>}
+                {label ?? value}
+                {value === recommended && (
+                  <>
+                    &nbsp;<Badge isRead>Recommended</Badge>
+                  </>
+                )}
               </SelectOption>
             ),
           )}

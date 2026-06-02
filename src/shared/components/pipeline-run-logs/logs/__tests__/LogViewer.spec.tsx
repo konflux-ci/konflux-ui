@@ -144,7 +144,7 @@ describe('LogViewer Integration Tests', () => {
     it('should render task name in banner', () => {
       const { container } = render(<LogViewer {...defaultProps} />);
 
-      const banner = container.querySelector('[data-testid="logs-taskName"]');
+      const banner = container.querySelector('[data-test="logs-taskName"]');
       expect(banner).toBeInTheDocument();
       expect(banner).toHaveTextContent('test-task');
     });
@@ -507,8 +507,8 @@ describe('LogViewer Integration Tests', () => {
       }).not.toThrow();
     });
 
-    it('should render resume button with data-testid when visible', () => {
-      // The resume button has data-testid="resume-log-stream" for testing
+    it('should render resume button with data-test when visible', () => {
+      // The resume button has data-test="resume-log-stream" for testing
       // It appears conditionally based on useAutoScrollWithResume hook state
       const { container } = render(<LogViewer {...defaultProps} allowAutoScroll={true} />);
 
