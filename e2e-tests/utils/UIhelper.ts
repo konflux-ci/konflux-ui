@@ -56,13 +56,13 @@ export class UIhelper {
 
   static clickButton(label: string, options?: { invoke?: boolean; force?: boolean }) {
     if (options?.invoke) {
-      return cy.contains(UIhelperPO.pf5_button, new RegExp(`^\\s*${label}\\s*$`)).invoke('click');
+      return cy.contains(UIhelperPO.pf6_button, new RegExp(`^\\s*${label}\\s*$`)).invoke('click');
     } else if (options?.force) {
       return cy
-        .contains(UIhelperPO.pf5_button, new RegExp(`^\\s*${label}\\s*$`))
+        .contains(UIhelperPO.pf6_button, new RegExp(`^\\s*${label}\\s*$`))
         .click({ force: true });
     }
-    return cy.contains(UIhelperPO.pf5_button, new RegExp(`^\\s*${label}\\s*$`)).click();
+    return cy.contains(UIhelperPO.pf6_button, new RegExp(`^\\s*${label}\\s*$`)).click();
   }
 
   static clickLink(
