@@ -39,10 +39,10 @@ export const ActivityTabV2: React.FC = () => {
 
   return (
     <Flex direction={{ default: 'column' }}>
-      <Title size="xl" headingLevel="h3" className="pf-v5-c-title pf-v5-u-mt-lg pf-v5-u-mb-sm">
+      <Title size="xl" headingLevel="h3" className="pf-v6-c-title pf-v6-u-mt-lg pf-v6-u-mb-sm">
         Activity by
       </Title>
-      <Content component="p" className="pf-v5-u-mb-sm">
+      <Content component="p" className="pf-v6-u-mb-sm">
         Monitor your commits and their pipeline progression{' '}
         {versionRevision ? 'in this component version' : 'across all component versions'}.
       </Content>

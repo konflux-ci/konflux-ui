@@ -41,7 +41,7 @@ const ErrorEmptyState: React.FC<React.PropsWithChildren<ErrorEmptyStateProps>> =
     >
       <EmptyStateFooter>
         {title ? (
-          <Title className="pf-v5-u-mt-lg" headingLevel="h2" size="lg">
+          <Title className="pf-v6-u-mt-lg" headingLevel="h2" size="lg">
             {title}
           </Title>
         ) : null}

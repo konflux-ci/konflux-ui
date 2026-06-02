@@ -10,7 +10,7 @@ export const ReleaseArtifactsToolbar: React.FC<Props> = ({ value, onSearchInputC
   return (
     <Toolbar>
       <ToolbarContent>
-        <ToolbarItem className="pf-v5-u-ml-0">
+        <ToolbarItem className="pf-v6-u-ml-0">
           <SearchInput
             name="nameInput"
             data-test="name-input-filter"

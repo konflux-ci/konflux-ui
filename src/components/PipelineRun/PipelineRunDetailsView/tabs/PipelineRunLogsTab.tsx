@@ -44,7 +44,7 @@ const PipelineRunLogsTab: React.FC = () => {
 
   return (
     <PipelineRunLogs
-      className="pf-v5-u-pt-md"
+      className="pf-v6-u-pt-md"
       obj={pipelineRun}
       taskRuns={taskRuns}
       activeTask={activeTask}

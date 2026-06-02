@@ -91,7 +91,7 @@ const CommitDetailsView: React.FC = () => {
         ]}
         title={
           <Content component={ContentVariants.h2}>
-            <span className="pf-v5-u-mr-sm">
+            <span className="pf-v6-u-mr-sm">
               <CommitIcon isPR={commit.isPullRequest} className="commit-details__title-icon" />{' '}
               <b>{commit.shaTitle}</b>
             </span>

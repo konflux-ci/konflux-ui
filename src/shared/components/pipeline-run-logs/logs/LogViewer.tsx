@@ -177,13 +177,13 @@ const LogViewer: React.FC<Props> = ({
         <div
           ref={fullscreenRef}
           style={{ height: isFullscreen ? '100vh' : '100%' }}
-          className={classNames('log-viewer__container', 'pf-v5-c-log-viewer', {
+          className={classNames('log-viewer__container', 'pf-v6-c-log-viewer', {
             'pf-m-dark': logTheme === 'dark',
             'log-viewer--light': logTheme === 'light',
           })}
         >
           {/* Toolbar */}
-          <div className="pf-v5-c-log-viewer__header">
+          <div className="pf-v6-c-log-viewer__header">
             <Toolbar>
               <ToolbarContent
                 className={classNames({

@@ -207,7 +207,7 @@ export const VirtualBody: React.FC<React.PropsWithChildren<VirtualBodyProps>> = 
     <VirtualTableBody
       ref={listRef}
       autoHeight
-      className="pf-v5-c-table pf-m-compact pf-m-border-rows pf-v5-c-window-scroller"
+      className="pf-v6-c-table pf-m-compact pf-m-border-rows pf-v6-c-window-scroller"
       deferredMeasurementCache={cellMeasurementCache}
       rowHeight={cellMeasurementCache.rowHeight}
       height={height || 0}

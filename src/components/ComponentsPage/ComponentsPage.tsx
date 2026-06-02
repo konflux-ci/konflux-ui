@@ -26,7 +26,7 @@ const ComponentsPage: React.FC = () => {
       >
         <PageSection hasBodyWrapper={false} padding={{ default: 'noPadding' }} isFilled>
           <AppEmptyState
-            className="pf-v5-u-mx-lg"
+            className="pf-v6-u-mx-lg"
             isXl
             emptyStateImg={emptyStateImgUrl}
             title="Bring your code to Konflux"

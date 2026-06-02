@@ -46,7 +46,7 @@ const KeyValueField: React.FC<React.PropsWithChildren<KeyValueFieldProps>> = ({
 
   return (
     <FormGroup fieldId={fieldId} label={label} labelHelp={labelIcon} isRequired={required}>
-      {description && <div className="pf-v5-c-form__helper-text">{description}</div>}
+      {description && <div className="pf-v6-c-form__helper-text">{description}</div>}
       <BasicNameValueEditor
         nameValuePairs={keyValue}
         valueString="Value"

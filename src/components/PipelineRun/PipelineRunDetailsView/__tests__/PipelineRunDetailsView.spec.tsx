@@ -143,7 +143,7 @@ describe('PipelineRunDetailsView', () => {
     expect(breadcrumb).toHaveTextContent('Pipeline runs');
 
     // Find the status label and verify it shows success
-    const statusLabel = screen.getByText('Succeeded').closest('.pf-v5-c-label');
+    const statusLabel = screen.getByText('Succeeded').closest('.pf-v6-c-label');
     expect(statusLabel).toHaveClass('pf-m-green');
     expect(statusLabel).toHaveTextContent('Succeeded');
 
@@ -212,7 +212,7 @@ describe('PipelineRunDetailsView', () => {
     expect(actionsButton).not.toBeDisabled();
 
     // Find the status label and verify it shows the correct status
-    const statusLabel = screen.getByText('Succeeded').closest('.pf-v5-c-label');
+    const statusLabel = screen.getByText('Succeeded').closest('.pf-v6-c-label');
     expect(statusLabel).toHaveClass('pf-m-green');
   });
 

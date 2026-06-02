@@ -54,8 +54,8 @@ export const AddIssueSection: React.FC<React.PropsWithChildren<AddIssueSectionPr
     nameFilter ? (
       <FilteredEmptyState onClearFilters={() => onClearFilters()} variant={EmptyStateVariant.xs} />
     ) : (
-      <EmptyState className="pf-v5-u-m-0 pf-v5-u-p-0" variant={EmptyStateVariant.xs}>
-        <EmptyStateBody className="pf-v5-u-m-0 pf-v5-u-p-0">
+      <EmptyState className="pf-v6-u-m-0 pf-v6-u-p-0" variant={EmptyStateVariant.xs}>
+        <EmptyStateBody className="pf-v6-u-m-0 pf-v6-u-p-0">
           {type === IssueType.BUG ? 'No Jira issues found' : 'No CVEs found'}
         </EmptyStateBody>
       </EmptyState>
@@ -71,8 +71,8 @@ export const AddIssueSection: React.FC<React.PropsWithChildren<AddIssueSectionPr
 
         return (
           <>
-            <Content className="pf-v5-u-mt-xs">
-              <Content component={ContentVariants.h4} className="pf-v5-u-mt-0 pf-v5-u-pt-0">
+            <Content className="pf-v6-u-mt-xs">
+              <Content component={ContentVariants.h4} className="pf-v6-u-mt-0 pf-v6-u-pt-0">
                 {isBug
                   ? 'Are there any Jira issues you would like to add to this release?'
                   : 'Are there any CVEs you would like to add to this release?'}
@@ -87,12 +87,12 @@ export const AddIssueSection: React.FC<React.PropsWithChildren<AddIssueSectionPr
             >
               <AddIssueModal bugArrayHelper={addNewBug} issueType={issueType} />
             </BaseTextFilterToolbar>
-            <div className="pf-v5-u-mb-md">
+            <div className="pf-v6-u-mb-md">
               <Table
                 aria-label="Simple table"
                 variant="compact"
                 borders
-                className="pf-v5-u-m-0 pf-v5-u-p-0"
+                className="pf-v6-u-m-0 pf-v6-u-p-0"
               >
                 {isBug ? <BugTableHead /> : <CVETableHead />}
                 {Array.isArray(filteredIssues) && filteredIssues.length > 0 && (

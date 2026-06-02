@@ -49,7 +49,7 @@ export const PipelineSection: React.FunctionComponent = () => {
       />
       {selectedPipelineDetail && (
         <Content>
-          <Content component={ContentVariants.small} className="pf-v5-u-color-200 pf-v5-u-mt-sm">
+          <Content component={ContentVariants.small} className="pf-v6-u-color-200 pf-v6-u-mt-sm">
             {selectedPipelineDetail}
           </Content>
         </Content>

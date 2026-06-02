@@ -37,7 +37,7 @@ const NamespaceCreateButton = React.memo(() => {
 
   return (
     <Tooltip content={<>Contact your platform engineer to create a new namespace.</>}>
-      <Flex className="pf-v5-u-mt-sm" data-test="namespace-create-tooltip">
+      <Flex className="pf-v6-u-mt-sm" data-test="namespace-create-tooltip">
         <QuestionCircleIcon />
       </Flex>
     </Tooltip>
@@ -73,7 +73,7 @@ const NamespaceListView: React.FC<React.PropsWithChildren<unknown>> = () => {
         <PageSection hasBodyWrapper={false} padding={{ default: 'noPadding' }} isFilled>
           {!namespaces || namespaces.length === 0 ? (
             <AppEmptyState
-              className="pf-v5-u-mx-lg"
+              className="pf-v6-u-mx-lg"
               isXl
               emptyStateImg={emptyStateImgUrl}
               title="No namespaces found"

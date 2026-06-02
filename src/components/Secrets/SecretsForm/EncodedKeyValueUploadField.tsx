@@ -77,7 +77,7 @@ const EncodedKeyValueFileInputField: React.FC<
             </FormFieldGroupExpandable>
           ))}
           <Button
-            className="pf-v5-u-text-align-left"
+            className="pf-v6-u-text-align-left"
             onClick={() => arrayHelpers.push({ key: '', value: '' })}
             type="button"
             data-test="add-key-value-button"

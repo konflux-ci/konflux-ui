@@ -79,13 +79,13 @@ const ComponentList: React.FC = () => {
 
   return (
     <>
-      <Title headingLevel="h3" className="pf-v5-u-mt-lg pf-v5-u-mb-sm pf-v5-u-pl-md">
+      <Title headingLevel="h3" className="pf-v6-u-mt-lg pf-v6-u-mb-sm pf-v6-u-pl-md">
         Components
-        <span className="pf-v5-u-ml-sm">
+        <span className="pf-v6-u-ml-sm">
           <FeatureFlagIndicator flags={['components-page']} />
         </span>
       </Title>
-      <Content className="pf-v5-u-pl-md">
+      <Content className="pf-v6-u-pl-md">
         <Content component={ContentVariants.p}>
           A component is an image built from source code in a repository.
         </Content>

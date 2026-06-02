@@ -11,15 +11,15 @@
   // each taking up one fraction (1fr) of the available space.
   --pf-v5-c-description-list--GridTemplateColumns: repeat(3, 1fr);
 
-  .pf-v5-c-description-list__term,
-  .pf-v5-c-description-list__description {
+  .pf-v6-c-description-list__term,
+  .pf-v6-c-description-list__description {
     white-space: normal;
     word-break: break-word;
   }
 }
 
 // ensures the expandable row content stretches to fill the remaining horizontal space
-.pf-v5-c-table__expandable-row-content {
+.pf-v6-c-table__expandable-row-content {
   flex: 1;
 }
 

@@ -227,10 +227,10 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
       {/* Hidden element to measure actual line height */}
       <div
         ref={measureCallbackRef}
-        className="pf-v5-c-log-viewer__list-item"
+        className="pf-v6-c-log-viewer__list-item"
         style={{ position: 'absolute', visibility: 'hidden', pointerEvents: 'none' }}
       >
-        <span className="pf-v5-c-log-viewer__text">M</span>
+        <span className="pf-v6-c-log-viewer__text">M</span>
       </div>
 
       {/* Scrollable container with gutter */}
@@ -276,7 +276,7 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
                   key={virtualItem.key}
                   data-index={virtualItem.index}
                   ref={virtualizer.measureElement}
-                  className={`pf-v5-c-log-viewer__list-item ${isHighlighted ? 'log-content__line--highlighted' : ''} ${hasHeaders && !isHeader ? 'log-content__line--indented' : ''}`}
+                  className={`pf-v6-c-log-viewer__list-item ${isHighlighted ? 'log-content__line--highlighted' : ''} ${hasHeaders && !isHeader ? 'log-content__line--indented' : ''}`}
                   style={{
                     position: 'absolute',
                     top: 0,

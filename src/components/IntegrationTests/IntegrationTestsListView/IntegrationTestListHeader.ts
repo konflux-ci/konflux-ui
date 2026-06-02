@@ -1,9 +1,9 @@
 export const integrationListTableColumnClasses = {
   name: 'pf-m-width-25',
-  containerImage: 'pf-m-width-25 pf-v5-l-flex',
+  containerImage: 'pf-m-width-25 pf-v6-l-flex',
   mandatory: 'pf-m-width-25',
   pipeline: 'pf-m-width-15',
-  kebab: 'pf-v5-c-table__action',
+  kebab: 'pf-v6-c-table__action',
 };
 
 export const IntegrationTestListHeader = () => {

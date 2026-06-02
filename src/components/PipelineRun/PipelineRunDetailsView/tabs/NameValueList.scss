@@ -3,7 +3,7 @@
     overflow-wrap: anywhere;
   }
   &.m-compressed {
-    .pf-m-grid-md.pf-v5-c-table {
+    .pf-m-grid-md.pf-v6-c-table {
       display: grid;
       grid-template-columns: 1fr;
       height: auto;
@@ -21,7 +21,7 @@
         display: block;
       }
 
-      tr:not(.pf-v5-c-table__expandable-row) {
+      tr:not(.pf-v6-c-table__expandable-row) {
         display: grid;
         grid-template-columns: 1fr;
         height: auto;

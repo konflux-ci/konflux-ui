@@ -49,7 +49,7 @@ export const GettingStartedCard: React.FC<React.PropsWithChildren<GettingStarted
           <Split>
             {imgSrc && (
               <SplitItem
-                className={classnames('pf-v5-u-min-width getting-started-card__img', imgClassName)}
+                className={classnames('pf-v6-u-min-width getting-started-card__img', imgClassName)}
               >
                 <SvgIcon aria-label={imgAlt} role="img" />
               </SplitItem>

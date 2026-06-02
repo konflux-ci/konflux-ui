@@ -249,7 +249,7 @@ const ComponentListView: React.FC<React.PropsWithChildren<ComponentListViewProps
 
   return (
     <>
-      <Title headingLevel="h3" className="pf-v5-u-mt-lg pf-v5-u-mb-sm">
+      <Title headingLevel="h3" className="pf-v6-u-mt-lg pf-v6-u-mb-sm">
         Components
       </Title>
       <Content>
@@ -260,7 +260,7 @@ const ComponentListView: React.FC<React.PropsWithChildren<ComponentListViewProps
       </Content>
       {pipelineRunsLoaded && pipelineRunsError ? (
         <Alert
-          className="pf-v5-u-mt-md"
+          className="pf-v6-u-mt-md"
           variant={AlertVariant.warning}
           isInline
           title="Error while fetching pipeline runs"
@@ -271,7 +271,7 @@ const ComponentListView: React.FC<React.PropsWithChildren<ComponentListViewProps
       {gettingStartedCard}
       {componentsLoaded && pipelineRunsLoaded && pendingCount > 0 && !mergeAlertHidden ? (
         <Alert
-          className="pf-v5-u-mt-md"
+          className="pf-v6-u-mt-md"
           variant={AlertVariant.warning}
           isInline
           title={`${pluralize(

@@ -99,7 +99,7 @@ describe('ApplicationDetails', () => {
     renderWithQueryClientAndRouter(<ApplicationDetails />);
     const appDetails = screen.getByTestId('details');
     const activeTab = appDetails.querySelector(
-      '.pf-v5-c-tabs__item.pf-m-current .pf-v5-c-tabs__item-text',
+      '.pf-v6-c-tabs__item.pf-m-current .pf-v6-c-tabs__item-text',
     );
     expect(activeTab).toHaveTextContent('Overview');
   });

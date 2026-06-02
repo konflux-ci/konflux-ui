@@ -67,7 +67,7 @@ const BugFormContent: React.FC<BugFormContentProps> = ({ modalToggle }) => {
           <Button
             data-test="close-bug-modal"
             variant={ButtonVariant.link}
-            className="pf-v5-u-ml-sm"
+            className="pf-v6-u-ml-sm"
             onClick={(e) => {
               e.preventDefault(), modalToggle();
             }}

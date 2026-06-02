@@ -104,7 +104,7 @@ const Row: React.FC<
         <Td>
           <ComponentPACStateLabel onStateChange={onComponentStateChange} component={component} />
         </Td>
-        <Td className="pf-v5-u-text-align-right">
+        <Td className="pf-v6-u-text-align-right">
           {(() => {
             switch (pacState) {
               case PACState.disabled:
@@ -302,7 +302,7 @@ const CustomizePipeline: React.FC<React.PropsWithChildren<Props>> = ({
       <ModalBoxBody>
         <>
           <Content
-            className="pf-v5-u-pt-lg"
+            className="pf-v6-u-pt-lg"
             style={{ visibility: allLoading ? 'hidden' : undefined, textAlign: 'center' }}
           >
             <Content component={ContentVariants.p}>
@@ -347,7 +347,7 @@ const CustomizePipeline: React.FC<React.PropsWithChildren<Props>> = ({
               </ExternalLink>
             </Content>
           </Content>
-          <div className="pf-v5-u-mt-lg" />
+          <div className="pf-v6-u-mt-lg" />
           {alert}
           <Table>
             <Thead>
@@ -375,8 +375,8 @@ const CustomizePipeline: React.FC<React.PropsWithChildren<Props>> = ({
           </Table>
           {totalCount > 0 ? (
             <p
-              className={`pf-v5-u-pt-lg ${
-                count === totalCount ? 'pf-v5-u-success-color-100' : 'pf-v5-u-color-400'
+              className={`pf-v6-u-pt-lg ${
+                count === totalCount ? 'pf-v6-u-success-color-100' : 'pf-v6-u-color-400'
               }`}
             >
               {`${count} of ${pluralize(totalCount, 'component')} upgraded to custom build`}

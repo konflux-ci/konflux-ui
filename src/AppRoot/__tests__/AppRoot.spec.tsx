@@ -179,6 +179,6 @@ describe('AppRoot', () => {
 
     // Check that the notification drawer content is visible
     expect(screen.getByText('Notifications')).toBeInTheDocument();
-    expect(document.querySelector('.pf-v5-c-notification-drawer__list')).toBeInTheDocument();
+    expect(document.querySelector('.pf-v6-c-notification-drawer__list')).toBeInTheDocument();
   });
 });

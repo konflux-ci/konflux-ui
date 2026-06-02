@@ -2,6 +2,6 @@
   --konflux-banner-height: 0px; /* default: no banner */
 }
 
-#konflux-banner ~ .pf-v5-c-page {
+#konflux-banner ~ .pf-v6-c-page {
   height: calc(100vh - var(--konflux-banner-height)) !important;
 }

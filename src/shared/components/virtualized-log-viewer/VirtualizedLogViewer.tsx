@@ -55,7 +55,7 @@ export const VirtualizedLogViewer: React.FC<VirtualizedLogViewerProps> = ({
   }, [rowInFocus, scrollToRow]);
 
   return (
-    <div className="pf-v5-c-log-viewer__main">
+    <div className="pf-v6-c-log-viewer__main">
       <VirtualizedLogContent
         sections={sections}
         height={height}

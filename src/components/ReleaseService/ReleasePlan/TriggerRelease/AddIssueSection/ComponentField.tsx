@@ -43,7 +43,7 @@ const ComponentField: React.FC<React.PropsWithChildren<ComponentFieldProps>> = (
                   return (
                     <StackItem key={`${name}[${i}]`}>
                       <InputGroup
-                        className="pf-v5-u-mb-sm"
+                        className="pf-v6-u-mb-sm"
                         label="Which components affect this CVE?"
                         data-test={`component-${i}`}
                       >
@@ -69,7 +69,7 @@ const ComponentField: React.FC<React.PropsWithChildren<ComponentFieldProps>> = (
                                 packages.map((__, j) => (
                                   <StackItem key={`component-${i}-package-${j}`}>
                                     <InputGroup
-                                      className="pf-v5-u-mb-sm pf-v5-u-ml-md"
+                                      className="pf-v6-u-mb-sm pf-v6-u-ml-md"
                                       label="Package"
                                     >
                                       <InputField

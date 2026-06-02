@@ -1,31 +1,31 @@
 @import '~@patternfly/patternfly/sass-utilities/all';
 
-.table .pf-v5-c-window-scroller.ReactVirtualized__VirtualGrid,
-.table .pf-v5-c-window-scroller .ReactVirtualized__VirtualGrid,
-.table .pf-v5-c-window-scroller .ReactVirtualized__VirtualGrid__innerScrollContainer {
+.table .pf-v6-c-window-scroller.ReactVirtualized__VirtualGrid,
+.table .pf-v6-c-window-scroller .ReactVirtualized__VirtualGrid,
+.table .pf-v6-c-window-scroller .ReactVirtualized__VirtualGrid__innerScrollContainer {
   overflow: visible !important;
 }
 
 /* Reserve scrollbar space to prevent width thrash while rows load */
-.table .pf-v5-c-window-scroller {
+.table .pf-v6-c-window-scroller {
   overflow-y: scroll;
   scrollbar-gutter: stable both-edges;
 }
 
-.table .pf-v5-c-table .wrap-column {
+.table .pf-v6-c-table .wrap-column {
   overflow-wrap: anywhere;
 }
 
-.table .pf-v5-c-table tr > th {
+.table .pf-v6-c-table tr > th {
   max-width: unset;
 }
 
-.table .pf-v5-c-table tr {
+.table .pf-v6-c-table tr {
   display: flex;
   align-items: flex-start;
 }
 
-.table .pf-v5-c-table .pf-v5-c-table__action {
+.table .pf-v6-c-table .pf-v6-c-table__action {
   --pf-v5-c-table--cell--MinWidth: 0;
   --pf-v5-c-table--cell--MaxWidth: none;
   display: flex;
@@ -35,173 +35,173 @@
 }
 
 @media screen and (min-width: $pf-v5-global--breakpoint--md) {
-  .table .pf-v5-c-table .pf-m-width-10-on-md {
+  .table .pf-v6-c-table .pf-m-width-10-on-md {
     --pf-v5-c-table--cell--Width: 10% !important;
   }
 
-  .table .pf-v5-c-table .pf-m-width-15-on-md {
+  .table .pf-v6-c-table .pf-m-width-15-on-md {
     --pf-v5-c-table--cell--Width: 15% !important;
   }
 
-  .table .pf-v5-c-table .pf-m-width-20-on-md {
+  .table .pf-v6-c-table .pf-m-width-20-on-md {
     --pf-v5-c-table--cell--Width: 20% !important;
   }
 
-  .table .pf-v5-c-table .pf-m-width-25-on-md {
+  .table .pf-v6-c-table .pf-m-width-25-on-md {
     --pf-v5-c-table--cell--Width: 25% !important;
   }
 
-  .table .pf-v5-c-table .pf-m-width-30-on-md {
+  .table .pf-v6-c-table .pf-m-width-30-on-md {
     --pf-v5-c-table--cell--Width: 30% !important;
   }
 
-  .table .pf-v5-c-table .pf-m-width-35-on-md {
+  .table .pf-v6-c-table .pf-m-width-35-on-md {
     --pf-v5-c-table--cell--Width: 35% !important;
   }
 
-  .table .pf-v5-c-table .pf-m-width-40-on-md {
+  .table .pf-v6-c-table .pf-m-width-40-on-md {
     --pf-v5-c-table--cell--Width: 40% !important;
   }
 
-  .table .pf-v5-c-table .pf-m-width-45-on-md {
+  .table .pf-v6-c-table .pf-m-width-45-on-md {
     --pf-v5-c-table--cell--Width: 45% !important;
   }
 
-  .table .pf-v5-c-table .pf-m-width-50-on-md {
+  .table .pf-v6-c-table .pf-m-width-50-on-md {
     --pf-v5-c-table--cell--Width: 50% !important;
   }
 
-  .table .pf-v5-c-table .pf-m-width-60-on-md {
+  .table .pf-v6-c-table .pf-m-width-60-on-md {
     --pf-v5-c-table--cell--Width: 60% !important;
   }
 
-  .table .pf-v5-c-table .pf-m-width-70-on-md {
+  .table .pf-v6-c-table .pf-m-width-70-on-md {
     --pf-v5-c-table--cell--Width: 70% !important;
   }
 
-  .table .pf-v5-c-table .pf-m-width-80-on-md {
+  .table .pf-v6-c-table .pf-m-width-80-on-md {
     --pf-v5-c-table--cell--Width: 80% !important;
   }
 
-  .table .pf-v5-c-table .pf-m-width-90-on-md {
+  .table .pf-v6-c-table .pf-m-width-90-on-md {
     --pf-v5-c-table--cell--Width: 90% !important;
   }
 
-  .table .pf-v5-c-table .pf-m-width-100-on-md {
+  .table .pf-v6-c-table .pf-m-width-100-on-md {
     --pf-v5-c-table--cell--Width: 100% !important;
   }
 }
 @media screen and (min-width: $pf-v5-global--breakpoint--lg) {
-  .table .pf-v5-c-table .pf-m-width-10-on-lg {
+  .table .pf-v6-c-table .pf-m-width-10-on-lg {
     --pf-v5-c-table--cell--Width: 10% !important;
   }
 
-  .table .pf-v5-c-table .pf-m-width-15-on-lg {
+  .table .pf-v6-c-table .pf-m-width-15-on-lg {
     --pf-v5-c-table--cell--Width: 15% !important;
   }
 
-  .table .pf-v5-c-table .pf-m-width-20-on-lg {
+  .table .pf-v6-c-table .pf-m-width-20-on-lg {
     --pf-v5-c-table--cell--Width: 20% !important;
   }
 
-  .table .pf-v5-c-table .pf-m-width-25-on-lg {
+  .table .pf-v6-c-table .pf-m-width-25-on-lg {
     --pf-v5-c-table--cell--Width: 25% !important;
   }
 
-  .table .pf-v5-c-table .pf-m-width-30-on-lg {
+  .table .pf-v6-c-table .pf-m-width-30-on-lg {
     --pf-v5-c-table--cell--Width: 30% !important;
   }
 
-  .table .pf-v5-c-table .pf-m-width-35-on-lg {
+  .table .pf-v6-c-table .pf-m-width-35-on-lg {
     --pf-v5-c-table--cell--Width: 35% !important;
   }
 
-  .table .pf-v5-c-table .pf-m-width-40-on-lg {
+  .table .pf-v6-c-table .pf-m-width-40-on-lg {
     --pf-v5-c-table--cell--Width: 40% !important;
   }
 
-  .table .pf-v5-c-table .pf-m-width-45-on-lg {
+  .table .pf-v6-c-table .pf-m-width-45-on-lg {
     --pf-v5-c-table--cell--Width: 45% !important;
   }
 
-  .table .pf-v5-c-table .pf-m-width-50-on-lg {
+  .table .pf-v6-c-table .pf-m-width-50-on-lg {
     --pf-v5-c-table--cell--Width: 50% !important;
   }
 
-  .table .pf-v5-c-table .pf-m-width-60-on-lg {
+  .table .pf-v6-c-table .pf-m-width-60-on-lg {
     --pf-v5-c-table--cell--Width: 60% !important;
   }
 
-  .table .pf-v5-c-table .pf-m-width-70-on-lg {
+  .table .pf-v6-c-table .pf-m-width-70-on-lg {
     --pf-v5-c-table--cell--Width: 70% !important;
   }
 
-  .table .pf-v5-c-table .pf-m-width-80-on-lg {
+  .table .pf-v6-c-table .pf-m-width-80-on-lg {
     --pf-v5-c-table--cell--Width: 80% !important;
   }
 
-  .table .pf-v5-c-table .pf-m-width-90-on-lg {
+  .table .pf-v6-c-table .pf-m-width-90-on-lg {
     --pf-v5-c-table--cell--Width: 90% !important;
   }
 
-  .table .pf-v5-c-table .pf-m-width-100-on-lg {
+  .table .pf-v6-c-table .pf-m-width-100-on-lg {
     --pf-v5-c-table--cell--Width: 100% !important;
   }
 }
 @media screen and (min-width: $pf-v5-global--breakpoint--xl) {
-  .table .pf-v5-c-table .pf-m-width-10-on-xl {
+  .table .pf-v6-c-table .pf-m-width-10-on-xl {
     --pf-v5-c-table--cell--Width: 10% !important;
   }
 
-  .table .pf-v5-c-table .pf-m-width-15-on-xl {
+  .table .pf-v6-c-table .pf-m-width-15-on-xl {
     --pf-v5-c-table--cell--Width: 15% !important;
   }
 
-  .table .pf-v5-c-table .pf-m-width-20-on-xl {
+  .table .pf-v6-c-table .pf-m-width-20-on-xl {
     --pf-v5-c-table--cell--Width: 20% !important;
   }
 
-  .table .pf-v5-c-table .pf-m-width-25-on-xl {
+  .table .pf-v6-c-table .pf-m-width-25-on-xl {
     --pf-v5-c-table--cell--Width: 25% !important;
   }
 
-  .table .pf-v5-c-table .pf-m-width-30-on-xl {
+  .table .pf-v6-c-table .pf-m-width-30-on-xl {
     --pf-v5-c-table--cell--Width: 30% !important;
   }
 
-  .table .pf-v5-c-table .pf-m-width-35-on-xl {
+  .table .pf-v6-c-table .pf-m-width-35-on-xl {
     --pf-v5-c-table--cell--Width: 35% !important;
   }
 
-  .table .pf-v5-c-table .pf-m-width-40-on-xl {
+  .table .pf-v6-c-table .pf-m-width-40-on-xl {
     --pf-v5-c-table--cell--Width: 40% !important;
   }
 
-  .table .pf-v5-c-table .pf-m-width-45-on-xl {
+  .table .pf-v6-c-table .pf-m-width-45-on-xl {
     --pf-v5-c-table--cell--Width: 45% !important;
   }
 
-  .table .pf-v5-c-table .pf-m-width-50-on-xl {
+  .table .pf-v6-c-table .pf-m-width-50-on-xl {
     --pf-v5-c-table--cell--Width: 50% !important;
   }
 
-  .table .pf-v5-c-table .pf-m-width-60-on-xl {
+  .table .pf-v6-c-table .pf-m-width-60-on-xl {
     --pf-v5-c-table--cell--Width: 60% !important;
   }
 
-  .table .pf-v5-c-table .pf-m-width-70-on-xl {
+  .table .pf-v6-c-table .pf-m-width-70-on-xl {
     --pf-v5-c-table--cell--Width: 70% !important;
   }
 
-  .table .pf-v5-c-table .pf-m-width-80-on-xl {
+  .table .pf-v6-c-table .pf-m-width-80-on-xl {
     --pf-v5-c-table--cell--Width: 80% !important;
   }
 
-  .table .pf-v5-c-table .pf-m-width-90-on-xl {
+  .table .pf-v6-c-table .pf-m-width-90-on-xl {
     --pf-v5-c-table--cell--Width: 90% !important;
   }
 
-  .table .pf-v5-c-table .pf-m-width-100-on-xl {
+  .table .pf-v6-c-table .pf-m-width-100-on-xl {
     --pf-v5-c-table--cell--Width: 100% !important;
   }
 }
@@ -212,7 +212,7 @@
   gap: var(--pf-v5-global--spacer--md);
 }
 
-.table .pf-v5-c-table {
+.table .pf-v6-c-table {
   --expand-cell-width: 5%;
 
   tr > td[data-test='virtual-body-expand-row'] {

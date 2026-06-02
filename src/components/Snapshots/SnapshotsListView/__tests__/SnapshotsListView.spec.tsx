@@ -94,7 +94,7 @@ describe('SnapshotsListView - Column Headers', () => {
     // There are 2 elements with the text "Name" (filter dropdown and table header).
     const name = screen.queryAllByText('Name');
     expect(name.length).toBe(2);
-    expect(name[1]).toHaveAttribute('class', 'pf-v5-c-table__text');
+    expect(name[1]).toHaveAttribute('class', 'pf-v6-c-table__text');
 
     expect(screen.getByText('Created at')).toBeInTheDocument();
     expect(screen.getByText('Components')).toBeInTheDocument();

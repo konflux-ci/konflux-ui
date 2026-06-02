@@ -90,7 +90,7 @@ export const MultiImageCredentialForm: React.FC<
             </FormFieldGroupExpandable>
           ))}
           <Button
-            className="pf-v5-u-text-align-left"
+            className="pf-v6-u-text-align-left"
             onClick={() =>
               arrayHelpers.push({ registry: '', username: '', password: '', email: '' })
             }

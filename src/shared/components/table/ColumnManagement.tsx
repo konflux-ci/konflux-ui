@@ -97,7 +97,7 @@ function ColumnManagement<T extends string>({
       <Form>
         <FormGroup>
           <Flex direction={{ default: 'column' }}>
-            <FlexItem className="pf-v5-u-my-md">
+            <FlexItem className="pf-v6-u-my-md">
               <Button variant="primary" onClick={handleReset}>
                 Reset to default
               </Button>

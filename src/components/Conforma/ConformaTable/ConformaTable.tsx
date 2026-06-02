@@ -71,7 +71,7 @@ export const ConformaTable: React.FC<React.PropsWithChildren<ConformaTableProps>
   }, [activeSortDirection, activeSortIndex, crResult]);
 
   return sortedCRResult ? (
-    <div className="pf-v5-c-table pf-m-compact pf-m-grid-md">
+    <div className="pf-v6-c-table pf-m-compact pf-m-grid-md">
       <Table
         virtualize
         data={sortedCRResult}

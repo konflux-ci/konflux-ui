@@ -39,7 +39,7 @@ export const ReleasesFilterToolbar: React.FC<Props> = ({
 
   return (
     <Toolbar data-test="releases-filter-toolbar">
-      <ToolbarContent className="pf-v5-u-pl-0">
+      <ToolbarContent className="pf-v6-u-pl-0">
         <ToolbarGroup align={{ default: 'alignStart' }}>
           <ToolbarItem>
             <InputGroup>

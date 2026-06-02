@@ -1,7 +1,7 @@
 .radio-group-field {
   padding-left: var(--pf-v5-global--spacer--sm);
 
-  .pf-v5-c-radio {
+  .pf-v6-c-radio {
     &__description {
       width: 100%;
     }
@@ -11,7 +11,7 @@
     display: flex;
     align-items: flex-start;
 
-    > .pf-v5-c-form__group-label {
+    > .pf-v6-c-form__group-label {
       margin-right: var(--pf-v5-global--spacer--md);
     }
   }

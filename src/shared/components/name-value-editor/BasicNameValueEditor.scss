@@ -39,7 +39,7 @@ $drag-column-width: 83px;
   }
   &--remove {
     grid-area: remove;
-    .pf-v5-c-button {
+    .pf-v6-c-button {
       margin-left: calc(-1 * var(--pf-v5-global--spacer--md));
     }
   }

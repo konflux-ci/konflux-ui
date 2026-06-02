@@ -87,7 +87,7 @@ const ApplicationListView: React.FC<React.PropsWithChildren<unknown>> = () => {
         <PageSection hasBodyWrapper={false} padding={{ default: 'noPadding' }} isFilled>
           {!applications || applications.length === 0 ? (
             <AppEmptyState
-              className="pf-v5-u-mx-lg"
+              className="pf-v6-u-mx-lg"
               isXl
               emptyStateImg={emptyStateImgUrl}
               title="Easily onboard your applications"

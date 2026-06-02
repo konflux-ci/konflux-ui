@@ -141,7 +141,7 @@ const IssueListView = () => {
 
   return (
     <>
-      <Title headingLevel="h3" className="pf-v5-u-mt-lg pf-v5-u-mb-sm">
+      <Title headingLevel="h3" className="pf-v6-u-mt-lg pf-v6-u-mb-sm">
         Issues list <FeatureFlagIndicator flags={['issues-dashboard']} />
       </Title>
       <Content>

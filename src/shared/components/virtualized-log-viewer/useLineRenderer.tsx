@@ -21,7 +21,7 @@ export function useLineRenderer({
   const renderLine = React.useCallback(
     (rowIndex: number) => {
       const lineObj = tokenizeLine(rowIndex);
-      if (!lineObj) return <span className="pf-v5-c-log-viewer__text">&nbsp;</span>;
+      if (!lineObj) return <span className="pf-v6-c-log-viewer__text">&nbsp;</span>;
 
       const { tokens, text } = lineObj;
 
@@ -37,19 +37,19 @@ export function useLineRenderer({
       if (tokens.length === 0) {
         // Empty line: show non-breaking space
         if (!text) {
-          return <span className="pf-v5-c-log-viewer__text">{'\u00A0'}</span>;
+          return <span className="pf-v6-c-log-viewer__text">{'\u00A0'}</span>;
         }
 
         // Plain text with search highlighting
         // Render as a single text token with search matches applied
         const rendered = renderTokenRecursive(text, 0, matches, currentMatch, 0);
-        return <span className="pf-v5-c-log-viewer__text">{rendered}</span>;
+        return <span className="pf-v6-c-log-viewer__text">{rendered}</span>;
       }
 
       // Normal mode: render syntax-highlighted tokens with search matches
       let offset = 0;
       return (
-        <span className="pf-v5-c-log-viewer__text">
+        <span className="pf-v6-c-log-viewer__text">
           {tokens.map((t, i) => {
             const rendered = renderTokenRecursive(t, offset, matches, currentMatch, i);
             offset += flattenTokenText(t).length;

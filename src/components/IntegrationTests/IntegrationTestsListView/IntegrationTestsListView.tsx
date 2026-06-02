@@ -120,7 +120,7 @@ const IntegrationTestsListView: React.FC<React.PropsWithChildren> = () => {
 
   return (
     <>
-      <Title headingLevel="h3" className="pf-v5-u-mt-lg pf-v5-u-mb-sm">
+      <Title headingLevel="h3" className="pf-v6-u-mt-lg pf-v6-u-mb-sm">
         Integration tests
       </Title>
       <Content>

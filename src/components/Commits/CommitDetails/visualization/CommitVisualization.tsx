@@ -43,7 +43,7 @@ const CommitVisualization: React.FC<{ commit: Commit }> = ({ commit }) => {
 
   if (!model || !loaded) {
     return (
-      <div className="pf-v5-u-m-lg">
+      <div className="pf-v6-u-m-lg">
         <Spinner />
       </div>
     );

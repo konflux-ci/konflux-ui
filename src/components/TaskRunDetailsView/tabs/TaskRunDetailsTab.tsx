@@ -74,7 +74,7 @@ const TaskRunDetailsTab: React.FC = () => {
 
   return (
     <>
-      <Title headingLevel="h4" className="pf-v5-c-title pf-v5-u-mt-lg pf-v5-u-mb-lg" size="lg">
+      <Title headingLevel="h4" className="pf-v6-c-title pf-v6-u-mt-lg pf-v6-u-mb-lg" size="lg">
         Task run details
       </Title>
       {!error && (

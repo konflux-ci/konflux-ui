@@ -121,7 +121,7 @@ describe('ComponentListViewPage', () => {
     renderWithQueryClient(<ComponentList />);
     expect(screen.getByTestId('component-list-toolbar')).toBeInTheDocument();
     const nameSearchInput = screen.getByTestId('name-input-filter');
-    const searchInput = nameSearchInput.querySelector('.pf-v5-c-text-input-group__text-input');
+    const searchInput = nameSearchInput.querySelector('.pf-v6-c-text-input-group__text-input');
     fireEvent.change(searchInput, { target: { value: 'nodejs' } });
     const componentList = screen.getByTestId('component-list');
     const componentListItems = within(componentList).getAllByTestId('component-list-item');

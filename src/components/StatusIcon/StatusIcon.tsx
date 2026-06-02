@@ -65,7 +65,7 @@ export const StatusIconWithText: React.FC<
     <>
       <span
         className={css(
-          'pf-v5-u-mr-xs status-icon',
+          'pf-v6-u-mr-xs status-icon',
           pipelineStyles.topologyPipelinesPillStatus,
           (status === runStatus.Running || status === runStatus['In Progress']) && 'icon-spin',
           getRunStatusModifier(runStatusToRunStatus(status)),

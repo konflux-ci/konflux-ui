@@ -62,11 +62,11 @@ const CommitOverviewTab: React.FC = () => {
 
   return (
     <>
-      <Content component="p" className="pf-v5-u-my-lg">
+      <Content component="p" className="pf-v6-u-my-lg">
         Events progression triggered by the commit.
       </Content>
       <CommitVisualization commit={commit} />
-      <Flex className="pf-v5-u-py-lg">
+      <Flex className="pf-v6-u-py-lg">
         <FlexItem flex={{ default: 'flex_3' }}>
           <DescriptionList
             data-test="commit-details"

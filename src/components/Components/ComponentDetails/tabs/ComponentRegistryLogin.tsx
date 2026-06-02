@@ -33,7 +33,7 @@ const ComponentRegistryLogin: React.FC = () => {
 
   return (
     <>
-      <Content className="pf-v5-u-mb-sm">
+      <Content className="pf-v6-u-mb-sm">
         <Content component="p">
           <ExternalLink href={oauthUrl}>Get your authentication token</ExternalLink>
           {' and use it as the password when prompted'}

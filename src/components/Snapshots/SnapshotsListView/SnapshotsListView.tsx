@@ -148,7 +148,7 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
         alignItems={{ default: 'alignItemsCenter' }}
       >
         <FlexItem>
-          <Title size="lg" headingLevel="h3" className="pf-v5-c-title pf-v5-u-mt-lg pf-v5-u-mb-sm">
+          <Title size="lg" headingLevel="h3" className="pf-v6-c-title pf-v6-u-mt-lg pf-v6-u-mb-sm">
             Snapshots
           </Title>
         </FlexItem>

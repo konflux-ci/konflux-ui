@@ -37,7 +37,7 @@ export const BaseTextFilterToolbar: React.FC<BaseTextFilterToolbarProps> = ({
     <Toolbar data-test={dataTest} clearAllFilters={onClearFilters}>
       <ToolbarContent style={{ paddingLeft: noLeftPadding ? '0' : undefined }}>
         {showSearchInput && (
-          <ToolbarItem className="pf-v5-u-ml-0">
+          <ToolbarItem className="pf-v6-u-ml-0">
             <SearchInput
               name={`${label}Input`}
               data-test={`${label}-input-filter`}
