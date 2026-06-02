@@ -5,7 +5,7 @@
   }
   &__sticky {
     position: sticky;
-    background: var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--palette--white */);
+    background: var(--pf-t--global--background--color--primary--default);
     bottom: 0;
   }
   &__shadow {

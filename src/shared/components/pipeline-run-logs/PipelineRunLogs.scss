@@ -27,8 +27,8 @@
   }
   &__logtext {
     position: relative;
-    background: var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--palette--black-1000 */); // pod log background color
-    color: var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--palette--white */);
+    background: var(--pf-t--global--background--color--primary--default); // pod log background color
+    color: var(--pf-t--global--text--color--on-brand--default);
     height: 100%;
     padding: var(--pf-t--global--spacer--sm) var(--pf-t--global--spacer--md);
   }

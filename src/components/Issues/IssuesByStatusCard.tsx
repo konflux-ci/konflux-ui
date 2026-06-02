@@ -10,9 +10,7 @@ import {
 } from '@patternfly/react-core';
 import { CheckCircleIcon } from '@patternfly/react-icons/dist/esm/icons/check-circle-icon';
 import { LockOpenIcon } from '@patternfly/react-icons/dist/esm/icons/lock-open-icon';
-import {
-  t_temp_dev_tbd as greenColor /* CODEMODS: you should update this color token, original v5 token was global_palette_green_400 */,
-} from '@patternfly/react-tokens/dist/js/t_temp_dev_tbd';
+import { t_global_color_nonstatus_green_default as greenColor } from '@patternfly/react-tokens/dist/js/t_global_color_nonstatus_green_default';
 import dayjs from 'dayjs';
 import { useIssues } from '~/kite/kite-hooks';
 import { LoadingSkeleton } from '~/shared';

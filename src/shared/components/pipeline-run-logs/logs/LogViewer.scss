@@ -8,7 +8,7 @@
   }
 
   &__divider {
-    color: var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--palette--black-600 */);
+    color: var(--pf-t--global--text--color--subtle);
     margin: 0 var(--pf-t--global--spacer--sm);
     align-self: center;
   }
@@ -55,11 +55,11 @@
 
 // Force light theme on the log content when user selects "Light theme" (e.g. when main app theme is dark)
 .pf-v6-c-log-viewer.log-viewer--light {
-  --pf-v6-c-log-viewer__main--BackgroundColor: var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--palette--white */);
-  --pf-v6-c-log-viewer__main--BorderColor: var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--palette--black-300 */);
-  --pf-v6-c-log-viewer__text--Color: var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--palette--black-900 */);
-  --pf-v6-c-log-viewer__index--Color: var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--palette--black-600 */);
+  --pf-v6-c-log-viewer__main--BackgroundColor: var(--pf-t--global--background--color--primary--default);
+  --pf-v6-c-log-viewer__main--BorderColor: var(--pf-t--global--border--color--default);
+  --pf-v6-c-log-viewer__text--Color: var(--pf-t--global--text--color--regular);
+  --pf-v6-c-log-viewer__index--Color: var(--pf-t--global--text--color--subtle);
   --pf-v6-c-log-viewer--m-line-numbers__main--before--BackgroundColor: var(
-    --pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--palette--black-300 */
+    --pf-t--global--border--color--default
   );
 }

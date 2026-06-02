@@ -2,10 +2,10 @@
   cursor: pointer;
   &.m-disabled {
     > .pf-topology-pipelines__pill-background {
-      fill: var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--BackgroundColor--200 */);
+      fill: var(--pf-t--global--background--color--secondary--default);
     }
     .pf-topology-pipelines__pill-text {
-      fill: var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--disabled-color--100 */);
+      fill: var(--pf-t--global--text--color--disabled);
     }
   }
   &__popover {

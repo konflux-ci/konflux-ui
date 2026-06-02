@@ -24,7 +24,7 @@ $drag-column-width: 83px;
     "value .";
   gap: var(--pf-t--global--spacer--md);
   padding-bottom: var(--pf-t--global--spacer--md);
-  border-bottom: 1px solid var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--BorderColor--100 */);
+  border-bottom: 1px solid var(--pf-t--global--border--color--default);
   &--name {
     align-items: center;
     display: flex;

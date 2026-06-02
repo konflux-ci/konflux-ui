@@ -310,7 +310,7 @@ export const pipelineRunStatusToGitOpsStatus = (status: string): GitOpsDeploymen
 
 export const getLabelColorFromStatus = (
   status: runStatus,
-): 'blue' | 'cyan' | 'green' | 'orange' | 'purple' | 'red' | 'grey' | 'gold' => {
+): 'blue' | 'teal' | 'green' | 'orange' | 'purple' | 'red' | 'grey' | 'yellow' => {
   switch (status) {
     case runStatus.Succeeded:
       return 'green';
@@ -321,7 +321,7 @@ export const getLabelColorFromStatus = (
       return 'blue';
     case runStatus.Cancelled:
     case runStatus.Cancelling:
-      return 'gold';
+      return 'yellow';
     case runStatus.Idle:
     case runStatus.Pending:
     case runStatus.Skipped:

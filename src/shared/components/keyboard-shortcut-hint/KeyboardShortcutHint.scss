@@ -20,13 +20,13 @@
 
   &__description {
     font-size: var(--pf-t--global--font--size--sm);
-    color: var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--Color--200 */);
+    color: var(--pf-t--global--text--color--subtle);
   }
 
   &__helper-text {
     margin-top: var(--pf-t--global--spacer--sm);
     font-size: var(--pf-t--global--font--size--xs);
-    color: var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--Color--200 */);
+    color: var(--pf-t--global--text--color--subtle);
     font-style: italic;
   }
 }
@@ -43,15 +43,15 @@
     padding: 2px 6px;
     font-size: var(--pf-t--global--font--size--xs);
     font-family: inherit;
-    border: 1px solid var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--BorderColor--100 */);
+    border: 1px solid var(--pf-t--global--border--color--default);
     border-radius: 3px;
-    background-color: var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--BackgroundColor--200 */);
+    background-color: var(--pf-t--global--background--color--secondary--default);
     line-height: 1.4;
   }
 
   &__separator {
     font-size: var(--pf-t--global--font--size--xs);
-    color: var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--Color--200 */);
+    color: var(--pf-t--global--text--color--subtle);
     padding: 0 1px;
   }
 }

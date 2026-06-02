@@ -20,8 +20,7 @@ type FeatureFlagIndicatorProps = {
   'data-test'?: string;
 };
 
-const warningColor =
-  'var(--pf-t--temp--dev--tbd)'; /* CODEMODS: original v5 color was --pf-v5-global--warning-color--100 */
+const warningColor = 'var(--pf-t--global--color--status--warning--default)';
 
 export const FeatureFlagIndicator: React.FC<FeatureFlagIndicatorProps> = ({
   flags,

@@ -4,7 +4,7 @@
   }
 
   &__severity-label {
-    color: var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--Color--200 */);
+    color: var(--pf-t--global--text--color--subtle);
     width: var(--pf-t--global--spacer--2xl);
   }
 
@@ -26,9 +26,9 @@
   &__chart-empty-state {
     width: 300px;
     height: 300px;
-    border: 1px dashed var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--BorderColor--200 */);
+    border: 1px dashed var(--pf-t--global--border--color--default);
     border-radius: var(--pf-t--global--border--radius--small);
-    color: var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--Color--200 */);
+    color: var(--pf-t--global--text--color--subtle);
   }
 
   &__chart-loading-state {

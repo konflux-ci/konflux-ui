@@ -44,7 +44,7 @@ export const GettingStartedCard: React.FC<React.PropsWithChildren<GettingStarted
 
   return (
     !isDismissed && (
-      <PageSection hasBodyWrapper={false} variant={isLight ? 'light' : 'default'}>
+      <PageSection hasBodyWrapper={false} variant={isLight ? 'secondary' : 'default'}>
         <Card>
           <Split>
             {imgSrc && (

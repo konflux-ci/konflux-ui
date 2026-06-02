@@ -11,13 +11,13 @@
     margin-inline-end: 0 !important;
   }
   &__image-flex {
-    background-color: var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--BackgroundColor--200 */);
+    background-color: var(--pf-t--global--background--color--secondary--default);
   }
   &__feedback-image {
     width: 100%;
     height: 100%;
     &--dark {
-      background-color: var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--Color--100 */);
+      background-color: var(--pf-t--global--text--color--regular);
     }
   }
   &__form {
@@ -58,12 +58,12 @@
     padding: inherit !important;
   }
   &__section-card {
-    background-color: var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--BackgroundColor--200 */);
+    background-color: var(--pf-t--global--background--color--secondary--default);
     border-radius: 5px;
     width: 100%;
     &:hover {
       cursor: pointer;
-      border: 1px solid var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--link--Color--light */);
+      border: 1px solid var(--pf-t--global--text--color--link--default);
     }
   }
 

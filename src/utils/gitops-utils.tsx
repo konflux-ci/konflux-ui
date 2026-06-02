@@ -3,15 +3,9 @@ import { ExclamationCircleIcon } from '@patternfly/react-icons/dist/esm/icons/ex
 import WarningTriangleIcon from '@patternfly/react-icons/dist/esm/icons/exclamation-triangle-icon';
 import { InProgressIcon } from '@patternfly/react-icons/dist/esm/icons/in-progress-icon';
 import { NotStartedIcon } from '@patternfly/react-icons/dist/esm/icons/not-started-icon';
-import {
-  t_temp_dev_tbd as greenColor /* CODEMODS: you should update this color token, original v5 token was global_palette_green_400 */,
-} from '@patternfly/react-tokens/dist/js/t_temp_dev_tbd';
-import {
-  t_temp_dev_tbd as orangeColor /* CODEMODS: you should update this color token, original v5 token was global_palette_orange_100 */,
-} from '@patternfly/react-tokens/dist/js/t_temp_dev_tbd';
-import {
-  t_temp_dev_tbd as redColor /* CODEMODS: you should update this color token, original v5 token was global_palette_red_100 */,
-} from '@patternfly/react-tokens/dist/js/t_temp_dev_tbd';
+import { t_global_icon_color_status_danger_default as redColor } from '@patternfly/react-tokens/dist/js/t_global_icon_color_status_danger_default';
+import { t_global_icon_color_status_success_default as greenColor } from '@patternfly/react-tokens/dist/js/t_global_icon_color_status_success_default';
+import { t_global_icon_color_status_warning_default as orangeColor } from '@patternfly/react-tokens/dist/js/t_global_icon_color_status_warning_default';
 import { runStatus } from '~/consts/pipelinerun';
 import {
   GitOpsDeploymentHealthStatus,

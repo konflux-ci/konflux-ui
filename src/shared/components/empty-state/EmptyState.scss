@@ -3,7 +3,7 @@
     padding-top: var(--pf-t--global--spacer--2xl);
     padding-bottom: var(--pf-t--global--spacer--2xl);
     &.m-is-top-level {
-      border: var(--pf-t--global--border--width--regular) var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--palette--black-500 */) dashed;
+      border: var(--pf-t--global--border--width--regular) var(--pf-t--global--border--color--default) dashed;
       border-radius: 3px;
       margin-top: var(--pf-t--global--spacer--xl);
     }
@@ -14,7 +14,7 @@
       width: var(--pf-t--global--spacer--4xl);
     }
     &.m-is-error {
-      color: var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--danger-color--100 */);
+      color: var(--pf-t--global--color--status--danger--default);
     }
   }
 }

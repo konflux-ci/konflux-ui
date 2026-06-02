@@ -2,15 +2,9 @@ import { CheckCircleIcon } from '@patternfly/react-icons/dist/esm/icons/check-ci
 import { DotCircleIcon } from '@patternfly/react-icons/dist/esm/icons/dot-circle-icon';
 import { ExclamationCircleIcon } from '@patternfly/react-icons/dist/esm/icons/exclamation-circle-icon';
 import { ExclamationTriangleIcon } from '@patternfly/react-icons/dist/esm/icons/exclamation-triangle-icon';
-import {
-  t_temp_dev_tbd as redColor /* CODEMODS: you should update this color token, original v5 token was global_danger_color_100 */,
-} from '@patternfly/react-tokens/dist/js/t_temp_dev_tbd';
-import {
-  t_temp_dev_tbd as greenColor /* CODEMODS: you should update this color token, original v5 token was global_success_color_100 */,
-} from '@patternfly/react-tokens/dist/js/t_temp_dev_tbd';
-import {
-  t_temp_dev_tbd as yellowColor /* CODEMODS: you should update this color token, original v5 token was global_warning_color_100 */,
-} from '@patternfly/react-tokens/dist/js/t_temp_dev_tbd';
+import { t_global_icon_color_status_danger_default as redColor } from '@patternfly/react-tokens/dist/js/t_global_icon_color_status_danger_default';
+import { t_global_icon_color_status_success_default as greenColor } from '@patternfly/react-tokens/dist/js/t_global_icon_color_status_success_default';
+import { t_global_icon_color_status_warning_default as yellowColor } from '@patternfly/react-tokens/dist/js/t_global_icon_color_status_warning_default';
 import { ENTERPRISE_CONTRACT_LABEL } from '~/consts/security';
 import { CONFORMA_RESULT_STATUS } from '~/types/conforma';
 import { K8sResourceCommon } from '~/types/k8s';

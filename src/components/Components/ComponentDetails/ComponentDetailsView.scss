@@ -26,27 +26,27 @@
   &__deployment-settings-table {
     display: grid;
     grid-template-columns: 270px 1fr;
-    border-top: 1px solid var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--BorderColor--300 */);
+    border-top: 1px solid var(--pf-t--global--border--color--default);
     &:first-of-type {
       border-top: none;
     }
     &--column {
       display: flex;
       flex-direction: column;
-      border-right: 1px solid var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--BorderColor--300 */);
+      border-right: 1px solid var(--pf-t--global--border--color--default);
       &:last-of-type {
         border-right: none;
       }
     }
     &--empty-row {
       padding: var(--pf-t--global--spacer--sm) var(--pf-t--global--spacer--lg);
-      border-bottom: 1px solid var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--BorderColor--300 */);
+      border-bottom: 1px solid var(--pf-t--global--border--color--default);
       font-style: italic;
 
     }
     &--header, &--setting, &--value {
       padding: var(--pf-t--global--spacer--sm) var(--pf-t--global--spacer--lg);
-      border-bottom: 1px solid var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--BorderColor--300 */);
+      border-bottom: 1px solid var(--pf-t--global--border--color--default);
       &.m-is-hidden {
         color: transparent;
       }
@@ -56,11 +56,11 @@
       font-weight: var(--pf-t--global--font--weight--heading--bold);
       line-height: var(--pf-t--global--font--line-height--body);
       &.m-is-setting {
-        border-right: 1px solid var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--BorderColor--300 */);
+        border-right: 1px solid var(--pf-t--global--border--color--default);
       }
     }
     &--setting {
-      border-right: 1px solid var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--BorderColor--300 */);
+      border-right: 1px solid var(--pf-t--global--border--color--default);
     }
     &--value {
       align-items: center;
@@ -70,7 +70,7 @@
   }
   &__icon-button {
     &.pf-v6-c-button.pf-m-link {
-      color: var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--Color--100 */);
+      color: var(--pf-t--global--text--color--regular);
     }
   }
 }

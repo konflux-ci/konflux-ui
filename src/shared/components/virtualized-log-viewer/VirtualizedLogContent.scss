@@ -10,12 +10,12 @@
 
     // Enable keyboard navigation
     &:focus {
-      outline: 2px solid var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--primary-color--100 */);
+      outline: 2px solid var(--pf-t--global--color--brand--default);
       outline-offset: -2px;
     }
     // Remove focus outline in dark mode (use border instead for better contrast)
     .pf-m-dark &:focus {
-      outline-color: var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--primary-color--200 */);
+      outline-color: var(--pf-t--global--color--brand--hover);
     }
   }
 }
@@ -31,9 +31,9 @@
 }
 
 .log-content__line--highlighted {
-  background-color: var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--palette--gold-50 */);
+  background-color: var(--pf-t--global--color--status--warning--default);
 
   .pf-m-dark & {
-    background-color: var(--pf-t--temp--dev--tbd /* CODEMODS: original v5 color was:--pf-v5-global--palette--gold-700 */);
+    background-color: var(--pf-t--global--color--nonstatus--yellow--hover);
   }
 }

@@ -12,24 +12,12 @@ import {
   Content,
   Title,
 } from '@patternfly/react-core';
-import {
-  t_temp_dev_tbd as gold200 /* CODEMODS: you should update this color token, original v5 token was global_palette_gold_200 */,
-} from '@patternfly/react-tokens/dist/js/t_temp_dev_tbd';
-import {
-  t_temp_dev_tbd as gold300 /* CODEMODS: you should update this color token, original v5 token was global_palette_gold_300 */,
-} from '@patternfly/react-tokens/dist/js/t_temp_dev_tbd';
-import {
-  t_temp_dev_tbd as gold400 /* CODEMODS: you should update this color token, original v5 token was global_palette_gold_400 */,
-} from '@patternfly/react-tokens/dist/js/t_temp_dev_tbd';
-import {
-  t_temp_dev_tbd as gold500 /* CODEMODS: you should update this color token, original v5 token was global_palette_gold_500 */,
-} from '@patternfly/react-tokens/dist/js/t_temp_dev_tbd';
-import {
-  t_temp_dev_tbd as gold600 /* CODEMODS: you should update this color token, original v5 token was global_palette_gold_600 */,
-} from '@patternfly/react-tokens/dist/js/t_temp_dev_tbd';
-import {
-  t_temp_dev_tbd as gold700 /* CODEMODS: you should update this color token, original v5 token was global_palette_gold_700 */,
-} from '@patternfly/react-tokens/dist/js/t_temp_dev_tbd';
+import { chart_color_orange_100 as chartOrange100 } from '@patternfly/react-tokens/dist/js/chart_color_orange_100';
+import { chart_color_yellow_100 as chartYellow100 } from '@patternfly/react-tokens/dist/js/chart_color_yellow_100';
+import { chart_color_yellow_200 as chartYellow200 } from '@patternfly/react-tokens/dist/js/chart_color_yellow_200';
+import { chart_color_yellow_300 as chartYellow300 } from '@patternfly/react-tokens/dist/js/chart_color_yellow_300';
+import { chart_color_yellow_400 as chartYellow400 } from '@patternfly/react-tokens/dist/js/chart_color_yellow_400';
+import { chart_color_yellow_500 as chartYellow500 } from '@patternfly/react-tokens/dist/js/chart_color_yellow_500';
 import { capitalize } from 'lodash-es';
 import { IssueSeverity } from '~/kite/issue-type';
 import { useIssueCountsBySeverity, useIssueCountsByType } from '~/kite/kite-hooks';
@@ -47,12 +35,12 @@ const CHART_DIMENSIONS = {
 } as const;
 
 const LEGEND_COLORS = [
-  gold500.value,
-  gold200.value,
-  gold400.value,
-  gold600.value,
-  gold300.value,
-  gold700.value,
+  chartYellow300.value,
+  chartYellow100.value,
+  chartYellow200.value,
+  chartYellow400.value,
+  chartYellow500.value,
+  chartOrange100.value,
 ];
 
 const SEVERITY_ORDER = [
