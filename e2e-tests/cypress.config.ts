@@ -119,7 +119,7 @@ export default defineConfig({
         LOCAL_CLUSTER: false,
         LOGIN_PROVIDER: '',
         PERIODIC_RUN_STAGE: false,
-        PIPELINE: 'docker-build-oci-ta',
+        PIPELINE: 'docker-build-oci-ta-min',
         SOURCE_REPO_OWNER: 'hac-test',
         SOURCE_REPO_NAME: 'devfile-sample-code-with-quarkus',
         resolution: 'high',
