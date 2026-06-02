@@ -35,7 +35,7 @@ const AppHeaderComponent: React.FC<AppHeaderPros> = ({
             data-test="sidebar-toggle"
             onSidebarToggle={onSideBarOpen}
             isSidebarOpen={isSideBarOpen}
-          ></PageToggleButton>
+          />
         </MastheadToggle>
         <MastheadBrand>
           <MastheadLogo>

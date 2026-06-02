@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router-dom';
-import { Table, Thead, Tr, Th, Tbody } from '@patternfly/react-table';
+import { Table, Tbody, Th, Thead, Tr } from '@patternfly/react-table';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { useK8sAndKarchResources } from '~/hooks/useK8sAndKarchResources';
@@ -40,7 +40,9 @@ jest.mock('../../../shared/components/table', () => {
           <Thead>
             <Tr>
               {columns.map((col, idx) => (
-                <Th key={idx} {...(col.props ?? {})}>{col.title}</Th>
+                <Th key={idx} {...(col.props ?? {})}>
+                  {col.title}
+                </Th>
               ))}
             </Tr>
           </Thead>
@@ -118,7 +120,7 @@ describe('ReleasesListView', () => {
       'aria-sort',
       'descending',
     );
-    expect(screen.getByRole('columnheader', { name: 'Name' })).toHaveAttribute('aria-sort', 'none');
+    expect(screen.getByRole('columnheader', { name: 'Name' })).not.toHaveAttribute('aria-sort');
     const rows = screen.getAllByRole('row');
     expect(rows[1].children[0]).toHaveTextContent('test-release-2');
     expect(rows[2].children[0]).toHaveTextContent('test-release');
@@ -134,10 +136,7 @@ describe('ReleasesListView', () => {
       'aria-sort',
       'ascending',
     );
-    expect(screen.getByRole('columnheader', { name: 'Created' })).toHaveAttribute(
-      'aria-sort',
-      'none',
-    );
+    expect(screen.getByRole('columnheader', { name: 'Created' })).not.toHaveAttribute('aria-sort');
     const rows = screen.getAllByRole('row');
     expect(rows[1].children[0]).toHaveTextContent('test-release');
     expect(rows[2].children[0]).toHaveTextContent('test-release-2');

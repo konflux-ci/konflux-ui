@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChartPie } from '@patternfly/react-charts/victory';
+import { ChartPie } from '@patternfly/react-charts';
 import {
   Bullseye,
   Button,

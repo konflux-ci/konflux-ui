@@ -12,7 +12,6 @@ import {
   Alert,
   AlertVariant,
 } from '@patternfly/react-core';
-
 import { useField } from 'formik';
 import HelpPopover from '../../../components/HelpPopover';
 import { getFieldId } from '../../../shared/components/formik-fields/field-utils';

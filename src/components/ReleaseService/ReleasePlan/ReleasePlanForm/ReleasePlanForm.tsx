@@ -62,7 +62,7 @@ export const ReleasePlanForm: React.FC<Props> = ({
           <SwitchField
             name="autoRelease"
             formLabel="Auto release"
-            labelIcon={
+            labelHelp={
               <HelpPopover
                 headerContent="Auto release"
                 bodyContent="Your application will trigger the release every time a snapshot is created."
@@ -72,7 +72,7 @@ export const ReleasePlanForm: React.FC<Props> = ({
           <SwitchField
             name="standingAttribution"
             formLabel="Standing attribution"
-            labelIcon={
+            labelHelp={
               <HelpPopover
                 headerContent="Standing attribution"
                 bodyContent="The author of the release plan will be provided as the standing attribution for releases."

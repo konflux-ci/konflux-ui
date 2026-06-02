@@ -1,5 +1,5 @@
 import { MemoryRouter } from 'react-router-dom';
-import { Table, Thead, Tr, Th, Tbody } from '@patternfly/react-table';
+import { Table, Tbody, Th, Thead, Tr } from '@patternfly/react-table';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { defaultKonfluxRoleMap } from '../../../__data__/role-data';
@@ -36,7 +36,9 @@ jest.mock('../../../shared/components/table', () => {
           <Thead>
             <Tr>
               {columns.map((col, idx) => (
-                <Th key={idx} {...(col.props ?? {})}>{col.title}</Th>
+                <Th key={idx} {...(col.props ?? {})}>
+                  {col.title}
+                </Th>
               ))}
             </Tr>
           </Thead>
@@ -137,7 +139,7 @@ describe('UserAccessListView', () => {
     useAccessReviewModalMock.mockReturnValue([false]);
     render(UserAccessList);
     const grantAccessButton = screen.getByText('Grant access');
-    expect(grantAccessButton.getAttribute('aria-disabled')).toEqual('true');
+    expect(grantAccessButton.closest('button')).toHaveAttribute('aria-disabled', 'true');
   });
 
   it('should handle undefined subjects in role bindings', () => {

@@ -11,8 +11,6 @@ type AppEmptyStateProps = {
 } & EmptyStateProps;
 
 const AppEmptyState: React.FC<React.PropsWithChildren<AppEmptyStateProps>> = ({
-  emptyStateImg,
-  isXl,
   className,
   title,
   children,

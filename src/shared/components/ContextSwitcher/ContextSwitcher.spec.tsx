@@ -135,12 +135,9 @@ describe('ContextSwitcher', () => {
     expect(screen.getByText('No Visibility Item')).toBeInTheDocument();
 
     // Check that visibility icons are present
-    const lockOpenIcons = screen
-      .getAllByRole('img', { hidden: true })
-      .filter((svg) => svg.getAttribute('viewBox') === '0 0 576 512');
-    const lockIcons = screen
-      .getAllByRole('img', { hidden: true })
-      .filter((svg) => svg.getAttribute('viewBox') === '0 0 448 512');
+    const allSvgs = screen.getAllByRole('img', { hidden: true });
+    const lockOpenIcons = allSvgs.filter((svg) => svg.querySelector('svg[viewBox="0 0 576 512"]'));
+    const lockIcons = allSvgs.filter((svg) => svg.querySelector('svg[viewBox="0 0 448 512"]'));
 
     expect(lockOpenIcons.length).toBeGreaterThan(0);
     expect(lockIcons.length).toBeGreaterThan(0);
@@ -200,7 +197,7 @@ describe('ContextSwitcher Click outside hook', () => {
   });
 
   it('should not close Menu on inside click', () => {
-render(
+    render(
       <div data-test="container-div">
         <ContextSwitcher menuItems={items} resourceType="application" footer={<>footer text</>} />
         <div data-test="outside-item">This is a div outside the switcher</div>

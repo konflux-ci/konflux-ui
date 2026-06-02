@@ -12,7 +12,6 @@ import {
   TextInputGroupUtilities,
   Button,
 } from '@patternfly/react-core';
-
 import { TimesIcon } from '@patternfly/react-icons/dist/esm/icons/times-icon';
 import { ContextOption } from './utils/creation-utils';
 

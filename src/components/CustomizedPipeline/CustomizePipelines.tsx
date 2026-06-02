@@ -15,7 +15,7 @@ import {
   ModalBoxFooter,
   ModalBoxHeader,
 } from '@patternfly/react-core/deprecated';
-import { Tbody, Thead, Th, Tr, Td, Table /* data-codemods */ } from '@patternfly/react-table';
+import { Tbody, Thead, Th, Tr, Td, Table } from '@patternfly/react-table';
 import SendIconUrl from '../../assets/send.svg';
 import SuccessIconUrl from '../../assets/success.svg';
 import { LEARN_MORE_GITLAB_OR_FORGEJO_URL } from '../../consts/documentation';
