@@ -224,7 +224,7 @@ import { Toolbar, ToolbarContent, ToolbarItem } from '@patternfly/react-core';
 
 <Toolbar usePageInsets clearAllFilters={onClearFilters}>
   <ToolbarContent>
-    <ToolbarItem className="pf-v5-u-ml-0">
+    <ToolbarItem className="pf-v6-u-ml-0">
       <SearchInput
         placeholder="Filter by name..."
         onChange={(_, value) => onTextInput(value)}
@@ -351,41 +351,41 @@ Use PatternFly design tokens. Never hardcode pixel values.
 
 ```scss
 // Spacing scale
-gap: var(--pf-v5-global--spacer--xs);    // 4px
-gap: var(--pf-v5-global--spacer--sm);    // 8px
-gap: var(--pf-v5-global--spacer--md);    // 16px
-gap: var(--pf-v5-global--spacer--lg);    // 24px
-gap: var(--pf-v5-global--spacer--xl);    // 32px
-gap: var(--pf-v5-global--spacer--2xl);   // 48px
-gap: var(--pf-v5-global--spacer--3xl);   // 64px
+gap: var(--pf-t--global--spacer--xs);    // 4px
+gap: var(--pf-t--global--spacer--sm);    // 8px
+gap: var(--pf-t--global--spacer--md);    // 16px
+gap: var(--pf-t--global--spacer--lg);    // 24px
+gap: var(--pf-t--global--spacer--xl);    // 32px
+gap: var(--pf-t--global--spacer--2xl);   // 48px
+gap: var(--pf-t--global--spacer--3xl);   // 64px
 ```
 
 ### Color Tokens
 
 ```scss
 // Semantic colors
-color: var(--pf-v5-global--danger-color--100);     // errors
-color: var(--pf-v5-global--warning-color--100);    // warnings
-color: var(--pf-v5-global--success-color--100);    // success
-color: var(--pf-v5-global--info-color--100);       // info
-color: var(--pf-v5-global--disabled-color--100);   // muted
-color: var(--pf-v5-global--link--Color);           // links
+color: var(--pf-t--global--color--status--danger--default);     // errors
+color: var(--pf-t--global--color--status--warning--default);    // warnings
+color: var(--pf-t--global--color--status--success--default);    // success
+color: var(--pf-t--global--color--status--info--default);       // info
+color: var(--pf-t--global--text--color--disabled);              // muted
+color: var(--pf-t--global--text--color--link--default);         // links
 
 // Background
-background-color: var(--pf-v5-global--BackgroundColor--200);
+background-color: var(--pf-t--global--background--color--secondary--default);
 
 // Border
-border: var(--pf-v5-global--BorderWidth--sm) solid var(--pf-v5-global--BorderColor--100);
+border: var(--pf-t--global--border--width--regular) solid var(--pf-t--global--border--color--default);
 ```
 
 ### Typography Tokens
 
 ```scss
-font-size: var(--pf-v5-global--FontSize--sm);
-font-size: var(--pf-v5-global--FontSize--md);
-font-size: var(--pf-v5-global--FontSize--lg);
-font-weight: var(--pf-v5-global--FontWeight--bold);
-font-family: var(--pf-v5-global--FontFamily--monospace);
+font-size: var(--pf-t--global--font--size--sm);
+font-size: var(--pf-t--global--font--size--md);
+font-size: var(--pf-t--global--font--size--lg);
+font-weight: var(--pf-t--global--font--weight--heading--bold);
+font-family: var(--pf-t--global--font--family--mono);
 ```
 
 ### Inline Style Tokens (TSX)
@@ -393,8 +393,8 @@ font-family: var(--pf-v5-global--FontFamily--monospace);
 Only acceptable inline styles are PF token references:
 
 ```tsx
-<Flex style={{ marginTop: 'var(--pf-v5-global--spacer--md)' }}>
-<Stack style={{ marginTop: 'var(--pf-v5-global--spacer--lg)' }} hasGutter>
+<Flex style={{ marginTop: 'var(--pf-t--global--spacer--md)' }}>
+<Stack style={{ marginTop: 'var(--pf-t--global--spacer--lg)' }} hasGutter>
 ```
 
 ## Icon Imports
@@ -434,19 +434,19 @@ import { css } from '@patternfly/react-styles';
 ```scss
 .my-component {
   // Custom styles using PF tokens
-  padding: var(--pf-v5-global--spacer--md);
+  padding: var(--pf-t--global--spacer--md);
 
   &__header {
-    margin-bottom: var(--pf-v5-global--spacer--sm);
+    margin-bottom: var(--pf-t--global--spacer--sm);
   }
 
   &--compact {
-    padding: var(--pf-v5-global--spacer--sm);
+    padding: var(--pf-t--global--spacer--sm);
   }
 
   // Override PF component token within this component scope
-  .pf-v5-c-description-list {
-    --pf-v5-c-description-list--GridTemplateColumns: repeat(3, 1fr);
+  .pf-v6-c-description-list {
+    --pf-v6-c-description-list--GridTemplateColumns: repeat(3, 1fr);
   }
 }
 ```

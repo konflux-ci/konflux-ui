@@ -188,7 +188,7 @@ MyFeatureDetailsView (parent route element)
 ```tsx
 const MyFeatureOverviewTab: React.FC = () => (
   <>
-    <Title headingLevel="h4" size="lg" className="pf-v5-u-mt-lg pf-v5-u-mb-lg">
+    <Title headingLevel="h4" size="lg" className="pf-v6-u-mt-lg pf-v6-u-mb-lg">
       Resource details
     </Title>
     <Flex>
