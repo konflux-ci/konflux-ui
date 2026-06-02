@@ -81,7 +81,7 @@ const ActionItem: React.FC<
           style={{
             color: isDisabled
               ? 'var(--pf-t--global--text--color--disabled)'
-              : 'var(--pf-v5-c-content--Color)',
+              : 'var(--pf-v6-c-content--Color)',
           }}
           isAriaDisabled={isDisabled}
           analytics={action.analytics}

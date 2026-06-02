@@ -9,7 +9,7 @@
 .conforma-description-list {
   // means the grid will have 3 equal-width columns,
   // each taking up one fraction (1fr) of the available space.
-  --pf-v5-c-description-list--GridTemplateColumns: repeat(3, 1fr);
+  --pf-v6-c-description-list--GridTemplateColumns: repeat(3, 1fr);
 
   .pf-v6-c-description-list__term,
   .pf-v6-c-description-list__description {
