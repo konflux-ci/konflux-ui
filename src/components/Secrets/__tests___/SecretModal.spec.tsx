@@ -130,8 +130,7 @@ describe('SecretModal', () => {
 
     act(() => {
       expect(screen.queryByTestId('build-secret-modal')).toBeInTheDocument();
-      const modal = screen.queryByTestId('build-secret-modal');
-      fireEvent.click(modal.querySelector('#secret-name-toggle-select-typeahead'));
+      fireEvent.click(screen.getByRole('button', { name: 'secret-name-dropdown' }));
     });
     act(() => {
       fireEvent.click(screen.queryByText('snyk-secret'));
@@ -157,8 +156,7 @@ describe('SecretModal', () => {
   it('should show all the predefined tasks in the select dropdown', async () => {
     await renderSecretModal(initialValues, [testSecret]);
 
-    const modal = screen.getByTestId('build-secret-modal');
-    fireEvent.click(modal.querySelector('#secret-name-toggle-select-typeahead'));
+    fireEvent.click(screen.getByRole('button', { name: 'secret-name-dropdown' }));
 
     await waitFor(() => {
       Object.values(supportedPartnerTasksSecrets).forEach((partnerSecret) => {
@@ -170,23 +168,30 @@ describe('SecretModal', () => {
   it('should not show the secrets in the select dropdown if it is already existing', async () => {
     await renderSecretModal(initialValues, [snykSecret]);
 
-    const modal = screen.getByTestId('build-secret-modal');
-    fireEvent.click(modal.querySelector('#secret-name-toggle-select-typeahead'));
+    fireEvent.click(screen.getByRole('button', { name: 'secret-name-dropdown' }));
 
-    expect(screen.queryByText('snyk-secret')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.queryByText('snyk-secret')).toBeInTheDocument();
+    });
   });
 
   it('should remove the selected value when clear button is clicked', async () => {
     await renderSecretModal(initialValues);
 
-    const modal = screen.getByTestId('build-secret-modal');
-    fireEvent.click(modal.querySelector('#secret-name-toggle-select-typeahead'));
+    fireEvent.click(screen.getByRole('button', { name: 'secret-name-dropdown' }));
+
+    await waitFor(() => {
+      expect(screen.getByText('snyk-secret')).toBeVisible();
+    });
 
     fireEvent.click(screen.getByText('snyk-secret'));
 
     await waitFor(() => {
-      fireEvent.click(modal.querySelector('.pf-v5-c-select__toggle-clear'));
-      expect(screen.queryByText('snyk-secret')).not.toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'Clear input value' }));
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByDisplayValue('snyk-secret')).not.toBeInTheDocument();
     });
   });
 
@@ -203,8 +208,7 @@ describe('SecretModal', () => {
 
     act(() => {
       expect(screen.queryByTestId('build-secret-modal')).toBeInTheDocument();
-      const modal = screen.queryByTestId('build-secret-modal');
-      fireEvent.click(modal.querySelector('#secret-name-toggle-select-typeahead'));
+      fireEvent.click(screen.getByRole('button', { name: 'secret-name-dropdown' }));
     });
 
     act(() => {
