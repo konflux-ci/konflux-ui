@@ -19,7 +19,7 @@ runs:
     # konflux-ci is cloned to /home/runner/work/konflux-ui/konflux-ui
     # as it have to be at home folder to use helm/kind-action@v1 action
     - name: Checkout Repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         repository: 'konflux-ci/konflux-ci'
         path: 'konflux-ci'

@@ -28,7 +28,7 @@ jobs:
       JOB_TYPE: 'periodic-stage'
       SUITE: 'features'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           repository: ${{ github.repository }}
           ref: "${{ env.HEAD_SHA }}"
