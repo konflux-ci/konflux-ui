@@ -54,12 +54,13 @@
 }
 
 // Force light theme on the log content when user selects "Light theme" (e.g. when main app theme is dark)
+// Uses base tokens (fixed values) so they don't adapt to the app-level dark theme
 .pf-v6-c-log-viewer.log-viewer--light {
-  --pf-v6-c-log-viewer__main--BackgroundColor: var(--pf-t--global--background--color--primary--default);
-  --pf-v6-c-log-viewer__main--BorderColor: var(--pf-t--global--border--color--default);
-  --pf-v6-c-log-viewer__text--Color: var(--pf-t--global--text--color--regular);
-  --pf-v6-c-log-viewer__index--Color: var(--pf-t--global--text--color--subtle);
+  --pf-v6-c-log-viewer__main--BackgroundColor: var(--pf-t--global--background--color--100);
+  --pf-v6-c-log-viewer__main--BorderColor: var(--pf-t--global--border--color--100);
+  --pf-v6-c-log-viewer__text--Color: var(--pf-t--global--text--color--100);
+  --pf-v6-c-log-viewer__index--Color: var(--pf-t--global--text--color--200);
   --pf-v6-c-log-viewer--m-line-numbers__main--before--BackgroundColor: var(
-    --pf-t--global--border--color--default
+    --pf-t--global--background--color--200
   );
 }

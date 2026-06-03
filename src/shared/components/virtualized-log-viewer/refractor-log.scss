@@ -53,7 +53,7 @@
   .token.mime-type,
   .token.filename,
   .token.file-path {
-    color: var(--pf-t--global--color--nonstatus--blue--default);
+    color: var(--pf-t--global--color--nonstatus--blue--300);
   }
 
   /* ================= Date and Time ================= */
@@ -66,7 +66,7 @@
   /* ================= Strings ================= */
 
   .token.string {
-    color: var(--pf-t--global--color--nonstatus--green--default);
+    color: var(--pf-t--global--color--nonstatus--green--300);
   }
 
   /* ================= Operators and Punctuation ================= */
@@ -86,7 +86,7 @@
     color: var(--pf-t--global--color--status--danger--hover);
 
     .token.keyword {
-      color: var(--pf-t--global--color--status--danger--default);
+      color: var(--pf-t--global--color--status--danger--300);
       font-weight: 600;
     }
 
@@ -95,7 +95,7 @@
     }
 
     .token.punctuation {
-      color: var(--pf-t--global--color--status--danger--default);
+      color: var(--pf-t--global--color--status--danger--300);
     }
   }
 
@@ -106,7 +106,7 @@
   .token.cli-arg {
     .token.key,
     .token.attr-name {
-      color: var(--pf-t--global--color--nonstatus--orange--default);
+      color: var(--pf-t--global--color--nonstatus--orange--300);
       font-weight: 500;
     }
 
@@ -127,27 +127,27 @@
   .token.mac-address,
   .token.domain,
   .token.uuid {
-    color: var(--pf-t--global--color--nonstatus--purple--default);
+    color: var(--pf-t--global--color--nonstatus--purple--300);
   }
 
   .token.hash {
-    color: var(--pf-t--global--color--nonstatus--yellow--default);
+    color: var(--pf-t--global--color--nonstatus--yellow--300);
     font-family: monospace;
   }
 
   .token.pid {
-    color: var(--pf-t--global--color--nonstatus--teal--default);
+    color: var(--pf-t--global--color--nonstatus--teal--300);
   }
 
   // Generic numbers (not dates/times)
   .token.number {
-    color: var(--pf-t--global--color--nonstatus--teal--default);
+    color: var(--pf-t--global--color--nonstatus--teal--300);
   }
 
   /* ================= Booleans ================= */
 
   .token.boolean {
-    color: var(--pf-t--global--color--nonstatus--blue--default);
+    color: var(--pf-t--global--color--nonstatus--blue--300);
     font-weight: 600;
   }
 

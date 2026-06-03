@@ -40,6 +40,11 @@
     min-width: 208px;
     margin-top: var(--pf-t--global--spacer--lg);
     overflow-y: auto;
+
+    .pf-v6-c-nav__link.pf-m-current {
+      --pf-v6-c-nav__link--m-current--BackgroundColor: var(--pf-t--global--background--color--primary--clicked);
+      border-inline-start: 3px solid var(--pf-t--global--color--brand--default);
+    }
   }
   &__container {
     flex: 1;
