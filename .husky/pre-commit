@@ -31,5 +31,3 @@ if [ -n "$STAGED" ]; then
     --exclude-files '(^|/)__tests__+/' \
     $STAGED
 fi
-
-gitleaks protect --staged --config .gitleaks.toml

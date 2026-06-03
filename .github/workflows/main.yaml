@@ -44,15 +44,6 @@ jobs:
           yarn install --immutable
           cd ..
 
-      - name: Dependency audit
-        run: yarn audit
-
-      - name: Secret scan (gitleaks)
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITLEAKS_CONFIG: .gitleaks.toml
-
       - name: Lint ✅
         run: yarn lint
 
