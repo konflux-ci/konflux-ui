@@ -53,11 +53,10 @@
     "NODE_ENV": "development"
   },
 
-  // Run arguments for the container - compatible with both Docker and Podman
-  "runArgs": ["--init", "--userns=keep-id"],
+  // Run arguments for the container
+  "runArgs": ["--init"],
 
-  // Mount the project directory
-  "workspaceFolder": "/workspaces/konflux-ui",
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
 
   // Lifecycle scripts
   "initializeCommand": "echo 'Initializing Konflux UI devcontainer...' && echo 'Copying git configuration files...' && mkdir -p .devcontainer/.gitconfig-dir && cp ~/.gitconfig* .devcontainer/.gitconfig-dir/ 2>/dev/null || echo 'No gitconfig files found in home directory'",
