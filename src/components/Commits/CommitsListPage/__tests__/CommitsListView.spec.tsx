@@ -50,7 +50,7 @@ jest.mock('../../../../shared/components/table/TableComponent', () => {
     const columns = props.Header(cProps);
 
     return (
-      <Table role="table" aria-label="table" variant="compact" borders={false}>
+      <Table role="table" aria-label="table" variant="compact" borders={true}>
         <Thead>
           <Tr>
             {columns.map((col, idx) => (

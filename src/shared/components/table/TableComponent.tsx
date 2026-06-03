@@ -166,7 +166,7 @@ const TableComponent: React.FC<React.PropsWithChildren<TableProps>> = ({
           role={virtualize ? 'presentation' : 'grid'}
           aria-label={virtualize ? null : ariaLabel}
           variant="compact"
-          borders={false}
+          borders={true}
         >
           <Thead role="rowgroup">
             <Tr>

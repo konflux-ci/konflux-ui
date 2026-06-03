@@ -44,7 +44,7 @@ jest.mock('~/shared/components/table/TableComponent', () => {
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [data]);
     return (
-      <Table role="table" aria-label="table" variant="compact" borders={false}>
+      <Table role="table" aria-label="table" variant="compact" borders={true}>
         <Thead>
           <Tr>
             {columns.map((col, idx) => (
