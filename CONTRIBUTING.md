@@ -85,6 +85,17 @@ Please ensure your PR is complete and clear — this helps reviewers respond fas
 
 ---
 
+## Git hooks and local checks
+
+Commits are enforced by **Husky** (installed via `yarn install` → `prepare` script):
+
+- **pre-commit:** `yarn lint-staged` (Prettier, ESLint restricted imports, Stylelint)
+- **commit-msg:** Conventional commits via Commitlint (see [Commit Guidelines](#commit-guidelines) below)
+
+**Claude Code / Cursor:** Shared agent hooks auto-format supported files after edits — [`.claude/settings.json`](./.claude/settings.json).
+
+---
+
 ## Development Environment
 
 - For detailed instructions on how to build and run the project, refer to the [README](./README.md).
