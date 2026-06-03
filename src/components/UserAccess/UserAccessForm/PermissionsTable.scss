@@ -1,8 +1,8 @@
 .permissions-table {
   border: var(--pf-v5-c-table--border-width--base) solid var(--pf-v5-c-table--BorderColor);
+  table-layout: fixed;
 
-  .pf-v5-c-table__thead,
-  .pf-v5-c-table__td {
+  &__cell {
     width: 50%;
   }
 

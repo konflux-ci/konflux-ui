@@ -77,13 +77,14 @@ const permissions: Record<NamespaceRole, Record<string, Permission[]>> = {
 
 export const PermissionsTable = React.memo<{ role: NamespaceRole }>(({ role }) => {
   const rolePermissions = permissions[role];
+  const cellClass = 'permissions-table__cell';
 
   return (
     <Table aria-label="List of permissions" variant="compact" className="permissions-table">
       <Thead>
         <Tr>
-          <Th>Permissions for</Th>
-          <Th>Access type</Th>
+          <Th className={cellClass}>Permissions for</Th>
+          <Th className={cellClass}>Access type</Th>
         </Tr>
       </Thead>
       <Tbody>
@@ -91,11 +92,11 @@ export const PermissionsTable = React.memo<{ role: NamespaceRole }>(({ role }) =
           const perms = rolePermissions[key];
           return (
             <Tr key={key}>
-              <Td>{key}</Td>
+              <Td className={cellClass}>{key}</Td>
               {perms.length === 1 ? (
-                <Td>{perms[0]}</Td>
+                <Td className={cellClass}>{perms[0]}</Td>
               ) : (
-                <Td>{`${perms.slice(0, perms.length - 1).join(', ')} and ${
+                <Td className={cellClass}>{`${perms.slice(0, perms.length - 1).join(', ')} and ${
                   perms[perms.length - 1]
                 }`}</Td>
               )}
