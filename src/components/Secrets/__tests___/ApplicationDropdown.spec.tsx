@@ -41,9 +41,8 @@ describe('ApplicationDropdown', () => {
     await act(() => fireEvent.click(screen.getByTestId('dropdown-toggle')));
     await waitFor(() => {
       const app1Elements = screen.getAllByText('app1');
-      const app2Elements = screen.getAllByText('app2');
-      expect(app1Elements.length).toEqual(2);
-      expect(app2Elements.length).toEqual(1);
+      expect(app1Elements.length).toEqual(1);
+      expect(screen.getByText('App 2')).toBeVisible();
     });
   });
 

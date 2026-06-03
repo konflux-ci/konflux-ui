@@ -69,7 +69,7 @@ const ReleasePlanAdmissionListView: React.FC<React.PropsWithChildren<unknown>> =
           Row={(props) => {
             const obj = props.obj as ReleasePlanAdmissionKind;
 
-            return <ReleasePlanAdmissionListRow {...props} obj={obj} customData={{ namespace }} />;
+            return <ReleasePlanAdmissionListRow {...props} obj={obj} />;
           }}
           loaded
           getRowProps={(obj: ReleasePlanAdmissionKind) => ({

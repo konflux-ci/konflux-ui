@@ -2,24 +2,21 @@ import * as React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Button,
+  Divider,
+  Dropdown,
+  DropdownItem,
+  DropdownList,
   Flex,
   FlexItem,
   Icon,
+  MenuToggle,
   PageGroup,
   PageSection,
   PageSectionVariants,
   Text,
   TextContent,
 } from '@patternfly/react-core';
-import {
-  Dropdown,
-  DropdownGroup,
-  DropdownItem,
-  DropdownSeparator,
-  DropdownToggle,
-} from '@patternfly/react-core/deprecated';
 import { ArrowLeftIcon } from '@patternfly/react-icons/dist/esm/icons/arrow-left-icon';
-import { CaretDownIcon } from '@patternfly/react-icons/dist/esm/icons/caret-down-icon';
 import { css } from '@patternfly/react-styles';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { FlagKey } from '~/feature-flags/flags';
@@ -70,14 +67,7 @@ const DetailsPage: React.FC<React.PropsWithChildren<DetailsPageProps>> = ({
           return acc;
         }
         if (type === 'separator') {
-          acc.push(<DropdownSeparator key={key} />);
-          if (label) {
-            acc.push(<DropdownGroup key={`${key}-group`} label={label} />);
-          }
-          return acc;
-        }
-        if (type === 'section-label') {
-          acc.push(<DropdownGroup key={`${key}-group`} label={label} data-test={key} />);
+          acc.push(<Divider key={key} />);
           return acc;
         }
         if (isDisabled && disabledTooltip) {
@@ -86,21 +76,29 @@ const DetailsPage: React.FC<React.PropsWithChildren<DetailsPageProps>> = ({
               key={key}
               data-test={key}
               {...props}
-              tooltip={disabledTooltip}
+              tooltipProps={disabledTooltip ? { content: disabledTooltip } : undefined}
               isAriaDisabled
             >
               {label}
             </DropdownItem>,
           );
-        } else {
+        } else if (component && React.isValidElement(component)) {
+          const { children: componentChildren, ...componentProps } = component.props;
           acc.push(
             <DropdownItem
               key={key}
               data-test={key}
               isDisabled={isDisabled}
-              component={!isDisabled ? component : 'a'}
+              component={component.type as React.ElementType}
+              {...componentProps}
               {...props}
             >
+              {componentChildren || label}
+            </DropdownItem>,
+          );
+        } else {
+          acc.push(
+            <DropdownItem key={key} data-test={key} isDisabled={isDisabled} {...props}>
               {label}
             </DropdownItem>,
           );
@@ -153,21 +151,24 @@ const DetailsPage: React.FC<React.PropsWithChildren<DetailsPageProps>> = ({
             {actions?.length ? (
               <FlexItem>
                 <Dropdown
-                  data-test="details__actions"
-                  position="right"
-                  toggle={
-                    <DropdownToggle
-                      onToggle={() => setIsOpen(!isOpen)}
-                      toggleIndicator={CaretDownIcon}
-                      toggleVariant="primary"
+                  popperProps={{ position: 'right' }}
+                  toggle={(toggleRef) => (
+                    <MenuToggle
+                      data-test="details__actions"
+                      ref={toggleRef}
+                      onClick={() => setIsOpen(!isOpen)}
+                      isExpanded={isOpen}
+                      variant="primary"
                     >
                       Actions
-                    </DropdownToggle>
-                  }
-                  onSelect={() => setIsOpen(!isOpen)}
+                    </MenuToggle>
+                  )}
+                  onSelect={() => setIsOpen(false)}
+                  onOpenChange={setIsOpen}
                   isOpen={isOpen}
-                  dropdownItems={dropdownItems}
-                />
+                >
+                  <DropdownList>{dropdownItems}</DropdownList>
+                </Dropdown>
               </FlexItem>
             ) : null}
           </Flex>

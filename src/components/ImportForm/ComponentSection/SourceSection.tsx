@@ -76,7 +76,7 @@ export const SourceSection = () => {
         helperText="Supports GitHub, GitLab, and Forgejo repositories"
         validated={validated}
         isRequired
-        data-testid="enter-source"
+        data-test="enter-source"
         onChange={handleChange}
       />
       <SwitchField name="isPrivateRepo" label="Should the image produced be private?" />

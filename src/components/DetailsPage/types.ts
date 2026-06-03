@@ -1,4 +1,4 @@
-import { DropdownItemProps } from '@patternfly/react-core/deprecated';
+import { DropdownItemProps } from '@patternfly/react-core';
 
 export type Action = {
   type?: string;
@@ -6,7 +6,8 @@ export type Action = {
   label: React.ReactNode;
   hidden?: boolean;
   disabledTooltip?: React.ReactNode;
-} & Omit<DropdownItemProps, 'label'>;
+  component?: React.ReactNode;
+} & Omit<DropdownItemProps, 'label' | 'component'>;
 
 export type DetailsPageTabProps = {
   key: string;

@@ -102,7 +102,7 @@ const CommitsListRow: React.FC<React.PropsWithChildren<CommitsListRowProps>> = (
             header: 'More commit components',
             ariaLabel: 'More commit components',
             moreText: (count: number) => `${count} more`,
-            dataTestIdPrefix: 'more-components-popover',
+            dataTestPrefix: 'more-components-popover',
           }}
         />
       </TableData>
