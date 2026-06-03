@@ -14,43 +14,6 @@
 
 CI runs two parallel jobs on Node 24: **lint** (`yarn lint` -> `yarn lint:restricted-imports` -> `yarn type-checks`) and **test** (`yarn test`).
 
-## Single-File Verification
-
-Fast feedback on one changed file — no webpack build. Use `yarn` so tool versions match the repo.
-
-### Single-file lint command
-
-```bash
-yarn eslint path/to/file.ts
-```
-
-Add flags for CI-equivalent checks (`.ts` and `.tsx` paths):
-
-```bash
-yarn eslint path/to/file.ts --report-unused-disable-directives --max-warnings 0
-yarn eslint path/to/file.ts --config .eslintrc.restrict-imports.cjs --no-eslintrc --max-warnings 0
-```
-
-SCSS: `yarn stylelint path/to/file.scss --config .stylelintrc.json`
-
-### Single-file type-check command
-
-```bash
-yarn tsc --noEmit path/to/file.ts
-```
-
-For edits using `~/` or `@routes/` imports, prefer project-wide check (~4s, no build):
-
-```bash
-yarn type-checks
-```
-
-### Unit test (optional)
-
-```bash
-yarn test path/to/file.spec.tsx
-```
-
 ## Setup
 
 One-command setup: `yarn setup` or `./setup.sh` (checks Node.js >= 24, enables Corepack, installs dependencies, starts dev server)
@@ -86,6 +49,9 @@ Detailed guides for AI agents and developers:
 | `docs/guidelines/hooks-and-data-fetching.md` | Using K8s hooks, React Query, RBAC, state management |
 | `docs/guidelines/patternfly-guidelines.md` | PatternFly components, layout, design tokens, SCSS |
 | `docs/guidelines/unit-testing.md` | Writing unit tests (mocks, renderers, patterns) |
+| `docs/guidelines/single-file-verification.md` | Fast per-file lint/type-check workflow (overview) |
+| `docs/guidelines/single-file-lint.md` | Lint one `.ts`, `.tsx`, or `.scss` file |
+| `docs/guidelines/single-file-type-check.md` | Type-check one file (or fall back to project-wide) |
 
 ## Other Documentation (docs/)
 
