@@ -89,7 +89,6 @@ export const SourceSecretForm: React.FC<SourceSecretFormProps> = ({
               />
               <SecretPasswordInputField
                 name="source.password"
-                data-test="secret-source-password"
                 label="Password"
                 helperText="For Git authentication"
                 placeholder={isEditMode ? 'To keep the same password, leave this field blank' : ''}

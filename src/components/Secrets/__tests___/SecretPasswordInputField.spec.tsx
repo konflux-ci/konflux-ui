@@ -1,8 +1,9 @@
-import { fireEvent, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
+import { userEvent } from '@testing-library/user-event';
 import { mockSourceSecretBasicAuthForEdit } from '~/components/Secrets/__data__/mock-secrets';
 import { SecretEditSensitiveProvider } from '~/components/Secrets/SecretsForm/SecretEditSensitiveContext';
 import { SecretPasswordInputField } from '~/components/Secrets/SecretsForm/SecretPasswordInputField';
-import { formikRenderer } from '~/utils/test-utils';
+import { formikRenderer } from '~/unit-test-utils';
 
 const sensitiveContextValue = {
   fullSecret: mockSourceSecretBasicAuthForEdit,
@@ -12,29 +13,20 @@ const sensitiveContextValue = {
 };
 
 describe('SecretPasswordInputField', () => {
-  it('renders a standard password field when full secret is not loaded', () => {
-    formikRenderer(
-      <SecretPasswordInputField
-        name="source.password"
-        label="Password"
-        data-test="secret-source-password"
-      />,
-      { source: { password: '' } },
-    );
+  it('does not show visibility toggle outside edit sensitive context', () => {
+    formikRenderer(<SecretPasswordInputField name="source.password" label="Password" />, {
+      source: { password: '' },
+    });
 
-    const passwordInput = screen.getByLabelText('Password');
-    expect(passwordInput).toHaveAttribute('type', 'password');
+    expect(screen.getByLabelText('Password')).toHaveAttribute('type', 'password');
     expect(screen.queryByRole('button', { name: 'Show password' })).not.toBeInTheDocument();
   });
 
-  it('shows a visibility toggle when full secret is loaded', () => {
+  it('shows visibility toggle when full secret is loaded', async () => {
+    const user = userEvent.setup();
     formikRenderer(
       <SecretEditSensitiveProvider value={sensitiveContextValue}>
-        <SecretPasswordInputField
-          name="source.password"
-          label="Password"
-          data-test="secret-source-password"
-        />
+        <SecretPasswordInputField name="source.password" label="Password" />
       </SecretEditSensitiveProvider>,
       { source: { password: 'gitpass' } },
     );
@@ -43,10 +35,10 @@ describe('SecretPasswordInputField', () => {
     expect(passwordInput).toHaveAttribute('type', 'password');
     expect(passwordInput).toHaveValue('gitpass');
 
-    fireEvent.click(screen.getByRole('button', { name: 'Show password' }));
+    await user.click(screen.getByRole('button', { name: 'Show password' }));
     expect(passwordInput).toHaveAttribute('type', 'text');
 
-    fireEvent.click(screen.getByRole('button', { name: 'Hide password' }));
+    await user.click(screen.getByRole('button', { name: 'Hide password' }));
     expect(passwordInput).toHaveAttribute('type', 'password');
   });
 });

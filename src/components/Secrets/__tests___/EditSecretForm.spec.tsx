@@ -352,7 +352,7 @@ describe('EditSecretForm', () => {
         expect(screen.getByDisplayValue('gituser')).toBeInTheDocument();
       });
 
-      const passwordInput = screen.getByTestId('secret-source-password');
+      const passwordInput = screen.getByLabelText('Password');
       await user.click(passwordInput);
       await user.clear(passwordInput);
       await user.type(passwordInput, 'edited');
@@ -586,10 +586,10 @@ describe('EditSecretForm', () => {
       await showSecretValues(user);
       await waitFor(() => {
         expect(screen.getByDisplayValue('gituser')).toBeInTheDocument();
-        expect(screen.getByTestId('secret-source-password')).toBeInTheDocument();
+        expect(screen.getByLabelText('Password')).toBeInTheDocument();
       });
 
-      const passwordInput = screen.getByTestId('secret-source-password');
+      const passwordInput = screen.getByLabelText('Password');
       await user.clear(passwordInput);
       await user.type(passwordInput, 'newpassword');
 
@@ -626,10 +626,10 @@ describe('EditSecretForm', () => {
 
       await showSecretValues(user);
       await waitFor(() => {
-        expect(screen.getByTestId('secret-source-password')).toBeInTheDocument();
+        expect(screen.getByLabelText('Password')).toBeInTheDocument();
       });
 
-      const passwordInput = screen.getByTestId('secret-source-password');
+      const passwordInput = screen.getByLabelText('Password');
       await user.click(passwordInput);
       await user.tab();
 

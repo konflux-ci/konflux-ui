@@ -24,8 +24,6 @@ export type SecretPasswordInputFieldProps = {
   placeholder?: string;
   isRequired?: boolean;
   required?: boolean;
-  'data-test'?: string;
-  dataTest?: string;
   isDisabled?: boolean;
 };
 
@@ -37,27 +35,18 @@ export const SecretPasswordInputField: React.FC<SecretPasswordInputFieldProps> =
   placeholder,
   isRequired,
   required,
-  'data-test': dataTestAttr,
-  dataTest,
   isDisabled,
 }) => {
   const sensitive = useOptionalSecretEditSensitive();
-  const showVisibilityToggle = sensitive?.fullSecret !== undefined;
+  // Uses != null (not !==): no provider is undefined, edit-before-reveal is null — both hide the toggle.
+  const showVisibilityToggle = sensitive?.fullSecret != null;
 
   const [isPasswordVisible, setIsPasswordVisible] = React.useState(false);
   const [field, meta] = useField<string>(name);
   const fieldId = getFieldId(name, 'input');
-  const resolvedDataTest = dataTest ?? dataTestAttr;
   const isValid = !(meta.touched && meta.error);
-  const errorMessage = meta.touched && meta.error ? String(meta.error) : undefined;
+  const errorMessage = !isValid ? String(meta.error) : undefined;
   const passwordLabel = typeof label === 'string' ? label : 'Password';
-
-  const passwordInputRef = React.useRef<HTMLInputElement>(null);
-  React.useEffect(() => {
-    if (resolvedDataTest && passwordInputRef.current) {
-      passwordInputRef.current.setAttribute('data-test', resolvedDataTest);
-    }
-  }, [resolvedDataTest]);
 
   return (
     <FormGroup fieldId={fieldId} label={label} isRequired={isRequired ?? required}>
@@ -73,7 +62,6 @@ export const SecretPasswordInputField: React.FC<SecretPasswordInputFieldProps> =
           onBlur={field.onBlur}
           placeholder={placeholder}
           aria-label={passwordLabel}
-          innerRef={passwordInputRef}
         />
         {showVisibilityToggle ? (
           <TextInputGroupUtilities>

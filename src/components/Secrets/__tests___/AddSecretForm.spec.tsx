@@ -120,7 +120,7 @@ describe('AddSecretForm', () => {
     await user.click(screen.getByTestId('dropdown-toggle'));
     await user.click(screen.getByText('Source secret'));
 
-    const passwordInput = await screen.findByTestId('secret-source-password');
+    const passwordInput = await screen.findByLabelText('Password');
     await user.click(passwordInput);
     await user.tab();
 
