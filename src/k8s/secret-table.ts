@@ -6,7 +6,7 @@ import { SecretKind } from '~/types';
 
 const defaultTimeout = 60_000;
 
-/** `meta.k8s.io` Table (v1 or v1beta1) — only fields used for Secret list/get. */
+/** `meta.k8s.io` Table (v1) — only fields used for Secret list/get. */
 export type K8sTable = {
   kind: string;
   apiVersion: string;
@@ -31,8 +31,7 @@ const cellString = (value: unknown): string => {
 
 /**
  * Maps a Kubernetes Table response for Secrets into `SecretKind[]` with `metadata` + `type`
- * (no `data`). Uses `columnDefinitions` when present; falls back to default column order
- * Name, Type, Data, Age.
+ * (no `data`). Uses `columnDefinitions` when present; falls back to Name then Type (cells 0 and 1).
  */
 export const parseSecretTableToSecretKinds = (
   table: K8sTable,
@@ -45,8 +44,6 @@ export const parseSecretTableToSecretKinds = (
   const colNames = table.columnDefinitions?.map((c) => (c.name ?? '').toLowerCase()) ?? [
     'name',
     'type',
-    'data',
-    'age',
   ];
   const colIndex = (label: string) => colNames.indexOf(label.toLowerCase());
 
@@ -58,24 +55,31 @@ export const parseSecretTableToSecretKinds = (
   return table.rows.map((row): SecretKind => {
     const cells = (row.cells ?? []).map(cellString);
     const embedded = row.object;
+
     const nameFromCell = nameI >= 0 ? cells[nameI] : '';
     const typeFromCell = typeI >= 0 ? cells[typeI] : '';
+
     const meta = embedded?.metadata;
     const name = meta?.name || nameFromCell;
     const namespace = meta?.namespace ?? defaultNamespace;
-    const resolvedType = typeFromCell || (embedded?.kind === 'Secret' ? embedded.type : undefined);
+    const resolvedType =
+      typeFromCell || (embedded?.kind === SecretModel.kind ? embedded.type : undefined);
 
-    if (embedded?.kind === 'Secret' && meta) {
+    const secretFields = {
+      apiVersion: SecretModel.apiVersion,
+      kind: SecretModel.kind,
+      type: resolvedType,
+    };
+
+    if (embedded?.kind === SecretModel.kind && meta) {
       return {
         ...(embedded as SecretKind),
-        apiVersion: (embedded as SecretKind).apiVersion ?? 'v1',
-        kind: 'Secret',
+        ...secretFields,
         metadata: {
           ...meta,
           name,
           namespace,
         },
-        type: resolvedType,
         data: undefined,
         stringData: undefined,
       };
@@ -83,25 +87,21 @@ export const parseSecretTableToSecretKinds = (
 
     if (meta) {
       return {
-        apiVersion: 'v1',
-        kind: 'Secret',
+        ...secretFields,
         metadata: {
           ...meta,
           name,
           namespace,
         },
-        type: resolvedType,
       };
     }
 
     return {
-      apiVersion: 'v1',
-      kind: 'Secret',
+      ...secretFields,
       metadata: {
         name: nameFromCell,
-        namespace: defaultNamespace,
+        namespace,
       },
-      type: resolvedType,
     };
   });
 };
