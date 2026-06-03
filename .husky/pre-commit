@@ -1,26 +1,40 @@
-#!/bin/sh
-set -e
+#!/bin/bash
+set -euo pipefail
 
 # 1. Auto-format staged files (Prettier, ESLint restricted imports, Stylelint)
 npx lint-staged
 
-# 2. Block destructive operations — refuse commits that delete protected paths
-PROTECTED_PATHS="
-.husky/pre-commit
-.husky/commit-msg
-.husky/pre-push
-package.json
-yarn.lock
-.gitignore
-AGENTS.md
-CLAUDE.md
-setup.sh
-"
+# 2. Block destructive operations — refuse commits that delete or rename protected paths
+# Policy: CONTRIBUTING.md § Git hooks → Protected repo files
+if [ "${SKIP_PROTECTED_PATH_CHECK:-}" != "1" ]; then
+  declare -A PROTECTED_PATH_LOOKUP=(
+    [".husky/pre-commit"]=1
+    [".husky/commit-msg"]=1
+    [".husky/pre-push"]=1
+    ["package.json"]=1
+    ["yarn.lock"]=1
+    [".gitignore"]=1
+    ["AGENTS.md"]=1
+    ["setup.sh"]=1
+  )
 
-DELETED=$(git diff --cached --name-only --diff-filter=D)
-for path in $PROTECTED_PATHS; do
-  if echo "$DELETED" | grep -qx "$path"; then
-    echo "husky (pre-commit): refusing to delete protected file '$path'"
-    exit 1
-  fi
-done
+  # Git-supplied paths are never expanded or passed to a shell — lookup only after format check.
+  is_safe_repo_path() {
+    [[ "$1" =~ ^[.A-Za-z0-9_/-]+$ ]]
+  }
+
+  while IFS=$'\t' read -r status affected _rest; do
+    case "$status" in
+      D) ;;
+      R*) ;;
+      *) continue ;;
+    esac
+    [ -n "$affected" ] || continue
+    is_safe_repo_path "$affected" || continue
+    if [[ -n "${PROTECTED_PATH_LOOKUP[$affected]+x}" ]]; then
+      printf 'husky (pre-commit): refusing to delete or rename protected file '\''%s'\''\n' "$affected"
+      echo "See CONTRIBUTING.md (Protected repo files) for rationale and override."
+      exit 1
+    fi
+  done < <(git diff --cached --name-status --diff-filter=DR)
+fi

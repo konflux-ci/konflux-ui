@@ -1,8 +1,8 @@
-#!/bin/sh
-set -e
+#!/bin/bash
+set -euo pipefail
 
 # Block force push and branch deletion on protected branches.
-PROTECTED_BRANCHES="main master"
+PROTECTED_BRANCHES=(main master)
 
 while read -r local_ref local_sha remote_ref remote_sha; do
   [ -n "$remote_ref" ] || continue
@@ -12,7 +12,7 @@ while read -r local_ref local_sha remote_ref remote_sha; do
     *) continue ;;
   esac
 
-  for protected in $PROTECTED_BRANCHES; do
+  for protected in "${PROTECTED_BRANCHES[@]}"; do
     [ "$branch" = "$protected" ] || continue
 
     # Block branch deletion
