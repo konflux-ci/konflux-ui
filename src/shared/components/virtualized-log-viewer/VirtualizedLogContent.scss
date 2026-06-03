@@ -26,6 +26,10 @@
   position: relative;
 }
 
+.log-content__line--indented {
+  padding-left: var(--pf-v5-global--spacer--md);
+}
+
 .log-content__line--highlighted {
   background-color: var(--pf-v5-global--palette--gold-50);
 

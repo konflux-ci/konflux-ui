@@ -33,7 +33,7 @@ jobs:
       - name: Setup ⚙️ Node.js 🔰
         uses: actions/setup-node@v4
         with:
-          node-version: 22.x
+          node-version: 24.x
           cache: 'yarn'
 
       # e2e-tests install is needed because eslint resolves eslint-plugin-cypress from e2e-tests/.eslintrc.cjs
@@ -71,7 +71,7 @@ jobs:
       - name: Setup ⚙️ Node.js 🔰
         uses: actions/setup-node@v4
         with:
-          node-version: 22.x
+          node-version: 24.x
           cache: 'yarn'
 
       - name: Install Dependencies 🥁
