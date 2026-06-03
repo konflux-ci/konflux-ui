@@ -149,7 +149,11 @@
       "eslint --config .eslintrc.restrict-imports.cjs"
     ],
     "*.{scss,css}": [
+      "prettier --write",
       "stylelint --config .stylelintrc.json"
+    ],
+    "*.{json,md}": [
+      "prettier --write"
     ]
   },
   "packageManager": "yarn@4.12.0"

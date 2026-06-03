@@ -1,7 +1,29 @@
 #!/bin/sh
 set -e
 
+# 1. Auto-format staged files (Prettier, ESLint restricted imports, Stylelint)
 npx lint-staged
+
+# 2. Block destructive operations — refuse commits that delete protected paths
+PROTECTED_PATHS="
+.husky/pre-commit
+.husky/commit-msg
+.husky/pre-push
+package.json
+yarn.lock
+.gitignore
+AGENTS.md
+CLAUDE.md
+setup.sh
+"
+
+DELETED=$(git diff --cached --name-only --diff-filter=D)
+for path in $PROTECTED_PATHS; do
+  if echo "$DELETED" | grep -qx "$path"; then
+    echo "husky (pre-commit): refusing to delete protected file '$path'"
+    exit 1
+  fi
+done
 
 STAGED=$(git diff --cached --name-only --diff-filter=ACM)
 if [ -n "$STAGED" ]; then

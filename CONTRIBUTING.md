@@ -89,7 +89,8 @@ Please ensure your PR is complete and clear — this helps reviewers respond fas
 
 Commits are enforced by **Husky** (installed via `yarn install` → `prepare` script):
 
-- **pre-commit:** `yarn lint-staged` (Prettier, ESLint restricted imports, Stylelint)
+- **pre-commit:** auto-format staged files via `lint-staged` (Prettier, ESLint restricted imports, Stylelint); block deletion of protected repo files; secret scanning via detect-secrets and gitleaks
+- **pre-push:** block force push and branch deletion on `main` / `master`
 - **commit-msg:** Conventional commits via Commitlint (see [Commit Guidelines](#commit-guidelines) below)
 
 **Claude Code / Cursor:** Shared agent hooks auto-format supported files after edits — [`.claude/settings.json`](./.claude/settings.json).
