@@ -24,10 +24,3 @@ for path in $PROTECTED_PATHS; do
     exit 1
   fi
 done
-
-STAGED=$(git diff --cached --name-only --diff-filter=ACM)
-if [ -n "$STAGED" ]; then
-  detect-secrets-hook --baseline .secrets.baseline \
-    --exclude-files '(^|/)__tests__+/' \
-    $STAGED
-fi

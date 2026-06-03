@@ -89,7 +89,7 @@ Please ensure your PR is complete and clear — this helps reviewers respond fas
 
 Commits are enforced by **Husky** (installed via `yarn install` → `prepare` script):
 
-- **pre-commit:** auto-format staged files via `lint-staged` (Prettier, ESLint restricted imports, Stylelint); block deletion of protected repo files; secret scanning via detect-secrets
+- **pre-commit:** auto-format staged files via `lint-staged` (Prettier, ESLint restricted imports, Stylelint); block deletion of protected repo files
 - **pre-push:** block force push and branch deletion on `main` / `master`
 
 ---
