@@ -31,17 +31,19 @@ export const FeatureFlagIndicator: React.FC<FeatureFlagIndicatorProps> = ({
   const [allFlags] = useFeatureFlags();
   const activeFlags = flags.filter((f) => allFlags[f]);
   const metas = activeFlags.map((f) => FLAGS[f]).filter(Boolean);
+  const anyWip = metas.some((m) => m.status === 'wip');
+  const iconColor = anyWip ? warningColor : readyColor;
+  const iconStyle = React.useMemo(() => ({ color: iconColor }), [iconColor]);
+
   if (metas.length === 0) return null;
 
-  const anyWip = metas.some((m) => m.status === 'wip');
   const statusText = anyWip ? FLAGS_STATUS.wip : FLAGS_STATUS.ready;
   const labelColor = anyWip ? 'orange' : 'green';
-  const iconColor = anyWip ? warningColor : readyColor;
 
   const header = (
     <Flex spaceItems={{ default: 'spaceItemsSm' }} alignItems={{ default: 'alignItemsCenter' }}>
       <FlexItem>
-        <FlaskIcon style={{ color: iconColor }} />
+        <FlaskIcon style={iconStyle} />
       </FlexItem>
       <FlexItem>
         <Text component={TextVariants.h6}>Experimental feature</Text>
@@ -66,7 +68,7 @@ export const FeatureFlagIndicator: React.FC<FeatureFlagIndicatorProps> = ({
       aria-label="Feature flag information"
       data-test={dataTest ?? `ff-indicator-${flags.join('-')}`}
     >
-      <Label icon={<FlaskIcon style={{ color: iconColor }} />} color={labelColor}>
+      <Label icon={<FlaskIcon style={iconStyle} />} color={labelColor}>
         {statusText}
       </Label>
     </Button>
@@ -77,7 +79,7 @@ export const FeatureFlagIndicator: React.FC<FeatureFlagIndicatorProps> = ({
       aria-label="Feature flag information"
       data-test={dataTest ?? `ff-indicator-${flags.join('-')}`}
     >
-      <FlaskIcon style={{ color: iconColor }} />
+      <FlaskIcon style={iconStyle} />
     </Button>
   );
 
