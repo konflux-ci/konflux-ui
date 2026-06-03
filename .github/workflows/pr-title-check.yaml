@@ -6,11 +6,12 @@ on:
 
 jobs:
   check-pr-title:
-    runs-on: ubuntu-latest
     if: >-
-      github.event.action == 'opened' ||
+      github.actor != 'red-hat-konflux[bot]' &&
+      (github.event.action == 'opened' ||
       github.event.action == 'reopened' ||
-      (github.event.action == 'edited' && github.event.changes.title)
+      (github.event.action == 'edited' && github.event.changes.title))
+    runs-on: ubuntu-latest
     permissions:
       pull-requests: write
     steps:
