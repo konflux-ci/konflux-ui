@@ -43,10 +43,12 @@
  *
  * ENVIRONMENT VARIABLES:
  * - GITHUB_TOKEN: Required - GitHub API authentication token
- * - SLACK_WEBHOOK_URL: Required (unless TEST_MODE) - cwf-cue Slack incoming webhook URL
- * - TEST_MODE: Optional - Set to 'true' to log output instead of sending to Slack
+ * - SLACK_CHANNEL_ID: Required (unless TEST_MODE) - Slack channel ID to post the report to
+ * - OUTPUT_FILE: Optional - Path to write JSON payload (default: /tmp/stale-prs-payload.json)
+ * - TEST_MODE: Optional - Set to 'true' to log output instead of writing to file
  */
 
+import { writeFileSync } from 'node:fs';
 import { Octokit } from '@octokit/rest';
 import dayjs from 'dayjs';
 
@@ -58,13 +60,13 @@ const REPO_NAME = 'konflux-ui';
 
 /** Environment variables */
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
-const SLACK_WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL; // Slack webhook for cwf-cue notifications
+const SLACK_CHANNEL_ID = process.env.SLACK_CHANNEL_ID;
+const OUTPUT_FILE = process.env.OUTPUT_FILE || '/tmp/stale-prs-payload.json';
 const TEST_MODE = process.env.TEST_MODE === 'true';
 
 /** Validate required environment variables */
 if (!GITHUB_TOKEN) throw new Error('GITHUB_TOKEN is not set');
-if (!TEST_MODE && !SLACK_WEBHOOK_URL)
-  throw new Error('Set the SLACK_WEBHOOK_URL or TEST_MODE=true.');
+if (!TEST_MODE && !SLACK_CHANNEL_ID) throw new Error('SLACK_CHANNEL_ID is not set');
 
 /** Initialize GitHub API client */
 const octokit = new Octokit({ auth: GITHUB_TOKEN });
@@ -480,30 +482,22 @@ const checkNeedsAuthorFollowupPRs = async () => {
       message += `\n⚡ Please accelerate reviews or merge PRs to keep the repo clean!\n`;
     }
 
-    // ----- Send to Slack or Log -----
+    // ----- Write payload to file or Log -----
     if (TEST_MODE) {
       // In test mode, print the message to console for validation
       console.log('--- TEST_MODE: Slack message (not sent) ---');
       console.log(message);
       console.log('--- End of test output ---');
     } else {
-      // Production mode: Send formatted report to Slack webhook
-      const response = await fetch(SLACK_WEBHOOK_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          text: message,
-          unfurl_links: false, // Don't auto-expand PR links
-          unfurl_media: false, // Don't auto-expand media
-        }),
-      });
-
-      // Fail loudly if Slack rejects the message
-      if (!response.ok) {
-        const text = await response.text();
-        throw new Error(`Slack webhook responded with ${response.status}: ${text}`);
-      }
-      console.log('✅ PR report sent to Slack successfully!');
+      // Write full Slack API payload to file for the GitHub Action step to send
+      const payload = {
+        channel: SLACK_CHANNEL_ID,
+        text: message,
+        unfurl_links: false,
+        unfurl_media: false,
+      };
+      writeFileSync(OUTPUT_FILE, JSON.stringify(payload, null, 2));
+      console.log(`✅ PR report payload written to ${OUTPUT_FILE}`);
     }
   } catch (err) {
     console.error('❌ Error checking PRs:', err);

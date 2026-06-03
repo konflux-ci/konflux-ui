@@ -2,20 +2,21 @@
 # Check for open PRs in infra-deployments repository related to konflux-ui
 #
 # This script queries the infra-deployments repository for PRs that mention
-# konflux-ui in their title and sends a report to Slack to prevent deployment
-# PRs from being forgotten.
+# konflux-ui in their title and writes a message to a file for the GitHub
+# Action workflow to send via Slack bot.
 #
 # Environment Variables (required):
-#   SLACK_WEBHOOK_URL - Slack incoming webhook URL for notifications
 #   GH_TOKEN          - GitHub token for API access
+#   SLACK_CHANNEL_ID  - Slack channel ID to post the report to (unless TEST_MODE)
 #
 # Environment Variables (optional):
+#   OUTPUT_FILE              - Path to write JSON payload (default: /tmp/infra-prs-payload.json)
 #   INFRA_DEPLOYMENTS_REPO - Target repo (default: redhat-appstudio/infra-deployments)
 #   COMPONENT_NAME         - Component to search (default: konflux-ui)
 #   INFRA_PR_LIMIT         - Max PRs to fetch (default: 100)
 #   INFRA_PR_STATE         - PR state: open, closed, merged, all (default: open)
 #   INFRA_BOT_LOGIN        - Bot account name (default: app/rh-tap-build-team)
-#   TEST_MODE              - Set to 'true' to log output instead of sending to Slack
+#   TEST_MODE              - Set to 'true' to log output instead of writing to file
 
 set -euo pipefail
 
@@ -27,6 +28,7 @@ PR_LIMIT="${INFRA_PR_LIMIT:-100}"
 PR_STATE="${INFRA_PR_STATE:-open}"
 BOT_LOGIN="${INFRA_BOT_LOGIN:-app/rh-tap-build-team}"
 TEST_MODE="${TEST_MODE:-false}"
+OUTPUT_FILE="${OUTPUT_FILE:-/tmp/infra-prs-payload.json}"
 
 # Validate required environment variables
 if [ -z "${GH_TOKEN:-}" ]; then
@@ -34,8 +36,8 @@ if [ -z "${GH_TOKEN:-}" ]; then
     exit 1
 fi
 
-if [ "$TEST_MODE" != "true" ] && [ -z "${SLACK_WEBHOOK_URL:-}" ]; then
-    echo "Error: SLACK_WEBHOOK_URL is not set (or set TEST_MODE=true for testing)" >&2
+if [ "$TEST_MODE" != "true" ] && [ -z "${SLACK_CHANNEL_ID:-}" ]; then
+    echo "Error: SLACK_CHANNEL_ID is not set (or set TEST_MODE=true for testing)" >&2
     exit 1
 fi
 
@@ -116,11 +118,7 @@ format_slack_message() {
         local error_msg
         error_msg=$(echo "$prs_json" | jq -r '.error // "Unknown error"')
 
-        cat <<EOF
-{
-  "text": "⚠️ *Failed to fetch infra-deployments PRs*\n${error_msg}"
-}
-EOF
+        printf '⚠️ *Failed to fetch infra-deployments PRs*\n%s' "${error_msg}"
         return 0
     fi
 
@@ -129,11 +127,7 @@ EOF
     pr_count=$(echo "$prs_json" | jq '. | length')
 
     if [ "$pr_count" -eq 0 ]; then
-        cat <<EOF
-{
-  "text": "✅ *No ${state_display} infra-deployments PRs for ${COMPONENT}*"
-}
-EOF
+        printf '✅ *No %s infra-deployments PRs for %s*' "${state_display}" "${COMPONENT}"
         return 0
     fi
 
@@ -162,38 +156,27 @@ EOF
         "• <\(.url)|#\(.number)> " + $includes + "- \(.title) by @\(.author.login) at \(.createdAt | split("T")[0])"
     ' | sed 's/$/\\n/' | tr -d '\n')
 
-    # Build Slack message JSON
-    cat <<EOF
-{
-  "text": "📋 *${state_display} infra-deployments PRs (${pr_count}):*\n${pr_list}"
-}
-EOF
+    # Return plain text message
+    printf '📋 *%s infra-deployments PRs (%s):*\n%s' "${state_display}" "${pr_count}" "${pr_list}"
 }
 
-send_to_slack() {
+write_payload() {
     local message="$1"
 
     if [ "$TEST_MODE" = "true" ]; then
         echo ""
-        echo "=== TEST MODE: Would send to Slack ===" >&2
-        echo "$message" | jq '.' >&2
+        echo "=== TEST MODE: Would write to ${OUTPUT_FILE} ===" >&2
+        echo "$message" >&2
         echo "=====================================" >&2
         return 0
     fi
 
-    # Send to Slack
-    local response
-    response=$(curl -s -X POST \
-        -H "Content-Type: application/json" \
-        -d "$message" \
-        "${SLACK_WEBHOOK_URL}")
-
-    if [ "$response" != "ok" ]; then
-        echo "Warning: Slack API returned: $response" >&2
-        return 1
-    fi
-
-    echo "✅ Report sent to Slack successfully" >&2
+    # Write full Slack API payload to file for the GitHub Action step to send
+    jq -n \
+        --arg channel "$SLACK_CHANNEL_ID" \
+        --arg text "$message" \
+        '{ channel: $channel, text: $text }' > "$OUTPUT_FILE"
+    echo "✅ Infra PR report payload written to ${OUTPUT_FILE}" >&2
 }
 
 # ----- Main Script -----
@@ -209,8 +192,8 @@ main() {
     local slack_message
     slack_message=$(format_slack_message "$prs_json" "$PR_STATE")
 
-    # Send to Slack
-    send_to_slack "$slack_message"
+    # Write payload to file
+    write_payload "$slack_message"
 
     echo "✅ Done!" >&2
 }
