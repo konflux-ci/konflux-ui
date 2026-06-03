@@ -60,7 +60,11 @@ export const FeatureFlagIndicator: React.FC<FeatureFlagIndicatorProps> = ({
   const trigger = fullLabel ? (
     <Button
       icon={
-        <Label icon={<FlaskIcon style={{ color: warningColor }} />} color={labelColor}>
+        <Label
+          icon={<FlaskIcon style={{ color: warningColor }} />}
+          color={labelColor}
+          variant="outline"
+        >
           {statusText}
         </Label>
       }

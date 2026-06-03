@@ -9,8 +9,7 @@ import {
   MastheadBrand,
   PageToggleButton,
 } from '@patternfly/react-core';
-
-import konfluxLogo from '../assets/iconsUrl/konflux.svg';
+import KonfluxLogo from '../assets/konflux-logo.svg';
 import { Header } from '../components/Header/Header';
 
 interface AppHeaderPros {
@@ -38,9 +37,11 @@ const AppHeaderComponent: React.FC<AppHeaderPros> = ({
             isSidebarOpen={isSideBarOpen}
           ></PageToggleButton>
         </MastheadToggle>
-        <MastheadBrand data-codemods>
-          <MastheadLogo data-codemods>
-            <Brand src={konfluxLogo} alt="konflux" heights={{ default: '36px' }} />
+        <MastheadBrand>
+          <MastheadLogo>
+            <Brand alt="" heights={{ default: '36px' }}>
+              <KonfluxLogo aria-label="konflux" />
+            </Brand>
           </MastheadLogo>
         </MastheadBrand>
       </MastheadMain>

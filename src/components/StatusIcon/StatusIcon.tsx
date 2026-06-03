@@ -62,7 +62,7 @@ export const StatusIconWithText: React.FC<
   React.PropsWithChildren<StatusIconProps & { text?: string; dataTestAttribute?: string }>
 > = ({ status, text, dataTestAttribute, ...others }) => {
   return (
-    <>
+    <span className="status-icon-with-text">
       <span
         className={css(
           'pf-v6-u-mr-xs status-icon',
@@ -74,7 +74,7 @@ export const StatusIconWithText: React.FC<
         <StatusIcon status={status} {...others} />
       </span>
       <span data-test={dataTestAttribute}>{text ?? status}</span>
-    </>
+    </span>
   );
 };
 
@@ -82,7 +82,7 @@ export const StatusIconWithTextLabel: React.FC<
   React.PropsWithChildren<StatusIconProps & { text?: string; dataTestAttribute?: string }>
 > = ({ status, ...others }) => {
   return (
-    <Label color={getLabelColorFromStatus(status)}>
+    <Label color={getLabelColorFromStatus(status)} variant="outline">
       <StatusIconWithText status={status} {...others} />
     </Label>
   );

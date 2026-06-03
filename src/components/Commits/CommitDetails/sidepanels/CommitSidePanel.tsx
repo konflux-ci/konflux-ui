@@ -46,7 +46,9 @@ const CommitSidePanel: React.FC<React.PropsWithChildren<CommitSidePanelBodyProps
         <span className="commit-side-panel__head-title">
           <CommitIcon isPR={commit.isPullRequest} className="commit-details__title-icon" />{' '}
           {commit.shaTitle}
-          <StatusIconWithTextLabel status={workflowNode.getData().status} />
+          <span>
+            <StatusIconWithTextLabel status={workflowNode.getData().status} />
+          </span>
         </span>
         <span className="pf-v6-u-mt-xs commit-side-panel__subtext">
           <GithubIcon /> Source code
