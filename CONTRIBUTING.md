@@ -94,7 +94,7 @@ Commits are enforced by **Husky** (installed via `yarn install` → `prepare` sc
 
 ### Protected repo files
 
-The pre-commit hook refuses to commit **deletions or renames** of infrastructure files that are easy for agents or bulk edits to remove by mistake. Content edits are not blocked.
+The pre-commit hook refuses to commit **deletions or renames** (source or destination) of infrastructure files that are easy for agents or bulk edits to remove by mistake. Content edits are not blocked.
 
 | Path | Rationale |
 | --- | --- |
@@ -112,7 +112,7 @@ SKIP_PROTECTED_PATH_CHECK=1 git commit -m "chore: remove setup.sh"
 
 Do not use `--no-verify`; that skips lint-staged and other pre-commit checks too.
 
-**Maintenance:** when adding a new repo-critical file that should never be deleted casually, add a quoted entry to `PROTECTED_PATH_LOOKUP` in `.husky/pre-commit` and add a row to the table above in the same PR.
+**Maintenance:** when adding a new repo-critical file that should never be deleted casually, add a pattern to `is_protected_path` in `.husky/pre-commit` and add a row to the table above in the same PR.
 
 ---
 

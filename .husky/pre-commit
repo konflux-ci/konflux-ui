@@ -6,35 +6,48 @@ npx lint-staged
 
 # 2. Block destructive operations — refuse commits that delete or rename protected paths
 # Policy: CONTRIBUTING.md § Git hooks → Protected repo files
+# Uses bash 3.2+ constructs only (macOS /bin/bash); no associative arrays.
 if [ "${SKIP_PROTECTED_PATH_CHECK:-}" != "1" ]; then
-  declare -A PROTECTED_PATH_LOOKUP=(
-    [".husky/pre-commit"]=1
-    [".husky/commit-msg"]=1
-    [".husky/pre-push"]=1
-    ["package.json"]=1
-    ["yarn.lock"]=1
-    [".gitignore"]=1
-    ["AGENTS.md"]=1
-    ["setup.sh"]=1
-  )
-
-  # Git-supplied paths are never expanded or passed to a shell — lookup only after format check.
   is_safe_repo_path() {
-    [[ "$1" =~ ^[.A-Za-z0-9_/-]+$ ]]
+    case "$1" in
+      '' | *[!/.A-Za-z0-9_-]*) return 1 ;;
+      *) return 0 ;;
+    esac
   }
 
-  while IFS=$'\t' read -r status affected _rest; do
-    case "$status" in
-      D) ;;
-      R*) ;;
-      *) continue ;;
+  is_protected_path() {
+    case "$1" in
+      .husky/pre-commit | .husky/commit-msg | .husky/pre-push | package.json | yarn.lock | .gitignore | AGENTS.md | setup.sh)
+        return 0
+        ;;
+      *)
+        return 1
+        ;;
     esac
-    [ -n "$affected" ] || continue
-    is_safe_repo_path "$affected" || continue
-    if [[ -n "${PROTECTED_PATH_LOOKUP[$affected]+x}" ]]; then
-      printf 'husky (pre-commit): refusing to delete or rename protected file '\''%s'\''\n' "$affected"
-      echo "See CONTRIBUTING.md (Protected repo files) for rationale and override."
-      exit 1
+  }
+
+  refuse_protected() {
+    printf 'husky (pre-commit): refusing to delete or rename protected file '\''%s'\''\n' "$1"
+    echo "See CONTRIBUTING.md (Protected repo files) for rationale and override."
+    exit 1
+  }
+
+  check_path() {
+    local path=$1
+    [ -n "$path" ] || return 0
+    is_safe_repo_path "$path" || return 0
+    if is_protected_path "$path"; then
+      refuse_protected "$path"
     fi
+  }
+
+  while IFS=$'\t' read -r status path1 path2; do
+    case "$status" in
+      D) check_path "$path1" ;;
+      R*)
+        check_path "$path1"
+        check_path "$path2"
+        ;;
+    esac
   done < <(git diff --cached --name-status --diff-filter=DR)
 fi

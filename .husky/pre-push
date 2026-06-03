@@ -30,5 +30,3 @@ while read -r local_ref local_sha remote_ref remote_sha; do
     fi
   done
 done
-
-exit 0
