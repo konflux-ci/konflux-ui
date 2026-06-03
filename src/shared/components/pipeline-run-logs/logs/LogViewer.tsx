@@ -199,7 +199,7 @@ const LogViewer: React.FC<Props> = ({
                 {showSearch && (
                   <ToolbarGroup>
                     <ToolbarItem>
-                      <LogViewerSearch placeholder="Search" minSearchChars={0} />
+                      <LogViewerSearch placeholder="Search logs" minSearchChars={0} />
                     </ToolbarItem>
                   </ToolbarGroup>
                 )}
