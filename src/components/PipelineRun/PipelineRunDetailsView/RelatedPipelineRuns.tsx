@@ -36,7 +36,7 @@ const RelatedPipelineRuns: React.FC<{ pipelineRun: PipelineRunKind }> = ({ pipel
       headerContent="Related pipelines"
       bodyContent={
         relatedPipelineRuns.length === 0
-          ? 'No related pipelines, create some!'
+          ? 'No related pipelines'
           : relatedPipelineRuns?.map((relatedPipelineRun: PipelineRunKind) => (
               <div key={relatedPipelineRun?.metadata?.uid}>
                 <Link

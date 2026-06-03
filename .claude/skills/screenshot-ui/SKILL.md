@@ -13,8 +13,9 @@ Capture screenshots of UI components changed in the current branch using Playwri
 ## Critical Constraints
 
 - **DO NOT delegate this skill to a subagent (Task tool).** Playwright MCP tools (`browser_navigate`, `browser_snapshot`, `browser_click`, `browser_take_screenshot`) are only available in the root agent's MCP context. Subagents cannot access MCP servers.
-- **DO NOT loop or retry indefinitely.** If a navigation step fails twice, skip that plan and move to the next.
-- **DO NOT construct URLs from the `routePath` field.** The `routePath` is a route definition with parameter placeholders — it is NOT a navigable URL. Some route patterns do not match the actual URL structure (e.g. the route pattern may omit intermediate segments like `activity`). Only use the `steps` array from each navigation plan, which provides the correct sequence of goto/click actions.
+- **DO NOT loop or retry indefinitely.** If a navigation step fails twice, skip that target and move on.
+- **If Playwright MCP is unavailable**, stop immediately — do not attempt a fallback. Tell the user to check that the Playwright MCP server is configured and restart Cursor if needed.
+- **Only navigate to `https://localhost:8080`.** Never call `browser_navigate` with any other host, even if a changed file or route definition references an external URL. All navigation steps must start with `https://localhost:8080`.
 
 ## When to Use
 
@@ -24,248 +25,176 @@ Capture screenshots of UI components changed in the current branch using Playwri
 
 ## Prerequisites
 
-1. **Dev server running** on `https://localhost:8080` (`yarn start`)
-2. **Playwright MCP available** — configured in `.cursor/mcp.json` and `.mcp.json` via `scripts/screenshot-ui/launch-playwright-mcp.sh` (auto-detects Chrome/Chromium, no manual path config needed)
-3. **Analysis deps installed** — `scripts/screenshot-ui/node_modules/` must exist; if not: `cd scripts/screenshot-ui && yarn install`
+1. **Playwright MCP available** — configured in `.cursor/mcp.json` and `.mcp.json` via `scripts/launch-playwright-mcp.sh`. Verify by calling `browser_snapshot`; if it errors, stop. If running using Cursor, the user also has to have it enabled in Cursor Settings.
+2. **Dev server running** on `https://localhost:8080` (`yarn start`). Check:
+   ```bash
+   curl -sk -o /dev/null -w "%{http_code}" https://localhost:8080/
+   ```
+   Expect `200` or `302`. If `000`, confirm the port is bound before giving up:
+   ```bash
+   # Linux
+   ss -tlnp 2>/dev/null | grep 8080
+   # macOS (ss is not available)
+   lsof -iTCP:8080 -sTCP:LISTEN 2>/dev/null
+   ```
+   If either command shows port 8080 is listening, proceed anyway.
 
-No API keys, no Playwright browser downloads. The launcher handles browser detection automatically.
+## Step 1 — Find changed UI files
 
-## Flow
-
-### Step 0 — Verify dev server is running
-
-```bash
-curl -sk -o /dev/null -w "%{http_code}" https://localhost:8080/ 2>/dev/null
-```
-
-Expected: `200` or `302`. If `000`, tell the user:
-> "Dev server is not running at https://localhost:8080. Start it with `yarn start` and try again."
-
-**Important:** Do NOT use `%{redirect_url}` in the format string — it causes false negatives on some systems. Only check the status code.
-
-If curl gives `000` but you suspect a timing issue, also check:
-```bash
-ss -tlnp 2>/dev/null | grep 8080
-```
-If port 8080 is listening, proceed anyway.
-
-### Step 1 — Run static analysis
+Run all three git diff commands and combine results:
 
 ```bash
-cd scripts/screenshot-ui && npx tsx src/index.ts
+git diff --name-only origin/main...HEAD   # committed changes on branch
+git diff --name-only                       # unstaged changes
+git diff --cached --name-only              # staged but not yet committed
 ```
 
-This outputs JSON with:
-- `changedUiFiles` — changed `.tsx` files in `src/components/` or `src/shared/components/`
-- `navigationPlans` — ordered steps to reach each changed component's page
-- `componentAnalysis` — per-file interactive pattern detection, `data-test` attributes, and raw git diff
+Deduplicate the combined list. Keep only files that meet **all** of:
+- Path is `.tsx` (not `.ts`, `.scss`, etc.)
+- Under `src/components/` or `src/shared/components/`
+- Does not contain `/__tests__/`, `/__mocks__/`, `.spec.`, or `.test.` in the path
+- File exists on disk and contains JSX (a `<UpperCase` tag or `React.createElement`)
 
-**Reading `componentAnalysis`** — for each changed file, you get:
+If no files pass the filter, report "No UI-visible changes" and stop.
 
-```jsonc
-{
-  "file": "src/components/...",
-  "interactivePatterns": [
-    { "type": "popover", "dataTest": "related-pipelines-popover" }
-  ],
-  "dataTestAttributes": ["related-pipelines-popover"],
-  "diff": "@@ -38,3 +38,3 @@ ..."   // what actually changed
-}
+## Step 2 — Analyze each changed file
+
+For each changed UI file:
+
+**2a. Read the diff:**
+
+```bash
+git diff origin/main...HEAD -- <file>   # committed diff
+git diff -- <file>                       # unstaged diff
 ```
 
-Use `interactivePatterns` and `diff` together to decide whether you need to interact with the component before screenshotting (see Step 3).
+Combine both. This shows exactly what lines changed.
 
-**Stopping conditions:**
-- `changedUiFiles` is empty → report "No UI-visible changes" and stop.
-- `navigationPlans` is empty but `changedUiFiles` is not → the components couldn't be mapped to any route. Report this, then take one fallback screenshot of the namespace overview via MCP.
+**2b. Read the file** to understand its component structure.
 
-### Step 2 — Authenticate (if needed)
+**2c. Determine the target page** by tracing imports upward:
+- Search for files that import this component: `rg --files-with-matches 'from.*<basename>'`
+- If the importer is in `src/routes/page-routes/`, you have found the route file — read it to understand the URL pattern.
+- If the importer is another component, repeat from that file.
+- Continue until you reach a route file or exhaust reasonable depth (4-5 levels). If no route is found, use the namespace overview (`/ns`) as a fallback page.
 
-Playwright MCP uses a **persistent browser profile** — once you log in, the session is saved across MCP restarts. You do NOT need to close the browser window after logging in.
+**2d. Decide whether interaction is needed** by reading the diff and file together:
+- Look at where the changed lines sit in the JSX tree.
+- If the changed code is **inside the body/content** of an interactive element (e.g., inside `<Popover bodyContent={...}>`, inside a `<Modal>` body, inside a `<Tooltip>` content, inside an `<ExpandableSection>` body), the content is hidden behind a user action — you need to trigger it first.
+- If the changed code is **the trigger element itself** (a button label, surrounding layout, or anything visible without interaction), a full-page screenshot suffices.
+- For each interactive element that needs revealing: note what action opens it (click, hover), and identify the trigger — look for a `data-test` attribute, button text, or role in the surrounding JSX.
+
+## Step 3 — Authenticate (if needed)
 
 ```
 browser_navigate { "url": "https://localhost:8080/ns" }
 browser_snapshot
 ```
 
-Check the snapshot result:
-- Page shows namespace content (table, list, headings) → already authenticated, proceed.
-- Redirected to `/oauth2/sign_in` or a login page → tell the user:
+- Page shows namespace content → already authenticated, proceed.
+- Redirected to a login page → tell the user:
   > "Please complete OAuth login in the browser window that Playwright opened. Do NOT close the browser — just log in. I'll wait and then take a snapshot to confirm."
 
-  After the user says they logged in, call `browser_snapshot` to verify. If still on login after 2 attempts, stop and tell the user authentication failed.
+  After the user confirms, call `browser_snapshot` to verify. If still on login after 2 attempts, stop.
 
-### Step 3 — Capture current branch screenshots
+## Step 4 — Output directory, navigate, and capture
 
-For each `navigationPlan`, follow the `steps` array using MCP tools, then decide how to screenshot based on `componentAnalysis`.
+### 4a. Create a run-specific output directory
 
-#### 3a — Navigate to the target page
+At the **start** of Step 4 (before any screenshots), create a new directory for this run.
 
-Follow the plan's `steps` array **exactly in order**. Each step has a `type`:
-
-| Step type | MCP action |
-|-----------|-----------|
-| `goto` | `browser_navigate { "url": "..." }` — use the URL from the step verbatim |
-| `wait` | `browser_snapshot` — if still loading, wait briefly and snapshot again |
-| `act` with a hint | See the interaction hint table below |
-| `screenshot` | Do NOT use the plan's screenshot step directly — see Step 3b instead |
-
-**Interaction hint → MCP action:**
-
-| Hint | Action |
-|------|--------|
-| `namespace-select` | `browser_snapshot` → find a namespace link in the table → `browser_click { "target": "<ref>" }` |
-| `sidebar-applications` | `browser_snapshot` → find "Applications" sidebar link → `browser_click { "target": "<ref>" }` |
-| `sidebar-components` | `browser_snapshot` → find "Components" sidebar link → `browser_click { "target": "<ref>" }` |
-| `sidebar-secrets` | `browser_snapshot` → find "Secrets" sidebar link → `browser_click { "target": "<ref>" }` |
-| `click-first-application` | `browser_snapshot` → click the first application row link in the table |
-| `click-first-component` | `browser_snapshot` → click the first component row link |
-| `click-first-pipeline-run` | `browser_snapshot` → click the first pipeline run row link |
-| `click-first-task-run` | `browser_snapshot` → click the first task run row link |
-| `click-first-commit` | `browser_snapshot` → click the first commit row link |
-| `click-first-release` | `browser_snapshot` → click the first release row link |
-| `click-first-snapshot` | `browser_snapshot` → click the first snapshot row link |
-| `click-first-integration-test` | `browser_snapshot` → click the first integration test row link |
-| `click-first-release-plan` | `browser_snapshot` → click the first release plan row link |
-| `click-tab` | `browser_snapshot` → find the tab matching `tabSegment` → `browser_click { "target": "<ref>" }` |
-
-**Important navigation rules:**
-- **Follow the `steps` array, do not improvise URLs.** The `routePath` in the navigation plan is a route definition, not a valid URL — some routes omit intermediate path segments that are present in the actual URL. Only use URLs from `goto` steps.
-- Always call `browser_snapshot` AFTER each click/navigate to verify the page changed and find refs for the next step.
-- If the snapshot shows loading indicators (spinners, skeleton screens), wait a moment and snapshot again before proceeding. Max 2 re-snapshots per step.
-- If a step fails (element not found, wrong page), skip this plan and continue with the next. Do NOT retry more than once.
-- If a table or list is empty (no resources), skip this plan with a note: "Skipped — no resources available."
-- Once a namespace is selected, subsequent plans for the same namespace can skip straight to `browser_navigate { "url": "https://localhost:8080/ns/<namespace>/applications" }` for the sidebar step — but do NOT try to construct deeper URLs.
-
-#### 3b — Decide how to interact with the changed component
-
-After reaching the target page, check the `componentAnalysis` for the changed file(s).
-
-**If `interactivePatterns` is empty** — the change is purely layout/display. Take a full-page screenshot directly:
-```
-browser_take_screenshot { "type": "png", "filename": ".screenshots/current/<plan-id>.png", "fullPage": true }
+```bash
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+BRANCH_SLUG=$(printf '%s' "$BRANCH" | tr '/' '-')
+RUN_ID=$(date -u +%Y%m%dT%H%M%SZ)
+OUTPUT_DIR=".screenshots/${BRANCH_SLUG}/${RUN_ID}"
+mkdir -p "$OUTPUT_DIR"
 ```
 
-**If `interactivePatterns` is non-empty** — read the `diff` field first to understand what changed:
+Use `OUTPUT_DIR` for every screenshot and for `manifest.json` in this run. Example path:
 
-| Pattern type | Diff touches... | Action before screenshot |
-|---|---|---|
-| `popover` | body content, header, link inside popover | Use `browser_snapshot` to find the trigger button/link (by `dataTest` attr or text), `browser_click` it to open the popover, then screenshot |
-| `popover` | trigger button label, surrounding layout only | Full-page screenshot is sufficient; popover body is not what changed |
-| `modal` | modal body, form fields inside modal | Screenshot the page as-is; add a note that the modal content requires a trigger action to view — describe what the trigger is |
-| `tooltip` | tooltip content | `browser_snapshot` → find the trigger element (by `dataTest` or surrounding context in diff), `browser_hover { "target": "<ref>" }`, then screenshot |
-| `expandable-section` | content inside the section | `browser_snapshot` → find and click the section toggle to expand it, then screenshot |
-| `drawer` | drawer panel content | Screenshot page as-is; note that the drawer requires a separate trigger interaction |
-| `dropdown` | dropdown items/options | Full-page screenshot is usually sufficient; opening a dropdown mid-capture is unreliable |
+`.screenshots/KFLUXUI-1247-automated-ui-screenshots/20260603T152130Z/related-pipelines-popover.png`
 
-**How to locate the element in a snapshot:**
-1. Use `dataTest` from `interactivePatterns` (e.g. `data-test="related-pipelines-popover"`) — search the snapshot for this value as a target ref.
-2. Look at the `diff` to understand what props the trigger has (e.g. a `<Button variant="link">` with dynamic text like `"2 pipelines"`).
-3. Search the snapshot for that button/link by role and approximate text.
-4. If you cannot find it, take a full-page screenshot and add a note explaining what interaction was needed.
+The timestamp folder keeps each run separate; the branch folder groups runs for the same PR branch.
 
-**After any interaction, always take the screenshot immediately** — do not navigate away.
+### 4b. Navigate and capture
 
-#### 3c — Save the screenshot
+For each target page, navigate using Playwright MCP. Always call `browser_snapshot` after every action to verify the page state and find element refs.
 
-```
-browser_take_screenshot {
-  "type": "png",
-  "filename": ".screenshots/current/<plan-id>.png",
-  "fullPage": true
-}
-```
+**Navigation pattern:**
+1. `browser_navigate { "url": "https://localhost:8080/ns" }` → snapshot → click first namespace in table
+2. Navigate to the relevant section using sidebar links or by constructing the list URL from the namespace you just discovered (`https://localhost:8080/ns/<namespace>/applications`, etc.)
+3. If the component lives on a detail page, click the first relevant row in the list
+4. If the component is on a tab, find and click that tab
+5. Once on the target page, snapshot to confirm content loaded
 
-The `plan-id` comes from the navigation plan's `id` field (e.g. `ns-workspacename-applications-applicationname-pipelineruns-pipelinerunname-0`).
+**Navigation rules:**
+- Always read element refs from the snapshot — never guess or hardcode resource names.
+- If a table or list is empty (no resources to click), skip this target with a note.
+- If a step fails, retry once. If it fails again, skip and move to the next target.
+- If still loading (spinners, skeleton screens), snapshot again. Max 2 re-snapshots per step.
 
-### Step 4 — Report results
+**Capturing:**
 
-Present results to the user:
+After reaching the target page:
 
-1. **Summary**: number of screenshots captured, skipped targets with reasons
-2. **Current branch screenshots**: embed each with `![description](path)`
-3. **Skipped targets**: list with reasons
-4. **Interaction notes**: for any component where you opened a popover/tooltip/etc., explain what you did and why
+- If **no interaction is needed** (Step 2d determined a plain layout change):
 
-Write a `manifest.json` to `.screenshots/`:
+  ```
+  browser_take_screenshot { "type": "png", "filename": "<OUTPUT_DIR>/<label>.png", "fullPage": true }
+  ```
+
+- If **interaction is needed** (content is hidden behind a trigger):
+  1. `browser_snapshot` to find the trigger element by its `data-test` attribute, role, or text
+  2. Perform the action (`browser_click` for popovers/dropdowns/expandable sections, `browser_hover` for tooltips)
+  3. `browser_snapshot` to confirm the element opened
+  4. `browser_take_screenshot { "type": "png", "filename": "<OUTPUT_DIR>/<label>.png", "fullPage": true }`
+  5. If the trigger element cannot be found after reading the snapshot carefully, take a full-page screenshot and add a note explaining what interaction was needed
+
+Use a short descriptive `<label>` (e.g., `pipeline-run-details`, `application-list`) — not a path with slashes. Filenames do not need a timestamp prefix because the parent `RUN_ID` folder already identifies the run.
+
+## Step 5 — Report results
+
+1. **Summary**: number of screenshots captured, targets skipped with reasons, and the **`OUTPUT_DIR`** used for this run
+2. **Screenshots**: embed each inline with paths under `OUTPUT_DIR`, e.g. `![description](.screenshots/<branch-slug>/<run-id>/<label>.png)`
+3. **Interaction notes**: for any component where you opened a popover/tooltip/etc., explain what you did
+
+Write **`${OUTPUT_DIR}/manifest.json`** (one manifest per run — do not overwrite manifests from earlier runs):
+
 ```json
 {
-  "generatedAt": "<ISO timestamp>",
-  "branch": "<current branch name>",
-  "baseRef": "origin/main",
-  "screenshots": {
-    "current": [
-      { "planId": "...", "path": ".screenshots/current/...", "label": "..." }
-    ]
-  },
+  "generatedAt": "<ISO-8601 timestamp>",
+  "branch": "<git rev-parse --abbrev-ref HEAD>",
+  "branchSlug": "<BRANCH_SLUG>",
+  "runId": "<RUN_ID>",
+  "outputDir": "<OUTPUT_DIR>",
+  "screenshots": [
+    { "label": "...", "path": "<OUTPUT_DIR>/<label>.png", "file": "src/..." }
+  ],
   "skipped": [
-    { "planId": "...", "label": "...", "reason": "..." }
+    { "file": "src/...", "reason": "..." }
   ]
 }
 ```
 
-## Fallback: Standalone Capture Script
-
-If Playwright MCP tools are not available (e.g. running outside Cursor, or MCP is disabled), use the standalone capture script as a fallback. It handles page-level navigation with fixed selectors but **cannot** open popovers, modals, or other interactive elements:
-
-```bash
-cd scripts/screenshot-ui && yarn capture
-```
-
-Optional args: `--base <ref>`, `--head <ref>`, `--dev-server <url>`, `--chrome-path <path>`
-
-The script auto-detects Chrome/Chromium. To verify browser detection:
-```bash
-cd scripts/screenshot-ui && yarn detect-browser
-```
-
-This fallback is appropriate for:
-- Quick overview screenshots of list/detail pages with no interactive components
-- CI environments where no MCP context is available
-
-## Navigation Tips
-
-- **Use `browser_snapshot`** after every navigation action — it returns the accessibility tree with clickable `target` refs. These refs are stable within a page session.
-- **Prefer role-based identification** in snapshots: look for links, buttons, tabs, and table rows.
-- **Don't assume element text** — read it from the snapshot. Resource names vary per user and cluster.
-- **Wait for content**: if a snapshot shows loading indicators, wait briefly and snapshot again. Max 2 re-snapshots per step.
-- **Re-use the namespace**: once selected, you can navigate to `https://localhost:8080/ns/<namespace>/applications` for the applications list — but do NOT construct deeper URLs from the `routePath`.
-- **Read the diff**: it tells you exactly what changed and where — whether the change is inside an interactive element or just around it.
-
-## Output Structure
-
-```
-.screenshots/
-  current/              # Current branch screenshots
-    <plan-id>.png
-    ...
-  manifest.json         # Metadata about the capture run
-```
-
-All outputs are gitignored.
-
-## Error Handling Summary
+## Error Handling
 
 | Condition | Action |
 |---|---|
+| Playwright MCP unavailable | Stop, tell user to check MCP config |
 | Dev server not running | Stop, tell user to run `yarn start` |
-| No UI changes in diff | Stop cleanly, report no screenshots needed |
-| Auth required | Ask user to log in in the browser (don't close it), wait, snapshot |
-| Page has no data | Skip that target, continue |
-| Single plan fails | Log and continue with remaining plans |
+| No UI changes found | Stop cleanly, report no screenshots needed |
+| Auth required | Ask user to log in in the browser window, wait, re-snapshot |
+| Page has no data (empty list) | Skip that target, continue |
+| Target navigation fails twice | Skip, log reason, continue |
 | Interactive element not found | Take full-page screenshot, add explanatory note |
-| MCP unavailable | Use fallback `yarn capture` script |
-| Looping/stuck on a step | Skip after 2 attempts, move to next plan |
 
 ## Anti-patterns
 
 1. **Do not delegate to subagents** — MCP tools are not available in subagent contexts
-2. **Do not commit** `.screenshots/`, `.worktree-main/`, or `.playwright-mcp/`
-3. **Do not hardcode** namespace names, application names, or resource names
+2. **Do not commit** `.screenshots/` or `.playwright-mcp/`
+3. **Do not hardcode** namespace names, application names, or resource names — always read from snapshots
 4. **Do not force screenshots** when no UI files changed
 5. **Do not block PR creation** if screenshots fail — degrade gracefully
-6. **Do not assume page structure** — always read from `browser_snapshot` results
-7. **Do not loop** — if a step fails twice, skip and move on
-8. **Do not use `%{redirect_url}`** in curl checks — it causes false negatives
-9. **Do not skip reading the diff** — the diff is what tells you whether a popover needs to be opened
-10. **Do not construct URLs from `routePath`** — route definitions differ from actual browser URLs; only follow the plan's `steps`
+6. **Do not loop** — skip after 2 failed attempts on any step
+7. **Do not use a fallback capture script** — if Playwright MCP is unavailable, stop

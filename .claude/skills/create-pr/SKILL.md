@@ -55,17 +55,15 @@ Fill the PR template from `.github/PULL_REQUEST_TEMPLATE.md` using **all availab
 - **Fixes**: extract Jira ticket ID from branch name or commit messages (pattern: `KFLUXUI-\d+` or `KONFLUX-\d+`). Format as `Fixes: https://redhat.atlassian.net/browse/<TICKET-ID>`. If no ticket ID found, leave the placeholder comment.
 - **Description**: 2-3 sentences summarizing the change and motivation. Pull from conversation context — what problem was being solved, what approach was chosen, and why. Do not just restate the commit messages.
 - **Type of change**: check the applicable box(es) based on the diff.
-- **Screen shots / Gifs**: if UI-visible changes exist (`.tsx` in `src/components/` or `src/shared/components/`), invoke the **`screenshot-ui` skill** (see [`.claude/skills/screenshot-ui/SKILL.md`](../screenshot-ui/SKILL.md)) and embed returned screenshots in this section. If capture fails or is skipped, note "Screenshots not available". If no UI changes, leave the placeholder comment.
+- **Screen shots / Gifs**: see step 4.5.
 - **How to test or reproduce**: list concrete steps to verify the change. Pull from conversation context — if the user described testing steps or verified behavior during the session, include those.
 - **Browser conformance**: leave unchecked (manual verification).
 
 ### Step 4.5 — Capture UI screenshots (optional)
 
-1. If the diff contains UI-visible changes (`.tsx` files in `src/components/` or `src/shared/components/`):
-   - Invoke the **`screenshot-ui` skill** (`.claude/skills/screenshot-ui/SKILL.md`)
-   - This uses Playwright MCP to navigate the running dev server and capture screenshots
-   - Also attempts to capture the same pages on `main` for visual comparison
-   - If it returns screenshots, embed them in the PR body under **Screen shots / Gifs**
+1. Invoke the **`screenshot-ui` skill** (`.claude/skills/screenshot-ui/SKILL.md`)
+   - This uses Playwright MCP to navigate the running dev server and capture screenshots into `.screenshots/<branch-slug>/<run-id>/`
+   - If it returns screenshots, inform the user to add them to the PR body
    - If it fails or is skipped, note "Screenshots not available" in that section
 2. If no UI-visible changes detected, skip this step
 3. **Never block PR creation** on screenshot failures — always continue to Step 5
