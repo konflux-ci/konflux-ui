@@ -46,6 +46,7 @@ CLAUDE.local.md
 # Screenshot UI automation outputs and worktree
 .screenshots/
 .worktree-main/
+.playwright-mcp/
 
 # Snyk Security Extension - AI Rules (auto-generated)
 .cursor/rules/snyk_rules.mdc

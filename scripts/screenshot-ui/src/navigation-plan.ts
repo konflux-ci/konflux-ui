@@ -22,38 +22,23 @@ function tabLabel(tabSegment?: string): string {
 }
 
 function hintToActInstruction(hint: InteractionHint, tabSegment?: string): string | undefined {
-  switch (hint) {
-    case 'namespace-select':
-      return 'click on the first namespace in the Namespaces table';
-    case 'sidebar-applications':
-      return "click 'Applications' in the sidebar";
-    case 'sidebar-components':
-      return "click 'Components' in the sidebar";
-    case 'sidebar-secrets':
-      return "click 'Secrets' in the sidebar";
-    case 'click-first-application':
-      return 'click on the first application in the applications table';
-    case 'click-first-component':
-      return 'click on the first component in the components table';
-    case 'click-first-pipeline-run':
-      return 'click on the first pipeline run in the list';
-    case 'click-first-task-run':
-      return 'click on the first task run in the list';
-    case 'click-first-commit':
-      return 'click on the first commit in the list';
-    case 'click-first-release':
-      return 'click on the first release in the list';
-    case 'click-first-snapshot':
-      return 'click on the first snapshot in the list';
-    case 'click-first-integration-test':
-      return 'click on the first integration test in the list';
-    case 'click-first-release-plan':
-      return 'click on the first release plan in the list';
-    case 'click-tab':
-      return `click the '${tabLabel(tabSegment)}' tab`;
-    default:
-      return undefined;
-  }
+  const instructions: Partial<Record<InteractionHint, string>> = {
+    'namespace-select': 'click on the first namespace in the Namespaces table',
+    'sidebar-applications': "click 'Applications' in the sidebar",
+    'sidebar-components': "click 'Components' in the sidebar",
+    'sidebar-secrets': "click 'Secrets' in the sidebar",
+    'click-first-application': 'click on the first application in the applications table',
+    'click-first-component': 'click on the first component in the components table',
+    'click-first-pipeline-run': 'click on the first pipeline run in the list',
+    'click-first-task-run': 'click on the first task run in the list',
+    'click-first-commit': 'click on the first commit in the list',
+    'click-first-release': 'click on the first release in the list',
+    'click-first-snapshot': 'click on the first snapshot in the list',
+    'click-first-integration-test': 'click on the first integration test in the list',
+    'click-first-release-plan': 'click on the first release plan in the list',
+    'click-tab': `click the '${tabLabel(tabSegment)}' tab`,
+  };
+  return instructions[hint];
 }
 
 function sidebarHintForRoute(routePath: string): InteractionHint | undefined {
@@ -83,7 +68,11 @@ function buildStepsForTarget(
   if (needsNamespaceDiscovery) {
     steps.push({ type: 'goto', url: `${devServerUrl.replace(/\/$/, '')}/ns` });
     steps.push({ type: 'wait', condition: 'networkidle' });
-    steps.push({ type: 'act', instruction: hintToActInstruction('namespace-select')! });
+    steps.push({
+      type: 'act',
+      instruction: hintToActInstruction('namespace-select')!,
+      hint: 'namespace-select',
+    });
     steps.push({ type: 'wait', condition: 'networkidle' });
   } else if (
     directUrl &&
@@ -101,7 +90,11 @@ function buildStepsForTarget(
   } else {
     steps.push({ type: 'goto', url: `${devServerUrl.replace(/\/$/, '')}/ns` });
     steps.push({ type: 'wait', condition: 'networkidle' });
-    steps.push({ type: 'act', instruction: hintToActInstruction('namespace-select')! });
+    steps.push({
+      type: 'act',
+      instruction: hintToActInstruction('namespace-select')!,
+      hint: 'namespace-select',
+    });
     steps.push({ type: 'wait', condition: 'networkidle' });
   }
 
@@ -109,7 +102,7 @@ function buildStepsForTarget(
   if (sidebarHint && needsNamespaceDiscovery) {
     const instruction = hintToActInstruction(sidebarHint);
     if (instruction) {
-      steps.push({ type: 'act', instruction });
+      steps.push({ type: 'act', instruction, hint: sidebarHint });
       steps.push({ type: 'wait', condition: 'networkidle' });
     }
   }
@@ -121,7 +114,7 @@ function buildStepsForTarget(
 
     const instruction = hintToActInstruction(hint, target.tabSegment);
     if (instruction) {
-      steps.push({ type: 'act', instruction });
+      steps.push({ type: 'act', instruction, hint, tabSegment: target.tabSegment });
       steps.push({ type: 'wait', condition: 'networkidle' });
     }
   }
@@ -157,6 +150,7 @@ export function buildNavigationPlans(
             instruction: namespace
               ? `click on '${namespace}' in the Namespaces table`
               : 'click on the first namespace in the Namespaces table',
+            hint: 'namespace-select' as const,
           },
           { type: 'wait', condition: 'networkidle' },
           { type: 'screenshot', name: 'overview-fallback.png', fullPage: true },

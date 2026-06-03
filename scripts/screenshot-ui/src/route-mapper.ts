@@ -15,8 +15,6 @@ type RouteFileMatch = {
   routeConstant?: string;
   routePath?: string;
   importedModules: string[];
-  jsxComponents: string[];
-  childPaths: string[];
 };
 
 function listRouteFiles(): string[] {
@@ -59,6 +57,11 @@ function extractImports(content: string, routeFile: string): string[] {
   return imports;
 }
 
+function isFullRoutePath(pathStr: string): boolean {
+  const normalized = pathStr.replace(/\$\{RouterParams\.(\w+)\}/g, ':$1');
+  return normalized.startsWith('ns') || normalized.startsWith('releasemonitor');
+}
+
 function extractRouteConstants(content: string): Array<{ constant?: string; path?: string }> {
   const constants: Array<{ constant?: string; path?: string }> = [];
   const pathConstantRegex = /path:\s*(\w+_PATH(?:\.\w+)?)\.path/g;
@@ -70,30 +73,14 @@ function extractRouteConstants(content: string): Array<{ constant?: string; path
 
   const templatePathRegex = /path:\s*[`'"]([^`'"]+)[`'"]/g;
   while ((match = templatePathRegex.exec(content)) !== null) {
-    constants.push({ path: match[1].replace(/\$\{RouterParams\.(\w+)\}/g, ':$1') });
+    const raw = match[1];
+    if (!isFullRoutePath(raw)) {
+      continue;
+    }
+    constants.push({ path: raw.replace(/\$\{RouterParams\.(\w+)\}/g, ':$1') });
   }
 
   return constants;
-}
-
-function extractJsxComponents(content: string): string[] {
-  const components = new Set<string>();
-  const jsxRegex = /<([A-Z][A-Za-z0-9]*)\b/g;
-  let match: RegExpExecArray | null;
-  while ((match = jsxRegex.exec(content)) !== null) {
-    components.add(match[1]);
-  }
-  return [...components];
-}
-
-function extractChildPaths(content: string): string[] {
-  const childPaths: string[] = [];
-  const childPathRegex = /path:\s*[`'"]([^`'"]+)[`'"]/g;
-  let match: RegExpExecArray | null;
-  while ((match = childPathRegex.exec(content)) !== null) {
-    childPaths.push(match[1].replace(/\$\{RouterParams\.(\w+)\}/g, ':$1'));
-  }
-  return childPaths;
 }
 
 function fileMatchesImport(changedFile: string, importPath: string): boolean {
@@ -136,8 +123,6 @@ function buildInteractionHints(routePath: string): {
 function parseRouteFile(routeFile: string): RouteFileMatch[] {
   const content = fs.readFileSync(routeFile, 'utf8');
   const importedModules = extractImports(content, routeFile);
-  const jsxComponents = extractJsxComponents(content);
-  const childPaths = extractChildPaths(content);
   const routeConstants = extractRouteConstants(content);
 
   if (routeConstants.length === 0) {
@@ -145,8 +130,6 @@ function parseRouteFile(routeFile: string): RouteFileMatch[] {
       {
         routeFile,
         importedModules,
-        jsxComponents,
-        childPaths,
       },
     ];
   }
@@ -156,8 +139,6 @@ function parseRouteFile(routeFile: string): RouteFileMatch[] {
     routeConstant: route.constant,
     routePath: route.path,
     importedModules,
-    jsxComponents,
-    childPaths,
   }));
 }
 

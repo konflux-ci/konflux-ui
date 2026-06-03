@@ -2,6 +2,7 @@ import { execSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { REPO_ROOT } from './constants.js';
+import { analyzeComponents } from './component-analyzer.js';
 import { findRoutesForChangedFiles } from './route-mapper.js';
 import { buildNavigationPlans } from './navigation-plan.js';
 import type { AnalysisResult } from './types.js';
@@ -78,11 +79,13 @@ export function analyzeDiff(
 
   const targets = findRoutesForChangedFiles(changedUiFiles);
   const navigationPlans = buildNavigationPlans(targets, changedUiFiles, devServerUrl);
+  const componentAnalysis = analyzeComponents(changedUiFiles, baseRef, headRef);
 
   return {
     changedUiFiles,
     skippedFiles,
     targets,
     navigationPlans,
+    componentAnalysis,
   };
 }
