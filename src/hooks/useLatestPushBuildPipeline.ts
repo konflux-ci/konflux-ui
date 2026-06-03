@@ -1,6 +1,6 @@
 import * as React from 'react';
 import {
-  PipelineRunEventType,
+  PUSH_BUILD_EVENT_TYPES,
   PipelineRunLabel,
   PipelineRunType,
   runStatus,
@@ -84,8 +84,14 @@ export const useLatestPushBuildPipelineRunForComponentV2 = (
           matchLabels: {
             [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.BUILD,
             [PipelineRunLabel.COMPONENT]: componentName,
-            [PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL]: PipelineRunEventType.PUSH,
           },
+          matchExpressions: [
+            {
+              key: PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL,
+              operator: 'In',
+              values: [...PUSH_BUILD_EVENT_TYPES],
+            },
+          ],
         },
         limit: 1,
       }),

@@ -1,5 +1,6 @@
 /* eslint-disable max-nested-callbacks */
 import { renderHook } from '@testing-library/react-hooks';
+import { PUSH_BUILD_EVENT_TYPES, PipelineRunLabel } from '~/consts/pipelinerun';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import {
   PipelineRunGroupVersionKind,
@@ -403,6 +404,20 @@ describe('usePipelineRuns', () => {
   });
 
   describe('useLatestPushBuildPipelineRunForComponent', () => {
+    const pushBuildSelector = {
+      matchLabels: {
+        'pipelines.appstudio.openshift.io/type': 'build',
+        'appstudio.openshift.io/component': 'sample-component',
+      },
+      matchExpressions: [
+        {
+          key: PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL,
+          operator: 'In',
+          values: [...PUSH_BUILD_EVENT_TYPES],
+        },
+      ],
+    };
+
     it('should create specific selector', () => {
       useK8sWatchResourceMock.mockReturnValue([[], true, undefined]);
       useTRPipelineRunsMock.mockReturnValue([[], false, undefined]);
@@ -417,13 +432,8 @@ describe('usePipelineRuns', () => {
           groupVersionKind: PipelineRunGroupVersionKind,
           namespace: 'test-ns',
           isList: true,
-          selector: {
-            matchLabels: {
-              'pipelines.appstudio.openshift.io/type': 'build',
-              'appstudio.openshift.io/component': 'sample-component',
-              'pipelinesascode.tekton.dev/event-type': 'push',
-            },
-          },
+          name: undefined,
+          selector: pushBuildSelector,
           watch: true,
         },
         PipelineRunModel,
@@ -431,13 +441,7 @@ describe('usePipelineRuns', () => {
       );
       expect(useTRPipelineRunsMock).toHaveBeenCalledWith('test-ns', {
         limit: 1,
-        selector: {
-          matchLabels: {
-            'pipelines.appstudio.openshift.io/type': 'build',
-            'appstudio.openshift.io/component': 'sample-component',
-            'pipelinesascode.tekton.dev/event-type': 'push',
-          },
-        },
+        selector: pushBuildSelector,
       });
     });
 

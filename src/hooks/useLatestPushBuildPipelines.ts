@@ -1,8 +1,8 @@
 import * as React from 'react';
-import { PipelineRunEventType, PipelineRunLabel, PipelineRunType } from '../consts/pipelinerun';
-import { PipelineRunKind } from '../types';
-import { useApplication } from './useApplications';
-import { usePipelineRunsV2 } from './usePipelineRunsV2';
+import { PUSH_BUILD_EVENT_TYPES, PipelineRunLabel, PipelineRunType } from '~/consts/pipelinerun';
+import { useApplication } from '~/hooks/useApplications';
+import { usePipelineRunsV2 } from '~/hooks/usePipelineRunsV2';
+import { PipelineRunKind } from '~/types';
 
 export const useLatestPushBuildPipelines = (
   namespace: string,
@@ -31,8 +31,14 @@ export const useLatestPushBuildPipelines = (
           matchLabels: {
             [PipelineRunLabel.APPLICATION]: applicationName,
             [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.BUILD,
-            [PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL]: PipelineRunEventType.PUSH,
           },
+          matchExpressions: [
+            {
+              key: PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL,
+              operator: 'In',
+              values: [...PUSH_BUILD_EVENT_TYPES],
+            },
+          ],
         },
       }),
       [applicationName, application],

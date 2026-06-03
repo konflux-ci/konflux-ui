@@ -85,4 +85,74 @@ describe('useLatestPushBuildPipelines', () => {
     expect(pipelineRuns.map((tr) => tr.metadata?.name)).toEqual(['test-caseqfvdj']);
     expect(getNextPageMock).toHaveBeenCalled();
   });
+
+  it('should return build pipelines triggered by incoming webhook', () => {
+    const mockIncomingPipelineRun = {
+      ...testPipelineRuns[DataState.SUCCEEDED],
+      metadata: {
+        ...testPipelineRuns[DataState.SUCCEEDED]?.metadata,
+        labels: {
+          ...testPipelineRuns[DataState.SUCCEEDED]?.metadata?.labels,
+          'pipelinesascode.tekton.dev/event-type': 'incoming',
+        },
+      },
+    };
+    useK8sWatchResourceMock.mockReturnValue([[mockIncomingPipelineRun], true, undefined]);
+    useTRPipelineRunsMock.mockReturnValue([[], true, undefined, undefined]);
+    const { result } = renderHook(() =>
+      useLatestPushBuildPipelines('test-ns', 'test-pipelinerun', componentNames),
+    );
+
+    const [pipelineRuns, loaded] = result.current;
+    expect(loaded).toBe(true);
+    expect(pipelineRuns.map((tr) => tr.metadata?.name)).toEqual(['test-caseqfvdj']);
+  });
+
+  it('should prefer the latest push or incoming build when both exist', () => {
+    const mockPushPipelineRun = {
+      ...testPipelineRuns[DataState.FAILED],
+      metadata: {
+        ...testPipelineRuns[DataState.FAILED]?.metadata,
+        name: 'older-push-build',
+        creationTimestamp: '2024-01-01T10:00:00Z',
+        labels: {
+          ...testPipelineRuns[DataState.FAILED]?.metadata?.labels,
+          'pipelinesascode.tekton.dev/event-type': 'push',
+        },
+      },
+      status: {
+        ...testPipelineRuns[DataState.FAILED]?.status,
+        completionTime: '2024-01-01T10:00:00Z',
+      },
+    };
+    const mockIncomingPipelineRun = {
+      ...testPipelineRuns[DataState.SUCCEEDED],
+      metadata: {
+        ...testPipelineRuns[DataState.SUCCEEDED]?.metadata,
+        name: 'newer-incoming-build',
+        creationTimestamp: '2024-01-01T11:00:00Z',
+        labels: {
+          ...testPipelineRuns[DataState.SUCCEEDED]?.metadata?.labels,
+          'pipelinesascode.tekton.dev/event-type': 'incoming',
+        },
+      },
+      status: {
+        ...testPipelineRuns[DataState.SUCCEEDED]?.status,
+        completionTime: '2024-01-01T11:00:00Z',
+      },
+    };
+    useK8sWatchResourceMock.mockReturnValue([
+      [mockPushPipelineRun, mockIncomingPipelineRun],
+      true,
+      undefined,
+    ]);
+    useTRPipelineRunsMock.mockReturnValue([[], true, undefined, undefined]);
+    const { result } = renderHook(() =>
+      useLatestPushBuildPipelines('test-ns', 'test-pipelinerun', componentNames),
+    );
+
+    const [pipelineRuns, loaded] = result.current;
+    expect(loaded).toBe(true);
+    expect(pipelineRuns.map((tr) => tr.metadata?.name)).toEqual(['newer-incoming-build']);
+  });
 });
