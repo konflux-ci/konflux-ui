@@ -49,5 +49,6 @@ msg="Post-edit checks found issues. Please fix:${errors}"
 if [[ -n "${CURSOR_VERSION:-}" ]]; then
   jq -n --arg msg "$msg" '{"followup_message": $msg}'
 else
-  jq -n --arg reason "$msg" '{"decision": "block", "reason": $reason}'
+  echo "$msg"
+  exit 1
 fi
