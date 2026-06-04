@@ -341,9 +341,26 @@ export const useApplicationConformaResults = (
   React.useEffect(() => {
     if (!useMock) return;
     let cancelled = false;
-    void import('./__data__/mockConformaResults').then(({ generateMockResults }) => {
-      if (!cancelled) setMockResults(generateMockResults());
-    });
+    void import('./__data__/mockConformaResults')
+      .then(({ generateMockResults }) => {
+        if (!cancelled) setMockResults(generateMockResults());
+      })
+      .catch((err) => {
+        logger.warn('Failed to load mock Conforma data', { error: err });
+        if (!cancelled) {
+          setMockResults({
+            componentStatuses: [],
+            allResults: [],
+            totalComponents: 0,
+            totalFailed: 0,
+            totalViolations: 0,
+            totalWarnings: 0,
+            totalSuccesses: 0,
+            loaded: true,
+            error: err,
+          });
+        }
+      });
     return () => {
       cancelled = true;
     };

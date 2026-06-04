@@ -2,7 +2,7 @@ import * as React from 'react';
 import { TableData } from '~/shared';
 import type { GroupedConformaRow } from './conforma-grouping-utils';
 import { ConformaCountBadge } from './ConformaCountBadge';
-import { ConformaGroupedTableColumnClasses } from './ConformaResultsListHeader';
+import { conformaGroupedTableColumnClasses } from './ConformaResultsListHeader';
 
 type ConformaResultsListRowProps = {
   obj: GroupedConformaRow;
@@ -15,14 +15,14 @@ type ConformaResultsListRowProps = {
  */
 const ConformaResultsListRow: React.FC<ConformaResultsListRowProps> = ({ obj }) => (
   <>
-    <TableData className={ConformaGroupedTableColumnClasses.groupKey}>{obj.groupKey}</TableData>
-    <TableData className={ConformaGroupedTableColumnClasses.violations}>
+    <TableData className={conformaGroupedTableColumnClasses.groupKey}>{obj.groupKey}</TableData>
+    <TableData className={conformaGroupedTableColumnClasses.violations}>
       <ConformaCountBadge count={obj.violations} type="violations" />
     </TableData>
-    <TableData className={ConformaGroupedTableColumnClasses.warnings}>
+    <TableData className={conformaGroupedTableColumnClasses.warnings}>
       <ConformaCountBadge count={obj.warnings} type="warnings" />
     </TableData>
-    <TableData className={ConformaGroupedTableColumnClasses.successes}>
+    <TableData className={conformaGroupedTableColumnClasses.successes}>
       <ConformaCountBadge count={obj.successes} type="successes" />
     </TableData>
   </>

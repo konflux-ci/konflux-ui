@@ -299,6 +299,24 @@ describe('useApplicationConformaResults', () => {
     expect(result.current).toEqual(mockApplicationResults);
   });
 
+  it('handles mock data import failure without staying stuck in loading state', async () => {
+    process.env.NODE_ENV = 'development';
+    mockUseLocation.mockReturnValue({ search: '?mock=conforma' });
+
+    const importError = new Error('mock module not found');
+    mockGenerateMockResults.mockImplementation(() => {
+      throw importError;
+    });
+
+    const { result } = renderHook(() => useApplicationConformaResults('test-app'));
+
+    await flushEffects();
+
+    expect(result.current.loaded).toBe(true);
+    expect(result.current.error).toBe(importError);
+    expect(result.current.allResults).toEqual([]);
+  });
+
   it('returns loaded empty state when there are no pipeline runs', async () => {
     const components = [createComponent('comp-a'), createComponent('comp-b')];
     mockUseComponents.mockReturnValue([components, true, undefined]);

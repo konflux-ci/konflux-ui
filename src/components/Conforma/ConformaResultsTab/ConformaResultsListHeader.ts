@@ -1,6 +1,6 @@
 import { createTableHeaders } from '~/shared/components/table/utils';
 
-export const ConformaGroupedTableColumnClasses = {
+export const conformaGroupedTableColumnClasses = {
   groupKey: 'pf-m-width-40',
   violations: 'pf-m-width-20',
   warnings: 'pf-m-width-20',
@@ -13,8 +13,8 @@ export const ConformaGroupedTableColumnClasses = {
  */
 export const getConformaGroupedHeader = (groupLabel: string) =>
   createTableHeaders([
-    { title: groupLabel, className: ConformaGroupedTableColumnClasses.groupKey },
-    { title: 'Violations', className: ConformaGroupedTableColumnClasses.violations },
-    { title: 'Warnings', className: ConformaGroupedTableColumnClasses.warnings },
-    { title: 'Successes', className: ConformaGroupedTableColumnClasses.successes },
+    { title: groupLabel, className: conformaGroupedTableColumnClasses.groupKey },
+    { title: 'Violations', className: conformaGroupedTableColumnClasses.violations },
+    { title: 'Warnings', className: conformaGroupedTableColumnClasses.warnings },
+    { title: 'Successes', className: conformaGroupedTableColumnClasses.successes },
   ])(null, null, null);
