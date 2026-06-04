@@ -1,5 +1,6 @@
 import { act } from '@testing-library/react';
 import { renderHook } from '@testing-library/react-hooks';
+import { isDeveloperMockMode, MOCK_WORKSPACE_CONFORMA_VIOLATIONS } from '~/dev-mock';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useApplications } from '~/hooks/useApplications';
 import { usePipelineRunsV2 } from '~/hooks/usePipelineRunsV2';
@@ -7,7 +8,6 @@ import { commonFetchJSON, getK8sResourceURL, K8sListResourceItems } from '~/k8s'
 import { useNamespace } from '~/shared/providers/Namespace';
 import { isResourceEnterpriseContract } from '~/utils/conforma-utils';
 import { isTaskRunInPipelineRun } from '~/utils/pipeline-utils';
-import { isDeveloperMockMode, MOCK_WORKSPACE_CONFORMA_VIOLATIONS } from '~/dev-mock';
 import { useWorkspaceConformaViolations } from '../useWorkspaceConformaViolations';
 
 jest.mock('~/hooks/useApplications', () => ({
@@ -303,6 +303,185 @@ describe('useWorkspaceConformaViolations', () => {
     const { result } = renderHook(() => useWorkspaceConformaViolations());
 
     expect(result.current.error).toEqual(prError);
+  });
+
+  it('should surface fetch error when all pipeline fetches fail', async () => {
+    mockUseApplications.mockReturnValue([
+      [{ metadata: { name: 'app-1' } }],
+      true,
+      undefined,
+    ]);
+
+    mockUsePipelineRunsV2.mockReturnValue([
+      [
+        {
+          metadata: {
+            name: 'pr-1',
+            creationTimestamp: '2025-01-01T10:00:00Z',
+            labels: {
+              'appstudio.openshift.io/application': 'app-1',
+              'appstudio.openshift.io/component': 'comp-a',
+              'pipelines.appstudio.openshift.io/type': 'test',
+            },
+          },
+        },
+      ],
+      true,
+      undefined,
+    ]);
+
+    jest.mocked(isResourceEnterpriseContract).mockReturnValue(true);
+
+    const fetchErr = new Error('Network failure');
+    jest.mocked(K8sListResourceItems).mockRejectedValue(fetchErr);
+
+    const { result } = renderHook(() => useWorkspaceConformaViolations());
+    await flushEffects();
+
+    expect(result.current.loaded).toBe(true);
+    expect(result.current.error).toBe(fetchErr);
+    expect(result.current.applications).toEqual([]);
+  });
+
+  it('should clear error state on subsequent successful fetch after failure', async () => {
+    mockUseApplications.mockReturnValue([
+      [{ metadata: { name: 'app-1' } }],
+      true,
+      undefined,
+    ]);
+
+    const pipelineRun = {
+      metadata: {
+        name: 'pr-1',
+        creationTimestamp: '2025-01-01T10:00:00Z',
+        labels: {
+          'appstudio.openshift.io/application': 'app-1',
+          'appstudio.openshift.io/component': 'comp-a',
+          'pipelines.appstudio.openshift.io/type': 'test',
+        },
+      },
+    };
+
+    mockUsePipelineRunsV2.mockReturnValue([[pipelineRun], true, undefined]);
+
+    jest.mocked(isResourceEnterpriseContract).mockReturnValue(true);
+
+    const fetchErr = new Error('Network failure');
+    jest.mocked(K8sListResourceItems).mockRejectedValue(fetchErr);
+
+    const { result, rerender } = renderHook(() => useWorkspaceConformaViolations());
+    await flushEffects();
+
+    expect(result.current.loaded).toBe(true);
+    expect(result.current.error).toBe(fetchErr);
+
+    jest.mocked(K8sListResourceItems).mockResolvedValue([
+      {
+        apiVersion: 'tekton.dev/v1',
+        kind: 'TaskRun',
+        metadata: { name: 'task-run-1', namespace: 'test-ns', uid: 'uid-1' },
+        status: { podName: 'pod-1' },
+      },
+    ]);
+
+    jest.mocked(commonFetchJSON).mockResolvedValue({
+      components: [
+        {
+          name: 'comp-a',
+          violations: [{ msg: 'violation 1', metadata: { title: 'v1' } }],
+          warnings: [],
+          successes: [],
+        },
+      ],
+    });
+
+    mockUsePipelineRunsV2.mockReturnValue([
+      [
+        {
+          ...pipelineRun,
+          metadata: {
+            ...pipelineRun.metadata,
+            name: 'pr-2',
+          },
+        },
+      ],
+      true,
+      undefined,
+    ]);
+
+    rerender();
+    await flushEffects();
+
+    expect(result.current.loaded).toBe(true);
+    expect(result.current.error).toBeUndefined();
+  });
+
+  it('should not surface error when only some pipeline fetches fail', async () => {
+    mockUseApplications.mockReturnValue([
+      [{ metadata: { name: 'app-ok' } }, { metadata: { name: 'app-fail' } }],
+      true,
+      undefined,
+    ]);
+
+    mockUsePipelineRunsV2.mockReturnValue([
+      [
+        {
+          metadata: {
+            name: 'pr-ok',
+            creationTimestamp: '2025-01-01T10:00:00Z',
+            labels: {
+              'appstudio.openshift.io/application': 'app-ok',
+              'appstudio.openshift.io/component': 'comp-ok',
+              'pipelines.appstudio.openshift.io/type': 'test',
+            },
+          },
+        },
+        {
+          metadata: {
+            name: 'pr-fail',
+            creationTimestamp: '2025-01-01T10:00:00Z',
+            labels: {
+              'appstudio.openshift.io/application': 'app-fail',
+              'appstudio.openshift.io/component': 'comp-fail',
+              'pipelines.appstudio.openshift.io/type': 'test',
+            },
+          },
+        },
+      ],
+      true,
+      undefined,
+    ]);
+
+    jest.mocked(isResourceEnterpriseContract).mockReturnValue(true);
+
+    let callCount = 0;
+    jest.mocked(K8sListResourceItems).mockImplementation(() => {
+      callCount++;
+      if (callCount <= 1) {
+        return Promise.resolve([
+          {
+            apiVersion: 'tekton.dev/v1',
+            kind: 'TaskRun',
+            metadata: { name: 'task-run', namespace: 'test-ns', uid: 'uid' },
+            status: { podName: 'pod' },
+          },
+        ] as never);
+      }
+      return Promise.reject(new Error('Network failure'));
+    });
+
+    jest.mocked(commonFetchJSON).mockResolvedValue({
+      components: [
+        { name: 'comp-ok', violations: [{ msg: 'v', metadata: { title: 'v' } }] },
+      ],
+    });
+
+    const { result } = renderHook(() => useWorkspaceConformaViolations());
+    await flushEffects();
+
+    expect(result.current.loaded).toBe(true);
+    expect(result.current.error).toBeUndefined();
+    expect(result.current.applications).toHaveLength(1);
   });
 
   it('should sort applications by violation count descending', async () => {

@@ -121,6 +121,7 @@ export const useWorkspaceConformaViolations = (): WorkspaceConformaViolations =>
     Record<string, { violationCount: number; warningCount: number }>
   >({});
   const [fetchFinished, setFetchFinished] = React.useState(false);
+  const [fetchError, setFetchError] = React.useState<unknown>(undefined);
 
   const readyToFetch = Boolean(namespace?.length && appsLoaded && pipelinesLoaded);
   const qualifierCount = stableQualifiers?.length ?? 0;
@@ -128,6 +129,7 @@ export const useWorkspaceConformaViolations = (): WorkspaceConformaViolations =>
   React.useEffect(() => {
     if (useMock) return;
     if (!readyToFetch) return;
+    setFetchError(undefined);
 
     if (qualifierCount === 0) {
       setCountsByApp((prev) => (Object.keys(prev).length === 0 ? prev : {}));
@@ -140,6 +142,8 @@ export const useWorkspaceConformaViolations = (): WorkspaceConformaViolations =>
 
     const run = async () => {
       const counts: Record<string, { violationCount: number; warningCount: number }> = {};
+      let failedCount = 0;
+      let lastError: unknown;
 
       await Promise.all(
         (stableQualifiers ?? []).map(async (sq) => {
@@ -159,6 +163,8 @@ export const useWorkspaceConformaViolations = (): WorkspaceConformaViolations =>
               warningCount: (existing?.warningCount ?? 0) + warningCount,
             };
           } catch (e) {
+            failedCount++;
+            lastError = e;
             if (!aborted) {
               logger.warn('Workspace conforma: fetch failed for pipeline run', {
                 pipelineRunName: sq.pipelineRunName,
@@ -170,6 +176,10 @@ export const useWorkspaceConformaViolations = (): WorkspaceConformaViolations =>
       );
 
       if (!aborted) {
+        const totalQualifiers = stableQualifiers?.length ?? 0;
+        if (failedCount > 0 && failedCount === totalQualifiers) {
+          setFetchError(lastError);
+        }
         setCountsByApp(counts);
         setFetchFinished(true);
       }
@@ -182,7 +192,7 @@ export const useWorkspaceConformaViolations = (): WorkspaceConformaViolations =>
   }, [useMock, readyToFetch, stableQualifiers, qualifierCount, namespace, isKubearchiveLogsEnabled]);
 
   const loaded = Boolean(namespace?.length && appsLoaded && pipelinesLoaded && fetchFinished);
-  const error = appsError ?? pipelinesError ?? undefined;
+  const error = appsError ?? pipelinesError ?? fetchError ?? undefined;
 
   return React.useMemo((): WorkspaceConformaViolations => {
     if (useMock) return MOCK_WORKSPACE_CONFORMA_VIOLATIONS;

@@ -1,31 +1,22 @@
 import * as React from 'react';
 import { useLocation } from 'react-router-dom';
-import { extractConformaResultsFromTaskRunLogs } from '~/components/Conforma/utils';
+import {
+  aggregateCounts,
+  listSecurityTaskRuns,
+  resolveConformaResultFromTaskRun,
+  securityTaskForPipeline,
+} from '~/components/Conforma/conforma-fetch-utils';
 import { PipelineRunLabel, PipelineRunType } from '~/consts/pipelinerun';
 import { CONFORMA_TASK, EC_TASK } from '~/consts/security';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useComponents } from '~/hooks/useComponents';
 import { usePipelineRunsV2 } from '~/hooks/usePipelineRunsV2';
 import { sortTaskRunsByTime } from '~/hooks/useTaskRuns';
-import { commonFetchJSON, getK8sResourceURL, K8sListResourceItems } from '~/k8s';
-import { KUBEARCHIVE_PATH_PREFIX } from '~/kubearchive/const';
-import { PodModel } from '~/models/pod';
-import { TaskRunModel } from '~/models/taskruns';
 import { logger } from '~/monitoring/logger';
 import { useDeepCompareMemoize } from '~/shared/hooks/useDeepCompareMemoize';
 import { useNamespace } from '~/shared/providers/Namespace';
-import type { PipelineRunKind, TaskRunKind } from '~/types';
-import {
-  ComponentConformaResult,
-  CONFORMA_RESULT_STATUS,
-  ConformaResult,
-  UIConformaData,
-} from '~/types/conforma';
-import { TektonResourceLabel } from '~/types/coreTekton';
-import { getPipelineRunFromTaskRunOwnerRef } from '~/utils/common-utils';
-import { isResourceEnterpriseContract } from '~/utils/conforma-utils';
-import { isTaskRunInPipelineRun } from '~/utils/pipeline-utils';
-import { getTaskRunLog } from '~/utils/tekton-results';
+import type { PipelineRunKind } from '~/types';
+import { ComponentConformaResult, CONFORMA_RESULT_STATUS, UIConformaData } from '~/types/conforma';
 
 export type ConformaResultRow = UIConformaData & {
   image?: string;
@@ -63,10 +54,12 @@ type ConformaByComponentEntry =
   | { state: 'error'; err: unknown; pipelineRunName?: string }
   | { state: 'skipped' };
 
-// Filter individual 404-artifact violations from each component rather than
-// dropping the entire component. This prevents a single 404 row from hiding
-// all other valid violations for that component (fixes B3 count discrepancy).
-const filterInvalidImageConformaRows = (
+// Removes individual 404-artifact violation entries from each component, leaving all
+// other violations intact. Intentionally different from the shared
+// `filterInvalidImageConformaRows` in `conforma-fetch-utils`, which removes entire
+// components that have only a single 404 violation. Here we do per-row surgery so a
+// component with a mix of real and 404 violations still surfaces the real ones.
+const filterPerComponent404Violations = (
   components: ComponentConformaResult[],
 ): ComponentConformaResult[] =>
   components.map((comp) => ({
@@ -74,28 +67,23 @@ const filterInvalidImageConformaRows = (
     violations: comp.violations?.filter((v) => !(v.msg?.includes('404 Not Found') && !v.metadata)),
   }));
 
-function securityTaskForPipeline(
-  pr: PipelineRunKind,
-): QualifyingPipeline['securityTaskName'] | undefined {
-  if (isResourceEnterpriseContract(pr)) {
-    return EC_TASK;
-  }
-  if (isTaskRunInPipelineRun(pr, CONFORMA_TASK)) {
-    return CONFORMA_TASK;
-  }
-  return undefined;
-}
-
-function aggregateCounts(components: ComponentConformaResult[]) {
-  return components.reduce(
-    (acc, c) => {
-      acc.violationCount += c.violations?.length ?? 0;
-      acc.warningCount += c.warnings?.length ?? 0;
-      acc.successCount += c.successes?.length ?? 0;
-      return acc;
-    },
-    { violationCount: 0, warningCount: 0, successCount: 0 },
+async function fetchConformaForPipeline(
+  namespace: string,
+  pipelineRunName: string,
+  securityTaskName: QualifyingPipeline['securityTaskName'],
+  isKubearchiveLogsEnabled: boolean,
+): Promise<ComponentConformaResult[]> {
+  const listed = sortTaskRunsByTime(
+    await listSecurityTaskRuns(namespace, pipelineRunName, securityTaskName),
   );
+  const taskRun = listed[0];
+  if (!taskRun) return [];
+  const conformaRaw = await resolveConformaResultFromTaskRun(
+    namespace,
+    taskRun,
+    isKubearchiveLogsEnabled,
+  );
+  return filterPerComponent404Violations(conformaRaw?.components ?? []);
 }
 
 function statusFromCounts(
@@ -109,107 +97,6 @@ function statusFromCounts(
   if (warningCount > 0) return 'warning';
   if (successCount > 0) return 'pass';
   return 'unknown';
-}
-
-async function listSecurityTaskRuns(
-  ns: string,
-  pipelineRunName: string,
-  pipelineTaskName: string,
-): Promise<TaskRunKind[]> {
-  return K8sListResourceItems<TaskRunKind>({
-    model: TaskRunModel,
-    queryOptions: {
-      ns,
-      queryParams: {
-        labelSelector: {
-          matchLabels: {
-            [TektonResourceLabel.pipelinerun]: pipelineRunName,
-            [TektonResourceLabel.pipelineTask]: pipelineTaskName,
-          },
-        },
-      },
-    },
-  });
-}
-
-async function resolveConformaResultFromTaskRun(
-  namespace: string,
-  taskRun: TaskRunKind,
-  isKubearchiveLogsEnabled: boolean,
-): Promise<ConformaResult | undefined> {
-  const podName = taskRun.status?.podName;
-  const taskRunUid = taskRun.metadata?.uid;
-  const taskRunNs = taskRun.metadata?.namespace;
-  const pipelineRunUid = taskRun.metadata
-    ? getPipelineRunFromTaskRunOwnerRef(taskRun)?.uid
-    : undefined;
-
-  const podLogOpts = podName
-    ? {
-        ns: namespace,
-        name: podName,
-        path: 'log',
-        queryParams: { container: 'step-report-json', follow: 'true' },
-      }
-    : null;
-
-  if (podLogOpts) {
-    try {
-      return await commonFetchJSON<ConformaResult>(
-        getK8sResourceURL(PodModel, undefined, podLogOpts),
-      );
-    } catch (err) {
-      const code =
-        typeof err === 'object' && err !== null && 'code' in err && typeof err.code === 'number'
-          ? err.code
-          : undefined;
-      if (code === 404 && isKubearchiveLogsEnabled) {
-        try {
-          return await commonFetchJSON<ConformaResult>(
-            getK8sResourceURL(PodModel, undefined, podLogOpts),
-            { pathPrefix: KUBEARCHIVE_PATH_PREFIX },
-          );
-        } catch (kArchErr) {
-          logger.warn('Conforma aggregate: Kubearchive pod log fetch failed', {
-            error: kArchErr,
-          });
-        }
-      } else if (code !== 404) {
-        logger.warn('Conforma aggregate: pod log fetch failed', { error: err });
-      }
-    }
-  }
-
-  if (taskRunUid && taskRunNs && pipelineRunUid) {
-    try {
-      const logs = await getTaskRunLog(taskRunNs, taskRunUid, pipelineRunUid);
-      return extractConformaResultsFromTaskRunLogs(logs);
-    } catch (e) {
-      logger.warn('Conforma aggregate: tekton-results log fallback failed', { error: e });
-    }
-  }
-
-  return undefined;
-}
-
-async function fetchConformaForPipeline(
-  namespace: string,
-  pipelineRunName: string,
-  securityTaskName: QualifyingPipeline['securityTaskName'],
-  isKubearchiveLogsEnabled: boolean,
-): Promise<ComponentConformaResult[]> {
-  const listed = sortTaskRunsByTime(
-    await listSecurityTaskRuns(namespace, pipelineRunName, securityTaskName),
-  );
-  const taskRun = listed[0];
-  if (!taskRun) return [];
-
-  const conformaRaw = await resolveConformaResultFromTaskRun(
-    namespace,
-    taskRun,
-    isKubearchiveLogsEnabled,
-  );
-  return filterInvalidImageConformaRows(conformaRaw?.components ?? []);
 }
 
 /**
@@ -374,6 +261,7 @@ export const useApplicationConformaResults = (
   const readyToFetch = Boolean(namespace?.length && pipelinesLoaded && componentsLoaded);
 
   React.useEffect(() => {
+    if (useMock) return;
     if (!readyToFetch) return;
 
     if (!stableQualifiers?.length) {
@@ -423,7 +311,7 @@ export const useApplicationConformaResults = (
     return () => {
       aborted = true;
     };
-  }, [readyToFetch, stableQualifiers, namespace, isKubearchiveLogsEnabled]);
+  }, [readyToFetch, stableQualifiers, namespace, isKubearchiveLogsEnabled, useMock]);
 
   const loaded = Boolean(
     namespace?.length && componentsLoaded && pipelinesLoaded && conformaBatchFinished,

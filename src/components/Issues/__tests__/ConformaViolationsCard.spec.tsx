@@ -1,11 +1,11 @@
 import { MemoryRouter } from 'react-router-dom';
 import { screen } from '@testing-library/react';
-import { renderWithQueryClient } from '~/unit-test-utils/mock-react-query';
-import ConformaViolationsCard from '../ConformaViolationsCard';
+import { ConformaViolationsCard } from '~/components/Issues/ConformaViolationsCard';
 import {
   useWorkspaceConformaViolations,
   WorkspaceConformaViolations,
-} from '../useWorkspaceConformaViolations';
+} from '~/components/Issues/useWorkspaceConformaViolations';
+import { renderWithQueryClient } from '~/unit-test-utils/mock-react-query';
 
 jest.mock('../useWorkspaceConformaViolations');
 jest.mock('~/shared/providers/Namespace', () => ({

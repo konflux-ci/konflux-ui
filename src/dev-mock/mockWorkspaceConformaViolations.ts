@@ -1,5 +1,4 @@
-import type { AppViolationSummary } from '~/components/Issues/useWorkspaceConformaViolations';
-import type { WorkspaceConformaViolations } from '~/components/Issues/useWorkspaceConformaViolations';
+import type { AppViolationSummary, WorkspaceConformaViolations } from '~/components/Issues/useWorkspaceConformaViolations';
 
 const MOCK_APP_NAME_PREFIXES = [
   'platform',

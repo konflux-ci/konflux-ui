@@ -2,6 +2,7 @@ import * as React from 'react';
 import { Bullseye, Spinner } from '@patternfly/react-core';
 import { LOGGED_IN_QUERY_PARAM } from '~/analytics/AnalyticsService';
 import { isDeveloperMockMode } from '~/dev-mock';
+import { logger } from '~/monitoring/logger';
 import { AuthContextType } from './type';
 import { useAuthAnalytics } from './useAuthAnalytics';
 import { setUserDataToLocalStorage } from './utils';
@@ -42,8 +43,8 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = React.memo(({ chi
           setIsAuthenticated(true);
         }
       } catch (err) {
-        // eslint-disable-next-line no-console
-        console.log('Error while Authenticating the user', err);
+        const error = err instanceof Error ? err : new Error(String(err));
+        logger.error('Error while authenticating the user', error);
       }
     };
     void checkAuthStatus();

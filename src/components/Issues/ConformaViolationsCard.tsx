@@ -15,15 +15,15 @@ import {
 import { ArrowRightIcon } from '@patternfly/react-icons/dist/esm/icons/arrow-right-icon';
 import { CheckCircleIcon } from '@patternfly/react-icons/dist/esm/icons/check-circle-icon';
 import { ExclamationTriangleIcon } from '@patternfly/react-icons/dist/esm/icons/exclamation-triangle-icon';
+import { useWorkspaceConformaViolations } from '~/components/Issues/useWorkspaceConformaViolations';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { APPLICATION_DETAILS_PATH } from '~/routes/paths';
 import { LoadingSkeleton } from '~/shared';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
 import './ConformaViolationsCard.scss';
-import { useWorkspaceConformaViolations } from './useWorkspaceConformaViolations';
 
-const ConformaViolationsCard: React.FC = () => {
+export const ConformaViolationsCard: React.FC = () => {
   const namespace = useNamespace();
   const { applications, totalViolations, totalWarnings, loaded, error } =
     useWorkspaceConformaViolations();
@@ -131,5 +131,3 @@ const ConformaViolationsCard: React.FC = () => {
     </Card>
   );
 };
-
-export default ConformaViolationsCard;

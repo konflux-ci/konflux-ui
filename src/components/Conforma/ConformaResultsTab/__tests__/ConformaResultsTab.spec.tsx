@@ -113,7 +113,7 @@ describe('ConformaResultsTab', () => {
 
     routerRenderer(<ConformaResultsTab />);
 
-    expect(screen.getByText('Unable to load Conforma results.')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Unable to load Conforma results/i })).toBeInTheDocument();
   });
 
   it('shows empty state when allResults is empty', () => {

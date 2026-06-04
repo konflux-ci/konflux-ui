@@ -69,7 +69,7 @@ export const groupByComponent = (
 export const filterResults = (
   results: ConformaResultRow[],
   searchText: string,
-  statusFilters: string[],
+  statusFilters: ConformaResultRow['status'][],
 ): ConformaResultRow[] => {
   const lowerSearch = searchText.toLowerCase();
 

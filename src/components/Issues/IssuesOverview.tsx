@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Grid, GridItem } from '@patternfly/react-core';
+import { ConformaViolationsCard } from '~/components/Issues/ConformaViolationsCard';
 import { IfFeature } from '~/feature-flags/hooks';
-import ConformaViolationsCard from './ConformaViolationsCard';
 import { IssueDistributionCard } from './IssueDistributionCard';
 import IssuesByStatusCard from './IssuesByStatusCard';
 import { LatestIssuesCard } from './LatestIssuesCard';

@@ -11,12 +11,13 @@ import {
 } from '@patternfly/react-core';
 import { FilterContext, FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { useDeepCompareMemoize } from '~/shared';
+import { getErrorState } from '~/shared/utils/error-utils';
 import type { GroupByMode } from './conforma-grouping-utils';
 import { filterResults, groupByComponent, groupByRule } from './conforma-grouping-utils';
 import { ConformaGroupedTable } from './ConformaGroupedTable';
 import { ConformaResultsToolbar } from './ConformaResultsToolbar';
 import { ConformaSummaryBar } from './ConformaSummaryBar';
-import { useApplicationConformaResults } from './useApplicationConformaResults';
+import { useApplicationConformaResults, type ConformaResultRow } from './useApplicationConformaResults';
 import './ConformaResultsTab.scss';
 
 /**
@@ -41,7 +42,9 @@ const ConformaResultsTabContent: React.FC = () => {
   const { filters: unparsedFilters } = React.useContext(FilterContext);
   const filters = useDeepCompareMemoize({
     name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
-    status: unparsedFilters.status ? (unparsedFilters.status as string[]) : [],
+    status: unparsedFilters.status
+      ? (unparsedFilters.status as ConformaResultRow['status'][])
+      : [],
   });
   const { name: nameFilter, status: statusFilter } = filters;
 
@@ -87,11 +90,7 @@ const ConformaResultsTabContent: React.FC = () => {
   }, []);
 
   if (error) {
-    return (
-      <PageSection>
-        <Text>Unable to load Conforma results.</Text>
-      </PageSection>
-    );
+    return <PageSection>{getErrorState(error, loaded, 'Conforma results')}</PageSection>;
   }
 
   if (!loaded) {
