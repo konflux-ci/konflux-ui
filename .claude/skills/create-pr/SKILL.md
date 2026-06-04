@@ -55,7 +55,7 @@ Fill the PR template from `.github/PULL_REQUEST_TEMPLATE.md` using **all availab
 - **Fixes**: extract Jira ticket ID from branch name or commit messages (pattern: `KFLUXUI-\d+` or `KONFLUX-\d+`). Format as `Fixes: https://redhat.atlassian.net/browse/<TICKET-ID>`. If no ticket ID found, leave the placeholder comment.
 - **Description**: 2-3 sentences summarizing the change and motivation. Pull from conversation context — what problem was being solved, what approach was chosen, and why. Do not just restate the commit messages.
 - **Type of change**: check the applicable box(es) based on the diff.
-- **Screen shots / Gifs**: see step 4.5.
+- **Screen shots / Gifs**: see step 4.1.
 - **How to test or reproduce**: list concrete steps to verify the change. Pull from conversation context — if the user described testing steps or verified behavior during the session, include those.
 - **Browser conformance**: leave unchecked (manual verification).
 

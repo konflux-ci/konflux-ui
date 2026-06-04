@@ -36,5 +36,4 @@ exec npx -y @playwright/mcp@0.0.75 \
   --allowed-origins="https://localhost:8080" \
   --ignore-https-errors \
   --viewport-size=1440x900 \
-  --executable-path="$CHROME_PATH" \
-  "$@"
+  --executable-path="$CHROME_PATH"

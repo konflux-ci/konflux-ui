@@ -25,7 +25,7 @@ Capture screenshots of UI components changed in the current branch using Playwri
 
 ## Prerequisites
 
-1. **Playwright MCP available** — configured in `.cursor/mcp.json` and `.mcp.json` via `scripts/launch-playwright-mcp.sh`. Verify by calling `browser_snapshot`; if it errors, stop. If running using Cursor, the user also has to have it enabled in Cursor Settings.
+1. **Playwright MCP available** — configured in `.cursor/mcp.json` and `.mcp.json` via `scripts/launch_playwright_mcp.sh`. Verify by calling `browser_snapshot`; if it errors, stop. If running using Cursor, the user also has to have it enabled in Cursor Settings.
 2. **Dev server running** on `https://localhost:8080` (`yarn start`). Check:
 
    ```bash
