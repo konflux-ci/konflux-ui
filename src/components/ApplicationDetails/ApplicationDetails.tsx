@@ -1,7 +1,6 @@
 import React from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Bullseye, Spinner } from '@patternfly/react-core';
-import type { FlagKey } from '~/feature-flags/flags';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
@@ -202,7 +201,6 @@ export const ApplicationDetails: React.FC<React.PropsWithChildren> = () => {
                   key: 'conforma-results',
                   label: 'Conforma Results',
                   isFilled: true,
-                  featureFlag: ['conforma-policy'] as FlagKey[],
                 },
               ]
             : []),

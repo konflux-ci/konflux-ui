@@ -3,30 +3,28 @@ import {
   Button,
   ButtonVariant,
   MenuToggle,
-  SearchInput,
   Select,
   SelectList,
   SelectOption,
-  Toolbar,
-  ToolbarContent,
-  ToolbarGroup,
-  ToolbarItem,
 } from '@patternfly/react-core';
+import { FilterContext } from '~/components/Filter/generic/FilterContext';
+import { MultiSelect } from '~/components/Filter/generic/MultiSelect';
+import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
+import { createFilterObj } from '~/components/Filter/utils/filter-utils';
+import { useDeepCompareMemoize } from '~/shared';
 import { CONFORMA_RESULT_STATUS } from '~/types/conforma';
 import type { GroupByMode } from './conforma-grouping-utils';
+import type { ConformaResultRow } from './useApplicationConformaResults';
 
 type ConformaResultsToolbarProps = {
-  searchText: string;
-  onSearchChange: (value: string) => void;
+  allResults: ConformaResultRow[];
   groupBy: GroupByMode;
   onGroupByChange: (value: GroupByMode) => void;
-  statusFilters: string[];
-  onStatusFiltersChange: (values: string[]) => void;
   onExpandAll: () => void;
   onCollapseAll: () => void;
 };
 
-const statusOptions = [
+const statuses = [
   CONFORMA_RESULT_STATUS.violations,
   CONFORMA_RESULT_STATUS.warnings,
   CONFORMA_RESULT_STATUS.successes,
@@ -38,120 +36,79 @@ const groupByLabels: Record<GroupByMode, string> = {
 };
 
 export const ConformaResultsToolbar: React.FC<ConformaResultsToolbarProps> = ({
-  searchText,
-  onSearchChange,
+  allResults,
   groupBy,
   onGroupByChange,
-  statusFilters,
-  onStatusFiltersChange,
   onExpandAll,
   onCollapseAll,
 }) => {
-  const [isGroupByOpen, setIsGroupByOpen] = React.useState(false);
-  const [isStatusOpen, setIsStatusOpen] = React.useState(false);
+  const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
+  const filters = useDeepCompareMemoize({
+    name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
+    status: unparsedFilters.status ? (unparsedFilters.status as string[]) : [],
+  });
+  const { name: nameFilter, status: statusFilter } = filters;
 
-  const statusToggleText =
-    statusFilters.length > 0 ? `Status (${statusFilters.length})` : 'Status';
+  const [isGroupByOpen, setIsGroupByOpen] = React.useState(false);
+
+  const statusFilterObj = React.useMemo(
+    () => createFilterObj(allResults, (r) => r.status, statuses),
+    [allResults],
+  );
 
   return (
-    <Toolbar data-test="conforma-results-toolbar">
-      <ToolbarContent>
-        <ToolbarItem>
-          <SearchInput
-            placeholder="Search by rule or com..."
-            value={searchText}
-            onChange={(_e, value) => onSearchChange(value)}
-            onClear={() => onSearchChange('')}
-            data-test="conforma-search-input"
-          />
-        </ToolbarItem>
-
-        <ToolbarItem>
-          <Select
-            toggle={(toggleRef) => (
-              <MenuToggle
-                ref={toggleRef}
-                isExpanded={isGroupByOpen}
-                onClick={() => setIsGroupByOpen(!isGroupByOpen)}
-                data-test="conforma-group-by-select"
-              >
-                {`Group by: ${groupByLabels[groupBy]}`}
-              </MenuToggle>
-            )}
-            onSelect={(_, value) => {
-              onGroupByChange(value as GroupByMode);
-              setIsGroupByOpen(false);
-            }}
-            selected={groupBy}
-            isOpen={isGroupByOpen}
-            onOpenChange={setIsGroupByOpen}
+    <BaseTextFilterToolbar
+      text={nameFilter}
+      label="rule"
+      setText={(name) => setFilters({ ...filters, name })}
+      onClearFilters={onClearFilters}
+      dataTest="conforma-results-toolbar"
+    >
+      <MultiSelect
+        label="Status"
+        filterKey="status"
+        values={statusFilter}
+        setValues={(status) => setFilters({ ...filters, status })}
+        options={statusFilterObj}
+      />
+      <Select
+        toggle={(toggleRef) => (
+          <MenuToggle
+            ref={toggleRef}
+            isExpanded={isGroupByOpen}
+            onClick={() => setIsGroupByOpen(!isGroupByOpen)}
+            data-test="conforma-group-by-select"
           >
-            <SelectList>
-              <SelectOption value="rule">Group by: Rule</SelectOption>
-              <SelectOption value="component">Group by: Component</SelectOption>
-            </SelectList>
-          </Select>
-        </ToolbarItem>
-
-        <ToolbarItem>
-          <Select
-            toggle={(toggleRef) => (
-              <MenuToggle
-                ref={toggleRef}
-                isExpanded={isStatusOpen}
-                onClick={() => setIsStatusOpen(!isStatusOpen)}
-                data-test="conforma-status-filter"
-              >
-                {statusToggleText}
-              </MenuToggle>
-            )}
-            onSelect={(_, value) => {
-              const strValue = value as string;
-              const next = statusFilters.includes(strValue)
-                ? statusFilters.filter((s) => s !== strValue)
-                : [...statusFilters, strValue];
-              onStatusFiltersChange(next);
-            }}
-            selected={statusFilters}
-            isOpen={isStatusOpen}
-            onOpenChange={setIsStatusOpen}
-          >
-            <SelectList>
-              {statusOptions.map((status) => (
-                <SelectOption
-                  key={status}
-                  value={status}
-                  hasCheckbox
-                  isSelected={statusFilters.includes(status)}
-                >
-                  {status}
-                </SelectOption>
-              ))}
-            </SelectList>
-          </Select>
-        </ToolbarItem>
-
-        <ToolbarGroup align={{ default: 'alignRight' }}>
-          <ToolbarItem>
-            <Button
-              variant={ButtonVariant.link}
-              onClick={onExpandAll}
-              data-test="conforma-expand-all"
-            >
-              Expand all
-            </Button>
-          </ToolbarItem>
-          <ToolbarItem>
-            <Button
-              variant={ButtonVariant.link}
-              onClick={onCollapseAll}
-              data-test="conforma-collapse-all"
-            >
-              Collapse all
-            </Button>
-          </ToolbarItem>
-        </ToolbarGroup>
-      </ToolbarContent>
-    </Toolbar>
+            {`Group by: ${groupByLabels[groupBy]}`}
+          </MenuToggle>
+        )}
+        onSelect={(_, value) => {
+          onGroupByChange(value as GroupByMode);
+          setIsGroupByOpen(false);
+        }}
+        selected={groupBy}
+        isOpen={isGroupByOpen}
+        onOpenChange={setIsGroupByOpen}
+      >
+        <SelectList>
+          <SelectOption value="rule">Group by: Rule</SelectOption>
+          <SelectOption value="component">Group by: Component</SelectOption>
+        </SelectList>
+      </Select>
+      <Button
+        variant={ButtonVariant.link}
+        onClick={onExpandAll}
+        data-test="conforma-expand-all"
+      >
+        Expand all
+      </Button>
+      <Button
+        variant={ButtonVariant.link}
+        onClick={onCollapseAll}
+        data-test="conforma-collapse-all"
+      >
+        Collapse all
+      </Button>
+    </BaseTextFilterToolbar>
   );
 };

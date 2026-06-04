@@ -9,9 +9,11 @@ import {
   Thead,
   Tr,
 } from '@patternfly/react-table';
+import type { ComponentProps } from '~/shared/components/table/Table';
 import { getRuleStatus } from '~/utils/conforma-utils';
 import type { GroupByMode, GroupedConformaRow } from './conforma-grouping-utils';
-import { ConformaCountBadge } from './ConformaCountBadge';
+import { getConformaGroupedHeader } from './ConformaResultsListHeader';
+import ConformaResultsListRow from './ConformaResultsListRow';
 import type { ConformaResultRow } from './useApplicationConformaResults';
 import './ConformaResultsTab.scss';
 
@@ -41,18 +43,12 @@ const DetailSubTable: React.FC<{ rows: ConformaResultRow[] }> = ({ rows }) => (
               <strong>{row.title ?? '-'}</strong>
             </div>
             {row.description && (
-              <div className="conforma-grouped-table__secondary-text">
-                {row.description}
-              </div>
+              <div className="conforma-grouped-table__secondary-text">{row.description}</div>
             )}
           </Td>
           <Td dataLabel="Component">{row.component}</Td>
           <Td dataLabel="Image">
-            {row.image ? (
-              <Truncate content={row.image} />
-            ) : (
-              '-'
-            )}
+            {row.image ? <Truncate content={row.image} /> : '-'}
           </Td>
           <Td dataLabel="Status">{getRuleStatus(row.status)}</Td>
           <Td dataLabel="Message">
@@ -77,15 +73,23 @@ export const ConformaGroupedTable: React.FC<ConformaGroupedTableProps> = ({
 }) => {
   const groupLabel = groupBy === 'rule' ? 'Rule' : 'Component';
 
+  // Build column definitions using the shared createTableHeaders utility so
+  // the header config follows the same pattern as other table components.
+  const headerColumns = React.useMemo(
+    () => getConformaGroupedHeader(groupLabel)({} as ComponentProps<unknown>),
+    [groupLabel],
+  );
+
   return (
     <Table aria-label="Conforma results grouped table" data-test="conforma-grouped-table">
       <Thead>
         <Tr>
           <Th screenReaderText="Expand" />
-          <Th>{groupLabel}</Th>
-          <Th>Violations</Th>
-          <Th>Warnings</Th>
-          <Th>Successes</Th>
+          {headerColumns.map((col) => (
+            <Th key={String(col.title)} {...col.props}>
+              {col.title}
+            </Th>
+          ))}
         </Tr>
       </Thead>
       {groups.map((group, groupIdx) => {
@@ -103,21 +107,13 @@ export const ConformaGroupedTable: React.FC<ConformaGroupedTableProps> = ({
                   expandId: `${rowId}-expand`,
                 }}
               />
-              <Td dataLabel={groupLabel}>{group.groupKey}</Td>
-              <Td dataLabel="Violations">
-                <ConformaCountBadge count={group.violations} type="violations" />
-              </Td>
-              <Td dataLabel="Warnings">
-                <ConformaCountBadge count={group.warnings} type="warnings" />
-              </Td>
-              <Td dataLabel="Successes">
-                <ConformaCountBadge count={group.successes} type="successes" />
-              </Td>
+              {/* Reuse the shared Row fragment for the main summary cells */}
+              <ConformaResultsListRow obj={group} />
             </Tr>
             <Tr isExpanded={isExpanded}>
               <Td colSpan={5} noPadding={false}>
                 <ExpandableRowContent>
-                  <DetailSubTable rows={group.rows} />
+                  {isExpanded && <DetailSubTable rows={group.rows} />}
                 </ExpandableRowContent>
               </Td>
             </Tr>

@@ -79,6 +79,9 @@ jest.mock('~/monitoring/logger', () => ({
   logger: { warn: jest.fn(), error: jest.fn(), info: jest.fn(), debug: jest.fn() },
 }));
 
+// S2: The hook uses a dynamic import() for the mock module. Jest intercepts
+// dynamic imports the same way as static ones via jest.mock, so this mock
+// works for both.
 jest.mock('../__data__/mockConformaResults', () => ({
   generateMockResults: jest.fn(),
 }));
@@ -88,7 +91,7 @@ const mockUseComponents = useComponents as jest.Mock;
 const mockUsePipelineRunsV2 = usePipelineRunsV2 as jest.Mock;
 const mockUseNamespace = useNamespace as jest.Mock;
 const mockUseIsOnFeatureFlag = useIsOnFeatureFlag as jest.Mock;
-const mockGenerateMockResults = generateMockResults as jest.Mock;
+const mockGenerateMockResults = jest.mocked(generateMockResults);
 
 const createComponent = (name: string): ComponentKind => ({
   apiVersion: 'appstudio.redhat.com/v1alpha1',
@@ -282,11 +285,15 @@ describe('useApplicationConformaResults', () => {
     expect(result.current.loaded).toBe(false);
   });
 
-  it('returns mock data when in development mode with mock param', () => {
+  it('returns mock data when in development mode with mock param', async () => {
     process.env.NODE_ENV = 'development';
     mockUseLocation.mockReturnValue({ search: '?mock=conforma' });
 
     const { result } = renderHook(() => useApplicationConformaResults('test-app'));
+
+    // The hook loads mock data via dynamic import (useEffect), so we flush
+    // the micro-task queue before asserting.
+    await flushEffects();
 
     expect(mockGenerateMockResults).toHaveBeenCalled();
     expect(result.current).toEqual(mockApplicationResults);
@@ -557,8 +564,44 @@ describe('useApplicationConformaResults', () => {
     expect(result.current.loaded).toBe(true);
   });
 
-  it('filters out invalid 404 image conforma rows', async () => {
-    const resultWith404: ConformaResult = {
+  it('filters out individual 404 violation rows but keeps other violations for the same component', async () => {
+    const resultWith404AndValid: ConformaResult = {
+      components: [
+        {
+          containerImage: 'quay.io/test/missing',
+          name: 'comp-a',
+          success: false,
+          violations: [
+            // 404 artifact row — should be removed
+            { msg: 'error: 404 Not Found' } as never,
+            // Valid violation — should be kept
+            {
+              metadata: {
+                title: 'Real violation',
+                description: 'This is a real issue',
+                collections: [],
+                code: 'real.issue',
+              },
+              msg: 'Real violation message',
+            },
+          ],
+        },
+      ],
+    };
+    setupFetchPipeline();
+    jest.mocked(commonFetchJSON).mockResolvedValue(resultWith404AndValid);
+
+    const { result } = renderHook(() => useApplicationConformaResults('test-app'));
+
+    await flushEffects();
+
+    // Only the 404 row is filtered; the real violation remains.
+    expect(result.current.allResults).toHaveLength(1);
+    expect(result.current.allResults[0].title).toBe('Real violation');
+  });
+
+  it('filters out a 404-only violation row when no other violations exist', async () => {
+    const resultWith404Only: ConformaResult = {
       components: [
         {
           containerImage: 'quay.io/test/missing',
@@ -569,7 +612,7 @@ describe('useApplicationConformaResults', () => {
       ],
     };
     setupFetchPipeline();
-    jest.mocked(commonFetchJSON).mockResolvedValue(resultWith404);
+    jest.mocked(commonFetchJSON).mockResolvedValue(resultWith404Only);
 
     const { result } = renderHook(() => useApplicationConformaResults('test-app'));
 

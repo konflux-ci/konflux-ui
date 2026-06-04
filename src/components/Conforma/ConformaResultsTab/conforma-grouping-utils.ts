@@ -33,8 +33,19 @@ export const groupByRule = (results: ConformaResultRow[]): GroupedConformaRow[] 
   }));
 };
 
-export const groupByComponent = (results: ConformaResultRow[]): GroupedConformaRow[] => {
+export const groupByComponent = (
+  results: ConformaResultRow[],
+  allComponentNames?: string[],
+): GroupedConformaRow[] => {
   const map = new Map<string, ConformaResultRow[]>();
+
+  // Pre-populate groups for all known components so components without
+  // any Conforma results still appear in the "group by component" view.
+  if (allComponentNames) {
+    for (const name of allComponentNames) {
+      if (name) map.set(name, []);
+    }
+  }
 
   for (const row of results) {
     const key = row.component || 'Unknown component';

@@ -99,6 +99,45 @@ describe('conforma-grouping-utils', () => {
 
       expect(groups[0].groupKey).toBe('Unknown component');
     });
+
+    it('includes all known components even when they have zero results', () => {
+      const rows = [mockRow({ component: 'api-gateway', title: 'Rule A' })];
+      const allComponentNames = ['api-gateway', 'auth-service', 'cache-service'];
+
+      const groups = groupByComponent(rows, allComponentNames);
+
+      expect(groups).toHaveLength(3);
+      const authGroup = groups.find((g) => g.groupKey === 'auth-service');
+      expect(authGroup).toBeDefined();
+      expect(authGroup?.rows).toHaveLength(0);
+      expect(authGroup?.violations).toBe(0);
+      expect(authGroup?.warnings).toBe(0);
+      expect(authGroup?.successes).toBe(0);
+    });
+
+    it('preserves result rows for components that have data', () => {
+      const rows = [
+        mockRow({ component: 'api-gateway', status: CONFORMA_RESULT_STATUS.violations }),
+      ];
+      const allComponentNames = ['api-gateway', 'no-data-service'];
+
+      const groups = groupByComponent(rows, allComponentNames);
+
+      const apiGroup = groups.find((g) => g.groupKey === 'api-gateway');
+      expect(apiGroup?.violations).toBe(1);
+      expect(apiGroup?.rows).toHaveLength(1);
+    });
+
+    it('behaves like before when allComponentNames is not provided', () => {
+      const rows = [
+        mockRow({ component: 'api', status: CONFORMA_RESULT_STATUS.violations }),
+      ];
+
+      const groups = groupByComponent(rows);
+
+      expect(groups).toHaveLength(1);
+      expect(groups[0].groupKey).toBe('api');
+    });
   });
 
   describe('filterResults', () => {

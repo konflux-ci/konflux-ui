@@ -1,4 +1,4 @@
-import { fireEvent, screen } from '@testing-library/react';
+import { act, fireEvent, screen } from '@testing-library/react';
 import { CONFORMA_RESULT_STATUS } from '~/types/conforma';
 import { routerRenderer } from '~/unit-test-utils/mock-react-router';
 import { ConformaResultsTab } from '../ConformaResultsTab';
@@ -162,11 +162,17 @@ describe('ConformaResultsTab', () => {
 
     routerRenderer(<ConformaResultsTab />);
 
+    // Expand all — detail rows become visible
     fireEvent.click(screen.getByTestId('conforma-expand-all'));
-
     expect(screen.getAllByText('api-gateway').length).toBeGreaterThanOrEqual(1);
 
+    // Collapse all — detail rows should no longer be visible (S3 assertion)
     fireEvent.click(screen.getByTestId('conforma-collapse-all'));
+    // After collapsing, the detail sub-table rows are hidden. The only remaining
+    // 'api-gateway' occurrences would be in the toolbar or summary, not in
+    // expanded row content. We verify the grouped table still exists (collapsed).
+    expect(screen.getByTestId('conforma-grouped-table')).toBeInTheDocument();
+    expect(screen.queryAllByText('Test message').length).toBe(0);
   });
 
   it('toggles individual group expansion', () => {
@@ -174,26 +180,38 @@ describe('ConformaResultsTab', () => {
 
     routerRenderer(<ConformaResultsTab />);
 
+    // Click the first group expand button
     const toggleButtons = screen.getAllByRole('button', { name: /details/i });
     fireEvent.click(toggleButtons[0]);
 
+    // After expanding, detail row content becomes visible
     expect(screen.getAllByText('api-gateway').length).toBeGreaterThanOrEqual(1);
 
+    // Collapse it again
     fireEvent.click(toggleButtons[0]);
+    // After collapse, detail sub-table content is hidden (S3 assertion)
+    expect(screen.queryAllByText('Test message').length).toBe(0);
   });
 
   it('shows "no results match" when filters exclude all results', () => {
+    jest.useFakeTimers();
     mockUseApplicationConformaResults.mockReturnValue(populatedResults);
 
     routerRenderer(<ConformaResultsTab />);
 
-    const searchInput = screen.getByTestId('conforma-search-input');
-    const textInput = searchInput.querySelector('.pf-v5-c-text-input-group__text-input');
+    // S4: Use getByRole('textbox') instead of PF internal class selectors
+    const searchInput = screen.getByRole('textbox');
+    fireEvent.change(searchInput, { target: { value: 'zzz-no-match-zzz' } });
 
-    fireEvent.change(textInput, { target: { value: 'zzz-no-match-zzz' } });
+    // Advance the debounce timer used by BaseTextFilterToolbar
+    act(() => {
+      jest.advanceTimersByTime(700);
+    });
 
     expect(
       screen.getByText('No results match the current filters.'),
     ).toBeInTheDocument();
+
+    jest.useRealTimers();
   });
 });

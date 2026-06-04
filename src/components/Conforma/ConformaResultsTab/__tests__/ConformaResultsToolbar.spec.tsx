@@ -1,29 +1,46 @@
 import { fireEvent, screen } from '@testing-library/react';
+import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
+import { CONFORMA_RESULT_STATUS } from '~/types/conforma';
 import { routerRenderer } from '~/unit-test-utils/mock-react-router';
 import type { GroupByMode } from '../conforma-grouping-utils';
 import { ConformaResultsToolbar } from '../ConformaResultsToolbar';
+import type { ConformaResultRow } from '../useApplicationConformaResults';
 import '@testing-library/jest-dom';
 
+const mockRow = (overrides: Partial<ConformaResultRow> = {}): ConformaResultRow => ({
+  title: 'Test rule',
+  description: 'A test rule description',
+  status: CONFORMA_RESULT_STATUS.violations,
+  component: 'test-component',
+  ...overrides,
+});
+
+const allResults: ConformaResultRow[] = [
+  mockRow({ status: CONFORMA_RESULT_STATUS.violations }),
+  mockRow({ status: CONFORMA_RESULT_STATUS.violations }),
+  mockRow({ status: CONFORMA_RESULT_STATUS.warnings }),
+  mockRow({ status: CONFORMA_RESULT_STATUS.successes }),
+];
+
 describe('ConformaResultsToolbar', () => {
-  const onSearchChange = jest.fn();
   const onGroupByChange = jest.fn();
-  const onStatusFiltersChange = jest.fn();
   const onExpandAll = jest.fn();
   const onCollapseAll = jest.fn();
 
   const defaultProps = {
-    searchText: '',
-    onSearchChange,
+    allResults,
     groupBy: 'rule' as GroupByMode,
     onGroupByChange,
-    statusFilters: [] as string[],
-    onStatusFiltersChange,
     onExpandAll,
     onCollapseAll,
   };
 
   const renderToolbar = (props: Partial<typeof defaultProps> = {}) => {
-    routerRenderer(<ConformaResultsToolbar {...defaultProps} {...props} />);
+    routerRenderer(
+      <FilterContextProvider filterParams={['name', 'status']}>
+        <ConformaResultsToolbar {...defaultProps} {...props} />
+      </FilterContextProvider>,
+    );
   };
 
   beforeEach(() => {
@@ -36,51 +53,12 @@ describe('ConformaResultsToolbar', () => {
     expect(screen.getByTestId('conforma-results-toolbar')).toBeInTheDocument();
   });
 
-  it('renders search input with placeholder text', () => {
+  it('renders search input with proper placeholder text', () => {
     renderToolbar();
 
-    const searchInput = screen.getByTestId('conforma-search-input');
-    const textInput = searchInput.querySelector('.pf-v5-c-text-input-group__text-input');
-
-    expect(textInput).toHaveAttribute('placeholder', 'Search by rule or com...');
-  });
-
-  it('calls onSearchChange when typing in search', () => {
-    renderToolbar();
-
-    const searchInput = screen.getByTestId('conforma-search-input');
-    const textInput = searchInput.querySelector('.pf-v5-c-text-input-group__text-input');
-
-    fireEvent.change(textInput, { target: { value: 'cve' } });
-
-    expect(onSearchChange).toHaveBeenCalledWith('cve');
-  });
-
-  it('calls onSearchChange with empty string when clearing search', () => {
-    renderToolbar({ searchText: 'cve' });
-
-    const clearButton = screen.getByRole('button', { name: 'Reset' });
-    fireEvent.click(clearButton);
-
-    expect(onSearchChange).toHaveBeenCalledWith('');
-  });
-
-  it('shows correct group-by toggle text', () => {
-    renderToolbar({ groupBy: 'rule' });
-
-    expect(screen.getByTestId('conforma-group-by-select')).toHaveTextContent('Group by: Rule');
-  });
-
-  it('shows "Status" as default status toggle text when no filters selected', () => {
-    renderToolbar({ statusFilters: [] });
-
-    expect(screen.getByTestId('conforma-status-filter')).toHaveTextContent('Status');
-  });
-
-  it('shows "Status (N)" when status filters are selected', () => {
-    renderToolbar({ statusFilters: ['violations'] });
-
-    expect(screen.getByTestId('conforma-status-filter')).toHaveTextContent('Status (1)');
+    // S4: Use role-based query instead of PF internal DOM class selectors
+    const textInput = screen.getByRole('textbox');
+    expect(textInput).toHaveAttribute('placeholder', 'Filter by rule...');
   });
 
   it('calls onExpandAll when Expand all button is clicked', () => {
@@ -106,6 +84,20 @@ describe('ConformaResultsToolbar', () => {
     expect(screen.getByTestId('conforma-collapse-all')).toHaveTextContent('Collapse all');
   });
 
+  it('shows correct group-by toggle text for "rule"', () => {
+    renderToolbar({ groupBy: 'rule' });
+
+    expect(screen.getByTestId('conforma-group-by-select')).toHaveTextContent('Group by: Rule');
+  });
+
+  it('shows correct group-by toggle text for "component"', () => {
+    renderToolbar({ groupBy: 'component' });
+
+    expect(screen.getByTestId('conforma-group-by-select')).toHaveTextContent(
+      'Group by: Component',
+    );
+  });
+
   it('calls onGroupByChange when a group-by option is selected', () => {
     renderToolbar();
 
@@ -115,21 +107,22 @@ describe('ConformaResultsToolbar', () => {
     expect(onGroupByChange).toHaveBeenCalledWith('component');
   });
 
-  it('calls onStatusFiltersChange when a status option is selected', () => {
+  it('renders Status filter toggle', () => {
     renderToolbar();
 
-    fireEvent.click(screen.getByTestId('conforma-status-filter'));
-    fireEvent.click(screen.getByText('Failed'));
-
-    expect(onStatusFiltersChange).toHaveBeenCalledWith(['Failed']);
+    // MultiSelect renders with aria-label "{label} filter menu"
+    expect(
+      screen.getByRole('button', { name: /status filter menu/i }),
+    ).toBeInTheDocument();
   });
 
-  it('toggles status filter off when already selected', () => {
-    renderToolbar({ statusFilters: ['Failed'] });
+  it('opens Status filter menu when clicked', () => {
+    renderToolbar();
 
-    fireEvent.click(screen.getByTestId('conforma-status-filter'));
-    fireEvent.click(screen.getByText('Failed'));
+    fireEvent.click(screen.getByRole('button', { name: /status filter menu/i }));
 
-    expect(onStatusFiltersChange).toHaveBeenCalledWith([]);
+    expect(screen.getByText(CONFORMA_RESULT_STATUS.violations)).toBeInTheDocument();
+    expect(screen.getByText(CONFORMA_RESULT_STATUS.warnings)).toBeInTheDocument();
+    expect(screen.getByText(CONFORMA_RESULT_STATUS.successes)).toBeInTheDocument();
   });
 });

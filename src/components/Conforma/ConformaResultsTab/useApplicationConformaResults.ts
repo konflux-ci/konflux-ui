@@ -26,7 +26,6 @@ import { getPipelineRunFromTaskRunOwnerRef } from '~/utils/common-utils';
 import { isResourceEnterpriseContract } from '~/utils/conforma-utils';
 import { isTaskRunInPipelineRun } from '~/utils/pipeline-utils';
 import { getTaskRunLog } from '~/utils/tekton-results';
-import { generateMockResults } from './__data__/mockConformaResults';
 
 export type ConformaResultRow = UIConformaData & {
   image?: string;
@@ -64,18 +63,16 @@ type ConformaByComponentEntry =
   | { state: 'error'; err: unknown; pipelineRunName?: string }
   | { state: 'skipped' };
 
+// Filter individual 404-artifact violations from each component rather than
+// dropping the entire component. This prevents a single 404 row from hiding
+// all other valid violations for that component (fixes B3 count discrepancy).
 const filterInvalidImageConformaRows = (
   components: ComponentConformaResult[],
 ): ComponentConformaResult[] =>
-  components.filter(
-    (comp) =>
-      !(
-        comp.violations &&
-        comp.violations.length === 1 &&
-        !comp.violations[0].metadata &&
-        comp.violations[0].msg.includes('404 Not Found')
-      ),
-  );
+  components.map((comp) => ({
+    ...comp,
+    violations: comp.violations?.filter((v) => !(v.msg?.includes('404 Not Found') && !v.metadata)),
+  }));
 
 function securityTaskForPipeline(
   pr: PipelineRunKind,
@@ -338,6 +335,20 @@ export const useApplicationConformaResults = (
     })),
   );
 
+  // S2: Load mock data via dynamic import so the mock module is excluded from
+  // the production bundle's dependency graph entirely.
+  const [mockResults, setMockResults] = React.useState<ApplicationConformaResults | null>(null);
+  React.useEffect(() => {
+    if (!useMock) return;
+    let cancelled = false;
+    void import('./__data__/mockConformaResults').then(({ generateMockResults }) => {
+      if (!cancelled) setMockResults(generateMockResults());
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [useMock]);
+
   const [conformaByComponent, setConformaByComponent] = React.useState<
     Record<string, ConformaByComponentEntry | undefined>
   >({});
@@ -421,7 +432,19 @@ export const useApplicationConformaResults = (
 
   return React.useMemo((): ApplicationConformaResults => {
     if (useMock) {
-      return generateMockResults();
+      return (
+        mockResults ?? {
+          componentStatuses: [],
+          allResults: [],
+          totalComponents: 0,
+          totalFailed: 0,
+          totalViolations: 0,
+          totalWarnings: 0,
+          totalSuccesses: 0,
+          loaded: false,
+          error: undefined,
+        }
+      );
     }
 
     if (!namespace?.length) {
@@ -508,5 +531,5 @@ export const useApplicationConformaResults = (
       loaded,
       error: aggregateError,
     };
-  }, [aggregateError, appComponents, conformaByComponent, loaded, namespace?.length, useMock]);
+  }, [aggregateError, appComponents, conformaByComponent, loaded, mockResults, namespace?.length, useMock]);
 };

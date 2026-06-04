@@ -9,6 +9,8 @@ import {
   TextContent,
   Title,
 } from '@patternfly/react-core';
+import { FilterContext, FilterContextProvider } from '~/components/Filter/generic/FilterContext';
+import { useDeepCompareMemoize } from '~/shared';
 import type { GroupByMode } from './conforma-grouping-utils';
 import { filterResults, groupByComponent, groupByRule } from './conforma-grouping-utils';
 import { ConformaGroupedTable } from './ConformaGroupedTable';
@@ -17,10 +19,16 @@ import { ConformaSummaryBar } from './ConformaSummaryBar';
 import { useApplicationConformaResults } from './useApplicationConformaResults';
 import './ConformaResultsTab.scss';
 
-export const ConformaResultsTab: React.FC = () => {
+/**
+ * Inner content component that reads filter state from FilterContext.
+ * Separated so it can be a consumer within the FilterContextProvider that
+ * ConformaResultsTab provides.
+ */
+const ConformaResultsTabContent: React.FC = () => {
   const { applicationName } = useParams();
   const {
     allResults,
+    componentStatuses,
     totalComponents,
     totalFailed,
     totalViolations,
@@ -30,19 +38,32 @@ export const ConformaResultsTab: React.FC = () => {
     error,
   } = useApplicationConformaResults(applicationName);
 
-  const [searchText, setSearchText] = React.useState('');
+  const { filters: unparsedFilters } = React.useContext(FilterContext);
+  const filters = useDeepCompareMemoize({
+    name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
+    status: unparsedFilters.status ? (unparsedFilters.status as string[]) : [],
+  });
+  const { name: nameFilter, status: statusFilter } = filters;
+
   const [groupBy, setGroupBy] = React.useState<GroupByMode>('rule');
-  const [statusFilters, setStatusFilters] = React.useState<string[]>([]);
   const [expandedGroups, setExpandedGroups] = React.useState<Set<string>>(new Set());
 
   const filteredResults = React.useMemo(
-    () => filterResults(allResults, searchText, statusFilters),
-    [allResults, searchText, statusFilters],
+    () => filterResults(allResults, nameFilter, statusFilter),
+    [allResults, nameFilter, statusFilter],
+  );
+
+  const allComponentNames = React.useMemo(
+    () => componentStatuses.map((c) => c.componentName),
+    [componentStatuses],
   );
 
   const groups = React.useMemo(
-    () => (groupBy === 'rule' ? groupByRule(filteredResults) : groupByComponent(filteredResults)),
-    [groupBy, filteredResults],
+    () =>
+      groupBy === 'rule'
+        ? groupByRule(filteredResults)
+        : groupByComponent(filteredResults, allComponentNames),
+    [groupBy, filteredResults, allComponentNames],
   );
 
   const handleToggleGroup = React.useCallback((groupKey: string) => {
@@ -110,12 +131,9 @@ export const ConformaResultsTab: React.FC = () => {
 
       <PageSection isFilled>
         <ConformaResultsToolbar
-          searchText={searchText}
-          onSearchChange={setSearchText}
+          allResults={allResults}
           groupBy={groupBy}
           onGroupByChange={setGroupBy}
-          statusFilters={statusFilters}
-          onStatusFiltersChange={setStatusFilters}
           onExpandAll={handleExpandAll}
           onCollapseAll={handleCollapseAll}
         />
@@ -140,3 +158,14 @@ export const ConformaResultsTab: React.FC = () => {
     </>
   );
 };
+
+/**
+ * Top-level tab component. Provides URL-synced FilterContext so that search
+ * and status filters survive navigation and can be bookmarked, following the
+ * same pattern used by CommitsListViewV2 and PipelineRunsListViewV2.
+ */
+export const ConformaResultsTab: React.FC = () => (
+  <FilterContextProvider filterParams={['name', 'status']}>
+    <ConformaResultsTabContent />
+  </FilterContextProvider>
+);
