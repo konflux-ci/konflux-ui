@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Bullseye, Spinner } from '@patternfly/react-core';
 import { LOGGED_IN_QUERY_PARAM } from '~/analytics/AnalyticsService';
+import { isDeveloperMockMode } from '~/dev-mock';
 import { AuthContextType } from './type';
 import { useAuthAnalytics } from './useAuthAnalytics';
 import { setUserDataToLocalStorage } from './utils';
@@ -16,14 +17,16 @@ export const AuthContext = React.createContext<AuthContextType>({
 });
 
 export const AuthProvider: React.FC<React.PropsWithChildren> = React.memo(({ children }) => {
+  const mockMode = isDeveloperMockMode();
   const [user, setUser] = React.useState<AuthContextType['user']>({
-    email: null,
-    preferredUsername: null,
+    email: mockMode ? 'dev@mock.local' : null,
+    preferredUsername: mockMode ? 'dev-mock-user' : null,
   });
-  const [isAuthenticated, setIsAuthenticated] = React.useState<boolean>(false);
+  const [isAuthenticated, setIsAuthenticated] = React.useState<boolean>(mockMode);
   const { onLogout } = useAuthAnalytics();
 
   React.useEffect(() => {
+    if (mockMode) return;
     const checkAuthStatus = async () => {
       try {
         const userData = await fetch('/oauth2/userinfo');
@@ -44,7 +47,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = React.memo(({ chi
       }
     };
     void checkAuthStatus();
-  }, []);
+  }, [mockMode]);
 
   const signOut = async () => {
     onLogout();

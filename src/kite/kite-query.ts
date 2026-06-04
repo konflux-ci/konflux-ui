@@ -1,7 +1,17 @@
 import { UseInfiniteQueryOptions, QueryOptions as ReactQueryOptions } from '@tanstack/react-query';
+import { isDeveloperMockMode, MOCK_ISSUES, mockIssueResponse } from '~/dev-mock';
 import { PLUGIN_KITE, STALE_TIME } from './const';
 import { IssueQuery, IssueResponse } from './issue-type';
 import { fetchIssues } from './kite-fetch';
+
+const mockFetchIssues = (issueQuery: IssueQuery): IssueResponse => {
+  let issues = [...MOCK_ISSUES];
+  if (issueQuery.severity) issues = issues.filter((i) => i.severity === issueQuery.severity);
+  if (issueQuery.issueType) issues = issues.filter((i) => i.issueType === issueQuery.issueType);
+  if (issueQuery.state) issues = issues.filter((i) => i.state === issueQuery.state);
+  const limit = issueQuery.limit ?? issues.length;
+  return mockIssueResponse(issues.slice(0, limit));
+};
 
 export const createGetIssueQueryOptions = (
   issueQuery: IssueQuery,
@@ -9,7 +19,9 @@ export const createGetIssueQueryOptions = (
 ) => {
   return {
     queryKey: [PLUGIN_KITE, issueQuery],
-    queryFn: () => fetchIssues(issueQuery),
+    queryFn: isDeveloperMockMode()
+      ? () => Promise.resolve(mockFetchIssues(issueQuery))
+      : () => fetchIssues(issueQuery),
     staleTime: STALE_TIME,
     ...options,
   };
