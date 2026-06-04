@@ -5,7 +5,12 @@ import { ClipboardCheckIcon } from '@patternfly/react-icons/dist/esm/icons/clipb
 import { ExclamationTriangleIcon } from '@patternfly/react-icons/dist/esm/icons/exclamation-triangle-icon';
 import { StatusIconWithText } from '~/components/StatusIcon/StatusIcon';
 import { PipelineRunColumnKeys } from '~/consts/pipeline';
-import { PipelineRunLabel, PipelineRunType, UNFINISHED_PLR_STATUSES } from '~/consts/pipelinerun';
+import {
+  PipelineRunLabel,
+  PipelineRunType,
+  runStatus,
+  UNFINISHED_PLR_STATUSES,
+} from '~/consts/pipelinerun';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useKarchScanResults } from '~/hooks/useScanResults';
 import {
@@ -14,6 +19,7 @@ import {
   SNAPSHOT_DETAILS_PATH,
 } from '~/routes/paths';
 import ActionMenu from '~/shared/components/action-menu/ActionMenu';
+import { Duration } from '~/shared/components/duration';
 import { RowFunctionArgs, TableData } from '~/shared/components/table';
 import { Timestamp } from '~/shared/components/timestamp/Timestamp';
 import { TriggerColumnData } from '~/shared/components/trigger-column-data/trigger-column-data';
@@ -21,7 +27,7 @@ import { useNamespace } from '~/shared/providers/Namespace';
 import { PipelineRunKind, TaskRunKind } from '~/types';
 import { ReleaseKind, ReleasePlanKind } from '~/types/coreBuildService';
 import { createCommitObjectFromPLR } from '~/utils/commits-utils';
-import { calculateDuration, pipelineRunStatus } from '~/utils/pipeline-utils';
+import { pipelineRunStatus } from '~/utils/pipeline-utils';
 import { ScanResults } from '~/utils/scan/scan-utils';
 import { usePipelinerunActionsLazy } from './pipelinerun-actions';
 import { pipelineRunTableColumnClasses, getDynamicColumnClasses } from './PipelineRunListHeader';
@@ -216,12 +222,18 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
         </TableData>
       ) : null}
       <TableData className={pipelineRunTableColumnClasses.duration}>
-        {status !== 'Pending'
-          ? calculateDuration(
-              typeof obj.status?.startTime === 'string' ? obj.status?.startTime : '',
-              typeof obj.status?.completionTime === 'string' ? obj.status?.completionTime : '',
-            )
-          : '-'}
+        {status !== runStatus.Pending ? (
+          <Duration
+            startTime={typeof obj.status?.startTime === 'string' ? obj.status?.startTime : undefined}
+            endTime={
+              typeof obj.status?.completionTime === 'string'
+                ? obj.status?.completionTime
+                : undefined
+            }
+          />
+        ) : (
+          '-'
+        )}
       </TableData>
       <TableData data-test="status" className={pipelineRunTableColumnClasses.status}>
         <StatusIconWithText status={status} />
@@ -398,12 +410,20 @@ const DynamicPipelineRunListRow: React.FC<
       )}
       {visibleColumns.has('duration') && (
         <TableData className={dynamicClasses.duration}>
-          {status !== 'Pending'
-            ? calculateDuration(
-                typeof obj.status?.startTime === 'string' ? obj.status?.startTime : '',
-                typeof obj.status?.completionTime === 'string' ? obj.status?.completionTime : '',
-              )
-            : '-'}
+          {status !== runStatus.Pending ? (
+            <Duration
+              startTime={
+                typeof obj.status?.startTime === 'string' ? obj.status?.startTime : undefined
+              }
+              endTime={
+                typeof obj.status?.completionTime === 'string'
+                  ? obj.status?.completionTime
+                  : undefined
+              }
+            />
+          ) : (
+            '-'
+          )}
         </TableData>
       )}
       {visibleColumns.has('status') && (

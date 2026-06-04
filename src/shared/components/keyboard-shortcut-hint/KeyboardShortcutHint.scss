@@ -1,0 +1,57 @@
+.keyboard-shortcut-hint {
+  padding: var(--pf-v5-global--spacer--sm);
+
+  &__title {
+    font-weight: var(--pf-v5-global--FontWeight--bold);
+    margin-bottom: var(--pf-v5-global--spacer--sm);
+    font-size: var(--pf-v5-global--FontSize--sm);
+  }
+
+  &__entry {
+    padding: var(--pf-v5-global--spacer--xs) 0;
+    align-items: center;
+  }
+
+  &__keys {
+    text-align: right;
+    white-space: nowrap;
+    padding-right: var(--pf-v5-global--spacer--md);
+  }
+
+  &__description {
+    font-size: var(--pf-v5-global--FontSize--sm);
+    color: var(--pf-v5-global--Color--200);
+  }
+
+  &__helper-text {
+    margin-top: var(--pf-v5-global--spacer--sm);
+    font-size: var(--pf-v5-global--FontSize--xs);
+    color: var(--pf-v5-global--Color--200);
+    font-style: italic;
+  }
+}
+
+.keyboard-shortcut {
+  &__command {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+  }
+
+  &__key {
+    display: inline-block;
+    padding: 2px 6px;
+    font-size: var(--pf-v5-global--FontSize--xs);
+    font-family: inherit;
+    border: 1px solid var(--pf-v5-global--BorderColor--100);
+    border-radius: 3px;
+    background-color: var(--pf-v5-global--BackgroundColor--200);
+    line-height: 1.4;
+  }
+
+  &__separator {
+    font-size: var(--pf-v5-global--FontSize--xs);
+    color: var(--pf-v5-global--Color--200);
+    padding: 0 1px;
+  }
+}

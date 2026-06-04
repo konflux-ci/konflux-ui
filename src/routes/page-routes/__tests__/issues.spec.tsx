@@ -23,7 +23,7 @@ type ChildRoute = IndexRoute | PathRoute;
 
 // Mock the RouteErrorBoundary
 jest.mock('../../RouteErrorBoundary', () => ({
-  RouteErrorBoundry: () => <div data-testid="error-boundary">Error Boundary</div>,
+  RouteErrorBoundry: () => <div data-test="error-boundary">Error Boundary</div>,
 }));
 
 // Mock the issuesPageLoader

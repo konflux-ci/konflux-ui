@@ -9,7 +9,9 @@ on:
       - patternfly-v6
   merge_group:
     types: [checks_requested]
-
+  # Triggers the workflow on manual dispatch
+  workflow_dispatch:
+  
 # Cancel in-progress runs when new commits are pushed
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -17,14 +19,9 @@ concurrency:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "test"
-  test:
-    # The type of runner that the job will run on
+  # Lint, restricted imports, and type checking — runs once in parallel with test shards
+  lint:
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [20.x] # can support multiple versions ex: [18.x, 20.x]
 
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
@@ -34,12 +31,13 @@ jobs:
       - name: Enable Corepack 📦
         run: corepack enable
 
-      - name: Setup ⚙️ Node.js ${{ matrix.node-version }} 🔰
-        uses: actions/setup-node@v4
+      - name: Setup ⚙️ Node.js 🔰
+        uses: actions/setup-node@v6
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 24.x
           cache: 'yarn'
 
+      # e2e-tests install is needed because eslint resolves eslint-plugin-cypress from e2e-tests/.eslintrc.cjs
       - name: Install Dependencies 🥁
         run: |
           yarn install --immutable
@@ -56,8 +54,32 @@ jobs:
       - name: Type Checking
         run: yarn type-checks
 
-      - name: Run unit tests 🧪
-        run: yarn test --maxWorkers=2 --coverage --silent --ci --verbose=false
+  # Unit tests — sharded across 2 runners for parallel execution
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        shard: [1, 2]
+
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v4
+
+      - name: Enable Corepack 📦
+        run: corepack enable
+
+      - name: Setup ⚙️ Node.js 🔰
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24.x
+          cache: 'yarn'
+
+      - name: Install Dependencies 🥁
+        run: yarn install --immutable
+
+      - name: Run unit tests 🧪 (shard ${{ matrix.shard }}/2)
+        run: yarn test --maxWorkers=2 --coverage --silent --ci --verbose=false --shard=${{ matrix.shard }}/2
         env:
           CI: true
 
@@ -66,5 +88,5 @@ jobs:
         with:
           file: ./coverage/lcov.info
           token: ${{ secrets.CODECOV_TOKEN }}
-          flags: unittests
+          flags: shard-${{ matrix.shard }}
           fail_ci_if_error: true

@@ -10,7 +10,7 @@ type Props = {
     header: string;
     ariaLabel: string;
     moreText: (count: number) => string;
-    dataTestIdPrefix: string;
+    dataTestPrefix: string;
   };
 };
 
@@ -35,7 +35,7 @@ const TruncatedLinkListWithPopover: React.FC<Props> = ({
           {visibleItems.map((appName) => renderItem(appName))}
           {hiddenItems.length > 0 && (
             <Popover
-              data-testid={popover.dataTestIdPrefix}
+              data-test={popover.dataTestPrefix}
               aria-label={popover.ariaLabel}
               headerContent={popover.header}
               enableFlip
