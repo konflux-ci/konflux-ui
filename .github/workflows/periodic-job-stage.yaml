@@ -26,7 +26,7 @@ jobs:
       CYPRESS_KONFLUX_BASE_URL: "https://konflux-ui.apps.stone-stg-rh01.l2vh.p1.openshiftapps.com"
       JOB_TYPE: 'periodic-stage'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           repository: ${{ github.repository }}
           ref: "${{ env.HEAD_SHA }}"
