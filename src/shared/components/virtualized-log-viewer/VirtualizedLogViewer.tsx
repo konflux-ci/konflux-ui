@@ -1,12 +1,13 @@
 import React from 'react';
 import { LogViewerToolbarContext } from '@patternfly/react-log-viewer';
+import type { LogSection } from './types';
 import { VirtualizedLogContent } from './VirtualizedLogContent';
 import '@patternfly/react-styles/css/components/LogViewer/log-viewer.css';
 
 import './VirtualizedLogViewer.scss';
 
 export interface VirtualizedLogViewerProps {
-  data: string;
+  sections: LogSection[];
   height: number; // Required: height in pixels for virtualization
   width?: string | number;
   scrollToRow?: number;
@@ -26,7 +27,7 @@ export interface VirtualizedLogViewerProps {
  * - Drop-in replacement for PatternFly LogViewer
  */
 export const VirtualizedLogViewer: React.FC<VirtualizedLogViewerProps> = ({
-  data,
+  sections,
   height,
   width = '100%',
   scrollToRow,
@@ -56,7 +57,7 @@ export const VirtualizedLogViewer: React.FC<VirtualizedLogViewerProps> = ({
   return (
     <div className="pf-v5-c-log-viewer__main">
       <VirtualizedLogContent
-        data={data}
+        sections={sections}
         height={height}
         width={width}
         scrollToRow={effectiveScrollToRow}
