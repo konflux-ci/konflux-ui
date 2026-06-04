@@ -68,7 +68,7 @@ describe('LogViewer Integration Tests', () => {
   };
 
   const defaultProps = {
-    data: 'line 1\nline 2\nline 3\nline 4\nline 5',
+    sections: [{ containerName: '', data: 'line 1\nline 2\nline 3\nline 4\nline 5' }],
     isLoading: false,
     errorMessage: null,
     taskRun: mockTaskRun,
@@ -144,7 +144,7 @@ describe('LogViewer Integration Tests', () => {
     it('should render task name in banner', () => {
       const { container } = render(<LogViewer {...defaultProps} />);
 
-      const banner = container.querySelector('[data-testid="logs-taskName"]');
+      const banner = container.querySelector('[data-test="logs-taskName"]');
       expect(banner).toBeInTheDocument();
       expect(banner).toHaveTextContent('test-task');
     });
@@ -186,7 +186,9 @@ describe('LogViewer Integration Tests', () => {
     it('should strip ANSI escape codes from log data', () => {
       const dataWithAnsi = '\x1b[32mSuccess\x1b[0m\n\x1b[31mError\x1b[0m\nPlain text';
 
-      const { container } = render(<LogViewer {...defaultProps} data={dataWithAnsi} />);
+      const { container } = render(
+        <LogViewer {...defaultProps} sections={[{ containerName: '', data: dataWithAnsi }]} />,
+      );
 
       // Virtualization may not render all lines, but the visible ones should have ANSI codes stripped
       // Check that rendered content doesn't contain ANSI escape codes
@@ -200,7 +202,9 @@ describe('LogViewer Integration Tests', () => {
     it('should handle carriage returns in log data', () => {
       const dataWithCR = 'line 1\roverwrite\nline 2';
 
-      const { container } = render(<LogViewer {...defaultProps} data={dataWithCR} />);
+      const { container } = render(
+        <LogViewer {...defaultProps} sections={[{ containerName: '', data: dataWithCR }]} />,
+      );
 
       // \r should be replaced with \n - check that processed lines are visible
       const logList = container.querySelector('.log-content__list');
@@ -325,7 +329,7 @@ describe('LogViewer Integration Tests', () => {
 
     it('should not download when data is empty', async () => {
       const user = userEvent.setup();
-      render(<LogViewer {...defaultProps} data="" />);
+      render(<LogViewer {...defaultProps} sections={[{ containerName: '', data: '' }]} />);
 
       const downloadButton = screen.getByRole('button', { name: /^Download$/i });
       await user.click(downloadButton);
@@ -381,7 +385,7 @@ describe('LogViewer Integration Tests', () => {
         expect(downloadAllButton).not.toBeDisabled();
       });
 
-      expect(consoleSpy).toHaveBeenCalledWith('Download failed');
+      expect(consoleSpy).toHaveBeenCalledWith('[WARN] Download failed', '');
       consoleSpy.mockRestore();
     });
   });
@@ -507,8 +511,8 @@ describe('LogViewer Integration Tests', () => {
       }).not.toThrow();
     });
 
-    it('should render resume button with data-testid when visible', () => {
-      // The resume button has data-testid="resume-log-stream" for testing
+    it('should render resume button with data-test when visible', () => {
+      // The resume button has data-test="resume-log-stream" for testing
       // It appears conditionally based on useAutoScrollWithResume hook state
       const { container } = render(<LogViewer {...defaultProps} allowAutoScroll={true} />);
 
@@ -526,14 +530,16 @@ describe('LogViewer Integration Tests', () => {
       expect(logList).toBeInTheDocument();
 
       const newData = 'new line 1\nnew line 2\nnew line 3';
-      rerender(<LogViewer {...defaultProps} data={newData} />);
+      rerender(<LogViewer {...defaultProps} sections={[{ containerName: '', data: newData }]} />);
 
       logList = container.querySelector('.log-content__list');
       expect(logList).toBeInTheDocument();
     });
 
     it('should handle empty data', () => {
-      const { container } = render(<LogViewer {...defaultProps} data="" />);
+      const { container } = render(
+        <LogViewer {...defaultProps} sections={[{ containerName: '', data: '' }]} />,
+      );
 
       const logList = container.querySelector('.log-content__list');
       expect(logList).toBeInTheDocument();
@@ -542,7 +548,9 @@ describe('LogViewer Integration Tests', () => {
     it('should handle very long log data', () => {
       const longData = Array.from({ length: 1000 }, (_, i) => `line ${i + 1}`).join('\n');
 
-      const { container } = render(<LogViewer {...defaultProps} data={longData} />);
+      const { container } = render(
+        <LogViewer {...defaultProps} sections={[{ containerName: '', data: longData }]} />,
+      );
 
       const logList = container.querySelector('.log-content__list');
       expect(logList).toBeInTheDocument();
@@ -550,6 +558,53 @@ describe('LogViewer Integration Tests', () => {
       // Should use virtualization (only render visible items)
       const visibleItems = container.querySelectorAll('.pf-v5-c-log-viewer__list-item');
       expect(visibleItems.length).toBeLessThan(1000);
+    });
+  });
+
+  describe('Sections support', () => {
+    const sectionProps = {
+      ...defaultProps,
+      sections: [
+        { containerName: 'step-build', data: 'building...\ndone' },
+        { containerName: 'step-test', data: 'testing...\npassed' },
+      ],
+    };
+
+    it('should render log content from sections', () => {
+      const { container } = render(<LogViewer {...sectionProps} />);
+
+      const logList = container.querySelector('.log-content__list');
+      expect(logList).toBeInTheDocument();
+      expect(logList?.textContent).toContain('building...');
+      expect(logList?.textContent).toContain('testing...');
+    });
+
+    it('should strip ANSI codes from section data', () => {
+      const sectionsWithAnsi = {
+        ...defaultProps,
+        sections: [
+          {
+            containerName: 'step-build',
+            data: '\x1b[32mSuccess\x1b[0m\nplain line',
+          },
+        ],
+      };
+
+      const { container } = render(<LogViewer {...sectionsWithAnsi} />);
+
+      const logList = container.querySelector('.log-content__list');
+      expect(logList?.textContent).not.toContain('\x1b');
+      expect(logList?.textContent).toContain('Success');
+    });
+
+    it('should support download when using sections', async () => {
+      const user = userEvent.setup();
+      render(<LogViewer {...sectionProps} />);
+
+      const downloadButton = screen.getByRole('button', { name: /^Download$/i });
+      await user.click(downloadButton);
+
+      expect(mockSaveAs).toHaveBeenCalledWith(expect.any(Blob), 'test-task.log');
     });
   });
 
@@ -639,6 +694,30 @@ describe('LogViewer Integration Tests', () => {
     });
   });
 
+  describe('Keyboard shortcuts popover', () => {
+    it('should render the keyboard shortcut button', () => {
+      render(<LogViewer {...defaultProps} />);
+
+      const button = screen.getByRole('button', { name: /show keyboard shortcuts/i });
+      expect(button).toBeInTheDocument();
+    });
+
+    it('should toggle the shortcuts popover on button click', async () => {
+      const user = userEvent.setup();
+      render(<LogViewer {...defaultProps} />);
+
+      const button = screen.getByRole('button', { name: /show keyboard shortcuts/i });
+      await user.click(button);
+
+      expect(screen.getByText('Keyboard shortcuts')).toBeInTheDocument();
+      expect(screen.getByText('Scroll up one line')).toBeInTheDocument();
+      expect(screen.getByText('Scroll down one line')).toBeInTheDocument();
+      expect(screen.getByText('Scroll to top')).toBeInTheDocument();
+      expect(screen.getByText('Scroll to bottom')).toBeInTheDocument();
+      expect(screen.getByText('Click the log area to enable these shortcuts.')).toBeInTheDocument();
+    });
+  });
+
   describe('Edge cases', () => {
     it('should handle null taskRun gracefully', () => {
       expect(() => {
@@ -658,7 +737,9 @@ describe('LogViewer Integration Tests', () => {
     });
 
     it('should handle data with only newlines', () => {
-      const { container } = render(<LogViewer {...defaultProps} data="\n\n\n\n" />);
+      const { container } = render(
+        <LogViewer {...defaultProps} sections={[{ containerName: '', data: '\n\n\n\n' }]} />,
+      );
 
       const logList = container.querySelector('.log-content__list');
       expect(logList).toBeInTheDocument();
@@ -667,7 +748,9 @@ describe('LogViewer Integration Tests', () => {
     it('should handle data with special characters', () => {
       const specialData = 'line with <html> tags\nline with & ampersand\nline with "quotes"';
 
-      const { container } = render(<LogViewer {...defaultProps} data={specialData} />);
+      const { container } = render(
+        <LogViewer {...defaultProps} sections={[{ containerName: '', data: specialData }]} />,
+      );
 
       const logList = container.querySelector('.log-content__list');
       expect(logList).toBeInTheDocument();

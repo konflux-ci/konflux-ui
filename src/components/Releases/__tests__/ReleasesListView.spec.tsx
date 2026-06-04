@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router-dom';
-import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
+import { Table, Thead, Tr, Th, Tbody } from '@patternfly/react-table';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { useK8sAndKarchResources } from '~/hooks/useK8sAndKarchResources';
@@ -36,20 +36,26 @@ jest.mock('../../../shared/components/table', () => {
       const cProps = { data, filters, selected, match, kindObj };
       const columns = props.Header(cProps);
       return (
-        <PfTable role="table" aria-label="table" cells={columns} variant="compact" borders={false}>
-          <TableHeader role="rowgroup" />
-          <tbody>
+        <Table role="table" aria-label="table" variant="compact" borders={true}>
+          <Thead>
+            <Tr>
+              {columns.map((col, idx) => (
+                <Th key={idx} {...(col.props ?? {})}>{col.title}</Th>
+              ))}
+            </Tr>
+          </Thead>
+          <Tbody>
             {props.data.map((obj, i) => (
-              <tr key={i}>
+              <Tr key={i}>
                 <ReleasesListRow
                   obj={obj}
                   columns={null}
                   customData={{ applicationName: 'test-app' }}
                 />
-              </tr>
+              </Tr>
             ))}
-          </tbody>
-        </PfTable>
+          </Tbody>
+        </Table>
       );
     },
   };

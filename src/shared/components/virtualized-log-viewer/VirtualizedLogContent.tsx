@@ -1,7 +1,8 @@
 import React from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { LineNumberGutter } from './LineNumberGutter';
-import type { SearchedWord } from './types';
+import { normalizeLineEndings, stripAnsiCodes } from './log-viewer-utils';
+import type { SearchedWord, LogSection } from './types';
 import { useKeyboardNavigation } from './useKeyboardNavigation';
 import { useLineNumberNavigation } from './useLineNumberNavigation';
 import { useLineRenderer } from './useLineRenderer';
@@ -20,7 +21,7 @@ import {
 import './VirtualizedLogContent.scss';
 
 export interface VirtualizedLogContentProps {
-  data: string;
+  sections: LogSection[];
   height: number;
   width: string | number;
   scrollToRow?: number;
@@ -34,7 +35,7 @@ export interface VirtualizedLogContentProps {
 }
 
 export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
-  data,
+  sections,
   height,
   width,
   scrollToRow,
@@ -42,14 +43,27 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
   searchText = '',
   currentSearchMatch,
 }) => {
-  const parentRef = React.useRef<HTMLDivElement>(null);
+  const parentRef = React.useRef<HTMLDivElement | null>(null);
   const [itemSize, setItemSize] = React.useState(VIRTUALIZATION_CONFIG.FALLBACK_LINE_HEIGHT);
   // Fallback values for when DOM measurement is unavailable (SSR, Canvas API failure, etc.)
   const avgCharWidthRef = React.useRef(VIRTUALIZATION_CONFIG.FALLBACK_CHAR_WIDTH);
   const charsPerLineRef = React.useRef(VIRTUALIZATION_CONFIG.FALLBACK_CHARS_PER_LINE);
 
-  // Split data into lines
-  const lines = React.useMemo(() => data.split('\n'), [data]);
+  const { lines, headerIndices } = React.useMemo(() => {
+    const result: string[] = [];
+    const headers = new Set<number>();
+    for (const section of sections) {
+      if (section.containerName) {
+        headers.add(result.length);
+        result.push(section.containerName);
+      }
+      if (section.data) {
+        const cleaned = stripAnsiCodes(normalizeLineEndings(section.data));
+        result.push(...cleaned.split('\n'));
+      }
+    }
+    return { lines: result, headerIndices: headers };
+  }, [sections]);
 
   // Suppress harmless ResizeObserver errors from virtualizer
   useResizeObserverFix();
@@ -143,11 +157,21 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
   const { highlightedLines, handleLineClick, isLineHighlighted } = useLineNumberNavigation();
 
   // Enable keyboard navigation (PageUp, PageDown, Home, End)
-  useKeyboardNavigation({
-    virtualizer,
+  const navRef = useKeyboardNavigation({
     scrollElementRef: parentRef,
+    lineHeight: itemSize,
     enabled: true,
   });
+
+  const scrollContainerRef = React.useCallback(
+    (node: HTMLDivElement | null) => {
+      parentRef.current = node;
+      if (navRef && 'current' in navRef) {
+        (navRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+      }
+    },
+    [navRef],
+  );
 
   // Scroll to highlighted lines when hash changes or on initial load
   React.useEffect(() => {
@@ -211,7 +235,7 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
 
       {/* Scrollable container with gutter */}
       <div
-        ref={parentRef}
+        ref={scrollContainerRef}
         className="log-content__list log-content__with-gutter"
         tabIndex={0}
         style={{
@@ -220,9 +244,6 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
           overflow: 'auto',
         }}
         onClick={() => {
-          // Ensure the container gets focus when clicked
-          // This is necessary because child elements with absolute positioning
-          // prevent clicks from reaching the parent
           parentRef.current?.focus();
         }}
       >
@@ -248,12 +269,14 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
             {virtualItems.map((virtualItem) => {
               const lineNumber: number = virtualItem.index + 1;
               const isHighlighted = isLineHighlighted(lineNumber);
+              const isHeader = headerIndices.has(virtualItem.index);
+              const hasHeaders = headerIndices.size > 0;
               return (
                 <div
                   key={virtualItem.key}
                   data-index={virtualItem.index}
                   ref={virtualizer.measureElement}
-                  className={`pf-v5-c-log-viewer__list-item ${isHighlighted ? 'log-content__line--highlighted' : ''}`}
+                  className={`pf-v5-c-log-viewer__list-item ${isHighlighted ? 'log-content__line--highlighted' : ''} ${hasHeaders && !isHeader ? 'log-content__line--indented' : ''}`}
                   style={{
                     position: 'absolute',
                     top: 0,

@@ -16,9 +16,6 @@ describe('ReleasePlanAdmissionListRow', () => {
     const wrapper = renderWithQueryClient(
       <ReleasePlanAdmissionListRow
         obj={{ ...mockReleasePlanAdmission }}
-        customData={{
-          namespace: 'test-namespace',
-        }}
       />,
     );
     const cells = wrapper.container.getElementsByTagName('td');
@@ -31,7 +28,28 @@ describe('ReleasePlanAdmissionListRow', () => {
     expect(appLink).toHaveAttribute(
       'href',
       APPLICATION_DETAILS_PATH.createPath({
-        workspaceName: 'test-namespace',
+        workspaceName: 'sbudhwar-1-tenant',
+        applicationName: 'my-app-1',
+      }),
+    );
+  });
+
+  it('should use spec.origin as workspace for application links', () => {
+    const mockRPACrossTenant = {
+      ...mockReleasePlanAdmission,
+      spec: {
+        ...mockReleasePlanAdmission.spec,
+        origin: 'user-tenant',
+        applications: ['my-app-1'],
+      },
+    };
+    renderWithQueryClient(<ReleasePlanAdmissionListRow obj={mockRPACrossTenant} />);
+
+    const appLink = screen.getByRole('link', { name: 'my-app-1' });
+    expect(appLink).toHaveAttribute(
+      'href',
+      APPLICATION_DETAILS_PATH.createPath({
+        workspaceName: 'user-tenant',
         applicationName: 'my-app-1',
       }),
     );
@@ -48,9 +66,6 @@ describe('ReleasePlanAdmissionListRow', () => {
     const wrapper = renderWithQueryClient(
       <ReleasePlanAdmissionListRow
         obj={mockRPAWithNoApplications}
-        customData={{
-          namespace: 'test-namespace',
-        }}
       />,
     );
     const cells = wrapper.container.getElementsByTagName('td');
@@ -78,9 +93,6 @@ describe('ReleasePlanAdmissionListRow', () => {
     renderWithQueryClient(
       <ReleasePlanAdmissionListRow
         obj={mockRPAWithManyApplications}
-        customData={{
-          namespace: 'test-namespace',
-        }}
       />,
     );
 
@@ -103,9 +115,6 @@ describe('ReleasePlanAdmissionListRow', () => {
     const wrapper = renderWithQueryClient(
       <ReleasePlanAdmissionListRow
         obj={mockReleasePlanAdmission}
-        customData={{
-          namespace: 'test-namespace',
-        }}
       />,
     );
     const cells = wrapper.container.getElementsByTagName('td');
@@ -127,9 +136,6 @@ describe('ReleasePlanAdmissionListRow', () => {
     const wrapper = renderWithQueryClient(
       <ReleasePlanAdmissionListRow
         obj={mockRPAWithBlockReleasesFalse}
-        customData={{
-          namespace: 'test-namespace',
-        }}
       />,
     );
     const cells = wrapper.container.getElementsByTagName('td');
@@ -149,9 +155,6 @@ describe('ReleasePlanAdmissionListRow', () => {
     const wrapper = renderWithQueryClient(
       <ReleasePlanAdmissionListRow
         obj={mockRPAWithoutBlockReleasesLabel}
-        customData={{
-          namespace: 'test-namespace',
-        }}
       />,
     );
     const cells = wrapper.container.getElementsByTagName('td');
@@ -171,9 +174,6 @@ describe('ReleasePlanAdmissionListRow', () => {
     const wrapper = renderWithQueryClient(
       <ReleasePlanAdmissionListRow
         obj={mockRPAWithoutLabels}
-        customData={{
-          namespace: 'test-namespace',
-        }}
       />,
     );
     const cells = wrapper.container.getElementsByTagName('td');
@@ -196,9 +196,6 @@ describe('ReleasePlanAdmissionListRow', () => {
     const wrapper = renderWithQueryClient(
       <ReleasePlanAdmissionListRow
         obj={mockRPAWithOtherLabels}
-        customData={{
-          namespace: 'test-namespace',
-        }}
       />,
     );
     const cells = wrapper.container.getElementsByTagName('td');

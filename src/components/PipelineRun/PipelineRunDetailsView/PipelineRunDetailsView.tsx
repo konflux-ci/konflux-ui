@@ -125,7 +125,9 @@ export const PipelineRunDetailsView: React.FC = () => {
         {
           key: 'stop',
           label: 'Stop',
-          tooltip: 'Let the running tasks complete, then execute finally tasks',
+          tooltipProps: {
+            content: 'Let the running tasks complete, then execute finally tasks',
+          },
           isDisabled: !(plrStatus && plrStatus === 'Running') || !canPatchPipeline,
           disabledTooltip: !canPatchPipeline ? "You don't have access to stop a build" : undefined,
           onClick: () => pipelineRunStop(pipelineRun),
@@ -133,7 +135,9 @@ export const PipelineRunDetailsView: React.FC = () => {
         {
           key: 'cancel',
           label: 'Cancel',
-          tooltip: 'Interrupt any executing non finally tasks, then execute finally tasks',
+          tooltipProps: {
+            content: 'Interrupt any executing non finally tasks, then execute finally tasks',
+          },
           isDisabled: !(plrStatus && plrStatus === 'Running') || !canPatchPipeline,
           disabledTooltip: !canPatchPipeline
             ? "You don't have access to cancel a build"

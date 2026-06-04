@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { SelectVariant } from '@patternfly/react-core/deprecated';
 import { useField, useFormikContext } from 'formik';
 import { InputField } from 'formik-pf';
 import { SecretLinkOptionLabels } from '~/consts/secrets';
@@ -157,16 +156,13 @@ export const SecretTypeSubForm: React.FC<React.PropsWithChildren<{ isEditMode?: 
         <>
           <SelectInputField
             name="name"
-            data-test="secret-name"
             label="Select or enter secret name"
             toggleAriaLabel="Select or enter secret name"
             helpText={secretNameHelperText}
             toggleId="secret-name-toggle"
-            variant={SelectVariant.typeahead}
+            variant="typeahead"
             options={options}
             isCreatable
-            className="secret-type-subform__dropdown"
-            isInputValuePersisted
             hasOnCreateOption
             isDisabled={isEditMode}
             required
@@ -193,7 +189,7 @@ export const SecretTypeSubForm: React.FC<React.PropsWithChildren<{ isEditMode?: 
           helperText={secretNameHelperText}
           placeholder="Enter name"
           isDisabled={isEditMode}
-          required
+          isRequired
         />
       )}
 

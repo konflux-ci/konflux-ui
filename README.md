@@ -7,6 +7,15 @@ UI for [Konflux](https://github.com/konflux-ci/konflux-ci)
 We welcome contributions! Please read our [Contributing Guidelines](./CONTRIBUTING.md) to get started.
 If you find a bug or want to request a feature, feel free to open an issue as well.
 
+## Quick Start
+
+**Prerequisites:** Node.js >= 24
+
+```bash
+git clone https://github.com/konflux-ci/konflux-ui.git && cd konflux-ui
+./setup.sh
+```
+
 ## Setting up development environment
 
 This project contains a DevContainer which has all dependencies for developing Konflux UI pre-installed. You can find out more information for how to configure your environment to use the DevContainer in the included [README.md](.devcontainer/README.md).
@@ -17,8 +26,8 @@ If you do not want to or cannot use the DevContainer, you can also setup the rep
 
 **Prerequisites:**
 
-- Node.js version >= 20
-- Corepack enabled (included with Node.js 20+)
+- Node.js version >= 24
+- Corepack enabled (included with Node.js 24+)
 
 > **Note:** This project uses [Yarn Berry (v4.x)](https://yarnpkg.com/) as the package manager. The correct Yarn version is automatically managed via the `packageManager` field in `package.json` and Corepack.
 

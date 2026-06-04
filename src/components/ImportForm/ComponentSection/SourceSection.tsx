@@ -76,15 +76,11 @@ export const SourceSection = () => {
         helperText="Supports GitHub, GitLab, and Forgejo repositories"
         validated={validated}
         isRequired
-        data-testid="enter-source"
+        data-test="enter-source"
         onChange={handleChange}
       />
-      {validated === ValidatedOptions.success ? (
-        <SwitchField name="isPrivateRepo" label="Should the image produced be private?" />
-      ) : null}
-      {validated === ValidatedOptions.success ? (
-        <GitOptions isGitAdvancedOpen={isGitAdvancedOpen} setGitAdvancedOpen={setGitAdvancedOpen} />
-      ) : null}
+      <SwitchField name="isPrivateRepo" label="Should the image produced be private?" />
+      <GitOptions isGitAdvancedOpen={isGitAdvancedOpen} setGitAdvancedOpen={setGitAdvancedOpen} />
     </>
   );
 };
