@@ -32,6 +32,7 @@ import { saveAs } from 'file-saver';
 import { debounce } from 'lodash-es';
 import { v4 as uuidv4 } from 'uuid';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
+import { logger } from '~/monitoring/logger';
 import {
   KeyboardShortcutHint,
   type ShortcutEntry,
@@ -39,7 +40,8 @@ import {
 import { useAutoScrollWithResume } from '~/shared/components/pipeline-run-logs/logs/useAutoScrollWithResume';
 import { useLogViewerSearch } from '~/shared/components/pipeline-run-logs/logs/useLogViewerSearch';
 import { LoadingInline } from '~/shared/components/status-box/StatusBox';
-import { VirtualizedLogViewer } from '~/shared/components/virtualized-log-viewer';
+import { VirtualizedLogViewer, type LogSection } from '~/shared/components/virtualized-log-viewer';
+import { buildLines } from '~/shared/components/virtualized-log-viewer/log-viewer-utils';
 import { useFullscreen } from '~/shared/hooks/fullscreen';
 import { TaskRunKind } from '~/types';
 import LogsTaskDuration from './LogsTaskDuration';
@@ -56,14 +58,9 @@ const LOG_VIEWER_SHORTCUTS: ShortcutEntry[] = [
   { keys: 'End', macKeys: 'Fn + Arrow Right', description: 'Scroll to bottom' },
 ];
 
-// ANSI escape code regex for removing color codes from terminal output
-// ESC character (\u001b) is a control character but necessary for ANSI escape sequences
-// eslint-disable-next-line no-control-regex
-const ANSI_ESCAPE_REGEX = /\u001b\[[0-9;]*m/g;
-
 export type Props = {
   showSearch?: boolean;
-  data: string;
+  sections: LogSection[];
   allowAutoScroll?: boolean;
   downloadAllLabel?: string;
   onDownloadAll?: () => Promise<Error>;
@@ -80,7 +77,7 @@ export type Props = {
 const LogViewer: React.FC<Props> = ({
   showSearch = true,
   allowAutoScroll,
-  data = '',
+  sections,
   downloadAllLabel,
   onDownloadAll,
   taskRun,
@@ -99,13 +96,7 @@ const LogViewer: React.FC<Props> = ({
       onScroll: onScrollProp,
     });
 
-  // Console rewind action adds \r to the logs, this replaces them not to cause line overlap
-  // Remove ANSI escape codes for plain text display
-  const processedData = React.useMemo(() => {
-    return data.replace(/\r/g, '\n').replace(ANSI_ESCAPE_REGEX, '');
-  }, [data]);
-
-  const lines = React.useMemo(() => processedData.split('\n'), [processedData]);
+  const lines = React.useMemo(() => buildLines(sections), [sections]);
 
   // Search state and context management
   const { logViewerContextValue, toolbarContextValue, scrolledRow } = useLogViewerSearch({
@@ -118,9 +109,15 @@ const LogViewer: React.FC<Props> = ({
   const [downloadAllStatus, setDownloadAllStatus] = React.useState(false);
   const [showShortcutHint, setShowShortcutHint] = React.useState(false);
 
+  const downloadData = React.useMemo(() => {
+    return sections
+      .map((s) => (s.containerName ? `${s.containerName}\n${s.data}` : s.data))
+      .join('\n\n');
+  }, [sections]);
+
   const downloadLogs = () => {
-    if (!data) return;
-    const blob = new Blob([data], {
+    if (!downloadData) return;
+    const blob = new Blob([downloadData], {
       type: 'text/plain;charset=utf-8',
     });
     saveAs(blob, `${taskName || `task-run-${uuidv4()}`}.log`);
@@ -128,14 +125,13 @@ const LogViewer: React.FC<Props> = ({
 
   const startDownloadAll = () => {
     setDownloadAllStatus(true);
-    onDownloadAll()
+    onDownloadAll?.()
       .then(() => {
         setDownloadAllStatus(false);
       })
       .catch((err: Error) => {
         setDownloadAllStatus(false);
-        // eslint-disable-next-line no-console
-        console.warn(err.message || 'Error downloading logs.');
+        logger.warn(err.message || 'Error downloading logs.');
       });
   };
 
@@ -288,7 +284,7 @@ const LogViewer: React.FC<Props> = ({
           </div>
 
           {/* Header */}
-          <Banner data-testid="logs-taskName">
+          <Banner data-test="logs-taskName">
             <Flex gap={{ default: 'gapSm' }}>
               {taskName && (
                 <FlexItem flex={{ default: 'flex_1' }} className="log-viewer__task-name">
@@ -312,7 +308,7 @@ const LogViewer: React.FC<Props> = ({
             {viewerHeight && (
               <VirtualizedLogViewer
                 key={taskRun?.metadata?.uid || 'default'}
-                data={processedData}
+                sections={sections}
                 height={viewerHeight}
                 scrollToRow={scrolledRow}
                 onScroll={handleScroll}
@@ -324,7 +320,7 @@ const LogViewer: React.FC<Props> = ({
           {showResumeStreamButton && (
             <div className="log-viewer__resume-stream-button-wrapper">
               <Button
-                data-testid="resume-log-stream"
+                data-test="resume-log-stream"
                 variant="primary"
                 isBlock
                 onClick={handleResumeClick}

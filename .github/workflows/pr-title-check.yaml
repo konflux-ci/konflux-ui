@@ -2,10 +2,15 @@ name: PR Title Check
 
 on:
   pull_request_target:
-    types: [opened, edited, synchronize, reopened]
+    types: [opened, edited, reopened]
 
 jobs:
   check-pr-title:
+    if: >-
+      github.actor != 'red-hat-konflux[bot]' &&
+      (github.event.action == 'opened' ||
+      github.event.action == 'reopened' ||
+      (github.event.action == 'edited' && github.event.changes.title))
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
