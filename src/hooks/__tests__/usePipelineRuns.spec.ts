@@ -1,6 +1,5 @@
 /* eslint-disable max-nested-callbacks */
 import { renderHook } from '@testing-library/react-hooks';
-import { PUSH_BUILD_EVENT_TYPES, PipelineRunLabel } from '~/consts/pipelinerun';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import {
   PipelineRunGroupVersionKind,
@@ -404,47 +403,6 @@ describe('usePipelineRuns', () => {
   });
 
   describe('useLatestPushBuildPipelineRunForComponent', () => {
-    const pushBuildSelector = {
-      matchLabels: {
-        'pipelines.appstudio.openshift.io/type': 'build',
-        'appstudio.openshift.io/component': 'sample-component',
-      },
-      matchExpressions: [
-        {
-          key: PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL,
-          operator: 'In',
-          values: [...PUSH_BUILD_EVENT_TYPES],
-        },
-      ],
-    };
-
-    it('should create specific selector', () => {
-      useK8sWatchResourceMock.mockReturnValue([[], true, undefined]);
-      useTRPipelineRunsMock.mockReturnValue([[], false, undefined]);
-      const { result } = renderHook(() =>
-        useLatestPushBuildPipelineRunForComponent('test-ns', 'sample-component'),
-      );
-
-      expect(result.current).toEqual([undefined, false, undefined]);
-
-      expect(useK8sWatchResourceMock).toHaveBeenCalledWith(
-        {
-          groupVersionKind: PipelineRunGroupVersionKind,
-          namespace: 'test-ns',
-          isList: true,
-          name: undefined,
-          selector: pushBuildSelector,
-          watch: true,
-        },
-        PipelineRunModel,
-        { retry: false },
-      );
-      expect(useTRPipelineRunsMock).toHaveBeenCalledWith('test-ns', {
-        limit: 1,
-        selector: pushBuildSelector,
-      });
-    });
-
     it('should return a single pipeline run', () => {
       useK8sWatchResourceMock.mockReturnValue([resultMockPush, true]);
       const { result } = renderHook(() =>

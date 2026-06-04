@@ -2,7 +2,7 @@ import * as React from 'react';
 import { differenceBy, uniqBy } from 'lodash-es';
 import { useK8sWatchResource } from '~/k8s';
 import {
-  PUSH_BUILD_EVENT_TYPES,
+  PipelineRunEventType,
   PipelineRunLabel,
   PipelineRunType,
   runStatus,
@@ -378,14 +378,8 @@ export const useLatestPushBuildPipelineRunForComponent = (
           matchLabels: {
             [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.BUILD,
             [PipelineRunLabel.COMPONENT]: componentName,
+            [PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL]: PipelineRunEventType.PUSH,
           },
-          matchExpressions: [
-            {
-              key: PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL,
-              operator: 'In',
-              values: [...PUSH_BUILD_EVENT_TYPES],
-            },
-          ],
         },
         limit: 1,
       }),
