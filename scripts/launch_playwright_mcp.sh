@@ -18,6 +18,8 @@ detect_chrome() {
     /usr/bin/chromium-browser \
     /opt/google/chrome/chrome \
     /snap/bin/chromium \
+    ~/.local/share/flatpak/exports/bin/com.google.Chrome \
+    /var/lib/flatpak/exports/bin/com.google.Chrome \
     "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
     "/Applications/Chromium.app/Contents/MacOS/Chromium"; do
     [ -x "$p" ] && echo "$p" && return

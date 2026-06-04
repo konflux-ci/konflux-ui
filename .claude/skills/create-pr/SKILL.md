@@ -59,7 +59,7 @@ Fill the PR template from `.github/PULL_REQUEST_TEMPLATE.md` using **all availab
 - **How to test or reproduce**: list concrete steps to verify the change. Pull from conversation context — if the user described testing steps or verified behavior during the session, include those.
 - **Browser conformance**: leave unchecked (manual verification).
 
-### Step 4.5 — Capture UI screenshots (optional)
+### Step 4.1 — Capture UI screenshots (optional)
 
 1. Invoke the **`screenshot-ui` skill** (`.claude/skills/screenshot-ui/SKILL.md`)
    - This uses Playwright MCP to navigate the running dev server and capture screenshots into `.screenshots/<branch-slug>/<run-id>/`
