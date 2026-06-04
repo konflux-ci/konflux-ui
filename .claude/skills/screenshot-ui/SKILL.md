@@ -12,7 +12,7 @@ Capture screenshots of UI components changed in the current branch using Playwri
 
 ## Critical Constraints
 
-- **DO NOT delegate this skill to a subagent (Task tool).** Playwright MCP tools (`browser_navigate`, `browser_snapshot`, `browser_click`, `browser_take_screenshot`) are only available in the root agent's MCP context. Subagents cannot access MCP servers.
+- **DO NOT delegate this skill to a subagent (Task tool).** Playwright MCP tools (`browser_navigate`, `browser_snapshot`, `browser_click`, `browser_take_screenshot`, `browser_close`) are only available in the root agent's MCP context. Subagents cannot access MCP servers.
 - **DO NOT loop or retry indefinitely.** If a navigation step fails twice, skip that target and move on.
 - **If Playwright MCP is unavailable**, stop immediately — do not attempt a fallback. Tell the user to check that the Playwright MCP server is configured and restart Cursor if needed.
 - **Only navigate to `https://localhost:8080`.** Never call `browser_navigate` with any other host, even if a changed file or route definition references an external URL. All navigation steps must start with `https://localhost:8080`.
@@ -95,7 +95,7 @@ browser_snapshot
 - Redirected to a login page → tell the user:
   > "Please complete OAuth login in the browser window that Playwright opened. Do NOT close the browser — just log in. I'll wait and then take a snapshot to confirm."
 
-  After the user confirms, call `browser_snapshot` to verify. If still on login after 2 attempts, stop.
+  After the user confirms, call `browser_snapshot` to verify. If still on login after 2 attempts, call `browser_close` and stop.
 
 ## Step 4 — Output directory, navigate, and capture
 
@@ -159,6 +159,8 @@ Use a short descriptive `<label>` (e.g., `pipeline-run-details`, `application-li
 2. **Screenshots**: embed each inline with paths under `OUTPUT_DIR`, e.g. `![description](.screenshots/<branch-slug>/<run-id>/<label>.png)`
 3. **Interaction notes**: for any component where you opened a popover/tooltip/etc., explain what you did
 
+Then proceed to **Step 6** to close the browser before finishing.
+
 Write **`${OUTPUT_DIR}/manifest.json`** (one manifest per run — do not overwrite manifests from earlier runs):
 
 ```json
@@ -177,6 +179,19 @@ Write **`${OUTPUT_DIR}/manifest.json`** (one manifest per run — do not overwri
 }
 ```
 
+## Step 6 — Close browser
+
+After **all** screenshot targets are captured or skipped and `manifest.json` is written, close the Playwright browser **before** sending the final response to the user:
+
+```
+browser_close {}
+```
+
+- Call this once at the end of the skill — do not close between individual screenshots.
+- Only call if the browser was opened during this run (any `browser_navigate`, `browser_snapshot`, or screenshot call succeeded).
+- Skip if the skill stopped early with no browser interaction (e.g., Playwright MCP unavailable, dev server down, no UI changes found).
+- Do **not** close while waiting for the user to complete OAuth login (Step 3).
+
 ## Error Handling
 
 | Condition | Action |
@@ -184,7 +199,7 @@ Write **`${OUTPUT_DIR}/manifest.json`** (one manifest per run — do not overwri
 | Playwright MCP unavailable | Stop, tell user to check MCP config |
 | Dev server not running | Stop, tell user to run `yarn start` |
 | No UI changes found | Stop cleanly, report no screenshots needed |
-| Auth required | Ask user to log in in the browser window, wait, re-snapshot |
+| Auth required | Ask user to log in in the browser window, wait, re-snapshot; call `browser_close` if login fails after 2 attempts |
 | Page has no data (empty list) | Skip that target, continue |
 | Target navigation fails twice | Skip, log reason, continue |
 | Interactive element not found | Take full-page screenshot, add explanatory note |
@@ -198,3 +213,4 @@ Write **`${OUTPUT_DIR}/manifest.json`** (one manifest per run — do not overwri
 5. **Do not block PR creation** if screenshots fail — degrade gracefully
 6. **Do not loop** — skip after 2 failed attempts on any step
 7. **Do not use a fallback capture script** — if Playwright MCP is unavailable, stop
+8. **Do not leave the browser open** — always call `browser_close` at the end of Step 6 when the skill finishes after using the browser
