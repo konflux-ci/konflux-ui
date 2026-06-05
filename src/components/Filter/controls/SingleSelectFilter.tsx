@@ -44,7 +44,7 @@ export const SingleSelectFilter = <T,>({ config, options }: SingleSelectFilterPr
 
   const toggleLabel = selected ? labelForValue(selected) : label;
 
-  const toggle = (toggleRef: React.Ref<MenuToggle>) => (
+  const toggle = (toggleRef: React.Ref<HTMLButtonElement>) => (
     <MenuToggle
       ref={toggleRef}
       onClick={() => setIsOpen((prev) => !prev)}

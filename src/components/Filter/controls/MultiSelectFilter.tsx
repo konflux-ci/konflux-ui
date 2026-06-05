@@ -56,7 +56,7 @@ export const MultiSelectFilter = <T,>({ config, options }: MultiSelectFilterProp
     void setSelected(null);
   };
 
-  const toggle = (toggleRef: React.Ref<MenuToggle>) => (
+  const toggle = (toggleRef: React.Ref<HTMLButtonElement>) => (
     <MenuToggle
       ref={toggleRef}
       onClick={() => setIsOpen((prev) => !prev)}

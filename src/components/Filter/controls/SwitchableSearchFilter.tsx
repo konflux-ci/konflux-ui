@@ -90,7 +90,7 @@ export const SwitchableSearchFilter = <T,>({ config }: SwitchableSearchFilterPro
     void setFieldValues({ [activeParam]: null });
   };
 
-  const toggle = (toggleRef: React.Ref<MenuToggle>) => (
+  const toggle = (toggleRef: React.Ref<HTMLButtonElement>) => (
     <MenuToggle ref={toggleRef} onClick={() => setIsOpen((prev) => !prev)} isExpanded={isOpen}>
       {activeField.label}
     </MenuToggle>
