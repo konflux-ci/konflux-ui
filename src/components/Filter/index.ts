@@ -26,4 +26,6 @@ export { useFilterState } from './hooks/useFilterState';
 
 export { SearchFilter } from './controls/SearchFilter';
 
+export { MultiSelectFilter } from './controls/MultiSelectFilter';
+
 export { buildOptions, buildOptionsWithFallback, NONE_VALUE } from './utils/buildOptions';
