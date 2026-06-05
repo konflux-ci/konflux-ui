@@ -10,3 +10,4 @@ export type {
 export { useColumnState } from './hooks/useColumnState';
 export { useResponsiveColumns } from './hooks/useResponsiveColumns';
 export { useVirtualization } from './hooks/useVirtualization';
+export { useInfiniteScroll } from './hooks/useInfiniteScroll';
