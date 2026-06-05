@@ -13,3 +13,4 @@ export { useTable, type UseTableOptions, type UseTableResult } from './hooks/use
 export { useVirtualization } from './hooks/useVirtualization';
 export { useInfiniteScroll } from './hooks/useInfiniteScroll';
 export { TableSkeleton } from './TableSkeleton';
+export { computeColumnWidths, type ColumnWidth } from './column-widths';
