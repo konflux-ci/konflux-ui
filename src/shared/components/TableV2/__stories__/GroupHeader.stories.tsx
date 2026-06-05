@@ -34,7 +34,9 @@ export const CollapsedGroup: Story = {
     const canvas = within(canvasElement);
 
     await expect(canvas.getByText('Applications (5)')).toBeInTheDocument();
-    await expect(canvas.getByRole('button', { name: /expand/i })).toBeInTheDocument();
+    const button = canvas.getByRole('button');
+    await expect(button).toBeInTheDocument();
+    await expect(button).toHaveAttribute('aria-expanded', 'false');
   },
 };
 
@@ -51,6 +53,8 @@ export const ExpandedGroup: Story = {
     const canvas = within(canvasElement);
 
     await expect(canvas.getByText('Services (12)')).toBeInTheDocument();
-    await expect(canvas.getByRole('button', { name: /collapse/i })).toBeInTheDocument();
+    const button = canvas.getByRole('button');
+    await expect(button).toBeInTheDocument();
+    await expect(button).toHaveAttribute('aria-expanded', 'true');
   },
 };
