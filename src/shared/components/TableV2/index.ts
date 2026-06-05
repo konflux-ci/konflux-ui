@@ -16,4 +16,5 @@ export { GroupHeader } from './GroupHeader';
 export { TableRow } from './TableRow';
 export { TableContainer } from './TableContainer';
 export { TableSkeleton } from './TableSkeleton';
+export { TableHeader } from './TableHeader';
 export { computeColumnWidths, type ColumnWidth } from './column-widths';
