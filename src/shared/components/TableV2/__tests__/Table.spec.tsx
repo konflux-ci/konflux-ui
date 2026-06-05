@@ -160,12 +160,14 @@ describe('Table', () => {
     );
   });
 
-  it('creates a scroll container div', () => {
+  it('creates a scroll container div with bounded height', () => {
     render(<Table {...defaultProps} />);
 
     const scrollContainer = screen.getByTestId('table-v2');
     expect(scrollContainer.tagName).toBe('DIV');
     expect(scrollContainer.style.overflow).toBe('auto');
+    expect(scrollContainer.style.height).toBe('100%');
+    expect(scrollContainer.style.minHeight).toBe('0');
   });
 
   it('passes columnWidths from computeColumnWidths to TableHeader', () => {

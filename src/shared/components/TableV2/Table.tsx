@@ -59,8 +59,12 @@ export const Table = <TData,>({
   const visibleColumnCount = table.getVisibleLeafColumns().length;
 
   return (
-    <div data-test="table-v2" ref={scrollContainerRef} style={{ overflow: 'auto' }}>
-      <PfTable aria-label={ariaLabel} isStriped isExpandable={enableExpansion}>
+    <div
+      data-test="table-v2"
+      ref={scrollContainerRef}
+      style={{ overflow: 'auto', height: '100%', minHeight: 0 }}
+    >
+      <PfTable aria-label={ariaLabel} isStriped variant="compact" isExpandable={enableExpansion}>
         <TableHeader table={table} columnWidths={columnWidths} enableExpansion={enableExpansion} />
         <TableBody
           rows={rows}
