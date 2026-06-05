@@ -17,3 +17,5 @@ export type {
 } from './types';
 
 export { defineFilters } from './types';
+
+export { NuqsAdapter } from './nuqs-adapter';
