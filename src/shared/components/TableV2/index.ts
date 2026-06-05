@@ -15,6 +15,7 @@ export { useInfiniteScroll } from './hooks/useInfiniteScroll';
 export { GroupHeader } from './GroupHeader';
 export { TableRow } from './TableRow';
 export { TableContainer } from './TableContainer';
+export { TableBody } from './TableBody';
 export { TableSkeleton } from './TableSkeleton';
 export { TableHeader } from './TableHeader';
 export { computeColumnWidths, type ColumnWidth } from './column-widths';
