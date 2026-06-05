@@ -12,3 +12,4 @@ export { useResponsiveColumns } from './hooks/useResponsiveColumns';
 export { useTable, type UseTableOptions, type UseTableResult } from './hooks/useTable';
 export { useVirtualization } from './hooks/useVirtualization';
 export { useInfiniteScroll } from './hooks/useInfiniteScroll';
+export { TableSkeleton } from './TableSkeleton';
