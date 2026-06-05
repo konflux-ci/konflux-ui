@@ -30,4 +30,6 @@ export { MultiSelectFilter } from './controls/MultiSelectFilter';
 
 export { SingleSelectFilter } from './controls/SingleSelectFilter';
 
+export { BooleanFilter } from './controls/BooleanFilter';
+
 export { buildOptions, buildOptionsWithFallback, NONE_VALUE } from './utils/buildOptions';
