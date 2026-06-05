@@ -102,7 +102,6 @@ describe('useLatestPushBuildPipelines', () => {
     const { result } = renderHook(() =>
       useLatestPushBuildPipelines('test-ns', 'test-pipelinerun', componentNames),
     );
-
     const [pipelineRuns, loaded] = result.current;
     expect(loaded).toBe(true);
     expect(pipelineRuns.map((tr) => tr.metadata?.name)).toEqual(['test-caseqfvdj']);
@@ -150,9 +149,29 @@ describe('useLatestPushBuildPipelines', () => {
     const { result } = renderHook(() =>
       useLatestPushBuildPipelines('test-ns', 'test-pipelinerun', componentNames),
     );
-
     const [pipelineRuns, loaded] = result.current;
     expect(loaded).toBe(true);
     expect(pipelineRuns.map((tr) => tr.metadata?.name)).toEqual(['newer-incoming-build']);
+  });
+
+  it('should return build pipelines triggered by gitlab Push event', () => {
+    const mockGitlabPushPipelineRun = {
+      ...testPipelineRuns[DataState.SUCCEEDED],
+      metadata: {
+        ...testPipelineRuns[DataState.SUCCEEDED]?.metadata,
+        labels: {
+          ...testPipelineRuns[DataState.SUCCEEDED]?.metadata?.labels,
+          'pipelinesascode.tekton.dev/event-type': 'Push',
+        },
+      },
+    };
+    useK8sWatchResourceMock.mockReturnValue([[mockGitlabPushPipelineRun], true, undefined]);
+    useTRPipelineRunsMock.mockReturnValue([[], true, undefined, undefined]);
+    const { result } = renderHook(() =>
+      useLatestPushBuildPipelines('test-ns', 'test-pipelinerun', componentNames),
+    );
+    const [pipelineRuns, loaded] = result.current;
+    expect(loaded).toBe(true);
+    expect(pipelineRuns.map((tr) => tr.metadata?.name)).toEqual(['test-caseqfvdj']);
   });
 });

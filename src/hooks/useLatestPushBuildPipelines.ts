@@ -36,7 +36,7 @@ export const useLatestPushBuildPipelines = (
             {
               key: PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL,
               operator: 'In',
-              values: [...PUSH_BUILD_EVENT_TYPES],
+              values: PUSH_BUILD_EVENT_TYPES,
             },
           ],
         },
