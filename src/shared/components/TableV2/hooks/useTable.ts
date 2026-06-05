@@ -6,7 +6,6 @@ import {
   getExpandedRowModel,
   type ColumnDef,
   type SortingState,
-  type ExpandedState,
   type Table,
   type Row,
 } from '@tanstack/react-table';
@@ -35,12 +34,12 @@ function mapColumns<TData>(columns: ColumnDefinition<TData>[]): ColumnDef<TData>
     id: col.id,
     header: col.header as string,
     accessorFn: col.accessorFn,
-    cell: col.cell,
+    ...(col.cell ? { cell: col.cell } : {}),
     size: col.size,
-    enableSorting: col.sortable,
-    sortingFn: col.sortFn,
+    enableSorting: col.sortable ?? false,
+    ...(col.sortFn ? { sortingFn: col.sortFn } : {}),
     enableResizing: col.enableResizing,
-    filterFn: col.filterFn,
+    ...(col.filterFn ? { filterFn: col.filterFn } : {}),
   }));
 }
 
@@ -95,8 +94,6 @@ export function useTable<TData>(options: UseTableOptions<TData>): UseTableResult
     return [{ id: columnState.sortColumn, desc: columnState.sortDirection === 'desc' }];
   }, [enableSorting, columnState.sortColumn, columnState.sortDirection]);
 
-  const expanded: ExpandedState | undefined = enableExpansion ? {} : undefined;
-
   const table = useReactTable<TData>({
     data,
     columns: columnDefs,
@@ -113,7 +110,6 @@ export function useTable<TData>(options: UseTableOptions<TData>): UseTableResult
       columnVisibility,
       columnOrder,
       ...(sorting ? { sorting } : {}),
-      ...(expanded !== undefined ? { expanded } : {}),
     },
     meta,
   });

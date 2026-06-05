@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useCallback, useState } from 'react';
 import { Table as PfTable } from '@patternfly/react-table';
 import { computeColumnWidths } from './column-widths';
 import { useColumnState } from './hooks/useColumnState';
@@ -25,8 +25,11 @@ export const Table = <TData,>({
   columnStateKey,
   scrollElement: scrollElementProp,
 }: TableProps<TData>) => {
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const scrollElement = scrollElementProp ?? scrollContainerRef.current;
+  const [scrollContainer, setScrollContainer] = useState<HTMLDivElement | null>(null);
+  const scrollContainerRef = useCallback((node: HTMLDivElement | null) => {
+    setScrollContainer(node);
+  }, []);
+  const scrollElement = scrollElementProp ?? scrollContainer;
 
   const { columnState, setColumnState } = useColumnState(columnStateKey, columns);
   const { columnVisibility } = useResponsiveColumns(columns);

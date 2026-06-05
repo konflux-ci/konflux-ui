@@ -85,9 +85,9 @@ export const ClickToSort: Story = {
     // Click again to sort descending
     await userEvent.click(sortButton);
 
-    // After desc sort, "pipeline-run-9" comes last alphabetically
-    // because "9" > "19" lexicographically
+    // After desc sort, "pipeline-run-19" comes first
+    // because TanStack uses alphanumeric sorting (19 > 9 numerically)
     const afterDescFirstRow = getFirstRowName();
-    await expect(afterDescFirstRow).toContain('pipeline-run-9');
+    await expect(afterDescFirstRow).toContain('pipeline-run-19');
   },
 };

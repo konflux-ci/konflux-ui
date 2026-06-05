@@ -54,8 +54,8 @@ export const Basic: Story = {
 
     // Verify actual cell content from mock data
     await expect(canvas.getByText('pipeline-run-0')).toBeInTheDocument();
-    await expect(canvas.getByText('Succeeded')).toBeInTheDocument();
-    await expect(canvas.getByText('frontend')).toBeInTheDocument();
+    await expect(canvas.getAllByText('Succeeded').length).toBeGreaterThan(0);
+    await expect(canvas.getAllByText('frontend').length).toBeGreaterThan(0);
   },
 };
 
