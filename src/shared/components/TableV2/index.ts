@@ -14,5 +14,6 @@ export { useVirtualization } from './hooks/useVirtualization';
 export { useInfiniteScroll } from './hooks/useInfiniteScroll';
 export { GroupHeader } from './GroupHeader';
 export { TableRow } from './TableRow';
+export { TableContainer } from './TableContainer';
 export { TableSkeleton } from './TableSkeleton';
 export { computeColumnWidths, type ColumnWidth } from './column-widths';
