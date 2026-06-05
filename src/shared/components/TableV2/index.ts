@@ -6,3 +6,5 @@ export type {
   TableProps,
   TableContainerProps,
 } from './types';
+
+export { useColumnState } from './hooks/useColumnState';
