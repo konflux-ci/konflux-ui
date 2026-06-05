@@ -32,4 +32,6 @@ export { SingleSelectFilter } from './controls/SingleSelectFilter';
 
 export { BooleanFilter } from './controls/BooleanFilter';
 
+export { SwitchableSearchFilter } from './controls/SwitchableSearchFilter';
+
 export { buildOptions, buildOptionsWithFallback, NONE_VALUE } from './utils/buildOptions';
