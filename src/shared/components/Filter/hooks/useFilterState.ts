@@ -1,6 +1,10 @@
 import { useMemo, useCallback } from 'react';
 import { useQueryStates, parseAsString, parseAsJson, parseAsBoolean } from 'nuqs';
-import type { FilterConfig, FilterValues, ClientFilterValues } from '~/components/Filter/types';
+import type {
+  FilterConfig,
+  FilterValues,
+  ClientFilterValues,
+} from '~/shared/components/Filter/types';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyParserMap = Record<string, any>;

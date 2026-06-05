@@ -1,6 +1,6 @@
 import { renderHook } from '@testing-library/react';
-import type { FilterConfig } from '~/components/Filter';
-import { useFilteredData } from '~/components/Filter/hooks/useFilteredData';
+import type { FilterConfig } from '~/shared/components/Filter';
+import { useFilteredData } from '~/shared/components/Filter/hooks/useFilteredData';
 import { textMatch } from '~/utils/text-filter-utils';
 
 type MockItem = {

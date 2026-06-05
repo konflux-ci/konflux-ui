@@ -2,7 +2,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { render, screen, act } from '@testing-library/react';
 import { useQueryState } from 'nuqs';
 import { NuqsTestingAdapter } from 'nuqs/adapters/testing';
-import { NuqsAdapter } from '~/components/Filter/nuqs-adapter';
+import { NuqsAdapter } from '~/shared/components/Filter/nuqs-adapter';
 
 const TestComponent = () => {
   const [value, setValue] = useQueryState('test');

@@ -1,4 +1,4 @@
-import { FilterOption, OptionItem } from '~/components/Filter/types';
+import { FilterOption, OptionItem } from '~/shared/components/Filter/types';
 
 export const NONE_VALUE = '__none__';
 

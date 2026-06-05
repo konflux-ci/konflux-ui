@@ -3,9 +3,9 @@ import { Toolbar, ToolbarContent } from '@patternfly/react-core';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { NuqsTestingAdapter } from 'nuqs/adapters/testing';
-import { SingleSelectFilter } from '~/components/Filter/controls/SingleSelectFilter';
-import { NuqsAdapter } from '~/components/Filter/nuqs-adapter';
-import { OptionItem, SingleSelectFilterConfig } from '~/components/Filter/types';
+import { SingleSelectFilter } from '~/shared/components/Filter/controls/SingleSelectFilter';
+import { NuqsAdapter } from '~/shared/components/Filter/nuqs-adapter';
+import { OptionItem, SingleSelectFilterConfig } from '~/shared/components/Filter/types';
 
 type Item = { status: string };
 

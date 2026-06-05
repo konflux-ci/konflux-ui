@@ -2,9 +2,9 @@ import { MemoryRouter } from 'react-router-dom';
 import { Toolbar, ToolbarContent } from '@patternfly/react-core';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MultiSelectFilter } from '~/components/Filter/controls/MultiSelectFilter';
-import { NuqsAdapter } from '~/components/Filter/nuqs-adapter';
-import { MultiSelectFilterConfig, OptionItem } from '~/components/Filter/types';
+import { MultiSelectFilter } from '~/shared/components/Filter/controls/MultiSelectFilter';
+import { NuqsAdapter } from '~/shared/components/Filter/nuqs-adapter';
+import { MultiSelectFilterConfig, OptionItem } from '~/shared/components/Filter/types';
 
 type Item = { status: string };
 

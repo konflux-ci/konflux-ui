@@ -2,9 +2,9 @@ import { MemoryRouter } from 'react-router-dom';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { NuqsTestingAdapter } from 'nuqs/adapters/testing';
-import { BooleanFilter } from '~/components/Filter/controls/BooleanFilter';
-import { NuqsAdapter } from '~/components/Filter/nuqs-adapter';
-import { BooleanFilterConfig } from '~/components/Filter/types';
+import { BooleanFilter } from '~/shared/components/Filter/controls/BooleanFilter';
+import { NuqsAdapter } from '~/shared/components/Filter/nuqs-adapter';
+import { BooleanFilterConfig } from '~/shared/components/Filter/types';
 
 const defaultConfig: BooleanFilterConfig = {
   type: 'boolean',

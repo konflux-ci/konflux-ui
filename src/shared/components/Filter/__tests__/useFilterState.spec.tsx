@@ -1,7 +1,7 @@
 import { render, screen, act } from '@testing-library/react';
 import { NuqsTestingAdapter } from 'nuqs/adapters/testing';
-import { useFilterState } from '~/components/Filter/hooks/useFilterState';
-import { defineFilters } from '~/components/Filter/types';
+import { useFilterState } from '~/shared/components/Filter/hooks/useFilterState';
+import { defineFilters } from '~/shared/components/Filter/types';
 
 const testConfigs = defineFilters<{ metadata: { name: string }; status: string }>()([
   {

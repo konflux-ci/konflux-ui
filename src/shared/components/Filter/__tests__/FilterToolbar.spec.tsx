@@ -1,15 +1,15 @@
 import { MemoryRouter } from 'react-router-dom';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { FilterToolbar } from '~/components/Filter/FilterToolbar';
-import { NuqsAdapter } from '~/components/Filter/nuqs-adapter';
+import { FilterToolbar } from '~/shared/components/Filter/FilterToolbar';
+import { NuqsAdapter } from '~/shared/components/Filter/nuqs-adapter';
 import type {
   BooleanFilterConfig,
   FilterConfig,
   MultiSelectFilterConfig,
   OptionItem,
   SearchFilterConfig,
-} from '~/components/Filter/types';
+} from '~/shared/components/Filter/types';
 
 type Item = { name: string; status: string; active: boolean };
 

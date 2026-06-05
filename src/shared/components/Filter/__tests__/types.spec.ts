@@ -1,4 +1,4 @@
-import { defineFilters } from '~/components/Filter';
+import { defineFilters } from '~/shared/components/Filter';
 
 type MockItem = {
   metadata: { name: string; namespace: string };

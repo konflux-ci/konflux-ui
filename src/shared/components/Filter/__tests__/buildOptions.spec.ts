@@ -1,4 +1,4 @@
-import { buildOptions, buildOptionsWithFallback, NONE_VALUE } from '~/components/Filter';
+import { buildOptions, buildOptionsWithFallback, NONE_VALUE } from '~/shared/components/Filter';
 
 type Item = { status?: string | null };
 

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Toolbar, ToolbarContent, ToolbarGroup, ToolbarItem } from '@patternfly/react-core';
-import { useFilterState } from '~/components/Filter/hooks/useFilterState';
-import type { FilterConfig, OptionItem } from '~/components/Filter/types';
+import { useFilterState } from '~/shared/components/Filter/hooks/useFilterState';
+import type { FilterConfig, OptionItem } from '~/shared/components/Filter/types';
 import { BooleanFilter } from './controls/BooleanFilter';
 import { MultiSelectFilter } from './controls/MultiSelectFilter';
 import { SearchFilter } from './controls/SearchFilter';

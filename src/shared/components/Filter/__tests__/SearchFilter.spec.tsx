@@ -2,9 +2,9 @@ import { MemoryRouter } from 'react-router-dom';
 import { render, screen, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { NuqsTestingAdapter } from 'nuqs/adapters/testing';
-import { SearchFilter } from '~/components/Filter/controls/SearchFilter';
-import { NuqsAdapter } from '~/components/Filter/nuqs-adapter';
-import { SearchFilterConfig } from '~/components/Filter/types';
+import { SearchFilter } from '~/shared/components/Filter/controls/SearchFilter';
+import { NuqsAdapter } from '~/shared/components/Filter/nuqs-adapter';
+import { SearchFilterConfig } from '~/shared/components/Filter/types';
 
 jest.useFakeTimers();
 

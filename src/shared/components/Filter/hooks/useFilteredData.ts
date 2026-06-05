@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import type { FilterConfig } from '~/components/Filter/types';
+import type { FilterConfig } from '~/shared/components/Filter/types';
 import { textMatch } from '~/utils/text-filter-utils';
 
 type FilterFn<T> = (item: T) => boolean;
