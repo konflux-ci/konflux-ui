@@ -34,4 +34,6 @@ export { BooleanFilter } from './controls/BooleanFilter';
 
 export { SwitchableSearchFilter } from './controls/SwitchableSearchFilter';
 
+export { FilterToolbar } from './FilterToolbar';
+
 export { buildOptions, buildOptionsWithFallback, NONE_VALUE } from './utils/buildOptions';
