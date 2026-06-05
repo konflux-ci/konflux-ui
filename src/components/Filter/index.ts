@@ -19,3 +19,5 @@ export type {
 export { defineFilters } from './types';
 
 export { NuqsAdapter } from './nuqs-adapter';
+
+export { useFilteredData } from './hooks/useFilteredData';
