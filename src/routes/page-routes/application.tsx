@@ -13,6 +13,7 @@ import {
   SnapshotsListViewTab,
   snapshotsTabLoader,
 } from '~/components/Snapshots/SnapshotsListView/SnapshotsTab';
+import { NuqsAdapter } from '~/shared/components/Filter';
 import { APPLICATION_DETAILS_PATH, APPLICATION_LIST_PATH } from '../paths';
 import { RouteErrorBoundry } from '../RouteErrorBoundary';
 
@@ -55,9 +56,9 @@ const applicationRoutes = [
         loader: integrationListPageLoader,
         errorElement: <RouteErrorBoundry />,
         element: (
-          <FilterContextProvider filterParams={['name']}>
+          <NuqsAdapter>
             <IntegrationTestsListView />
-          </FilterContextProvider>
+          </NuqsAdapter>
         ),
       },
       {

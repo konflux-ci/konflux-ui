@@ -11,7 +11,7 @@ const isEmpty = (value: unknown): boolean => {
   return true;
 };
 
-export const useFilteredData = <T extends { metadata: { name: string } }>(
+export const useFilteredData = <T>(
   configs: readonly FilterConfig<T>[],
   data: T[],
   clientFilterValues: Record<string, unknown>,
@@ -44,7 +44,9 @@ export const useFilteredData = <T extends { metadata: { name: string } }>(
 
       if (config.type === 'search') {
         const filterFn =
-          config.filterFn ?? ((item: T, v: string) => textMatch(item.metadata.name, v));
+          config.filterFn ??
+          ((item: T, v: string) =>
+            textMatch((item as { metadata?: { name?: string } }).metadata?.name ?? '', v));
         activeFilters.push((item) => filterFn(item, value as string));
       } else if (config.type === 'multiSelect') {
         activeFilters.push((item) => config.filterFn(item, value as string[]));

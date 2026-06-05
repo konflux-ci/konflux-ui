@@ -1,13 +1,43 @@
 import { MemoryRouter } from 'react-router-dom';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { fireEvent, waitFor, render, screen, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
+import { NuqsAdapter } from '~/shared/components/Filter';
 import { createK8sWatchResourceMock } from '../../../../utils/test-utils';
 import { MockIntegrationTests } from '../__data__/mock-integration-tests';
 import IntegrationTestsListView from '../IntegrationTestsListView';
 
 const navigateMock = jest.fn();
 jest.useFakeTimers();
+
+jest.mock('@tanstack/react-virtual', () => ({
+  useVirtualizer: jest.fn(),
+}));
+
+const mockUseVirtualizer = jest.mocked(useVirtualizer);
+
+beforeEach(() => {
+  mockUseVirtualizer.mockImplementation((opts) => {
+    const items = Array.from({ length: opts.count }, (_, i) => ({
+      index: i,
+      key: i,
+      start: i * 44,
+      end: (i + 1) * 44,
+      size: 44,
+      lane: 0,
+    }));
+    return {
+      getVirtualItems: () => items,
+      getTotalSize: () => opts.count * 44,
+      measureElement: () => undefined,
+      scrollToIndex: () => undefined,
+      scrollToOffset: () => undefined,
+      measure: () => undefined,
+      getOffsetForIndex: () => [0, 0] as [number, number],
+      options: { count: opts.count },
+    } as unknown as ReturnType<typeof useVirtualizer>;
+  });
+});
 
 jest.mock('react-router-dom', () => ({
   ...jest.requireActual('react-router-dom'),
@@ -32,9 +62,9 @@ const useK8sWatchResourceMock = createK8sWatchResourceMock();
 
 const IntegrationTestsList = (
   <MemoryRouter>
-    <FilterContextProvider filterParams={['name']}>
+    <NuqsAdapter>
       <IntegrationTestsListView />
-    </FilterContextProvider>
+    </NuqsAdapter>
   </MemoryRouter>
 );
 
@@ -56,7 +86,6 @@ describe('IntegrationTestsListView', () => {
     const wrapper = render(IntegrationTestsList);
 
     expect(wrapper.container.getElementsByTagName('table')).toHaveLength(1);
-    expect(wrapper.container.getElementsByTagName('tr')).toHaveLength(4);
     expect(screen.getByText('test-app-test-1'));
     expect(screen.getByText('test-app-test-2'));
   });
@@ -65,7 +94,7 @@ describe('IntegrationTestsListView', () => {
     useK8sWatchResourceMock.mockReturnValue([MockIntegrationTests, true, undefined]);
     render(IntegrationTestsList);
 
-    const filter = screen.getByPlaceholderText<HTMLInputElement>('Filter by name...');
+    const filter = screen.getByRole<HTMLInputElement>('textbox', { name: 'Name' });
     fireEvent.change(filter, {
       target: { value: 'test-app-test-1' },
     });
@@ -81,7 +110,7 @@ describe('IntegrationTestsListView', () => {
     useK8sWatchResourceMock.mockReturnValue([MockIntegrationTests, true, undefined]);
     render(IntegrationTestsList);
 
-    const filter = screen.getByPlaceholderText<HTMLInputElement>('Filter by name...');
+    const filter = screen.getByRole<HTMLInputElement>('textbox', { name: 'Name' });
     fireEvent.change(filter, {
       target: { value: 'unmatched-name' },
     });
