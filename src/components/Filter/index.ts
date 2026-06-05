@@ -24,4 +24,6 @@ export { useFilteredData } from './hooks/useFilteredData';
 
 export { useFilterState } from './hooks/useFilterState';
 
+export { SearchFilter } from './controls/SearchFilter';
+
 export { buildOptions, buildOptionsWithFallback, NONE_VALUE } from './utils/buildOptions';
