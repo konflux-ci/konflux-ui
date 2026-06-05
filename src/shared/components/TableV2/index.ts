@@ -8,3 +8,4 @@ export type {
 } from './types';
 
 export { useColumnState } from './hooks/useColumnState';
+export { useVirtualization } from './hooks/useVirtualization';
