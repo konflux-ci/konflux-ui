@@ -21,3 +21,5 @@ export { defineFilters } from './types';
 export { NuqsAdapter } from './nuqs-adapter';
 
 export { useFilteredData } from './hooks/useFilteredData';
+
+export { buildOptions, buildOptionsWithFallback, NONE_VALUE } from './utils/buildOptions';
