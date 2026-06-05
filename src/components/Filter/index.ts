@@ -28,4 +28,6 @@ export { SearchFilter } from './controls/SearchFilter';
 
 export { MultiSelectFilter } from './controls/MultiSelectFilter';
 
+export { SingleSelectFilter } from './controls/SingleSelectFilter';
+
 export { buildOptions, buildOptionsWithFallback, NONE_VALUE } from './utils/buildOptions';
