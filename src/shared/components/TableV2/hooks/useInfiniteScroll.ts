@@ -5,16 +5,12 @@ interface VirtualItem {
   index: number;
 }
 
-/** Minimal virtualizer shape needed for scroll detection. */
-interface VirtualizerLike {
-  getVirtualItems: () => VirtualItem[];
-  options: { count: number };
-}
-
 /** Options for the {@link useInfiniteScroll} hook. */
 interface UseInfiniteScrollOptions {
-  /** The virtualizer instance from `useVirtualization`. */
-  virtualizer: VirtualizerLike;
+  /** The current virtual items from the virtualizer. Changes trigger re-evaluation. */
+  virtualRows: VirtualItem[];
+  /** Total number of rows in the data set. */
+  totalCount: number;
   /** Whether more data is available to fetch. */
   hasNextPage: boolean;
   /** Whether a fetch is currently in progress. Guards against double-fetch. */
@@ -43,7 +39,8 @@ interface UseInfiniteScrollOptions {
  * @example
  * ```tsx
  * useInfiniteScroll({
- *   virtualizer,
+ *   virtualRows,
+ *   totalCount: rows.length,
  *   hasNextPage: !!query.hasNextPage,
  *   isFetchingNextPage: query.isFetchingNextPage,
  *   fetchNextPage: query.fetchNextPage,
@@ -51,19 +48,21 @@ interface UseInfiniteScrollOptions {
  * ```
  */
 export const useInfiniteScroll = (options: UseInfiniteScrollOptions): void => {
-  const { virtualizer, hasNextPage, isFetchingNextPage, fetchNextPage, threshold = 5 } = options;
+  const {
+    virtualRows,
+    totalCount,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+    threshold = 5,
+  } = options;
 
   useEffect(() => {
-    const items = virtualizer.getVirtualItems();
-    const lastItem = items[items.length - 1];
+    const lastItem = virtualRows[virtualRows.length - 1];
     if (!lastItem) return;
 
-    if (
-      lastItem.index >= virtualizer.options.count - threshold &&
-      hasNextPage &&
-      !isFetchingNextPage
-    ) {
+    if (lastItem.index >= totalCount - threshold && hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
     }
-  }, [virtualizer, hasNextPage, isFetchingNextPage, fetchNextPage, threshold]);
+  }, [virtualRows, totalCount, hasNextPage, isFetchingNextPage, fetchNextPage, threshold]);
 };

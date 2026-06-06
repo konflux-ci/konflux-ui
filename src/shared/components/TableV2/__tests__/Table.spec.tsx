@@ -142,6 +142,8 @@ describe('Table', () => {
 
     expect(useInfiniteScroll).toHaveBeenCalledWith(
       expect.objectContaining({
+        virtualRows: [],
+        totalCount: 0,
         hasNextPage: true,
         isFetchingNextPage: false,
         fetchNextPage,
@@ -154,6 +156,8 @@ describe('Table', () => {
 
     expect(useInfiniteScroll).toHaveBeenCalledWith(
       expect.objectContaining({
+        virtualRows: [],
+        totalCount: 0,
         hasNextPage: false,
         isFetchingNextPage: false,
       }),

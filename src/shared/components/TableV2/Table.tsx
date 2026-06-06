@@ -96,7 +96,8 @@ export const Table = <TData,>({
   });
 
   useInfiniteScroll({
-    virtualizer,
+    virtualRows,
+    totalCount: rows.length,
     hasNextPage: !!hasNextPage,
     isFetchingNextPage: !!isFetchingNextPage,
     fetchNextPage: fetchNextPage ?? (() => undefined),

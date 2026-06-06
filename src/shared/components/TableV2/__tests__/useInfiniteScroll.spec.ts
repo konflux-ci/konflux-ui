@@ -1,21 +1,14 @@
 import { renderHook } from '@testing-library/react';
 import { useInfiniteScroll } from '~/shared/components/TableV2/hooks/useInfiniteScroll';
 
-const createMockVirtualizer = (overrides: { lastIndex?: number; count?: number } = {}) => ({
-  getVirtualItems: jest
-    .fn()
-    .mockReturnValue(overrides.lastIndex !== undefined ? [{ index: overrides.lastIndex }] : []),
-  options: { count: overrides.count ?? 100 },
-});
-
 describe('useInfiniteScroll', () => {
   it('triggers fetch when last item is within threshold of total count', () => {
     const fetchNextPage = jest.fn();
-    const virtualizer = createMockVirtualizer({ lastIndex: 96, count: 100 });
 
     renderHook(() =>
       useInfiniteScroll({
-        virtualizer,
+        virtualRows: [{ index: 96 }],
+        totalCount: 100,
         hasNextPage: true,
         isFetchingNextPage: false,
         fetchNextPage,
@@ -27,11 +20,11 @@ describe('useInfiniteScroll', () => {
 
   it('does NOT trigger when already fetching', () => {
     const fetchNextPage = jest.fn();
-    const virtualizer = createMockVirtualizer({ lastIndex: 96, count: 100 });
 
     renderHook(() =>
       useInfiniteScroll({
-        virtualizer,
+        virtualRows: [{ index: 96 }],
+        totalCount: 100,
         hasNextPage: true,
         isFetchingNextPage: true,
         fetchNextPage,
@@ -43,11 +36,11 @@ describe('useInfiniteScroll', () => {
 
   it('does NOT trigger when no next page', () => {
     const fetchNextPage = jest.fn();
-    const virtualizer = createMockVirtualizer({ lastIndex: 96, count: 100 });
 
     renderHook(() =>
       useInfiniteScroll({
-        virtualizer,
+        virtualRows: [{ index: 96 }],
+        totalCount: 100,
         hasNextPage: false,
         isFetchingNextPage: false,
         fetchNextPage,
@@ -59,11 +52,11 @@ describe('useInfiniteScroll', () => {
 
   it('does NOT trigger when well above threshold', () => {
     const fetchNextPage = jest.fn();
-    const virtualizer = createMockVirtualizer({ lastIndex: 50, count: 100 });
 
     renderHook(() =>
       useInfiniteScroll({
-        virtualizer,
+        virtualRows: [{ index: 50 }],
+        totalCount: 100,
         hasNextPage: true,
         isFetchingNextPage: false,
         fetchNextPage,
@@ -75,11 +68,11 @@ describe('useInfiniteScroll', () => {
 
   it('handles empty virtual items without crashing', () => {
     const fetchNextPage = jest.fn();
-    const virtualizer = createMockVirtualizer({ count: 100 });
 
     renderHook(() =>
       useInfiniteScroll({
-        virtualizer,
+        virtualRows: [],
+        totalCount: 100,
         hasNextPage: true,
         isFetchingNextPage: false,
         fetchNextPage,
@@ -91,11 +84,11 @@ describe('useInfiniteScroll', () => {
 
   it('supports custom threshold', () => {
     const fetchNextPage = jest.fn();
-    const virtualizer = createMockVirtualizer({ lastIndex: 96, count: 100 });
 
     renderHook(() =>
       useInfiniteScroll({
-        virtualizer,
+        virtualRows: [{ index: 96 }],
+        totalCount: 100,
         hasNextPage: true,
         isFetchingNextPage: false,
         fetchNextPage,
