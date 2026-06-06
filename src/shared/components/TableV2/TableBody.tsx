@@ -1,4 +1,5 @@
 import React, { type ReactNode } from 'react';
+import { Skeleton } from '@patternfly/react-core';
 import { Tbody, Tr, Td, ExpandableRowContent } from '@patternfly/react-table';
 import { type Row } from '@tanstack/react-table';
 import { type VirtualItem } from '@tanstack/react-virtual';
@@ -20,7 +21,7 @@ interface TableBodyProps<TData> {
   expandedContent?: (row: TData) => ReactNode;
   /** Number of visible columns, used for `colSpan` on expanded content and loading rows. */
   visibleColumnCount: number;
-  /** Whether the next page is being fetched. Shows a "Loading more..." row when `true`. */
+  /** Whether the next page is being fetched. Shows skeleton rows when `true`. */
   isFetchingNextPage?: boolean;
   /** Callback to measure a row element for dynamic height virtualization. */
   measureElement?: (el: HTMLElement | null) => void;
@@ -33,7 +34,7 @@ interface TableBodyProps<TData> {
  * bottom spacer `<Tr>` elements maintain correct scroll height. When a row
  * is expanded, its expanded content is rendered in a full-width row below it.
  *
- * Shows a "Loading more..." indicator when `isFetchingNextPage` is `true`.
+ * Shows skeleton loading rows when `isFetchingNextPage` is `true`.
  *
  * @typeParam TData - The row data type
  */
@@ -75,11 +76,16 @@ export const TableBody = <TData,>({
         );
       })}
       {bottomSpacerHeight > 0 && <Tr style={{ height: bottomSpacerHeight }} />}
-      {isFetchingNextPage && (
-        <Tr data-test="table-loading-more">
-          <Td colSpan={visibleColumnCount}>Loading more...</Td>
-        </Tr>
-      )}
+      {isFetchingNextPage &&
+        Array.from({ length: 3 }, (_, rowIdx) => (
+          <Tr key={`skeleton-${rowIdx}`} data-test="table-loading-more">
+            {Array.from({ length: visibleColumnCount }, (__, colIdx) => (
+              <Td key={colIdx}>
+                <Skeleton width={`${50 + ((rowIdx + colIdx) % 4) * 10}%`} />
+              </Td>
+            ))}
+          </Tr>
+        ))}
     </Tbody>
   );
 };

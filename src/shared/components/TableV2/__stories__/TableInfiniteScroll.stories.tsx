@@ -99,10 +99,10 @@ export const FetchingIndicator: StoryObj = {
     // Table renders
     await expect(canvas.getByRole('grid')).toBeInTheDocument();
 
-    // The "Loading more..." indicator is in the DOM
-    // (It may or may not be visible depending on scroll position,
-    // but it should exist in the table body)
-    const loadingRow = canvasElement.querySelector('[data-test="table-loading-more"]');
-    await expect(loadingRow).not.toBeNull();
+    // The skeleton loading rows are in the DOM
+    // (They may or may not be visible depending on scroll position,
+    // but they should exist in the table body)
+    const loadingRows = canvasElement.querySelectorAll('[data-test="table-loading-more"]');
+    await expect(loadingRows.length).toBeGreaterThan(0);
   },
 };

@@ -1,7 +1,7 @@
 import { Table } from '@patternfly/react-table';
-import { type VirtualItem } from '@tanstack/react-virtual';
 import { render, screen, within } from '@testing-library/react';
 import { TableBody } from '~/shared/components/TableV2/TableBody';
+import { createMockRow, createMockVirtualRows } from '~/unit-test-utils';
 
 jest.mock('~/shared/components/TableV2/TableRow', () => ({
   TableRow: ({ rowId }: { rowId: string }) => (
@@ -10,25 +10,6 @@ jest.mock('~/shared/components/TableV2/TableRow', () => ({
     </tr>
   ),
 }));
-
-const createMockRow = (id: string, expanded = false) => ({
-  id,
-  getVisibleCells: () => [],
-  getIsExpanded: () => expanded,
-  getToggleExpandedHandler: () => jest.fn(),
-  original: { id },
-});
-
-const createMockVirtualRows = (count: number): VirtualItem[] =>
-  Array.from({ length: count }, (_, i) => ({
-    index: i,
-    start: i * 44,
-    size: 44,
-    end: (i + 1) * 44,
-    key: `row-${i}`,
-    lane: 0,
-    measureElement: jest.fn(),
-  }));
 
 const renderTableBody = (props: Partial<React.ComponentProps<typeof TableBody>> = {}) => {
   const rows = props.rows ?? [createMockRow('r-0'), createMockRow('r-1'), createMockRow('r-2')];
@@ -77,7 +58,7 @@ describe('TableBody', () => {
   });
 
   it('renders expanded content when row is expanded', () => {
-    const rows = [createMockRow('r-0', true)];
+    const rows = [createMockRow('r-0', { expanded: true })];
     const virtualRows = createMockVirtualRows(1);
 
     renderTableBody({
@@ -94,7 +75,7 @@ describe('TableBody', () => {
   });
 
   it('does not render expanded content when row is not expanded', () => {
-    const rows = [createMockRow('r-0', false)];
+    const rows = [createMockRow('r-0')];
     const virtualRows = createMockVirtualRows(1);
 
     renderTableBody({
@@ -110,7 +91,7 @@ describe('TableBody', () => {
   });
 
   it('sets correct colspan on expanded content', () => {
-    const rows = [createMockRow('r-0', true)];
+    const rows = [createMockRow('r-0', { expanded: true })];
     const virtualRows = createMockVirtualRows(1);
 
     renderTableBody({
@@ -127,10 +108,17 @@ describe('TableBody', () => {
     expect(td).toHaveAttribute('colspan', '5');
   });
 
-  it('renders loading indicator when isFetchingNextPage is true', () => {
-    renderTableBody({ isFetchingNextPage: true });
+  it('renders 3 skeleton rows when isFetchingNextPage is true', () => {
+    renderTableBody({ isFetchingNextPage: true, visibleColumnCount: 4 });
 
-    expect(screen.getByTestId('table-loading-more')).toBeInTheDocument();
+    const skeletonRows = screen.getAllByTestId('table-loading-more');
+    expect(skeletonRows).toHaveLength(3);
+
+    // Each skeleton row should have one skeleton per visible column
+    skeletonRows.forEach((row) => {
+      const skeletons = row.querySelectorAll('.pf-v5-c-skeleton');
+      expect(skeletons).toHaveLength(4);
+    });
   });
 
   it('does not render loading indicator when isFetchingNextPage is false', () => {
