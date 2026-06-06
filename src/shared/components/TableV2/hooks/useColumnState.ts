@@ -9,6 +9,7 @@ type ColumnId = Pick<ColumnDefinition<never>, 'id'>;
 function deriveDefaultState(columns: ColumnId[]): ColumnState {
   return {
     visibleColumns: columns.map((c) => c.id),
+    allColumns: columns.map((c) => c.id),
   };
 }
 
@@ -25,9 +26,15 @@ function migrateState(persisted: ColumnState, columns: ColumnId[]): ColumnState 
   // Remove stale column IDs, preserving persisted order
   const existing = persisted.visibleColumns.filter((id) => validIds.has(id));
 
-  // Append new column IDs not present in persisted state
-  const existingSet = new Set(existing);
-  const added = columns.filter((c) => !existingSet.has(c.id)).map((c) => c.id);
+  // Determine genuinely NEW columns.
+  // If allColumns is stored, a column is "new" only if it wasn't in allColumns.
+  // If allColumns is not stored (legacy format), fall back to old behavior
+  // where every column absent from visibleColumns is treated as new.
+  const knownIds = persisted.allColumns
+    ? new Set(persisted.allColumns)
+    : new Set(persisted.visibleColumns);
+
+  const added = columns.filter((c) => !knownIds.has(c.id)).map((c) => c.id);
 
   const visibleColumns = [...existing, ...added];
 
@@ -36,7 +43,12 @@ function migrateState(persisted: ColumnState, columns: ColumnId[]): ColumnState 
     persisted.sortColumn && validIds.has(persisted.sortColumn) ? persisted.sortColumn : undefined;
   const sortDirection = sortColumn ? persisted.sortDirection : undefined;
 
-  return { visibleColumns, sortColumn, sortDirection };
+  return {
+    visibleColumns,
+    allColumns: columns.map((c) => c.id),
+    sortColumn,
+    sortDirection,
+  };
 }
 
 /**
@@ -95,13 +107,17 @@ export function useColumnState<TData>(
 
   const setColumnState = useCallback(
     (state: ColumnState) => {
+      const stateToSave: ColumnState = {
+        ...state,
+        allColumns: columns.map((c) => c.id),
+      };
       if (isPersisted) {
-        setPersistedValue(state);
+        setPersistedValue(stateToSave);
       } else {
-        setEphemeralState(state);
+        setEphemeralState(stateToSave);
       }
     },
-    [isPersisted, setPersistedValue],
+    [isPersisted, setPersistedValue, columns],
   );
 
   return { columnState, setColumnState };

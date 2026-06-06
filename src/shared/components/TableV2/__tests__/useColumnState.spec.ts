@@ -66,6 +66,7 @@ describe('useColumnState', () => {
 
       expect(mockSetValue).toHaveBeenCalledWith({
         visibleColumns: ['name', 'status'],
+        allColumns: ['name', 'status', 'id'],
         sortColumn: 'name',
         sortDirection: 'asc',
       });
@@ -119,12 +120,52 @@ describe('useColumnState', () => {
     it('appends new column IDs that exist in definitions but not in persisted state', () => {
       const persisted = {
         visibleColumns: ['name'],
+        allColumns: ['name'],
       };
       mockUseLocalStorage.mockReturnValue([persisted, mockSetValue, jest.fn()]);
 
       const { result } = renderHook(() => useColumnState('test-key', columns));
 
       expect(result.current.columnState.visibleColumns).toEqual(['name', 'status', 'id']);
+    });
+
+    it('should not re-add intentionally hidden columns during migration', () => {
+      // 'status' was known but intentionally hidden by the user
+      const persisted = {
+        visibleColumns: ['name', 'id'],
+        allColumns: ['name', 'status', 'id'],
+      };
+      mockUseLocalStorage.mockReturnValue([persisted, mockSetValue, jest.fn()]);
+
+      const { result } = renderHook(() => useColumnState('test-key', columns));
+
+      expect(result.current.columnState.visibleColumns).toEqual(['name', 'id']);
+      expect(result.current.columnState.visibleColumns).not.toContain('status');
+    });
+
+    it('should add genuinely new columns during migration', () => {
+      // 'status' was not known at all — it's a genuinely new column
+      const persisted = {
+        visibleColumns: ['name', 'id'],
+        allColumns: ['name', 'id'],
+      };
+      mockUseLocalStorage.mockReturnValue([persisted, mockSetValue, jest.fn()]);
+
+      const { result } = renderHook(() => useColumnState('test-key', columns));
+
+      expect(result.current.columnState.visibleColumns).toEqual(['name', 'id', 'status']);
+    });
+
+    it('should handle legacy state without allColumns (backward compat)', () => {
+      // No allColumns — falls back to old behavior (treats missing columns as new)
+      const persisted = {
+        visibleColumns: ['name', 'id'],
+      };
+      mockUseLocalStorage.mockReturnValue([persisted, mockSetValue, jest.fn()]);
+
+      const { result } = renderHook(() => useColumnState('test-key', columns));
+
+      expect(result.current.columnState.visibleColumns).toEqual(['name', 'id', 'status']);
     });
   });
 
@@ -191,6 +232,7 @@ describe('useColumnState', () => {
 
       expect(mockSetValue).toHaveBeenCalledWith(
         expect.objectContaining({
+          allColumns: ['name', 'status', 'id'],
           sortColumn: 'name',
           sortDirection: 'asc',
         }),
@@ -227,12 +269,13 @@ describe('useColumnState', () => {
     it('appends new columns after existing order', () => {
       const persisted = {
         visibleColumns: ['status'],
+        allColumns: ['status'],
       };
       mockUseLocalStorage.mockReturnValue([persisted, mockSetValue, jest.fn()]);
 
       const { result } = renderHook(() => useColumnState('test-key', columns));
 
-      // 'status' keeps its position, 'name' and 'id' are appended
+      // 'status' keeps its position, 'name' and 'id' are appended as new
       expect(result.current.columnState.visibleColumns).toEqual(['status', 'name', 'id']);
     });
   });

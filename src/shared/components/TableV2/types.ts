@@ -130,6 +130,16 @@ export interface ColumnState {
   /** Ordered list of visible column IDs. Order determines column display order. */
   visibleColumns: string[];
 
+  /**
+   * All column IDs known at the time this state was saved.
+   *
+   * Used by migration to distinguish intentionally hidden columns from
+   * genuinely new columns added to the definition. Without this field
+   * (legacy format), migration falls back to treating every column absent
+   * from `visibleColumns` as new.
+   */
+  allColumns?: string[];
+
   /** ID of the currently sorted column, if any. */
   sortColumn?: string;
 
