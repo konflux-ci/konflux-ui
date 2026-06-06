@@ -8,6 +8,12 @@ import { SearchFilter } from './controls/SearchFilter';
 import { SingleSelectFilter } from './controls/SingleSelectFilter';
 import { SwitchableSearchFilter } from './controls/SwitchableSearchFilter';
 
+/** Configuration for a named toolbar group. */
+export type ToolbarGroupConfig = {
+  /** PF ToolbarGroup variant. Defaults to 'filter-group'. */
+  variant?: 'filter-group' | 'icon-button-group' | 'button-group';
+};
+
 /**
  * Props for `FilterToolbar`.
  *
@@ -18,6 +24,8 @@ type FilterToolbarProps<C extends readonly FilterConfig<unknown>[]> = {
   configs: C;
   /** Dropdown options keyed by filter `param`. Required for `multiSelect` and `singleSelect`. */
   options?: Record<string, OptionItem[]>;
+  /** Configuration for named toolbar groups. Keys are group names from filter configs. */
+  groups?: Record<string, ToolbarGroupConfig>;
   /** Extra toolbar items rendered after the filter controls (e.g. action buttons). */
   children?: React.ReactNode;
 };
@@ -74,16 +82,43 @@ const renderControl = (config: FilterConfig<unknown>, options: Record<string, Op
 export const FilterToolbar = <C extends readonly FilterConfig<unknown>[]>({
   configs,
   options = {},
+  groups: groupConfigs = {},
   children,
 }: FilterToolbarProps<C>) => {
   const { clearAll } = useFilterState(configs);
 
+  // Group configs by group name, preserving order
+  const groupedConfigs = React.useMemo(() => {
+    const map = new Map<string | undefined, FilterConfig<unknown>[]>();
+    for (const config of configs) {
+      const key = config.group;
+      const existing = map.get(key);
+      if (existing) {
+        existing.push(config);
+      } else {
+        map.set(key, [config]);
+      }
+    }
+    return map;
+  }, [configs]);
+
   return (
     <Toolbar data-test="filter-toolbar" clearAllFilters={clearAll}>
       <ToolbarContent>
-        <ToolbarGroup variant="filter-group">
-          {configs.map((config) => renderControl(config, options))}
-        </ToolbarGroup>
+        {Array.from(groupedConfigs.entries()).map(([groupName, groupConfigs_]) => {
+          const variant = groupName
+            ? groupConfigs[groupName]?.variant ?? 'filter-group'
+            : 'filter-group';
+          return (
+            <ToolbarGroup
+              key={groupName ?? '__default'}
+              variant={variant}
+              data-test={groupName ? `filter-group-${groupName}` : 'filter-group-default'}
+            >
+              {groupConfigs_.map((config) => renderControl(config, options))}
+            </ToolbarGroup>
+          );
+        })}
         {children ? <ToolbarItem>{children}</ToolbarItem> : null}
       </ToolbarContent>
     </Toolbar>

@@ -26,6 +26,8 @@ export type FilterConfigBase = {
   param: string;
   label: string;
   mode?: FilterMode; // defaults to 'client'
+  /** Optional group name. Filters with the same group render in the same ToolbarGroup. */
+  group?: string;
 };
 
 /**

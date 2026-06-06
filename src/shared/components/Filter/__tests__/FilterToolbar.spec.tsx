@@ -2,6 +2,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { FilterToolbar } from '~/shared/components/Filter/FilterToolbar';
+import type { ToolbarGroupConfig } from '~/shared/components/Filter/FilterToolbar';
 import { NuqsAdapter } from '~/shared/components/Filter/nuqs-adapter';
 import type {
   BooleanFilterConfig,
@@ -9,6 +10,7 @@ import type {
   MultiSelectFilterConfig,
   OptionItem,
   SearchFilterConfig,
+  SingleSelectFilterConfig,
 } from '~/shared/components/Filter/types';
 
 type Item = { name: string; status: string; active: boolean };
@@ -38,15 +40,24 @@ const statusOptions: OptionItem[] = [
   { label: 'Stopped', value: 'stopped' },
 ];
 
+const singleSelectConfig: SingleSelectFilterConfig<Item> = {
+  type: 'singleSelect',
+  param: 'env',
+  label: 'Environment',
+  group: 'actions',
+  filterFn: (item, value) => item.status === value,
+};
+
 const renderToolbar = (
   configs: readonly FilterConfig<unknown>[] = [searchConfig],
   options?: Record<string, OptionItem[]>,
   children?: React.ReactNode,
+  groups?: Record<string, ToolbarGroupConfig>,
 ) =>
   render(
     <MemoryRouter>
       <NuqsAdapter>
-        <FilterToolbar configs={configs} options={options}>
+        <FilterToolbar configs={configs} options={options} groups={groups}>
           {children}
         </FilterToolbar>
       </NuqsAdapter>
@@ -93,5 +104,49 @@ describe('FilterToolbar', () => {
     renderToolbar([searchConfig], undefined, <button data-test="extra-action">Export</button>);
     expect(screen.getByTestId('extra-action')).toBeInTheDocument();
     expect(screen.getByText('Export')).toBeInTheDocument();
+  });
+
+  it('renders grouped configs in separate ToolbarGroup elements', () => {
+    const groupedSearch: SearchFilterConfig<Item> = {
+      ...searchConfig,
+      group: 'actions',
+    };
+
+    renderToolbar([groupedSearch, multiSelectConfig, singleSelectConfig], {
+      status: statusOptions,
+      env: statusOptions,
+    });
+
+    // default group contains multiSelectConfig (no group)
+    const defaultGroup = screen.getByTestId('filter-group-default');
+    expect(defaultGroup).toBeInTheDocument();
+    expect(
+      defaultGroup.querySelector('[data-test="multi-select-filter-status"]'),
+    ).toBeInTheDocument();
+
+    // 'actions' group contains searchConfig and singleSelectConfig
+    const actionsGroup = screen.getByTestId('filter-group-actions');
+    expect(actionsGroup).toBeInTheDocument();
+    expect(actionsGroup.querySelector('[aria-label="Name"]')).toBeInTheDocument();
+    expect(
+      actionsGroup.querySelector('[data-test="single-select-filter-env"]'),
+    ).toBeInTheDocument();
+  });
+
+  it('applies variant from groups prop to named groups', () => {
+    const groupedBoolean: BooleanFilterConfig = {
+      ...booleanConfig,
+      group: 'toggles',
+    };
+
+    renderToolbar([searchConfig, groupedBoolean], undefined, undefined, {
+      toggles: { variant: 'icon-button-group' },
+    });
+
+    const defaultGroup = screen.getByTestId('filter-group-default');
+    expect(defaultGroup).toHaveClass('pf-m-filter-group');
+
+    const togglesGroup = screen.getByTestId('filter-group-toggles');
+    expect(togglesGroup).toHaveClass('pf-m-icon-button-group');
   });
 });
