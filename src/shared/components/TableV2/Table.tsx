@@ -101,6 +101,7 @@ export const Table = <TData,>({
     hasNextPage: !!hasNextPage,
     isFetchingNextPage: !!isFetchingNextPage,
     fetchNextPage: fetchNextPage ?? (() => undefined),
+    scrollElement,
   });
 
   const columnWidths = computeColumnWidths(columns, columnState.visibleColumns);

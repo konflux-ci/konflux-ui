@@ -17,6 +17,8 @@ interface UseInfiniteScrollOptions {
   isFetchingNextPage: boolean;
   /** Callback to trigger fetching the next page. */
   fetchNextPage: () => void;
+  /** The scroll container element. Required for scroll-position detection. */
+  scrollElement: HTMLElement | null;
   /**
    * Number of rows from the end at which to trigger a fetch.
    * Defaults to `5`.
@@ -28,9 +30,15 @@ interface UseInfiniteScrollOptions {
  * Triggers infinite scroll data fetching when the user scrolls near the
  * bottom of a virtualized list.
  *
- * Detection logic: after each render, checks whether the last visible virtual
- * item's index is within `threshold` rows of the total row count. If so, and
- * `hasNextPage` is `true` and no fetch is in progress, calls `fetchNextPage`.
+ * Detection logic: listens to scroll events on `scrollElement` and checks
+ * two conditions before fetching:
+ * 1. The content overflows (has a scrollbar) and the user has scrolled near
+ *    the bottom (within 200px).
+ * 2. The last visible virtual item's index is within `threshold` rows of
+ *    the total row count.
+ *
+ * If all content fits without scrolling (no scrollbar), no fetch is triggered
+ * — the user must scroll to load more.
  *
  * Guards against double-fetch via the `isFetchingNextPage` flag.
  *
@@ -44,6 +52,7 @@ interface UseInfiniteScrollOptions {
  *   hasNextPage: !!query.hasNextPage,
  *   isFetchingNextPage: query.isFetchingNextPage,
  *   fetchNextPage: query.fetchNextPage,
+ *   scrollElement,
  * });
  * ```
  */
@@ -54,15 +63,43 @@ export const useInfiniteScroll = (options: UseInfiniteScrollOptions): void => {
     hasNextPage,
     isFetchingNextPage,
     fetchNextPage,
+    scrollElement,
     threshold = 5,
   } = options;
 
   useEffect(() => {
-    const lastItem = virtualRows[virtualRows.length - 1];
-    if (!lastItem) return;
+    if (!scrollElement || !hasNextPage || isFetchingNextPage) return;
 
-    if (lastItem.index >= totalCount - threshold && hasNextPage && !isFetchingNextPage) {
-      fetchNextPage();
-    }
-  }, [virtualRows, totalCount, hasNextPage, isFetchingNextPage, fetchNextPage, threshold]);
+    const handleScroll = () => {
+      const { scrollTop, clientHeight, scrollHeight } = scrollElement;
+
+      // If no overflow (no scrollbar), don't trigger — user needs to scroll
+      if (scrollHeight <= clientHeight) return;
+
+      // Check if scrolled near the bottom (within 200px)
+      const nearBottom = scrollTop + clientHeight >= scrollHeight - 200;
+      if (!nearBottom) return;
+
+      // Also check virtual items as a secondary guard
+      const lastItem = virtualRows[virtualRows.length - 1];
+      if (!lastItem) return;
+      if (lastItem.index >= totalCount - threshold) {
+        fetchNextPage();
+      }
+    };
+
+    // Check immediately in case we're already scrolled to bottom
+    handleScroll();
+
+    scrollElement.addEventListener('scroll', handleScroll, { passive: true });
+    return () => scrollElement.removeEventListener('scroll', handleScroll);
+  }, [
+    scrollElement,
+    virtualRows,
+    totalCount,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+    threshold,
+  ]);
 };

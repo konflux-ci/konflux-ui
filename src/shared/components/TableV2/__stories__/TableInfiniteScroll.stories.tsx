@@ -8,7 +8,7 @@ const meta: Meta = {
   title: 'TableV2/InfiniteScroll',
   decorators: [
     (Story) => (
-      <div style={{ height: '400px' }}>
+      <div style={{ height: '400px', overflow: 'hidden' }}>
         <Story />
       </div>
     ),
@@ -19,7 +19,7 @@ export default meta;
 
 const InfiniteScrollDemo = () => {
   const [pages, setPages] = useState(1);
-  const pageSize = 20;
+  const pageSize = 50;
   const maxPages = 5;
 
   const data = generateMockData(pages * pageSize);
@@ -36,11 +36,14 @@ const InfiniteScrollDemo = () => {
   }, []);
 
   return (
-    <div data-test="infinite-scroll-wrapper">
-      <div style={{ padding: '8px 0', fontSize: '12px' }}>
+    <div
+      data-test="infinite-scroll-wrapper"
+      style={{ height: '100%', display: 'flex', flexDirection: 'column' }}
+    >
+      <div style={{ padding: '8px 0', fontSize: '12px', flexShrink: 0 }}>
         Loaded: {data.length} rows (page {pages}/{maxPages})
       </div>
-      <div style={{ height: 'calc(100% - 30px)' }}>
+      <div style={{ flex: 1, minHeight: 0 }}>
         <Table
           data={data}
           columns={columns}
@@ -68,7 +71,7 @@ export const InfiniteScroll: StoryObj = {
     await expect(rows.length).toBeGreaterThan(0);
 
     // Shows page info
-    await expect(canvas.getByText(/Loaded: 20 rows/)).toBeInTheDocument();
+    await expect(canvas.getByText(/Loaded: 50 rows/)).toBeInTheDocument();
   },
 };
 

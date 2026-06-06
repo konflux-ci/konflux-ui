@@ -147,6 +147,7 @@ describe('Table', () => {
         hasNextPage: true,
         isFetchingNextPage: false,
         fetchNextPage,
+        scrollElement: null,
       }),
     );
   });
@@ -160,6 +161,7 @@ describe('Table', () => {
         totalCount: 0,
         hasNextPage: false,
         isFetchingNextPage: false,
+        scrollElement: null,
       }),
     );
   });
