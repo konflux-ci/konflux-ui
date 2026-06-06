@@ -37,6 +37,35 @@ Conventional Commits enforced by commitlint: `feat:`, `fix:`, `chore:`, etc. Hus
 - Read `docs/pr-review-guidelines.md` before reviewing or creating PRs.
 - Fill every section of `.github/PULL_REQUEST_TEMPLATE.md` when creating a PR.
 
+## TanStack CLI
+
+When working with TanStack libraries, use the TanStack CLI for documentation lookup and project scaffolding. The CLI is available via `npx @tanstack/cli`.
+
+### Searching Docs
+
+```sh
+npx -y @tanstack/cli search-docs "<query>" --library <library> --framework react --json
+```
+Installed libraries: `query`, `table`, `virtual`
+
+```sh
+npx -y @tanstack/cli search-docs "useQuery" --library query --framework react --json
+```
+
+Other Useful Commands:
+
+```sh
+# List all TanStack libraries
+npx -y @tanstack/cli libraries --json
+
+# Get specific doc page
+npx -y @tanstack/cli doc <library> <path> --json
+npx @tanstack/cli doc table framework/react/overview --json
+
+# Browse ecosystem integrations
+```
+Always use the `--json` flag for deterministic parsing.
+
 ## Guidelines (docs/guidelines/)
 
 Detailed guides for AI agents and developers:
@@ -44,7 +73,9 @@ Detailed guides for AI agents and developers:
 | Document | Use When |
 |---|---|
 | `docs/guidelines/component-guidelines.md` | Creating new components (imports, architecture, conventions) |
-| `docs/guidelines/table-component.md` | Building list views with the shared table system |
+| `docs/guidelines/table-component.md` | Legacy table system (pre-TableV2) — reference only for unmigrated views |
+| `docs/guidelines/table-v2.md` | **TableV2 system** — building list views with `@tanstack/react-table` + virtual scroll |
+| `docs/guidelines/filter-system.md` | **Filter system** — config-driven URL-synced filters with `defineFilters` + nuqs |
 | `docs/guidelines/layout-and-pages.md` | Creating pages (list, detail, form, modal patterns) |
 | `docs/guidelines/hooks-and-data-fetching.md` | Using K8s hooks, React Query, RBAC, state management |
 | `docs/guidelines/patternfly-guidelines.md` | PatternFly components, layout, design tokens, SCSS |
