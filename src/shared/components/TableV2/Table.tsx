@@ -1,5 +1,6 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Table as PfTable } from '@patternfly/react-table';
+import { getParentScrollableElement } from '~/shared/hooks';
 import { computeColumnWidths } from './column-widths';
 import { useColumnState } from './hooks/useColumnState';
 import { useInfiniteScroll } from './hooks/useInfiniteScroll';
@@ -69,11 +70,24 @@ export const Table = <TData,>({
   columnStateKey,
   scrollElement: scrollElementProp,
 }: TableProps<TData>) => {
-  const [scrollContainer, setScrollContainer] = useState<HTMLDivElement | null>(null);
-  const scrollContainerRef = useCallback((node: HTMLDivElement | null) => {
-    setScrollContainer(node);
+  const [tableNode, setTableNode] = useState<HTMLDivElement | null>(null);
+  const tableRef = useCallback((node: HTMLDivElement | null) => {
+    setTableNode(node);
   }, []);
-  const scrollElement = scrollElementProp ?? scrollContainer;
+
+  // Find the scroll container: external prop > nearest scrollable ancestor > null
+  const [scrollElement, setScrollElement] = useState<HTMLElement | null>(null);
+  useEffect(() => {
+    if (scrollElementProp) {
+      setScrollElement(scrollElementProp);
+      return;
+    }
+    if (tableNode) {
+      setScrollElement(getParentScrollableElement(tableNode) ?? null);
+    } else {
+      setScrollElement(null);
+    }
+  }, [scrollElementProp, tableNode]);
 
   const { columnState, setColumnState } = useColumnState(columnStateKey, columns);
   const { columnVisibility } = useResponsiveColumns(columns);
@@ -108,11 +122,7 @@ export const Table = <TData,>({
   const visibleColumnCount = table.getVisibleLeafColumns().length;
 
   return (
-    <div
-      data-test="table-v2"
-      ref={scrollContainerRef}
-      style={{ overflow: 'auto', height: '100%', minHeight: 0 }}
-    >
+    <div data-test="table-v2" ref={tableRef}>
       <PfTable aria-label={ariaLabel} isStriped variant="compact" isExpandable={enableExpansion}>
         <TableHeader table={table} columnWidths={columnWidths} enableExpansion={enableExpansion} />
         <TableBody

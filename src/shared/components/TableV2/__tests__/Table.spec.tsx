@@ -8,6 +8,9 @@ import { useVirtualization } from '~/shared/components/TableV2/hooks/useVirtuali
 import { Table } from '~/shared/components/TableV2/Table';
 import { type ColumnDefinition } from '~/shared/components/TableV2/types';
 
+jest.mock('~/shared/hooks', () => ({
+  getParentScrollableElement: jest.fn().mockReturnValue(null),
+}));
 jest.mock('~/shared/components/TableV2/hooks/useTable');
 jest.mock('~/shared/components/TableV2/hooks/useColumnState');
 jest.mock('~/shared/components/TableV2/hooks/useResponsiveColumns');
@@ -166,14 +169,12 @@ describe('Table', () => {
     );
   });
 
-  it('creates a scroll container div with bounded height', () => {
+  it('renders the outer div without inline scroll styles', () => {
     render(<Table {...defaultProps} />);
 
-    const scrollContainer = screen.getByTestId('table-v2');
-    expect(scrollContainer.tagName).toBe('DIV');
-    expect(scrollContainer.style.overflow).toBe('auto');
-    expect(scrollContainer.style.height).toBe('100%');
-    expect(scrollContainer.style.minHeight).toBe('0');
+    const container = screen.getByTestId('table-v2');
+    expect(container.tagName).toBe('DIV');
+    expect(container.style.overflow).toBe('');
   });
 
   it('passes columnWidths from computeColumnWidths to TableHeader', () => {

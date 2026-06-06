@@ -139,7 +139,7 @@ export const WithData: Story = {
   render: () => {
     const data = generateMockData(10);
     return (
-      <div style={{ height: '600px' }}>
+      <div style={{ height: '600px', overflow: 'auto' }}>
         <TableContainer data={data} unfilteredData={data} loaded={true}>
           <Table data={data} columns={columns} getRowId={getRowId} aria-label="With data" />
         </TableContainer>
@@ -167,7 +167,7 @@ export const WithToolbar: Story = {
   render: () => {
     const data = generateMockData(10);
     return (
-      <div style={{ height: '600px', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ height: '600px', overflow: 'auto' }}>
         <TableContainer
           data={data}
           unfilteredData={data}

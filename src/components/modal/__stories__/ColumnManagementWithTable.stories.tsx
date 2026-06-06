@@ -86,7 +86,7 @@ const ColumnManagementDemo = () => {
   );
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <div>
       <div style={{ padding: '8px', display: 'flex', gap: '8px', alignItems: 'center' }}>
         <Button
           variant="secondary"
@@ -99,16 +99,14 @@ const ColumnManagementDemo = () => {
           Visible: {columnState.visibleColumns.length} / {columns.length} columns
         </span>
       </div>
-      <div style={{ flex: 1, minHeight: 0 }}>
-        <Table
-          data={data}
-          columns={columns}
-          getRowId={(r) => r.id}
-          aria-label="Column management demo"
-          enableSorting
-          columnStateKey={COLUMN_STATE_KEY}
-        />
-      </div>
+      <Table
+        data={data}
+        columns={columns}
+        getRowId={(r) => r.id}
+        aria-label="Column management demo"
+        enableSorting
+        columnStateKey={COLUMN_STATE_KEY}
+      />
       {isModalOpen && (
         <ColumnManagementModal
           columns={columnInfoForModal}
@@ -126,7 +124,7 @@ const meta: Meta = {
   title: 'Components/Modal/ColumnManagementWithTable',
   decorators: [
     (Story) => (
-      <div style={{ height: '500px' }}>
+      <div style={{ height: '500px', overflow: 'auto' }}>
         <Story />
       </div>
     ),

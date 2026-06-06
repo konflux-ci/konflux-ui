@@ -8,7 +8,7 @@ const meta: Meta = {
   title: 'TableV2/InfiniteScroll',
   decorators: [
     (Story) => (
-      <div style={{ height: '400px', overflow: 'hidden' }}>
+      <div style={{ height: '400px', overflow: 'auto' }}>
         <Story />
       </div>
     ),
@@ -36,24 +36,19 @@ const InfiniteScrollDemo = () => {
   }, []);
 
   return (
-    <div
-      data-test="infinite-scroll-wrapper"
-      style={{ height: '100%', display: 'flex', flexDirection: 'column' }}
-    >
-      <div style={{ padding: '8px 0', fontSize: '12px', flexShrink: 0 }}>
+    <div data-test="infinite-scroll-wrapper">
+      <div style={{ padding: '8px 0', fontSize: '12px' }}>
         Loaded: {data.length} rows (page {pages}/{maxPages})
       </div>
-      <div style={{ flex: 1, minHeight: 0 }}>
-        <Table
-          data={data}
-          columns={columns}
-          getRowId={getRowId}
-          aria-label="Infinite scroll demo"
-          hasNextPage={hasNextPage}
-          isFetchingNextPage={isFetching}
-          fetchNextPage={fetchNextPage}
-        />
-      </div>
+      <Table
+        data={data}
+        columns={columns}
+        getRowId={getRowId}
+        aria-label="Infinite scroll demo"
+        hasNextPage={hasNextPage}
+        isFetchingNextPage={isFetching}
+        fetchNextPage={fetchNextPage}
+      />
     </div>
   );
 };
@@ -91,7 +86,7 @@ export const FetchingIndicator: StoryObj = {
   render: () => <FetchingMoreDemo />,
   decorators: [
     (Story) => (
-      <div style={{ height: '600px' }}>
+      <div style={{ height: '600px', overflow: 'auto' }}>
         <Story />
       </div>
     ),

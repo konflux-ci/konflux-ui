@@ -9,7 +9,7 @@ const meta: Meta<typeof Table<PipelineRun>> = {
   component: Table,
   decorators: [
     (Story) => (
-      <div style={{ height: '600px' }}>
+      <div style={{ height: '600px', overflow: 'auto' }}>
         <Story />
       </div>
     ),
