@@ -1,9 +1,9 @@
 import '@testing-library/jest-dom';
-import { useVirtualizer } from '@tanstack/react-virtual';
 import { screen, act, fireEvent } from '@testing-library/react';
 import { useK8sAndKarchResources } from '~/hooks/useK8sAndKarchResources';
 import { NuqsAdapter } from '~/shared/components/Filter';
 import { ResourceSource } from '~/types/k8s';
+import { setupVirtualizerMock } from '~/unit-test-utils';
 import { mockSnapshots } from '../../../../__data__/mock-snapshots';
 import { mockUseNamespaceHook } from '../../../../unit-test-utils/mock-namespace';
 import { createUseParamsMock, renderWithQueryClientAndRouter } from '../../../../utils/test-utils';
@@ -15,29 +15,8 @@ jest.mock('@tanstack/react-virtual', () => ({
   useVirtualizer: jest.fn(),
 }));
 
-const mockUseVirtualizer = jest.mocked(useVirtualizer);
-
 beforeEach(() => {
-  mockUseVirtualizer.mockImplementation((opts) => {
-    const items = Array.from({ length: opts.count }, (_, i) => ({
-      index: i,
-      key: i,
-      start: i * 44,
-      end: (i + 1) * 44,
-      size: 44,
-      lane: 0,
-    }));
-    return {
-      getVirtualItems: () => items,
-      getTotalSize: () => opts.count * 44,
-      measureElement: () => undefined,
-      scrollToIndex: () => undefined,
-      scrollToOffset: () => undefined,
-      measure: () => undefined,
-      getOffsetForIndex: () => [0, 0] as [number, number],
-      options: { count: opts.count },
-    } as unknown as ReturnType<typeof useVirtualizer>;
-  });
+  setupVirtualizerMock();
 });
 
 jest.mock('react-i18next', () => ({

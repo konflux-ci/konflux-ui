@@ -12,6 +12,9 @@ import {
   FlexItem,
 } from '@patternfly/react-core';
 import emptySnapshotImgUrl from '~/assets/Snapshots.svg';
+import ColumnManagementButton from '~/components/Filter/components/ColumnManagementButton';
+import { columnManagementModalLauncher } from '~/components/modal/ColumnManagementModal';
+import { useModalLauncher } from '~/components/modal/ModalProvider';
 import { LEARN_MORE_SNAPSHOTS } from '~/consts/documentation';
 import { PipelineRunEventType, PipelineRunLabel } from '~/consts/pipelinerun';
 import { useK8sAndKarchResources } from '~/hooks/useK8sAndKarchResources';
@@ -27,7 +30,13 @@ import {
   useFilteredData,
   FilterToolbar,
 } from '~/shared/components/Filter';
-import { Table, TableContainer, type ColumnDefinition } from '~/shared/components/TableV2';
+import {
+  Table,
+  TableContainer,
+  useColumnState,
+  type ColumnDefinition,
+  type ColumnState,
+} from '~/shared/components/TableV2';
 import { Timestamp } from '~/shared/components/timestamp/Timestamp';
 import { TriggerColumnData } from '~/shared/components/trigger-column-data/trigger-column-data';
 import TruncatedLinkListWithPopover from '~/shared/components/truncated-link-list-with-popover/TruncatedLinkListWithPopover';
@@ -42,6 +51,8 @@ import { useSnapshotActions } from './snapshot-actions';
 export type SnapshotsListViewProps = {
   applicationName: string;
 };
+
+const COLUMN_STATE_KEY = 'snapshots-list';
 
 const filterConfigs = defineFilters<Snapshot>()([
   {
@@ -91,6 +102,7 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
   applicationName,
 }) => {
   const namespace = useNamespace();
+  const showModal = useModalLauncher();
   const { filterValues, clientFilterValues, clearAll, isFiltered } = useFilterState(filterConfigs);
 
   const {
@@ -214,7 +226,7 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
         id: 'reference',
         header: 'Reference',
         accessorFn: (row) => row,
-        size: 2,
+        size: 3,
         cell: (info) => {
           const commit = createCommitObjectFromSnapshot(info.row.original);
           return (
@@ -245,6 +257,35 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
     ],
     [namespace, applicationName, getComponentLink, getSource],
   );
+
+  const { columnState, setColumnState } = useColumnState(COLUMN_STATE_KEY, columns);
+
+  const defaultColumnState: ColumnState = React.useMemo(
+    () => ({ visibleColumns: columns.map((c) => c.id) }),
+    [columns],
+  );
+
+  const columnInfoForModal = React.useMemo(
+    () =>
+      columns.map((c) => ({
+        id: c.id,
+        header: typeof c.header === 'string' ? c.header : c.id,
+        nonHidable: c.nonHidable,
+        pinned: c.pinned,
+      })),
+    [columns],
+  );
+
+  const openColumnManagement = React.useCallback(() => {
+    showModal(
+      columnManagementModalLauncher({
+        columns: columnInfoForModal,
+        columnState,
+        defaultColumnState,
+        onSave: setColumnState,
+      }),
+    );
+  }, [showModal, columnInfoForModal, columnState, defaultColumnState, setColumnState]);
 
   if (clusterError && archiveError) {
     // Don't display cluster error if the code is 404 as this error is expected
@@ -300,7 +341,9 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
         }
         toolbar={
           isFiltered || (snapshots ?? []).length > 0 ? (
-            <FilterToolbar configs={filterConfigs} />
+            <FilterToolbar configs={filterConfigs}>
+              <ColumnManagementButton onClick={openColumnManagement} totalColumns={9} />
+            </FilterToolbar>
           ) : undefined
         }
       >
@@ -313,6 +356,7 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
           hasNextPage={hasNextPage}
           isFetchingNextPage={isFetchingNextPage}
           fetchNextPage={fetchNextPage}
+          columnStateKey={COLUMN_STATE_KEY}
         />
       </TableContainer>
     </PageSection>
