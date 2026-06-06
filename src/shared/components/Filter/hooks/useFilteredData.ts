@@ -4,6 +4,7 @@ import { textMatch } from '~/utils/text-filter-utils';
 
 type FilterFn<T> = (item: T) => boolean;
 
+/** Returns `true` when the value equals its type's "empty" default. */
 const isEmpty = (value: unknown): boolean => {
   if (typeof value === 'string') return value === '';
   if (Array.isArray(value)) return value.length === 0;
@@ -11,6 +12,31 @@ const isEmpty = (value: unknown): boolean => {
   return true;
 };
 
+/**
+ * Applies client-side filtering to a data array using the provided filter configs.
+ *
+ * This hook is URL-unaware — it receives pre-read `clientFilterValues` and
+ * returns the filtered subset. Filters with `mode: 'api'` or `type: 'boolean'`
+ * are skipped.
+ *
+ * For `search` configs without a custom `filterFn`, a default predicate using
+ * `textMatch` on `item.metadata.name` is used.
+ *
+ * All active predicates are combined with AND logic — an item must pass every
+ * active filter to be included.
+ *
+ * @typeParam T - The data-item type being filtered.
+ * @param configs - Filter configuration array (same one passed to `useFilterState`).
+ * @param data - The full (unfiltered) data array.
+ * @param clientFilterValues - Current client-side filter values (from `useFilterState`).
+ * @returns Object with `filteredData` — the filtered subset of `data`.
+ *
+ * @example
+ * ```tsx
+ * const { clientFilterValues } = useFilterState(filterConfigs);
+ * const { filteredData } = useFilteredData(filterConfigs, allItems, clientFilterValues);
+ * ```
+ */
 export const useFilteredData = <T>(
   configs: readonly FilterConfig<T>[],
   data: T[],

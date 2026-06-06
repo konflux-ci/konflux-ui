@@ -6,10 +6,21 @@ import { SearchFilterConfig } from '../types';
 
 const DEFAULT_DEBOUNCE = 600;
 
+/** Props for {@link SearchFilter}. */
 type SearchFilterProps<T> = {
+  /** Search filter configuration. */
   config: SearchFilterConfig<T>;
 };
 
+/**
+ * Text-search filter control.
+ *
+ * Renders a `SearchInput` that writes a debounced value to a URL parameter
+ * via nuqs. Local state keeps the input responsive while the URL update
+ * is debounced.
+ *
+ * @typeParam T - The data-item type being filtered.
+ */
 export const SearchFilter = <T,>({ config }: SearchFilterProps<T>) => {
   const { param, label, placeholder, debounce: debounceMs = DEFAULT_DEBOUNCE } = config;
 

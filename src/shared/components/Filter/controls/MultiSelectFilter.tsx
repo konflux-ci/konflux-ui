@@ -11,13 +11,26 @@ import {
 import { parseAsJson, useQueryState } from 'nuqs';
 import { FilterOption, MultiSelectFilterConfig, OptionItem } from '../types';
 
+/** Type guard that distinguishes a selectable option from a divider. */
 const isFilterOption = (item: OptionItem): item is FilterOption => 'value' in item;
 
+/** Props for {@link MultiSelectFilter}. */
 type MultiSelectFilterProps<T> = {
+  /** Multi-select filter configuration. */
   config: MultiSelectFilterConfig<T>;
+  /** Dropdown options (may include {@link DividerOption} entries). */
   options: OptionItem[];
 };
 
+/**
+ * Multi-select checkbox filter control.
+ *
+ * Renders a PatternFly `Select` with checkboxes. Selected values are stored
+ * as a JSON array in the URL parameter via nuqs. Chips are displayed via
+ * `ToolbarFilter` and can be individually removed.
+ *
+ * @typeParam T - The data-item type being filtered.
+ */
 export const MultiSelectFilter = <T,>({ config, options }: MultiSelectFilterProps<T>) => {
   const { param, label } = config;
   const [isOpen, setIsOpen] = React.useState(false);

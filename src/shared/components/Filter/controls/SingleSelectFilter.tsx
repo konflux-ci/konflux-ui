@@ -9,13 +9,26 @@ import {
 import { parseAsString, useQueryState } from 'nuqs';
 import { FilterOption, OptionItem, SingleSelectFilterConfig } from '../types';
 
+/** Type guard that distinguishes a selectable option from a divider. */
 const isFilterOption = (item: OptionItem): item is FilterOption => 'value' in item;
 
+/** Props for {@link SingleSelectFilter}. */
 type SingleSelectFilterProps<T> = {
+  /** Single-select filter configuration. */
   config: SingleSelectFilterConfig<T>;
+  /** Dropdown options (divider entries are filtered out). */
   options: OptionItem[];
 };
 
+/**
+ * Single-select dropdown filter control.
+ *
+ * Renders a PatternFly `Select` where only one value can be active at a time.
+ * Clicking the currently selected value deselects it. The selected value is
+ * stored in the URL as a plain string via nuqs.
+ *
+ * @typeParam T - The data-item type being filtered.
+ */
 export const SingleSelectFilter = <T,>({ config, options }: SingleSelectFilterProps<T>) => {
   const { param, label } = config;
   const [isOpen, setIsOpen] = React.useState(false);

@@ -15,10 +15,16 @@ import { SwitchableSearchFilterConfig } from '../types';
 
 const DEFAULT_DEBOUNCE = 600;
 
+/** Props for {@link SwitchableSearchFilter}. */
 type SwitchableSearchFilterProps<T> = {
+  /** Switchable-search filter configuration. */
   config: SwitchableSearchFilterConfig<T>;
 };
 
+/**
+ * Builds a nuqs parser map for each field's URL parameter.
+ * @internal
+ */
 const buildFieldParsersMap = <T,>(config: SwitchableSearchFilterConfig<T>) => {
   const map: Record<string, ReturnType<typeof parseAsString.withDefault>> = {};
   for (const field of config.fields) {
@@ -27,6 +33,16 @@ const buildFieldParsersMap = <T,>(config: SwitchableSearchFilterConfig<T>) => {
   return map;
 };
 
+/**
+ * Switchable-search filter control.
+ *
+ * Combines a field-picker dropdown with a debounced search input. The active
+ * field selection is stored in one URL parameter; each field's search text
+ * is stored in its own URL parameter. Switching fields clears the previous
+ * field's value and focuses the search input.
+ *
+ * @typeParam T - The data-item type being filtered.
+ */
 export const SwitchableSearchFilter = <T,>({ config }: SwitchableSearchFilterProps<T>) => {
   const { param, fields, debounce: debounceMs = DEFAULT_DEBOUNCE } = config;
 
