@@ -11,24 +11,47 @@ import {
 } from '@tanstack/react-table';
 import { type ColumnDefinition, type ColumnState } from '../types';
 
+/**
+ * Options for the {@link useTable} hook.
+ *
+ * @typeParam TData - The row data type
+ */
 export interface UseTableOptions<TData> {
+  /** Array of row data to display. */
   data: TData[];
+  /** Column definitions for the table. */
   columns: ColumnDefinition<TData>[];
+  /** Returns a unique, stable string ID for a given row. */
   getRowId: (row: TData) => string;
+  /** Current column state (visibility, order, sort). */
   columnState: ColumnState;
+  /** Updater for column state. */
   setColumnState: (state: ColumnState) => void;
+  /** Responsive column visibility map from `useResponsiveColumns`. */
   responsiveColumnVisibility: Record<string, boolean>;
+  /** Enables client-side sorting. */
   enableSorting?: boolean;
+  /** Enables expandable rows. */
   enableExpansion?: boolean;
+  /** Enables row grouping. Reserved for future use. */
   enableGrouping?: boolean;
+  /** Arbitrary metadata passed to TanStack Table's `meta` option. */
   meta?: Record<string, unknown>;
 }
 
+/**
+ * Return value of the {@link useTable} hook.
+ *
+ * @typeParam TData - The row data type
+ */
 export interface UseTableResult<TData> {
+  /** The TanStack Table instance. */
   table: Table<TData>;
+  /** The current row model (post-sort, post-filter). */
   rows: Row<TData>[];
 }
 
+/** Maps `ColumnDefinition` to TanStack `ColumnDef`, translating our API to theirs. */
 function mapColumns<TData>(columns: ColumnDefinition<TData>[]): ColumnDef<TData>[] {
   return columns.map((col) => ({
     id: col.id,
@@ -43,6 +66,11 @@ function mapColumns<TData>(columns: ColumnDefinition<TData>[]): ColumnDef<TData>
   }));
 }
 
+/**
+ * Merges user column visibility (from column state) with responsive visibility
+ * (from breakpoint matching). A column is visible only if both the user and
+ * the responsive check agree it should be shown.
+ */
 function mergeColumnVisibility(
   columns: ColumnDefinition<unknown>[],
   columnState: ColumnState,
@@ -63,6 +91,33 @@ function mergeColumnVisibility(
   return visibility;
 }
 
+/**
+ * Core hook that wraps TanStack's `useReactTable` with TableV2 conventions.
+ *
+ * Handles:
+ * - Mapping `ColumnDefinition` to TanStack `ColumnDef`
+ * - Merging user and responsive column visibility
+ * - Applying column order from `ColumnState`
+ * - Deriving `SortingState` from `ColumnState`
+ * - Conditionally enabling sorted/expanded row models
+ *
+ * @typeParam TData - The row data type
+ * @param options - Configuration for the table instance
+ * @returns The TanStack table instance and the current row model
+ *
+ * @example
+ * ```tsx
+ * const { table, rows } = useTable({
+ *   data,
+ *   columns,
+ *   getRowId: (row) => row.id,
+ *   columnState,
+ *   setColumnState,
+ *   responsiveColumnVisibility: columnVisibility,
+ *   enableSorting: true,
+ * });
+ * ```
+ */
 export function useTable<TData>(options: UseTableOptions<TData>): UseTableResult<TData> {
   const {
     data,

@@ -1,6 +1,10 @@
 import { useState, useEffect, useMemo } from 'react';
 import { type ColumnDefinition, type Breakpoint } from '../types';
 
+/**
+ * Breakpoint pixel values matching PatternFly's responsive grid.
+ * Each value is the `min-width` at which the breakpoint becomes active.
+ */
 const BREAKPOINTS: Record<Breakpoint, number> = {
   sm: 576,
   md: 768,
@@ -9,6 +13,27 @@ const BREAKPOINTS: Record<Breakpoint, number> = {
   '2xl': 1450,
 };
 
+/**
+ * Tracks viewport breakpoints and returns a column visibility map based on
+ * each column's `visibleFrom` setting.
+ *
+ * Uses `window.matchMedia` to listen for breakpoint changes. Only registers
+ * listeners for breakpoints actually used by the provided columns, avoiding
+ * unnecessary subscriptions.
+ *
+ * @typeParam TData - The row data type
+ * @param columns - Column definitions to derive responsive visibility from
+ * @returns An object with `columnVisibility` — a `Record<string, boolean>` where
+ *   keys are column IDs and values indicate whether the column should be visible
+ *   at the current viewport width. Columns without `visibleFrom` are omitted
+ *   (treated as always visible).
+ *
+ * @example
+ * ```tsx
+ * const { columnVisibility } = useResponsiveColumns(columns);
+ * // columnVisibility: { status: true, details: false }
+ * ```
+ */
 export const useResponsiveColumns = <TData>(
   columns: ColumnDefinition<TData>[],
 ): { columnVisibility: Record<string, boolean> } => {

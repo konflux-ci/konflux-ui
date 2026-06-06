@@ -2,12 +2,25 @@ import { Thead, Tr, Th, type ThProps } from '@patternfly/react-table';
 import { flexRender, type Table } from '@tanstack/react-table';
 import { type ColumnWidth } from './column-widths';
 
+/** Props for the {@link TableHeader} component. */
 interface TableHeaderProps<TData> {
+  /** The TanStack Table instance. */
   table: Table<TData>;
+  /** Computed column widths from `computeColumnWidths`. */
   columnWidths: ColumnWidth[];
+  /** Whether to render an empty expand/collapse header cell. */
   enableExpansion?: boolean;
 }
 
+/**
+ * Renders the table header row with column labels, widths, and sort indicators.
+ *
+ * Applies flex or fixed widths from `columnWidths` and wires up PatternFly's
+ * sort props for sortable columns. When expansion is enabled, adds an empty
+ * leading `<Th>` for the expand toggle column.
+ *
+ * @typeParam TData - The row data type
+ */
 export const TableHeader = <TData,>({
   table,
   columnWidths,

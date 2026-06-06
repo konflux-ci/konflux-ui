@@ -4,18 +4,39 @@ import { type Row } from '@tanstack/react-table';
 import { type VirtualItem } from '@tanstack/react-virtual';
 import { TableRow } from '~/shared/components/TableV2/TableRow';
 
+/** Props for the {@link TableBody} component. */
 interface TableBodyProps<TData> {
+  /** All rows from the table model. */
   rows: Row<TData>[];
+  /** Virtual items from the virtualizer — only these are rendered in the DOM. */
   virtualRows: VirtualItem[];
+  /** Total pixel height of all rows (used for spacer calculation). */
   totalSize: number;
+  /** Returns a unique, stable string ID for a given row. */
   getRowId: (row: TData) => string;
+  /** Whether rows are expandable. */
   enableExpansion?: boolean;
+  /** Render function for expanded row content. */
   expandedContent?: (row: TData) => ReactNode;
+  /** Number of visible columns, used for `colSpan` on expanded content and loading rows. */
   visibleColumnCount: number;
+  /** Whether the next page is being fetched. Shows a "Loading more..." row when `true`. */
   isFetchingNextPage?: boolean;
+  /** Callback to measure a row element for dynamic height virtualization. */
   measureElement?: (el: HTMLElement | null) => void;
 }
 
+/**
+ * Renders the virtualized table body.
+ *
+ * Only rows visible in the viewport (plus overscan) are rendered. Top and
+ * bottom spacer `<Tr>` elements maintain correct scroll height. When a row
+ * is expanded, its expanded content is rendered in a full-width row below it.
+ *
+ * Shows a "Loading more..." indicator when `isFetchingNextPage` is `true`.
+ *
+ * @typeParam TData - The row data type
+ */
 export const TableBody = <TData,>({
   rows,
   virtualRows,

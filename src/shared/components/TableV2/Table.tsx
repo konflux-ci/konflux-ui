@@ -10,6 +10,50 @@ import { TableBody } from './TableBody';
 import { TableHeader } from './TableHeader';
 import { type TableProps } from './types';
 
+/**
+ * Main TableV2 component — the primary orchestrator for rendering data tables.
+ *
+ * Composes several hooks and sub-components into a full-featured table:
+ * - **Column state** (`useColumnState`) — persisted visibility, order, and sort
+ * - **Responsive columns** (`useResponsiveColumns`) — hides columns at breakpoints
+ * - **Core table** (`useTable`) — TanStack Table instance with sorting and expansion
+ * - **Virtualization** (`useVirtualization`) — only renders visible rows for performance
+ * - **Infinite scroll** (`useInfiniteScroll`) — triggers data fetching near the bottom
+ * - **Column widths** (`computeColumnWidths`) — flex and fixed width calculation
+ *
+ * Renders a PatternFly `Table` with `TableHeader` and `TableBody` sub-components.
+ *
+ * @typeParam TData - The row data type
+ *
+ * @example
+ * Basic usage:
+ * ```tsx
+ * <Table
+ *   data={pipelineRuns}
+ *   columns={columns}
+ *   getRowId={(row) => row.metadata.uid}
+ *   aria-label="Pipeline runs"
+ * />
+ * ```
+ *
+ * @example
+ * Full-featured usage with sorting, expansion, infinite scroll, and persistence:
+ * ```tsx
+ * <Table
+ *   data={pipelineRuns}
+ *   columns={columns}
+ *   getRowId={(row) => row.metadata.uid}
+ *   aria-label="Pipeline runs"
+ *   enableSorting
+ *   enableExpansion
+ *   expandedContent={(row) => <RunDetails run={row} />}
+ *   columnStateKey="pipeline-runs-table"
+ *   hasNextPage={hasNextPage}
+ *   isFetchingNextPage={isFetchingNextPage}
+ *   fetchNextPage={fetchNextPage}
+ * />
+ * ```
+ */
 export const Table = <TData,>({
   data,
   columns,
