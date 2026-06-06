@@ -1,16 +1,44 @@
 import '@testing-library/jest-dom';
-import { Table, Thead, Tr, Th, Tbody } from '@patternfly/react-table';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { screen, act, fireEvent } from '@testing-library/react';
-import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { useK8sAndKarchResources } from '~/hooks/useK8sAndKarchResources';
+import { NuqsAdapter } from '~/shared/components/Filter';
 import { ResourceSource } from '~/types/k8s';
 import { mockSnapshots } from '../../../../__data__/mock-snapshots';
 import { mockUseNamespaceHook } from '../../../../unit-test-utils/mock-namespace';
 import { createUseParamsMock, renderWithQueryClientAndRouter } from '../../../../utils/test-utils';
-import SnapshotsListRow from '../SnapshotsListRow';
 import SnapshotsListView from '../SnapshotsListView';
 
 jest.useFakeTimers();
+
+jest.mock('@tanstack/react-virtual', () => ({
+  useVirtualizer: jest.fn(),
+}));
+
+const mockUseVirtualizer = jest.mocked(useVirtualizer);
+
+beforeEach(() => {
+  mockUseVirtualizer.mockImplementation((opts) => {
+    const items = Array.from({ length: opts.count }, (_, i) => ({
+      index: i,
+      key: i,
+      start: i * 44,
+      end: (i + 1) * 44,
+      size: 44,
+      lane: 0,
+    }));
+    return {
+      getVirtualItems: () => items,
+      getTotalSize: () => opts.count * 44,
+      measureElement: () => undefined,
+      scrollToIndex: () => undefined,
+      scrollToOffset: () => undefined,
+      measure: () => undefined,
+      getOffsetForIndex: () => [0, 0] as [number, number],
+      options: { count: opts.count },
+    } as unknown as ReturnType<typeof useVirtualizer>;
+  });
+});
 
 jest.mock('react-i18next', () => ({
   useTranslation: jest.fn(() => ({ t: (x) => x })),
@@ -32,44 +60,13 @@ jest.mock('react-router-dom', () => {
   };
 });
 
-jest.mock('../../../../shared/components/table', () => {
-  const actual = jest.requireActual('../../../../shared/components/table');
-  return {
-    ...actual,
-    Table: (props) => {
-      const { data, filters, selected, match, kindObj } = props;
-      const cProps = { data, filters, selected, match, kindObj };
-      const columns = props.Header(cProps);
-      return (
-        <Table role="table" aria-label="table" variant="compact" borders={true}>
-          <Thead>
-            <Tr>
-              {columns.map((col, idx) => (
-                <Th key={idx} {...(col.props ?? {})}>
-                  {col.title}
-                </Th>
-              ))}
-            </Tr>
-          </Thead>
-          <Tbody>
-            {props.data.map((obj, i) => (
-              <Tr key={i}>
-                <SnapshotsListRow obj={obj} columns={null} customData={props.customData} />
-              </Tr>
-            ))}
-          </Tbody>
-        </Table>
-      );
-    },
-  };
-});
 
 const useMockSnapshots = useK8sAndKarchResources as jest.Mock;
 
 const createWrappedComponent = () => (
-  <FilterContextProvider filterParams={['name', 'commitMessage', 'showMergedOnly', 'releasable']}>
+  <NuqsAdapter>
     <SnapshotsListView applicationName="test-app" />
-  </FilterContextProvider>
+  </NuqsAdapter>
 );
 
 describe('SnapshotsListView - Column Headers', () => {
@@ -91,12 +88,6 @@ describe('SnapshotsListView - Column Headers', () => {
     act(() => {
       renderWithQueryClientAndRouter(createWrappedComponent());
     });
-
-    // Check that all required column headers are present
-    // There are 2 elements with the text "Name" (filter dropdown and table header).
-    const name = screen.queryAllByText('Name');
-    expect(name.length).toBe(2);
-    expect(name[1]).toHaveAttribute('class', 'pf-v5-c-table__text');
 
     expect(screen.getByText('Created at')).toBeInTheDocument();
     expect(screen.getByText('Components')).toBeInTheDocument();

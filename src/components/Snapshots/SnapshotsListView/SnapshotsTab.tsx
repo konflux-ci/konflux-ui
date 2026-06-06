@@ -1,8 +1,8 @@
 import { useParams } from 'react-router-dom';
-import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
-import { SnapshotModel } from '../../../models';
-import { RouterParams } from '../../../routes/utils';
-import { createLoaderWithAccessCheck } from '../../../utils/rbac';
+import { SnapshotModel } from '~/models';
+import { RouterParams } from '~/routes/utils';
+import { NuqsAdapter } from '~/shared/components/Filter';
+import { createLoaderWithAccessCheck } from '~/utils/rbac';
 import { default as SnapshotsListView } from './SnapshotsListView';
 
 export const snapshotsTabLoader = createLoaderWithAccessCheck(
@@ -16,9 +16,9 @@ export const snapshotsTabLoader = createLoaderWithAccessCheck(
 export const SnapshotsListViewTab: React.FC = () => {
   const { applicationName } = useParams<RouterParams>();
   return (
-    <FilterContextProvider filterParams={['name', 'commitMessage', 'showMergedOnly', 'releasable']}>
+    <NuqsAdapter>
       <SnapshotsListView applicationName={applicationName} />
-    </FilterContextProvider>
+    </NuqsAdapter>
   );
 };
 
