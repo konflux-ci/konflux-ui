@@ -10,8 +10,8 @@ import {
   Checkbox,
   ModalVariant,
 } from '@patternfly/react-core';
-import ArrowDownIcon from '@patternfly/react-icons/dist/esm/icons/arrow-down-icon';
-import ArrowUpIcon from '@patternfly/react-icons/dist/esm/icons/arrow-up-icon';
+import { ArrowDownIcon } from '@patternfly/react-icons/dist/esm/icons/arrow-down-icon';
+import { ArrowUpIcon } from '@patternfly/react-icons/dist/esm/icons/arrow-up-icon';
 import { type ColumnState } from '~/shared/components/TableV2';
 import { type ComponentProps, createModalLauncher } from './createModalLauncher';
 
