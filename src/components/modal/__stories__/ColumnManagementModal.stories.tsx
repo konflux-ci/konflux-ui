@@ -78,17 +78,15 @@ export const WithPinnedColumns: Story = {
     const actionsCheckbox = within(actionsRow as HTMLElement).getByRole('checkbox');
     await expect(actionsCheckbox).toBeDisabled();
 
-    // Pinned columns have disabled reorder buttons
+    // Pinned columns have disabled drag buttons
     const nameRow = canvasElement.querySelector('[data-test="column-row-name"]')!;
-    const nameButtons = within(nameRow as HTMLElement).getAllByRole('button');
-    for (const button of nameButtons) {
-      await expect(button).toBeDisabled();
-    }
+    const nameDragButton = within(nameRow as HTMLElement).getByRole('button', { name: /reorder/i });
+    await expect(nameDragButton).toBeDisabled();
 
-    const actionsButtons = within(actionsRow as HTMLElement).getAllByRole('button');
-    for (const button of actionsButtons) {
-      await expect(button).toBeDisabled();
-    }
+    const actionsDragButton = within(actionsRow as HTMLElement).getByRole('button', {
+      name: /reorder/i,
+    });
+    await expect(actionsDragButton).toBeDisabled();
 
     // Unpinned column should have enabled checkbox
     await expect(canvas.getByLabelText('Status')).toBeEnabled();

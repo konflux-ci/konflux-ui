@@ -2,16 +2,20 @@ import React, { useState, useCallback } from 'react';
 import {
   ActionGroup,
   Button,
+  Checkbox,
   DataList,
   DataListCell,
+  DataListControl,
+  DataListDragButton,
   DataListItem,
   DataListItemCells,
   DataListItemRow,
-  Checkbox,
+  DragDrop,
+  Draggable,
+  Droppable,
   ModalVariant,
+  type DraggableItemPosition,
 } from '@patternfly/react-core';
-import { ArrowDownIcon } from '@patternfly/react-icons/dist/esm/icons/arrow-down-icon';
-import { ArrowUpIcon } from '@patternfly/react-icons/dist/esm/icons/arrow-up-icon';
 import { type ColumnState } from '~/shared/components/TableV2';
 import { type ComponentProps, createModalLauncher } from './createModalLauncher';
 
@@ -81,25 +85,23 @@ export const ColumnManagementModal: React.FC<ColumnManagementModalProps> = ({
     });
   }, []);
 
-  const handleMoveUp = useCallback((id: string) => {
-    setAllColumnsOrder((prev) => {
-      const idx = prev.indexOf(id);
-      if (idx <= 0) return prev;
-      const next = [...prev];
-      [next[idx - 1], next[idx]] = [next[idx], next[idx - 1]];
-      return next;
-    });
-  }, []);
+  const handleDrop = useCallback(
+    (source: DraggableItemPosition, dest?: DraggableItemPosition): boolean => {
+      if (!dest) return false;
+      setAllColumnsOrder((prev) => {
+        const pinnedStartIds = prev.filter((id) => columnsById.get(id)?.pinned === 'start');
+        const unpinnedIds = prev.filter((id) => !columnsById.get(id)?.pinned);
+        const pinnedEndIds = prev.filter((id) => columnsById.get(id)?.pinned === 'end');
 
-  const handleMoveDown = useCallback((id: string) => {
-    setAllColumnsOrder((prev) => {
-      const idx = prev.indexOf(id);
-      if (idx < 0 || idx >= prev.length - 1) return prev;
-      const next = [...prev];
-      [next[idx], next[idx + 1]] = [next[idx + 1], next[idx]];
-      return next;
-    });
-  }, []);
+        const [moved] = unpinnedIds.splice(source.index, 1);
+        unpinnedIds.splice(dest.index, 0, moved);
+
+        return [...pinnedStartIds, ...unpinnedIds, ...pinnedEndIds];
+      });
+      return true;
+    },
+    [columnsById],
+  );
 
   const handleReset = useCallback(() => {
     setAllColumnsOrder(buildOrderedColumns(columns, defaultColumnState.visibleColumns));
@@ -124,9 +126,7 @@ export const ColumnManagementModal: React.FC<ColumnManagementModalProps> = ({
   const unpinned = allColumnsOrder.filter((id) => !columnsById.get(id)?.pinned);
   const pinnedEnd = allColumnsOrder.filter((id) => columnsById.get(id)?.pinned === 'end');
 
-  const orderedIds = [...pinnedStart, ...unpinned, ...pinnedEnd];
-
-  const renderColumnRow = (id: string) => {
+  const renderColumnRow = (id: string, options: { isDraggable: boolean }) => {
     const col = columnsById.get(id);
     if (!col) return null;
 
@@ -135,15 +135,15 @@ export const ColumnManagementModal: React.FC<ColumnManagementModalProps> = ({
     const isChecked = visibleSet.has(id);
     const isCheckboxDisabled = isNonHidable || isPinned;
 
-    // Determine if reorder buttons should be disabled
-    const isReorderDisabled = isPinned;
-    const unpinnedIndex = unpinned.indexOf(id);
-    const isFirst = unpinnedIndex === 0;
-    const isLast = unpinnedIndex === unpinned.length - 1;
-
     return (
       <DataListItem key={id} data-test={`column-row-${id}`}>
         <DataListItemRow>
+          <DataListControl>
+            <DataListDragButton
+              aria-label={`Reorder ${col.header}`}
+              isDisabled={!options.isDraggable}
+            />
+          </DataListControl>
           <DataListItemCells
             dataListCells={[
               <DataListCell key="checkbox">
@@ -155,26 +155,6 @@ export const ColumnManagementModal: React.FC<ColumnManagementModalProps> = ({
                   onChange={() => handleToggle(id)}
                 />
               </DataListCell>,
-              <DataListCell key="reorder" alignRight>
-                <Button
-                  variant="plain"
-                  aria-label="Move up"
-                  isDisabled={isReorderDisabled || isFirst}
-                  onClick={() => handleMoveUp(id)}
-                  size="sm"
-                >
-                  <ArrowUpIcon />
-                </Button>
-                <Button
-                  variant="plain"
-                  aria-label="Move down"
-                  isDisabled={isReorderDisabled || isLast}
-                  onClick={() => handleMoveDown(id)}
-                  size="sm"
-                >
-                  <ArrowDownIcon />
-                </Button>
-              </DataListCell>,
             ]}
           />
         </DataListItemRow>
@@ -185,7 +165,17 @@ export const ColumnManagementModal: React.FC<ColumnManagementModalProps> = ({
   return (
     <>
       <DataList aria-label="Column management" isCompact>
-        {orderedIds.map(renderColumnRow)}
+        {pinnedStart.map((id) => renderColumnRow(id, { isDraggable: false }))}
+        <DragDrop onDrop={handleDrop}>
+          <Droppable>
+            {unpinned.map((id) => (
+              <Draggable key={id} hasNoWrapper>
+                {renderColumnRow(id, { isDraggable: true })}
+              </Draggable>
+            ))}
+          </Droppable>
+        </DragDrop>
+        {pinnedEnd.map((id) => renderColumnRow(id, { isDraggable: false }))}
       </DataList>
       <ActionGroup>
         <Button variant="link" onClick={handleReset}>

@@ -69,45 +69,16 @@ describe('ColumnManagementModal', () => {
     expect(actionsCheckbox).toBeDisabled();
   });
 
-  it('should move column up when up button is clicked', async () => {
-    const user = userEvent.setup();
-    const { onSave } = renderModal();
-
-    // 'Type' is at index 2 (after name, status). Move it up.
-    const typeRow = screen.getByTestId('column-row-type');
-    await user.click(within(typeRow).getByRole('button', { name: 'Move up' }));
-
-    await user.click(screen.getByRole('button', { name: /save/i }));
-
-    const savedState = onSave.mock.calls[0][0] as ColumnState;
-    const typeIndex = savedState.visibleColumns.indexOf('type');
-    const statusIndex = savedState.visibleColumns.indexOf('status');
-    expect(typeIndex).toBeLessThan(statusIndex);
+  it('should render drag buttons for each column', () => {
+    renderModal();
+    expect(screen.getAllByRole('button', { name: /reorder/i })).toHaveLength(columns.length);
   });
 
-  it('should move column down when down button is clicked', async () => {
-    const user = userEvent.setup();
-    const { onSave } = renderModal();
-
-    // 'Status' is at index 1. Move it down.
-    const statusRow = screen.getByTestId('column-row-status');
-    await user.click(within(statusRow).getByRole('button', { name: 'Move down' }));
-
-    await user.click(screen.getByRole('button', { name: /save/i }));
-
-    const savedState = onSave.mock.calls[0][0] as ColumnState;
-    const statusIndex = savedState.visibleColumns.indexOf('status');
-    const typeIndex = savedState.visibleColumns.indexOf('type');
-    expect(statusIndex).toBeGreaterThan(typeIndex);
-  });
-
-  it('should disable reorder buttons for pinned columns', () => {
+  it('should disable drag button for pinned columns', () => {
     renderModal();
     const actionsRow = screen.getByTestId('column-row-actions');
-    const rowScope = within(actionsRow);
-
-    expect(rowScope.getByRole('button', { name: 'Move up' })).toBeDisabled();
-    expect(rowScope.getByRole('button', { name: 'Move down' })).toBeDisabled();
+    const dragButton = within(actionsRow).getByRole('button', { name: /reorder/i });
+    expect(dragButton).toBeDisabled();
   });
 
   it('should reset to default column state when reset is clicked', async () => {
