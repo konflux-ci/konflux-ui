@@ -1,10 +1,9 @@
-import { MemoryRouter } from 'react-router-dom';
 import { render, screen, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { NuqsTestingAdapter } from 'nuqs/adapters/testing';
 import { SearchFilter } from '~/shared/components/Filter/controls/SearchFilter';
-import { NuqsAdapter } from '~/shared/components/Filter/nuqs-adapter';
 import { SearchFilterConfig } from '~/shared/components/Filter/types';
+import { renderWithNuqsRouter } from '~/unit-test-utils';
 
 jest.useFakeTimers();
 
@@ -17,14 +16,8 @@ const defaultConfig: SearchFilterConfig<Item> = {
   filterFn: (item, value) => item.name.includes(value),
 };
 
-const renderWithRouter = (config: SearchFilterConfig<Item> = defaultConfig) =>
-  render(
-    <MemoryRouter>
-      <NuqsAdapter>
-        <SearchFilter config={config} />
-      </NuqsAdapter>
-    </MemoryRouter>,
-  );
+const renderFilter = (config: SearchFilterConfig<Item> = defaultConfig) =>
+  renderWithNuqsRouter(<SearchFilter config={config} />);
 
 describe('SearchFilter', () => {
   afterEach(() => {
@@ -37,12 +30,12 @@ describe('SearchFilter', () => {
   });
 
   it('renders a search input with aria-label', () => {
-    renderWithRouter();
+    renderFilter();
     expect(screen.getByRole('textbox', { name: 'Name' })).toBeInTheDocument();
   });
 
   it('has data-test="search-filter-{param}" attribute', () => {
-    renderWithRouter();
+    renderFilter();
     expect(screen.getByTestId('search-filter-name')).toBeInTheDocument();
   });
 
@@ -57,7 +50,7 @@ describe('SearchFilter', () => {
 
   it('updates local value immediately on typing', async () => {
     const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
-    renderWithRouter();
+    renderFilter();
     const input = screen.getByRole('textbox', { name: 'Name' });
     await user.type(input, 'test');
     expect(input).toHaveValue('test');
@@ -79,7 +72,7 @@ describe('SearchFilter', () => {
   });
 
   it('uses custom placeholder when provided', () => {
-    renderWithRouter({
+    renderFilter({
       ...defaultConfig,
       placeholder: 'Search names...',
     });
@@ -87,7 +80,7 @@ describe('SearchFilter', () => {
   });
 
   it('uses default placeholder when none provided', () => {
-    renderWithRouter();
+    renderFilter();
     expect(screen.getByPlaceholderText('Filter by Name...')).toBeInTheDocument();
   });
 });

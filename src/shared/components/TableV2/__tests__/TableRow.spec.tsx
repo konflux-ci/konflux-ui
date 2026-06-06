@@ -2,6 +2,7 @@ import { Table, Tbody } from '@patternfly/react-table';
 import { flexRender } from '@tanstack/react-table';
 import { render, screen, within } from '@testing-library/react';
 import { TableRow } from '~/shared/components/TableV2';
+import { createMockRow } from '~/unit-test-utils';
 
 jest.mock('@tanstack/react-table', () => ({
   ...jest.requireActual('@tanstack/react-table'),
@@ -10,21 +11,6 @@ jest.mock('@tanstack/react-table', () => ({
     return component;
   }),
 }));
-
-const createMockRow = (id: string, cells: { id: string; value: string; header: string }[]) => ({
-  id,
-  getVisibleCells: () =>
-    cells.map((c) => ({
-      id: c.id,
-      column: {
-        id: c.id,
-        columnDef: { cell: () => c.value, header: c.header },
-      },
-      getContext: () => ({ getValue: () => c.value }),
-    })),
-  getIsExpanded: () => false,
-  getToggleExpandedHandler: () => jest.fn(),
-});
 
 const renderTableRow = (ui: React.ReactElement) =>
   render(
@@ -44,7 +30,7 @@ describe('TableRow', () => {
   ];
 
   it('renders a Td for each visible cell', () => {
-    const row = createMockRow('row-1', mockCells);
+    const row = createMockRow('row-1', { cells: mockCells });
     renderTableRow(<TableRow row={row as never} rowId="test-1" />);
 
     expect(screen.getByText('my-app')).toBeInTheDocument();
@@ -52,7 +38,7 @@ describe('TableRow', () => {
   });
 
   it('sets data-test and data-id attributes on the row', () => {
-    const row = createMockRow('row-1', mockCells);
+    const row = createMockRow('row-1', { cells: mockCells });
     renderTableRow(<TableRow row={row as never} rowId="test-1" />);
 
     const tr = screen.getByTestId('table-row');
@@ -61,7 +47,7 @@ describe('TableRow', () => {
   });
 
   it('sets dataLabel on each Td from column header', () => {
-    const row = createMockRow('row-1', mockCells);
+    const row = createMockRow('row-1', { cells: mockCells });
     renderTableRow(<TableRow row={row as never} rowId="test-1" />);
 
     const cells = screen.getAllByRole('cell');
@@ -70,7 +56,7 @@ describe('TableRow', () => {
   });
 
   it('calls flexRender with cell renderer and context', () => {
-    const row = createMockRow('row-1', mockCells);
+    const row = createMockRow('row-1', { cells: mockCells });
     renderTableRow(<TableRow row={row as never} rowId="test-1" />);
 
     expect(flexRender).toHaveBeenCalledTimes(2);
@@ -81,7 +67,7 @@ describe('TableRow', () => {
   });
 
   it('renders expand toggle as first cell when enableExpansion is true', () => {
-    const row = createMockRow('row-1', mockCells);
+    const row = createMockRow('row-1', { cells: mockCells });
     renderTableRow(<TableRow row={row as never} rowId="test-1" enableExpansion />);
 
     const tr = screen.getByTestId('table-row');
@@ -95,7 +81,7 @@ describe('TableRow', () => {
   });
 
   it('does not render expand toggle when enableExpansion is false', () => {
-    const row = createMockRow('row-1', mockCells);
+    const row = createMockRow('row-1', { cells: mockCells });
     renderTableRow(<TableRow row={row as never} rowId="test-1" />);
 
     const tr = screen.getByTestId('table-row');

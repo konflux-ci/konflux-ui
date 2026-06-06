@@ -1,10 +1,9 @@
-import { MemoryRouter } from 'react-router-dom';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { NuqsTestingAdapter } from 'nuqs/adapters/testing';
 import { BooleanFilter } from '~/shared/components/Filter/controls/BooleanFilter';
-import { NuqsAdapter } from '~/shared/components/Filter/nuqs-adapter';
 import { BooleanFilterConfig } from '~/shared/components/Filter/types';
+import { renderWithNuqsRouter } from '~/unit-test-utils';
 
 const defaultConfig: BooleanFilterConfig = {
   type: 'boolean',
@@ -12,28 +11,22 @@ const defaultConfig: BooleanFilterConfig = {
   label: 'Active',
 };
 
-const renderWithRouter = (config: BooleanFilterConfig = defaultConfig) =>
-  render(
-    <MemoryRouter>
-      <NuqsAdapter>
-        <BooleanFilter config={config} />
-      </NuqsAdapter>
-    </MemoryRouter>,
-  );
+const renderFilter = (config: BooleanFilterConfig = defaultConfig) =>
+  renderWithNuqsRouter(<BooleanFilter config={config} />);
 
 describe('BooleanFilter', () => {
   it('renders switch with label', () => {
-    renderWithRouter();
+    renderFilter();
     expect(screen.getByRole('checkbox', { name: 'Active' })).toBeInTheDocument();
   });
 
   it('has data-test="boolean-filter-{param}" attribute', () => {
-    renderWithRouter();
+    renderFilter();
     expect(screen.getByTestId('boolean-filter-active')).toBeInTheDocument();
   });
 
   it('is unchecked by default', () => {
-    renderWithRouter();
+    renderFilter();
     expect(screen.getByRole('checkbox', { name: 'Active' })).not.toBeChecked();
   });
 
@@ -48,7 +41,7 @@ describe('BooleanFilter', () => {
 
   it('toggles on when clicked', async () => {
     const user = userEvent.setup();
-    renderWithRouter();
+    renderFilter();
     const toggle = screen.getByRole('checkbox', { name: 'Active' });
     expect(toggle).not.toBeChecked();
     await user.click(toggle);

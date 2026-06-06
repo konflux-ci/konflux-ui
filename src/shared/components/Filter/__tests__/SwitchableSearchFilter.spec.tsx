@@ -1,10 +1,9 @@
-import { MemoryRouter } from 'react-router-dom';
 import { render, screen, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { NuqsTestingAdapter } from 'nuqs/adapters/testing';
 import { SwitchableSearchFilter } from '~/shared/components/Filter/controls/SwitchableSearchFilter';
-import { NuqsAdapter } from '~/shared/components/Filter/nuqs-adapter';
 import { SwitchableSearchFilterConfig } from '~/shared/components/Filter/types';
+import { renderWithNuqsRouter } from '~/unit-test-utils';
 
 jest.useFakeTimers();
 
@@ -30,14 +29,8 @@ const defaultConfig: SwitchableSearchFilterConfig<Item> = {
   ],
 };
 
-const renderWithRouter = (config: SwitchableSearchFilterConfig<Item> = defaultConfig) =>
-  render(
-    <MemoryRouter>
-      <NuqsAdapter>
-        <SwitchableSearchFilter config={config} />
-      </NuqsAdapter>
-    </MemoryRouter>,
-  );
+const renderFilter = (config: SwitchableSearchFilterConfig<Item> = defaultConfig) =>
+  renderWithNuqsRouter(<SwitchableSearchFilter config={config} />);
 
 describe('SwitchableSearchFilter', () => {
   afterEach(() => {
@@ -49,7 +42,7 @@ describe('SwitchableSearchFilter', () => {
   });
 
   it('renders field picker and search input', () => {
-    renderWithRouter();
+    renderFilter();
     // Field picker toggle shows first field label
     expect(screen.getByRole('button', { name: 'Name' })).toBeInTheDocument();
     // Search input is present
@@ -57,13 +50,13 @@ describe('SwitchableSearchFilter', () => {
   });
 
   it('has data-test="switchable-search-filter-{param}" attribute', () => {
-    renderWithRouter();
+    renderFilter();
     expect(screen.getByTestId('switchable-search-filter-searchField')).toBeInTheDocument();
   });
 
   it('shows field options when picker clicked', async () => {
     const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
-    renderWithRouter();
+    renderFilter();
 
     await user.click(screen.getByRole('button', { name: 'Name' }));
 
@@ -76,7 +69,7 @@ describe('SwitchableSearchFilter', () => {
 
   it('switches active field', async () => {
     const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
-    renderWithRouter();
+    renderFilter();
 
     // Open picker and select Namespace
     await user.click(screen.getByRole('button', { name: 'Name' }));

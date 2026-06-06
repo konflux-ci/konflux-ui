@@ -1,8 +1,8 @@
 import { MemoryRouter } from 'react-router-dom';
-import { useVirtualizer } from '@tanstack/react-virtual';
 import { fireEvent, waitFor, render, screen, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { NuqsAdapter } from '~/shared/components/Filter';
+import { setupVirtualizerMock } from '~/unit-test-utils';
 import { createK8sWatchResourceMock } from '../../../../utils/test-utils';
 import { MockIntegrationTests } from '../__data__/mock-integration-tests';
 import IntegrationTestsListView from '../IntegrationTestsListView';
@@ -14,29 +14,8 @@ jest.mock('@tanstack/react-virtual', () => ({
   useVirtualizer: jest.fn(),
 }));
 
-const mockUseVirtualizer = jest.mocked(useVirtualizer);
-
 beforeEach(() => {
-  mockUseVirtualizer.mockImplementation((opts) => {
-    const items = Array.from({ length: opts.count }, (_, i) => ({
-      index: i,
-      key: i,
-      start: i * 44,
-      end: (i + 1) * 44,
-      size: 44,
-      lane: 0,
-    }));
-    return {
-      getVirtualItems: () => items,
-      getTotalSize: () => opts.count * 44,
-      measureElement: () => undefined,
-      scrollToIndex: () => undefined,
-      scrollToOffset: () => undefined,
-      measure: () => undefined,
-      getOffsetForIndex: () => [0, 0] as [number, number],
-      options: { count: opts.count },
-    } as unknown as ReturnType<typeof useVirtualizer>;
-  });
+  setupVirtualizerMock();
 });
 
 jest.mock('react-router-dom', () => ({

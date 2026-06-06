@@ -1,10 +1,9 @@
-import { MemoryRouter } from 'react-router-dom';
 import { Toolbar, ToolbarContent } from '@patternfly/react-core';
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MultiSelectFilter } from '~/shared/components/Filter/controls/MultiSelectFilter';
-import { NuqsAdapter } from '~/shared/components/Filter/nuqs-adapter';
 import { MultiSelectFilterConfig, OptionItem } from '~/shared/components/Filter/types';
+import { renderWithNuqsRouter } from '~/unit-test-utils';
 
 type Item = { status: string };
 
@@ -22,20 +21,16 @@ const defaultOptions: OptionItem[] = [
   { label: 'Archived', value: 'archived' },
 ];
 
-const renderWithRouter = (
+const renderFilter = (
   config: MultiSelectFilterConfig<Item> = defaultConfig,
   options: OptionItem[] = defaultOptions,
 ) =>
-  render(
-    <MemoryRouter>
-      <NuqsAdapter>
-        <Toolbar>
-          <ToolbarContent>
-            <MultiSelectFilter config={config} options={options} />
-          </ToolbarContent>
-        </Toolbar>
-      </NuqsAdapter>
-    </MemoryRouter>,
+  renderWithNuqsRouter(
+    <Toolbar>
+      <ToolbarContent>
+        <MultiSelectFilter config={config} options={options} />
+      </ToolbarContent>
+    </Toolbar>,
   );
 
 const clickToggle = async (user: ReturnType<typeof userEvent.setup>) => {
@@ -44,18 +39,18 @@ const clickToggle = async (user: ReturnType<typeof userEvent.setup>) => {
 
 describe('MultiSelectFilter', () => {
   it('renders toggle with label', () => {
-    renderWithRouter();
+    renderFilter();
     expect(screen.getByTestId('multi-select-filter-status')).toHaveTextContent('Status');
   });
 
   it('has data-test="multi-select-filter-{param}" on the toggle', () => {
-    renderWithRouter();
+    renderFilter();
     expect(screen.getByTestId('multi-select-filter-status')).toBeInTheDocument();
   });
 
   it('shows options when opened', async () => {
     const user = userEvent.setup();
-    renderWithRouter();
+    renderFilter();
 
     await clickToggle(user);
 
@@ -66,7 +61,7 @@ describe('MultiSelectFilter', () => {
 
   it('selects an option (checkbox select)', async () => {
     const user = userEvent.setup();
-    renderWithRouter();
+    renderFilter();
 
     await clickToggle(user);
     await user.click(screen.getByText('Active'));
@@ -77,7 +72,7 @@ describe('MultiSelectFilter', () => {
 
   it('renders dividers in dropdown', async () => {
     const user = userEvent.setup();
-    renderWithRouter();
+    renderFilter();
 
     await clickToggle(user);
 
@@ -86,7 +81,7 @@ describe('MultiSelectFilter', () => {
 
   it('handles empty options', async () => {
     const user = userEvent.setup();
-    renderWithRouter(defaultConfig, []);
+    renderFilter(defaultConfig, []);
 
     await clickToggle(user);
 

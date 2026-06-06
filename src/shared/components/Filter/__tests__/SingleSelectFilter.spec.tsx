@@ -1,11 +1,10 @@
-import { MemoryRouter } from 'react-router-dom';
 import { Toolbar, ToolbarContent } from '@patternfly/react-core';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { NuqsTestingAdapter } from 'nuqs/adapters/testing';
 import { SingleSelectFilter } from '~/shared/components/Filter/controls/SingleSelectFilter';
-import { NuqsAdapter } from '~/shared/components/Filter/nuqs-adapter';
 import { OptionItem, SingleSelectFilterConfig } from '~/shared/components/Filter/types';
+import { renderWithNuqsRouter } from '~/unit-test-utils';
 
 type Item = { status: string };
 
@@ -22,20 +21,16 @@ const defaultOptions: OptionItem[] = [
   { label: 'Archived', value: 'archived' },
 ];
 
-const renderWithRouter = (
+const renderFilter = (
   config: SingleSelectFilterConfig<Item> = defaultConfig,
   options: OptionItem[] = defaultOptions,
 ) =>
-  render(
-    <MemoryRouter>
-      <NuqsAdapter>
-        <Toolbar>
-          <ToolbarContent>
-            <SingleSelectFilter config={config} options={options} />
-          </ToolbarContent>
-        </Toolbar>
-      </NuqsAdapter>
-    </MemoryRouter>,
+  renderWithNuqsRouter(
+    <Toolbar>
+      <ToolbarContent>
+        <SingleSelectFilter config={config} options={options} />
+      </ToolbarContent>
+    </Toolbar>,
   );
 
 const clickToggle = async (user: ReturnType<typeof userEvent.setup>) => {
@@ -44,18 +39,18 @@ const clickToggle = async (user: ReturnType<typeof userEvent.setup>) => {
 
 describe('SingleSelectFilter', () => {
   it('renders toggle with label', () => {
-    renderWithRouter();
+    renderFilter();
     expect(screen.getByTestId('single-select-filter-status')).toHaveTextContent('Status');
   });
 
   it('has data-test="single-select-filter-{param}" on the toggle', () => {
-    renderWithRouter();
+    renderFilter();
     expect(screen.getByTestId('single-select-filter-status')).toBeInTheDocument();
   });
 
   it('shows options when opened', async () => {
     const user = userEvent.setup();
-    renderWithRouter();
+    renderFilter();
 
     await clickToggle(user);
 
@@ -66,7 +61,7 @@ describe('SingleSelectFilter', () => {
 
   it('selects option and shows label in toggle', async () => {
     const user = userEvent.setup();
-    renderWithRouter();
+    renderFilter();
 
     await clickToggle(user);
     await user.click(screen.getByText('Active'));
