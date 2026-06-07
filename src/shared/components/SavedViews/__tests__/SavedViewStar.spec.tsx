@@ -104,6 +104,7 @@ describe('SavedViewStar', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
     expect(mockSaveView).toHaveBeenCalledWith({
+      slug: undefined,
       label: 'My Filter',
       searchParams: 'status=running&type=build',
       currentColumnStateKey: 'cols-pipelines:current',
@@ -173,11 +174,45 @@ describe('SavedViewStar', () => {
       fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
       expect(mockSaveView).toHaveBeenCalledWith({
+        slug: undefined,
         label: 'New View',
         searchParams: 'status=running&type=build',
         currentColumnStateKey: 'cols-pipelines:current',
       });
       expect(mockSetViewParam).toHaveBeenCalledWith('sv-test1234');
     });
+  });
+
+  it('slug field is optional and shown in save form', () => {
+    render(<SavedViewStar {...defaultProps} isFiltered={true} />);
+    fireEvent.click(screen.getByRole('button', { name: /save/i }));
+
+    // Both name and slug fields are visible
+    expect(screen.getByTestId('saved-view-name-input')).toBeInTheDocument();
+    expect(screen.getByTestId('saved-view-slug-input')).toBeInTheDocument();
+
+    // Fill only name, leave slug empty
+    const nameInput = screen.getByTestId('saved-view-name-input');
+    fireEvent.change(nameInput, { target: { value: 'My View' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(mockSaveView).toHaveBeenCalledWith(
+      expect.objectContaining({ slug: undefined, label: 'My View' }),
+    );
+  });
+
+  it('passes slug to saveView when provided', () => {
+    render(<SavedViewStar {...defaultProps} isFiltered={true} />);
+    fireEvent.click(screen.getByRole('button', { name: /save/i }));
+
+    const nameInput = screen.getByTestId('saved-view-name-input');
+    const slugInput = screen.getByTestId('saved-view-slug-input');
+    fireEvent.change(nameInput, { target: { value: 'My View' } });
+    fireEvent.change(slugInput, { target: { value: 'my-custom-slug' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(mockSaveView).toHaveBeenCalledWith(
+      expect.objectContaining({ slug: 'my-custom-slug', label: 'My View' }),
+    );
   });
 });

@@ -22,22 +22,6 @@ import { PipelineRunsEmptyState } from './PipelineRunsEmptyState';
 
 const filterConfigs = defineFilters<PipelineRunKind>()([
   {
-    type: 'multiSelect',
-    param: 'app',
-    label: 'Application',
-    mode: 'api',
-    filterFn: (item, values) =>
-      values.includes(item.metadata?.labels?.[PipelineRunLabel.APPLICATION] ?? ''),
-  },
-  {
-    type: 'multiSelect',
-    param: 'component',
-    label: 'Component',
-    mode: 'api',
-    filterFn: (item, values) =>
-      values.includes(item.metadata?.labels?.[PipelineRunLabel.COMPONENT] ?? ''),
-  },
-  {
     type: 'search',
     param: 'name',
     label: 'Name',
@@ -47,8 +31,27 @@ const filterConfigs = defineFilters<PipelineRunKind>()([
   },
   {
     type: 'multiSelect',
+    param: 'app',
+    label: 'Application',
+    mode: 'api',
+    group: 'resource',
+    filterFn: (item, values) =>
+      values.includes(item.metadata?.labels?.[PipelineRunLabel.APPLICATION] ?? ''),
+  },
+  {
+    type: 'multiSelect',
+    param: 'component',
+    label: 'Component',
+    mode: 'api',
+    group: 'resource',
+    filterFn: (item, values) =>
+      values.includes(item.metadata?.labels?.[PipelineRunLabel.COMPONENT] ?? ''),
+  },
+  {
+    type: 'multiSelect',
     param: 'status',
     label: 'Status',
+    group: 'attributes',
     filterFn: (item, values) => values.includes(pipelineRunStatus(item)),
   },
   {
@@ -56,8 +59,14 @@ const filterConfigs = defineFilters<PipelineRunKind>()([
     param: 'type',
     label: 'Type',
     mode: 'api',
+    group: 'attributes',
     filterFn: (item, values) =>
       values.includes(item.metadata?.labels?.[PipelineRunLabel.PIPELINE_TYPE] ?? ''),
+  },
+  {
+    type: 'boolean',
+    param: 'archive',
+    label: 'Include archived',
   },
 ] as const);
 
@@ -120,14 +129,14 @@ export const PipelineRunsPage: React.FC = () => {
 
   // Build filter options
   const appOptions = React.useMemo(
-    () => buildOptions(applications, (app) => app.metadata?.name ?? ''),
+    () => buildOptions(applications ?? [], (app) => app.metadata?.name ?? ''),
     [applications],
   );
 
   // Narrow component options by selected apps
   const filteredComponents = React.useMemo(() => {
-    if (selectedApps.length === 0) return components;
-    return components.filter((c: ComponentKind) =>
+    if (selectedApps.length === 0) return components ?? [];
+    return (components ?? []).filter((c: ComponentKind) =>
       selectedApps.includes(c.spec?.application ?? ''),
     );
   }, [components, selectedApps]);
@@ -144,7 +153,7 @@ export const PipelineRunsPage: React.FC = () => {
   const typeOptions = React.useMemo(
     () =>
       buildOptions(
-        pipelineRuns,
+        pipelineRuns ?? [],
         (plr) => plr.metadata?.labels?.[PipelineRunLabel.PIPELINE_TYPE] ?? '',
       ),
     [pipelineRuns],
@@ -173,7 +182,14 @@ export const PipelineRunsPage: React.FC = () => {
       title={pageTitle}
       description="Monitor pipeline runs across applications and components."
     >
-      <FilterToolbar configs={filterConfigs} options={optionsMap}>
+      <FilterToolbar
+        configs={filterConfigs}
+        options={optionsMap}
+        groups={{
+          resource: { variant: 'filter-group' },
+          attributes: { variant: 'filter-group' },
+        }}
+      >
         <SavedViewStar
           resourceKey="pipeline-runs"
           columnKeyPrefix="prns-columns"
