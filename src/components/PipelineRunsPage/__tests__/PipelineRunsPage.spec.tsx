@@ -10,6 +10,11 @@ import { PipelineRunsPage } from '../PipelineRunsPage';
 
 mockUseNamespaceHook('test-ns');
 
+jest.mock('~/components/ColumnManagement/ColumnManagement', () => ({
+  __esModule: true,
+  default: () => <div data-test="column-management" />,
+}));
+
 jest.mock('~/shared/components/SavedViews', () => ({
   ...jest.requireActual('~/shared/components/SavedViews'),
   useActiveSavedView: jest.fn(),
@@ -68,8 +73,17 @@ const mockUseFilteredData = jest.mocked(useFilteredData);
 const mockUseActiveSavedView = jest.mocked(useActiveSavedView);
 
 const defaultFilterState = {
-  filterValues: { app: [], component: [], name: '', status: [], type: [] },
-  clientFilterValues: { name: '', status: [] },
+  filterValues: {
+    app: [],
+    component: [],
+    eventType: [],
+    name: '',
+    prNumber: '',
+    searchField: '',
+    status: [],
+    type: [],
+  },
+  clientFilterValues: { name: '', prNumber: '', searchField: '', eventType: [], status: [] },
   isFiltered: false,
   clearAll: jest.fn(),
 };
@@ -147,7 +161,16 @@ describe('PipelineRunsPage', () => {
   it('renders table when required filters are selected', () => {
     mockUseFilterState.mockReturnValue({
       ...defaultFilterState,
-      filterValues: { app: ['my-app'], component: [], name: '', status: [], type: [] },
+      filterValues: {
+        app: ['my-app'],
+        component: [],
+        eventType: [],
+        name: '',
+        prNumber: '',
+        searchField: '',
+        status: [],
+        type: [],
+      },
       isFiltered: true,
     } as unknown as ReturnType<typeof useFilterState>);
     mockUseFilteredData.mockReturnValue({

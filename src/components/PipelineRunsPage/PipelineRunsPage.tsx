@@ -1,6 +1,7 @@
 import React from 'react';
 import { Bullseye, Spinner } from '@patternfly/react-core';
-import { PipelineRunLabel, runStatus } from '~/consts/pipelinerun';
+import ColumnManagement from '~/components/ColumnManagement/ColumnManagement';
+import { PipelineRunEventType, PipelineRunLabel, runStatus } from '~/consts/pipelinerun';
 import { useApplications } from '~/hooks/useApplications';
 import { useAllComponents } from '~/hooks/useComponents';
 import { usePipelineRunsV2 } from '~/hooks/usePipelineRunsV2';
@@ -17,17 +18,36 @@ import { useNamespace } from '~/shared/providers/Namespace';
 import { PipelineRunKind, ComponentKind } from '~/types';
 import { pipelineRunStatus } from '~/utils/pipeline-utils';
 import PageLayout from '../PageLayout/PageLayout';
-import { getPipelineRunsColumns } from './PipelineRunsColumns';
+import { getPipelineRunsColumns, PipelineRunEventTypeLabel } from './PipelineRunsColumns';
 import { PipelineRunsEmptyState } from './PipelineRunsEmptyState';
+
+const eventTypeOptions = Object.values(PipelineRunEventType).map((value) => ({
+  label: PipelineRunEventTypeLabel[value as keyof typeof PipelineRunEventTypeLabel] ?? value,
+  value,
+}));
 
 const filterConfigs = defineFilters<PipelineRunKind>()([
   {
-    type: 'search',
-    param: 'name',
-    label: 'Name',
-    placeholder: 'Search by name...',
-    filterFn: (item, value) =>
-      (item.metadata?.name ?? '').toLowerCase().includes(value.toLowerCase()),
+    type: 'switchableSearch',
+    param: 'searchField',
+    label: 'Search',
+    fields: [
+      {
+        label: 'Name',
+        value: 'name',
+        param: 'name',
+        filterFn: (item, value) =>
+          (item.metadata?.name ?? '').toLowerCase().includes(value.toLowerCase()),
+      },
+      {
+        label: 'PR number',
+        value: 'prNumber',
+        param: 'prNumber',
+        multiValue: true,
+        filterFn: (item, value) =>
+          (item.metadata?.labels?.[PipelineRunLabel.PULL_REQUEST_NUMBER_LABEL] ?? '') === value,
+      },
+    ],
   },
   {
     type: 'multiSelect',
@@ -49,6 +69,14 @@ const filterConfigs = defineFilters<PipelineRunKind>()([
   },
   {
     type: 'multiSelect',
+    param: 'eventType',
+    label: 'Event type',
+    group: 'resource',
+    filterFn: (item, values) =>
+      values.includes(item.metadata?.labels?.[PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL] ?? ''),
+  },
+  {
+    type: 'multiSelect',
     param: 'status',
     label: 'Status',
     group: 'attributes',
@@ -67,6 +95,7 @@ const filterConfigs = defineFilters<PipelineRunKind>()([
     type: 'boolean',
     param: 'archive',
     label: 'Include archived',
+    group: 'archive',
   },
 ] as const);
 
@@ -173,6 +202,7 @@ export const PipelineRunsPage: React.FC = () => {
   const optionsMap = {
     app: appOptions,
     component: componentOptions,
+    eventType: eventTypeOptions,
     status: statusOptions,
     type: typeOptions,
   };
@@ -188,8 +218,10 @@ export const PipelineRunsPage: React.FC = () => {
         groups={{
           resource: { variant: 'filter-group' },
           attributes: { variant: 'filter-group' },
+          archive: { variant: 'filter-group' },
         }}
       >
+        <ColumnManagement columns={columns} columnStateKey={columnStateKey} showColumnManagement />
         <SavedViewStar
           resourceKey="pipeline-runs"
           columnKeyPrefix="prns-columns"
