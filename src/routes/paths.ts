@@ -157,3 +157,5 @@ export const USER_ACCESS_GRANT_PAGE = USER_ACCESS_LIST_PAGE.extend('grant');
 export const USER_ACCESS_EDIT_PAGE = USER_ACCESS_LIST_PAGE.extend(
   `edit/:${RouterParams.bindingName}`,
 );
+
+export const PIPELINE_RUNS_PAGE_PATH = WORKSPACE_PATH.extend('prns');
