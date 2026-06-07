@@ -82,8 +82,9 @@ const defaultFilterState = {
     searchField: '',
     status: [],
     type: [],
+    archive: false,
   },
-  clientFilterValues: { name: '', prNumber: '', searchField: '', eventType: [], status: [] },
+  clientFilterValues: { name: '', prNumber: '', searchField: '', status: [] },
   isFiltered: false,
   clearAll: jest.fn(),
 };
@@ -137,9 +138,9 @@ describe('PipelineRunsPage', () => {
     expect(screen.getByTestId('pipeline-runs-empty-state')).toBeInTheDocument();
   });
 
-  it('renders filter toolbar', () => {
+  it('renders filter toolbars', () => {
     renderPage();
-    expect(screen.getByTestId('filter-toolbar')).toBeInTheDocument();
+    expect(screen.getAllByTestId('filter-toolbar')).toHaveLength(2);
   });
 
   it('renders saved view star inside toolbar', () => {
@@ -170,6 +171,7 @@ describe('PipelineRunsPage', () => {
         searchField: '',
         status: [],
         type: [],
+        archive: false,
       },
       isFiltered: true,
     } as unknown as ReturnType<typeof useFilterState>);

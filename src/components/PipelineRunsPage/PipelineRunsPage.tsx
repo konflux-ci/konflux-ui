@@ -71,6 +71,7 @@ const filterConfigs = defineFilters<PipelineRunKind>()([
     type: 'multiSelect',
     param: 'eventType',
     label: 'Event type',
+    mode: 'api',
     group: 'resource',
     filterFn: (item, values) =>
       values.includes(item.metadata?.labels?.[PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL] ?? ''),
@@ -125,8 +126,20 @@ export const PipelineRunsPage: React.FC = () => {
     [filterValues.component],
   );
 
-  // Only fetch when at least one app or component is selected
-  const hasRequiredFilters = selectedApps.length > 0 || selectedComponents.length > 0;
+  // PR number chips from switchable search
+  const prNumbers = filterValues.prNumber;
+  const hasPrNumbers = Array.isArray(prNumbers) && prNumbers.length > 0;
+
+  // Fetch when at least one app, component, or PR number is selected
+  const hasRequiredFilters =
+    selectedApps.length > 0 || selectedComponents.length > 0 || hasPrNumbers;
+
+  // API-mode filter values
+  const selectedEventTypes = React.useMemo(
+    () => filterValues.eventType ?? [],
+    [filterValues.eventType],
+  );
+  const selectedTypes = React.useMemo(() => filterValues.type ?? [], [filterValues.type]);
 
   const matchExpressions = React.useMemo(() => {
     const expressions: Array<{ key: string; operator: string; values: string[] }> = [];
@@ -144,13 +157,45 @@ export const PipelineRunsPage: React.FC = () => {
         values: selectedComponents,
       });
     }
+    if (hasPrNumbers) {
+      expressions.push({
+        key: PipelineRunLabel.PULL_REQUEST_NUMBER_LABEL,
+        operator: 'In',
+        values: prNumbers as string[],
+      });
+    }
+    if (selectedEventTypes.length > 0) {
+      expressions.push({
+        key: PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL,
+        operator: 'In',
+        values: selectedEventTypes,
+      });
+    }
+    if (selectedTypes.length > 0) {
+      expressions.push({
+        key: PipelineRunLabel.PIPELINE_TYPE,
+        operator: 'In',
+        values: selectedTypes,
+      });
+    }
     return expressions;
-  }, [selectedApps, selectedComponents]);
+  }, [
+    selectedApps,
+    selectedComponents,
+    hasPrNumbers,
+    prNumbers,
+    selectedEventTypes,
+    selectedTypes,
+  ]);
+
+  // Archive toggle
+  const includeArchive = filterValues.archive === true;
 
   // Fetch pipeline runs
   const [pipelineRuns, plrLoaded, plrError, getNextPage, { isFetchingNextPage, hasNextPage }] =
     usePipelineRunsV2(hasRequiredFilters ? namespace : null, {
       selector: { matchExpressions },
+      enableArchive: includeArchive,
     });
 
   // Client-side filtering
