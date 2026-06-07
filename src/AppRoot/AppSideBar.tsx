@@ -7,6 +7,7 @@ import {
   COMPONENTS_PATH,
   ISSUES_PATH,
   NAMESPACE_LIST_PATH,
+  PIPELINE_RUNS_PAGE_PATH,
   RELEASE_MONITOR_PATH,
   RELEASE_SERVICE_PATH,
   SECRET_LIST_PATH,
@@ -14,9 +15,16 @@ import {
 } from '@routes/paths';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { IfFeature } from '~/feature-flags/hooks';
+import { SavedViewNavItems, SavedViewsConfig } from '~/shared/components/SavedViews';
 import { useActiveRouteChecker } from '../../src/hooks/useActiveRouteChecker';
 import { useNamespace } from '../shared/providers/Namespace';
 import './AppSideBar.scss';
+
+const PIPELINE_RUNS_SAVED_VIEWS_CONFIG: SavedViewsConfig = {
+  resourceKey: 'pipeline-runs',
+  columnKeyPrefix: 'prns-columns',
+  routePath: 'ns/:workspaceName/prns',
+};
 
 export const AppSideBar: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
   const isActive = useActiveRouteChecker();
@@ -93,6 +101,22 @@ export const AppSideBar: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
 
             <NavItem
               className={css({ 'app-side-bar__nav-item--disabled': disabled })}
+              isActive={isActive(PIPELINE_RUNS_PAGE_PATH.path)}
+              data-test="pipeline-runs-nav"
+            >
+              <Link
+                to={
+                  namespace
+                    ? PIPELINE_RUNS_PAGE_PATH.createPath({ workspaceName: namespace })
+                    : undefined
+                }
+              >
+                Pipeline Runs
+              </Link>
+            </NavItem>
+
+            <NavItem
+              className={css({ 'app-side-bar__nav-item--disabled': disabled })}
               isActive={isActive(SECRET_LIST_PATH.path)}
             >
               <NavLink
@@ -131,6 +155,10 @@ export const AppSideBar: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
                 User Access
               </NavLink>
             </NavItem>
+
+            {namespace && (
+              <SavedViewNavItems config={PIPELINE_RUNS_SAVED_VIEWS_CONFIG} namespace={namespace} />
+            )}
           </NavList>
         </Nav>
       </PageSidebarBody>
