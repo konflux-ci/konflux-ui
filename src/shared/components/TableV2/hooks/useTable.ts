@@ -56,7 +56,7 @@ function mapColumns<TData>(columns: ColumnDefinition<TData>[]): ColumnDef<TData>
   return columns.map((col) => ({
     id: col.id,
     header: col.header as string,
-    accessorFn: col.accessorFn,
+    ...(col.accessorFn ? { accessorFn: col.accessorFn } : {}),
     ...(col.cell ? { cell: col.cell } : {}),
     size: col.size,
     enableSorting: col.sortable ?? false,
@@ -142,7 +142,7 @@ export function useTable<TData>(options: UseTableOptions<TData>): UseTableResult
     [columns, columnState, responsiveColumnVisibility],
   );
 
-  const columnOrder = columnState.visibleColumns;
+  const columnOrder = columnState.columnOrder;
 
   const sorting: SortingState | undefined = useMemo(() => {
     if (!enableSorting || !columnState.sortColumn) return undefined;

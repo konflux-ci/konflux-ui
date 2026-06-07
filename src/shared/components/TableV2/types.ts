@@ -15,13 +15,12 @@ import {
 export type Breakpoint = 'sm' | 'md' | 'lg' | 'xl' | '2xl';
 
 /**
- * Re-export of TanStack Table's `CellContext` with the value type fixed to
- * `unknown`. This simplifies column definitions so consumers only need to
- * provide a single `TData` generic instead of `TData, TValue`.
+ * Re-export of TanStack Table's `CellContext`.
  *
  * @typeParam TData - The row data type
+ * @typeParam TValue - The cell value type (defaults to `unknown`)
  */
-export type CellContext<TData> = TanStackCellContext<TData, unknown>;
+export type CellContext<TData, TValue = unknown> = TanStackCellContext<TData, TValue>;
 
 /**
  * Defines a column for the TableV2 component.
@@ -49,7 +48,7 @@ export type CellContext<TData> = TanStackCellContext<TData, unknown>;
  * ];
  * ```
  */
-export interface ColumnDefinition<TData> {
+export interface ColumnDefinition<TData, TValue = unknown> {
   /** Unique column identifier. Must be stable across renders. */
   id: string;
 
@@ -59,18 +58,20 @@ export interface ColumnDefinition<TData> {
   /**
    * Accessor function that extracts the cell value from a row.
    *
-   * `accessorKey` is intentionally not supported — `accessorFn` is required
+   * `accessorKey` is intentionally not supported — `accessorFn` is preferred
    * because row data in this codebase is often a Kubernetes resource with
    * deeply nested or computed fields. An explicit function avoids type
    * mismatches and keeps column definitions self-documenting.
+   *
+   * Optional — omit for display-only columns (e.g. actions).
    */
-  accessorFn: (row: TData) => unknown;
+  accessorFn?: (row: TData) => TValue;
 
   /**
    * Custom cell renderer. When omitted, the raw accessor value is rendered
    * as a string via TanStack's default cell.
    */
-  cell?: (info: CellContext<TData>) => ReactNode;
+  cell?: (info: CellContext<TData, TValue>) => ReactNode;
 
   /**
    * Flex proportion for column width. Columns share available space in
@@ -127,18 +128,15 @@ export interface ColumnDefinition<TData> {
  * provided, or held in React state otherwise. Managed by `useColumnState`.
  */
 export interface ColumnState {
-  /** Ordered list of visible column IDs. Order determines column display order. */
+  /** Set of visible column IDs. */
   visibleColumns: string[];
 
   /**
-   * All column IDs known at the time this state was saved.
-   *
-   * Used by migration to distinguish intentionally hidden columns from
-   * genuinely new columns added to the definition. Without this field
-   * (legacy format), migration falls back to treating every column absent
-   * from `visibleColumns` as new.
+   * Ordered list of ALL column IDs (visible + hidden).
+   * Passed to TanStack's columnOrder state.
+   * Default order = column definition array order.
    */
-  allColumns?: string[];
+  columnOrder: string[];
 
   /** ID of the currently sorted column, if any. */
   sortColumn?: string;

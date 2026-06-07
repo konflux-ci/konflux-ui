@@ -16,6 +16,7 @@ const allVisibleColumns = ['name', 'status', 'component', 'started', 'duration',
 
 const defaultState: ColumnState = {
   visibleColumns: allVisibleColumns,
+  columnOrder: allVisibleColumns,
 };
 
 const meta: Meta<typeof ColumnManagementModal> = {
@@ -48,6 +49,7 @@ export const SomeHidden: Story = {
   args: {
     columnState: {
       visibleColumns: ['name', 'status', 'started', 'actions'],
+      columnOrder: allVisibleColumns,
     },
   },
   play: async ({ canvasElement }) => {

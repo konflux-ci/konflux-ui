@@ -1,4 +1,5 @@
 import * as React from 'react';
+import ActionMenu from '~/shared/components/action-menu/ActionMenu';
 import { ResourceSource } from '~/types/k8s';
 import { downloadYamlAction } from '~/utils/common-utils';
 import { ReleaseModel } from '../../../models';
@@ -50,3 +51,11 @@ export const useSnapshotActions = (snapshot: Snapshot, source?: ResourceSource):
 
   return actions;
 };
+
+export const SnapshotActionCell: React.FC<{
+  snapshot: Snapshot;
+  source: ResourceSource | undefined;
+}> = React.memo(({ snapshot, source }) => {
+  const actions = useSnapshotActions(snapshot, source);
+  return <ActionMenu actions={actions} />;
+});

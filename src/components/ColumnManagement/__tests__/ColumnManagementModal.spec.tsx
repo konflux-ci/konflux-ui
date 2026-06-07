@@ -12,8 +12,11 @@ const columns = [
   { id: 'actions', header: 'Actions', pinned: 'end' as const },
 ];
 
+const allColumnIds = columns.map((c) => c.id);
+
 const defaultColumnState: ColumnState = {
-  visibleColumns: ['name', 'status', 'type', 'created', 'actions'],
+  visibleColumns: allColumnIds,
+  columnOrder: allColumnIds,
 };
 
 describe('ColumnManagementModal', () => {
@@ -56,6 +59,21 @@ describe('ColumnManagementModal', () => {
     );
   });
 
+  it('should save columnOrder with all columns when toggling visibility', async () => {
+    const user = userEvent.setup();
+    const { onSave } = renderModal();
+
+    // Uncheck 'Status'
+    await user.click(screen.getByRole('checkbox', { name: 'Status' }));
+    await user.click(screen.getByRole('button', { name: /save/i }));
+
+    const savedState = onSave.mock.calls[0][0] as ColumnState;
+    // columnOrder still has all columns including hidden
+    expect(savedState.columnOrder).toEqual(allColumnIds);
+    // visibleColumns excludes hidden column
+    expect(savedState.visibleColumns).not.toContain('status');
+  });
+
   it('should disable checkbox for nonHidable columns', () => {
     renderModal();
     const nameCheckbox = screen.getByRole('checkbox', { name: 'Name' });
@@ -85,6 +103,7 @@ describe('ColumnManagementModal', () => {
     const user = userEvent.setup();
     const customState: ColumnState = {
       visibleColumns: ['name', 'type', 'actions'],
+      columnOrder: ['name', 'type', 'status', 'created', 'actions'],
     };
     const { onSave } = renderModal({ columnState: customState });
 
@@ -122,5 +141,24 @@ describe('ColumnManagementModal', () => {
 
     expect(onSave).not.toHaveBeenCalled();
     expect(onClose).toHaveBeenCalled();
+  });
+
+  it('should preserve column position when re-showing a hidden column', async () => {
+    const user = userEvent.setup();
+    // 'status' is hidden but its position is preserved in columnOrder
+    const customState: ColumnState = {
+      visibleColumns: ['name', 'type', 'created', 'actions'],
+      columnOrder: ['name', 'status', 'type', 'created', 'actions'],
+    };
+    const { onSave } = renderModal({ columnState: customState });
+
+    // Re-show 'Status'
+    await user.click(screen.getByRole('checkbox', { name: 'Status' }));
+    await user.click(screen.getByRole('button', { name: /save/i }));
+
+    const savedState = onSave.mock.calls[0][0] as ColumnState;
+    // 'status' should appear at its original position (index 1), not at the end
+    expect(savedState.visibleColumns).toEqual(['name', 'status', 'type', 'created', 'actions']);
+    expect(savedState.columnOrder).toEqual(['name', 'status', 'type', 'created', 'actions']);
   });
 });

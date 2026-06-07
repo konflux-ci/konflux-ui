@@ -17,7 +17,7 @@ import {
   type DraggableItemPosition,
 } from '@patternfly/react-core';
 import { type ColumnState } from '~/shared/components/TableV2';
-import { type ComponentProps, createModalLauncher } from './createModalLauncher';
+import { type ComponentProps, createModalLauncher } from '../modal/createModalLauncher';
 
 interface ColumnInfo {
   id: string;
@@ -33,26 +33,6 @@ interface ColumnManagementModalProps extends ComponentProps {
   onSave: (state: ColumnState) => void;
 }
 
-const buildOrderedColumns = (columns: ColumnInfo[], visibleColumns: string[]): string[] => {
-  // Start with visible columns in their order, then append any hidden ones
-  const allIds = columns.map((c) => c.id);
-  const ordered: string[] = [];
-
-  // First, add visible columns in their saved order
-  for (const id of visibleColumns) {
-    if (allIds.includes(id)) {
-      ordered.push(id);
-    }
-  }
-  // Then add any columns not in visibleColumns (hidden ones)
-  for (const id of allIds) {
-    if (!ordered.includes(id)) {
-      ordered.push(id);
-    }
-  }
-  return ordered;
-};
-
 export const ColumnManagementModal: React.FC<ColumnManagementModalProps> = ({
   columns,
   columnState,
@@ -60,9 +40,7 @@ export const ColumnManagementModal: React.FC<ColumnManagementModalProps> = ({
   onSave,
   onClose,
 }) => {
-  const [allColumnsOrder, setAllColumnsOrder] = useState<string[]>(() =>
-    buildOrderedColumns(columns, columnState.visibleColumns),
-  );
+  const [allColumnsOrder, setAllColumnsOrder] = useState<string[]>(() => columnState.columnOrder);
   const [visibleSet, setVisibleSet] = useState<Set<string>>(
     () => new Set(columnState.visibleColumns),
   );
@@ -104,13 +82,14 @@ export const ColumnManagementModal: React.FC<ColumnManagementModalProps> = ({
   );
 
   const handleReset = useCallback(() => {
-    setAllColumnsOrder(buildOrderedColumns(columns, defaultColumnState.visibleColumns));
+    setAllColumnsOrder(defaultColumnState.columnOrder);
     setVisibleSet(new Set(defaultColumnState.visibleColumns));
-  }, [columns, defaultColumnState]);
+  }, [defaultColumnState]);
 
   const handleSave = useCallback(() => {
     const newState: ColumnState = {
       ...columnState,
+      columnOrder: allColumnsOrder,
       visibleColumns: allColumnsOrder.filter((id) => visibleSet.has(id)),
     };
     onSave(newState);

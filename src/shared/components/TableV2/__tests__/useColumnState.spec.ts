@@ -38,6 +38,12 @@ describe('useColumnState', () => {
       expect(result.current.columnState.visibleColumns).toEqual(['name', 'status', 'id']);
     });
 
+    it('derives columnOrder from column definitions when no persisted state exists', () => {
+      const { result } = renderHook(() => useColumnState('test-key', columns));
+
+      expect(result.current.columnState.columnOrder).toEqual(['name', 'status', 'id']);
+    });
+
     it('derives default state with no sort', () => {
       const { result } = renderHook(() => useColumnState('test-key', columns));
 
@@ -59,6 +65,7 @@ describe('useColumnState', () => {
       act(() => {
         result.current.setColumnState({
           visibleColumns: ['name', 'status'],
+          columnOrder: ['name', 'status', 'id'],
           sortColumn: 'name',
           sortDirection: 'asc',
         });
@@ -66,7 +73,7 @@ describe('useColumnState', () => {
 
       expect(mockSetValue).toHaveBeenCalledWith({
         visibleColumns: ['name', 'status'],
-        allColumns: ['name', 'status', 'id'],
+        columnOrder: ['name', 'status', 'id'],
         sortColumn: 'name',
         sortDirection: 'asc',
       });
@@ -75,6 +82,7 @@ describe('useColumnState', () => {
     it('returns persisted state when available', () => {
       const persisted = {
         visibleColumns: ['status', 'name', 'id'],
+        columnOrder: ['status', 'name', 'id'],
         sortColumn: 'status',
         sortDirection: 'desc' as const,
       };
@@ -92,6 +100,7 @@ describe('useColumnState', () => {
     it('removes column IDs from persisted state that no longer exist in definitions', () => {
       const persisted = {
         visibleColumns: ['name', 'deleted-col', 'status', 'id'],
+        columnOrder: ['name', 'deleted-col', 'status', 'id'],
       };
       mockUseLocalStorage.mockReturnValue([persisted, mockSetValue, jest.fn()]);
 
@@ -99,11 +108,13 @@ describe('useColumnState', () => {
 
       expect(result.current.columnState.visibleColumns).toEqual(['name', 'status', 'id']);
       expect(result.current.columnState.visibleColumns).not.toContain('deleted-col');
+      expect(result.current.columnState.columnOrder).not.toContain('deleted-col');
     });
 
     it('clears sortColumn if the sorted column was removed', () => {
       const persisted = {
         visibleColumns: ['name', 'status', 'id'],
+        columnOrder: ['name', 'status', 'id'],
         sortColumn: 'deleted-col',
         sortDirection: 'asc' as const,
       };
@@ -117,23 +128,27 @@ describe('useColumnState', () => {
   });
 
   describe('schema migration: added columns', () => {
-    it('appends new column IDs that exist in definitions but not in persisted state', () => {
+    it('inserts new columns at definition-relative position', () => {
+      // Only 'name' was known; 'status' and 'id' are new
       const persisted = {
         visibleColumns: ['name'],
-        allColumns: ['name'],
+        columnOrder: ['name'],
       };
       mockUseLocalStorage.mockReturnValue([persisted, mockSetValue, jest.fn()]);
 
       const { result } = renderHook(() => useColumnState('test-key', columns));
 
-      expect(result.current.columnState.visibleColumns).toEqual(['name', 'status', 'id']);
+      // 'status' comes after 'name' in definitions, 'id' comes after 'status'
+      expect(result.current.columnState.visibleColumns).toContain('status');
+      expect(result.current.columnState.visibleColumns).toContain('id');
+      expect(result.current.columnState.columnOrder).toEqual(['name', 'status', 'id']);
     });
 
     it('should not re-add intentionally hidden columns during migration', () => {
       // 'status' was known but intentionally hidden by the user
       const persisted = {
         visibleColumns: ['name', 'id'],
-        allColumns: ['name', 'status', 'id'],
+        columnOrder: ['name', 'status', 'id'],
       };
       mockUseLocalStorage.mockReturnValue([persisted, mockSetValue, jest.fn()]);
 
@@ -141,31 +156,39 @@ describe('useColumnState', () => {
 
       expect(result.current.columnState.visibleColumns).toEqual(['name', 'id']);
       expect(result.current.columnState.visibleColumns).not.toContain('status');
+      // columnOrder still contains all columns including hidden ones
+      expect(result.current.columnState.columnOrder).toContain('status');
     });
 
     it('should add genuinely new columns during migration', () => {
       // 'status' was not known at all — it's a genuinely new column
       const persisted = {
         visibleColumns: ['name', 'id'],
-        allColumns: ['name', 'id'],
+        columnOrder: ['name', 'id'],
       };
       mockUseLocalStorage.mockReturnValue([persisted, mockSetValue, jest.fn()]);
 
       const { result } = renderHook(() => useColumnState('test-key', columns));
 
-      expect(result.current.columnState.visibleColumns).toEqual(['name', 'id', 'status']);
+      // 'status' is new and should be visible
+      expect(result.current.columnState.visibleColumns).toContain('status');
+      // 'status' should be inserted between 'name' and 'id' (its definition position)
+      expect(result.current.columnState.columnOrder).toEqual(['name', 'status', 'id']);
     });
 
-    it('should handle legacy state without allColumns (backward compat)', () => {
-      // No allColumns — falls back to old behavior (treats missing columns as new)
+    it('inserts new column at the beginning when no predecessor exists', () => {
+      // Only 'id' was known; 'name' and 'status' are new and come before 'id' in definitions
       const persisted = {
-        visibleColumns: ['name', 'id'],
+        visibleColumns: ['id'],
+        columnOrder: ['id'],
       };
       mockUseLocalStorage.mockReturnValue([persisted, mockSetValue, jest.fn()]);
 
       const { result } = renderHook(() => useColumnState('test-key', columns));
 
-      expect(result.current.columnState.visibleColumns).toEqual(['name', 'id', 'status']);
+      // 'name' has no predecessor in existing order → inserted at start
+      // 'status' has 'name' as predecessor → inserted after 'name'
+      expect(result.current.columnState.columnOrder).toEqual(['name', 'status', 'id']);
     });
   });
 
@@ -176,6 +199,7 @@ describe('useColumnState', () => {
       act(() => {
         result.current.setColumnState({
           visibleColumns: ['name'],
+          columnOrder: ['name', 'status', 'id'],
           sortColumn: 'name',
           sortDirection: 'desc',
         });
@@ -191,6 +215,7 @@ describe('useColumnState', () => {
       act(() => {
         result.current.setColumnState({
           visibleColumns: ['name'],
+          columnOrder: ['name', 'status', 'id'],
           sortColumn: 'name',
           sortDirection: 'asc',
         });
@@ -207,6 +232,7 @@ describe('useColumnState', () => {
       act(() => {
         result.current.setColumnState({
           visibleColumns: ['name'],
+          columnOrder: ['name', 'status', 'id'],
           sortColumn: 'name',
           sortDirection: 'desc',
         });
@@ -225,6 +251,7 @@ describe('useColumnState', () => {
       act(() => {
         result.current.setColumnState({
           visibleColumns: ['name', 'status', 'id'],
+          columnOrder: ['name', 'status', 'id'],
           sortColumn: 'name',
           sortDirection: 'asc',
         });
@@ -232,7 +259,7 @@ describe('useColumnState', () => {
 
       expect(mockSetValue).toHaveBeenCalledWith(
         expect.objectContaining({
-          allColumns: ['name', 'status', 'id'],
+          columnOrder: ['name', 'status', 'id'],
           sortColumn: 'name',
           sortDirection: 'asc',
         }),
@@ -242,6 +269,7 @@ describe('useColumnState', () => {
     it('restores persisted sort state', () => {
       const persisted = {
         visibleColumns: ['name', 'status', 'id'],
+        columnOrder: ['name', 'status', 'id'],
         sortColumn: 'status',
         sortDirection: 'asc' as const,
       };
@@ -255,28 +283,47 @@ describe('useColumnState', () => {
   });
 
   describe('column ordering', () => {
-    it('preserves persisted visibleColumns order', () => {
+    it('preserves persisted columnOrder', () => {
       const persisted = {
         visibleColumns: ['id', 'status', 'name'],
+        columnOrder: ['id', 'status', 'name'],
       };
       mockUseLocalStorage.mockReturnValue([persisted, mockSetValue, jest.fn()]);
 
       const { result } = renderHook(() => useColumnState('test-key', columns));
 
+      expect(result.current.columnState.columnOrder).toEqual(['id', 'status', 'name']);
       expect(result.current.columnState.visibleColumns).toEqual(['id', 'status', 'name']);
     });
 
-    it('appends new columns after existing order', () => {
+    it('inserts new columns at definition-relative position in columnOrder', () => {
       const persisted = {
         visibleColumns: ['status'],
-        allColumns: ['status'],
+        columnOrder: ['status'],
       };
       mockUseLocalStorage.mockReturnValue([persisted, mockSetValue, jest.fn()]);
 
       const { result } = renderHook(() => useColumnState('test-key', columns));
 
-      // 'status' keeps its position, 'name' and 'id' are appended as new
+      // 'name' has no predecessor in existing order → inserted at start
+      // 'id' has 'status' as predecessor → inserted after 'status'
+      expect(result.current.columnState.columnOrder).toEqual(['name', 'status', 'id']);
+      // All new columns are visible
       expect(result.current.columnState.visibleColumns).toEqual(['status', 'name', 'id']);
+    });
+
+    it('re-shown column appears at its original position, not at end', () => {
+      // User had hidden 'status' but it was in columnOrder between name and id
+      const persisted = {
+        visibleColumns: ['name', 'id'],
+        columnOrder: ['name', 'status', 'id'],
+      };
+      mockUseLocalStorage.mockReturnValue([persisted, mockSetValue, jest.fn()]);
+
+      const { result } = renderHook(() => useColumnState('test-key', columns));
+
+      // columnOrder preserves the position of 'status' even though it's hidden
+      expect(result.current.columnState.columnOrder).toEqual(['name', 'status', 'id']);
     });
   });
 });

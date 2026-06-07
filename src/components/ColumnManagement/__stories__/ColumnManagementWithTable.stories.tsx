@@ -61,7 +61,7 @@ const ColumnManagementDemo = () => {
   const defaultColumnState: ColumnState = useMemo(
     () => ({
       visibleColumns: columns.map((c) => c.id),
-      allColumns: columns.map((c) => c.id),
+      columnOrder: columns.map((c) => c.id),
     }),
     [],
   );

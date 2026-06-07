@@ -7,45 +7,59 @@ type ColumnId = Pick<ColumnDefinition<never>, 'id'>;
 
 /** Derives the default column state from column definitions (all columns visible, no sort). */
 function deriveDefaultState(columns: ColumnId[]): ColumnState {
-  return {
-    visibleColumns: columns.map((c) => c.id),
-    allColumns: columns.map((c) => c.id),
-  };
+  const ids = columns.map((c) => c.id);
+  return { visibleColumns: ids, columnOrder: ids };
 }
 
 /**
  * Migrates a persisted column state against the current column definitions.
  *
  * Handles schema drift: removes IDs for columns that no longer exist,
- * appends new columns that were added since the state was persisted,
+ * inserts new columns at their definition-relative position,
  * and clears the sort if the sorted column was removed.
  */
 function migrateState(persisted: ColumnState, columns: ColumnId[]): ColumnState {
   const validIds = new Set(columns.map((c) => c.id));
+  const definitionIds = columns.map((c) => c.id);
 
-  // Remove stale column IDs, preserving persisted order
-  const existing = persisted.visibleColumns.filter((id) => validIds.has(id));
+  const columnOrder = persisted.columnOrder ?? [];
+  const visibleColumns = persisted.visibleColumns ?? [];
 
-  // Determine genuinely NEW columns.
-  // If allColumns is stored, a column is "new" only if it wasn't in allColumns.
-  // If allColumns is not stored (legacy format), fall back to old behavior
-  // where every column absent from visibleColumns is treated as new.
-  const knownIds = persisted.allColumns
-    ? new Set(persisted.allColumns)
-    : new Set(persisted.visibleColumns);
+  // Remove stale IDs from both arrays
+  const existingOrder = columnOrder.filter((id) => validIds.has(id));
+  const existingVisible = visibleColumns.filter((id) => validIds.has(id));
 
-  const added = columns.filter((c) => !knownIds.has(c.id)).map((c) => c.id);
+  // Find new columns not in persisted columnOrder
+  const knownIds = new Set(columnOrder);
+  const newColumns = definitionIds.filter((id) => !knownIds.has(id));
 
-  const visibleColumns = [...existing, ...added];
+  // Insert new columns at their definition-relative position
+  const mergedOrder = [...existingOrder];
+  for (const newId of newColumns) {
+    const defIndex = definitionIds.indexOf(newId);
+    // Find the rightmost existing column that appears before newId in definition order
+    let insertAfterIndex = -1;
+    for (let i = defIndex - 1; i >= 0; i--) {
+      const idx = mergedOrder.indexOf(definitionIds[i]);
+      if (idx !== -1) {
+        insertAfterIndex = idx;
+        break;
+      }
+    }
+    mergedOrder.splice(insertAfterIndex + 1, 0, newId);
+  }
 
-  // Clear sort if the sorted column no longer exists
+  // New columns are also visible by default
+  const mergedVisible = [...existingVisible, ...newColumns];
+
+  // Clear sort if sorted column was removed
   const sortColumn =
     persisted.sortColumn && validIds.has(persisted.sortColumn) ? persisted.sortColumn : undefined;
   const sortDirection = sortColumn ? persisted.sortDirection : undefined;
 
   return {
-    visibleColumns,
-    allColumns: columns.map((c) => c.id),
+    visibleColumns: mergedVisible,
+    columnOrder: mergedOrder,
     sortColumn,
     sortDirection,
   };
@@ -107,17 +121,13 @@ export function useColumnState<TData>(
 
   const setColumnState = useCallback(
     (state: ColumnState) => {
-      const stateToSave: ColumnState = {
-        ...state,
-        allColumns: columns.map((c) => c.id),
-      };
       if (isPersisted) {
-        setPersistedValue(stateToSave);
+        setPersistedValue(state);
       } else {
-        setEphemeralState(stateToSave);
+        setEphemeralState(state);
       }
     },
-    [isPersisted, setPersistedValue, columns],
+    [isPersisted, setPersistedValue],
   );
 
   return { columnState, setColumnState };

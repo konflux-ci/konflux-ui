@@ -46,7 +46,7 @@ beforeEach(() => {
     rows: [],
   });
   jest.mocked(useColumnState).mockReturnValue({
-    columnState: { visibleColumns: ['name', 'id'] },
+    columnState: { visibleColumns: ['name', 'id'], columnOrder: ['name', 'id'] },
     setColumnState: jest.fn(),
   });
   jest.mocked(useResponsiveColumns).mockReturnValue({
@@ -93,7 +93,7 @@ describe('Table', () => {
   it('calls useTable with correct options', () => {
     const setColumnState = jest.fn();
     jest.mocked(useColumnState).mockReturnValue({
-      columnState: { visibleColumns: ['name', 'id'] },
+      columnState: { visibleColumns: ['name', 'id'], columnOrder: ['name', 'id'] },
       setColumnState,
     });
     jest.mocked(useResponsiveColumns).mockReturnValue({
@@ -107,7 +107,7 @@ describe('Table', () => {
         data: defaultProps.data,
         columns,
         getRowId: defaultProps.getRowId,
-        columnState: { visibleColumns: ['name', 'id'] },
+        columnState: { visibleColumns: ['name', 'id'], columnOrder: ['name', 'id'] },
         setColumnState,
         responsiveColumnVisibility: { name: true },
         enableSorting: true,

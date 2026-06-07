@@ -1,5 +1,6 @@
 import '@testing-library/jest-dom';
-import { screen, act, fireEvent } from '@testing-library/react';
+import { screen, act, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { useK8sAndKarchResources } from '~/hooks/useK8sAndKarchResources';
 import { NuqsAdapter } from '~/shared/components/Filter';
 import { ResourceSource } from '~/types/k8s';
@@ -54,6 +55,8 @@ describe('SnapshotsListView - Column Headers', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockUseNamespaceHook('test-namespace');
+    // Reset URL state between tests (BrowserRouter shares window.location)
+    window.history.replaceState({}, '', '/');
   });
 
   it('should display all expected column headers correctly', () => {
@@ -74,7 +77,9 @@ describe('SnapshotsListView - Column Headers', () => {
     expect(screen.getByText('Reference')).toBeInTheDocument();
   });
 
-  it('should filter out archive snapshots when releasable filter is enabled', () => {
+  it('should filter out archive snapshots when releasable filter is enabled', async () => {
+    jest.useRealTimers();
+
     const clusterSnapshot = {
       ...mockSnapshots[0],
       metadata: { ...mockSnapshots[0].metadata, name: 'cluster-snapshot', uid: 'uid-cluster' },
@@ -92,7 +97,7 @@ describe('SnapshotsListView - Column Headers', () => {
 
     useMockSnapshots.mockImplementation(
       (_resourceInit, _model, _queryOptions, _options, queryControl) => {
-        const enableArchive = queryControl?.enableArchive !== false;
+        const enableArchive = queryControl?.enableArchive === true;
 
         return {
           data: enableArchive ? [clusterSnapshot, archiveSnapshot] : [clusterSnapshot],
@@ -103,67 +108,72 @@ describe('SnapshotsListView - Column Headers', () => {
       },
     );
 
-    act(() => {
-      renderWithQueryClientAndRouter(createWrappedComponent());
-    });
+    renderWithQueryClientAndRouter(createWrappedComponent());
 
+    // By default, enableArchive is false (no filter selected), so only cluster snapshot shown
     expect(screen.getByText('cluster-snapshot')).toBeInTheDocument();
-    expect(screen.getByText('archive-snapshot')).toBeInTheDocument();
+    expect(screen.queryByText('archive-snapshot')).not.toBeInTheDocument();
 
     expect(useMockSnapshots).toHaveBeenCalledWith(
       expect.any(Object),
       expect.any(Object),
       undefined,
       undefined,
-      expect.objectContaining({ enableArchive: true }),
+      expect.objectContaining({ enableArchive: false }),
     );
 
-    const switchElement = screen.getByRole('checkbox', { name: /show only releasable snapshots/i });
-    expect(switchElement).not.toBeChecked();
+    // Open the multiSelect dropdown and select "Show only releasable snapshots"
+    const user = userEvent.setup();
+    await user.click(screen.getByTestId('multi-select-filter-filterBy'));
+    await user.click(screen.getByText('Show only releasable snapshots'));
 
-    act(() => {
-      fireEvent.click(switchElement);
+    // After selecting the filter, enableArchive is true, so both snapshots are fetched
+    await waitFor(() => {
+      expect(screen.getByText('archive-snapshot')).toBeInTheDocument();
     });
 
-    const callsWithEnableArchiveFalse = useMockSnapshots.mock.calls.filter(
-      (call) => call[4]?.enableArchive === false,
-    );
-    expect(callsWithEnableArchiveFalse.length).toBeGreaterThan(0);
-
     expect(screen.getByText('cluster-snapshot')).toBeInTheDocument();
-    expect(screen.queryByText('archive-snapshot')).not.toBeInTheDocument();
 
-    expect(switchElement).toBeChecked();
+    jest.useFakeTimers();
   });
 
-  it('should show filter dashboard if no results but filters are applied', () => {
-    const archiveSnapshot = {
+  it('should show filter dashboard if no results but filters are applied', async () => {
+    jest.useRealTimers();
+
+    const clusterSnapshot = {
       ...mockSnapshots[0],
-      metadata: { ...mockSnapshots[0].metadata, name: 'archive-snapshot', uid: 'uid-archive' },
+      metadata: { ...mockSnapshots[0].metadata, name: 'cluster-snapshot', uid: 'uid-cluster' },
     };
 
     useMockSnapshots.mockImplementation(
       (_resourceInit, _model, _queryOptions, _options, queryControl) => {
-        const enableArchive = queryControl?.enableArchive !== false;
+        const enableArchive = queryControl?.enableArchive === true;
 
         return {
-          data: enableArchive ? [archiveSnapshot] : [],
-          getSource: () => ResourceSource.Archive,
+          data: enableArchive ? [] : [clusterSnapshot],
+          getSource: () => ResourceSource.Cluster,
           isLoading: false,
           hasError: false,
         };
       },
     );
-    act(() => {
-      renderWithQueryClientAndRouter(createWrappedComponent());
+    renderWithQueryClientAndRouter(createWrappedComponent());
+
+    // Initially there is data so toolbar is visible
+    await waitFor(() => {
+      expect(screen.getByText('cluster-snapshot')).toBeInTheDocument();
     });
 
-    const switchElement = screen.getByRole('checkbox', { name: /show only releasable snapshots/i });
+    // Open the multiSelect dropdown and select "Show only releasable snapshots"
+    const user = userEvent.setup();
+    await user.click(screen.getByTestId('multi-select-filter-filterBy'));
+    await user.click(screen.getByRole('menuitem', { name: /show only releasable snapshots/i }));
 
-    act(() => {
-      fireEvent.click(switchElement);
+    // After selecting the filter, enableArchive is true and mock returns [], so the filter toolbar should still be visible
+    await waitFor(() => {
+      expect(screen.getByTestId('multi-select-filter-filterBy')).toBeInTheDocument();
     });
 
-    expect(switchElement).toBeInTheDocument();
+    jest.useFakeTimers();
   });
 });

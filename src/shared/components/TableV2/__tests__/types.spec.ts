@@ -33,7 +33,7 @@ interface PipelineRun {
 // --- ColumnDefinition tests ---
 
 describe('ColumnDefinition', () => {
-  it('requires id, header, and accessorFn', () => {
+  it('requires id and header, accessorFn is optional', () => {
     const col: ColumnDefinition<PipelineRun> = {
       id: 'name',
       header: 'Name',
@@ -42,6 +42,13 @@ describe('ColumnDefinition', () => {
     expect(col.id).toBe('name');
     expect(col.header).toBe('Name');
     expect(typeof col.accessorFn).toBe('function');
+
+    // Display-only column (e.g. actions) — no accessorFn needed
+    const displayCol: ColumnDefinition<PipelineRun> = {
+      id: 'actions',
+      header: '',
+    };
+    expect(displayCol.accessorFn).toBeUndefined();
   });
 
   it('accepts all optional fields', () => {
@@ -140,16 +147,19 @@ describe('ColumnDefinition', () => {
 // --- ColumnState tests ---
 
 describe('ColumnState', () => {
-  it('has required visibleColumns array', () => {
+  it('has required visibleColumns and columnOrder arrays', () => {
     const state: ColumnState = {
       visibleColumns: ['name', 'status', 'actions'],
+      columnOrder: ['name', 'status', 'actions'],
     };
     expect(state.visibleColumns).toHaveLength(3);
+    expect(state.columnOrder).toHaveLength(3);
   });
 
   it('accepts optional sort state', () => {
     const state: ColumnState = {
       visibleColumns: ['name', 'status'],
+      columnOrder: ['name', 'status'],
       sortColumn: 'name',
       sortDirection: 'asc',
     };
@@ -160,6 +170,7 @@ describe('ColumnState', () => {
   it('accepts desc sort direction', () => {
     const state: ColumnState = {
       visibleColumns: ['name'],
+      columnOrder: ['name'],
       sortDirection: 'desc',
     };
     expect(state.sortDirection).toBe('desc');

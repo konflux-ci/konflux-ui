@@ -46,6 +46,7 @@ const testData: TestRow[] = [
 
 const defaultColumnState: ColumnState = {
   visibleColumns: ['name', 'status'],
+  columnOrder: ['name', 'status'],
 };
 
 const defaultOptions: UseTableOptions<TestRow> = {
@@ -106,6 +107,7 @@ describe('useTable', () => {
           enableSorting: true,
           columnState: {
             visibleColumns: ['name', 'status'],
+            columnOrder: ['name', 'status'],
             sortColumn: 'name',
             sortDirection: 'asc',
           },
@@ -176,6 +178,7 @@ describe('useTable', () => {
           ...defaultOptions,
           columnState: {
             visibleColumns: ['name'], // 'status' hidden by user
+            columnOrder: ['name', 'status'],
           },
           responsiveColumnVisibility: {
             name: true,
@@ -199,6 +202,7 @@ describe('useTable', () => {
           ...defaultOptions,
           columnState: {
             visibleColumns: ['name', 'status'], // user wants both
+            columnOrder: ['name', 'status'],
           },
           responsiveColumnVisibility: {
             name: false, // responsive says hidden
@@ -214,12 +218,13 @@ describe('useTable', () => {
   });
 
   describe('column ordering', () => {
-    it('passes columnState.visibleColumns as columnOrder', () => {
+    it('passes columnState.columnOrder as columnOrder', () => {
       renderHook(() =>
         useTable({
           ...defaultOptions,
           columnState: {
             visibleColumns: ['status', 'name'],
+            columnOrder: ['status', 'name'],
           },
         }),
       );
