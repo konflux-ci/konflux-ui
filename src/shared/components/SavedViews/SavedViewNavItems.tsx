@@ -1,6 +1,14 @@
 import * as React from 'react';
 import { NavLink, useSearchParams } from 'react-router-dom';
-import { Dropdown, DropdownItem, DropdownList, MenuToggle, NavItem } from '@patternfly/react-core';
+import {
+  Dropdown,
+  DropdownItem,
+  DropdownList,
+  Flex,
+  FlexItem,
+  MenuToggle,
+  NavItem,
+} from '@patternfly/react-core';
 import { EllipsisVIcon } from '@patternfly/react-icons/dist/esm/icons/ellipsis-v-icon';
 import { useModalLauncher } from '~/shared/components/modal/ModalProvider';
 import { createSavedViewDeleteModal } from './SavedViewDeleteModal';
@@ -60,34 +68,43 @@ export const SavedViewNavItems: React.FC<SavedViewNavItemsProps> = ({ config, na
 
         return (
           <NavItem key={view.slug} isActive={isActive}>
-            <div className="saved-view-nav-item" data-test={`saved-view-nav-${view.slug}`}>
-              <NavLink to={href}>{view.label}</NavLink>
-              <Dropdown
-                isOpen={openKebab === view.slug}
-                onOpenChange={(isOpen) => setOpenKebab(isOpen ? view.slug : null)}
-                toggle={(toggleRef) => (
-                  <MenuToggle
-                    ref={toggleRef as React.Ref<HTMLButtonElement>}
-                    variant="plain"
-                    onClick={() => setOpenKebab(openKebab === view.slug ? null : view.slug)}
-                    isExpanded={openKebab === view.slug}
-                    data-test={`saved-view-kebab-${view.slug}`}
-                  >
-                    <EllipsisVIcon />
-                  </MenuToggle>
-                )}
-                popperProps={{ position: 'right' }}
-              >
-                <DropdownList>
-                  <DropdownItem onClick={handleRename} data-test="saved-view-rename-action">
-                    Rename
-                  </DropdownItem>
-                  <DropdownItem onClick={handleDelete} data-test="saved-view-delete-action">
-                    Delete
-                  </DropdownItem>
-                </DropdownList>
-              </Dropdown>
-            </div>
+            <Flex
+              justifyContent={{ default: 'justifyContentSpaceBetween' }}
+              alignItems={{ default: 'alignItemsCenter' }}
+              flexWrap={{ default: 'nowrap' }}
+              data-test={`saved-view-nav-${view.slug}`}
+            >
+              <FlexItem grow={{ default: 'grow' }}>
+                <NavLink to={href}>{view.label}</NavLink>
+              </FlexItem>
+              <FlexItem>
+                <Dropdown
+                  isOpen={openKebab === view.slug}
+                  onOpenChange={(isOpen) => setOpenKebab(isOpen ? view.slug : null)}
+                  toggle={(toggleRef) => (
+                    <MenuToggle
+                      ref={toggleRef as React.Ref<HTMLButtonElement>}
+                      variant="plain"
+                      onClick={() => setOpenKebab(openKebab === view.slug ? null : view.slug)}
+                      isExpanded={openKebab === view.slug}
+                      data-test={`saved-view-kebab-${view.slug}`}
+                    >
+                      <EllipsisVIcon />
+                    </MenuToggle>
+                  )}
+                  popperProps={{ position: 'right' }}
+                >
+                  <DropdownList>
+                    <DropdownItem onClick={handleRename} data-test="saved-view-rename-action">
+                      Rename
+                    </DropdownItem>
+                    <DropdownItem onClick={handleDelete} data-test="saved-view-delete-action">
+                      Delete
+                    </DropdownItem>
+                  </DropdownList>
+                </Dropdown>
+              </FlexItem>
+            </Flex>
           </NavItem>
         );
       })}

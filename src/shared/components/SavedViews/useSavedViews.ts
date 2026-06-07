@@ -1,9 +1,7 @@
 import { useCallback } from 'react';
 import { useLocalStorage } from '~/shared/hooks/useLocalStorage';
 import { SavedView, SavedViewsConfig } from './types';
-import { generateSlug, isSlugUnique } from './utils';
-
-const STORAGE_KEY_PREFIX = 'saved-views';
+import { generateSlug, isSlugUnique, STORAGE_KEY_PREFIX } from './utils';
 
 export const useSavedViews = (config: SavedViewsConfig) => {
   const { resourceKey, columnKeyPrefix } = config;

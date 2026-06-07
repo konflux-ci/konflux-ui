@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Button, ButtonVariant, Form, FormGroup, Popover, TextInput } from '@patternfly/react-core';
 import { OutlinedStarIcon } from '@patternfly/react-icons/dist/esm/icons/outlined-star-icon';
 import { StarIcon } from '@patternfly/react-icons/dist/esm/icons/star-icon';
-import { useSearchParam } from '~/hooks/useSearchParam';
+import { parseAsString, useQueryState } from 'nuqs';
 import { SavedView } from './types';
 import { useSavedViews } from './useSavedViews';
 
@@ -26,7 +26,7 @@ export const SavedViewStar: React.FC<SavedViewStarProps> = ({
     columnKeyPrefix,
     routePath: '',
   });
-  const [, setViewParam] = useSearchParam('view', '');
+  const [, setViewParam] = useQueryState('view', parseAsString);
 
   const [name, setName] = React.useState('');
   const [showSaveAs, setShowSaveAs] = React.useState(false);
@@ -48,7 +48,7 @@ export const SavedViewStar: React.FC<SavedViewStarProps> = ({
       searchParams: getSearchParams(),
       currentColumnStateKey,
     });
-    setViewParam(slug);
+    void setViewParam(slug);
     setName('');
     setShowSaveAs(false);
     setIsOpen(false);

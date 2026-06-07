@@ -1,11 +1,14 @@
 import { render, screen, fireEvent } from '@testing-library/react';
-import { useSearchParam } from '~/hooks/useSearchParam';
+import { useQueryState } from 'nuqs';
 import { SavedViewStar } from '../SavedViewStar';
 import { SavedView } from '../types';
 import { useSavedViews } from '../useSavedViews';
 
 jest.mock('../useSavedViews');
-jest.mock('~/hooks/useSearchParam');
+jest.mock('nuqs', () => ({
+  useQueryState: jest.fn(),
+  parseAsString: {},
+}));
 
 const mockSaveView = jest.fn().mockReturnValue('sv-test1234');
 const mockUpdateView = jest.fn();
@@ -31,8 +34,8 @@ beforeEach(() => {
     isSlugAvailable: mockIsSlugAvailable,
   });
   jest
-    .mocked(useSearchParam)
-    .mockReturnValue(['', mockSetViewParam, jest.fn()] as ReturnType<typeof useSearchParam>);
+    .mocked(useQueryState)
+    .mockReturnValue([null, mockSetViewParam] as ReturnType<typeof useQueryState>);
 
   // Mock window.location.search
   Object.defineProperty(window, 'location', {

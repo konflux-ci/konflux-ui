@@ -2,6 +2,7 @@ import { redirect, RouteObject } from 'react-router-dom';
 import { PIPELINE_RUNS_PAGE_PATH } from '@routes/paths';
 import { PipelineRunsPage } from '~/components/PipelineRunsPage/PipelineRunsPage';
 import { NuqsAdapter } from '~/shared/components/Filter';
+import { STORAGE_KEY_PREFIX } from '~/shared/components/SavedViews/utils';
 import { RouteErrorBoundry } from '../RouteErrorBoundary';
 
 export const pipelineRunsPageLoader = ({ request }: { request: Request }) => {
@@ -14,7 +15,7 @@ export const pipelineRunsPageLoader = ({ request }: { request: Request }) => {
   const paramKeys = Array.from(url.searchParams.keys());
   if (slug && paramKeys.length === 1 && paramKeys[0] === 'view') {
     try {
-      const stored = localStorage.getItem('saved-views:pipeline-runs');
+      const stored = localStorage.getItem(`${STORAGE_KEY_PREFIX}:pipeline-runs`);
       if (stored) {
         const views = JSON.parse(stored) as Array<{ slug: string; searchParams?: string }>;
         const savedView = views.find((v) => v.slug === slug);

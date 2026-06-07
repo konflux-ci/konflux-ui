@@ -1,5 +1,7 @@
 import { SavedView } from './types';
 
+export const STORAGE_KEY_PREFIX = 'saved-views';
+
 export const generateSlug = (): string => {
   const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
   let random = '';
