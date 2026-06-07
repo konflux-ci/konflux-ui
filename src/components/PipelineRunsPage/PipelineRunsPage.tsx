@@ -91,13 +91,16 @@ const filterConfigs = defineFilters<PipelineRunKind>()([
     filterFn: (item, values) =>
       values.includes(item.metadata?.labels?.[PipelineRunLabel.PIPELINE_TYPE] ?? ''),
   },
+] as const);
+
+const TopFilter = defineFilters<PipelineRunKind>()([
   {
     type: 'boolean',
     param: 'archive',
     label: 'Include archived',
     group: 'archive',
   },
-] as const);
+]);
 
 export const PipelineRunsPage: React.FC = () => {
   const namespace = useNamespace();
@@ -110,7 +113,10 @@ export const PipelineRunsPage: React.FC = () => {
   const [components, componentsLoaded] = useAllComponents(namespace);
 
   // Filter state
-  const { filterValues, clientFilterValues, isFiltered } = useFilterState(filterConfigs);
+  const { filterValues, clientFilterValues, isFiltered } = useFilterState([
+    ...filterConfigs,
+    ...TopFilter,
+  ]);
 
   // Build match expressions from API-mode filter values
   const selectedApps = React.useMemo(() => filterValues.app ?? [], [filterValues.app]);
@@ -211,6 +217,17 @@ export const PipelineRunsPage: React.FC = () => {
     <PageLayout
       title={pageTitle}
       description="Monitor pipeline runs across applications and components."
+      customActions={
+        <FilterToolbar configs={TopFilter}>
+          <SavedViewStar
+            resourceKey="pipeline-runs"
+            columnKeyPrefix="prns-columns"
+            currentColumnStateKey={columnStateKey}
+            isFiltered={isFiltered}
+            activeSavedView={activeSavedView}
+          />
+        </FilterToolbar>
+      }
     >
       <FilterToolbar
         configs={filterConfigs}
@@ -222,13 +239,6 @@ export const PipelineRunsPage: React.FC = () => {
         }}
       >
         <ColumnManagement columns={columns} columnStateKey={columnStateKey} showColumnManagement />
-        <SavedViewStar
-          resourceKey="pipeline-runs"
-          columnKeyPrefix="prns-columns"
-          currentColumnStateKey={columnStateKey}
-          isFiltered={isFiltered}
-          activeSavedView={activeSavedView}
-        />
       </FilterToolbar>
       {hasRequiredFilters ? (
         <TableContainer
@@ -247,7 +257,6 @@ export const PipelineRunsPage: React.FC = () => {
             hasNextPage={hasNextPage}
             isFetchingNextPage={isFetchingNextPage}
             fetchNextPage={getNextPage}
-            enableSorting
           />
         </TableContainer>
       ) : (

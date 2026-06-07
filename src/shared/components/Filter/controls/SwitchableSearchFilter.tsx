@@ -3,6 +3,7 @@ import {
   Button,
   Chip,
   ChipGroup,
+  HelperText,
   InputGroup,
   InputGroupItem,
   MenuToggle,
@@ -207,7 +208,10 @@ export const SwitchableSearchFilter = <T,>({ config }: SwitchableSearchFilterPro
   );
 
   return (
-    <ToolbarItem data-test={`switchable-search-filter-${param}`}>
+    <ToolbarItem
+      style={{ display: 'flex', flexDirection: 'column' }}
+      data-test={`switchable-search-filter-${param}`}
+    >
       <InputGroup>
         <InputGroupItem>
           <Select
@@ -252,6 +256,7 @@ export const SwitchableSearchFilter = <T,>({ config }: SwitchableSearchFilterPro
           )}
         </InputGroupItem>
       </InputGroup>
+      {isMultiValue && <HelperText>Press Enter to search for {activeField.label}.</HelperText>}
     </ToolbarItem>
   );
 };

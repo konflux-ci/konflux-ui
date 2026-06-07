@@ -2,6 +2,7 @@ import * as React from 'react';
 import {
   Button,
   ButtonVariant,
+  Flex,
   Form,
   FormGroup,
   FormHelperText,
@@ -118,7 +119,7 @@ export const SavedViewStar: React.FC<SavedViewStarProps> = ({
   const footerContent = () => {
     if (activeSavedView && !showSaveAs) {
       return (
-        <>
+        <Flex>
           <Button
             variant={ButtonVariant.primary}
             onClick={handleUpdate}
@@ -129,7 +130,7 @@ export const SavedViewStar: React.FC<SavedViewStarProps> = ({
           <Button variant={ButtonVariant.secondary} onClick={handleSaveAsClick}>
             Save As
           </Button>
-        </>
+        </Flex>
       );
     }
     return (
@@ -145,7 +146,7 @@ export const SavedViewStar: React.FC<SavedViewStarProps> = ({
   };
 
   const icon = activeSavedView ? (
-    <StarIcon data-test="saved-view-star-filled" />
+    <StarIcon data-test="saved-view-star-filled" color="var(--pf-v5-global--primary-color--100)" />
   ) : (
     <OutlinedStarIcon data-test="saved-view-star-outline" />
   );
@@ -171,7 +172,11 @@ export const SavedViewStar: React.FC<SavedViewStarProps> = ({
       bodyContent={bodyContent()}
       footerContent={footerContent()}
     >
-      <Button variant={ButtonVariant.plain} aria-label="Save view" data-test="saved-view-star-btn">
+      <Button
+        variant={ButtonVariant.primary}
+        aria-label="Save view"
+        data-test="saved-view-star-btn"
+      >
         {icon}
       </Button>
     </Popover>

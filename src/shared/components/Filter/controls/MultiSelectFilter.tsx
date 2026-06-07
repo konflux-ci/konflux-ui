@@ -76,8 +76,7 @@ export const MultiSelectFilter = <T,>({ config, options }: MultiSelectFilterProp
       isExpanded={isOpen}
       data-test={`multi-select-filter-${param}`}
     >
-      {label}
-      {selected.length > 0 && <Badge isRead>{selected.length}</Badge>}
+      {label} {selected.length > 0 && <Badge isRead>{selected.length}</Badge>}
     </MenuToggle>
   );
 
