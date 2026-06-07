@@ -1,5 +1,8 @@
 import * as React from 'react';
 import {
+  Button,
+  Chip,
+  ChipGroup,
   InputGroup,
   InputGroupItem,
   MenuToggle,
@@ -7,10 +10,15 @@ import {
   Select,
   SelectList,
   SelectOption,
+  TextInputGroup,
+  TextInputGroupMain,
+  TextInputGroupUtilities,
   ToolbarItem,
 } from '@patternfly/react-core';
+import { TimesIcon } from '@patternfly/react-icons/dist/esm/icons/times-icon';
 import { parseAsString, useQueryState, useQueryStates } from 'nuqs';
 import { useDebounceCallback } from '~/shared/hooks/useDebounceCallback';
+import { parseAsCommaSeparated } from '../parsers';
 import { SwitchableSearchFilterConfig } from '../types';
 
 const DEFAULT_DEBOUNCE = 600;
@@ -23,14 +31,72 @@ type SwitchableSearchFilterProps<T> = {
 
 /**
  * Builds a nuqs parser map for each field's URL parameter.
+ *
+ * Multi-value fields use a comma-separated array parser; single-value
+ * fields use the standard string parser.
  * @internal
  */
-const buildFieldParsersMap = <T,>(config: SwitchableSearchFilterConfig<T>) => {
-  const map: Record<string, ReturnType<typeof parseAsString.withDefault>> = {};
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const buildFieldParsersMap = <T,>(config: SwitchableSearchFilterConfig<T>): Record<string, any> => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const map: Record<string, any> = {};
   for (const field of config.fields) {
-    map[field.param] = parseAsString.withDefault('');
+    map[field.param] = field.multiValue ? parseAsCommaSeparated : parseAsString.withDefault('');
   }
   return map;
+};
+
+/** Chip-based input for multi-value switchable-search fields. @internal */
+const ChipInput: React.FC<{
+  values: string[];
+  onAdd: (value: string) => void;
+  onRemove: (value: string) => void;
+  onClearAll: () => void;
+  label: string;
+  inputRef: React.RefObject<HTMLInputElement>;
+}> = ({ values, onAdd, onRemove, onClearAll, label, inputRef }) => {
+  const [inputValue, setInputValue] = React.useState('');
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && inputValue.trim()) {
+      e.preventDefault();
+      const trimmed = inputValue.trim();
+      if (!values.includes(trimmed)) {
+        onAdd(trimmed);
+      }
+      setInputValue('');
+    }
+  };
+
+  return (
+    <TextInputGroup>
+      <TextInputGroupMain
+        ref={inputRef}
+        value={inputValue}
+        onChange={(_e, val) => setInputValue(val)}
+        onKeyDown={handleKeyDown}
+        aria-label={label}
+        placeholder={values.length === 0 ? `Filter by ${label}...` : ''}
+      >
+        {values.length > 0 && (
+          <ChipGroup>
+            {values.map((v) => (
+              <Chip key={v} onClick={() => onRemove(v)}>
+                {v}
+              </Chip>
+            ))}
+          </ChipGroup>
+        )}
+      </TextInputGroupMain>
+      {values.length > 0 && (
+        <TextInputGroupUtilities>
+          <Button variant="plain" onClick={onClearAll} aria-label="Clear all">
+            <TimesIcon />
+          </Button>
+        </TextInputGroupUtilities>
+      )}
+    </TextInputGroup>
+  );
 };
 
 /**
@@ -40,6 +106,10 @@ const buildFieldParsersMap = <T,>(config: SwitchableSearchFilterConfig<T>) => {
  * field selection is stored in one URL parameter; each field's search text
  * is stored in its own URL parameter. Switching fields clears the previous
  * field's value and focuses the search input.
+ *
+ * When a field has `multiValue: true`, a chip-based input is rendered instead
+ * of a standard search input. Users type text and press Enter to add chips;
+ * each chip can be removed individually.
  *
  * @typeParam T - The data-item type being filtered.
  */
@@ -58,8 +128,11 @@ export const SwitchableSearchFilter = <T,>({ config }: SwitchableSearchFilterPro
 
   const activeField = fields.find((f) => f.value === activeFieldValue) ?? fields[0];
   const activeParam = activeField.param;
+  const isMultiValue = activeField.multiValue === true;
 
-  const [localValue, setLocalValue] = React.useState(fieldValues[activeParam] ?? '');
+  const [localValue, setLocalValue] = React.useState(
+    isMultiValue ? '' : (fieldValues[activeParam] as string) ?? '',
+  );
 
   const searchInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -69,8 +142,10 @@ export const SwitchableSearchFilter = <T,>({ config }: SwitchableSearchFilterPro
 
   // Sync local state when URL changes externally (e.g., clearAll)
   React.useEffect(() => {
-    setLocalValue(fieldValues[activeParam] ?? '');
-  }, [fieldValues, activeParam]);
+    if (!isMultiValue) {
+      setLocalValue((fieldValues[activeParam] as string) ?? '');
+    }
+  }, [fieldValues, activeParam, isMultiValue]);
 
   const handleFieldSelect = (
     _event: React.MouseEvent | undefined,
@@ -78,7 +153,7 @@ export const SwitchableSearchFilter = <T,>({ config }: SwitchableSearchFilterPro
   ) => {
     if (typeof value !== 'string') return;
 
-    // Clear previous field's URL param
+    // Clear previous field's URL param (works for both string and array)
     void setFieldValues({ [activeParam]: null });
     // Update selector to new field
     void setActiveFieldValue(value === fields[0]?.value ? null : value);
@@ -103,6 +178,25 @@ export const SwitchableSearchFilter = <T,>({ config }: SwitchableSearchFilterPro
   const handleClear = () => {
     debouncedSetUrl.cancel();
     setLocalValue('');
+    void setFieldValues({ [activeParam]: null });
+  };
+
+  // Multi-value handlers — updates go directly to URL (no debounce)
+  const multiValues: string[] = isMultiValue
+    ? (fieldValues[activeParam] as unknown as string[]) ?? []
+    : [];
+
+  const handleChipAdd = (value: string) => {
+    const updated = [...multiValues, value];
+    void setFieldValues({ [activeParam]: updated });
+  };
+
+  const handleChipRemove = (value: string) => {
+    const updated = multiValues.filter((v) => v !== value);
+    void setFieldValues({ [activeParam]: updated.length > 0 ? updated : null });
+  };
+
+  const handleChipClearAll = () => {
     void setFieldValues({ [activeParam]: null });
   };
 
@@ -137,14 +231,25 @@ export const SwitchableSearchFilter = <T,>({ config }: SwitchableSearchFilterPro
           </Select>
         </InputGroupItem>
         <InputGroupItem isFill>
-          <SearchInput
-            ref={searchInputRef}
-            aria-label={activeField.label}
-            placeholder={`Filter by ${activeField.label}...`}
-            value={localValue}
-            onChange={handleSearchChange}
-            onClear={handleClear}
-          />
+          {isMultiValue ? (
+            <ChipInput
+              values={multiValues}
+              onAdd={handleChipAdd}
+              onRemove={handleChipRemove}
+              onClearAll={handleChipClearAll}
+              label={activeField.label}
+              inputRef={searchInputRef}
+            />
+          ) : (
+            <SearchInput
+              ref={searchInputRef}
+              aria-label={activeField.label}
+              placeholder={`Filter by ${activeField.label}...`}
+              value={localValue}
+              onChange={handleSearchChange}
+              onClear={handleClear}
+            />
+          )}
         </InputGroupItem>
       </InputGroup>
     </ToolbarItem>

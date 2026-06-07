@@ -107,6 +107,11 @@ export type SwitchableSearchField<T> = {
   value: string;
   param: string;
   mode?: FilterMode;
+  /**
+   * When true, the field accepts multiple values (rendered as chips).
+   * The filterFn receives each value individually; items matching ANY value pass.
+   */
+  multiValue?: boolean;
   filterFn: (item: T, text: string) => boolean;
 };
 

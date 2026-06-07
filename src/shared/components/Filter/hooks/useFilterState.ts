@@ -5,6 +5,7 @@ import type {
   FilterValues,
   ClientFilterValues,
 } from '~/shared/components/Filter/types';
+import { parseAsCommaSeparated } from '../parsers';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyParserMap = Record<string, any>;
@@ -35,7 +36,11 @@ const buildParsersMap = <T>(configs: readonly FilterConfig<T>[]): AnyParserMap =
       case 'switchableSearch':
         map[config.param] = parseAsString.withDefault('');
         for (const field of config.fields) {
-          map[field.param] = parseAsString.withDefault('');
+          if (field.multiValue) {
+            map[field.param] = parseAsCommaSeparated;
+          } else {
+            map[field.param] = parseAsString.withDefault('');
+          }
         }
         break;
       default:

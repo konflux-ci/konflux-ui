@@ -18,6 +18,8 @@ export type {
 
 export { defineFilters } from './types';
 
+export { parseAsCommaSeparated } from './parsers';
+
 export { NuqsAdapter } from './nuqs-adapter';
 
 export { useFilteredData } from './hooks/useFilteredData';

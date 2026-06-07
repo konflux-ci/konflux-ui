@@ -58,8 +58,18 @@ export const useFilteredData = <T>(
           if (field.mode === 'api') continue;
 
           const fieldValue = clientFilterValues[field.param];
-          if (typeof fieldValue === 'string' && !isEmpty(fieldValue)) {
-            activeFilters.push((item) => field.filterFn(item, fieldValue));
+
+          if (field.multiValue) {
+            // Multi-value: fieldValue is string[], match ANY value (OR logic)
+            const values: string[] = Array.isArray(fieldValue) ? (fieldValue as string[]) : [];
+            if (values.length > 0) {
+              activeFilters.push((item) => values.some((v) => field.filterFn(item, v)));
+            }
+          } else {
+            // Single-value: existing behavior
+            if (typeof fieldValue === 'string' && !isEmpty(fieldValue)) {
+              activeFilters.push((item) => field.filterFn(item, fieldValue));
+            }
           }
         }
         continue;

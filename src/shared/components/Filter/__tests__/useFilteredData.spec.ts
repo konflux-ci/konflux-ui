@@ -198,6 +198,81 @@ describe('useFilteredData', () => {
     expect(result.current.filteredData).toEqual([items[0]]);
   });
 
+  it('handles multiValue switchableSearch with OR logic', () => {
+    const configs: FilterConfig<MockItem>[] = [
+      {
+        type: 'switchableSearch',
+        param: 'searchField',
+        label: 'Search',
+        fields: [
+          {
+            label: 'Status',
+            value: 'status',
+            param: 'status',
+            multiValue: true,
+            filterFn: (item, text) => item.spec.status === text,
+          },
+        ],
+      },
+    ];
+    // Multiple values: match any
+    const filterValues = { searchField: 'status', status: ['running', 'stopped'] };
+
+    const { result } = renderHook(() => useFilteredData(configs, items, filterValues));
+
+    // Both running and stopped items match
+    expect(result.current.filteredData).toEqual([items[0], items[1], items[2]]);
+  });
+
+  it('handles multiValue switchableSearch with single value', () => {
+    const configs: FilterConfig<MockItem>[] = [
+      {
+        type: 'switchableSearch',
+        param: 'searchField',
+        label: 'Search',
+        fields: [
+          {
+            label: 'Status',
+            value: 'status',
+            param: 'status',
+            multiValue: true,
+            filterFn: (item, text) => item.spec.status === text,
+          },
+        ],
+      },
+    ];
+    const filterValues = { searchField: 'status', status: ['stopped'] };
+
+    const { result } = renderHook(() => useFilteredData(configs, items, filterValues));
+
+    expect(result.current.filteredData).toEqual([items[1]]);
+  });
+
+  it('skips multiValue switchableSearch with empty array', () => {
+    const configs: FilterConfig<MockItem>[] = [
+      {
+        type: 'switchableSearch',
+        param: 'searchField',
+        label: 'Search',
+        fields: [
+          {
+            label: 'Status',
+            value: 'status',
+            param: 'status',
+            multiValue: true,
+            filterFn: (item, text) => item.spec.status === text,
+          },
+        ],
+      },
+    ];
+    const filterValues = { searchField: 'status', status: [] };
+
+    const { result } = renderHook(() => useFilteredData(configs, items, filterValues));
+
+    // Empty array means no filter active — return all items
+    expect(result.current.filteredData).toBe(items);
+  });
+
   it('skips switchableSearch fields with api mode', () => {
     const configs: FilterConfig<MockItem>[] = [
       {
