@@ -1,9 +1,8 @@
 import { redirect, RouteObject } from 'react-router-dom';
 import { PIPELINE_RUNS_PAGE_PATH } from '@routes/paths';
+import { PipelineRunsPage } from '~/components/PipelineRunsPage/PipelineRunsPage';
+import { NuqsAdapter } from '~/shared/components/Filter';
 import { RouteErrorBoundry } from '../RouteErrorBoundary';
-
-// Placeholder page component until Task 12
-const PipelineRunsPage = () => <div data-test="pipeline-runs-page">Pipeline Runs</div>;
 
 export const pipelineRunsPageLoader = ({ request }: { request: Request }) => {
   const url = new URL(request.url);
@@ -34,7 +33,11 @@ export const pipelineRunsPageRoutes: RouteObject[] = [
   {
     path: PIPELINE_RUNS_PAGE_PATH.path,
     loader: pipelineRunsPageLoader,
-    element: <PipelineRunsPage />,
+    element: (
+      <NuqsAdapter>
+        <PipelineRunsPage />
+      </NuqsAdapter>
+    ),
     errorElement: <RouteErrorBoundry />,
   },
 ];
