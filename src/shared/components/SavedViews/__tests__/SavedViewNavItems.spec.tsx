@@ -1,13 +1,13 @@
 import { MemoryRouter, useSearchParams } from 'react-router-dom';
 import { Nav, NavList } from '@patternfly/react-core';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { useModalLauncher } from '~/components/modal/ModalProvider';
+import { useModalLauncher } from '~/shared/components/modal/ModalProvider';
 import { SavedViewNavItems } from '../SavedViewNavItems';
 import { SavedView, SavedViewsConfig } from '../types';
 import { useSavedViews } from '../useSavedViews';
 
 jest.mock('../useSavedViews');
-jest.mock('~/components/modal/ModalProvider');
+jest.mock('~/shared/components/modal/ModalProvider');
 jest.mock('react-router-dom', () => ({
   ...jest.requireActual('react-router-dom'),
   useSearchParams: jest.fn(),

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Button, ButtonVariant, ModalVariant, Text, TextContent } from '@patternfly/react-core';
-import { ComponentProps, createModalLauncher } from '~/components/modal/createModalLauncher';
+import { ComponentProps, createModalLauncher } from '~/shared/components/modal/createModalLauncher';
 
 type SavedViewDeleteModalProps = ComponentProps & {
   viewLabel: string;

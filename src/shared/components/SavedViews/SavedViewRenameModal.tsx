@@ -7,7 +7,7 @@ import {
   ModalVariant,
   TextInput,
 } from '@patternfly/react-core';
-import { ComponentProps, createModalLauncher } from '~/components/modal/createModalLauncher';
+import { ComponentProps, createModalLauncher } from '~/shared/components/modal/createModalLauncher';
 
 type SavedViewRenameModalProps = ComponentProps & {
   currentLabel: string;

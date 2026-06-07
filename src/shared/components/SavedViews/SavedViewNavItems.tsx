@@ -2,7 +2,7 @@ import * as React from 'react';
 import { NavLink, useSearchParams } from 'react-router-dom';
 import { Dropdown, DropdownItem, DropdownList, MenuToggle, NavItem } from '@patternfly/react-core';
 import { EllipsisVIcon } from '@patternfly/react-icons/dist/esm/icons/ellipsis-v-icon';
-import { useModalLauncher } from '~/components/modal/ModalProvider';
+import { useModalLauncher } from '~/shared/components/modal/ModalProvider';
 import { createSavedViewDeleteModal } from './SavedViewDeleteModal';
 import { createSavedViewRenameModal } from './SavedViewRenameModal';
 import { SavedView, SavedViewsConfig } from './types';
