@@ -5,6 +5,7 @@ import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { useApplications } from '~/hooks/useApplications';
 import { useAllComponents } from '~/hooks/useComponents';
 import { usePipelineRunsV2 } from '~/hooks/usePipelineRunsV2';
+import FilteredEmptyState from '~/shared/components/empty-state/FilteredEmptyState';
 import {
   defineFilters,
   useFilterState,
@@ -90,7 +91,7 @@ export const PipelineRunsPage: React.FC = () => {
   const [components, componentsLoaded] = useAllComponents(namespace);
 
   // Filter state
-  const { filterValues, clientFilterValues, isFiltered } = useFilterState([
+  const { filterValues, clientFilterValues, isFiltered, clearAll } = useFilterState([
     ...filterConfigs,
     ...TopFilter,
   ]);
@@ -252,6 +253,7 @@ export const PipelineRunsPage: React.FC = () => {
           data={filteredData}
           unfilteredData={pipelineRuns}
           loaded={plrLoaded}
+          noDataState={<FilteredEmptyState onClearFilters={clearAll} />}
           loadError={plrError as Error | undefined}
           emptyState={<PipelineRunsEmptyState />}
         >

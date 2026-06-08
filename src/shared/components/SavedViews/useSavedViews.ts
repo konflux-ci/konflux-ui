@@ -1,4 +1,6 @@
 import { useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { parseAsString, useQueryState } from 'nuqs';
 import { useLocalStorage } from '~/shared/hooks/useLocalStorage';
 import { SavedView, SavedViewsConfig } from './types';
 import { generateSlug, isSlugUnique, STORAGE_KEY_PREFIX } from './utils';
@@ -6,6 +8,8 @@ import { generateSlug, isSlugUnique, STORAGE_KEY_PREFIX } from './utils';
 export const useSavedViews = (config: SavedViewsConfig) => {
   const { resourceKey, columnKeyPrefix } = config;
   const storageKey = `${STORAGE_KEY_PREFIX}:${resourceKey}`;
+  const [activeViewSlug] = useQueryState('view', parseAsString);
+  const navigate = useNavigate();
 
   const [views = [], setViews] = useLocalStorage<SavedView[]>(storageKey, []);
 
@@ -46,12 +50,16 @@ export const useSavedViews = (config: SavedViewsConfig) => {
   const deleteView = useCallback(
     (slug: string) => {
       const view = views.find((v) => v.slug === slug);
+
       if (view) {
         localStorage.removeItem(view.columnStateKey);
       }
       setViews((prev) => (prev ?? []).filter((v) => v.slug !== slug));
+      if (activeViewSlug === slug) {
+        navigate(`${config.routePath}?`, { replace: true });
+      }
     },
-    [views, setViews],
+    [views, setViews, activeViewSlug, config.routePath, navigate],
   );
 
   const renameView = useCallback(

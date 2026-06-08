@@ -1,39 +1,31 @@
 import * as React from 'react';
-import { NavLink, useSearchParams } from 'react-router-dom';
-import {
-  Dropdown,
-  DropdownItem,
-  DropdownList,
-  Flex,
-  FlexItem,
-  MenuToggle,
-  NavItem,
-} from '@patternfly/react-core';
-import { EllipsisVIcon } from '@patternfly/react-icons/dist/esm/icons/ellipsis-v-icon';
+import { NavLink } from 'react-router-dom';
+import { Button, Flex, FlexItem, NavItem } from '@patternfly/react-core';
+import { PencilAltIcon } from '@patternfly/react-icons/dist/esm/icons/pencil-alt-icon';
+import { TrashIcon } from '@patternfly/react-icons/dist/esm/icons/trash-icon';
+import { parseAsString, useQueryState } from 'nuqs';
 import { useModalLauncher } from '~/shared/components/modal/ModalProvider';
 import { createSavedViewDeleteModal } from './SavedViewDeleteModal';
 import { createSavedViewRenameModal } from './SavedViewRenameModal';
 import { SavedView, SavedViewsConfig } from './types';
 import { useSavedViews } from './useSavedViews';
 
+import './SavedViewNavItems.scss';
+
 type SavedViewNavItemsProps = {
   config: SavedViewsConfig;
-  namespace: string;
 };
 
-export const SavedViewNavItems: React.FC<SavedViewNavItemsProps> = ({ config, namespace }) => {
+export const SavedViewNavItems: React.FC<SavedViewNavItemsProps> = ({ config }) => {
   const { views, renameView, deleteView } = useSavedViews(config);
   const showModal = useModalLauncher();
-  const [searchParams] = useSearchParams();
-  const [openKebab, setOpenKebab] = React.useState<string | null>(null);
-
-  const activeViewSlug = searchParams.get('view');
+  const [activeViewSlug] = useQueryState('view', parseAsString);
 
   const buildViewHref = (view: SavedView): string => {
-    const basePath = config.routePath.replace(':workspaceName', namespace).replace(/^\/+/, '');
+    const basePath = config.routePath;
     const params = new URLSearchParams(view.searchParams);
     params.set('view', view.slug);
-    return `/${basePath}?${params.toString()}`;
+    return `${basePath}?${params.toString()}`;
   };
 
   if (views.length === 0) {
@@ -44,7 +36,6 @@ export const SavedViewNavItems: React.FC<SavedViewNavItemsProps> = ({ config, na
     <>
       {views.map((view) => {
         const handleRename = () => {
-          setOpenKebab(null);
           showModal(
             createSavedViewRenameModal({
               currentLabel: view.label,
@@ -54,7 +45,6 @@ export const SavedViewNavItems: React.FC<SavedViewNavItemsProps> = ({ config, na
         };
 
         const handleDelete = () => {
-          setOpenKebab(null);
           showModal(
             createSavedViewDeleteModal({
               viewLabel: view.label,
@@ -68,43 +58,34 @@ export const SavedViewNavItems: React.FC<SavedViewNavItemsProps> = ({ config, na
 
         return (
           <NavItem key={view.slug} isActive={isActive}>
-            <Flex
-              justifyContent={{ default: 'justifyContentSpaceBetween' }}
-              alignItems={{ default: 'alignItemsCenter' }}
-              flexWrap={{ default: 'nowrap' }}
-              data-test={`saved-view-nav-${view.slug}`}
-            >
-              <FlexItem grow={{ default: 'grow' }}>
-                <NavLink to={href}>{view.label}</NavLink>
-              </FlexItem>
-              <FlexItem>
-                <Dropdown
-                  isOpen={openKebab === view.slug}
-                  onOpenChange={(isOpen) => setOpenKebab(isOpen ? view.slug : null)}
-                  toggle={(toggleRef) => (
-                    <MenuToggle
-                      ref={toggleRef as React.Ref<HTMLButtonElement>}
-                      variant="plain"
-                      onClick={() => setOpenKebab(openKebab === view.slug ? null : view.slug)}
-                      isExpanded={openKebab === view.slug}
-                      data-test={`saved-view-kebab-${view.slug}`}
-                    >
-                      <EllipsisVIcon />
-                    </MenuToggle>
-                  )}
-                  popperProps={{ position: 'right' }}
-                >
-                  <DropdownList>
-                    <DropdownItem onClick={handleRename} data-test="saved-view-rename-action">
-                      Rename
-                    </DropdownItem>
-                    <DropdownItem onClick={handleDelete} data-test="saved-view-delete-action">
-                      Delete
-                    </DropdownItem>
-                  </DropdownList>
-                </Dropdown>
-              </FlexItem>
-            </Flex>
+            <NavLink to={href} style={{ display: 'block' }}>
+              <Flex
+                justifyContent={{ default: 'justifyContentSpaceBetween' }}
+                alignItems={{ default: 'alignItemsCenter' }}
+                flexWrap={{ default: 'nowrap' }}
+                data-test={`saved-view-nav-${view.slug}`}
+              >
+                <FlexItem>{view.label}</FlexItem>
+                <Flex gap={{ default: 'gapMd' }}>
+                  <Button
+                    className="saved-view-nav-items__button saved-view-nav-items__button--rename"
+                    variant="plain"
+                    onClick={handleRename}
+                    data-test={`saved-view-rename-${view.slug}`}
+                  >
+                    <PencilAltIcon />
+                  </Button>
+                  <Button
+                    className="saved-view-nav-items__button saved-view-nav-items__button--delete"
+                    variant="plain"
+                    onClick={handleDelete}
+                    data-test={`saved-view-delete-${view.slug}`}
+                  >
+                    <TrashIcon />
+                  </Button>
+                </Flex>
+              </Flex>
+            </NavLink>
           </NavItem>
         );
       })}

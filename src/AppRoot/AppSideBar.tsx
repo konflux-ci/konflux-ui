@@ -2,6 +2,7 @@ import * as React from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { Nav, NavItem, NavList, PageSidebar, PageSidebarBody } from '@patternfly/react-core';
 import { css } from '@patternfly/react-styles';
+import { parseAsString, useQueryState } from 'nuqs';
 import {
   APPLICATION_LIST_PATH,
   COMPONENTS_PATH,
@@ -20,16 +21,20 @@ import { useActiveRouteChecker } from '../../src/hooks/useActiveRouteChecker';
 import { useNamespace } from '../shared/providers/Namespace';
 import './AppSideBar.scss';
 
-const PIPELINE_RUNS_SAVED_VIEWS_CONFIG: SavedViewsConfig = {
-  resourceKey: 'pipeline-runs',
-  columnKeyPrefix: 'prns-columns',
-  routePath: 'ns/:workspaceName/prns',
-};
-
 export const AppSideBar: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
   const isActive = useActiveRouteChecker();
+  const [viewParam] = useQueryState('view', parseAsString.withDefault(''));
   const namespace = useNamespace();
   const disabled = !namespace;
+
+  const pipelineRunsSavedViewsConfig = React.useMemo<SavedViewsConfig>(
+    () => ({
+      resourceKey: 'pipeline-runs',
+      columnKeyPrefix: 'prns-columns',
+      routePath: PIPELINE_RUNS_PAGE_PATH.createPath({ workspaceName: namespace }),
+    }),
+    [namespace],
+  );
 
   return (
     <PageSidebar data-test="sidebar" isSidebarOpen={isOpen}>
@@ -101,7 +106,7 @@ export const AppSideBar: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
 
             <NavItem
               className={css({ 'app-side-bar__nav-item--disabled': disabled })}
-              isActive={isActive(PIPELINE_RUNS_PAGE_PATH.path)}
+              isActive={isActive(PIPELINE_RUNS_PAGE_PATH.path) && !viewParam}
               data-test="pipeline-runs-nav"
             >
               <Link
@@ -156,9 +161,7 @@ export const AppSideBar: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
               </NavLink>
             </NavItem>
 
-            {namespace && (
-              <SavedViewNavItems config={PIPELINE_RUNS_SAVED_VIEWS_CONFIG} namespace={namespace} />
-            )}
+            {namespace && <SavedViewNavItems config={pipelineRunsSavedViewsConfig} />}
           </NavList>
         </Nav>
       </PageSidebarBody>

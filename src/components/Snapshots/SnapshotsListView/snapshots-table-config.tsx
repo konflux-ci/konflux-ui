@@ -62,7 +62,6 @@ export const filterConfigs = defineFilters<Snapshot>()([
     label: 'Filter snapshots...',
     group: 'filter-by',
     mode: 'api',
-    filterFn: () => false,
   },
 ] as const);
 
