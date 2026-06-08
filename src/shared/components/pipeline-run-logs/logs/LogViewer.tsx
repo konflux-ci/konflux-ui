@@ -40,9 +40,9 @@ import { useAutoScrollWithResume } from '~/shared/components/pipeline-run-logs/l
 import { useLogViewerSearch } from '~/shared/components/pipeline-run-logs/logs/useLogViewerSearch';
 import { LoadingInline } from '~/shared/components/status-box/StatusBox';
 import { VirtualizedLogViewer, type LogSection } from '~/shared/components/virtualized-log-viewer';
-import { buildLines } from '~/shared/components/virtualized-log-viewer/log-viewer-utils';
 import { useFullscreen } from '~/shared/hooks/fullscreen';
 import { TaskRunKind } from '~/types';
+import { prepareLogViewerContent } from './log-viewer-content';
 import LogsTaskDuration from './LogsTaskDuration';
 import { useLogViewerTheme } from './useLogViewerTheme';
 
@@ -88,16 +88,19 @@ const LogViewer: React.FC<Props> = ({
   const [logTheme, setLogTheme] = useLogViewerTheme();
   const themeCheckboxId = React.useId();
 
-  // Auto-scroll and resume button logic
+  const { processedData, downloadData } = React.useMemo(
+    () => prepareLogViewerContent(sections),
+    [sections],
+  );
+
+  const lines = React.useMemo(() => processedData.split('\n'), [processedData]);
+
   const { autoScroll, showResumeStreamButton, handleScroll, handleResumeClick } =
     useAutoScrollWithResume({
       allowAutoScroll,
       onScroll: onScrollProp,
     });
 
-  const lines = React.useMemo(() => buildLines(sections), [sections]);
-
-  // Search state and context management
   const { logViewerContextValue, toolbarContextValue, scrolledRow } = useLogViewerSearch({
     lines,
     autoScroll,
@@ -107,12 +110,6 @@ const LogViewer: React.FC<Props> = ({
     useFullscreen<HTMLDivElement>();
   const [downloadAllStatus, setDownloadAllStatus] = React.useState(false);
   const [showShortcutHint, setShowShortcutHint] = React.useState(false);
-
-  const downloadData = React.useMemo(() => {
-    return sections
-      .map((s) => (s.containerName ? `${s.containerName}\n${s.data}` : s.data))
-      .join('\n\n');
-  }, [sections]);
 
   const downloadLogs = () => {
     if (!downloadData) return;
