@@ -154,12 +154,11 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
         </FlexItem>
       </Flex>
 
-      <Content>
-        <Content component={ContentVariants.p}>
-          A snapshot is a point-in-time, immutable record of an application&apos;s container images.{' '}
-          <ExternalLink href={LEARN_MORE_SNAPSHOTS}>Learn more</ExternalLink>
-        </Content>
+      <Content component={ContentVariants.p}>
+        A snapshot is a point-in-time, immutable record of an application&apos;s container images.{' '}
+        <ExternalLink href={LEARN_MORE_SNAPSHOTS}>Learn more</ExternalLink>
       </Content>
+
       {(!snapshots || snapshots.length === 0) && !isFiltered ? (
         <AppEmptyState
           emptyStateImg={emptySnapshotImgUrl}

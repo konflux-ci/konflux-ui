@@ -10,6 +10,7 @@ import {
   Title,
   Content,
   Button,
+  ContentVariants,
 } from '@patternfly/react-core';
 import OverviewBannerSvg from '../../assets/overview/overview-banner.svg';
 import { NAMESPACE_LIST_PATH, RELEASE_MONITOR_PATH } from '../../routes/paths';
@@ -37,7 +38,7 @@ const IntroBanner: React.FC = () => {
             </Title>
           </CardTitle>
           <CardBody>
-            <Content component="p">
+            <Content component={ContentVariants.p}>
               Konflux makes it easy to securely build, test and release your software projects to a
               wide variety of targets.
             </Content>
