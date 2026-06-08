@@ -38,14 +38,17 @@ const renderControl = (config: FilterConfig<unknown>, options: Record<string, Op
   switch (config.type) {
     case 'search':
       return <SearchFilter key={config.param} config={config} />;
-    case 'multiSelect':
+    case 'multiSelect': {
+      const configOptions = options[config.param] ?? [];
       return (
         <MultiSelectFilter
           key={config.param}
           config={config}
-          options={options[config.param] ?? []}
+          options={configOptions}
+          isDisabled={configOptions.length === 0}
         />
       );
+    }
     case 'singleSelect':
       return (
         <SingleSelectFilter

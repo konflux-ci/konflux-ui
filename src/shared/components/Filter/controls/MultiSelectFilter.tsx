@@ -20,6 +20,8 @@ type MultiSelectFilterProps<T> = {
   config: MultiSelectFilterConfig<T>;
   /** Dropdown options (may include {@link DividerOption} entries). */
   options: OptionItem[];
+  /** When true, the toggle is disabled. Auto-disabled when options are empty. */
+  isDisabled?: boolean;
 };
 
 /**
@@ -31,7 +33,11 @@ type MultiSelectFilterProps<T> = {
  *
  * @typeParam T - The data-item type being filtered.
  */
-export const MultiSelectFilter = <T,>({ config, options }: MultiSelectFilterProps<T>) => {
+export const MultiSelectFilter = <T,>({
+  config,
+  options,
+  isDisabled,
+}: MultiSelectFilterProps<T>) => {
   const { param, label } = config;
   const [isOpen, setIsOpen] = React.useState(false);
 
@@ -69,14 +75,17 @@ export const MultiSelectFilter = <T,>({ config, options }: MultiSelectFilterProp
     void setSelected(null);
   };
 
+  const disabled = isDisabled || options.length === 0;
+
   const toggle = (toggleRef: React.Ref<HTMLButtonElement>) => (
     <MenuToggle
       ref={toggleRef}
       onClick={() => setIsOpen((prev) => !prev)}
       isExpanded={isOpen}
+      isDisabled={disabled}
       data-test={`multi-select-filter-${param}`}
     >
-      {label} {selected.length > 0 && <Badge isRead>{selected.length}</Badge>}
+      {label} {!disabled && selected.length > 0 && <Badge isRead>{selected.length}</Badge>}
     </MenuToggle>
   );
 

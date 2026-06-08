@@ -85,9 +85,15 @@ export const useFilteredData = <T>(
             textMatch((item as { metadata?: { name?: string } }).metadata?.name ?? '', v));
         activeFilters.push((item) => filterFn(item, value as string));
       } else if (config.type === 'multiSelect') {
-        activeFilters.push((item) => config.filterFn(item, value as string[]));
+        const { filterFn } = config;
+        if (filterFn) {
+          activeFilters.push((item) => filterFn(item, value as string[]));
+        }
       } else if (config.type === 'singleSelect') {
-        activeFilters.push((item) => config.filterFn(item, value as string));
+        const { filterFn } = config;
+        if (filterFn) {
+          activeFilters.push((item) => filterFn(item, value as string));
+        }
       }
     }
 

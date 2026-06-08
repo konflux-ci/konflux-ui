@@ -61,7 +61,7 @@ export type SearchFilterConfig<T> = FilterConfigBase & {
  */
 export type MultiSelectFilterConfig<T> = FilterConfigBase & {
   type: 'multiSelect';
-  filterFn: (item: T, selectedValues: string[]) => boolean;
+  filterFn?: (item: T, selectedValues: string[]) => boolean;
 };
 
 /**
@@ -75,7 +75,7 @@ export type MultiSelectFilterConfig<T> = FilterConfigBase & {
  */
 export type SingleSelectFilterConfig<T> = FilterConfigBase & {
   type: 'singleSelect';
-  filterFn: (item: T, selectedValue: string) => boolean;
+  filterFn?: (item: T, selectedValue: string) => boolean;
 };
 
 /**
