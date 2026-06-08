@@ -1,5 +1,6 @@
-import { renderHook, act } from '@testing-library/react';
+import { act } from '@testing-library/react';
 import { useLocalStorage } from '~/shared/hooks/useLocalStorage';
+import { renderHookWithNuqs } from '~/unit-test-utils';
 import { SavedView, SavedViewsConfig } from '../types';
 import { useSavedViews } from '../useSavedViews';
 import { generateSlug } from '../utils';
@@ -40,19 +41,19 @@ beforeEach(() => {
 
 describe('useSavedViews', () => {
   it('should initialize with empty views', () => {
-    const { result } = renderHook(() => useSavedViews(config));
+    const { result } = renderHookWithNuqs(() => useSavedViews(config));
     expect(result.current.views).toEqual([]);
   });
 
   it('should use the correct storage key', () => {
-    renderHook(() => useSavedViews(config));
+    renderHookWithNuqs(() => useSavedViews(config));
     expect(mockUseLocalStorage).toHaveBeenCalledWith('saved-views:pipelineruns', []);
   });
 
   describe('saveView', () => {
     it('should save a view with auto-generated slug', () => {
       mockGenerateSlug.mockReturnValue('sv-auto1234');
-      const { result } = renderHook(() => useSavedViews(config));
+      const { result } = renderHookWithNuqs(() => useSavedViews(config));
 
       let slug = '';
       act(() => {
@@ -80,7 +81,7 @@ describe('useSavedViews', () => {
     });
 
     it('should save a view with a custom slug', () => {
-      const { result } = renderHook(() => useSavedViews(config));
+      const { result } = renderHookWithNuqs(() => useSavedViews(config));
 
       let slug = '';
       act(() => {
@@ -98,7 +99,7 @@ describe('useSavedViews', () => {
 
     it('should copy column state from current key to new view key', () => {
       localStorage.setItem('col-state-pr:default', JSON.stringify({ order: ['a', 'b'] }));
-      const { result } = renderHook(() => useSavedViews(config));
+      const { result } = renderHookWithNuqs(() => useSavedViews(config));
 
       act(() => {
         result.current.saveView({
@@ -115,7 +116,7 @@ describe('useSavedViews', () => {
     });
 
     it('should not copy column state if source key does not exist', () => {
-      const { result } = renderHook(() => useSavedViews(config));
+      const { result } = renderHookWithNuqs(() => useSavedViews(config));
 
       act(() => {
         result.current.saveView({
@@ -137,7 +138,7 @@ describe('useSavedViews', () => {
         columnStateKey: 'col-state-pr:existing',
       };
 
-      const { result } = renderHook(() => useSavedViews(config));
+      const { result } = renderHookWithNuqs(() => useSavedViews(config));
 
       act(() => {
         result.current.saveView({
@@ -168,7 +169,7 @@ describe('useSavedViews', () => {
       localStorage.setItem('col-state-pr:delete-me', '{"cols":["a"]}');
 
       mockUseLocalStorage.mockReturnValue([mockViews, mockSetViews, mockRemoveViews]);
-      const { result } = renderHook(() => useSavedViews(config));
+      const { result } = renderHookWithNuqs(() => useSavedViews(config));
 
       act(() => {
         result.current.deleteView('delete-me');
@@ -185,7 +186,7 @@ describe('useSavedViews', () => {
     it('should handle deleting a non-existent slug gracefully', () => {
       mockViews = [];
       mockUseLocalStorage.mockReturnValue([mockViews, mockSetViews, mockRemoveViews]);
-      const { result } = renderHook(() => useSavedViews(config));
+      const { result } = renderHookWithNuqs(() => useSavedViews(config));
 
       act(() => {
         result.current.deleteView('nonexistent');
@@ -198,7 +199,7 @@ describe('useSavedViews', () => {
 
   describe('renameView', () => {
     it('should update the label without changing the slug', () => {
-      const { result } = renderHook(() => useSavedViews(config));
+      const { result } = renderHookWithNuqs(() => useSavedViews(config));
 
       act(() => {
         result.current.renameView('my-view', 'Updated Label');
@@ -224,7 +225,7 @@ describe('useSavedViews', () => {
     });
 
     it('should not affect other views', () => {
-      const { result } = renderHook(() => useSavedViews(config));
+      const { result } = renderHookWithNuqs(() => useSavedViews(config));
 
       act(() => {
         result.current.renameView('view-a', 'New Name');
@@ -250,7 +251,7 @@ describe('useSavedViews', () => {
   describe('updateView', () => {
     it('should update searchParams and copy column state', () => {
       localStorage.setItem('col-state-pr:current', '{"visibility":{"name":true}}');
-      const { result } = renderHook(() => useSavedViews(config));
+      const { result } = renderHookWithNuqs(() => useSavedViews(config));
 
       act(() => {
         result.current.updateView('my-view', {
@@ -275,7 +276,7 @@ describe('useSavedViews', () => {
 
     it('should not copy column state if source key does not exist', () => {
       localStorage.setItem('col-state-pr:my-view', '{"old":"state"}');
-      const { result } = renderHook(() => useSavedViews(config));
+      const { result } = renderHookWithNuqs(() => useSavedViews(config));
 
       act(() => {
         result.current.updateView('my-view', {
@@ -302,7 +303,7 @@ describe('useSavedViews', () => {
     it('should return true for a unique slug', () => {
       mockViews = [];
       mockUseLocalStorage.mockReturnValue([mockViews, mockSetViews, mockRemoveViews]);
-      const { result } = renderHook(() => useSavedViews(config));
+      const { result } = renderHookWithNuqs(() => useSavedViews(config));
 
       expect(result.current.isSlugAvailable('new-slug')).toBe(true);
     });
@@ -317,7 +318,7 @@ describe('useSavedViews', () => {
         },
       ];
       mockUseLocalStorage.mockReturnValue([mockViews, mockSetViews, mockRemoveViews]);
-      const { result } = renderHook(() => useSavedViews(config));
+      const { result } = renderHookWithNuqs(() => useSavedViews(config));
 
       expect(result.current.isSlugAvailable('taken')).toBe(false);
     });

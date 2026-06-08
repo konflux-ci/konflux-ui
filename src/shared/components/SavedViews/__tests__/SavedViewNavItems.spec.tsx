@@ -1,17 +1,14 @@
-import { MemoryRouter, useSearchParams } from 'react-router-dom';
+import { MemoryRouter } from 'react-router-dom';
 import { Nav, NavList } from '@patternfly/react-core';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { NuqsTestingAdapter } from 'nuqs/adapters/testing';
 import { useModalLauncher } from '~/shared/components/modal/ModalProvider';
 import { SavedViewNavItems } from '../SavedViewNavItems';
-import { SavedView, SavedViewsConfig } from '../types';
+import { SavedViewsConfig } from '../types';
 import { useSavedViews } from '../useSavedViews';
 
 jest.mock('../useSavedViews');
 jest.mock('~/shared/components/modal/ModalProvider');
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
-  useSearchParams: jest.fn(),
-}));
 
 const mockRenameView = jest.fn();
 const mockDeleteView = jest.fn();
@@ -20,10 +17,10 @@ const mockShowModal = jest.fn();
 const testConfig: SavedViewsConfig = {
   resourceKey: 'pipelines',
   columnKeyPrefix: 'cols-pipelines',
-  routePath: 'ns/:workspaceName/pipelines',
+  routePath: 'ns/my-workspace/pipelines',
 };
 
-const testViews: SavedView[] = [
+const testViews = [
   {
     slug: 'running-builds',
     label: 'Running Builds',
@@ -38,20 +35,18 @@ const testViews: SavedView[] = [
   },
 ];
 
-const renderComponent = (viewParam = '') => {
-  const searchParams = new URLSearchParams(viewParam ? `view=${viewParam}` : '');
-  jest.mocked(useSearchParams).mockReturnValue([searchParams, jest.fn()]);
-
-  return render(
+const renderComponent = (searchParams?: Record<string, string>) =>
+  render(
     <MemoryRouter>
-      <Nav>
-        <NavList>
-          <SavedViewNavItems config={testConfig} namespace="my-workspace" />
-        </NavList>
-      </Nav>
+      <NuqsTestingAdapter searchParams={searchParams}>
+        <Nav>
+          <NavList>
+            <SavedViewNavItems config={testConfig} />
+          </NavList>
+        </Nav>
+      </NuqsTestingAdapter>
     </MemoryRouter>,
   );
-};
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -96,36 +91,32 @@ describe('SavedViewNavItems', () => {
   });
 
   it('marks nav item as active when view param matches slug', () => {
-    renderComponent('running-builds');
+    renderComponent({ view: 'running-builds' });
     const navItem = screen.getByTestId('saved-view-nav-running-builds');
-    expect(navItem).toHaveClass('pf-m-current');
+    expect(navItem.closest('a')).toHaveClass('pf-m-current');
   });
 
   it('does not mark nav item as active when view param does not match', () => {
-    renderComponent('other-view');
+    renderComponent({ view: 'other-view' });
     const navItem = screen.getByTestId('saved-view-nav-running-builds');
-    expect(navItem).not.toHaveClass('pf-m-current');
+    expect(navItem.closest('a')).not.toHaveClass('pf-m-current');
   });
 
-  it('opens kebab menu with Rename and Delete options', () => {
+  it('shows Rename and Delete actions for each view', () => {
     renderComponent();
-    const kebab = screen.getByTestId('saved-view-kebab-running-builds');
-    fireEvent.click(kebab);
-    expect(screen.getByText('Rename')).toBeInTheDocument();
-    expect(screen.getByText('Delete')).toBeInTheDocument();
+    expect(screen.getByTestId('saved-view-rename-running-builds')).toBeInTheDocument();
+    expect(screen.getByTestId('saved-view-delete-running-builds')).toBeInTheDocument();
   });
 
   it('launches rename modal on Rename click', () => {
     renderComponent();
-    fireEvent.click(screen.getByTestId('saved-view-kebab-running-builds'));
-    fireEvent.click(screen.getByText('Rename'));
+    fireEvent.click(screen.getByTestId('saved-view-rename-running-builds'));
     expect(mockShowModal).toHaveBeenCalledTimes(1);
   });
 
   it('launches delete modal on Delete click', () => {
     renderComponent();
-    fireEvent.click(screen.getByTestId('saved-view-kebab-running-builds'));
-    fireEvent.click(screen.getByText('Delete'));
+    fireEvent.click(screen.getByTestId('saved-view-delete-running-builds'));
     expect(mockShowModal).toHaveBeenCalledTimes(1);
   });
 });

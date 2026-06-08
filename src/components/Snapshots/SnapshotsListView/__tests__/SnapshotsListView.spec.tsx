@@ -2,7 +2,6 @@ import '@testing-library/jest-dom';
 import { screen, act, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useK8sAndKarchResources } from '~/hooks/useK8sAndKarchResources';
-import { NuqsAdapter } from '~/shared/components/Filter';
 import { ResourceSource } from '~/types/k8s';
 import { setupVirtualizerMock } from '~/unit-test-utils';
 import { mockSnapshots } from '../../../../__data__/mock-snapshots';
@@ -43,11 +42,7 @@ jest.mock('react-router-dom', () => {
 
 const useMockSnapshots = useK8sAndKarchResources as jest.Mock;
 
-const createWrappedComponent = () => (
-  <NuqsAdapter>
-    <SnapshotsListView applicationName="test-app" />
-  </NuqsAdapter>
-);
+const createWrappedComponent = () => <SnapshotsListView applicationName="test-app" />;
 
 describe('SnapshotsListView - Column Headers', () => {
   createUseParamsMock({ applicationName: 'test-app' });

@@ -57,6 +57,7 @@ const useMockSnapshots = useK8sAndKarchResources as jest.Mock;
 describe('SnapshotsListViewTab', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.clearAllTimers();
     mockUseNamespaceHook('test-namespace');
     useMockSnapshots.mockReturnValue({
       data: mockSnapshots,

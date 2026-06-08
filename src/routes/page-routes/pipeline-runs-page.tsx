@@ -1,7 +1,6 @@
 import { redirect, RouteObject } from 'react-router-dom';
 import { PIPELINE_RUNS_PAGE_PATH } from '@routes/paths';
 import { PipelineRunsPage } from '~/components/PipelineRunsPage/PipelineRunsPage';
-import { NuqsAdapter } from '~/shared/components/Filter';
 import { STORAGE_KEY_PREFIX } from '~/shared/components/SavedViews/utils';
 import { RouteErrorBoundry } from '../RouteErrorBoundary';
 
@@ -34,11 +33,7 @@ export const pipelineRunsPageRoutes: RouteObject[] = [
   {
     path: PIPELINE_RUNS_PAGE_PATH.path,
     loader: pipelineRunsPageLoader,
-    element: (
-      <NuqsAdapter>
-        <PipelineRunsPage />
-      </NuqsAdapter>
-    ),
+    element: <PipelineRunsPage />,
     errorElement: <RouteErrorBoundry />,
   },
 ];
