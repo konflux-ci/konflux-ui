@@ -24,14 +24,8 @@ import { Timestamp } from '~/shared/components/timestamp/Timestamp';
 import { TriggerColumnData } from '~/shared/components/trigger-column-data/trigger-column-data';
 import { PipelineRunKind } from '~/types';
 import { createCommitObjectFromPLR } from '~/utils/commits-utils';
+import { PipelineRunEventTypeLabel } from '~/utils/pipeline-run-filter-utils';
 import { pipelineRunStatus } from '~/utils/pipeline-utils';
-
-export enum PipelineRunEventTypeLabel {
-  push = 'Push',
-  pull_request = 'Pull Request',
-  incoming = 'Incoming',
-  'retest-all-comment' = 'Retest All Comment',
-}
 
 const PipelineRunAttestation: React.FC<{ plr: PipelineRunKind }> = ({ plr }) => {
   const hasAttestation =
@@ -237,9 +231,7 @@ export const getPipelineRunsColumns = (namespace: string): ColumnDefinition<Pipe
       if (!commit) {
         return <>-</>;
       }
-      const eventTypeLabel =
-        PipelineRunEventTypeLabel[commit.eventType as keyof typeof PipelineRunEventTypeLabel] ??
-        '-';
+      const eventTypeLabel = PipelineRunEventTypeLabel[commit.eventType] ?? '-';
       return (
         <>
           {eventTypeLabel}{' '}

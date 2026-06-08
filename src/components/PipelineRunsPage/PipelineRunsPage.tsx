@@ -1,7 +1,7 @@
 import React from 'react';
 import { Bullseye, Spinner } from '@patternfly/react-core';
 import ColumnManagement from '~/components/ColumnManagement/ColumnManagement';
-import { PipelineRunEventType, PipelineRunLabel, runStatus } from '~/consts/pipelinerun';
+import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { useApplications } from '~/hooks/useApplications';
 import { useAllComponents } from '~/hooks/useComponents';
 import { usePipelineRunsV2 } from '~/hooks/usePipelineRunsV2';
@@ -16,15 +16,17 @@ import { useActiveSavedView, SavedViewStar } from '~/shared/components/SavedView
 import { Table, TableContainer } from '~/shared/components/TableV2';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { PipelineRunKind, ComponentKind } from '~/types';
-import { pipelineRunStatus } from '~/utils/pipeline-utils';
+import {
+  PIPELINE_RUN_EVENT_TYPE_OPTIONS,
+  PIPELINE_RUN_STATUS_OPTIONS,
+  PIPELINE_RUN_TYPE_OPTIONS,
+  eventTypeFilterConfig,
+  pipelineTypeFilterConfig,
+  statusFilterConfig,
+} from '~/utils/pipeline-run-filter-utils';
 import PageLayout from '../PageLayout/PageLayout';
-import { getPipelineRunsColumns, PipelineRunEventTypeLabel } from './PipelineRunsColumns';
+import { getPipelineRunsColumns } from './PipelineRunsColumns';
 import { PipelineRunsEmptyState } from './PipelineRunsEmptyState';
-
-const eventTypeOptions = Object.values(PipelineRunEventType).map((value) => ({
-  label: PipelineRunEventTypeLabel[value as keyof typeof PipelineRunEventTypeLabel] ?? value,
-  value,
-}));
 
 const filterConfigs = defineFilters<PipelineRunKind>()([
   {
@@ -55,8 +57,6 @@ const filterConfigs = defineFilters<PipelineRunKind>()([
     label: 'Application',
     mode: 'api',
     group: 'resource',
-    filterFn: (item, values) =>
-      values.includes(item.metadata?.labels?.[PipelineRunLabel.APPLICATION] ?? ''),
   },
   {
     type: 'multiSelect',
@@ -64,34 +64,10 @@ const filterConfigs = defineFilters<PipelineRunKind>()([
     label: 'Component',
     mode: 'api',
     group: 'resource',
-    filterFn: (item, values) =>
-      values.includes(item.metadata?.labels?.[PipelineRunLabel.COMPONENT] ?? ''),
   },
-  {
-    type: 'multiSelect',
-    param: 'eventType',
-    label: 'Event type',
-    mode: 'api',
-    group: 'resource',
-    filterFn: (item, values) =>
-      values.includes(item.metadata?.labels?.[PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL] ?? ''),
-  },
-  {
-    type: 'multiSelect',
-    param: 'status',
-    label: 'Status',
-    group: 'attributes',
-    filterFn: (item, values) => values.includes(pipelineRunStatus(item)),
-  },
-  {
-    type: 'multiSelect',
-    param: 'type',
-    label: 'Type',
-    mode: 'api',
-    group: 'attributes',
-    filterFn: (item, values) =>
-      values.includes(item.metadata?.labels?.[PipelineRunLabel.PIPELINE_TYPE] ?? ''),
-  },
+  { ...eventTypeFilterConfig, group: 'resource' },
+  { ...statusFilterConfig, group: 'attributes' },
+  { ...pipelineTypeFilterConfig, group: 'attributes' },
 ] as const);
 
 const TopFilter = defineFilters<PipelineRunKind>()([
@@ -225,20 +201,6 @@ export const PipelineRunsPage: React.FC = () => {
     [filteredComponents],
   );
 
-  const statusOptions = React.useMemo(
-    () => Object.values(runStatus).map((s) => ({ label: s, value: s })),
-    [],
-  );
-
-  const typeOptions = React.useMemo(
-    () =>
-      buildOptions(
-        pipelineRuns ?? [],
-        (plr) => plr.metadata?.labels?.[PipelineRunLabel.PIPELINE_TYPE] ?? '',
-      ),
-    [pipelineRuns],
-  );
-
   // Loading state
   if (!appsLoaded || !componentsLoaded) {
     return (
@@ -253,9 +215,9 @@ export const PipelineRunsPage: React.FC = () => {
   const optionsMap = {
     app: appOptions,
     component: componentOptions,
-    eventType: eventTypeOptions,
-    status: statusOptions,
-    type: typeOptions,
+    eventType: PIPELINE_RUN_EVENT_TYPE_OPTIONS,
+    status: PIPELINE_RUN_STATUS_OPTIONS,
+    type: PIPELINE_RUN_TYPE_OPTIONS,
   };
 
   return (
