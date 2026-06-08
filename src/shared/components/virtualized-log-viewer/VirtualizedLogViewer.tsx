@@ -8,7 +8,7 @@ import './VirtualizedLogViewer.scss';
 
 export interface VirtualizedLogViewerProps {
   sections: LogSection[];
-  height: number; // Required: height in pixels for virtualization
+  height: number;
   width?: string | number;
   scrollToRow?: number;
   onScroll?: (props: {
@@ -18,14 +18,6 @@ export interface VirtualizedLogViewerProps {
   }) => void;
 }
 
-/**
- * Virtualized log viewer using @tanstack/react-virtual
- *
- * Features:
- * - Uses @tanstack/react-virtual for virtualization
- * - Renders plain text (no syntax highlighting yet)
- * - Drop-in replacement for PatternFly LogViewer
- */
 export const VirtualizedLogViewer: React.FC<VirtualizedLogViewerProps> = ({
   sections,
   height,
@@ -33,26 +25,48 @@ export const VirtualizedLogViewer: React.FC<VirtualizedLogViewerProps> = ({
   scrollToRow,
   onScroll,
 }) => {
-  // Get search context from parent
   const toolbarContext = React.useContext(LogViewerToolbarContext);
-  const searchedInput = toolbarContext?.searchedInput || '';
+  const searchedInput =
+    typeof toolbarContext?.searchedInput === 'string' ? toolbarContext.searchedInput : '';
   const currentMatchIndex = toolbarContext?.currentSearchedItemCount || 0;
   const searchedWordIndexes = toolbarContext?.searchedWordIndexes || [];
 
-  // Prioritize toolbarContext.rowInFocus if it has a valid rowIndex (>= 0)
-  // This allows programmatic navigation via scrollToRow() to work correctly
   const rowInFocus =
     toolbarContext?.rowInFocus && toolbarContext.rowInFocus.rowIndex >= 0
       ? toolbarContext.rowInFocus
       : searchedWordIndexes[currentMatchIndex];
 
-  // Determine effective scroll row based on search or prop
   const effectiveScrollToRow = React.useMemo(() => {
     if (rowInFocus && rowInFocus.rowIndex >= 0) {
-      return rowInFocus.rowIndex + 1; // +1 because scrollToRow is 1-indexed
+      return rowInFocus.rowIndex + 1;
     }
     return scrollToRow;
   }, [rowInFocus, scrollToRow]);
+
+  // Expand folded steps only when using search prev/next — not when typing a query.
+  const [expandSearchTargetRow, setExpandSearchTargetRow] = React.useState<number | undefined>();
+  const prevSearchedInputRef = React.useRef(searchedInput);
+  const prevMatchIndexRef = React.useRef(currentMatchIndex);
+
+  React.useEffect(() => {
+    const isNewSearch = prevSearchedInputRef.current !== searchedInput;
+    prevSearchedInputRef.current = searchedInput;
+
+    if (isNewSearch) {
+      prevMatchIndexRef.current = currentMatchIndex;
+      setExpandSearchTargetRow(undefined);
+      return;
+    }
+
+    if (
+      currentMatchIndex !== prevMatchIndexRef.current &&
+      rowInFocus &&
+      rowInFocus.rowIndex >= 0
+    ) {
+      setExpandSearchTargetRow(rowInFocus.rowIndex + 1);
+    }
+    prevMatchIndexRef.current = currentMatchIndex;
+  }, [searchedInput, currentMatchIndex, rowInFocus]);
 
   return (
     <div className="pf-v5-c-log-viewer__main">
@@ -61,6 +75,7 @@ export const VirtualizedLogViewer: React.FC<VirtualizedLogViewerProps> = ({
         height={height}
         width={width}
         scrollToRow={effectiveScrollToRow}
+        expandSearchTargetRow={expandSearchTargetRow}
         onScroll={onScroll}
         searchText={searchedInput}
         currentSearchMatch={rowInFocus}

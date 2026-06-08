@@ -10,6 +10,18 @@ export const normalizeLineEndings = (value: string): string => value.replace(/\r
 
 export const stripAnsiCodes = (value: string): string => value.replace(ANSI_ESCAPE_REGEX, '');
 
+export function normalizeLogLines(data: string): string[] {
+  return stripAnsiCodes(normalizeLineEndings(data)).split('\n');
+}
+
+export function singleLogSection(
+  data: string,
+  containerName = 'log',
+  isCompleted = true,
+): LogSection {
+  return { containerName, data, isCompleted };
+}
+
 export const buildLines = (sections: LogSection[]): string[] => {
   const result: string[] = [];
   for (const section of sections) {
