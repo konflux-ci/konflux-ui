@@ -7,6 +7,10 @@ interface TableRowProps<TData> {
   row: Row<TData>;
   /** Unique row identifier, set as `data-id` on the `<Tr>`. */
   rowId: string;
+  /** Virtual index used by TanStack Virtual for measurement tracking. */
+  virtualIndex: number;
+  /** Callback from virtualizer to measure this row's actual DOM height. */
+  measureElement: (el: HTMLElement | null) => void;
   /** Whether to render an expand/collapse toggle cell. */
   enableExpansion?: boolean;
 }
@@ -20,9 +24,15 @@ interface TableRowProps<TData> {
  *
  * @typeParam TData - The row data type
  */
-export const TableRow = <TData,>({ row, rowId, enableExpansion }: TableRowProps<TData>) => {
+export const TableRow = <TData,>({
+  row,
+  rowId,
+  virtualIndex,
+  measureElement,
+  enableExpansion,
+}: TableRowProps<TData>) => {
   return (
-    <Tr data-test="table-row" data-id={rowId}>
+    <Tr data-test="table-row" data-id={rowId} data-index={virtualIndex} ref={measureElement}>
       {enableExpansion && (
         <Td
           expand={{

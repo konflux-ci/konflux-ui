@@ -11,6 +11,8 @@ jest.mock('~/shared/components/TableV2/TableRow', () => ({
   ),
 }));
 
+const mockMeasureElement = jest.fn();
+
 const renderTableBody = (props: Partial<React.ComponentProps<typeof TableBody>> = {}) => {
   const rows = props.rows ?? [createMockRow('r-0'), createMockRow('r-1'), createMockRow('r-2')];
   const virtualRows = props.virtualRows ?? createMockVirtualRows(rows.length);
@@ -21,6 +23,7 @@ const renderTableBody = (props: Partial<React.ComponentProps<typeof TableBody>> 
         rows={rows as never[]}
         virtualRows={virtualRows}
         totalSize={rows.length * 44}
+        measureElement={mockMeasureElement}
         getRowId={(row: { id: string }) => row.id}
         visibleColumnCount={3}
         {...props}

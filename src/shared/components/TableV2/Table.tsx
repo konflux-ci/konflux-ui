@@ -123,12 +123,13 @@ export const Table = <TData,>({
 
   return (
     <div data-test="table-v2" ref={tableRef}>
-      <PfTable aria-label={ariaLabel} isStriped variant="compact" isExpandable={enableExpansion}>
+      <PfTable aria-label={ariaLabel} variant="compact" isExpandable={enableExpansion}>
         <TableHeader table={table} columnWidths={columnWidths} enableExpansion={enableExpansion} />
         <TableBody
           rows={rows}
           virtualRows={virtualRows}
           totalSize={virtualizer.getTotalSize()}
+          measureElement={virtualizer.measureElement}
           getRowId={getRowId}
           enableExpansion={enableExpansion}
           expandedContent={expandedContent}

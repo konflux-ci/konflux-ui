@@ -19,6 +19,8 @@ const renderTableRow = (ui: React.ReactElement) =>
     </Table>,
   );
 
+const mockMeasureElement = jest.fn();
+
 describe('TableRow', () => {
   beforeEach(() => {
     (flexRender as jest.Mock).mockClear();
@@ -31,7 +33,14 @@ describe('TableRow', () => {
 
   it('renders a Td for each visible cell', () => {
     const row = createMockRow('row-1', { cells: mockCells });
-    renderTableRow(<TableRow row={row as never} rowId="test-1" />);
+    renderTableRow(
+      <TableRow
+        row={row as never}
+        rowId="test-1"
+        virtualIndex={0}
+        measureElement={mockMeasureElement}
+      />,
+    );
 
     expect(screen.getByText('my-app')).toBeInTheDocument();
     expect(screen.getByText('Running')).toBeInTheDocument();
@@ -39,7 +48,14 @@ describe('TableRow', () => {
 
   it('sets data-test and data-id attributes on the row', () => {
     const row = createMockRow('row-1', { cells: mockCells });
-    renderTableRow(<TableRow row={row as never} rowId="test-1" />);
+    renderTableRow(
+      <TableRow
+        row={row as never}
+        rowId="test-1"
+        virtualIndex={0}
+        measureElement={mockMeasureElement}
+      />,
+    );
 
     const tr = screen.getByTestId('table-row');
     expect(tr).toBeInTheDocument();
@@ -48,7 +64,14 @@ describe('TableRow', () => {
 
   it('sets dataLabel on each Td from column header', () => {
     const row = createMockRow('row-1', { cells: mockCells });
-    renderTableRow(<TableRow row={row as never} rowId="test-1" />);
+    renderTableRow(
+      <TableRow
+        row={row as never}
+        rowId="test-1"
+        virtualIndex={0}
+        measureElement={mockMeasureElement}
+      />,
+    );
 
     const cells = screen.getAllByRole('cell');
     expect(cells[0]).toHaveAttribute('data-label', 'Name');
@@ -57,7 +80,14 @@ describe('TableRow', () => {
 
   it('calls flexRender with cell renderer and context', () => {
     const row = createMockRow('row-1', { cells: mockCells });
-    renderTableRow(<TableRow row={row as never} rowId="test-1" />);
+    renderTableRow(
+      <TableRow
+        row={row as never}
+        rowId="test-1"
+        virtualIndex={0}
+        measureElement={mockMeasureElement}
+      />,
+    );
 
     expect(flexRender).toHaveBeenCalledTimes(2);
     expect(flexRender).toHaveBeenCalledWith(
@@ -68,7 +98,15 @@ describe('TableRow', () => {
 
   it('renders expand toggle as first cell when enableExpansion is true', () => {
     const row = createMockRow('row-1', { cells: mockCells });
-    renderTableRow(<TableRow row={row as never} rowId="test-1" enableExpansion />);
+    renderTableRow(
+      <TableRow
+        row={row as never}
+        rowId="test-1"
+        virtualIndex={0}
+        measureElement={mockMeasureElement}
+        enableExpansion
+      />,
+    );
 
     const tr = screen.getByTestId('table-row');
     const cells = within(tr).getAllByRole('cell');
@@ -82,7 +120,14 @@ describe('TableRow', () => {
 
   it('does not render expand toggle when enableExpansion is false', () => {
     const row = createMockRow('row-1', { cells: mockCells });
-    renderTableRow(<TableRow row={row as never} rowId="test-1" />);
+    renderTableRow(
+      <TableRow
+        row={row as never}
+        rowId="test-1"
+        virtualIndex={0}
+        measureElement={mockMeasureElement}
+      />,
+    );
 
     const tr = screen.getByTestId('table-row');
     const cells = within(tr).getAllByRole('cell');

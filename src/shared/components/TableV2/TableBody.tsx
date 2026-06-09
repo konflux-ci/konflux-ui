@@ -13,6 +13,8 @@ interface TableBodyProps<TData> {
   virtualRows: VirtualItem[];
   /** Total pixel height of all rows (used for spacer calculation). */
   totalSize: number;
+  /** Callback from virtualizer to measure a row element for dynamic height. */
+  measureElement: (el: HTMLElement | null) => void;
   /** Returns a unique, stable string ID for a given row. */
   getRowId: (row: TData) => string;
   /** Whether rows are expandable. */
@@ -23,8 +25,6 @@ interface TableBodyProps<TData> {
   visibleColumnCount: number;
   /** Whether the next page is being fetched. Shows skeleton rows when `true`. */
   isFetchingNextPage?: boolean;
-  /** Callback to measure a row element for dynamic height virtualization. */
-  measureElement?: (el: HTMLElement | null) => void;
 }
 
 /**
@@ -42,6 +42,7 @@ export const TableBody = <TData,>({
   rows,
   virtualRows,
   totalSize,
+  measureElement,
   getRowId,
   enableExpansion,
   expandedContent,
@@ -64,7 +65,13 @@ export const TableBody = <TData,>({
         const rowId = getRowId(row.original);
         return (
           <React.Fragment key={rowId}>
-            <TableRow row={row} rowId={rowId} enableExpansion={enableExpansion} />
+            <TableRow
+              row={row}
+              rowId={rowId}
+              virtualIndex={virtualRow.index}
+              measureElement={measureElement}
+              enableExpansion={enableExpansion}
+            />
             {enableExpansion && row.getIsExpanded() && expandedContent && (
               <Tr>
                 <Td colSpan={visibleColumnCount}>

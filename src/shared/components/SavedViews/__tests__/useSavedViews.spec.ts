@@ -74,7 +74,7 @@ describe('useSavedViews', () => {
         {
           slug: 'sv-auto1234',
           label: 'My View',
-          searchParams: '?status=failed',
+          searchParams: 'status=failed',
           columnStateKey: 'col-state-pr:sv-auto1234',
         },
       ]);
