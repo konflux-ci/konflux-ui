@@ -83,7 +83,7 @@ const InternalFLAGS = {
   },
   'taskruns-kubearchive': {
     key: 'taskruns-kubearchive',
-    description: 'Use KubeArchive as data source for TaskRuns instead of Tekton results',
+    description: 'Use KubeArchive as data source for TaskRuns instead of Tekton Results',
     defaultEnabled: true,
     status: 'ready',
     guard: {
