@@ -1,5 +1,5 @@
-import { testTaskRuns } from '../../components/TaskRunListView/__data__/mock-TaskRun-data';
-import { sortTaskRunsByTime } from '../useTaskRuns';
+import { testTaskRuns } from '~/components/TaskRunListView/__data__/mock-TaskRun-data';
+import { sortTaskRunsByTime } from '~/hooks/useTaskRuns';
 
 describe('sortTaskRunsByTime', () => {
   it('returns empty array when task runs are undefined or empty', () => {

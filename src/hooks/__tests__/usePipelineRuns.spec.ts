@@ -87,4 +87,24 @@ describe('useLatestBuildPipelineRunForComponent', () => {
     );
     expect(result.current).toEqual([resultMock[0], true, undefined]);
   });
+
+  it('should return the latest pipeline run by timestamp', () => {
+    const olderRun = {
+      ...resultMock[0],
+      metadata: { ...resultMock[0].metadata, creationTimestamp: '2023-01-01T10:00:00Z' },
+    };
+    const newerRun = {
+      ...resultMock[0],
+      metadata: {
+        ...resultMock[0].metadata,
+        name: 'newer',
+        creationTimestamp: '2023-06-01T10:00:00Z',
+      },
+    };
+    useK8sWatchResourceMock.mockReturnValue([[olderRun, newerRun], true]);
+    const { result } = renderHook(() =>
+      useLatestBuildPipelineRunForComponent('test-ns', 'sample-component'),
+    );
+    expect(result.current[0]).toEqual(newerRun);
+  });
 });
