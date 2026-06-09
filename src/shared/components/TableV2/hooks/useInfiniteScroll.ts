@@ -91,9 +91,6 @@ export const useInfiniteScroll = (options: UseInfiniteScrollOptions): void => {
       }
     };
 
-    // Check immediately in case we're already scrolled to bottom
-    handleScroll();
-
     scrollElement.addEventListener('scroll', handleScroll, { passive: true });
     return () => scrollElement.removeEventListener('scroll', handleScroll);
   }, [

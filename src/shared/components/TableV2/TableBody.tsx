@@ -55,7 +55,7 @@ export const TableBody = <TData,>({
     : 0;
 
   return (
-    <Tbody data-test="table-body">
+    <Tbody data-test="table-body" style={{ overflowAnchor: 'none' }}>
       {virtualRows.length > 0 && virtualRows[0].start > 0 && (
         <Tr style={{ height: virtualRows[0].start }} />
       )}

@@ -38,6 +38,8 @@ describe('useInfiniteScroll', () => {
       }),
     );
 
+    // Fetch only triggers on actual scroll events, not on mount
+    scrollElement.dispatchEvent(new Event('scroll'));
     expect(fetchNextPage).toHaveBeenCalledTimes(1);
   });
 
