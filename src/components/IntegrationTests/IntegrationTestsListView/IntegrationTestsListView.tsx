@@ -10,6 +10,7 @@ import {
   Truncate,
   EmptyStateActions,
 } from '@patternfly/react-core';
+import { INTEGRATION_TEST_ADD_PATH, INTEGRATION_TEST_DETAILS_PATH } from '@routes/paths';
 import ActionMenu from '~/shared/components/action-menu/ActionMenu';
 import AppEmptyState from '~/shared/components/empty-state/AppEmptyState';
 import FilteredEmptyState from '~/shared/components/empty-state/FilteredEmptyState';
@@ -27,7 +28,6 @@ import { textMatch } from '~/utils/text-filter-utils';
 import emptyStateImgUrl from '../../../assets/Integration-test.svg';
 import { useIntegrationTestScenarios } from '../../../hooks/useIntegrationTestScenarios';
 import { IntegrationTestScenarioModel } from '../../../models';
-import { INTEGRATION_TEST_ADD_PATH, INTEGRATION_TEST_DETAILS_PATH } from '../../../routes/paths';
 import { RouterParams } from '../../../routes/utils';
 import { IntegrationTestScenarioKind } from '../../../types/coreBuildService';
 import { useAccessReviewForModel } from '../../../utils/rbac';

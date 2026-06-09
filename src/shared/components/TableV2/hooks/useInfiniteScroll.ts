@@ -67,6 +67,10 @@ export const useInfiniteScroll = (options: UseInfiniteScrollOptions): void => {
     threshold = 5,
   } = options;
 
+  // Derive a stable primitive from virtualRows to avoid effect re-registration
+  // on every render (virtualRows is a new array reference each time).
+  const lastVirtualIndex = virtualRows.length > 0 ? virtualRows[virtualRows.length - 1].index : -1;
+
   useEffect(() => {
     if (!scrollElement || !hasNextPage || isFetchingNextPage) return;
 
@@ -81,9 +85,8 @@ export const useInfiniteScroll = (options: UseInfiniteScrollOptions): void => {
       if (!nearBottom) return;
 
       // Also check virtual items as a secondary guard
-      const lastItem = virtualRows[virtualRows.length - 1];
-      if (!lastItem) return;
-      if (lastItem.index >= totalCount - threshold) {
+      if (lastVirtualIndex < 0) return;
+      if (lastVirtualIndex >= totalCount - threshold) {
         fetchNextPage();
       }
     };
@@ -95,7 +98,7 @@ export const useInfiniteScroll = (options: UseInfiniteScrollOptions): void => {
     return () => scrollElement.removeEventListener('scroll', handleScroll);
   }, [
     scrollElement,
-    virtualRows,
+    lastVirtualIndex,
     totalCount,
     hasNextPage,
     isFetchingNextPage,

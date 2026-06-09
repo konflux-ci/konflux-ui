@@ -30,7 +30,24 @@ export const useSavedViews = (config: SavedViewsConfig) => {
       searchParams: string;
       currentColumnStateKey: string;
     }): string => {
-      const slug = providedSlug ?? generateSlug();
+      // Validate searchParams — strip leading '?' and ensure it parses
+      let sanitizedParams = searchParams;
+      if (sanitizedParams.startsWith('?')) {
+        sanitizedParams = sanitizedParams.slice(1);
+      }
+      // Validate by attempting to parse; use empty string on failure
+      try {
+        new URLSearchParams(sanitizedParams);
+      } catch {
+        sanitizedParams = '';
+      }
+
+      // Ensure slug uniqueness — regenerate on collision
+      let slug = providedSlug ?? generateSlug();
+      if (!isSlugUnique(slug, views)) {
+        slug = generateSlug();
+      }
+
       const columnStateKey = `${columnKeyPrefix}:${slug}`;
 
       // Copy column state from current key to the new view's key
@@ -39,12 +56,12 @@ export const useSavedViews = (config: SavedViewsConfig) => {
         localStorage.setItem(columnStateKey, columnState);
       }
 
-      const newView: SavedView = { slug, label, searchParams, columnStateKey };
+      const newView: SavedView = { slug, label, searchParams: sanitizedParams, columnStateKey };
       setViews((prev) => [...(prev ?? []), newView]);
 
       return slug;
     },
-    [columnKeyPrefix, setViews],
+    [columnKeyPrefix, setViews, views],
   );
 
   const deleteView = useCallback(

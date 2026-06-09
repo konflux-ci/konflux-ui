@@ -259,9 +259,9 @@ export const PipelineRunsPage: React.FC = () => {
           data={filteredData}
           unfilteredData={pipelineRuns}
           loaded={plrLoaded}
-          noDataState={<FilteredEmptyState onClearFilters={clearAll} />}
+          emptyState={<FilteredEmptyState onClearFilters={clearAll} />}
           loadError={plrError as Error | undefined}
-          emptyState={<PipelineRunsEmptyState />}
+          noDataState={<PipelineRunsEmptyState />}
         >
           <Table
             data={filteredData}
