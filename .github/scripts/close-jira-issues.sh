@@ -28,18 +28,44 @@ if [[ -z "$USER" || -z "$TOKEN" ]]; then
   exit 1
 fi
 
-get_close_transition_id() {
+build_close_transition_payload() {
   local issue_key="$1"
-  local transitions_response
+  local transitions_response payload
   if ! transitions_response="$(
     curl -sS --fail-with-body -u "${USER}:${TOKEN}" \
       -H 'Accept: application/json' \
-      "${JIRA_API_URL}/issue/${issue_key}/transitions"
+      "${JIRA_API_URL}/issue/${issue_key}/transitions?expand=transitions.fields"
   )"; then
     echo "Failed to fetch transitions for ${issue_key}: ${transitions_response:-curl request failed}" >&2
     return 1
   fi
-  jq -r '[.transitions[] | select(.to.name == "Closed") | .id][0] // empty' <<<"$transitions_response"
+
+  payload="$(jq -c '
+    [.transitions[] | select(.to.name == "Closed")] | first | if . == null then empty else
+      { transition: { id: .id } }
+      + if .fields.resolution then {
+          fields: {
+            resolution: {
+              name: (
+                [.fields.resolution.allowedValues[]?.name] as $names
+                | if ($names | index("Closed")) then "Closed"
+                  elif ($names | index("Done")) then "Done"
+                  elif ($names | length) > 0 then $names[0]
+                  else "Closed"
+                  end
+              )
+            }
+          }
+        } else {} end
+    end
+  ' <<<"$transitions_response")"
+
+  if [[ -z "$payload" ]]; then
+    echo "No Close transition available for ${issue_key}" >&2
+    return 1
+  fi
+
+  echo "$payload"
 }
 
 if [[ ! -f "$CHANGELOG" ]]; then
@@ -77,23 +103,11 @@ for issue_key in "${JIRA_ISSUES[@]}"; do
     continue
   fi
 
-  transition_id=""
-  if ! transition_id="$(get_close_transition_id "$issue_key")"; then
+  transition_payload=""
+  if ! transition_payload="$(build_close_transition_payload "$issue_key")"; then
     FAILED+=("$issue_key")
     continue
   fi
-  if [[ -z "$transition_id" ]]; then
-    echo "No Close transition available for ${issue_key} (status: ${status:-unknown})" >&2
-    FAILED+=("$issue_key")
-    continue
-  fi
-
-  transition_payload="$(jq -n \
-    --arg transition_id "$transition_id" \
-    '{
-      "resolution": { "name": "Closed" },
-      "transition": { "id": $transition_id }
-    }')"
 
   if ! transition_response="$(
     curl -sS -w $'\n%{http_code}' -u "${USER}:${TOKEN}" \
