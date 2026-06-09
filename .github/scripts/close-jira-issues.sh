@@ -3,15 +3,16 @@
 #
 # Requires JIRA_USER and JIRA_TOKEN environment variables.
 # Optional:
-#   JIRA_BASE_URL - browse URL for issue links (default: https://issues.redhat.com)
-#   JIRA_API_URL  - REST API base URL (default: https://redhat.atlassian.net/rest/api/2)
+#   CHANGELOG_PATH - changelog file path (default: /tmp/changelog.md)
+#   JIRA_BASE_URL  - browse URL for issue links (default: https://issues.redhat.com)
+#   JIRA_API_URL   - REST API base URL (default: https://redhat.atlassian.net/rest/api/2)
 # issues.redhat.com is the browse alias for the redhat.atlassian.net Jira instance.
 #
 # Usage: ./close-jira-issues.sh [path/to/changelog.md]
 
 set -euo pipefail
 
-CHANGELOG="${1:-/tmp/changelog.md}"
+CHANGELOG="${1:-${CHANGELOG_PATH:-/tmp/changelog.md}}"
 SKIPPED=() #issues that were already closed
 CLOSED=()
 FAILED=()

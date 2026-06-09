@@ -157,6 +157,7 @@ jobs:
       OLD_SHA: ${{ needs.preflight.outputs.old_sha }}
       NEW_SHA: ${{ needs.preflight.outputs.new_sha }}
       RELEASE_DATE: ${{ needs.preflight.outputs.release_date }}
+      CHANGELOG_PATH: /tmp/changelog.md
 
     steps:
       - name: Checkout
@@ -171,7 +172,7 @@ jobs:
             -b "$OLD_SHA" \
             -t "$NEW_SHA" \
             -d "$(pwd)" \
-            -o /tmp/changelog.md
+            -o "$CHANGELOG_PATH"
 
       # --- Create tracking issue (before infra PR so we can include Fixes link) ---
       - name: Create tracking issue
@@ -254,7 +255,7 @@ jobs:
           <details>
           <summary>What's in this release</summary>
 
-          $(cat /tmp/changelog.md)
+          $(cat "$CHANGELOG_PATH")
 
           </details>
 
