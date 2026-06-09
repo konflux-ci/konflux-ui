@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 # Close Jira issues referenced in a changelog (or any markdown file).
+#
 # Requires JIRA_USER and JIRA_TOKEN environment variables.
+# Optional:
+#   JIRA_BASE_URL - browse URL for issue links (default: https://issues.redhat.com)
+#   JIRA_API_URL  - REST API base URL (default: https://redhat.atlassian.net/rest/api/2)
+# issues.redhat.com is the browse alias for the redhat.atlassian.net Jira instance.
+#
 # Usage: ./close-jira-issues.sh [path/to/changelog.md]
 
 set -euo pipefail
@@ -11,7 +17,11 @@ CLOSED=()
 FAILED=()
 USER="${JIRA_USER:-}"
 TOKEN="${JIRA_TOKEN:-}"
-JIRA_API_BASE="https://redhat.atlassian.net/rest/api/2"
+JIRA_BASE_URL="${JIRA_BASE_URL:-https://issues.redhat.com}"
+JIRA_BASE_URL="${JIRA_BASE_URL%/}"
+JIRA_BASE_URL_PATTERN="${JIRA_BASE_URL//./\\.}"
+JIRA_API_URL="${JIRA_API_URL:-https://redhat.atlassian.net/rest/api/2}"
+JIRA_API_URL="${JIRA_API_URL%/}"
 
 if [[ -z "$USER" || -z "$TOKEN" ]]; then
   echo "JIRA_USER and JIRA_TOKEN must be set" >&2
@@ -24,7 +34,7 @@ get_close_transition_id() {
   if ! transitions_response="$(
     curl -sS --fail-with-body -u "${USER}:${TOKEN}" \
       -H 'Accept: application/json' \
-      "${JIRA_API_BASE}/issue/${issue_key}/transitions"
+      "${JIRA_API_URL}/issue/${issue_key}/transitions"
   )"; then
     echo "Failed to fetch transitions for ${issue_key}: ${transitions_response:-curl request failed}" >&2
     return 1
@@ -38,7 +48,7 @@ if [[ ! -f "$CHANGELOG" ]]; then
 fi
 
 mapfile -t JIRA_ISSUES < <(
-  grep -oE 'https://issues\.redhat\.com/browse/[A-Z]+-[0-9]+' "$CHANGELOG" \
+  grep -oE "${JIRA_BASE_URL_PATTERN}/browse/[A-Z]+-[0-9]+" "$CHANGELOG" \
     | sed 's|.*/||' \
     | sort -u
 )
@@ -53,7 +63,7 @@ for issue_key in "${JIRA_ISSUES[@]}"; do
   if ! issue_response="$(
     curl -sS --fail-with-body -u "${USER}:${TOKEN}" \
       -H 'Accept: application/json' \
-      "${JIRA_API_BASE}/issue/${issue_key}"
+      "${JIRA_API_URL}/issue/${issue_key}"
   )"; then
     echo "Failed to fetch status for ${issue_key}: ${issue_response:-curl request failed}" >&2
     FAILED+=("$issue_key")
@@ -90,7 +100,7 @@ for issue_key in "${JIRA_ISSUES[@]}"; do
       -H 'Accept: application/json' \
       -H 'Content-Type: application/json' \
       -X POST \
-      "${JIRA_API_BASE}/issue/${issue_key}/transitions" \
+      "${JIRA_API_URL}/issue/${issue_key}/transitions" \
       -d "$transition_payload"
   )"; then
     echo "Failed to close ${issue_key}: curl request failed" >&2
