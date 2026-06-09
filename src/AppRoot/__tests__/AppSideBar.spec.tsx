@@ -1,3 +1,4 @@
+import React from 'react';
 import { screen } from '@testing-library/react';
 import { useActiveRouteChecker } from '../../../src/hooks/useActiveRouteChecker';
 import { useNamespace } from '../../shared/providers/Namespace';
@@ -14,6 +15,16 @@ jest.mock('../../shared/providers/Namespace', () => ({
 
 jest.mock('~/shared/components/SavedViews', () => ({
   SavedViewNavItems: () => null,
+}));
+
+jest.mock('~/feature-flags/hooks', () => ({
+  ...jest.requireActual('~/feature-flags/hooks'),
+  useIsOnFeatureFlag: () => true,
+  IfFeature: ({ children }: { children: React.ReactNode }) => children,
+}));
+
+jest.mock('~/feature-flags/FeatureFlagIndicator', () => ({
+  FeatureFlagIndicator: () => null,
 }));
 
 describe('AppSideBar', () => {

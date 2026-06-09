@@ -104,21 +104,23 @@ export const AppSideBar: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
               </Link>
             </NavItem>
 
-            <NavItem
-              className={css({ 'app-side-bar__nav-item--disabled': disabled })}
-              isActive={isActive(PIPELINE_RUNS_PAGE_PATH.path) && !viewParam}
-              data-test="pipeline-runs-nav"
-            >
-              <Link
-                to={
-                  namespace
-                    ? PIPELINE_RUNS_PAGE_PATH.createPath({ workspaceName: namespace })
-                    : undefined
-                }
+            <IfFeature flag="pipeline-runs-page">
+              <NavItem
+                className={css({ 'app-side-bar__nav-item--disabled': disabled })}
+                isActive={isActive(PIPELINE_RUNS_PAGE_PATH.path) && !viewParam}
+                data-test="pipeline-runs-nav"
               >
-                Pipeline Runs
-              </Link>
-            </NavItem>
+                <Link
+                  to={
+                    namespace
+                      ? PIPELINE_RUNS_PAGE_PATH.createPath({ workspaceName: namespace })
+                      : undefined
+                  }
+                >
+                  Pipeline Runs <FeatureFlagIndicator flags={['pipeline-runs-page']} />
+                </Link>
+              </NavItem>
+            </IfFeature>
 
             <NavItem
               className={css({ 'app-side-bar__nav-item--disabled': disabled })}
@@ -161,7 +163,9 @@ export const AppSideBar: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
               </NavLink>
             </NavItem>
 
-            {namespace && <SavedViewNavItems config={pipelineRunsSavedViewsConfig} />}
+            <IfFeature flag="pipeline-runs-page">
+              {namespace && <SavedViewNavItems config={pipelineRunsSavedViewsConfig} />}
+            </IfFeature>
           </NavList>
         </Nav>
       </PageSidebarBody>

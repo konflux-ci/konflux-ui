@@ -52,3 +52,9 @@ CLAUDE.local.md
 
 # Storybook
 storybook-static/
+
+# Worktrees
+.worktrees/
+
+# Snapshots (no snapshot tests)
+**/__snapshots__/

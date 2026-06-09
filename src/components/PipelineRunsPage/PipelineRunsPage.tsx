@@ -2,6 +2,7 @@ import React from 'react';
 import { Bullseye, Spinner } from '@patternfly/react-core';
 import ColumnManagement from '~/components/ColumnManagement/ColumnManagement';
 import { PipelineRunLabel } from '~/consts/pipelinerun';
+import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { useApplications } from '~/hooks/useApplications';
 import { useAllComponents } from '~/hooks/useComponents';
 import { usePipelineRunsV2 } from '~/hooks/usePipelineRunsV2';
@@ -211,7 +212,12 @@ export const PipelineRunsPage: React.FC = () => {
     );
   }
 
-  const pageTitle = activeSavedView?.label ?? 'Pipeline Runs';
+  const pageTitle = (
+    <>
+      {activeSavedView?.label ?? 'Pipeline Runs'}{' '}
+      <FeatureFlagIndicator flags={['pipeline-runs-page']} />
+    </>
+  );
 
   const optionsMap = {
     app: appOptions,

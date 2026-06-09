@@ -1,5 +1,10 @@
 import { pipelineRunsPageLoader } from '../pipeline-runs-page';
 
+jest.mock('~/feature-flags/utils', () => ({
+  ...jest.requireActual('~/feature-flags/utils'),
+  ensureFeatureFlagOnLoader: jest.fn(),
+}));
+
 describe('pipelineRunsPageLoader', () => {
   beforeEach(() => {
     localStorage.clear();

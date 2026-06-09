@@ -1,10 +1,12 @@
 import { redirect, RouteObject } from 'react-router-dom';
 import { PIPELINE_RUNS_PAGE_PATH } from '@routes/paths';
 import { PipelineRunsPage } from '~/components/PipelineRunsPage/PipelineRunsPage';
+import { ensureFeatureFlagOnLoader } from '~/feature-flags/utils';
 import { STORAGE_KEY_PREFIX } from '~/shared/components/SavedViews/utils';
 import { RouteErrorBoundry } from '../RouteErrorBoundary';
 
 export const pipelineRunsPageLoader = ({ request }: { request: Request }) => {
+  ensureFeatureFlagOnLoader('pipeline-runs-page');
   const url = new URL(request.url);
   const slug = url.searchParams.get('view');
 
