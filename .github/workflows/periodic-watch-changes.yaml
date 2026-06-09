@@ -35,6 +35,8 @@ jobs:
             "generate-err-logs.sh"
             "operator/config/samples/konflux_v1alpha1_konflux.yaml"
             "operator/config/samples/konflux-e2e.yaml"
+            "operator/upstream-kustomizations/ui/core/proxy/proxy.yaml"
+            "operator/upstream-kustomizations/ui/core/proxy/kustomization.yaml"
           )
       
           TEMP_DIR=$(mktemp -d)

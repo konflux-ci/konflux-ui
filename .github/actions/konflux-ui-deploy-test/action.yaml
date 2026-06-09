@@ -19,7 +19,9 @@ runs:
     - name: Get latest konflux-ci release tag
       id: get-konflux-release
       run: |
-        LATEST_TAG=$(gh release view --repo konflux-ci/konflux-ci --json tagName -q .tagName)
+        LATEST_TAG=$(gh release list --repo konflux-ci/konflux-ci \
+          --exclude-pre-releases --limit 50 --json tagName -q '.[].tagName' \
+          | sort -V | tail -1)
         echo "tag=${LATEST_TAG}" >> "$GITHUB_OUTPUT"
         echo "Latest konflux-ci release: ${LATEST_TAG}"
       shell: bash
@@ -117,11 +119,6 @@ runs:
                     "name": "copy-static-content",
                     "image": "localhost/test/test:konflux-ui",
                     "imagePullPolicy": "IfNotPresent"
-                  },
-                  {
-                    "name": "generate-nginx-configs",
-                    "image": "localhost/test/test:konflux-ui",
-                    "imagePullPolicy": "IfNotPresent"
                   }
                 ]
               }
@@ -129,5 +126,15 @@ runs:
           }
         }'
 
-        kubectl rollout status deployment/proxy -n konflux-ui --timeout=5m
+        if ! kubectl rollout status deployment/proxy -n konflux-ui --timeout=5m; then
+          echo "::error::Proxy deployment rollout failed"
+          kubectl describe deployment proxy -n konflux-ui
+          kubectl get pods -n konflux-ui -l app=proxy -o wide
+          for pod in $(kubectl get pods -n konflux-ui -l app=proxy -o name); do
+            echo "=== $pod ==="
+            kubectl describe "$pod" -n konflux-ui
+            kubectl logs "$pod" -n konflux-ui --all-containers --previous 2>/dev/null || true
+          done
+          exit 1
+        fi
       shell: bash
