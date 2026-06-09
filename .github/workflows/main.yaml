@@ -10,7 +10,7 @@ on:
     types: [checks_requested]
   # Triggers the workflow on manual dispatch
   workflow_dispatch:
-  
+
 # Cancel in-progress runs when new commits are pushed
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -83,9 +83,9 @@ jobs:
           CI: true
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v6.0.2
         with:
-          file: ./coverage/lcov.info
+          files: ./coverage/lcov.info
           token: ${{ secrets.CODECOV_TOKEN }}
           flags: shard-${{ matrix.shard }}
           fail_ci_if_error: true
