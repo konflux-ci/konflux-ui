@@ -7,13 +7,16 @@ import { SecretLabels } from '~/components/Secrets/SecretsListView/SecretLabels'
 import { secretsTableColumnClasses } from '~/components/Secrets/SecretsListView/SecretsListHeaderWithComponents';
 import { BackgroundStatusIconWithText } from '~/components/StatusIcon/BackgroundTaskStatusIcon';
 import { LINKING_ERROR_ANNOTATION, LINKING_STATUS_ANNOTATION } from '~/consts/secrets';
+import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useLinkedServiceAccounts } from '~/hooks/useLinkedServiceAccounts';
 import { HttpError } from '~/k8s/error';
+import { SecretModel } from '~/models';
 import { SECRET_EDIT_PATH } from '~/routes/paths';
 import { RowFunctionArgs, TableData } from '~/shared/components';
 import ActionMenu from '~/shared/components/action-menu/ActionMenu';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { SecretKind } from '~/types';
+import { useAccessReviewForModel } from '~/utils/rbac';
 import { getSecretRowLabels, getSecretTypetoLabel } from '~/utils/secrets/secret-utils';
 import { isLinkableSecret } from '~/utils/service-account/service-account-utils';
 import { BackgroundJobStatus, useTaskStore } from '~/utils/task-store';
@@ -32,6 +35,8 @@ const SecretsListRowWithComponents: React.FC<React.PropsWithChildren<SecretsList
   const actions = useSecretActions(obj);
   const namespace = useNamespace();
   const { expandedIds, handleToggle } = customData;
+  const [canEdit] = useAccessReviewForModel(SecretModel, 'patch');
+  const isEditSecretPageEnabled = useIsOnFeatureFlag('edit-secret-page');
 
   const { secretLabels } = getSecretRowLabels(obj);
   const labels = secretLabels !== '-' ? secretLabels.split(', ') : [secretLabels];
@@ -61,12 +66,16 @@ const SecretsListRowWithComponents: React.FC<React.PropsWithChildren<SecretsList
         {getSecretTypetoLabel(obj) ?? '-'}
       </TableData>
       <TableData className={`${secretsTableColumnClasses.name} vertical-cell-align`}>
-        <Link
-          to={`${SECRET_EDIT_PATH.createPath({ workspaceName: namespace })}?secretName=${obj.metadata?.name}`}
-          data-test="secret-name-link"
-        >
-          {obj.metadata?.name}
-        </Link>
+        {canEdit && isEditSecretPageEnabled ? (
+          <Link
+            to={`${SECRET_EDIT_PATH.createPath({ workspaceName: namespace })}?secretName=${obj.metadata?.name}`}
+            data-test="secret-name-link"
+          >
+            {obj.metadata?.name}
+          </Link>
+        ) : (
+          <span data-test="secret-name">{obj.metadata?.name}</span>
+        )}
       </TableData>
       <TableData
         className={`${secretsTableColumnClasses.components} vertical-cell-align`}

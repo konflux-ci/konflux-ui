@@ -5,9 +5,11 @@ import { FilterContextProvider } from '~/components/Filter/generic/FilterContext
 import { mockServiceAccounts } from '~/components/Secrets/__data__/mock-secrets';
 import SecretsListRowWithComponents from '~/components/Secrets/SecretsListView/SecretsListRowWithComponents';
 import SecretsListView from '~/components/Secrets/SecretsListView/SecretsListView';
+import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useLinkedServiceAccounts } from '~/hooks/useLinkedServiceAccounts';
 import { useSecrets } from '~/hooks/useSecrets';
 import { RemoteSecretStatusReason } from '~/types';
+import { useAccessReviewForModel } from '~/utils/rbac';
 import { sampleRemoteSecrets } from './secret-data';
 
 jest.useFakeTimers();
@@ -36,6 +38,15 @@ jest.mock('~/hooks/useLinkedServiceAccounts', () => ({
 
 jest.mock('~/shared/providers/Namespace', () => ({
   useNamespace: jest.fn(() => 'test-ns'),
+}));
+
+jest.mock('~/utils/rbac', () => ({
+  useAccessReviewForModel: jest.fn(() => [true, true]),
+}));
+
+jest.mock('~/feature-flags/hooks', () => ({
+  ...jest.requireActual('~/feature-flags/hooks'),
+  useIsOnFeatureFlag: jest.fn(),
 }));
 
 jest.mock('~/shared/components/table', () => {
@@ -78,6 +89,8 @@ jest.mock('~/shared/components/table', () => {
 
 const useSecretsMock = useSecrets as jest.Mock;
 const mockUseLinkedServiceAccounts = useLinkedServiceAccounts as jest.Mock;
+const useAccessReviewForModelMock = useAccessReviewForModel as jest.Mock;
+const mockUseIsOnFeatureFlag = useIsOnFeatureFlag as jest.Mock;
 
 const SecretsList = (
   <MemoryRouter>
@@ -88,6 +101,8 @@ const SecretsList = (
 );
 describe('Secrets List With Components and Status', () => {
   beforeEach(() => {
+    mockUseIsOnFeatureFlag.mockImplementation((flag) => flag === 'edit-secret-page');
+    useAccessReviewForModelMock.mockReturnValue([true, true]);
     useSecretsMock.mockReturnValue([
       [
         {
@@ -205,5 +220,25 @@ describe('Secrets List With Components and Status', () => {
       '/ns/test-ns/secrets/edit?secretName=test-secret-one',
     );
     expect(secretNameLink).toHaveTextContent('test-secret-one');
+  });
+
+  it('should render secret name as plain text when user lacks patch permission', () => {
+    useAccessReviewForModelMock.mockReturnValue([false, true]);
+    render(SecretsList);
+
+    const secretNameText = screen.getByTestId('secret-name');
+    expect(secretNameText).toBeInTheDocument();
+    expect(secretNameText).toHaveTextContent('test-secret-one');
+    expect(screen.queryByTestId('secret-name-link')).not.toBeInTheDocument();
+  });
+
+  it('should render secret name as plain text when edit-secret-page flag is disabled', () => {
+    mockUseIsOnFeatureFlag.mockReturnValue(false);
+    render(SecretsList);
+
+    const secretNameText = screen.getByTestId('secret-name');
+    expect(secretNameText).toBeInTheDocument();
+    expect(secretNameText).toHaveTextContent('test-secret-one');
+    expect(screen.queryByTestId('secret-name-link')).not.toBeInTheDocument();
   });
 });
