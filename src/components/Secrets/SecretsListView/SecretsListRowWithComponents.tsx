@@ -1,21 +1,22 @@
 import * as React from 'react';
+import { Link } from 'react-router-dom';
 import { Button, Popover, Spinner } from '@patternfly/react-core';
 import ErrorModal from '~/components/modal/ErrorModal';
+import { useSecretActions } from '~/components/Secrets/secret-actions';
+import { SecretLabels } from '~/components/Secrets/SecretsListView/SecretLabels';
+import { secretsTableColumnClasses } from '~/components/Secrets/SecretsListView/SecretsListHeaderWithComponents';
 import { BackgroundStatusIconWithText } from '~/components/StatusIcon/BackgroundTaskStatusIcon';
 import { LINKING_ERROR_ANNOTATION, LINKING_STATUS_ANNOTATION } from '~/consts/secrets';
 import { useLinkedServiceAccounts } from '~/hooks/useLinkedServiceAccounts';
 import { HttpError } from '~/k8s/error';
+import { SECRET_EDIT_PATH } from '~/routes/paths';
+import { RowFunctionArgs, TableData } from '~/shared/components';
+import ActionMenu from '~/shared/components/action-menu/ActionMenu';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { SecretKind } from '~/types';
 import { getSecretRowLabels, getSecretTypetoLabel } from '~/utils/secrets/secret-utils';
 import { isLinkableSecret } from '~/utils/service-account/service-account-utils';
 import { BackgroundJobStatus, useTaskStore } from '~/utils/task-store';
-import { RowFunctionArgs, TableData } from '../../../shared';
-import ActionMenu from '../../../shared/components/action-menu/ActionMenu';
-import { useSecretActions } from '../secret-actions';
-import { SecretLabels } from './SecretLabels';
-import { secretsTableColumnClasses } from './SecretsListHeaderWithComponents';
-
 import './SecretsListRow.scss';
 
 type SecretsListRowProps = RowFunctionArgs<
@@ -60,7 +61,12 @@ const SecretsListRowWithComponents: React.FC<React.PropsWithChildren<SecretsList
         {getSecretTypetoLabel(obj) ?? '-'}
       </TableData>
       <TableData className={`${secretsTableColumnClasses.name} vertical-cell-align`}>
-        {obj.metadata?.name}
+        <Link
+          to={`${SECRET_EDIT_PATH.createPath({ workspaceName: namespace })}?secretName=${obj.metadata?.name}`}
+          data-test="secret-name-link"
+        >
+          {obj.metadata?.name}
+        </Link>
       </TableData>
       <TableData
         className={`${secretsTableColumnClasses.components} vertical-cell-align`}

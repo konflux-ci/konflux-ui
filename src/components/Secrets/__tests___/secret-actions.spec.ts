@@ -1,18 +1,14 @@
 import '@testing-library/jest-dom';
 import { renderHook } from '@testing-library/react-hooks';
-import { SecretKind, SecretType } from '../../../types';
-import { useAccessReviewForModel } from '../../../utils/rbac';
-import { useSecretActions } from '../secret-actions';
+import { useSecretActions } from '~/components/Secrets/secret-actions';
+import { SecretKind, SecretType } from '~/types';
+import { useAccessReviewForModel } from '~/utils/rbac';
 
-jest.mock('react-router-dom', () => ({
-  useNavigate: jest.fn(() => jest.fn()),
-}));
-
-jest.mock('../../../utils/rbac', () => ({
+jest.mock('~/utils/rbac', () => ({
   useAccessReviewForModel: jest.fn(() => [true, true]),
 }));
 
-jest.mock('../../modal/ModalProvider', () => ({
+jest.mock('~/components/modal/ModalProvider', () => ({
   useModalLauncher: jest.fn(() => 'cta'),
 }));
 
@@ -32,15 +28,8 @@ describe('useSecretActions', () => {
     );
     const actions = result.current;
 
+    expect(actions).toHaveLength(1);
     expect(actions[0]).toEqual(
-      expect.objectContaining({
-        label: 'Edit',
-        disabledTooltip: "You don't have access to edit this secret",
-        id: 'edit-test-secret',
-        disabled: false,
-      }),
-    );
-    expect(actions[1]).toEqual(
       expect.objectContaining({
         label: 'Delete',
         disabledTooltip: "You don't have access to delete this secret",
