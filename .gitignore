@@ -43,5 +43,9 @@ tsconfig.tsbuildinfo
 CLAUDE.local.md
 .claude/worktrees/**/*
 
+# Screenshot UI automation outputs (Playwright MCP; layout: .screenshots/<branch>/<run-id>/)
+.screenshots/
+.playwright-mcp/
+
 # Snyk Security Extension - AI Rules (auto-generated)
 .cursor/rules/snyk_rules.mdc
