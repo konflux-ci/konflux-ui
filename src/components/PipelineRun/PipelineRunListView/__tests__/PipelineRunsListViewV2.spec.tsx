@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
+import { Table, Thead, Tr, Th, Tbody } from '@patternfly/react-table';
 import { screen, waitFor } from '@testing-library/react';
 import { FilterContext, FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { PipelineRunLabel, PipelineRunType } from '~/consts/pipelinerun';
@@ -44,16 +44,22 @@ jest.mock('~/shared/components/table/TableComponent', () => {
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [data]);
     return (
-      <PfTable role="table" aria-label="table" cells={columns} variant="compact" borders={false}>
-        <TableHeader role="rowgroup" />
-        <tbody>
+      <Table role="table" aria-label="table" variant="compact" borders={true}>
+        <Thead>
+          <Tr>
+            {columns.map((col, idx) => (
+              <Th key={idx} {...(col.props ?? {})}>{col.title}</Th>
+            ))}
+          </Tr>
+        </Thead>
+        <Tbody>
           {props.data.map((d, i) => (
-            <tr key={i}>
+            <Tr key={i}>
               <PipelineRunListRow columns={null} obj={d} />
-            </tr>
+            </Tr>
           ))}
-        </tbody>
-      </PfTable>
+        </Tbody>
+      </Table>
     );
   };
 });

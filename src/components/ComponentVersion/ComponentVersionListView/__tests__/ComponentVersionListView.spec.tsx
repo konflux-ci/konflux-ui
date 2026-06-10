@@ -22,7 +22,7 @@ jest.mock('~/hooks/useComponents', () => ({
 jest.mock('~/shared/components/table/TableComponent', () => {
   return (props) => {
     return (
-      <PfTable role="table" aria-label="table" variant="compact" borders={false}>
+      <PfTable role="table" aria-label="table" variant="compact" borders={true}>
         <Tbody>
           {props.data.map((d, i) => (
             <Tr key={i}>

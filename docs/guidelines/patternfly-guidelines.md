@@ -461,6 +461,52 @@ These deprecated APIs exist in the codebase but should not be used in new code:
 | `Select` from `@patternfly/react-core/deprecated` | `BasicDropdown` from `~/shared/components/dropdown/` or PF5 `Select` |
 | `DropdownToggle` from `@patternfly/react-core/deprecated` | PF5 `MenuToggle` |
 
+## Common Pitfalls — Composable Component DOM Semantics
+
+When migrating from deprecated PF APIs to the composable equivalents (`Select`, `Menu`, `Dropdown`), pay attention to DOM semantics. The composable API gives you full control over the markup, which means you are responsible for valid HTML nesting.
+
+### Divider inside list containers
+
+`SelectList`, `MenuList`, and `DropdownList` render a `<ul>` element. A `<Divider />` renders `<hr>` by default, which is not a valid child of `<ul>`. Always set `component="li"`:
+
+```tsx
+// ✅ Correct — valid inside <ul>
+<SelectList>
+  <SelectOption value="option-1">Option 1</SelectOption>
+  <Divider component="li" />
+  <SelectOption value="option-2">Option 2</SelectOption>
+</SelectList>
+
+// ❌ Wrong — <hr> is invalid inside <ul>
+<SelectList>
+  <SelectOption value="option-1">Option 1</SelectOption>
+  <Divider />
+  <SelectOption value="option-2">Option 2</SelectOption>
+</SelectList>
+```
+
+The same rule applies to `MenuList` and `DropdownList`.
+
+### MenuToggle ref forwarding
+
+The composable `Select`, `Menu`, and `Dropdown` require a `toggle` render function that receives a `ref`. You **must** forward this ref to `MenuToggle` — without it, Popper positioning and outside-click detection break silently:
+
+```tsx
+<Select
+  toggle={(toggleRef) => (
+    <MenuToggle ref={toggleRef} onClick={onToggle}>
+      {selected || 'Select an option'}
+    </MenuToggle>
+  )}
+>
+  <SelectList>{/* options */}</SelectList>
+</Select>
+```
+
+### SelectOption and value types
+
+In the composable `Select`, `SelectOption` requires an explicit `value` prop. If you omit it, click handlers receive `undefined`. When using object values, provide a `toString()` method or use `itemId` for identification.
+
 ## Component Wrapping Decision Guide
 
 | Need | Use |
