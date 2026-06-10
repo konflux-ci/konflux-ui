@@ -1,46 +1,40 @@
-import { singleLogSection } from '~/shared/components/virtualized-log-viewer/log-viewer-utils';
+import { normalizeSection, singleLogSection } from '~/shared/components/virtualized-log-viewer/log-viewer-utils';
 import { formatSectionsForSearch, prepareLogViewerContent } from '../log-viewer-content';
 
 describe('log-viewer-content', () => {
   describe('formatSectionsForSearch', () => {
-    it('should join sections with uppercase headers', () => {
+    it('should join sections with headers and data', () => {
       const result = formatSectionsForSearch([
-        { containerName: 'step-a', data: 'line 1' },
-        { containerName: 'step-b', data: 'line 2' },
+        { containerName: 'STEP-A', data: 'line 1' },
+        { containerName: 'STEP-B', data: 'line 2' },
       ]);
       expect(result).toBe('STEP-A\nline 1\n\nSTEP-B\nline 2');
     });
   });
 
   describe('prepareLogViewerContent', () => {
-    it('should return empty content for no sections', () => {
-      expect(prepareLogViewerContent([])).toEqual({
-        processedData: '',
-        downloadData: '',
-      });
+    it('should return empty lines for no sections', () => {
+      expect(prepareLogViewerContent([])).toEqual([]);
     });
 
-    it('should include step header in processed data for a single section', () => {
-      const result = prepareLogViewerContent([singleLogSection('hello\nworld', 'task')]);
-      expect(result.processedData).toBe('TASK\nhello\nworld');
-      expect(result.downloadData).toBe('hello\nworld');
+    it('should include step header for a single section', () => {
+      const result = prepareLogViewerContent([normalizeSection(singleLogSection('hello\nworld', 'TASK'))]);
+      expect(result).toEqual(['TASK', 'hello', 'world']);
     });
 
-    it('should strip ANSI and normalize line endings for single-section content', () => {
+    it('should strip ANSI and normalize line endings', () => {
       const result = prepareLogViewerContent([
-        singleLogSection('line\r\n\x1b[31mred\x1b[0m', 'step'),
+        normalizeSection(singleLogSection('line\r\n\x1b[31mred\x1b[0m', 'STEP')),
       ]);
-      expect(result.processedData).toBe('STEP\nline\nred');
+      expect(result).toEqual(['STEP', 'line', 'red']);
     });
 
-    it('should include step headers for multiple sections', () => {
+    it('should separate multiple sections with a blank line', () => {
       const sections = [
-        { containerName: 'a', data: 'one' },
-        { containerName: 'b', data: 'two' },
-      ] as const;
-      const result = prepareLogViewerContent(sections);
-      expect(result.downloadData).toBe('A\none\n\nB\ntwo');
-      expect(result.processedData).toBe('A\none\n\nB\ntwo');
+        normalizeSection({ containerName: 'A', data: 'one' }),
+        normalizeSection({ containerName: 'B', data: 'two' }),
+      ];
+      expect(prepareLogViewerContent(sections)).toEqual(['A', 'one', '', 'B', 'two']);
     });
   });
 });

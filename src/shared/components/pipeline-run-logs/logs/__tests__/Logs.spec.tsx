@@ -323,13 +323,11 @@ describe('Logs', () => {
         await Promise.resolve();
       });
 
-      // All containers are included for foldable steps; empty containers keep empty data
+      // Containers without logs are omitted from sections
       const lastCall = mockLogViewer.mock.calls[mockLogViewer.mock.calls.length - 1][0];
-      expect(lastCall.sections).toHaveLength(2);
+      expect(lastCall.sections).toHaveLength(1);
       expect(lastCall.sections[0].containerName).toBe('CONTAINER1');
       expect(lastCall.sections[0].data).toBe('has logs');
-      expect(lastCall.sections[1].containerName).toBe('CONTAINER2');
-      expect(lastCall.sections[1].data).toBe('');
     });
 
     it('should pass empty sections when no containers have logs', () => {

@@ -1,6 +1,6 @@
 import React from 'react';
 import { LogViewerToolbarContext } from '@patternfly/react-log-viewer';
-import type { LogSection } from './types';
+import type { LogSection, NormalizedLogSection } from './types';
 import { VirtualizedLogContent } from './VirtualizedLogContent';
 import '@patternfly/react-styles/css/components/LogViewer/log-viewer.css';
 
@@ -8,6 +8,8 @@ import './VirtualizedLogViewer.scss';
 
 export interface VirtualizedLogViewerProps {
   sections: LogSection[];
+  /** Pre-normalized sections forwarded to VirtualizedLogContent to avoid redundant normalization */
+  normalizedSections?: NormalizedLogSection[];
   height: number;
   width?: string | number;
   scrollToRow?: number;
@@ -20,6 +22,7 @@ export interface VirtualizedLogViewerProps {
 
 export const VirtualizedLogViewer: React.FC<VirtualizedLogViewerProps> = ({
   sections,
+  normalizedSections,
   height,
   width = '100%',
   scrollToRow,
@@ -35,13 +38,6 @@ export const VirtualizedLogViewer: React.FC<VirtualizedLogViewerProps> = ({
     toolbarContext?.rowInFocus && toolbarContext.rowInFocus.rowIndex >= 0
       ? toolbarContext.rowInFocus
       : searchedWordIndexes[currentMatchIndex];
-
-  const effectiveScrollToRow = React.useMemo(() => {
-    if (rowInFocus && rowInFocus.rowIndex >= 0) {
-      return rowInFocus.rowIndex + 1;
-    }
-    return scrollToRow;
-  }, [rowInFocus, scrollToRow]);
 
   // Expand folded steps only when using search prev/next — not when typing a query.
   const [expandSearchTargetRow, setExpandSearchTargetRow] = React.useState<number | undefined>();
@@ -72,9 +68,10 @@ export const VirtualizedLogViewer: React.FC<VirtualizedLogViewerProps> = ({
     <div className="pf-v5-c-log-viewer__main">
       <VirtualizedLogContent
         sections={sections}
+        normalizedSections={normalizedSections}
         height={height}
         width={width}
-        scrollToRow={effectiveScrollToRow}
+        scrollToRow={scrollToRow}
         expandSearchTargetRow={expandSearchTargetRow}
         onScroll={onScroll}
         searchText={searchedInput}

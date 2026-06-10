@@ -1,8 +1,8 @@
 import * as React from 'react';
+import { singleLogSection } from '~/shared/components/virtualized-log-viewer/log-viewer-utils';
 import { useTRTaskRunLog } from '../../../../hooks/useTektonResults';
 import { HttpError } from '../../../../k8s/error';
 import { TaskRunKind } from '../../../../types';
-import { singleLogSection } from '~/shared/components/virtualized-log-viewer/log-viewer-utils';
 import LogViewer from './LogViewer';
 
 type TektonTaskRunLogProps = {
@@ -24,9 +24,14 @@ export const TektonTaskRunLog: React.FC<React.PropsWithChildren<TektonTaskRunLog
       ? `Logs are no longer accessible for ${taskName} task`
       : null;
 
+  const sections = React.useMemo(
+    () => (trResults ? [singleLogSection(trResults, taskName ?? 'log')] : []),
+    [trResults, taskName],
+  );
+
   return (
     <LogViewer
-      sections={[singleLogSection(trResults ?? '', taskName ?? 'log')]}
+      sections={sections}
       downloadAllLabel={downloadAllLabel}
       onDownloadAll={onDownloadAll}
       taskRun={taskRun}
