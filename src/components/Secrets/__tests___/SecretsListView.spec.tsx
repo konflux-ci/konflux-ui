@@ -2,12 +2,12 @@ import { MemoryRouter } from 'react-router-dom';
 import { Table, Thead, Tr, Th, Tbody } from '@patternfly/react-table';
 import { screen, render, fireEvent, act } from '@testing-library/react';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
+import { mockServiceAccounts } from '~/components/Secrets/__data__/mock-secrets';
+import SecretsListRowWithComponents from '~/components/Secrets/SecretsListView/SecretsListRowWithComponents';
+import SecretsListView from '~/components/Secrets/SecretsListView/SecretsListView';
 import { useLinkedServiceAccounts } from '~/hooks/useLinkedServiceAccounts';
-import { useSecrets } from '../../../hooks/useSecrets';
-import { RemoteSecretStatusReason } from '../../../types';
-import { mockServiceAccounts } from '../__data__/mock-secrets';
-import SecretsListRowWithComponents from '../SecretsListView/SecretsListRowWithComponents';
-import SecretsListView from '../SecretsListView/SecretsListView';
+import { useSecrets } from '~/hooks/useSecrets';
+import { RemoteSecretStatusReason } from '~/types';
 import { sampleRemoteSecrets } from './secret-data';
 
 jest.useFakeTimers();
@@ -26,7 +26,7 @@ jest.mock('react-router-dom', () => {
   };
 });
 
-jest.mock('../../../hooks/useSecrets', () => ({
+jest.mock('~/hooks/useSecrets', () => ({
   useSecrets: jest.fn(),
 }));
 
@@ -34,8 +34,12 @@ jest.mock('~/hooks/useLinkedServiceAccounts', () => ({
   useLinkedServiceAccounts: jest.fn(),
 }));
 
-jest.mock('../../../shared/components/table', () => {
-  const actual = jest.requireActual('../../../shared/components/table');
+jest.mock('~/shared/providers/Namespace', () => ({
+  useNamespace: jest.fn(() => 'test-ns'),
+}));
+
+jest.mock('~/shared/components/table', () => {
+  const actual = jest.requireActual('~/shared/components/table');
 
   return {
     ...actual,
@@ -49,7 +53,9 @@ jest.mock('../../../shared/components/table', () => {
           <Thead>
             <Tr>
               {columns.map((col, idx) => (
-                <Th key={idx} {...(col.props ?? {})}>{col.title}</Th>
+                <Th key={idx} {...(col.props ?? {})}>
+                  {col.title}
+                </Th>
               ))}
             </Tr>
           </Thead>
@@ -187,5 +193,17 @@ describe('Secrets List With Components and Status', () => {
 
     screen.getByText('test-secret-two');
     screen.getByText('Key/value (1)');
+  });
+
+  it('should render secret name as a link to the edit page', () => {
+    render(SecretsList);
+
+    const secretNameLink = screen.getByTestId('secret-name-link');
+    expect(secretNameLink).toBeInTheDocument();
+    expect(secretNameLink).toHaveAttribute(
+      'href',
+      '/ns/test-ns/secrets/edit?secretName=test-secret-one',
+    );
+    expect(secretNameLink).toHaveTextContent('test-secret-one');
   });
 });
