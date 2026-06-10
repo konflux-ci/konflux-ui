@@ -84,7 +84,7 @@ const IntegrationTestSidePanel: React.FC<
             )}
             <StatusIconWithTextLabel status={workflowNode.getData().status} />
           </span>
-          <span className="pf-v5-u-mt-xs commit-side-panel__subtext">
+          <span className="pf-v6-u-mt-xs commit-side-panel__subtext">
             <PipelineIcon role="img" aria-label="Pipeline run" /> Integration test{' '}
             <FeatureFlagIndicator flags={['taskruns-kubearchive']} />
           </span>
@@ -123,7 +123,7 @@ const IntegrationTestSidePanel: React.FC<
             </DescriptionListGroup>
           </DescriptionList>
           <DescriptionList
-            className="pf-v5-u-mt-lg"
+            className="pf-v6-u-mt-lg"
             data-test="pipeline-run-details"
             columnModifier={{
               default: '1Col',
@@ -169,7 +169,7 @@ const IntegrationTestSidePanel: React.FC<
           </DescriptionList>
           {Object.keys(pipelineRunFailed).length > 0 && (
             <DescriptionList
-              className="pf-v5-u-mt-lg"
+              className="pf-v6-u-mt-lg"
               data-test="pipeline-run-details"
               columnModifier={{
                 default: '1Col',

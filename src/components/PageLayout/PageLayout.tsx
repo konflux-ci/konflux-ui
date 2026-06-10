@@ -5,9 +5,7 @@ import {
   PageBreadcrumb,
   PageGroup,
   PageSection,
-  PageSectionVariants,
-  Text,
-  TextContent,
+  Content,
 } from '@patternfly/react-core';
 import ActionMenu from '../../shared/components/action-menu/ActionMenu';
 import { Action, ActionMenuVariant } from '../../shared/components/action-menu/types';
@@ -34,15 +32,17 @@ const PageLayout: React.FC<React.PropsWithChildren<PageLayoutProps>> = ({
     <>
       <PageGroup>
         {breadcrumbs && (
-          <PageBreadcrumb>{<BreadCrumbs breadcrumbs={breadcrumbs} />}</PageBreadcrumb>
+          <PageBreadcrumb hasBodyWrapper={false}>
+            {<BreadCrumbs breadcrumbs={breadcrumbs} />}
+          </PageBreadcrumb>
         )}
-        <PageSection variant={PageSectionVariants.light}>
+        <PageSection hasBodyWrapper={false}>
           <Flex>
             <FlexItem>
-              <TextContent>
-                <Text component="h1">{title}</Text>
-                {description && <Text component="p">{description}</Text>}
-              </TextContent>
+              <Content>
+                <Content component="h1">{title}</Content>
+                {description && <Content component="p">{description}</Content>}
+              </Content>
             </FlexItem>
             {actions && (
               <FlexItem align={{ default: 'alignRight' }}>
@@ -54,7 +54,7 @@ const PageLayout: React.FC<React.PropsWithChildren<PageLayoutProps>> = ({
       </PageGroup>
       {children}
       {footer && (
-        <PageSection variant={PageSectionVariants.light} isFilled={false}>
+        <PageSection hasBodyWrapper={false} isFilled={false}>
           {footer}
         </PageSection>
       )}

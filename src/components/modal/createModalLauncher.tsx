@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Modal, ModalProps as PFModalProps } from '@patternfly/react-core';
+import { Modal, ModalProps as PFModalProps } from '@patternfly/react-core/deprecated';
 
 export type ModalProps = Omit<PFModalProps, 'children' | 'ref'>;
 

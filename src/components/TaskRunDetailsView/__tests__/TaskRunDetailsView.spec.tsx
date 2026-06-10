@@ -148,7 +148,7 @@ describe('TaskRunDetailsView', () => {
     ]);
 
     renderWithQueryClientAndRouter(<TaskRunDetailsView />);
-    const titleSpan = document.querySelector('.pf-v5-u-mr-sm');
+    const titleSpan = document.querySelector('.pf-v6-u-mr-sm');
     expect(titleSpan).not.toBeNull();
     expect(titleSpan.textContent).toContain('(Build for linux/amd64)');
   });
@@ -170,7 +170,7 @@ describe('TaskRunDetailsView', () => {
     ]);
 
     renderWithQueryClientAndRouter(<TaskRunDetailsView />);
-    const titleSpan = document.querySelector('.pf-v5-u-mr-sm');
+    const titleSpan = document.querySelector('.pf-v6-u-mr-sm');
     expect(titleSpan).not.toBeNull();
     expect(titleSpan.textContent).not.toContain('(');
   });

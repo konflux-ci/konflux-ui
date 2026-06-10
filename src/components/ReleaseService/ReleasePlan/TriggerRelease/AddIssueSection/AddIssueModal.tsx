@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { Button, Modal, ModalVariant } from '@patternfly/react-core';
+import { Button } from '@patternfly/react-core';
+import { Modal, ModalVariant } from '@patternfly/react-core/deprecated';
 import { Formik } from 'formik';
 import * as yup from 'yup';
 import { URL_ERROR_MSG, URL_REGEX } from '../../../../../utils/validation-utils';

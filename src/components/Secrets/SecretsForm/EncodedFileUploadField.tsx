@@ -78,7 +78,7 @@ const EncodedFileUploadField: React.FC<React.PropsWithChildren<EncodedFileUpload
       allowEditingUploadedText
       required={required}
     >
-      {helpText && <div className="pf-v5-c-form__helper-text">{helpText}</div>}
+      {helpText && <div className="pf-v6-c-form__helper-text">{helpText}</div>}
     </FileUploadField>
   );
 };

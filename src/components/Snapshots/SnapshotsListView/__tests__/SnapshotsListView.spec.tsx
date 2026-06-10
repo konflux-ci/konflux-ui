@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom';
-import { Table, Thead, Tr, Th, Tbody } from '@patternfly/react-table';
+import { Table, Tbody, Th, Thead, Tr } from '@patternfly/react-table';
 import { screen, act, fireEvent } from '@testing-library/react';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { useK8sAndKarchResources } from '~/hooks/useK8sAndKarchResources';
@@ -45,7 +45,9 @@ jest.mock('../../../../shared/components/table', () => {
           <Thead>
             <Tr>
               {columns.map((col, idx) => (
-                <Th key={idx} {...(col.props ?? {})}>{col.title}</Th>
+                <Th key={idx} {...(col.props ?? {})}>
+                  {col.title}
+                </Th>
               ))}
             </Tr>
           </Thead>
@@ -94,7 +96,7 @@ describe('SnapshotsListView - Column Headers', () => {
     // There are 2 elements with the text "Name" (filter dropdown and table header).
     const name = screen.queryAllByText('Name');
     expect(name.length).toBe(2);
-    expect(name[1]).toHaveAttribute('class', 'pf-v5-c-table__text');
+    expect(name[1]).toHaveAttribute('class', 'pf-v6-c-table__text');
 
     expect(screen.getByText('Created at')).toBeInTheDocument();
     expect(screen.getByText('Components')).toBeInTheDocument();
@@ -146,7 +148,7 @@ describe('SnapshotsListView - Column Headers', () => {
       expect.objectContaining({ enableArchive: true }),
     );
 
-    const switchElement = screen.getByRole('checkbox', { name: /show only releasable snapshots/i });
+    const switchElement = screen.getByRole('switch', { name: /show only releasable snapshots/i });
     expect(switchElement).not.toBeChecked();
 
     act(() => {
@@ -186,7 +188,7 @@ describe('SnapshotsListView - Column Headers', () => {
       renderWithQueryClientAndRouter(createWrappedComponent());
     });
 
-    const switchElement = screen.getByRole('checkbox', { name: /show only releasable snapshots/i });
+    const switchElement = screen.getByRole('switch', { name: /show only releasable snapshots/i });
 
     act(() => {
       fireEvent.click(switchElement);

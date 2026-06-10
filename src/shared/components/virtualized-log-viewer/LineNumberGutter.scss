@@ -2,52 +2,52 @@
 .line-number__gutter {
   position: sticky;
   left: 0;
-  width: var(--pf-v5-global--spacer--3xl);
+  width: var(--pf-t--global--spacer--3xl);
   flex-shrink: 0;
-  background-color: var(--pf-v5-global--BackgroundColor--200);
-  border-right: var(--pf-v5-global--BorderWidth--sm) solid var(--pf-v5-global--BorderColor--100);
+  background-color: var(--pf-t--global--background--color--secondary--default);
+  border-right: var(--pf-t--global--border--width--regular) solid var(--pf-t--global--border--color--default);
   user-select: none;
   overflow: hidden;
 
   .pf-m-dark & {
-    background-color: var(--pf-v5-global--BackgroundColor--dark-100);
-    border-right-color: var(--pf-v5-global--BorderColor--dark-100);
+    background-color: var(--pf-t--global--background--color--primary--default);
+    border-right-color: var(--pf-t--global--border--color--default);
   }
 }
 .line-number__gutter-cell {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  padding-right: var(--pf-v5-global--spacer--sm);
+  padding-right: var(--pf-t--global--spacer--sm);
   width: 100%;
   box-sizing: border-box;
 }
 
 .line-number__gutter-cell--highlighted {
-  background-color: var(--pf-v5-global--palette--gold-100);
+  background-color: var(--pf-t--global--color--status--warning--default);
 
   .pf-m-dark & {
-    background-color: var(--pf-v5-global--palette--gold-400);
+    background-color: var(--pf-t--global--color--status--warning--hover);
   }
 }
 
 .line-number__line-number {
-  font-family: var(--pf-v5-global--FontFamily--monospace);
-  font-size: var(--pf-v5-global--FontSize--sm);
-  color: var(--pf-v5-global--Color--200);
+  font-family: var(--pf-t--global--font--family--mono);
+  font-size: var(--pf-t--global--font--size--sm);
+  color: var(--pf-t--global--text--color--subtle);
   text-decoration: none;
   cursor: pointer;
 
   &:hover {
-    color: var(--pf-v5-global--Color--100);
+    color: var(--pf-t--global--text--color--regular);
     text-decoration: underline;
   }
 
   .pf-m-dark & {
-    color: var(--pf-v5-global--Color--dark-200);
+    color: var(--pf-t--global--text--color--subtle);
 
     &:hover {
-      color: var(--pf-v5-global--palette--white-300);
+      color: var(--pf-v6-global--palette--white-300);
       text-decoration: underline;
     }
   }

@@ -425,11 +425,11 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
             productOptions={filterOptions.productOptions}
             productVersionOptions={filterOptions.productVersionOptions}
           />
-          <Flex justifyContent={{ default: 'justifyContentFlexEnd' }} className="pf-v5-u-mr-xl">
+          <Flex justifyContent={{ default: 'justifyContentFlexEnd' }} className="pf-v6-u-mr-xl">
             <FlexItem>
               <Label
                 color="blue"
-                className="pf-v5-u-font-weight-bold"
+                className="pf-v6-u-font-weight-bold"
                 data-test="release-count-label"
               >
                 {pluralize(sortedFilteredData.length, 'release')}

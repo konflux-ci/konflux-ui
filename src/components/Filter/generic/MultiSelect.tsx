@@ -46,12 +46,12 @@ export const MultiSelect = ({
 
   return (
     <ToolbarFilter
-      chips={chipLabels}
-      deleteChip={(_type, chip) => {
+      labels={chipLabels}
+      deleteLabel={(_type, chip) => {
         const key = labelToKey ? labelToKey[chip as string] ?? chip : chip;
         setValues(values.filter((v) => v !== key));
       }}
-      deleteChipGroup={() => {
+      deleteLabelGroup={() => {
         setValues([]);
       }}
       categoryName={label}

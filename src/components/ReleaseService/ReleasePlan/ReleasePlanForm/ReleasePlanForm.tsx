@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Form, PageSection, PageSectionVariants } from '@patternfly/react-core';
+import { Form, PageSection } from '@patternfly/react-core';
 import { FormikProps, useField } from 'formik';
 import { InputField, SwitchField } from 'formik-pf';
 import isEmpty from 'lodash-es/isEmpty';
@@ -44,7 +44,7 @@ export const ReleasePlanForm: React.FC<Props> = ({
         />
       }
     >
-      <PageSection variant={PageSectionVariants.light} isFilled isWidthLimited>
+      <PageSection hasBodyWrapper isFilled isWidthLimited>
         <Form style={{ maxWidth: '70%' }}>
           <InputField
             name="name"
@@ -62,7 +62,7 @@ export const ReleasePlanForm: React.FC<Props> = ({
           <SwitchField
             name="autoRelease"
             formLabel="Auto release"
-            labelIcon={
+            labelHelp={
               <HelpPopover
                 headerContent="Auto release"
                 bodyContent="Your application will trigger the release every time a snapshot is created."
@@ -72,7 +72,7 @@ export const ReleasePlanForm: React.FC<Props> = ({
           <SwitchField
             name="standingAttribution"
             formLabel="Standing attribution"
-            labelIcon={
+            labelHelp={
               <HelpPopover
                 headerContent="Standing attribution"
                 bodyContent="The author of the release plan will be provided as the standing attribution for releases."

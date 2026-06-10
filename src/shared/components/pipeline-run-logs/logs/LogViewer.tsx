@@ -177,13 +177,13 @@ const LogViewer: React.FC<Props> = ({
         <div
           ref={fullscreenRef}
           style={{ height: isFullscreen ? '100vh' : '100%' }}
-          className={classNames('log-viewer__container', 'pf-v5-c-log-viewer', {
+          className={classNames('log-viewer__container', 'pf-v6-c-log-viewer', {
             'pf-m-dark': logTheme === 'dark',
             'log-viewer--light': logTheme === 'light',
           })}
         >
           {/* Toolbar */}
-          <div className="pf-v5-c-log-viewer__header">
+          <div className="pf-v6-c-log-viewer__header">
             <Toolbar>
               <ToolbarContent
                 className={classNames({
@@ -203,7 +203,7 @@ const LogViewer: React.FC<Props> = ({
                     </ToolbarItem>
                   </ToolbarGroup>
                 )}
-                <ToolbarGroup align={{ default: 'alignRight' }}>
+                <ToolbarGroup align={{ default: 'alignEnd' }}>
                   <ToolbarItem>
                     <Checkbox
                       id={themeCheckboxId}
@@ -238,7 +238,7 @@ const LogViewer: React.FC<Props> = ({
                     </>
                   )}
                   {fullscreenToggle && isFullscreenSupported && (
-                    <ToolbarItem spacer={{ default: 'spacerMd' }}>
+                    <ToolbarItem gap={{ default: 'gapMd' }}>
                       <Button variant="link" onClick={fullscreenToggle} isInline>
                         {isFullscreen ? (
                           <>
@@ -270,12 +270,11 @@ const LogViewer: React.FC<Props> = ({
                       hasAutoWidth
                     >
                       <Button
+                        icon={<OutlinedKeyboardIcon />}
                         variant="plain"
                         aria-label="Show keyboard shortcuts"
                         onClick={() => setShowShortcutHint((prev) => !prev)}
-                      >
-                        <OutlinedKeyboardIcon />
-                      </Button>
+                      />
                     </Popover>
                   </ToolbarItem>
                 </ToolbarGroup>

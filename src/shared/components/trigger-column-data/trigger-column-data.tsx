@@ -4,6 +4,8 @@ import { CommitIcon } from '~/components/Commits/CommitIcon';
 import { ExternalLink } from '../..';
 import { PipelineRunEventType } from '../../../consts/pipelinerun';
 
+import './trigger-column-data.scss';
+
 export interface TriggerColumnData {
   repoOrg?: string;
   repoName?: string;
@@ -51,7 +53,12 @@ export const TriggerColumnData: React.FC<TriggerColumnData> = ({
         </FlexItem>
       )}
       <FlexItem>
-        <Label color="blue" isCompact>
+        <Label
+          color="blue"
+          isCompact
+          variant="outline"
+          className="trigger-column-data__commit-label"
+        >
           <ExternalLink href={shaUrl} text={commitShaText} />
         </Label>
       </FlexItem>

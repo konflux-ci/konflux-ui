@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { useParams } from 'react-router-dom';
-import { Button, Flex, FlexItem, Text, ModalVariant, Alert } from '@patternfly/react-core';
+import { Button, Flex, FlexItem, Content, Alert } from '@patternfly/react-core';
+import { ModalVariant } from '@patternfly/react-core/deprecated';
 import { RouterParams } from '@routes/utils';
 import { COMMON_SECRETS_LABEL } from '~/consts/pipeline';
 import { useComponent } from '~/hooks/useComponents';
@@ -35,17 +36,17 @@ export const UnlinkSecret: React.FC<React.PropsWithChildren<UnlinkSecretModalPro
   return (
     <Flex direction={{ default: 'column' }}>
       <FlexItem>
-        <Text component="p">
+        <Content component="p">
           <strong>{secret?.metadata?.name}</strong> will be unlinked from{' '}
           <strong>{component?.metadata?.name}</strong>
-        </Text>
+        </Content>
       </FlexItem>
       {isCommonSecret && (
         <FlexItem>
-          <Text>
+          <Content component="p">
             <strong>Note:</strong> This is a common secret. Unlinking will remove its common secret
             label and prevent automatic linking to new components.
-          </Text>
+          </Content>
         </FlexItem>
       )}
       {compError && (

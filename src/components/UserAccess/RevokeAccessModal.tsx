@@ -1,17 +1,15 @@
 import React from 'react';
 import {
-  Modal,
   Stack,
   StackItem,
-  TextContent,
-  Text,
+  Content,
   Alert,
   AlertVariant,
   Button,
   ButtonType,
   ButtonVariant,
-  ModalVariant,
 } from '@patternfly/react-core';
+import { Modal, ModalVariant } from '@patternfly/react-core/deprecated';
 import { K8sQueryDeleteResource } from '../../k8s';
 import { RoleBindingModel } from '../../models';
 import { RoleBinding } from '../../types';
@@ -57,13 +55,13 @@ export const RevokeAccessModal: React.FC<React.PropsWithChildren<Props>> = ({
     <Modal {...modalProps} variant={ModalVariant.small}>
       <Stack hasGutter>
         <StackItem>
-          <TextContent>
-            <Text data-test="description">
+          <Content>
+            <Content component="p" data-test="description">
               The user <strong>{username}</strong> will lose access to this namespace and all of its
               applications, environments, and any other dependent items.
-            </Text>
-            <Text>You can always grant the user access later.</Text>
-          </TextContent>
+            </Content>
+            <Content component="p">You can always grant the user access later.</Content>
+          </Content>
         </StackItem>
         <StackItem>
           {error && (

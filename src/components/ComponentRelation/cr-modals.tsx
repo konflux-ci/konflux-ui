@@ -6,8 +6,6 @@ import {
   EmptyStateActions,
   EmptyStateBody,
   EmptyStateFooter,
-  EmptyStateHeader,
-  EmptyStateIcon,
   Flex,
   FlexItem,
   Form,
@@ -15,9 +13,8 @@ import {
   HelperText,
   HelperTextItem,
   Icon,
-  Modal,
-  ModalVariant,
 } from '@patternfly/react-core';
+import { Modal, ModalVariant } from '@patternfly/react-core/deprecated';
 import { CheckCircleIcon } from '@patternfly/react-icons/dist/esm/icons/check-circle-icon';
 import { PlusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/plus-circle-icon';
 import { FieldArray, useFormikContext } from 'formik';
@@ -154,12 +151,7 @@ export const ConfirmSubmissionComponentRelationModal: React.FC<
 > = ({ modalProps: { onClose, ...rest } }) => {
   return (
     <Modal {...rest} variant={ModalVariant.medium} showClose={false}>
-      <EmptyState>
-        <EmptyStateHeader
-          titleText="Relationships updated!"
-          headingLevel="h2"
-          icon={<EmptyStateIcon icon={SuccessIcon} />}
-        />
+      <EmptyState headingLevel="h2" icon={SuccessIcon} titleText="Relationships updated!">
         <EmptyStateBody>Checkout each component&apos;s details page to view</EmptyStateBody>
         <EmptyStateFooter>
           <EmptyStateActions>

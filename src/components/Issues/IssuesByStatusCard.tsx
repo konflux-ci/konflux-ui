@@ -5,13 +5,12 @@ import {
   HelperText,
   Split,
   SplitItem,
-  Text,
-  TextContent,
-  TextVariants,
+  Content,
+  ContentVariants,
 } from '@patternfly/react-core';
 import { CheckCircleIcon } from '@patternfly/react-icons/dist/esm/icons/check-circle-icon';
 import { LockOpenIcon } from '@patternfly/react-icons/dist/esm/icons/lock-open-icon';
-import { global_palette_green_400 as greenColor } from '@patternfly/react-tokens/dist/js/global_palette_green_400';
+import { t_global_color_nonstatus_green_default as greenColor } from '@patternfly/react-tokens/dist/js/t_global_color_nonstatus_green_default';
 import dayjs from 'dayjs';
 import { useIssues } from '~/kite/kite-hooks';
 import { LoadingSkeleton } from '~/shared';
@@ -54,11 +53,11 @@ const IssuesByStatusCard = () => {
         ) : (
           <Split hasGutter>
             <SplitItem>
-              <TextContent>
-                <Text component={TextVariants.h6}>
+              <Content>
+                <Content component={ContentVariants.h6}>
                   <LockOpenIcon /> Open
-                </Text>
-              </TextContent>
+                </Content>
+              </Content>
               {isLoading ? (
                 <LoadingSkeleton count={1} widths="100%" height="16px" />
               ) : (
@@ -67,11 +66,11 @@ const IssuesByStatusCard = () => {
             </SplitItem>
 
             <SplitItem style={{ paddingLeft: '1rem' }}>
-              <TextContent>
-                <Text component={TextVariants.h6}>
+              <Content>
+                <Content component={ContentVariants.h6}>
                   <CheckCircleIcon color={greenColor.value} /> Resolved
-                </Text>
-              </TextContent>
+                </Content>
+              </Content>
               {isLoading ? (
                 <LoadingSkeleton count={1} widths="100%" height="16px" />
               ) : (

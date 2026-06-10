@@ -5,8 +5,8 @@ import {
   DescriptionListDescription,
   DescriptionListGroup,
   DescriptionListTerm,
-  ModalVariant,
 } from '@patternfly/react-core';
+import { ModalVariant } from '@patternfly/react-core/deprecated';
 import dayjs from 'dayjs';
 import { PIPELINERUN_DETAILS_PATH } from '@routes/paths';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
@@ -59,8 +59,8 @@ export const BuildLogViewer: React.FC<React.PropsWithChildren<BuildLogViewerProp
 
   return (
     <>
-      <div className="pf-v5-c-modal-box__title build-log-viewer__title">
-        <span className="pf-v5-c-modal-box__title-text">{`Build pipeline run log for ${component.metadata.name}`}</span>
+      <div className="pf-v6-c-modal-box__title build-log-viewer__title">
+        <span className="pf-v6-c-modal-box__title-text">{`Build pipeline run log for ${component.metadata.name}`}</span>
         <StatusIconWithTextLabel status={plrStatus} />
         <FeatureFlagIndicator flags={['taskruns-kubearchive']} />
       </div>

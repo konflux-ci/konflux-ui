@@ -4,10 +4,9 @@ import {
   EmptyState,
   EmptyStateBody,
   EmptyStateVariant,
-  Modal,
-  EmptyStateHeader,
   EmptyStateFooter,
 } from '@patternfly/react-core';
+import { Modal } from '@patternfly/react-core/deprecated';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { useComponents } from '../../hooks/useComponents';
 import { ComponentModel } from '../../models';
@@ -55,8 +54,7 @@ const CustomizeAllPipelines: React.FC<React.PropsWithChildren<Props>> = ({
 
     return (
       <Modal {...modalProps}>
-        <EmptyState variant={EmptyStateVariant.lg}>
-          <EmptyStateHeader titleText="No components" headingLevel="h4" />
+        <EmptyState headingLevel="h4" titleText="No components" variant={EmptyStateVariant.lg}>
           <EmptyStateBody>To get started, add a component to your application.</EmptyStateBody>
           <EmptyStateFooter>
             <ButtonWithAccessTooltip

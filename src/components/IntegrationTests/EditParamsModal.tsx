@@ -6,10 +6,10 @@ import {
   ButtonType,
   ButtonVariant,
   Form,
-  ModalVariant,
   Stack,
   StackItem,
 } from '@patternfly/react-core';
+import { ModalVariant } from '@patternfly/react-core/deprecated';
 import { Formik, FormikValues } from 'formik';
 import { K8sQueryPatchResource } from '../../k8s';
 import { IntegrationTestScenarioModel } from '../../models';

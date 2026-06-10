@@ -1,11 +1,5 @@
 import * as React from 'react';
-import {
-  FormSection,
-  Text,
-  TextContent,
-  TextVariants,
-  ValidatedOptions,
-} from '@patternfly/react-core';
+import { FormSection, Content, ContentVariants, ValidatedOptions } from '@patternfly/react-core';
 import { useField } from 'formik';
 import { CheckboxField, InputField, RadioGroupField } from 'formik-pf';
 import HelpPopover from '~/components/HelpPopover';
@@ -33,14 +27,14 @@ const IntegrationTestSection: React.FC<React.PropsWithChildren<Props>> = ({ isIn
     <>
       {!isInPage && (
         <>
-          <TextContent data-test="integration-test-section-header">
-            <Text component={TextVariants.h1}>Add integration test</Text>
-            <Text component={TextVariants.p}>
+          <Content data-test="integration-test-section-header">
+            <Content component={ContentVariants.h1}>Add integration test</Content>
+            <Content component={ContentVariants.p}>
               To test all your components after code commit, add an integration test. Integration
               tests run in parallel using temporary environments.
               <ExternalLink href={LEARN_MORE_ABOUT_INTEGRATION_TESTS} text="Learn more" icon />
-            </Text>
-          </TextContent>
+            </Content>
+          </Content>
         </>
       )}
       <FormSection>

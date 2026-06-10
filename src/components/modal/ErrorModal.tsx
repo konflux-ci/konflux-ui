@@ -1,5 +1,6 @@
 import React from 'react';
-import { Modal, Button, TextContent, Text } from '@patternfly/react-core';
+import { Button, Content } from '@patternfly/react-core';
+import { Modal } from '@patternfly/react-core/deprecated';
 
 interface ErrorModalProps {
   title: string;
@@ -22,11 +23,11 @@ const ErrorModal: React.FC<ErrorModalProps> = ({ title, errorMessage, isOpen, on
         </Button>,
       ]}
     >
-      <TextContent>
-        <Text component="pre" style={{ whiteSpace: 'pre-wrap' }}>
+      <Content>
+        <Content component="pre" style={{ whiteSpace: 'pre-wrap' }}>
           {errorMessage}
-        </Text>
-      </TextContent>
+        </Content>
+      </Content>
     </Modal>
   );
 };

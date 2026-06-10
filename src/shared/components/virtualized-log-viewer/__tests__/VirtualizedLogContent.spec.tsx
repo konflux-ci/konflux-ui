@@ -83,7 +83,7 @@ describe('VirtualizedLogContent Integration Tests', () => {
     it('should render measurement element for virtualization', () => {
       renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
 
-      const measureElement = document.querySelector('.pf-v5-c-log-viewer__list-item');
+      const measureElement = document.querySelector('.pf-v6-c-log-viewer__list-item');
       expect(measureElement).toBeInTheDocument();
       expect(measureElement).toHaveStyle({
         position: 'absolute',
@@ -96,14 +96,14 @@ describe('VirtualizedLogContent Integration Tests', () => {
     it('should render virtualized items with real virtualizer', () => {
       renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
 
-      const items = document.querySelectorAll('.pf-v5-c-log-viewer__list-item');
+      const items = document.querySelectorAll('.pf-v6-c-log-viewer__list-item');
       expect(items.length).toBeGreaterThan(0);
     });
 
     it('should apply positioning styles to virtual items', () => {
       renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
 
-      const items = document.querySelectorAll('.pf-v5-c-log-viewer__list-item');
+      const items = document.querySelectorAll('.pf-v6-c-log-viewer__list-item');
       // Virtual items should have positioning (either absolute position or transform)
       const itemsWithPositioning = Array.from(items).filter((item) => {
         if (!(item instanceof HTMLElement)) return false;
@@ -123,7 +123,7 @@ describe('VirtualizedLogContent Integration Tests', () => {
         />,
       );
 
-      const items = document.querySelectorAll('.pf-v5-c-log-viewer__list-item');
+      const items = document.querySelectorAll('.pf-v6-c-log-viewer__list-item');
       // Should only render visible items, not all 1000
       expect(items.length).toBeLessThan(1000);
       expect(items.length).toBeGreaterThan(0);
@@ -187,7 +187,7 @@ describe('VirtualizedLogContent Integration Tests', () => {
         />,
       );
 
-      const textElements = container.querySelectorAll('.pf-v5-c-log-viewer__text');
+      const textElements = container.querySelectorAll('.pf-v6-c-log-viewer__text');
       // Find the empty line element (should contain only non-breaking space)
       const emptyLineElement = Array.from(textElements).find((el) => el.textContent === '\u00A0');
       expect(emptyLineElement).toBeInTheDocument();
@@ -211,7 +211,7 @@ describe('VirtualizedLogContent Integration Tests', () => {
         />,
       );
 
-      const marks = document.querySelectorAll('mark.pf-v5-c-log-viewer__string.pf-m-match');
+      const marks = document.querySelectorAll('mark.pf-v6-c-log-viewer__string.pf-m-match');
       expect(marks.length).toBeGreaterThan(0);
     });
 
@@ -238,7 +238,7 @@ describe('VirtualizedLogContent Integration Tests', () => {
         />,
       );
 
-      const marks = document.querySelectorAll('mark.pf-v5-c-log-viewer__string.pf-m-match');
+      const marks = document.querySelectorAll('mark.pf-v6-c-log-viewer__string.pf-m-match');
       expect(marks.length).toBe(3);
     });
 
@@ -251,7 +251,7 @@ describe('VirtualizedLogContent Integration Tests', () => {
         />,
       );
 
-      const marks = container.querySelectorAll('mark.pf-v5-c-log-viewer__string.pf-m-match');
+      const marks = container.querySelectorAll('mark.pf-v6-c-log-viewer__string.pf-m-match');
       // Syntax highlighting may split "[error]" into multiple tokens, creating multiple marks
       // but the combined text should be "[error]" and should NOT match the standalone "error"
       expect(marks.length).toBeGreaterThan(0);
@@ -279,7 +279,7 @@ describe('VirtualizedLogContent Integration Tests', () => {
         />,
       );
 
-      const marks = document.querySelectorAll('mark.pf-v5-c-log-viewer__string.pf-m-match');
+      const marks = document.querySelectorAll('mark.pf-v6-c-log-viewer__string.pf-m-match');
       // Should match both "ERROR" and "error"
       expect(marks.length).toBe(2);
     });
@@ -342,7 +342,7 @@ describe('VirtualizedLogContent Integration Tests', () => {
         />,
       );
 
-      const textElement = document.querySelector('.pf-v5-c-log-viewer__text');
+      const textElement = document.querySelector('.pf-v6-c-log-viewer__text');
       expect(textElement).toBeInTheDocument();
     });
 
@@ -389,7 +389,7 @@ describe('VirtualizedLogContent Integration Tests', () => {
         />,
       );
 
-      const textElements = container.querySelectorAll('.pf-v5-c-log-viewer__text');
+      const textElements = container.querySelectorAll('.pf-v6-c-log-viewer__text');
       expect(textElements.length).toBeGreaterThan(0);
 
       // Empty lines should contain non-breaking space (\u00A0)
@@ -413,14 +413,14 @@ describe('VirtualizedLogContent Integration Tests', () => {
         />,
       );
 
-      const textElements = container.querySelectorAll('.pf-v5-c-log-viewer__text');
+      const textElements = container.querySelectorAll('.pf-v6-c-log-viewer__text');
 
       // Find the empty line element (should contain only non-breaking space)
       const emptyLineElement = Array.from(textElements).find((el) => el.textContent === '\u00A0');
       expect(emptyLineElement).toBeInTheDocument();
 
       // Should have search highlights for the two "error" lines
-      const marks = container.querySelectorAll('mark.pf-v5-c-log-viewer__string.pf-m-match');
+      const marks = container.querySelectorAll('mark.pf-v6-c-log-viewer__string.pf-m-match');
       expect(marks.length).toBe(2);
     });
   });
@@ -436,11 +436,11 @@ describe('VirtualizedLogContent Integration Tests', () => {
         />,
       );
 
-      const logText = container.querySelector('.pf-v5-c-log-viewer__text');
+      const logText = container.querySelector('.pf-v6-c-log-viewer__text');
       expect(logText).toBeInTheDocument();
 
       // Verify element has the correct class for styling
-      expect(logText?.className).toContain('pf-v5-c-log-viewer__text');
+      expect(logText?.className).toContain('pf-v6-c-log-viewer__text');
     });
 
     it('should break long words/URLs with word-break', () => {
@@ -492,7 +492,7 @@ Another short line`;
       const scrollContainer = container.querySelector('.log-content__list');
       expect(scrollContainer).toBeInTheDocument();
 
-      const listItems = scrollContainer?.querySelectorAll('.pf-v5-c-log-viewer__list-item');
+      const listItems = scrollContainer?.querySelectorAll('.pf-v6-c-log-viewer__list-item');
       expect(listItems).toBeDefined();
       expect(listItems?.length).toBeGreaterThan(0);
 
@@ -603,7 +603,7 @@ Another short line`;
 
       const gutterCells = document.querySelectorAll('.line-number__gutter-cell');
       const contentItems = document.querySelectorAll(
-        '.log-content__content-column .pf-v5-c-log-viewer__list-item',
+        '.log-content__content-column .pf-v6-c-log-viewer__list-item',
       );
 
       // Should have matching number of visible items
@@ -727,7 +727,7 @@ Another short line`;
       expect(listElement).toBeInTheDocument();
 
       // Should only render visible items due to virtualization
-      const items = document.querySelectorAll('.pf-v5-c-log-viewer__list-item');
+      const items = document.querySelectorAll('.pf-v6-c-log-viewer__list-item');
       expect(items.length).toBeLessThan(1000);
     });
 
@@ -825,7 +825,7 @@ Another short line`;
 
       renderWithQueryClientAndRouter(<VirtualizedLogContent {...searchSectionProps} />);
 
-      const marks = document.querySelectorAll('mark.pf-v5-c-log-viewer__string.pf-m-match');
+      const marks = document.querySelectorAll('mark.pf-v6-c-log-viewer__string.pf-m-match');
       expect(marks.length).toBe(1);
     });
 

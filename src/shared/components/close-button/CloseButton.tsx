@@ -21,14 +21,13 @@ const CloseButton: React.FC<React.PropsWithChildren<CloseButtonProps>> = ({
   const { t } = useTranslation();
   return (
     <Button
+      icon={<CloseIcon />}
       aria-label={ariaLabel || t('hac-shared~Close')}
       className={classNames('close-button', additionalClassName)}
       data-test={dataTestID}
       onClick={onClick}
       variant="plain"
-    >
-      <CloseIcon />
-    </Button>
+    />
   );
 };
 

@@ -24,7 +24,7 @@ export const ThemeContext = React.createContext<ThemeContextValue>({
 });
 
 const THEME_STORAGE_KEY = 'konflux-theme-preference';
-const DARK_THEME_CLASS = 'pf-v5-theme-dark';
+const DARK_THEME_CLASS = 'pf-v6-theme-dark';
 
 const getSystemPreference = (): Theme => {
   return window.matchMedia(PREFERS_COLOR_SCHEME_DARK).matches ? THEME_DARK : THEME_LIGHT;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { EmptyStateBody, PageSection, PageSectionVariants, Title } from '@patternfly/react-core';
+import { EmptyStateBody, PageSection, Title } from '@patternfly/react-core';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { IfFeature } from '~/feature-flags/hooks';
 import { ExternalLink } from '~/shared';
@@ -24,13 +24,9 @@ const ComponentsPage: React.FC = () => {
           </>
         }
       >
-        <PageSection
-          padding={{ default: 'noPadding' }}
-          variant={PageSectionVariants.light}
-          isFilled
-        >
+        <PageSection hasBodyWrapper={false} padding={{ default: 'noPadding' }} isFilled>
           <AppEmptyState
-            className="pf-v5-u-mx-lg"
+            className="pf-v6-u-mx-lg"
             isXl
             emptyStateImg={emptyStateImgUrl}
             title="Bring your code to Konflux"

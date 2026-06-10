@@ -6,7 +6,7 @@ export const snapshotsTableColumnClasses = {
   components: 'pf-m-width-15',
   commitMessage: 'pf-m-width-25',
   reference: 'pf-m-width-15',
-  kebab: 'pf-v5-c-table__action',
+  kebab: 'pf-v6-c-table__action',
 };
 
 export const snapshotColumns = [

@@ -1,10 +1,10 @@
 :root {
   --konflux-primary-color: #fc783d;
   --konflux-primary-hover-color: #d36634;
-  --konflux-icon-color: var(--pf-v5-global--icon--Color--dark);
+  --konflux-icon-color: var(--pf-t--global--icon--color--regular);
 }
 
-html.pf-v5-theme-dark {
+html.pf-v6-theme-dark {
   --konflux-primary-color: #e05c3b;
   --konflux-primary-hover-color: #b94c2a;
 }
@@ -12,7 +12,7 @@ html.pf-v5-theme-dark {
 #root {
   height: 100%;
 
-  .pf-v5-c-button.pf-m-primary:not(.pf-m-disabled):not(.pf-m-aria-disabled) {
+  .pf-v6-c-button.pf-m-primary:not(.pf-m-disabled):not(.pf-m-aria-disabled) {
     background-color: var(--konflux-primary-color);
 
     &:hover {
@@ -20,7 +20,7 @@ html.pf-v5-theme-dark {
     }
   }
 
-  .pf-v5-c-dropdown__toggle.pf-m-primary:not(.pf-m-disabled):not(.pf-m-aria-disabled) {
+  .pf-v6-c-dropdown__toggle.pf-m-primary:not(.pf-m-disabled):not(.pf-m-aria-disabled) {
     background-color: var(--konflux-primary-color);
 
     &:hover {
@@ -28,7 +28,7 @@ html.pf-v5-theme-dark {
     }
   }
 
-  .pf-v5-c-menu-toggle.pf-m-primary:not(.pf-m-disabled):not(.pf-m-aria-disabled) {
+  .pf-v6-c-menu-toggle.pf-m-primary:not(.pf-m-disabled):not(.pf-m-aria-disabled) {
     background-color: var(--konflux-primary-color);
 
     &:hover {
@@ -36,5 +36,3 @@ html.pf-v5-theme-dark {
     }
   }
 }
-
-

@@ -2,13 +2,11 @@ import * as React from 'react';
 import {
   Bullseye,
   EmptyStateBody,
-  PageSectionVariants,
   PageSection,
   Spinner,
   Title,
-  TextContent,
-  Text,
-  TextVariants,
+  Content,
+  ContentVariants,
   Flex,
   FlexItem,
   Switch,
@@ -144,24 +142,23 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
   const isFiltered = nameFilter || releasableFilter || commitMessageFilter || showMergedOnly;
 
   return (
-    <PageSection padding={{ default: 'noPadding' }} variant={PageSectionVariants.light} isFilled>
+    <PageSection hasBodyWrapper={false} padding={{ default: 'noPadding' }} isFilled>
       <Flex
         justifyContent={{ default: 'justifyContentSpaceBetween' }}
         alignItems={{ default: 'alignItemsCenter' }}
       >
         <FlexItem>
-          <Title size="lg" headingLevel="h3" className="pf-v5-c-title pf-v5-u-mt-lg pf-v5-u-mb-sm">
+          <Title size="lg" headingLevel="h3" className="pf-v6-c-title pf-v6-u-mt-lg pf-v6-u-mb-sm">
             Snapshots
           </Title>
         </FlexItem>
       </Flex>
 
-      <TextContent>
-        <Text component={TextVariants.p}>
-          A snapshot is a point-in-time, immutable record of an application&apos;s container images.{' '}
-          <ExternalLink href={LEARN_MORE_SNAPSHOTS}>Learn more</ExternalLink>
-        </Text>
-      </TextContent>
+      <Content component={ContentVariants.p}>
+        A snapshot is a point-in-time, immutable record of an application&apos;s container images.{' '}
+        <ExternalLink href={LEARN_MORE_SNAPSHOTS}>Learn more</ExternalLink>
+      </Content>
+
       {(!snapshots || snapshots.length === 0) && !isFiltered ? (
         <AppEmptyState
           emptyStateImg={emptySnapshotImgUrl}

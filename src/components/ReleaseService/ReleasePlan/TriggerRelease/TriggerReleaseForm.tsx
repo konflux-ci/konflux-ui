@@ -5,7 +5,6 @@ import {
   Grid,
   GridItem,
   PageSection,
-  PageSectionVariants,
   TextInput,
   TextInputTypes,
 } from '@patternfly/react-core';
@@ -97,7 +96,7 @@ export const TriggerReleaseForm: React.FC<Props> = ({
         />
       }
     >
-      <PageSection variant={PageSectionVariants.light} isFilled isWidthLimited>
+      <PageSection hasBodyWrapper isFilled isWidthLimited>
         <Form style={{ maxWidth: '70%' }}>
           <ReleasePlanDropdown
             name="releasePlan"

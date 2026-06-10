@@ -4,17 +4,18 @@ import {
   AlertVariant,
   Button,
   ButtonVariant,
+  pluralize,
+  Content,
+  ContentVariants,
+  Truncate,
+} from '@patternfly/react-core';
+import {
   Modal,
   ModalBoxBody,
   ModalBoxFooter,
   ModalBoxHeader,
-  pluralize,
-  Text,
-  TextContent,
-  TextVariants,
-  Truncate,
-} from '@patternfly/react-core';
-import { Tbody, Thead, Th, Tr, Td, Table /* data-codemods */ } from '@patternfly/react-table';
+} from '@patternfly/react-core/deprecated';
+import { Tbody, Thead, Th, Tr, Td, Table } from '@patternfly/react-table';
 import SendIconUrl from '../../assets/send.svg';
 import SuccessIconUrl from '../../assets/success.svg';
 import { LEARN_MORE_GITLAB_OR_FORGEJO_URL } from '../../consts/documentation';
@@ -103,7 +104,7 @@ const Row: React.FC<
         <Td>
           <ComponentPACStateLabel onStateChange={onComponentStateChange} component={component} />
         </Td>
-        <Td className="pf-v5-u-text-align-right">
+        <Td className="pf-v6-u-text-align-right">
           {(() => {
             switch (pacState) {
               case PACState.disabled:
@@ -300,29 +301,29 @@ const CustomizePipeline: React.FC<React.PropsWithChildren<Props>> = ({
       <ModalBoxHeader />
       <ModalBoxBody>
         <>
-          <TextContent
-            className="pf-v5-u-pt-lg"
+          <Content
+            className="pf-v6-u-pt-lg"
             style={{ visibility: allLoading ? 'hidden' : undefined, textAlign: 'center' }}
           >
-            <Text component={TextVariants.p}>
+            <Content component={ContentVariants.p}>
               {completed ? (
                 <SuccessIconUrl style={{ width: 100 }} />
               ) : (
                 <SendIconUrl style={{ width: 100 }} />
               )}
-            </Text>
-            <Text component={TextVariants.h2}>{'Manage build pipeline'}</Text>
-            <Text component={TextVariants.p}>
+            </Content>
+            <Content component={ContentVariants.h2}>{'Manage build pipeline'}</Content>
+            <Content component={ContentVariants.p}>
               Konflux build pipelines are Pipelines as Code that are committed to your
               component&apos;s repository. To automatically build on future changes, merge the
               initial pull request sent to your connected repository. You must provide permission to
               your repository in the Konflux Git application. If you&apos;re using GitLab or
               Forgejo, you must grant permission by uploading a repository access token.
-            </Text>
-            <Text component={TextVariants.p}>
+            </Content>
+            <Content component={ContentVariants.p}>
               {applicationUrl ? (
                 <ExternalLink
-                  style={{ paddingLeft: 'var(--pf-v5-global--spacer--2xl)' }}
+                  style={{ paddingLeft: 'var(--pf-t--global--spacer--2xl)' }}
                   href={applicationUrl}
                   analytics={{
                     link_name: 'install-github-app',
@@ -334,7 +335,7 @@ const CustomizePipeline: React.FC<React.PropsWithChildren<Props>> = ({
                 </ExternalLink>
               ) : null}
               <ExternalLink
-                style={{ paddingLeft: 'var(--pf-v5-global--spacer--2xl)' }}
+                style={{ paddingLeft: 'var(--pf-t--global--spacer--2xl)' }}
                 href={LEARN_MORE_GITLAB_OR_FORGEJO_URL}
                 analytics={{
                   link_name: 'learn-more-gitlab-or-forgejo-token',
@@ -344,9 +345,9 @@ const CustomizePipeline: React.FC<React.PropsWithChildren<Props>> = ({
               >
                 Learn more about GitLab or Forgejo repository access token
               </ExternalLink>
-            </Text>
-          </TextContent>
-          <div className="pf-v5-u-mt-lg" />
+            </Content>
+          </Content>
+          <div className="pf-v6-u-mt-lg" />
           {alert}
           <Table>
             <Thead>
@@ -374,8 +375,8 @@ const CustomizePipeline: React.FC<React.PropsWithChildren<Props>> = ({
           </Table>
           {totalCount > 0 ? (
             <p
-              className={`pf-v5-u-pt-lg ${
-                count === totalCount ? 'pf-v5-u-success-color-100' : 'pf-v5-u-color-400'
+              className={`pf-v6-u-pt-lg ${
+                count === totalCount ? 'pf-v6-u-success-color-100' : 'pf-v6-u-color-400'
               }`}
             >
               {`${count} of ${pluralize(totalCount, 'component')} upgraded to custom build`}

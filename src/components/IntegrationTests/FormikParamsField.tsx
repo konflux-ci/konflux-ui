@@ -2,7 +2,7 @@ import * as React from 'react';
 import {
   Flex,
   FlexItem,
-  TextContent,
+  Content,
   DataList,
   DataListItem,
   DataListToggle,
@@ -84,9 +84,9 @@ const FormikParamsField: React.FC<React.PropsWithChildren<IntegrationTestParamsP
             'aria-labelledby': `review-${fieldName} toggle-${fieldName}`,
             'aria-expanded': paramExpanded,
             'data-test': `${fieldName}-toggle-button`,
-            className: 'pf-v5-u-pr-xs pf-v5-u-pl-sm',
+            className: 'pf-v6-u-pr-xs pf-v6-u-pl-sm',
           }}
-          className="pf-v5-u-pl-xs pf-v5-u-pr-xs"
+          className="pf-v6-u-pl-xs pf-v6-u-pr-xs"
         >
           {heading ?? 'Parameters'}
           {error && (
@@ -109,18 +109,18 @@ const FormikParamsField: React.FC<React.PropsWithChildren<IntegrationTestParamsP
                             isExpanded={expanded[i]}
                             data-test={`its-param-${i + 1}`}
                           >
-                            <DataListItemRow className="pf-v5-u-pl-0">
+                            <DataListItemRow className="pf-v6-u-pl-0">
                               <DataListToggle
                                 id={p.name}
                                 onClick={() => toggleExpandedState(i)}
                                 isExpanded={expanded[i]}
                                 data-test={`expand-param-${i + 1}`}
-                                className="pf-v5-u-mr-0"
+                                className="pf-v6-u-mr-0"
                               />
                               <DataListItemCells
                                 dataListCells={[
                                   <DataListCell key="param-title" width={5}>
-                                    <TextContent>{p.name}</TextContent>
+                                    <Content>{p.name}</Content>
                                   </DataListCell>,
 
                                   <DataListCell key="remove-param-button" width={3}>
@@ -146,13 +146,13 @@ const FormikParamsField: React.FC<React.PropsWithChildren<IntegrationTestParamsP
                               aria-label="list-item-content"
                               isHidden={!expanded[i]}
                             >
-                              <DataListItemRow className="pf-v5-u-pl-0">
+                              <DataListItemRow className="pf-v6-u-pl-0">
                                 <DataListItemCells
                                   dataListCells={[
                                     <DataListCell
                                       key="param-name"
                                       width={3}
-                                      className="pf-v5-u-pl-xl pf-v5-u-pt-0"
+                                      className="pf-v6-u-pl-xl pf-v6-u-pt-0"
                                     >
                                       <FormGroup label="Name">
                                         <InputField
@@ -164,7 +164,7 @@ const FormikParamsField: React.FC<React.PropsWithChildren<IntegrationTestParamsP
                                     <DataListCell
                                       key="param-value"
                                       width={4}
-                                      className="pf-v5-u-pl-xl pf-v5-u-pt-0"
+                                      className="pf-v6-u-pl-xl pf-v6-u-pt-0"
                                     >
                                       <FormGroup label="Value">
                                         <FieldArray
@@ -176,7 +176,7 @@ const FormikParamsField: React.FC<React.PropsWithChildren<IntegrationTestParamsP
                                                 p.values.map((_, j) => (
                                                   <InputGroup
                                                     key={`value${i}${j}`}
-                                                    className="pf-v5-u-mb-md"
+                                                    className="pf-v6-u-mb-md"
                                                   >
                                                     <InputField
                                                       key={`value${i}${j}`}
@@ -184,7 +184,7 @@ const FormikParamsField: React.FC<React.PropsWithChildren<IntegrationTestParamsP
                                                       data-test={`param-${i}-value-${j}`}
                                                     />
                                                     <Button
-                                                      className="pf-v5-u-ml-md"
+                                                      className="pf-v6-u-ml-md"
                                                       isInline
                                                       type="button"
                                                       variant="link"
@@ -219,13 +219,13 @@ const FormikParamsField: React.FC<React.PropsWithChildren<IntegrationTestParamsP
                       })}
                     <DataListItem>
                       <Flex>
-                        <FlexItem className="pf-v5-u-mt-md pf-v5-u-mb-md">
+                        <FlexItem className="pf-v6-u-mt-md pf-v6-u-mb-md">
                           <Button
                             isInline
                             type="button"
                             variant="link"
                             data-test="add-param-button"
-                            className="pf-v5-u-ml-md"
+                            className="pf-v6-u-ml-md"
                             icon={<PlusCircleIcon />}
                             onClick={() => {
                               addParam();

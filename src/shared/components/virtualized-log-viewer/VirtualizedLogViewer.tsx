@@ -2,7 +2,7 @@ import React from 'react';
 import { LogViewerToolbarContext } from '@patternfly/react-log-viewer';
 import type { LogSection } from './types';
 import { VirtualizedLogContent } from './VirtualizedLogContent';
-import '@patternfly/react-styles/css/components/LogViewer/log-viewer.css';
+import '@patternfly/react-log-viewer/dist/css/log-viewer.css';
 
 import './VirtualizedLogViewer.scss';
 
@@ -55,7 +55,7 @@ export const VirtualizedLogViewer: React.FC<VirtualizedLogViewerProps> = ({
   }, [rowInFocus, scrollToRow]);
 
   return (
-    <div className="pf-v5-c-log-viewer__main">
+    <div className="pf-v6-c-log-viewer__main">
       <VirtualizedLogContent
         sections={sections}
         height={height}

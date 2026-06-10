@@ -204,8 +204,8 @@ describe('getLabelColorFromStatus', () => {
   });
 
   it('should return gold for cancelled/cancelling status', () => {
-    expect(getLabelColorFromStatus(runStatus.Cancelled)).toBe('gold');
-    expect(getLabelColorFromStatus(runStatus.Cancelling)).toBe('gold');
+    expect(getLabelColorFromStatus(runStatus.Cancelled)).toBe('yellow');
+    expect(getLabelColorFromStatus(runStatus.Cancelling)).toBe('yellow');
   });
 });
 

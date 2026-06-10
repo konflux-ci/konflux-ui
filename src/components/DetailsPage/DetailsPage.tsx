@@ -12,9 +12,7 @@ import {
   MenuToggle,
   PageGroup,
   PageSection,
-  PageSectionVariants,
-  Text,
-  TextContent,
+  Content,
 } from '@patternfly/react-core';
 import { ArrowLeftIcon } from '@patternfly/react-icons/dist/esm/icons/arrow-left-icon';
 import { css } from '@patternfly/react-styles';
@@ -115,9 +113,9 @@ const DetailsPage: React.FC<React.PropsWithChildren<DetailsPageProps>> = ({
   const renderTitle = () => {
     if (typeof title === 'string') {
       return (
-        <Text component="h1" data-test="details__title">
+        <Content component="h1" data-test="details__title">
           {title}
-        </Text>
+        </Content>
       );
     }
     return title;
@@ -125,26 +123,32 @@ const DetailsPage: React.FC<React.PropsWithChildren<DetailsPageProps>> = ({
 
   return (
     <PageGroup data-test="details" className="app-details">
-      <PageSection type="breadcrumb">
+      <PageSection hasBodyWrapper={false} type="breadcrumb">
         {!backButtonLink && breadcrumbs && (
           <BreadCrumbs data-test="details__breadcrumbs" breadcrumbs={breadcrumbs} />
         )}
         {backButtonLink && backButtonText ? (
-          <Button onClick={() => navigate(backButtonLink as string)} variant="link" isInline>
-            <Icon>
-              <ArrowLeftIcon style={{ marginRight: 'var(--pf-v5-global--spacer--sm)' }} />
-            </Icon>
+          <Button
+            icon={
+              <Icon>
+                <ArrowLeftIcon style={{ marginRight: 'var(--pf-t--global--spacer--sm)' }} />
+              </Icon>
+            }
+            onClick={() => navigate(backButtonLink as string)}
+            variant="link"
+            isInline
+          >
             {backButtonText}
           </Button>
         ) : (
           ''
         )}
-        <Flex style={{ paddingTop: 'var(--pf-v5-global--spacer--lg)' }}>
+        <Flex style={{ paddingTop: 'var(--pf-t--global--spacer--lg)' }}>
           <FlexItem>
-            <TextContent>
+            <Content>
               {renderTitle()}
-              {description && <Text component="p">{description}</Text>}
-            </TextContent>
+              {description && <Content component="p">{description}</Content>}
+            </Content>
           </FlexItem>
           <Flex align={{ default: 'alignRight' }}>
             {featureFlags && <FeatureFlagIndicator flags={featureFlags} />}
@@ -176,7 +180,7 @@ const DetailsPage: React.FC<React.PropsWithChildren<DetailsPageProps>> = ({
       </PageSection>
       {preComponent}
       {tabs?.length && (
-        <PageSection className="app-details__tabs" isFilled variant={PageSectionVariants.light}>
+        <PageSection hasBodyWrapper={false} className="app-details__tabs" isFilled>
           <TabsLayout
             id="app-details"
             onTabSelect={onTabSelect}
@@ -187,7 +191,7 @@ const DetailsPage: React.FC<React.PropsWithChildren<DetailsPageProps>> = ({
         </PageSection>
       )}
       {footer && (
-        <PageSection variant={PageSectionVariants.light} isFilled={false}>
+        <PageSection hasBodyWrapper={false} isFilled={false}>
           {footer}
         </PageSection>
       )}

@@ -1,12 +1,6 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
-import {
-  Bullseye,
-  EmptyStateBody,
-  PageSection,
-  PageSectionVariants,
-  Spinner,
-} from '@patternfly/react-core';
+import { Bullseye, EmptyStateBody, PageSection, Spinner } from '@patternfly/react-core';
 import { SortByDirection } from '@patternfly/react-table';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { textMatch } from '~/utils/text-filter-utils';
@@ -90,14 +84,10 @@ const ApplicationListView: React.FC<React.PropsWithChildren<unknown>> = () => {
         title="Applications"
         description="An application is 1 or more components running together for building and releasing."
       >
-        <PageSection
-          padding={{ default: 'noPadding' }}
-          variant={PageSectionVariants.light}
-          isFilled
-        >
+        <PageSection hasBodyWrapper={false} padding={{ default: 'noPadding' }} isFilled>
           {!applications || applications.length === 0 ? (
             <AppEmptyState
-              className="pf-v5-u-mx-lg"
+              className="pf-v6-u-mx-lg"
               isXl
               emptyStateImg={emptyStateImgUrl}
               title="Easily onboard your applications"

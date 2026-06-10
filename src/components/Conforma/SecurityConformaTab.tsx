@@ -5,9 +5,8 @@ import {
   Flex,
   FlexItem,
   Spinner,
-  Text,
-  TextContent,
-  TextVariants,
+  Content,
+  ContentVariants,
 } from '@patternfly/react-core';
 import { CONFORMA_POLICY_AVAILABLE_RULE_COLLECTIONS_URL } from '~/consts/documentation';
 import { useDeepCompareMemoize } from '~/shared';
@@ -131,9 +130,9 @@ export const SecurityConformaTab: React.FC<
 
   return (
     <>
-      <TextContent style={{ marginTop: 'var(--pf-v5-global--spacer--lg)' }}>
-        <Text component={TextVariants.h3}>Testing apps against Conforma</Text>
-        <Text component={TextVariants.p}>
+      <Content style={{ marginTop: 'var(--pf-t--global--spacer--lg)' }}>
+        <Content component={ContentVariants.h3}>Testing apps against Conforma</Content>
+        <Content component={ContentVariants.p}>
           Conforma is a set of tools for verifying the provenance of application snapshots and
           validating them against a clearly defined policy.
           <br />
@@ -168,36 +167,36 @@ export const SecurityConformaTab: React.FC<
             Conforma Policies
           </Button>
           .
-        </Text>
-      </TextContent>
-      <Flex style={{ marginTop: 'var(--pf-v5-global--spacer--xl)' }}>
-        <FlexItem style={{ marginRight: 'var(--pf-v5-global--spacer--2xl)' }}>
-          <TextContent>
-            <Text component={TextVariants.h3}>Results</Text>
-          </TextContent>
+        </Content>
+      </Content>
+      <Flex style={{ marginTop: 'var(--pf-t--global--spacer--xl)' }}>
+        <FlexItem style={{ marginRight: 'var(--pf-t--global--spacer--2xl)' }}>
+          <Content>
+            <Content component={ContentVariants.h3}>Results</Content>
+          </Content>
           {toolbar}
         </FlexItem>
         <Flex direction={{ default: 'column' }}>
           <FlexItem>
-            <TextContent>
-              <Text component={TextVariants.h3}>Results summary</Text>
-            </TextContent>
+            <Content>
+              <Content component={ContentVariants.h3}>Results summary</Content>
+            </Content>
           </FlexItem>
           <Flex data-test="result-summary" spaceItems={{ default: 'spaceItemsXl' }}>
             <FlexItem spacer={{ default: 'spacerXl' }}>
-              <span style={{ marginRight: 'var(--pf-v5-global--spacer--sm)' }}>
+              <span style={{ marginRight: 'var(--pf-t--global--spacer--sm)' }}>
                 {getRuleStatus(CONFORMA_RESULT_STATUS.violations)}
               </span>
               <b>{resultSummary[CONFORMA_RESULT_STATUS.violations]}</b>
             </FlexItem>
             <FlexItem>
-              <span style={{ marginRight: 'var(--pf-v5-global--spacer--sm)' }}>
+              <span style={{ marginRight: 'var(--pf-t--global--spacer--sm)' }}>
                 {getRuleStatus(CONFORMA_RESULT_STATUS.warnings)}
               </span>
               <b>{resultSummary[CONFORMA_RESULT_STATUS.warnings]}</b>
             </FlexItem>
             <FlexItem>
-              <span style={{ marginRight: 'var(--pf-v5-global--spacer--sm)' }}>
+              <span style={{ marginRight: 'var(--pf-t--global--spacer--sm)' }}>
                 {getRuleStatus(CONFORMA_RESULT_STATUS.successes)}
               </span>
               <b>{resultSummary[CONFORMA_RESULT_STATUS.successes]}</b>

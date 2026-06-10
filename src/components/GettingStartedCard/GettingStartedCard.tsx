@@ -44,12 +44,12 @@ export const GettingStartedCard: React.FC<React.PropsWithChildren<GettingStarted
 
   return (
     !isDismissed && (
-      <PageSection variant={isLight ? 'light' : 'default'}>
+      <PageSection hasBodyWrapper={false} variant={isLight ? 'secondary' : 'default'}>
         <Card>
           <Split>
             {imgSrc && (
               <SplitItem
-                className={classnames('pf-v5-u-min-width getting-started-card__img', imgClassName)}
+                className={classnames('pf-v6-u-min-width getting-started-card__img', imgClassName)}
               >
                 <SvgIcon aria-label={imgAlt} role="img" />
               </SplitItem>
@@ -60,12 +60,11 @@ export const GettingStartedCard: React.FC<React.PropsWithChildren<GettingStarted
                   actions: (
                     <>
                       <Button
+                        icon={<CloseIcon />}
                         variant="plain"
                         aria-label="Hide card"
                         onClick={() => setStorageKeys({ ...keys, [localStorageKey]: true })}
-                      >
-                        <CloseIcon />
-                      </Button>
+                      />
                     </>
                   ),
                   hasNoOffset: false,

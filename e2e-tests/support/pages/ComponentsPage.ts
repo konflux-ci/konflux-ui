@@ -60,10 +60,8 @@ export class ComponentPage extends AbstractWizardPage {
   }
 
   setPipeline(pipeline: string) {
-    cy.contains('.pf-v5-c-form__group', 'Pipeline').within(($form) => {
-      cy.get(ComponentsPagePO.dropdown).click();
-      cy.contains('li', pipeline).click();
-    });
+    cy.contains('.pf-v6-c-form__group', 'Pipeline').find(ComponentsPagePO.dropdown).click();
+    cy.contains('li', pipeline).click();
   }
 
   public componentName: string;

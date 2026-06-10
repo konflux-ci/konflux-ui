@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { Button, Modal, ModalVariant, Text, TextContent } from '@patternfly/react-core';
+import { Button, Content } from '@patternfly/react-core';
+import { Modal, ModalVariant } from '@patternfly/react-core/deprecated';
 
 const DEFAULT_MAX_LENGTH = 80;
 
@@ -53,9 +54,11 @@ export const Truncate: React.FC<TruncateProps> = ({
         variant={ModalVariant.medium}
         data-test={dataTest ? `${dataTest}-modal` : 'truncate-modal'}
       >
-        <TextContent>
-          <Text style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{content}</Text>
-        </TextContent>
+        <Content>
+          <Content component="p" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+            {content}
+          </Content>
+        </Content>
       </Modal>
     </>
   );

@@ -82,7 +82,7 @@ const ComponentPACStateLabelInner: React.FC<
     case PACState.pending:
       return (
         <Tooltip content="No build pipeline is set for this component. To set a build pipeline for this component, merge the pull request containing the build pipeline we sent to your repository.">
-          <Label color="gold" onClick={customizePipeline} role={role} style={style}>
+          <Label color="yellow" onClick={customizePipeline} role={role} style={style}>
             Merge pull request
           </Label>
         </Tooltip>
@@ -91,7 +91,7 @@ const ComponentPACStateLabelInner: React.FC<
     case PACState.unconfigureRequested:
       return (
         <Tooltip content="We sent a pull request to your repository containing the default build pipeline for you to customize. Merge the pull request to set a build pipeline for this component.">
-          <Label color="gold" onClick={customizePipeline} role={role} style={style}>
+          <Label color="yellow" onClick={customizePipeline} role={role} style={style}>
             {pacState === PACState.configureRequested ? 'Sending pull request' : 'Rolling back'}
           </Label>
         </Tooltip>

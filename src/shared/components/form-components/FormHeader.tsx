@@ -17,8 +17,8 @@ const FormHeader: React.FC<React.PropsWithChildren<FormHeaderProps>> = ({
   marginBottom,
 }) => {
   const marginStyles = {
-    ...(marginTop ? { marginTop: `var(--pf-v5-global--spacer--${marginTop})` } : {}),
-    ...(marginBottom ? { marginBottom: `var(--pf-v5-global--spacer--${marginBottom})` } : {}),
+    ...(marginTop ? { marginTop: `var(--pf-t--global--spacer--${marginTop})` } : {}),
+    ...(marginBottom ? { marginBottom: `var(--pf-t--global--spacer--${marginBottom})` } : {}),
   };
 
   return (
@@ -26,7 +26,7 @@ const FormHeader: React.FC<React.PropsWithChildren<FormHeaderProps>> = ({
       <Title headingLevel="h1" size="2xl">
         {title}
       </Title>
-      <FormHelperText style={{ marginTop: 'var(--pf-v5-global--spacer--xs)' }}>
+      <FormHelperText style={{ marginTop: 'var(--pf-t--global--spacer--xs)' }}>
         {helpText}
       </FormHelperText>
     </div>

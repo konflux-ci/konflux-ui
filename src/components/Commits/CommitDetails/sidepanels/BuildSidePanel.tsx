@@ -87,7 +87,7 @@ const BuildSidePanel: React.FC<React.PropsWithChildren<PipelineSidePanelBodyProp
             </Link>
             <StatusIconWithTextLabel status={workflowNode.getData().status} />
           </span>
-          <span className="pf-v5-u-mt-xs commit-side-panel__subtext">
+          <span className="pf-v6-u-mt-xs commit-side-panel__subtext">
             <PipelineIcon role="img" aria-label="Pipeline run" /> Pipeline run{' '}
             <FeatureFlagIndicator flags={['taskruns-kubearchive']} />
           </span>
@@ -124,7 +124,7 @@ const BuildSidePanel: React.FC<React.PropsWithChildren<PipelineSidePanelBodyProp
             </DescriptionListGroup>
           </DescriptionList>
           <DescriptionList
-            className="pf-v5-u-mt-lg"
+            className="pf-v6-u-mt-lg"
             data-test="pipeline-run-details"
             columnModifier={{
               default: '1Col',
@@ -170,14 +170,14 @@ const BuildSidePanel: React.FC<React.PropsWithChildren<PipelineSidePanelBodyProp
             </DescriptionListGroup>
           </DescriptionList>
           {results ? (
-            <div className="pf-v5-u-mt-lg">
+            <div className="pf-v6-u-mt-lg">
               <RunResultsList results={results} status={pipelineStatus} compressed />
             </div>
           ) : null}
 
           {specParams?.length && (
             <>
-              <Divider style={{ padding: 'var(--pf-v5-global--spacer--lg) 0' }} />
+              <Divider style={{ padding: 'var(--pf-t--global--spacer--lg)' }} />
               <RunParamsList params={specParams} compressed />
             </>
           )}

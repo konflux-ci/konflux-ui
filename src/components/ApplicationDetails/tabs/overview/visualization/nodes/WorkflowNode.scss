@@ -2,14 +2,14 @@
   cursor: pointer;
   &.m-disabled {
     > .pf-topology-pipelines__pill-background {
-      fill: var(--pf-v5-global--BackgroundColor--200);
+      fill: var(--pf-t--global--background--color--secondary--default);
     }
     .pf-topology-pipelines__pill-text {
-      fill: var(--pf-v5-global--disabled-color--100);
+      fill: var(--pf-t--global--text--color--disabled);
     }
   }
   &__popover {
-    .pf-v5-c-popover__content, .pf-v5-c-popover__body {
+    .pf-v6-c-popover__content, .pf-v6-c-popover__body {
       padding: 0;
     }
   }

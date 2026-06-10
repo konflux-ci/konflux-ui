@@ -74,7 +74,7 @@ const IntegrationTestPipelineRunTab: React.FC<React.PropsWithChildren> = () => {
 
   return (
     <>
-      <Title headingLevel="h3" className="pf-v5-c-title pf-v5-u-mt-lg pf-v5-u-mb-lg">
+      <Title headingLevel="h3" className="pf-v6-c-title pf-v6-u-mt-lg pf-v6-u-mb-lg">
         Pipeline runs <FeatureFlagIndicator flags={['pipelineruns-kubearchive']} />
       </Title>
       {pipelineRuns && pipelineRuns.length > 0 && (

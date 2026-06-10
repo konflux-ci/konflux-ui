@@ -42,7 +42,7 @@ const TaskRunDetails: React.FC<React.PropsWithChildren<Props>> = ({ taskRun, sta
               </DescriptionListDescription>
             </DescriptionListGroup>
           </DescriptionList>
-          <DescriptionList className="pf-v5-u-mt-lg">
+          <DescriptionList className="pf-v6-u-mt-lg">
             <DescriptionListGroup>
               <DescriptionListTerm>Description</DescriptionListTerm>
               <DescriptionListDescription>
@@ -64,7 +64,7 @@ const TaskRunDetails: React.FC<React.PropsWithChildren<Props>> = ({ taskRun, sta
 
       {specParams?.length && (
         <>
-          <Divider style={{ padding: 'var(--pf-v5-global--spacer--lg) 0' }} />
+          <Divider style={{ padding: 'var(--pf-t--global--spacer--lg)' }} />
           <RunParamsList params={specParams} compressed />
         </>
       )}

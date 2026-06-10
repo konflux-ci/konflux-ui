@@ -5,7 +5,7 @@ import { ThemeProvider } from '../ThemeContext';
 import { useTheme } from '../useTheme';
 
 const THEME_STORAGE_KEY = 'konflux-theme-preference';
-const DARK_THEME_CLASS = 'pf-v5-theme-dark';
+const DARK_THEME_CLASS = 'pf-v6-theme-dark';
 
 // Mock localStorage
 const mockLocalStorage = {
