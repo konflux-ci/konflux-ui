@@ -6,6 +6,7 @@ cat > /dev/null
 
 # Loop protection: counter file tracks completed failing iterations
 MAX_RETRIES="${POST_EDIT_MAX_RETRIES:-3}"
+[[ "$MAX_RETRIES" =~ ^[0-9]+$ ]] || MAX_RETRIES=3
 REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || echo "$PWD")
 REPO_HASH=$(printf '%s' "$REPO_ROOT" | cksum | cut -d' ' -f1)
 
@@ -74,6 +75,7 @@ if (( count >= MAX_RETRIES )); then
   if [[ -n "${CURSOR_VERSION:-}" ]]; then
     jq -n --arg msg "$msg" '{"followup_message": $msg}'
   else
+    # systemMessage (not "decision":"block") so Claude stops instead of retrying the bail-out
     jq -n --arg msg "$msg" '{"systemMessage": $msg}'
   fi
   exit 0
