@@ -4,8 +4,26 @@ set -euo pipefail
 # Consume stdin (required by both Cursor and Claude Code hooks protocol)
 cat > /dev/null
 
-changed_files=$(git diff --name-only HEAD 2>/dev/null || true)
-[[ -z "$changed_files" ]] && exit 0
+# Loop protection: counter file tracks completed failing iterations
+MAX_RETRIES="${POST_EDIT_MAX_RETRIES:-3}"
+REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || echo "$PWD")
+REPO_HASH=$(printf '%s' "$REPO_ROOT" | cksum | cut -d' ' -f1)
+
+COUNTER_DIR="${TMPDIR:-/tmp}/post-edit-hooks-$(id -u)"
+mkdir -p "$COUNTER_DIR" && chmod 700 "$COUNTER_DIR"
+COUNTER_FILE="$COUNTER_DIR/$REPO_HASH"
+
+count=0
+if [[ -f "$COUNTER_FILE" ]]; then
+  raw=$(cat "$COUNTER_FILE")
+  [[ "$raw" =~ ^[0-9]+$ ]] && count=$raw
+fi
+
+changed_files=$(git diff --name-only 2>/dev/null || true)
+if [[ -z "$changed_files" ]]; then
+  rm -f "$COUNTER_FILE"
+  exit 0
+fi
 
 errors=""
 
@@ -34,7 +52,7 @@ if [[ -n "$test_files" ]]; then
 ${test_out}"
 fi
 
-suppress=$(git diff -U0 HEAD 2>/dev/null \
+suppress=$(git diff -U0 2>/dev/null \
   | grep -E '^\+' | grep -v '^\+\+\+' \
   | grep -E 'eslint-disable|@ts-ignore|@ts-expect-error' || true)
 [[ -n "$suppress" ]] && errors="${errors}
@@ -42,7 +60,24 @@ suppress=$(git diff -U0 HEAD 2>/dev/null \
 Remove these and fix the underlying issues:
 ${suppress}"
 
-[[ -z "$errors" ]] && exit 0
+if [[ -z "$errors" ]]; then
+  rm -f "$COUNTER_FILE"
+  exit 0
+fi
+
+count=$(( count + 1 ))
+echo "$count" > "$COUNTER_FILE"
+
+if (( count >= MAX_RETRIES )); then
+  rm -f "$COUNTER_FILE"
+  msg="Post-edit hook failed ${count} times consecutively. Stopping to prevent infinite loop. Remaining issues:${errors}"
+  if [[ -n "${CURSOR_VERSION:-}" ]]; then
+    jq -n --arg msg "$msg" '{"followup_message": $msg}'
+  else
+    jq -n --arg msg "$msg" '{"systemMessage": $msg}'
+  fi
+  exit 0
+fi
 
 msg="Post-edit checks found issues. Please fix:${errors}"
 
