@@ -17,17 +17,10 @@ export function prepareLogViewerContent(
     return { processedData: '', downloadData: '' };
   }
 
-  if (sections.length === 1) {
-    const { containerName, data } = sections[0];
-    return {
-      processedData: normalizeLogLines(`${containerName.toUpperCase()}\n${data}`).join('\n'),
-      downloadData: data,
-    };
-  }
-
-  const downloadData = formatSectionsForSearch(sections);
+  const formatted = formatSectionsForSearch(sections);
+  const hasLogContent = sections.some((s) => s.data.length > 0);
   return {
-    processedData: normalizeLogLines(downloadData).join('\n'),
-    downloadData,
+    processedData: normalizeLogLines(formatted).join('\n'),
+    downloadData: hasLogContent ? formatted : '',
   };
 }

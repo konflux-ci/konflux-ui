@@ -1,9 +1,10 @@
-import { screen } from '@testing-library/react';
+import { fireEvent, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import Prism from 'prismjs';
 import { renderWithQueryClientAndRouter } from '~/unit-test-utils/rendering-utils';
 import { singleLogSection } from '../log-viewer-utils';
 import registerLogSyntax from '../refractor-log';
+import type { LogSection } from '../types';
 import { VirtualizedLogContent } from '../VirtualizedLogContent';
 
 // Register the log language
@@ -696,6 +697,79 @@ Another short line`;
       // Cleanup
       scrollToIndexSpy = null;
       window.requestAnimationFrame = originalRAF;
+    });
+  });
+
+  describe('Foldable sections', () => {
+    const multiSections: LogSection[] = [
+      { containerName: 'build', data: 'compile\nlink', isCompleted: true },
+      { containerName: 'test', data: 'running tests', isCompleted: false },
+    ];
+
+    it('should render section headers for each pipeline step', () => {
+      renderWithQueryClientAndRouter(
+        <VirtualizedLogContent {...defaultProps} sections={multiSections} />,
+      );
+
+      expect(screen.getByTestId('fold-header-build')).toBeInTheDocument();
+      expect(screen.getByTestId('fold-header-test')).toBeInTheDocument();
+      expect(screen.getByText('BUILD')).toBeInTheDocument();
+      expect(screen.getByText('TEST')).toBeInTheDocument();
+    });
+
+    it('should hide completed section content and show a fold indicator', () => {
+      renderWithQueryClientAndRouter(
+        <VirtualizedLogContent {...defaultProps} sections={multiSections} />,
+      );
+
+      expect(screen.queryByText('compile')).not.toBeInTheDocument();
+      expect(screen.getByText('··· 2 lines hidden')).toBeInTheDocument();
+      expect(screen.getByText('running tests')).toBeInTheDocument();
+    });
+
+    it('should toggle section visibility when the header is clicked', () => {
+      renderWithQueryClientAndRouter(
+        <VirtualizedLogContent {...defaultProps} sections={multiSections} />,
+      );
+
+      expect(screen.getByText('running tests')).toBeInTheDocument();
+
+      fireEvent.click(screen.getByTestId('fold-header-test'));
+
+      expect(screen.queryByText('running tests')).not.toBeInTheDocument();
+      expect(screen.getByText('··· 1 lines hidden')).toBeInTheDocument();
+
+      fireEvent.click(screen.getByTestId('fold-header-test'));
+
+      expect(screen.getByText('running tests')).toBeInTheDocument();
+    });
+
+    it('should expand a completed section when its header is clicked', () => {
+      renderWithQueryClientAndRouter(
+        <VirtualizedLogContent {...defaultProps} sections={multiSections} />,
+      );
+
+      expect(screen.queryByText('compile')).not.toBeInTheDocument();
+
+      fireEvent.click(screen.getByTestId('fold-header-build'));
+
+      expect(screen.getByText('compile')).toBeInTheDocument();
+      expect(screen.getByText('link')).toBeInTheDocument();
+    });
+
+    it('should show a sticky header after scrolling in multi-section mode', () => {
+      renderWithQueryClientAndRouter(
+        <VirtualizedLogContent {...defaultProps} sections={multiSections} height={120} />,
+      );
+
+      expect(screen.queryByTestId('sticky-header-build')).not.toBeInTheDocument();
+
+      const listElement = document.querySelector('.log-content__list');
+      if (!listElement) throw new Error('Expected scroll container');
+      Object.defineProperty(listElement, 'scrollTop', { value: 80, configurable: true });
+      fireEvent.scroll(listElement);
+
+      expect(screen.getByTestId('sticky-header-build')).toBeInTheDocument();
     });
   });
 });

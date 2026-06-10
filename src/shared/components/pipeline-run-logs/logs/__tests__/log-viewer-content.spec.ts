@@ -20,10 +20,10 @@ describe('log-viewer-content', () => {
       });
     });
 
-    it('should include step header in processed data for a single section', () => {
+    it('should include step header in processed and download data for a single section', () => {
       const result = prepareLogViewerContent([singleLogSection('hello\nworld', 'task')]);
       expect(result.processedData).toBe('TASK\nhello\nworld');
-      expect(result.downloadData).toBe('hello\nworld');
+      expect(result.downloadData).toBe('TASK\nhello\nworld');
     });
 
     it('should strip ANSI and normalize line endings for single-section content', () => {
@@ -41,6 +41,11 @@ describe('log-viewer-content', () => {
       const result = prepareLogViewerContent(sections);
       expect(result.downloadData).toBe('A\none\n\nB\ntwo');
       expect(result.processedData).toBe('A\none\n\nB\ntwo');
+    });
+
+    it('should return empty download data when all sections have no log content', () => {
+      const result = prepareLogViewerContent([{ containerName: 'task', data: '' }]);
+      expect(result.downloadData).toBe('');
     });
   });
 });

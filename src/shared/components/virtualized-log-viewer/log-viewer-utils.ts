@@ -6,9 +6,9 @@ import type { LogSection, MatchRange } from './types';
 // eslint-disable-next-line no-control-regex
 const ANSI_ESCAPE_REGEX = /\u001b\[[0-9;]*m/g;
 
-export const normalizeLineEndings = (value: string): string => value.replace(/\r\n?/g, '\n');
+const normalizeLineEndings = (value: string): string => value.replace(/\r\n?/g, '\n');
 
-export const stripAnsiCodes = (value: string): string => value.replace(ANSI_ESCAPE_REGEX, '');
+const stripAnsiCodes = (value: string): string => value.replace(ANSI_ESCAPE_REGEX, '');
 
 export function normalizeLogLines(data: string): string[] {
   return stripAnsiCodes(normalizeLineEndings(data)).split('\n');
@@ -21,19 +21,6 @@ export function singleLogSection(
 ): LogSection {
   return { containerName, data, isCompleted };
 }
-
-export const buildLines = (sections: LogSection[]): string[] => {
-  const result: string[] = [];
-  for (const section of sections) {
-    if (section.containerName) {
-      result.push(section.containerName);
-    }
-    if (section.data) {
-      result.push(...stripAnsiCodes(normalizeLineEndings(section.data)).split('\n'));
-    }
-  }
-  return result;
-};
 
 /** Recursively flattens nested Prism tokens into plain text */
 export function flattenTokenText(token: string | Prism.Token): string {
