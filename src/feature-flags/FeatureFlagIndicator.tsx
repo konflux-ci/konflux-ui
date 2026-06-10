@@ -21,6 +21,7 @@ type FeatureFlagIndicatorProps = {
 };
 
 const warningColor = 'var(--pf-t--global--color--status--warning--default)';
+const readyColor = 'var(--pf-t--global--color--status--success--default)';
 
 export const FeatureFlagIndicator: React.FC<FeatureFlagIndicatorProps> = ({
   flags,
@@ -30,16 +31,19 @@ export const FeatureFlagIndicator: React.FC<FeatureFlagIndicatorProps> = ({
   const [allFlags] = useFeatureFlags();
   const activeFlags = flags.filter((f) => allFlags[f]);
   const metas = activeFlags.map((f) => FLAGS[f]).filter(Boolean);
+  const anyWip = metas.some((m) => m.status === 'wip');
+  const iconColor = anyWip ? warningColor : readyColor;
+  const iconStyle = React.useMemo(() => ({ color: iconColor }), [iconColor]);
+
   if (metas.length === 0) return null;
 
-  const anyWip = metas.some((m) => m.status === 'wip');
   const statusText = anyWip ? FLAGS_STATUS.wip : FLAGS_STATUS.ready;
   const labelColor = anyWip ? 'orange' : 'green';
 
   const header = (
     <Flex spaceItems={{ default: 'spaceItemsSm' }} alignItems={{ default: 'alignItemsCenter' }}>
       <FlexItem>
-        <FlaskIcon style={{ color: warningColor }} />
+        <FlaskIcon style={iconStyle} />
       </FlexItem>
       <FlexItem>
         <Content component={ContentVariants.h6}>Experimental feature</Content>
@@ -72,7 +76,11 @@ export const FeatureFlagIndicator: React.FC<FeatureFlagIndicatorProps> = ({
       variant="plain"
       aria-label="Feature flag information"
       data-test={dataTest ?? `ff-indicator-${flags.join('-')}`}
-    />
+    >
+      <Label icon={<FlaskIcon style={iconStyle} />} color={labelColor}>
+        {statusText}
+      </Label>
+    </Button>
   ) : (
     <Button
       icon={<FlaskIcon style={{ color: warningColor }} />}
@@ -80,7 +88,9 @@ export const FeatureFlagIndicator: React.FC<FeatureFlagIndicatorProps> = ({
       variant="plain"
       aria-label="Feature flag information"
       data-test={dataTest ?? `ff-indicator-${flags.join('-')}`}
-    />
+    >
+      <FlaskIcon style={iconStyle} />
+    </Button>
   );
 
   return (

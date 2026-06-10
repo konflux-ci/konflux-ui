@@ -1,6 +1,7 @@
 import '@testing-library/jest-dom';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { renderHook, act } from '@testing-library/react-hooks';
+import { DataState, testPipelineRuns } from '~/__data__/pipelinerun-data';
 import { downloadYaml } from '~/utils/common-utils';
 import { PipelineRunEventType, PipelineRunLabel, runStatus } from '../../../../consts/pipelinerun';
 import { useComponent } from '../../../../hooks/useComponents';
@@ -322,6 +323,33 @@ describe('usePipelinerunActions', () => {
         disabled: true,
         disabledTooltip:
           'To rerun the build pipeline for the latest commit in this PR, comment `/retest` on the pull request',
+      }),
+    );
+  });
+
+  it('should contain disabled rerun actions for cancelling pipeline', () => {
+    const testPipelineRun = testPipelineRuns[DataState.PIPELINE_RUN_CANCELLING];
+    useAccessReviewForModelMock.mockReturnValueOnce([true, true]);
+    const { result } = renderHook(() =>
+      usePipelinerunActions({
+        metadata: {
+          labels: {
+            'pipelines.appstudio.openshift.io/type': 'test',
+            [PipelineRunLabel.SNAPSHOT]: 'snp1',
+            [PipelineRunLabel.TEST_SERVICE_SCENARIO]: 'scn1',
+          },
+        },
+        spec: testPipelineRun.spec,
+        status: testPipelineRun.status,
+      } as unknown as PipelineRunKind),
+    );
+    const actions = result.current;
+
+    expect(actions[0]).toEqual(
+      expect.objectContaining({
+        label: 'Rerun',
+        disabled: true,
+        disabledTooltip: 'Cannot rerun while the pipeline run is being cancelled',
       }),
     );
   });
@@ -1136,7 +1164,7 @@ describe('useRerunActionLazy', () => {
       expect(actions[0]).toEqual(
         expect.objectContaining({
           disabled: false,
-          disabledTooltip: undefined,
+          disabledTooltip: null,
         }),
       );
 
@@ -1253,7 +1281,7 @@ describe('useRerunActionLazy', () => {
       expect(actions[0]).toEqual(
         expect.objectContaining({
           disabled: false,
-          disabledTooltip: undefined,
+          disabledTooltip: null,
         }),
       );
 

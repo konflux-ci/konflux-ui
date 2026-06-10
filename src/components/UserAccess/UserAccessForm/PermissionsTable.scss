@@ -1,5 +1,10 @@
 .permissions-table {
   border: var(--pf-v6-c-table--border-width--base) solid var(--pf-v6-c-table--BorderColor);
+  table-layout: fixed;
+
+  &__cell {
+    width: 50%;
+  }
 
   @media (min-width: 769px) {
     max-width: 740px;

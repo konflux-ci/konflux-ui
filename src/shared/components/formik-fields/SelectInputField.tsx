@@ -153,8 +153,12 @@ const SelectInputField: React.FC<React.PropsWithChildren<SelectInputFieldProps>>
 
   const onTextInputChange = (_event: React.FormEvent<HTMLInputElement>, value: string) => {
     setFilterValue(value);
-    if (!isMulti && field.value) {
-      void setFieldValue(name, '', false);
+    if (!isMulti) {
+      if (isCreatable) {
+        void setFieldValue(name, value, false);
+      } else if (field.value) {
+        void setFieldValue(name, '', false);
+      }
     }
     if (!isOpen) {
       setIsOpen(true);
