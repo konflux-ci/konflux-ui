@@ -20,7 +20,10 @@ if [[ -f "$COUNTER_FILE" ]]; then
   [[ "$raw" =~ ^[0-9]+$ ]] && count=$raw
 fi
 
-changed_files=$(git diff --name-only 2>/dev/null || true)
+changed_files=$({
+  git diff --name-only --diff-filter=d 2>/dev/null || true
+  git ls-files --others --exclude-standard 2>/dev/null || true
+} | sort -u)
 if [[ -z "$changed_files" ]]; then
   rm -f "$COUNTER_FILE"
   exit 0
