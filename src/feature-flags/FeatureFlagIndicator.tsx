@@ -63,15 +63,6 @@ export const FeatureFlagIndicator: React.FC<FeatureFlagIndicatorProps> = ({
 
   const trigger = fullLabel ? (
     <Button
-      icon={
-        <Label
-          icon={<FlaskIcon style={{ color: warningColor }} />}
-          color={labelColor}
-          variant="outline"
-        >
-          {statusText}
-        </Label>
-      }
       isInline
       variant="plain"
       aria-label="Feature flag information"
@@ -83,7 +74,6 @@ export const FeatureFlagIndicator: React.FC<FeatureFlagIndicatorProps> = ({
     </Button>
   ) : (
     <Button
-      icon={<FlaskIcon style={{ color: warningColor }} />}
       isInline
       variant="plain"
       aria-label="Feature flag information"
