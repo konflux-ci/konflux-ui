@@ -14,16 +14,36 @@ const AppEmptyState: React.FC<React.PropsWithChildren<AppEmptyStateProps>> = ({
   className,
   title,
   children,
+  emptyStateImg,
+  isXl,
   ...props
-}) => (
-  <EmptyState
-    headingLevel="h3"
-    titleText={<>{title}</>}
-    className={css('app-empty-state m-is-top-level', className)}
-    {...props}
-  >
-    <EmptyStateFooter>{children}</EmptyStateFooter>
-  </EmptyState>
-);
+}) => {
+  const EmptyStateImage =
+    typeof emptyStateImg === 'string'
+      ? () => (
+          <img
+            src={emptyStateImg}
+            className={css('app-empty-state__icon', isXl && 'm-is-xl')}
+            alt=""
+          />
+        )
+      : () => {
+          const SvgComponent = emptyStateImg as unknown as React.ComponentType<
+            React.SVGProps<SVGSVGElement>
+          >;
+          return <SvgComponent className={css('app-empty-state__icon', isXl && 'm-is-xl')} />;
+        };
+  return (
+    <EmptyState
+      headingLevel="h3"
+      titleText={<>{title}</>}
+      icon={EmptyStateImage}
+      className={css('app-empty-state m-is-top-level', className)}
+      {...props}
+    >
+      <EmptyStateFooter>{children}</EmptyStateFooter>
+    </EmptyState>
+  );
+};
 
 export default AppEmptyState;
