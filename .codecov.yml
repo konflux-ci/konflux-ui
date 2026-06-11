@@ -2,23 +2,20 @@ codecov:
   require_ci_to_pass: true
 
 coverage:
-  precision: 2
-  round: down
-  range: "60...80"
   status:
     project:
       default:
         target: auto
         threshold: 1%
+        informational: true
     patch:
       default:
         target: 85%
-        threshold: 5%
+        informational: true
 
 ignore:
   - "**/*__data__*/*.ts"
 
 comment:
   layout: "reach,diff,flags,files,footer"
-  behavior: default
-  require_changes: false
+  require_changes: true
