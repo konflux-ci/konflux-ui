@@ -30,7 +30,7 @@ const PageLayout: React.FC<React.PropsWithChildren<PageLayoutProps>> = ({
 }) => {
   return (
     <>
-      <PageGroup>
+      <PageGroup isFilled={false}>
         {breadcrumbs && (
           <PageBreadcrumb hasBodyWrapper={false}>
             {<BreadCrumbs breadcrumbs={breadcrumbs} />}
