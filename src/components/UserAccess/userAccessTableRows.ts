@@ -1,4 +1,5 @@
 import { RoleBinding } from '~/types';
+import { textMatch } from '~/utils/text-filter-utils';
 
 /**
  * Delimiter encoding `UserAccessTableRow.rowKey`.
@@ -131,17 +132,14 @@ export function filterUserAccessRows(
   rows: UserAccessTableRow[],
   filters: UserAccessRowFilters,
 ): UserAccessTableRow[] {
-  const usernameQ = filters.username?.trim().toLowerCase() ?? '';
-  if (usernameQ) {
-    return rows.filter((row) => row.subject && row.subject.name.toLowerCase().includes(usernameQ));
+  const usernameFilter = filters.username;
+  if (usernameFilter?.trim()) {
+    return rows.filter((row) => row.subject && textMatch(row.subject.name, usernameFilter));
   }
 
-  const roleBindingQ = filters.roleBindingName?.trim().toLowerCase() ?? '';
-  if (roleBindingQ) {
-    return rows.filter((row) => {
-      const name = row.roleBinding.metadata?.name?.toLowerCase() ?? '';
-      return name.includes(roleBindingQ);
-    });
+  const roleBindingNameFilter = filters.roleBindingName;
+  if (roleBindingNameFilter?.trim()) {
+    return rows.filter((row) => textMatch(row.roleBinding.metadata?.name, roleBindingNameFilter));
   }
 
   return rows;

@@ -91,15 +91,6 @@ export const UserAccessChangeRoleModal: React.FC<UserAccessChangeRoleModalProps>
 
   const hasUnrankedRoles = unrankedRoleRefs.length > 0;
 
-  React.useEffect(() => {
-    if (!isOpen) {
-      setIsSaving(false);
-      setSaveError(null);
-      setModalSelectedRoleRef(undefined);
-      setRoleSelectOpen(false);
-    }
-  }, [isOpen]);
-
   const resetModalFields = () => {
     setModalSelectedRoleRef(undefined);
     setRoleSelectOpen(false);
@@ -300,7 +291,9 @@ export const UserAccessChangeRoleModal: React.FC<UserAccessChangeRoleModalProps>
                     </MenuToggle>
                   )}
                   onSelect={(_, val) => {
-                    setModalSelectedRoleRef(val as string);
+                    if (typeof val === 'string') {
+                      setModalSelectedRoleRef(val);
+                    }
                     setRoleSelectOpen(false);
                     setSaveError(null);
                   }}
