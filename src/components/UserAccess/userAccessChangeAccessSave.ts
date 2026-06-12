@@ -144,28 +144,29 @@ export async function performUserAccessRoleChange({
       !userHasRoleBindingOutsideDeletions(username, newRoleRef, roleBindings, toDelete),
   );
 
-  const preservedFromMultiSubject = toDelete
-    .filter((rb) => (rb.subjects?.length ?? 0) > 1)
-    .flatMap((rb) => {
-      const currentRole = currentRoleMap[rb.roleRef.name];
-      if (!currentRole) {
-        throw new Error(`Role "${rb.roleRef.name}" not found in role map. Cannot preserve access.`);
+  const preservedFromMultiSubject = new Map<string, { username: string; role: NamespaceRole }>();
+  for (const rb of toDelete) {
+    if ((rb.subjects?.length ?? 0) <= 1) {
+      continue;
+    }
+    const roleRefName = rb.roleRef.name;
+    const currentRole = currentRoleMap[roleRefName];
+    if (!currentRole) {
+      throw new Error(`Role "${roleRefName}" not found in role map. Cannot preserve access.`);
+    }
+    for (const subject of rb.subjects ?? []) {
+      if (selectedUsernames.has(subject.name)) {
+        continue;
       }
-      return (
-        rb.subjects
-          ?.filter((subject) => !selectedUsernames.has(subject.name))
-          .map((subject): [string, NamespaceRole] => [subject.name, currentRole])
-          .filter(
-            ([username]) =>
-              !userHasRoleBindingOutsideDeletions(
-                username,
-                rb.roleRef.name,
-                roleBindings,
-                toDelete,
-              ),
-          ) ?? []
-      );
-    });
+      if (userHasRoleBindingOutsideDeletions(subject.name, roleRefName, roleBindings, toDelete)) {
+        continue;
+      }
+      preservedFromMultiSubject.set(`${subject.name}__${roleRefName}`, {
+        username: subject.name,
+        role: currentRole,
+      });
+    }
+  }
 
   const newRole = currentRoleMap[newRoleRef];
   if (!newRole) {
@@ -184,7 +185,7 @@ export async function performUserAccessRoleChange({
       );
     }
 
-    for (const [username, preservedRole] of preservedFromMultiSubject) {
+    for (const { username, role: preservedRole } of preservedFromMultiSubject.values()) {
       createdBindings.push(
         ...(await createRBs({ usernames: [username], role: preservedRole, roleMap }, namespace)),
       );

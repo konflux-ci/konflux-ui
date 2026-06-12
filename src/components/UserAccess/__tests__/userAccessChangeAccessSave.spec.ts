@@ -185,4 +185,47 @@ describe('performUserAccessRoleChange', () => {
       }),
     );
   });
+
+  it('creates one preserved binding per user-role when the same user appears in multiple multi-subject bindings', async () => {
+    const contributorRef = 'konflux-contributor-user-actions';
+    const sharedAliceBob = {
+      ...mockSingleSubjectRoleBinding('rb-shared-alice-bob', 'alice', contributorRef),
+      subjects: [
+        { apiGroup: 'rbac.authorization.k8s.io', kind: 'User' as const, name: 'alice' },
+        { apiGroup: 'rbac.authorization.k8s.io', kind: 'User' as const, name: 'bob' },
+      ],
+    };
+    const sharedBobCharlie = {
+      ...mockSingleSubjectRoleBinding('rb-shared-bob-charlie', 'bob', contributorRef),
+      subjects: [
+        { apiGroup: 'rbac.authorization.k8s.io', kind: 'User' as const, name: 'bob' },
+        { apiGroup: 'rbac.authorization.k8s.io', kind: 'User' as const, name: 'charlie' },
+      ],
+    };
+
+    k8sCreateMock.mockImplementation((req: { resource: unknown }) => req.resource);
+    k8sDeleteMock.mockResolvedValue(undefined);
+
+    await performUserAccessRoleChange({
+      newRoleRef: 'konflux-maintainer-user-actions',
+      selectedRowKeys: new Set([
+        `${contributorRef}__0__User__alice__rb-shared-alice-bob`,
+        `${contributorRef}__1__User__charlie__rb-shared-bob-charlie`,
+      ]),
+      roleBindings: [sharedAliceBob, sharedBobCharlie],
+      currentRoleMap,
+      roleMap: defaultKonfluxRoleMap,
+      namespace,
+      onSuccessClearSelection: jest.fn(),
+    });
+
+    const bobCreateCalls = k8sCreateMock.mock.calls.filter(
+      ([req]) =>
+        (req as { resource: { subjects?: { name: string }[] } }).resource.subjects?.[0]?.name ===
+        'bob',
+    );
+    expect(bobCreateCalls).toHaveLength(1);
+    expect(k8sCreateMock).toHaveBeenCalledTimes(3);
+    expect(k8sDeleteMock).toHaveBeenCalledTimes(2);
+  });
 });
