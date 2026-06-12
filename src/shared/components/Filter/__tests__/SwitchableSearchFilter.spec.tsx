@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { NuqsTestingAdapter } from 'nuqs/adapters/testing';
 import { SwitchableSearchFilter } from '~/shared/components/Filter/controls/SwitchableSearchFilter';
 import { SwitchableSearchFilterConfig } from '~/shared/components/Filter/types';
-import { renderWithNuqsRouter } from '~/unit-test-utils';
+import { renderWithNuqs } from '~/unit-test-utils';
 
 jest.useFakeTimers();
 
@@ -51,7 +51,7 @@ const multiValueConfig: SwitchableSearchFilterConfig<Item> = {
 };
 
 const renderFilter = (config: SwitchableSearchFilterConfig<Item> = defaultConfig) =>
-  renderWithNuqsRouter(<SwitchableSearchFilter config={config} />);
+  renderWithNuqs(<SwitchableSearchFilter config={config} />);
 
 describe('SwitchableSearchFilter', () => {
   afterEach(() => {

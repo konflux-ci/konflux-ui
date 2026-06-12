@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { NuqsTestingAdapter } from 'nuqs/adapters/testing';
 import { SearchFilter } from '~/shared/components/Filter/controls/SearchFilter';
 import { SearchFilterConfig } from '~/shared/components/Filter/types';
-import { renderWithNuqsRouter } from '~/unit-test-utils';
+import { renderWithNuqs } from '~/unit-test-utils';
 
 jest.useFakeTimers();
 
@@ -17,7 +17,7 @@ const defaultConfig: SearchFilterConfig<Item> = {
 };
 
 const renderFilter = (config: SearchFilterConfig<Item> = defaultConfig) =>
-  renderWithNuqsRouter(<SearchFilter config={config} />);
+  renderWithNuqs(<SearchFilter config={config} />);
 
 describe('SearchFilter', () => {
   afterEach(() => {

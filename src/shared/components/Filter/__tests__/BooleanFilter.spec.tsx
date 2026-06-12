@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { NuqsTestingAdapter } from 'nuqs/adapters/testing';
 import { BooleanFilter } from '~/shared/components/Filter/controls/BooleanFilter';
 import { BooleanFilterConfig } from '~/shared/components/Filter/types';
-import { renderWithNuqsRouter } from '~/unit-test-utils';
+import { renderWithNuqs } from '~/unit-test-utils';
 
 const defaultConfig: BooleanFilterConfig = {
   type: 'boolean',
@@ -12,7 +12,7 @@ const defaultConfig: BooleanFilterConfig = {
 };
 
 const renderFilter = (config: BooleanFilterConfig = defaultConfig) =>
-  renderWithNuqsRouter(<BooleanFilter config={config} />);
+  renderWithNuqs(<BooleanFilter config={config} />);
 
 describe('BooleanFilter', () => {
   it('renders switch with label', () => {

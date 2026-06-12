@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { NuqsTestingAdapter } from 'nuqs/adapters/testing';
 import { SingleSelectFilter } from '~/shared/components/Filter/controls/SingleSelectFilter';
 import { OptionItem, SingleSelectFilterConfig } from '~/shared/components/Filter/types';
-import { renderWithNuqsRouter } from '~/unit-test-utils';
+import { renderWithNuqs } from '~/unit-test-utils';
 
 type Item = { status: string };
 
@@ -25,7 +25,7 @@ const renderFilter = (
   config: SingleSelectFilterConfig<Item> = defaultConfig,
   options: OptionItem[] = defaultOptions,
 ) =>
-  renderWithNuqsRouter(
+  renderWithNuqs(
     <Toolbar>
       <ToolbarContent>
         <SingleSelectFilter config={config} options={options} />

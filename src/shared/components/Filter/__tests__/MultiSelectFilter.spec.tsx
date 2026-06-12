@@ -3,7 +3,7 @@ import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MultiSelectFilter } from '~/shared/components/Filter/controls/MultiSelectFilter';
 import { MultiSelectFilterConfig, OptionItem } from '~/shared/components/Filter/types';
-import { renderWithNuqsRouter } from '~/unit-test-utils';
+import { renderWithNuqs } from '~/unit-test-utils';
 
 type Item = { status: string };
 
@@ -25,7 +25,7 @@ const renderFilter = (
   config: MultiSelectFilterConfig<Item> = defaultConfig,
   options: OptionItem[] = defaultOptions,
 ) =>
-  renderWithNuqsRouter(
+  renderWithNuqs(
     <Toolbar>
       <ToolbarContent>
         <MultiSelectFilter config={config} options={options} />
