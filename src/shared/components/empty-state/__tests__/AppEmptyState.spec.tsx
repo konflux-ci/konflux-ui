@@ -46,6 +46,15 @@ describe('AppEmptyState', () => {
     expect(screen.getByTestId('mock-svg')).toHaveClass('m-is-xl');
   });
 
+  it('should not apply xl class when isXl is not provided', () => {
+    render(
+      <AppEmptyState emptyStateImg={MockSvg} title="Default test">
+        <p>body</p>
+      </AppEmptyState>,
+    );
+    expect(screen.getByTestId('mock-svg')).not.toHaveClass('m-is-xl');
+  });
+
   it('should render children in the footer', () => {
     render(
       <AppEmptyState emptyStateImg={MockSvg} title="Footer test">

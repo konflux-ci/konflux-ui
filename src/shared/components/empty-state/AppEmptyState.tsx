@@ -18,21 +18,24 @@ const AppEmptyState: React.FC<React.PropsWithChildren<AppEmptyStateProps>> = ({
   isXl,
   ...props
 }) => {
-  const EmptyStateImage =
-    typeof emptyStateImg === 'string'
-      ? () => (
-          <img
-            src={emptyStateImg}
-            className={css('app-empty-state__icon', isXl && 'm-is-xl')}
-            alt=""
-          />
-        )
-      : () => {
-          const SvgComponent = emptyStateImg as unknown as React.ComponentType<
-            React.SVGProps<SVGSVGElement>
-          >;
-          return <SvgComponent className={css('app-empty-state__icon', isXl && 'm-is-xl')} />;
-        };
+  const EmptyStateImage = React.useMemo(
+    () =>
+      typeof emptyStateImg === 'string'
+        ? () => (
+            <img
+              src={emptyStateImg}
+              className={css('app-empty-state__icon', isXl && 'm-is-xl')}
+              alt=""
+            />
+          )
+        : () => {
+            const SvgComponent = emptyStateImg as unknown as React.ComponentType<
+              React.SVGProps<SVGSVGElement>
+            >;
+            return <SvgComponent className={css('app-empty-state__icon', isXl && 'm-is-xl')} />;
+          },
+    [emptyStateImg, isXl],
+  );
   return (
     <EmptyState
       headingLevel="h3"
