@@ -295,6 +295,38 @@ describe('SelectInputField', () => {
       });
     });
 
+    it('syncs typed value to formik', async () => {
+      const ValueIndicator = () => {
+        const { values } = useFormikContext<Record<string, unknown>>();
+        return <span data-test="field-value">{String(values[fieldName] ?? '')}</span>;
+      };
+
+      const user = setupUser();
+      formikRenderer(
+        <>
+          <SelectInputField
+            name={fieldName}
+            label="Test Label"
+            options={options}
+            toggleId="test-toggle"
+            toggleAriaLabel="Test toggle"
+            variant="typeahead"
+            isCreatable
+            hasOnCreateOption
+          />
+          <ValueIndicator />
+        </>,
+        { [fieldName]: '' },
+      );
+
+      const input = screen.getByRole('combobox');
+      await user.type(input, 'my-secret');
+
+      await waitFor(() => {
+        expect(screen.getByTestId('field-value')).toHaveTextContent('my-secret');
+      });
+    });
+
     it('creates and selects a new option in single-select mode', async () => {
       const user = setupUser();
       renderField({ variant: 'typeahead', isCreatable: true, hasOnCreateOption: true });

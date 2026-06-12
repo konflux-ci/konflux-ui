@@ -10,8 +10,6 @@ export const localKonfluxLoginPO = {
   password: '#password',
   loginButton: '#submit-login',
   dex: `button[type="submit"]`,
-  grantAccessClass: `.dex-btn-text`,
-  grantAccessText: 'Grant Access',
 };
 
 export const openshiftLoginPO = {

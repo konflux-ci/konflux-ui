@@ -224,7 +224,9 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
       <TableData className={pipelineRunTableColumnClasses.duration}>
         {status !== runStatus.Pending ? (
           <Duration
-            startTime={typeof obj.status?.startTime === 'string' ? obj.status?.startTime : undefined}
+            startTime={
+              typeof obj.status?.startTime === 'string' ? obj.status?.startTime : undefined
+            }
             endTime={
               typeof obj.status?.completionTime === 'string'
                 ? obj.status?.completionTime
