@@ -74,7 +74,7 @@ export const DependencyRunsListView = ({ componentName }: DependencyRunsListView
   }
 
   return (
-    <Flex direction={{ default: 'column' }}>
+    <Flex direction={{ default: 'column' }} className="dependency-runs-list">
       <TableContainer
         data={filteredData}
         unfilteredData={dependencyRunsList}
