@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
+import { useMintmakerLogViewerModal } from '~/components/LogViewer/MintmakerLogViewer';
 import { Table, TableContainer } from '~/shared/components/TableV2';
 import { PipelineRunKind, PipelineRunStatus } from '~/types';
 import { setupVirtualizerMock } from '~/unit-test-utils/mock-virtualizer';
@@ -15,6 +16,12 @@ jest.mock('react-router-dom', () => ({
     <a href={to}>{children}</a>
   ),
 }));
+
+jest.mock('~/components/LogViewer/MintmakerLogViewer', () => ({
+  useMintmakerLogViewerModal: jest.fn(),
+}));
+
+const useMintmakerLogViewerModalMock = useMintmakerLogViewerModal as jest.Mock;
 
 const makePipelineRun = (overrides: Partial<PipelineRunKind> = {}): PipelineRunKind => ({
   kind: 'PipelineRun',
@@ -46,9 +53,16 @@ const renderTable = (data: PipelineRunKind[]) =>
     </TableContainer>,
   );
 
+const renderRow = (run: PipelineRunKind) => renderTable([run]);
+
 describe('Dependency runs column renderers', () => {
   beforeEach(() => {
     setupVirtualizerMock();
+    useMintmakerLogViewerModalMock.mockReturnValue(jest.fn());
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   it('renders the pipeline run name', () => {
@@ -124,5 +138,30 @@ describe('Dependency runs column renderers', () => {
     });
     renderTable([run]);
     expect(screen.getByTestId('dependency-run-duration')).toHaveTextContent('-');
+  });
+
+  it('renders a logs cell with a "View logs" button', () => {
+    renderRow(makePipelineRun());
+    expect(screen.getByTestId('dependency-run-logs')).toBeInTheDocument();
+    expect(screen.getByText('View logs')).toBeInTheDocument();
+  });
+
+  it('renders the "View logs" button with a data-test attribute containing the run name', () => {
+    renderRow(makePipelineRun());
+    expect(screen.getByTestId('view-logs-test-dependency-run')).toBeInTheDocument();
+  });
+
+  it('calls the modal launcher when "View logs" is clicked', () => {
+    const openModal = jest.fn();
+    useMintmakerLogViewerModalMock.mockReturnValue(openModal);
+    renderRow(makePipelineRun());
+    fireEvent.click(screen.getByText('View logs'));
+    expect(openModal).toHaveBeenCalledTimes(1);
+  });
+
+  it('passes the pipeline run object to useMintmakerLogViewerModal', () => {
+    const run = makePipelineRun();
+    renderRow(run);
+    expect(useMintmakerLogViewerModalMock).toHaveBeenCalledWith(run);
   });
 });
