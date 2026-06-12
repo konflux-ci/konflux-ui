@@ -174,4 +174,84 @@ describe('useLatestPushBuildPipelines', () => {
     expect(loaded).toBe(true);
     expect(pipelineRuns.map((tr) => tr.metadata?.name)).toEqual(['test-caseqfvdj']);
   });
+
+  it('should update when a watched pipeline run status changes', () => {
+    const mockRunningPipelineRun = {
+      ...testPipelineRuns[DataState.RUNNING],
+      metadata: {
+        ...testPipelineRuns[DataState.RUNNING]?.metadata,
+        labels: {
+          ...testPipelineRuns[DataState.RUNNING]?.metadata?.labels,
+          'pipelinesascode.tekton.dev/event-type': 'push',
+        },
+      },
+    };
+    useK8sWatchResourceMock.mockReturnValue([[mockRunningPipelineRun], true, undefined]);
+    useTRPipelineRunsMock.mockReturnValue([[], true, undefined, undefined]);
+    const { result, rerender } = renderHook(() =>
+      useLatestPushBuildPipelines('test-ns', 'test-pipelinerun', componentNames),
+    );
+
+    expect(result.current[0][0].status?.conditions?.[0]?.status).toBe('Unknown');
+
+    const mockCancelledPipelineRun = {
+      ...mockRunningPipelineRun,
+      status: testPipelineRuns[DataState.PIPELINE_RUN_CANCELLED]?.status,
+    };
+    useK8sWatchResourceMock.mockReturnValue([[mockCancelledPipelineRun], true, undefined]);
+    rerender();
+
+    expect(result.current[0][0].status?.conditions?.[0]?.reason).toBe('Cancelled');
+  });
+
+  it('should pick up a newer build when one is created', () => {
+    const mockOlderPipelineRun = {
+      ...testPipelineRuns[DataState.SUCCEEDED],
+      metadata: {
+        ...testPipelineRuns[DataState.SUCCEEDED]?.metadata,
+        name: 'older-build',
+        creationTimestamp: '2024-01-01T10:00:00Z',
+        labels: {
+          ...testPipelineRuns[DataState.SUCCEEDED]?.metadata?.labels,
+          'pipelinesascode.tekton.dev/event-type': 'push',
+        },
+      },
+      status: {
+        ...testPipelineRuns[DataState.SUCCEEDED]?.status,
+        completionTime: '2024-01-01T10:00:00Z',
+      },
+    };
+    useK8sWatchResourceMock.mockReturnValue([[mockOlderPipelineRun], true, undefined]);
+    useTRPipelineRunsMock.mockReturnValue([[], true, undefined, undefined]);
+    const { result, rerender } = renderHook(() =>
+      useLatestPushBuildPipelines('test-ns', 'test-pipelinerun', componentNames),
+    );
+
+    expect(result.current[0][0].metadata?.name).toBe('older-build');
+
+    const mockNewerPipelineRun = {
+      ...testPipelineRuns[DataState.RUNNING],
+      metadata: {
+        ...testPipelineRuns[DataState.RUNNING]?.metadata,
+        name: 'newer-build',
+        creationTimestamp: '2024-01-01T11:00:00Z',
+        labels: {
+          ...testPipelineRuns[DataState.RUNNING]?.metadata?.labels,
+          'pipelinesascode.tekton.dev/event-type': 'push',
+        },
+      },
+      status: {
+        ...testPipelineRuns[DataState.RUNNING]?.status,
+        startTime: '2024-01-01T11:00:00Z',
+      },
+    };
+    useK8sWatchResourceMock.mockReturnValue([
+      [mockOlderPipelineRun, mockNewerPipelineRun],
+      true,
+      undefined,
+    ]);
+    rerender();
+
+    expect(result.current[0][0].metadata?.name).toBe('newer-build');
+  });
 });
