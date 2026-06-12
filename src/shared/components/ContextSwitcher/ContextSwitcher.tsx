@@ -220,6 +220,7 @@ export const ContextSwitcher: React.FC<React.PropsWithChildren<ContextSwitcherPr
               />
             </MenuSearchInput>
           </MenuSearch>
+          {/* Tabs must be outside MenuContent to avoid being clipped by PF v6's overflow:hidden */}
           <Tabs activeKey={activeTab} onSelect={onTabChange} isFilled>
             <Tab eventKey={ContextTab.Recent} title={<TabTitleText>Recent</TabTitleText>} />
             <Tab eventKey={ContextTab.All} title={<TabTitleText>All</TabTitleText>} />
