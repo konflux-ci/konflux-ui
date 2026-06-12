@@ -55,7 +55,7 @@ function ColumnManagement<T>({
   columnStateKey,
   showColumnManagement = false,
 }: ColumnManagementProps<T> & { showColumnManagement?: boolean }) {
-  if (!showColumnManagement && columns.length > 5) {
+  if (!showColumnManagement && columns.length <= 5) {
     return null;
   }
   return <ColumnManagement_<T> columns={columns} columnStateKey={columnStateKey} />;

@@ -54,6 +54,10 @@ describe('SnapshotsListView - Column Headers', () => {
     window.history.replaceState({}, '', '/');
   });
 
+  afterEach(() => {
+    jest.useFakeTimers();
+  });
+
   it('should display all expected column headers correctly', () => {
     useMockSnapshots.mockReturnValue({
       data: mockSnapshots,
@@ -105,16 +109,16 @@ describe('SnapshotsListView - Column Headers', () => {
 
     renderWithQueryClientAndRouter(createWrappedComponent());
 
-    // By default, enableArchive is false (no filter selected), so only cluster snapshot shown
+    // By default, enableArchive is true (no releasable filter), so both snapshots shown
     expect(screen.getByText('cluster-snapshot')).toBeInTheDocument();
-    expect(screen.queryByText('archive-snapshot')).not.toBeInTheDocument();
+    expect(screen.getByText('archive-snapshot')).toBeInTheDocument();
 
     expect(useMockSnapshots).toHaveBeenCalledWith(
       expect.any(Object),
       expect.any(Object),
       undefined,
       undefined,
-      expect.objectContaining({ enableArchive: false }),
+      expect.objectContaining({ enableArchive: true }),
     );
 
     // Open the multiSelect dropdown and select "Show only releasable snapshots"
@@ -122,14 +126,12 @@ describe('SnapshotsListView - Column Headers', () => {
     await user.click(screen.getByTestId('multi-select-filter-filterBy'));
     await user.click(screen.getByText('Show only releasable snapshots'));
 
-    // After selecting the filter, enableArchive is true, so both snapshots are fetched
+    // After selecting the releasable filter, enableArchive is false, so only cluster snapshot shown
     await waitFor(() => {
-      expect(screen.getByText('archive-snapshot')).toBeInTheDocument();
+      expect(screen.queryByText('archive-snapshot')).not.toBeInTheDocument();
     });
 
     expect(screen.getByText('cluster-snapshot')).toBeInTheDocument();
-
-    jest.useFakeTimers();
   });
 
   it('should show filter dashboard if no results but filters are applied', async () => {
@@ -145,7 +147,7 @@ describe('SnapshotsListView - Column Headers', () => {
         const enableArchive = queryControl?.enableArchive === true;
 
         return {
-          data: enableArchive ? [] : [clusterSnapshot],
+          data: enableArchive ? [clusterSnapshot] : [],
           getSource: () => ResourceSource.Cluster,
           isLoading: false,
           hasError: false,
@@ -154,7 +156,7 @@ describe('SnapshotsListView - Column Headers', () => {
     );
     renderWithQueryClientAndRouter(createWrappedComponent());
 
-    // Initially there is data so toolbar is visible
+    // Initially enableArchive is true (default), so data is available and toolbar is visible
     await waitFor(() => {
       expect(screen.getByText('cluster-snapshot')).toBeInTheDocument();
     });
@@ -164,11 +166,9 @@ describe('SnapshotsListView - Column Headers', () => {
     await user.click(screen.getByTestId('multi-select-filter-filterBy'));
     await user.click(screen.getByRole('menuitem', { name: /show only releasable snapshots/i }));
 
-    // After selecting the filter, enableArchive is true and mock returns [], so the filter toolbar should still be visible
+    // After selecting the releasable filter, enableArchive is false and mock returns [], so the filter toolbar should still be visible
     await waitFor(() => {
       expect(screen.getByTestId('multi-select-filter-filterBy')).toBeInTheDocument();
     });
-
-    jest.useFakeTimers();
   });
 });

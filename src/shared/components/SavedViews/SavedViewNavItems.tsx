@@ -70,7 +70,11 @@ export const SavedViewNavItems: React.FC<SavedViewNavItemsProps> = ({ config }) 
                   <Button
                     className="saved-view-nav-items__button saved-view-nav-items__button--rename"
                     variant="plain"
-                    onClick={handleRename}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      handleRename();
+                    }}
                     data-test={`saved-view-rename-${view.slug}`}
                   >
                     <PencilAltIcon />
@@ -78,7 +82,11 @@ export const SavedViewNavItems: React.FC<SavedViewNavItemsProps> = ({ config }) 
                   <Button
                     className="saved-view-nav-items__button saved-view-nav-items__button--delete"
                     variant="plain"
-                    onClick={handleDelete}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      handleDelete();
+                    }}
                     data-test={`saved-view-delete-${view.slug}`}
                   >
                     <TrashIcon />

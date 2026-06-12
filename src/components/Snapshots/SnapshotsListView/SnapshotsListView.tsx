@@ -66,7 +66,7 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
     undefined,
     undefined,
     {
-      enableArchive: filterValues.filterBy.includes(FILTER_BY_VALUES.RELEASABLE),
+      enableArchive: !filterValues.filterBy.includes(FILTER_BY_VALUES.RELEASABLE),
     },
   );
 

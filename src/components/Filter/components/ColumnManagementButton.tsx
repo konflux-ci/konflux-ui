@@ -1,14 +1,13 @@
 import React from 'react';
 import { Button } from '@patternfly/react-core';
-//eslint-disable-next-line @typescript-eslint/no-unused-vars
-import ColumnManagement from '~/components/ColumnManagement/ColumnManagement';
 
 interface ColumnManagementButtonProps {
   onClick: () => void;
   totalColumns?: number;
 }
 /**
- * @deprecated This component is deprecated and will be removed in the future. Use {@link ColumnManagement}
+ * @deprecated This component is deprecated and will be removed in the future.
+ * Use ColumnManagement from ~/components/ColumnManagement/ColumnManagement instead.
  */
 const ColumnManagementButton: React.FC<ColumnManagementButtonProps> = ({
   onClick,

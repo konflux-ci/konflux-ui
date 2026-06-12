@@ -55,7 +55,7 @@ export interface UseTableResult<TData> {
 function mapColumns<TData>(columns: ColumnDefinition<TData>[]): ColumnDef<TData>[] {
   return columns.map((col) => ({
     id: col.id,
-    header: col.header as string,
+    header: typeof col.header === 'string' ? col.header : () => col.header,
     ...(col.accessorFn ? { accessorFn: col.accessorFn } : {}),
     ...(col.cell ? { cell: col.cell } : {}),
     size: col.size,

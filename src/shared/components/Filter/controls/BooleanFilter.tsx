@@ -1,3 +1,4 @@
+import type { ChangeEvent } from 'react';
 import { Switch, ToolbarItem } from '@patternfly/react-core';
 import { parseAsBoolean, useQueryState } from 'nuqs';
 import { BooleanFilterConfig } from '../types';
@@ -20,7 +21,7 @@ export const BooleanFilter = ({ config }: BooleanFilterProps) => {
 
   const [isChecked, setIsChecked] = useQueryState(param, parseAsBoolean.withDefault(false));
 
-  const handleChange = (_event: React.ChangeEvent<HTMLInputElement>, checked: boolean) => {
+  const handleChange = (_event: ChangeEvent<HTMLInputElement>, checked: boolean) => {
     void setIsChecked(checked || null);
   };
 

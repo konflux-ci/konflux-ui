@@ -22,6 +22,8 @@ import { useDebounceCallback } from '~/shared/hooks/useDebounceCallback';
 import { parseAsCommaSeparated } from '../parsers';
 import { SwitchableSearchFilterConfig } from '../types';
 
+import './SwitchableSearchFilter.scss';
+
 const DEFAULT_DEBOUNCE = 600;
 
 /** Props for {@link SwitchableSearchFilter}. */
@@ -209,7 +211,7 @@ export const SwitchableSearchFilter = <T,>({ config }: SwitchableSearchFilterPro
 
   return (
     <ToolbarItem
-      style={{ display: 'flex', flexDirection: 'column' }}
+      className="switchable-search-filter"
       data-test={`switchable-search-filter-${param}`}
     >
       <InputGroup>

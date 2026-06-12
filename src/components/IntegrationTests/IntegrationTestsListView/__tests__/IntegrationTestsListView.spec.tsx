@@ -3,7 +3,7 @@ import { fireEvent, waitFor, render, screen, act } from '@testing-library/react'
 import '@testing-library/jest-dom';
 import { NuqsTestingAdapter } from 'nuqs/adapters/testing';
 import { setupVirtualizerMock } from '~/unit-test-utils';
-import { createK8sWatchResourceMock } from '../../../../utils/test-utils';
+import { createK8sWatchResourceMock } from '~/utils/test-utils';
 import { MockIntegrationTests } from '../__data__/mock-integration-tests';
 import IntegrationTestsListView from '../IntegrationTestsListView';
 

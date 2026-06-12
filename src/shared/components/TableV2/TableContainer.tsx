@@ -1,27 +1,6 @@
 import React, { type ReactNode } from 'react';
 import { TableSkeleton } from './TableSkeleton';
-
-/** Internal props for TableContainer (mirrors {@link TableContainerProps} without TData). */
-interface TableContainerComponentProps {
-  /** Filtered data (after search/filter). */
-  data: unknown[];
-  /** Unfiltered data (all rows before filtering). */
-  unfilteredData: unknown[];
-  /** Whether the initial data load has completed. */
-  loaded: boolean;
-  /** Error from the initial data load, if any. */
-  loadError?: Error;
-  /** Custom skeleton to show while loading. Defaults to a generic `TableSkeleton`. */
-  skeleton?: ReactNode;
-  /** Content to display when filters match no rows but unfiltered data exists. */
-  emptyState?: ReactNode;
-  /** Content to display when no data exists at all. */
-  noDataState?: ReactNode;
-  /** Toolbar rendered above the table content in all states. */
-  toolbar?: ReactNode;
-  /** The table content rendered when data is loaded and non-empty. */
-  children: ReactNode;
-}
+import { type TableContainerProps } from './types';
 
 /**
  * State machine wrapper that selects the correct content to render based
@@ -51,7 +30,7 @@ interface TableContainerComponentProps {
  * </TableContainer>
  * ```
  */
-export const TableContainer: React.FC<TableContainerComponentProps> = ({
+export const TableContainer: React.FC<TableContainerProps<unknown>> = ({
   data,
   unfilteredData,
   loaded,
