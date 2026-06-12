@@ -36,6 +36,7 @@ jest.mock('~/utils/rbac', () => ({
   ...jest.requireActual('~/utils/rbac'),
   useAccessReviewForModel: jest.fn(),
 }));
+
 jest.mock('~/hooks/useRoleBindings');
 jest.mock('~/hooks/useRole');
 
