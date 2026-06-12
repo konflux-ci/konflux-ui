@@ -14,6 +14,7 @@ const renderGroupHeader = (props: Partial<React.ComponentProps<typeof GroupHeade
           visibleColumnCount={4}
           isExpanded={true}
           onToggle={jest.fn()}
+          groupIndex={0}
           {...props}
         />
       </Tbody>
@@ -75,6 +76,7 @@ describe('GroupHeader', () => {
             visibleColumnCount={4}
             isExpanded={false}
             onToggle={jest.fn()}
+            groupIndex={0}
           />
         </Tbody>
       </Table>,

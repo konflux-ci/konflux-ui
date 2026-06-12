@@ -15,6 +15,8 @@ interface GroupHeaderProps {
   isExpanded: boolean;
   /** Callback to toggle the group's expanded/collapsed state. */
   onToggle: () => void;
+  /** Index of this group header, used for unique ARIA IDs on the expand toggle. */
+  groupIndex: number;
 }
 
 /**
@@ -32,6 +34,7 @@ interface GroupHeaderProps {
  *   visibleColumnCount={5}
  *   isExpanded={true}
  *   onToggle={() => toggleGroup('failed')}
+ *   groupIndex={0}
  * />
  * ```
  */
@@ -42,11 +45,12 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
   visibleColumnCount,
   isExpanded,
   onToggle,
+  groupIndex,
 }) => (
   <Tr data-test={`group-header-${groupId}`}>
     <Td
       expand={{
-        rowIndex: 0,
+        rowIndex: groupIndex,
         isExpanded,
         onToggle,
       }}
