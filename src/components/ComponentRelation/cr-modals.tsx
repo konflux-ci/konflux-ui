@@ -47,10 +47,16 @@ export const DefineComponentRelationModal: React.FC<DefineComponentRelationModal
     useFormikContext<ComponentRelationFormikValue>();
   const isDuplicateRelationExist = errors?.relations?.includes(DUPLICATE_RELATONSHIP);
 
-  const { isOpen, appendTo } = modalProps || {};
+  const { isOpen, appendTo, ...rest } = modalProps || {};
 
   return (
-    <Modal isOpen={isOpen} onClose={onCancel} appendTo={appendTo} variant={ModalVariant.medium}>
+    <Modal
+      {...rest}
+      isOpen={isOpen}
+      onClose={onCancel}
+      appendTo={appendTo}
+      variant={ModalVariant.medium}
+    >
       <ModalHeader
         title="Component relationships"
         description={
@@ -155,10 +161,16 @@ type ConfirmSubmissionComponentRelationModalProps = Pick<RawComponentProps, 'mod
 export const ConfirmSubmissionComponentRelationModal: React.FC<
   ConfirmSubmissionComponentRelationModalProps
 > = ({ modalProps }) => {
-  const { isOpen, onClose, appendTo } = modalProps || {};
+  const { isOpen, onClose, appendTo, ...rest } = modalProps || {};
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} appendTo={appendTo} variant={ModalVariant.medium}>
+    <Modal
+      {...rest}
+      isOpen={isOpen}
+      onClose={onClose}
+      appendTo={appendTo}
+      variant={ModalVariant.medium}
+    >
       <ModalBody>
         <EmptyState headingLevel="h2" icon={SuccessIcon} titleText="Relationships updated!">
           <EmptyStateBody>Checkout each component&apos;s details page to view</EmptyStateBody>
@@ -182,10 +194,16 @@ type ConfirmCancelationComponentRelationModalProps = Pick<RawComponentProps, 'mo
 export const ConfirmCancelationComponentRelationModal: React.FC<
   ConfirmCancelationComponentRelationModalProps
 > = ({ modalProps, onGoBack }) => {
-  const { isOpen, onClose, appendTo } = modalProps || {};
+  const { isOpen, onClose, appendTo, ...rest } = modalProps || {};
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} appendTo={appendTo} variant={ModalVariant.small}>
+    <Modal
+      {...rest}
+      isOpen={isOpen}
+      onClose={onClose}
+      appendTo={appendTo}
+      variant={ModalVariant.small}
+    >
       <ModalHeader title="Your changes will be lost!" />
       <ModalBody>Are you sure you want to close the window?</ModalBody>
       <ModalFooter>

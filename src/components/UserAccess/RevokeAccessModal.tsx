@@ -53,10 +53,23 @@ export const RevokeAccessModal: React.FC<React.PropsWithChildren<Props>> = ({
     [onClose, rb],
   );
 
-  const { isOpen, onClose: handleClose, appendTo, title, titleIconVariant } = modalProps || {};
+  const {
+    isOpen,
+    onClose: handleClose,
+    appendTo,
+    title,
+    titleIconVariant,
+    ...rest
+  } = modalProps || {};
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} appendTo={appendTo} variant={ModalVariant.small}>
+    <Modal
+      {...rest}
+      isOpen={isOpen}
+      onClose={handleClose}
+      appendTo={appendTo}
+      variant={ModalVariant.small}
+    >
       <ModalHeader title={title} titleIconVariant={titleIconVariant} />
       <ModalBody>
         <Stack hasGutter>

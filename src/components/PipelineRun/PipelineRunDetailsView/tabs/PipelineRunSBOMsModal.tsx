@@ -20,10 +20,16 @@ type PipelineRunSBOMsProps = {
 type PipelineRunSBOMsModalProps = RawComponentProps & PipelineRunSBOMsProps;
 
 const PipelineRunSBOMsModal: React.FC<PipelineRunSBOMsModalProps> = ({ modalProps, sboms }) => {
-  const { isOpen, onClose, appendTo } = modalProps || {};
+  const { isOpen, onClose, appendTo, ...rest } = modalProps || {};
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} appendTo={appendTo} variant={ModalVariant.small}>
+    <Modal
+      {...rest}
+      isOpen={isOpen}
+      onClose={onClose}
+      appendTo={appendTo}
+      variant={ModalVariant.small}
+    >
       <ModalHeader title="SBOMs" />
       <ModalBody>
         <Stack hasGutter>

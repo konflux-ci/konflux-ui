@@ -39,12 +39,12 @@ const CustomizeAllPipelines: React.FC<React.PropsWithChildren<Props>> = ({
     [loaded, components, filter],
   );
 
-  const { isOpen, onClose: handleClose, appendTo } = modalProps || {};
+  const { isOpen, onClose: handleClose, appendTo, ...rest } = modalProps || {};
 
   if (loaded) {
     if (error) {
       return (
-        <Modal isOpen={isOpen} onClose={handleClose} appendTo={appendTo} variant="large">
+        <Modal {...rest} isOpen={isOpen} onClose={handleClose} appendTo={appendTo} variant="large">
           <ModalHeader />
           <ModalBody>{getErrorState(error, loaded, 'components')}</ModalBody>
         </Modal>

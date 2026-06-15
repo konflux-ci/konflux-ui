@@ -294,10 +294,10 @@ const CustomizePipeline: React.FC<React.PropsWithChildren<Props>> = ({
     onClose();
   }, [onClose, applicationName, namespace, track]);
 
-  const { isOpen, appendTo } = modalProps || {};
+  const { isOpen, appendTo, ...rest } = modalProps || {};
 
   return (
-    <Modal isOpen={isOpen} onClose={trackedOnClose} appendTo={appendTo} variant="large">
+    <Modal {...rest} isOpen={isOpen} onClose={trackedOnClose} appendTo={appendTo} variant="large">
       <ModalHeader title="Manage build pipelines" />
       <ModalBody>
         <>

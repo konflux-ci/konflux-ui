@@ -98,7 +98,7 @@ const SecretModal: React.FC<React.PropsWithChildren<SecretModalProps>> = ({
     return merged;
   }, [existingSecrets, currentComponent, initialSecret]);
 
-  const { isOpen, onClose: handleClose, appendTo } = modalProps || {};
+  const { isOpen, onClose: handleClose, appendTo, ...rest } = modalProps || {};
 
   return (
     <Formik
@@ -109,6 +109,7 @@ const SecretModal: React.FC<React.PropsWithChildren<SecretModalProps>> = ({
       {(props) => {
         return (
           <Modal
+            {...rest}
             isOpen={isOpen}
             onClose={handleClose}
             appendTo={appendTo}
