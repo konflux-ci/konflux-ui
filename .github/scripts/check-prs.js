@@ -21,8 +21,8 @@
  *    - Not yet merged
  *    - Ready for final merge action
  *
- * 4. **Konflux Bot PRs**:
- *    - PRs raised by konflux-ci[bot]
+ * 4. **Bot PRs**:
+ *    - PRs raised by konflux-ci[bot] and fullsend-ai-coder[bot]
  *    - Excluded from "Needs Review" and "Needs Author Followup" categories
  *    - Tracked separately to avoid noise in human workflow tracking
  *
@@ -204,9 +204,14 @@ const checkNeedsAuthorFollowupPRs = async () => {
       if (!user || !user.login) return false;
       const login = user.login.toLowerCase();
       return (
-        ['codecov', 'coderabbitai', 'dependabot', 'github-actions', 'fullsend-ai-review'].includes(
-          login,
-        ) || user.type === 'Bot'
+        [
+          'codecov',
+          'coderabbitai',
+          'dependabot',
+          'github-actions',
+          'fullsend-ai-review',
+          'red-hat-konflux',
+        ].includes(login) || user.type === 'Bot'
       );
     };
 
@@ -238,6 +243,12 @@ const checkNeedsAuthorFollowupPRs = async () => {
         const daysOpen = now.diff(dayjs(pr.created_at), 'day');
         const prInfo = { number: pr.number, author: pr.user.login };
 
+        // Skip draft PRs from analysis (they're tracked separately)
+        if (pr.draft) {
+          draftPRs.push(prInfo);
+          return;
+        }
+
         // Track konflux bot PRs separately for the bot section
         const isKonfluxBot = isKonfluxBotPR(pr);
         if (isKonfluxBot) {
@@ -249,12 +260,6 @@ const checkNeedsAuthorFollowupPRs = async () => {
         if (isFullsendBot) {
           fullsendBotPRs.push(prInfo);
           // Don't return - continue to process for age-based categories
-        }
-
-        // Skip draft PRs from analysis (they're tracked separately)
-        if (pr.draft) {
-          draftPRs.push(prInfo);
-          return;
         }
 
         // Skip action-based categorization for Konflux bot PRs
@@ -500,13 +505,13 @@ const checkNeedsAuthorFollowupPRs = async () => {
       console.log('✅ PR report sent to Slack successfully!');
     }
   } catch (err) {
-    console.error('❌ Error checking stale PRs:', err);
+    console.error('❌ Error checking PRs:', err);
     process.exit(1);
   }
 };
 
 // ----- Execute Script -----
 checkNeedsAuthorFollowupPRs().catch((err) => {
-  console.error('❌ Error checking stale PRs:', err);
+  console.error('❌ Error checking PRs:', err);
   process.exit(1);
 });
