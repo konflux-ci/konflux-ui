@@ -110,7 +110,7 @@ describe('BaseTextFilterToolbar', () => {
         setText={mockSetText}
         onClearFilters={mockOnClearFilters}
       >
-        <div data-testid="custom-child">Custom child component</div>
+        <div data-test="custom-child">Custom child component</div>
       </BaseTextFilterToolbar>,
     );
 

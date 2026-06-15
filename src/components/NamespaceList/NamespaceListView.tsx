@@ -38,7 +38,7 @@ const NamespaceCreateButton = React.memo(() => {
 
   return (
     <Tooltip content={<>Contact your platform engineer to create a new namespace.</>}>
-      <Flex className="pf-v5-u-mt-sm" data-testid="namespace-create-tooltip">
+      <Flex className="pf-v5-u-mt-sm" data-test="namespace-create-tooltip">
         <QuestionCircleIcon />
       </Flex>
     </Tooltip>

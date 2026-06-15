@@ -31,7 +31,15 @@ describe('Basic Happy Path', () => {
 
   const pipelineConfigs: Record<string, { tasks: string[]; logCheckTask: string }> = {
     'docker-build-oci-ta': {
-      tasks: ['init', 'clone-repository', 'build-container', 'apply-tags', 'push-dockerfile'],
+      tasks: [
+        'init',
+        'clone-repository',
+        'prefetch-dependencies',
+        'build-container',
+        'build-image-index',
+        'apply-tags',
+        'push-dockerfile',
+      ],
       logCheckTask: 'push-dockerfile',
     },
     'docker-build-oci-ta-min': {
@@ -43,7 +51,9 @@ describe('Basic Happy Path', () => {
   const pipeline: string = Cypress.env('PIPELINE');
   const pipelineConfig = pipelineConfigs[pipeline];
   if (!pipelineConfig) {
-    throw new Error(`Unknown pipeline "${pipeline}". Supported: ${Object.keys(pipelineConfigs).join(', ')}`);
+    throw new Error(
+      `Unknown pipeline "${pipeline}". Supported: ${Object.keys(pipelineConfigs).join(', ')}`,
+    );
   }
   const piplinerunlogsTasks = pipelineConfig.tasks;
 
@@ -143,7 +153,11 @@ describe('Basic Happy Path', () => {
           UIhelper.checkTableHasRows('Pipeline run List', componentName, 2);
           UIhelper.clickRowCellInTable('Pipeline run List', pipelinerunName, pipelinerunName);
           UIhelper.verifyLabelAndValue('Namespace', Cypress.env('HAC_NAMESPACE'));
-          UIhelper.verifyLabelAndValue('Pipeline', pipelinerunName);
+          // Use the pipelinerunName excluding the last hyphenated part "-<generated_number>"
+          const lastDashIndex = pipelinerunName.lastIndexOf('-');
+          const shortPipelinerunName =
+            lastDashIndex !== -1 ? pipelinerunName.substring(0, lastDashIndex) : pipelinerunName;
+          UIhelper.verifyLabelAndValue('Pipeline', shortPipelinerunName);
           UIhelper.verifyLabelAndValue('Application', applicationName);
           UIhelper.verifyLabelAndValue('Component', componentName);
           UIhelper.verifyLabelAndValue('Related pipelines', '0 pipelines');
@@ -172,7 +186,13 @@ describe('Basic Happy Path', () => {
 
     it('Verify Enterprise contract Test pipeline run Details', () => {
       UIhelper.clickRowCellInTable('Pipeline run List', 'Test', `${applicationName}-`);
-      DetailsTab.waitForPLRAndDownloadAllLogs(false);
+      // We encountered problems with EC checks on a local deployment,
+      // so we only check for Succeeded status on the stage job
+      if (Cypress.env('PERIODIC_RUN_STAGE') === 'true') {
+        DetailsTab.waitForPLRAndDownloadAllLogs(false, 'Succeeded');
+      } else {
+        DetailsTab.waitForPLRAndDownloadAllLogs(false, '(Succeeded|Failed)');
+      }
     });
 
     it('Verify vulnerabilities column exists in Pipeline runs table', () => {

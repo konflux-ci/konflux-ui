@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "hooks": {
+    "stop": [
+      {
+        "command": ".cursor/hooks/post-edit-checks.sh",
+        "timeout": 120
+      }
+    ]
+  }
+}
