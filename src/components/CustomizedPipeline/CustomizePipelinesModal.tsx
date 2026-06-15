@@ -1,4 +1,4 @@
-import { ModalVariant } from '@patternfly/react-core/deprecated';
+import { ModalVariant } from '@patternfly/react-core';
 import { ComponentKind } from '../../types';
 import { createRawModalLauncher } from '../modal/createModalLauncher';
 import CustomizeAllPipelines from './CustomizeAllPipelines';
@@ -13,7 +13,7 @@ export const createCustomizeAllPipelinesModalLauncher = (
   createRawModalLauncher(CustomizeAllPipelines, {
     'data-test': 'customized-all-pipelines-modal',
     variant: ModalVariant.large,
-    hasNoBodyWrapper: true,
+
     onClose,
   })({ applicationName, namespace, filter });
 
@@ -21,5 +21,4 @@ export const createCustomizeComponentPipelineModalLauncher = (name: string, name
   createRawModalLauncher(CustomizeComponentPipeline, {
     'data-test': 'customized-pipelines-modal',
     variant: ModalVariant.large,
-    hasNoBodyWrapper: true,
   })({ name, namespace });

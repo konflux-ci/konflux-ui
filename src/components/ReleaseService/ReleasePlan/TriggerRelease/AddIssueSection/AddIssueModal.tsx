@@ -1,6 +1,5 @@
 import * as React from 'react';
-import { Button } from '@patternfly/react-core';
-import { Modal, ModalVariant } from '@patternfly/react-core/deprecated';
+import { Button, Modal, ModalBody, ModalHeader, ModalVariant } from '@patternfly/react-core';
 import { Formik } from 'formik';
 import * as yup from 'yup';
 import { URL_ERROR_MSG, URL_REGEX } from '../../../../../utils/validation-utils';
@@ -56,30 +55,32 @@ export const AddIssueModal: React.FC<React.PropsWithChildren<AddIssueModalProps>
       </Button>
       <Modal
         variant={ModalVariant.medium}
-        title={isBug ? 'Add Jira issue' : 'Add a CVE'}
         isOpen={isModalOpen}
         onClose={handleModalToggle}
         data-test="add-issue-modal"
       >
-        <Formik
-          onSubmit={setValues}
-          initialValues={
-            isBug
-              ? { id: '', source: '', uploadDate: dateFormat(new Date()) }
-              : {
-                  key: '',
-                  component: '',
-                  packages: [],
-                }
-          }
-          validationSchema={isBug ? IssueFormSchema : CVEFormSchema}
-        >
-          {isBug ? (
-            <BugFormContent modalToggle={handleModalToggle} />
-          ) : (
-            <CVEFormContent modalToggle={handleModalToggle} />
-          )}
-        </Formik>
+        <ModalHeader title={isBug ? 'Add Jira issue' : 'Add a CVE'} />
+        <ModalBody>
+          <Formik
+            onSubmit={setValues}
+            initialValues={
+              isBug
+                ? { id: '', source: '', uploadDate: dateFormat(new Date()) }
+                : {
+                    key: '',
+                    component: '',
+                    packages: [],
+                  }
+            }
+            validationSchema={isBug ? IssueFormSchema : CVEFormSchema}
+          >
+            {isBug ? (
+              <BugFormContent modalToggle={handleModalToggle} />
+            ) : (
+              <CVEFormContent modalToggle={handleModalToggle} />
+            )}
+          </Formik>
+        </ModalBody>
       </Modal>
     </>
   );

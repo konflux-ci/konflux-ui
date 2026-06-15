@@ -5,8 +5,10 @@ import {
   EmptyStateBody,
   EmptyStateVariant,
   EmptyStateFooter,
+  Modal,
+  ModalBody,
+  ModalHeader,
 } from '@patternfly/react-core';
-import { Modal } from '@patternfly/react-core/deprecated';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { useComponents } from '../../hooks/useComponents';
 import { ComponentModel } from '../../models';
@@ -37,9 +39,16 @@ const CustomizeAllPipelines: React.FC<React.PropsWithChildren<Props>> = ({
     [loaded, components, filter],
   );
 
+  const { isOpen, onClose: handleClose, appendTo } = modalProps || {};
+
   if (loaded) {
     if (error) {
-      return <Modal {...modalProps}>{getErrorState(error, loaded, 'components')}</Modal>;
+      return (
+        <Modal isOpen={isOpen} onClose={handleClose} appendTo={appendTo} variant="large">
+          <ModalHeader />
+          <ModalBody>{getErrorState(error, loaded, 'components')}</ModalBody>
+        </Modal>
+      );
     }
 
     if (filteredComponents.length > 0) {
@@ -53,35 +62,37 @@ const CustomizeAllPipelines: React.FC<React.PropsWithChildren<Props>> = ({
     }
 
     return (
-      <Modal {...modalProps}>
-        <EmptyState headingLevel="h4" titleText="No components" variant={EmptyStateVariant.lg}>
-          <EmptyStateBody>To get started, add a component to your application.</EmptyStateBody>
-          <EmptyStateFooter>
-            <ButtonWithAccessTooltip
-              variant="primary"
-              component={(props) => (
-                <Link
-                  {...props}
-                  to={`${IMPORT_PATH.createPath({ workspaceName: namespace })}?application=${applicationName}`}
-                  onClick={(event) => {
-                    props.onClick?.(event);
-                    onClose?.();
-                  }}
-                />
-              )}
-              isDisabled={!canCreateComponent}
-              tooltip="You don't have access to add a component"
-              analytics={{
-                link_name: 'add-component',
-                link_location: 'manage-build-pipelines',
-                app_name: applicationName,
-                namespace,
-              }}
-            >
-              Add component
-            </ButtonWithAccessTooltip>
-          </EmptyStateFooter>
-        </EmptyState>
+      <Modal isOpen={isOpen} onClose={handleClose} appendTo={appendTo} variant="large">
+        <ModalBody>
+          <EmptyState headingLevel="h4" titleText="No components" variant={EmptyStateVariant.lg}>
+            <EmptyStateBody>To get started, add a component to your application.</EmptyStateBody>
+            <EmptyStateFooter>
+              <ButtonWithAccessTooltip
+                variant="primary"
+                component={(props) => (
+                  <Link
+                    {...props}
+                    to={`${IMPORT_PATH.createPath({ workspaceName: namespace })}?application=${applicationName}`}
+                    onClick={(event) => {
+                      props.onClick?.(event);
+                      onClose?.();
+                    }}
+                  />
+                )}
+                isDisabled={!canCreateComponent}
+                tooltip="You don't have access to add a component"
+                analytics={{
+                  link_name: 'add-component',
+                  link_location: 'manage-build-pipelines',
+                  app_name: applicationName,
+                  namespace,
+                }}
+              >
+                Add component
+              </ButtonWithAccessTooltip>
+            </EmptyStateFooter>
+          </EmptyState>
+        </ModalBody>
       </Modal>
     );
   }
