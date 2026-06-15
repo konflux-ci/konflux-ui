@@ -2,6 +2,7 @@
   --konflux-primary-color: #fc783d;
   --konflux-primary-hover-color: #d36634;
   --konflux-icon-color: var(--pf-t--global--icon--color--regular);
+  // PF v6 defaults to dashed underline for links; override to solid
   --pf-t--global--text-decoration--link--style--default: solid;
   --pf-t--global--text-decoration--link--style--hover: solid;
 }
