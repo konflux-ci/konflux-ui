@@ -39,7 +39,7 @@ const AppEmptyState: React.FC<React.PropsWithChildren<AppEmptyStateProps>> = ({
   return (
     <EmptyState
       headingLevel="h3"
-      titleText={<>{title}</>}
+      titleText={title}
       icon={EmptyStateImage}
       className={css('app-empty-state m-is-top-level', className)}
       {...props}
