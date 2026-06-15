@@ -102,7 +102,7 @@ const SecretModal: React.FC<React.PropsWithChildren<SecretModalProps>> = ({
 
   return (
     <Formik
-      onSubmit={(v) => createPartnerTaskSecret(v, onSubmit, modalProps.onClose)}
+      onSubmit={(v) => createPartnerTaskSecret(v, onSubmit, handleClose)}
       initialValues={initialValues}
       validationSchema={SecretFromSchema}
     >
@@ -135,7 +135,7 @@ const SecretModal: React.FC<React.PropsWithChildren<SecretModalProps>> = ({
               >
                 {isEdit ? 'Save' : 'Create'}
               </Button>
-              <Button key="cancel" variant="link" onClick={modalProps.onClose}>
+              <Button key="cancel" variant="link" onClick={handleClose}>
                 Cancel
               </Button>
             </ModalFooter>

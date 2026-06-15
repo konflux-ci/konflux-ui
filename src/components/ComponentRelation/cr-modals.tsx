@@ -158,7 +158,7 @@ export const ConfirmSubmissionComponentRelationModal: React.FC<
   const { isOpen, onClose, appendTo } = modalProps || {};
 
   return (
-    <Modal isOpen={isOpen} appendTo={appendTo} variant={ModalVariant.medium}>
+    <Modal isOpen={isOpen} onClose={onClose} appendTo={appendTo} variant={ModalVariant.medium}>
       <ModalBody>
         <EmptyState headingLevel="h2" icon={SuccessIcon} titleText="Relationships updated!">
           <EmptyStateBody>Checkout each component&apos;s details page to view</EmptyStateBody>
@@ -185,7 +185,7 @@ export const ConfirmCancelationComponentRelationModal: React.FC<
   const { isOpen, onClose, appendTo } = modalProps || {};
 
   return (
-    <Modal isOpen={isOpen} appendTo={appendTo} variant={ModalVariant.small}>
+    <Modal isOpen={isOpen} onClose={onClose} appendTo={appendTo} variant={ModalVariant.small}>
       <ModalHeader title="Your changes will be lost!" />
       <ModalBody>Are you sure you want to close the window?</ModalBody>
       <ModalFooter>

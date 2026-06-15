@@ -63,7 +63,7 @@ export const createModalLauncher = <D extends Record<string, unknown>, P extends
   inModalProps: ModalComponentProps,
 ) =>
   createRawModalLauncher(({ modalProps, ...props }: P & { modalProps?: ModalProps }) => {
-    const { title, titleIconVariant, description, actions, ...rest } = modalProps;
+    const { title, titleIconVariant, description, actions, ...rest } = modalProps || {};
     return (
       <Modal {...rest}>
         {title && (
