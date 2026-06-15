@@ -81,6 +81,8 @@ const TopFilter = defineFilters<PipelineRunKind>()([
   },
 ]);
 
+const allFilterConfigs = [...filterConfigs, ...TopFilter];
+
 export const PipelineRunsPage: React.FC = () => {
   const namespace = useNamespace();
 
@@ -92,10 +94,8 @@ export const PipelineRunsPage: React.FC = () => {
   const [components, componentsLoaded] = useAllComponents(namespace);
 
   // Filter state
-  const { filterValues, clientFilterValues, isFiltered, clearAll } = useFilterState([
-    ...filterConfigs,
-    ...TopFilter,
-  ]);
+  const { filterValues, clientFilterValues, isFiltered, clearAll } =
+    useFilterState(allFilterConfigs);
 
   // Build match expressions from API-mode filter values
   const selectedApps = React.useMemo(() => filterValues.app ?? [], [filterValues.app]);

@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { Button } from '@patternfly/react-core';
+import { Button, Modal } from '@patternfly/react-core';
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, userEvent, within } from 'storybook/test';
 import {
@@ -107,7 +107,13 @@ const ColumnManagementDemo = () => {
         enableSorting
         columnStateKey={COLUMN_STATE_KEY}
       />
-      {isModalOpen && (
+      <Modal
+        title="Manage columns"
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        variant="small"
+        data-test="column-management-modal"
+      >
         <ColumnManagementModal
           columns={columnInfoForModal}
           columnState={columnState}
@@ -115,7 +121,7 @@ const ColumnManagementDemo = () => {
           onSave={handleSave}
           onClose={() => setIsModalOpen(false)}
         />
-      )}
+      </Modal>
     </div>
   );
 };
