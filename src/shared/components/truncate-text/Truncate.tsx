@@ -1,6 +1,12 @@
 import * as React from 'react';
-import { Button, Content } from '@patternfly/react-core';
-import { Modal, ModalVariant } from '@patternfly/react-core/deprecated';
+import {
+  Button,
+  Content,
+  Modal,
+  ModalBody,
+  ModalHeader,
+  ModalVariant,
+} from '@patternfly/react-core';
 
 const DEFAULT_MAX_LENGTH = 80;
 
@@ -11,12 +17,6 @@ export type TruncateProps = {
   'data-test'?: string;
 };
 
-/**
- * Truncate component
- *
- * Displays text content, truncating it if it exceeds the specified maxLength.
- * When truncated, clicking on 'more' opens a modal displaying the full content.
- */
 export const Truncate: React.FC<TruncateProps> = ({
   content,
   modalTitle,
@@ -50,15 +50,17 @@ export const Truncate: React.FC<TruncateProps> = ({
       <Modal
         isOpen={isModalOpen}
         onClose={handleClose}
-        title={modalTitle}
         variant={ModalVariant.medium}
         data-test={dataTest ? `${dataTest}-modal` : 'truncate-modal'}
       >
-        <Content>
-          <Content component="p" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-            {content}
+        {modalTitle && <ModalHeader title={modalTitle} />}
+        <ModalBody>
+          <Content>
+            <Content component="p" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+              {content}
+            </Content>
           </Content>
-        </Content>
+        </ModalBody>
       </Modal>
     </>
   );

@@ -1,4 +1,4 @@
-import { ModalVariant } from '@patternfly/react-core/deprecated';
+import { ModalVariant } from '@patternfly/react-core';
 import { ComponentKind } from '../../types';
 import { createRawModalLauncher } from '../modal/createModalLauncher';
 import CustomizeAllPipelines from './CustomizeAllPipelines';

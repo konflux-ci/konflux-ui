@@ -1,7 +1,18 @@
 import * as React from 'react';
-import { Modal, ModalProps as PFModalProps } from '@patternfly/react-core';
+import {
+  Modal,
+  ModalBody,
+  ModalFooter,
+  ModalHeader,
+  ModalProps as PFModalProps,
+} from '@patternfly/react-core';
 
-export type ModalProps = Omit<PFModalProps, 'children' | 'ref'>;
+export type ModalProps = Omit<PFModalProps, 'children' | 'ref'> & {
+  title?: React.ReactNode;
+  titleIconVariant?: 'success' | 'danger' | 'warning' | 'info' | 'custom' | React.ComponentType;
+  description?: React.ReactNode;
+  actions?: React.ReactNode[];
+};
 
 type ModalComponentProps = Omit<ModalProps, 'isOpen' | 'appendTo'> & {
   'data-test': string;
@@ -51,12 +62,22 @@ export const createModalLauncher = <D extends Record<string, unknown>, P extends
   Component: React.ComponentType<React.PropsWithChildren<P>>,
   inModalProps: ModalComponentProps,
 ) =>
-  createRawModalLauncher(
-    ({ modalProps, ...props }: P & { modalProps?: ModalProps }) => (
-      <Modal {...modalProps}>
-        {/* eslint-disable-next-line */}
-        <Component {...(props as any)} />
+  createRawModalLauncher(({ modalProps, ...props }: P & { modalProps?: ModalProps }) => {
+    const { title, titleIconVariant, description, actions, ...rest } = modalProps || {};
+    return (
+      <Modal {...rest}>
+        {title !== undefined && (
+          <ModalHeader
+            title={title}
+            titleIconVariant={titleIconVariant}
+            description={description}
+          />
+        )}
+        <ModalBody>
+          {/* eslint-disable-next-line */}
+          <Component {...(props as any)} />
+        </ModalBody>
+        {actions?.length > 0 && <ModalFooter>{actions}</ModalFooter>}
       </Modal>
-    ),
-    inModalProps,
-  );
+    );
+  }, inModalProps);

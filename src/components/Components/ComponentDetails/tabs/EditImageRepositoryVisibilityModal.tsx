@@ -12,8 +12,8 @@ import {
   Switch,
   ContentVariants,
   Content,
+  ModalVariant,
 } from '@patternfly/react-core';
-import { ModalVariant } from '@patternfly/react-core/deprecated';
 import { Formik } from 'formik';
 import { ComponentProps, createModalLauncher } from '~/components/modal/createModalLauncher';
 import { ImageRepositoryKind, ImageRepositoryVisibility } from '~/types';
