@@ -66,7 +66,7 @@ export const createModalLauncher = <D extends Record<string, unknown>, P extends
     const { title, titleIconVariant, description, actions, ...rest } = modalProps || {};
     return (
       <Modal {...rest}>
-        {title && (
+        {title !== undefined && (
           <ModalHeader
             title={title}
             titleIconVariant={titleIconVariant}

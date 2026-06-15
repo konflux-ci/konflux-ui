@@ -62,7 +62,7 @@ const CustomizeAllPipelines: React.FC<React.PropsWithChildren<Props>> = ({
     }
 
     return (
-      <Modal isOpen={isOpen} onClose={handleClose} appendTo={appendTo} variant="large">
+      <Modal {...rest} isOpen={isOpen} onClose={handleClose} appendTo={appendTo} variant="large">
         <ModalBody>
           <EmptyState headingLevel="h4" titleText="No components" variant={EmptyStateVariant.lg}>
             <EmptyStateBody>To get started, add a component to your application.</EmptyStateBody>
