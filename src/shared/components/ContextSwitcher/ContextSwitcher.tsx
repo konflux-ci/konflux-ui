@@ -169,7 +169,6 @@ export const ContextSwitcher: React.FC<React.PropsWithChildren<ContextSwitcherPr
     <MenuToggle
       ref={defaultToggleRef}
       id="toggle-context-switcher"
-      className="context-switcher__dropdown"
       aria-label="toggle context switcher menu"
       onClick={() => setIsOpen((val) => !val)}
       variant="plain"
