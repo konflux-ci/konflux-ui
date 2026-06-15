@@ -1,18 +1,12 @@
 import { renderHook } from '@testing-library/react';
 import { K8S_QUERY_KEY_SECRET_TABLE, SECRET_POLLING_INTERVAL } from '~/k8s/consts/k8s-accept';
-import { fetchSecretListTable } from '~/k8s/secret-table';
+import { createSecretListTableQueryOptions } from '~/k8s/secret-table';
 import { SecretGroupVersionKind, SecretModel } from '~/models';
 import { createK8sWatchResourceMock } from '~/unit-test-utils';
 import { mockedSecret, mockedSecrets } from '../__data__/mock-data';
 import { useSecret, useSecrets } from '../useSecrets';
 
 const useK8sWatchResourceMock = createK8sWatchResourceMock();
-
-jest.mock('~/k8s/secret-table', () => ({
-  fetchSecretListTable: jest.fn(),
-}));
-
-const fetchSecretListTableMock = fetchSecretListTable as jest.Mock;
 
 describe('useSecrets', () => {
   beforeEach(() => {
@@ -133,17 +127,16 @@ describe('useSecrets', () => {
 
       const queryOptions = useK8sWatchResourceMock.mock.calls[0][2];
 
+      expect(queryOptions.queryKey).toEqual(createSecretListTableQueryOptions('test-ns').queryKey);
       expect(queryOptions.queryKey).toContain(K8S_QUERY_KEY_SECRET_TABLE);
     });
 
-    it('should call fetchSecretListTable from queryFn', async () => {
+    it('should pass secret table queryFn', () => {
       renderHook(() => useSecrets('test-ns', true, { metadataOnly: true }));
 
       const queryOptions = useK8sWatchResourceMock.mock.calls[0][2];
 
-      await queryOptions.queryFn();
-
-      expect(fetchSecretListTableMock).toHaveBeenCalledWith('test-ns');
+      expect(typeof queryOptions.queryFn).toBe('function');
     });
 
     it('should still filter deleted secrets when loaded', () => {

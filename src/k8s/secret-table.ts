@@ -1,6 +1,9 @@
-import { K8S_ACCEPT_TABLE } from '~/k8s/consts/k8s-accept';
+import type { UseQueryOptions } from '@tanstack/react-query';
+import { K8S_ACCEPT_TABLE, K8S_QUERY_KEY_SECRET_TABLE } from '~/k8s/consts/k8s-accept';
 import { commonFetchJSON } from '~/k8s/fetch';
 import { getK8sResourceURL } from '~/k8s/k8s-utils';
+import { queryClient } from '~/k8s/query/core';
+import { createQueryKeys } from '~/k8s/query/utils';
 import { SecretModel } from '~/models';
 import { SecretKind } from '~/types';
 
@@ -121,6 +124,26 @@ export const fetchSecretListTable = async (namespace: string): Promise<SecretKin
   );
   return parseSecretTableToSecretKinds(table, namespace);
 };
+
+export const createSecretListTableQueryKey = (namespace: string) => [
+  ...createQueryKeys({ model: SecretModel, queryOptions: { ns: namespace } }),
+  K8S_QUERY_KEY_SECRET_TABLE,
+];
+
+export const createSecretListTableQueryOptions = (
+  namespace: string,
+  options?: Omit<UseQueryOptions<SecretKind[]>, 'queryKey' | 'queryFn'>,
+): UseQueryOptions<SecretKind[]> => ({
+  queryKey: createSecretListTableQueryKey(namespace),
+  queryFn: () => fetchSecretListTable(namespace),
+  ...options,
+});
+
+export const K8sQuerySecretListTableItems = (
+  namespace: string,
+  options?: Omit<UseQueryOptions<SecretKind[]>, 'queryKey' | 'queryFn'>,
+): Promise<SecretKind[]> =>
+  queryClient.ensureQueryData(createSecretListTableQueryOptions(namespace, options));
 
 export const fetchSecretGetTable = async (
   namespace: string,
