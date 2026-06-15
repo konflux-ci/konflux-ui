@@ -5,30 +5,11 @@ import { COMPONENT_LINKED_SECRETS_PATH, COMPONENT_LIST_PATH } from '../../routes
 import { Action } from '../../shared/components/action-menu/types';
 import { useNamespace } from '../../shared/providers/Namespace/useNamespaceInfo';
 import { ComponentKind } from '../../types';
-import {
-  GIT_PROVIDER_ANNOTATION,
-  GIT_PROVIDER_ANNOTATION_VALUE,
-  startNewBuild,
-} from '../../utils/component-utils';
+import { startNewBuild } from '../../utils/component-utils';
 import { useAccessReviewForModel } from '../../utils/rbac';
 import { createCustomizeComponentPipelineModalLauncher } from '../CustomizedPipeline/CustomizePipelinesModal';
 import { useModalLauncher } from '../modal/ModalProvider';
 import { componentDeleteModal } from '../modal/resource-modals';
-
-export const getURLForComponentPR = (component: ComponentKind): string | undefined => {
-  const gitProvider = component.metadata.annotations?.[GIT_PROVIDER_ANNOTATION];
-  const url = component.spec.source?.git?.url?.replace(/\.git$/i, '');
-  if (!url) return undefined;
-  switch (gitProvider) {
-    case GIT_PROVIDER_ANNOTATION_VALUE.GITHUB:
-    case GIT_PROVIDER_ANNOTATION_VALUE.FORGEJO:
-      return `${url}/pulls`;
-    case GIT_PROVIDER_ANNOTATION_VALUE.GITLAB:
-      return `${url}/-/merge_requests`;
-    default:
-      return undefined;
-  }
-};
 
 export const useComponentActions = (component: ComponentKind, name: string): Action[] => {
   const namespace = useNamespace();
@@ -36,10 +17,8 @@ export const useComponentActions = (component: ComponentKind, name: string): Act
   const navigate = useNavigate();
   const applicationName = component?.spec.application;
   const [canPatchComponent] = useAccessReviewForModel(ComponentModel, 'patch');
-  const [canViewComponent] = useAccessReviewForModel(ComponentModel, 'get');
   const [canDeleteComponent] = useAccessReviewForModel(ComponentModel, 'delete');
   const [canManageLinkedSecrets] = useAccessReviewForModel(ServiceAccountModel, 'patch');
-  const prURL = component ? getURLForComponentPR(component) : undefined;
 
   const actions: Action[] = React.useMemo(() => {
     if (!component) {
@@ -93,22 +72,6 @@ export const useComponentActions = (component: ComponentKind, name: string): Act
         disabled: !canManageLinkedSecrets,
         disabledTooltip: "You don't have access to manage linked secrets",
       },
-      {
-        cta: { href: prURL, external: true },
-        id: `view-all-prs-${name.toLowerCase()}`,
-        label: 'View all pull requests',
-        disabled: !canViewComponent || !prURL,
-        disabledTooltip: !prURL
-          ? 'Pull request URL is not available for this component'
-          : "You don't have access to view all pull requests",
-        analytics: {
-          link_name: 'view-all-prs',
-          link_location: 'component-actions',
-          component_name: name,
-          app_name: applicationName,
-          namespace,
-        },
-      },
     ];
 
     updatedActions.push({
@@ -131,13 +94,11 @@ export const useComponentActions = (component: ComponentKind, name: string): Act
   }, [
     component,
     canPatchComponent,
-    canViewComponent,
     name,
     applicationName,
     namespace,
     canManageLinkedSecrets,
     canDeleteComponent,
-    prURL,
     showModal,
     navigate,
   ]);

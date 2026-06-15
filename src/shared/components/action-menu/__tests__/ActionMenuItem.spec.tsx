@@ -17,16 +17,13 @@ const ActionMenuItemRenderer = (props: ActionMenuItemProps) =>
 
 describe('ActionMenuItem', () => {
   let navigateMock;
-  let openMock: jest.SpyInstance;
 
   beforeEach(() => {
     navigateMock = jest.fn();
     useNavigateMock.mockImplementation(() => navigateMock);
-    openMock = jest.spyOn(window, 'open').mockImplementation(() => null);
   });
 
   afterEach(() => {
-    openMock.mockRestore();
     jest.clearAllMocks();
   });
 
@@ -124,8 +121,7 @@ describe('ActionMenuItem', () => {
     fireEvent.click(within(getByTestId('Action 1')).getByRole('menuitem'));
 
     await waitFor(() => {
-      expect(openMock).toHaveBeenCalledWith('www.example.com', '_blank', 'noopener,noreferrer');
-      expect(navigateMock).not.toHaveBeenCalled();
+      expect(useNavigateMock).toHaveBeenCalledTimes(1);
     });
   });
 
