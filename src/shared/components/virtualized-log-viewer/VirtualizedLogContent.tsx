@@ -236,8 +236,6 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
         onClick={() => scrollRef.current?.focus()}
       >
         <Flex
-          alignItems={{ default: 'alignItemsStretch' }}
-          gap={{ default: 'gapNone' }}
           style={{
             height: `${virtualizer.getTotalSize()}px`,
             width: '100%',
@@ -252,7 +250,7 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
             isLineHighlighted={isLineHighlighted}
           />
 
-          <Flex className="log-content__content-column" flex={{ default: 'flex_1' }} gap={{ default: 'gapNone' }}>
+          <Flex className="log-content__content-column" flex={{ default: 'flex_1' }}>
             {virtualItems.map((virtualItem) => {
               const row = displayRows[virtualItem.index];
               if (!row) return null;

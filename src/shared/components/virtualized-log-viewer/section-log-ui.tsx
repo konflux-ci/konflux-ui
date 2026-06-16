@@ -15,13 +15,7 @@ export const SectionHeaderButton: React.FC<{ row: SectionHeaderRow; onToggle: ()
     aria-expanded={row.isExpanded}
     data-test={`fold-header-${row.sectionName}`}
   >
-    <Flex
-      alignItems={{ default: 'alignItemsCenter' }}
-      justifyContent={{ default: 'justifyContentFlexStart' }}
-      spaceItems={{ default: 'spaceItemsXs' }}
-      flexWrap={{ default: 'nowrap' }}
-      gap={{ default: 'gapNone' }}
-    >
+    <Flex alignItems={{ default: 'alignItemsCenter' }} spaceItems={{ default: 'spaceItemsXs' }}>
       <FlexItem>
         {row.isExpanded ? <AngleDownIcon aria-hidden /> : <AngleRightIcon aria-hidden />}
       </FlexItem>
@@ -49,8 +43,6 @@ export const StickySectionHeaderBar: React.FC<{
   onToggle: () => void;
 }> = ({ row, pushUpOffset, itemSize, onToggle }) => (
   <Flex
-    alignItems={{ default: 'alignItemsStretch' }}
-    gap={{ default: 'gapNone' }}
     style={{
       position: 'absolute',
       top: 0,
@@ -70,7 +62,6 @@ export const StickySectionHeaderBar: React.FC<{
       className="line-number__gutter"
       alignItems={{ default: 'alignItemsCenter' }}
       justifyContent={{ default: 'justifyContentFlexEnd' }}
-      gap={{ default: 'gapNone' }}
       style={{ position: 'relative', height: `${itemSize}px` }}
     >
       <FlexItem className="line-number__line-number pf-v5-u-pr-sm">{row.lineNumber}</FlexItem>
@@ -79,8 +70,6 @@ export const StickySectionHeaderBar: React.FC<{
       className="log-content__content-column pf-v5-c-log-viewer__list-item"
       flex={{ default: 'flex_1' }}
       alignItems={{ default: 'alignItemsCenter' }}
-      justifyContent={{ default: 'justifyContentFlexStart' }}
-      gap={{ default: 'gapNone' }}
       style={{ minWidth: 0, height: `${itemSize}px` }}
     >
       <FlexItem>
