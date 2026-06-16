@@ -42,3 +42,7 @@ html.pf-v6-theme-dark {
     background-color: var(--konflux-primary-hover-color);
   }
 }
+
+.pf-v6-c-button.pf-m-danger:not(.pf-m-disabled):not(.pf-m-aria-disabled):not(:disabled) {
+  color: #fff;
+}
