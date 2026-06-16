@@ -164,7 +164,13 @@ export const ConfirmSubmissionComponentRelationModal: React.FC<
   const { isOpen, onClose, appendTo, ...rest } = modalProps || {};
 
   return (
-    <Modal {...rest} isOpen={isOpen} appendTo={appendTo} variant={ModalVariant.medium}>
+    <Modal
+      {...rest}
+      isOpen={isOpen}
+      onClose={onClose}
+      appendTo={appendTo}
+      variant={ModalVariant.medium}
+    >
       <ModalBody>
         <EmptyState headingLevel="h2" icon={SuccessIcon} titleText="Relationships updated!">
           <EmptyStateBody>Checkout each component&apos;s details page to view</EmptyStateBody>
