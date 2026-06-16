@@ -222,7 +222,7 @@ const ComponentListView: React.FC<React.PropsWithChildren<ComponentListViewProps
         options={statusFilterObj}
       />
       <ButtonWithAccessTooltip
-        variant="secondary"
+        variant="primary"
         component={(p) => (
           <Link
             {...p}
