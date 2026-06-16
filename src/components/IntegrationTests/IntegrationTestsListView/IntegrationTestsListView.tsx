@@ -103,7 +103,7 @@ const IntegrationTestsListView: React.FC<React.PropsWithChildren> = () => {
       dataTest="integration-list-toolbar"
     >
       <ButtonWithAccessTooltip
-        variant={ButtonVariant.secondary}
+        variant={ButtonVariant.primary}
         onClick={handleAddTest}
         isDisabled={!canCreateIntegrationTest}
         tooltip="You don't have access to add an integration test"
