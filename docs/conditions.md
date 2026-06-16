@@ -16,8 +16,8 @@ const showKubearchive = useIsOnFeatureFlag('kubearchive-integration') && isKubea
 
 // New way: Condition-guarded flag
 const showKubearchive = useIsOnFeatureFlag('kubearchive-integration'); 
-// ✅ Flag is enabled AND Kubearchive is installed
-// ❌ Flag switch is disabled if Kubearchive isn't installed (user can't enable it)
+// ✅ Flag is enabled AND KubeArchive is installed
+// ❌ Flag switch is disabled if KubeArchive isn't installed (user can't enable it)
 ```
 
 ### Two main use cases:
@@ -27,14 +27,14 @@ const showKubearchive = useIsOnFeatureFlag('kubearchive-integration');
 
 | Use Case | When to Use | Example |
 |----------|-------------|---------|
-| **Guarded Flags** | Feature depends on external service/environment | Kubearchive integration only works if Kubearchive is installed |
+| **Guarded Flags** | Feature depends on external service/environment | KubeArchive integration only works if KubeArchive is installed |
 | **Independent Conditions** | UI needs to adapt to environment without feature flags | Show "staging environment" banner, hide unavailable features |
 
 ### Already available conditions
 
 ```ts
 // These are already set up for you:
-'isKubearchiveEnabled' // → true if Kubearchive service is available
+'isKubearchiveEnabled' // → true if KubeArchive service is available
 'isStagingCluster'     // → true if running in staging environment
 ```
 
@@ -54,8 +54,8 @@ export const FLAGS = {
     defaultEnabled: false,
     status: 'wip',
     guard: {
-      allOf: ['isKubearchiveEnabled'],  // Requires Kubearchive
-      failureReason: 'Kubearchive must be installed',
+      allOf: ['isKubearchiveEnabled'],  // Requires KubeArchive
+      failureReason: 'KubeArchive must be installed',
       visibleInFeatureFlagPanel: true,  // when guard fails, show the flag entry disabled with the reason
       // visibleInFeatureFlagPanel: true => show the flag disabled with its reason
       // visibleInFeatureFlagPanel: false => hide the flag entirely when guard conditions aren’t met
@@ -79,7 +79,7 @@ const MyComponent = () => {
 };
 ```
 
-**That's it!** The flag will automatically be `false` if Kubearchive isn't available, and users won't be able to enable it in the dev panel (the switch will be disabled).
+**That's it!** The flag will automatically be `false` if KubeArchive isn't available, and users won't be able to enable it in the dev panel (the switch will be disabled).
 
 ### Guard Options
 
@@ -103,12 +103,12 @@ guard: {
 export const FLAGS = {
   'kubearchive-integration': {
     key: 'kubearchive-integration',
-    description: 'Kubearchive features',
+    description: 'KubeArchive features',
     defaultEnabled: false,
     status: 'wip',
     guard: {
       allOf: ['isKubearchiveEnabled'], 
-      failureReason: 'Kubearchive not installed',
+      failureReason: 'KubeArchive not installed',
       visibleInFeatureFlagPanel: true,
     },
   },
@@ -117,8 +117,8 @@ export const FLAGS = {
 // In component - use flag normally
 const MyPage = () => {
   const showKubearchive = useIsOnFeatureFlag('kubearchive-integration');
-  // ✅ true only if flag is ON and Kubearchive is available
-  // ❌ false if Kubearchive isn't available (user can't enable flag)
+  // ✅ true only if flag is ON and KubeArchive is available
+  // ❌ false if KubeArchive isn't available (user can't enable flag)
   
   return <div>{showKubearchive && <KubearchivePage />}</div>;
 };
@@ -139,7 +139,7 @@ const MyPage = () => {
       {conditions.isKubearchiveEnabled ? (
         <KubearchivePage />
       ) : (
-        <div>Kubearchive features unavailable</div>
+        <div>KubeArchive features unavailable</div>
       )}
     </div>
   );
@@ -165,7 +165,7 @@ guard: {
 // Need both staging AND kubearchive
 guard: {
   allOf: ['isStagingCluster', 'isKubearchiveEnabled'],
-  failureReason: 'Requires staging environment with Kubearchive',
+  failureReason: 'Requires staging environment with KubeArchive',
   visibleInFeatureFlagPanel: true,
 }
 ```
@@ -173,10 +173,10 @@ guard: {
 ### Service dependency features  
 
 ```ts
-// Feature needs Kubearchive service
+// Feature needs KubeArchive service
 guard: {
   allOf: ['isKubearchiveEnabled'],
-  failureReason: 'Kubearchive service not available',
+  failureReason: 'KubeArchive service not available',
   visibleInFeatureFlagPanel: true,
 }
 ```
@@ -242,7 +242,7 @@ const MyComponent = () => {
       {conditions.isKubearchiveEnabled ? (
         <ArchiveSection />
       ) : (
-        <div>Archive features unavailable - Kubearchive not installed</div>
+        <div>Archive features unavailable - KubeArchive not installed</div>
       )}
       
       <RegularContent />
@@ -379,7 +379,7 @@ const conditions = useMyConditions(); // { myCondition: boolean }
 ```
 
 ### Available conditions:
-- `'isKubearchiveEnabled'` - Kubearchive service available
+- `'isKubearchiveEnabled'` - KubeArchive service available
 - `'isStagingCluster'` - Running in staging environment
 
 That's it! You now know everything you need to use conditions

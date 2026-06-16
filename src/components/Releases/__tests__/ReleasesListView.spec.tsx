@@ -40,7 +40,9 @@ jest.mock('../../../shared/components/table', () => {
           <Thead>
             <Tr>
               {columns.map((col, idx) => (
-                <Th key={idx} {...(col.props ?? {})}>{col.title}</Th>
+                <Th key={idx} {...(col.props ?? {})}>
+                  {col.title}
+                </Th>
               ))}
             </Tr>
           </Thead>

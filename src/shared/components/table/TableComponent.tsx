@@ -177,9 +177,7 @@ const TableComponent: React.FC<React.PropsWithChildren<TableProps>> = ({
               ))}
             </Tr>
           </Thead>
-          {!virtualize ? (
-            <Tbody>{data.map((obj, index) => rowRenderer(obj, index))}</Tbody>
-          ) : null}
+          {!virtualize ? <Tbody>{data.map((obj, index) => rowRenderer(obj, index))}</Tbody> : null}
         </Table>
         {virtualize && <WithScrollContainer>{renderVirtualizedTable}</WithScrollContainer>}
       </TableWrapper>
