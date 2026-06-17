@@ -42,7 +42,7 @@
     "@tanstack/react-virtual": "^3.13.18",
     "classnames": "^2.5.1",
     "dagre": "^0.8.5",
-    "dayjs": "^1.11.13",
+    "dayjs": "^1.11.21",
     "file-saver": "^2.0.5",
     "formik": "^2.4.6",
     "formik-pf": "0.0.1-alpha11",
