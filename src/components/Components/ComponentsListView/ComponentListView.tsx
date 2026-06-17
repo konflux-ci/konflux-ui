@@ -177,7 +177,7 @@ const ComponentListView: React.FC<React.PropsWithChildren<ComponentListViewProps
         title="Upgrade build pipeline plans for your components."
         imgSrc={pipelineImg}
         imgAlt="build pipeline plans"
-        isLight
+        hasHorizontalPadding={false}
       >
         <Flex
           justifyContent={{ default: 'justifyContentSpaceBetween' }}
