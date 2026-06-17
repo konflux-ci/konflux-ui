@@ -9,6 +9,7 @@ import {
   TextContent,
   TextVariants,
 } from '@patternfly/react-core';
+import { ChatContextTarget } from '~/components/AIChat';
 import { CONFORMA_POLICY_AVAILABLE_RULE_COLLECTIONS_URL } from '~/consts/documentation';
 import { useDeepCompareMemoize } from '~/shared';
 import { getErrorState } from '~/shared/utils/error-utils';
@@ -131,79 +132,97 @@ export const SecurityConformaTab: React.FC<
 
   return (
     <>
-      <TextContent style={{ marginTop: 'var(--pf-v5-global--spacer--lg)' }}>
-        <Text component={TextVariants.h3}>Testing apps against Conforma</Text>
-        <Text component={TextVariants.p}>
-          Conforma is a set of tools for verifying the provenance of application snapshots and
-          validating them against a clearly defined policy.
-          <br />
-          The Conforma policy is defined using the{' '}
-          <Button
-            variant="link"
-            isInline
-            component={(props) => (
-              <a
-                {...props}
-                href="https://www.openpolicyagent.org/docs/latest/policy-language/"
-                target="_blank"
-                rel="noreferrer"
-              />
-            )}
-          >
-            rego policy language
-          </Button>{' '}
-          and is described here in{' '}
-          <Button
-            variant="link"
-            isInline
-            component={(props) => (
-              <a
-                {...props}
-                href={CONFORMA_POLICY_AVAILABLE_RULE_COLLECTIONS_URL}
-                target="_blank"
-                rel="noreferrer"
-              />
-            )}
-          >
-            Conforma Policies
-          </Button>
-          .
-        </Text>
-      </TextContent>
+      <ChatContextTarget
+        id={`${pipelineRunName}-security-overview`}
+        label="Security overview"
+        description="Conforma policy testing summary"
+      >
+        <TextContent style={{ marginTop: 'var(--pf-v5-global--spacer--lg)' }}>
+          <Text component={TextVariants.h3}>Testing apps against Conforma</Text>
+          <Text component={TextVariants.p}>
+            Conforma is a set of tools for verifying the provenance of application snapshots and
+            validating them against a clearly defined policy.
+            <br />
+            The Conforma policy is defined using the{' '}
+            <Button
+              variant="link"
+              isInline
+              component={(props) => (
+                <a
+                  {...props}
+                  href="https://www.openpolicyagent.org/docs/latest/policy-language/"
+                  target="_blank"
+                  rel="noreferrer"
+                />
+              )}
+            >
+              rego policy language
+            </Button>{' '}
+            and is described here in{' '}
+            <Button
+              variant="link"
+              isInline
+              component={(props) => (
+                <a
+                  {...props}
+                  href={CONFORMA_POLICY_AVAILABLE_RULE_COLLECTIONS_URL}
+                  target="_blank"
+                  rel="noreferrer"
+                />
+              )}
+            >
+              Conforma Policies
+            </Button>
+            .
+          </Text>
+        </TextContent>
+      </ChatContextTarget>
       <Flex style={{ marginTop: 'var(--pf-v5-global--spacer--xl)' }}>
         <FlexItem style={{ marginRight: 'var(--pf-v5-global--spacer--2xl)' }}>
-          <TextContent>
-            <Text component={TextVariants.h3}>Results</Text>
-          </TextContent>
-          {toolbar}
-        </FlexItem>
-        <Flex direction={{ default: 'column' }}>
-          <FlexItem>
+          <ChatContextTarget
+            id={`${pipelineRunName}-security-filters`}
+            label="Security filters"
+            description="Filter Conforma results by rule, component, and status"
+          >
             <TextContent>
-              <Text component={TextVariants.h3}>Results summary</Text>
+              <Text component={TextVariants.h3}>Results</Text>
             </TextContent>
-          </FlexItem>
-          <Flex data-test="result-summary" spaceItems={{ default: 'spaceItemsXl' }}>
-            <FlexItem spacer={{ default: 'spacerXl' }}>
-              <span style={{ marginRight: 'var(--pf-v5-global--spacer--sm)' }}>
-                {getRuleStatus(CONFORMA_RESULT_STATUS.violations)}
-              </span>
-              <b>{resultSummary[CONFORMA_RESULT_STATUS.violations]}</b>
-            </FlexItem>
+            {toolbar}
+          </ChatContextTarget>
+        </FlexItem>
+        <ChatContextTarget
+          id={`${pipelineRunName}-security-summary`}
+          label="Security results summary"
+          description="Failed, warning, and success counts"
+        >
+          <Flex direction={{ default: 'column' }}>
             <FlexItem>
-              <span style={{ marginRight: 'var(--pf-v5-global--spacer--sm)' }}>
-                {getRuleStatus(CONFORMA_RESULT_STATUS.warnings)}
-              </span>
-              <b>{resultSummary[CONFORMA_RESULT_STATUS.warnings]}</b>
+              <TextContent>
+                <Text component={TextVariants.h3}>Results summary</Text>
+              </TextContent>
             </FlexItem>
-            <FlexItem>
-              <span style={{ marginRight: 'var(--pf-v5-global--spacer--sm)' }}>
-                {getRuleStatus(CONFORMA_RESULT_STATUS.successes)}
-              </span>
-              <b>{resultSummary[CONFORMA_RESULT_STATUS.successes]}</b>
-            </FlexItem>
+            <Flex data-test="result-summary" spaceItems={{ default: 'spaceItemsXl' }}>
+              <FlexItem spacer={{ default: 'spacerXl' }}>
+                <span style={{ marginRight: 'var(--pf-v5-global--spacer--sm)' }}>
+                  {getRuleStatus(CONFORMA_RESULT_STATUS.violations)}
+                </span>
+                <b>{resultSummary[CONFORMA_RESULT_STATUS.violations]}</b>
+              </FlexItem>
+              <FlexItem>
+                <span style={{ marginRight: 'var(--pf-v5-global--spacer--sm)' }}>
+                  {getRuleStatus(CONFORMA_RESULT_STATUS.warnings)}
+                </span>
+                <b>{resultSummary[CONFORMA_RESULT_STATUS.warnings]}</b>
+              </FlexItem>
+              <FlexItem>
+                <span style={{ marginRight: 'var(--pf-v5-global--spacer--sm)' }}>
+                  {getRuleStatus(CONFORMA_RESULT_STATUS.successes)}
+                </span>
+                <b>{resultSummary[CONFORMA_RESULT_STATUS.successes]}</b>
+              </FlexItem>
+            </Flex>
           </Flex>
-        </Flex>
+        </ChatContextTarget>
       </Flex>
       {crLoaded && filteredCRResult.length > 0 ? (
         <ConformaTable conformaResult={filteredCRResult} />

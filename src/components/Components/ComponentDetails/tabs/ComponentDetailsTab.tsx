@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { useParams } from 'react-router-dom';
 import { Button, ButtonVariant } from '@patternfly/react-core';
+import { ChatContextTarget } from '~/components/AIChat';
 import { LEARN_MORE_ABOUT_LOGIN_IMAGE_REPO } from '~/consts/documentation';
 import ExternalLink from '~/shared/components/links/ExternalLink';
 import { useComponent } from '../../../../hooks/useComponents';
@@ -41,13 +42,25 @@ const ComponentDetailsTab: React.FC = () => {
   return (
     <div className="component-details">
       <DetailsSection title="Component details">
-        <ComponentDetails component={component} />
+        <ChatContextTarget
+          id={`${componentName}-component-details`}
+          label="Component details"
+          description="Source code, image repository visibility, and latest image"
+        >
+          <ComponentDetails component={component} />
+        </ChatContextTarget>
       </DetailsSection>
       <DetailsSection
         title="Latest build"
         description="All information is based on the latest successful build of this component."
       >
-        <ComponentLatestBuild component={component} />
+        <ChatContextTarget
+          id={`${componentName}-latest-build`}
+          label="Latest build"
+          description="Information from the latest successful build of this component"
+        >
+          <ComponentLatestBuild component={component} />
+        </ChatContextTarget>
       </DetailsSection>
       <DetailsSection
         title="Build settings"
@@ -60,8 +73,14 @@ const ComponentDetailsTab: React.FC = () => {
           </span>
         }
       >
-        <ComponentBuildSettings component={component} />
-        <ComponentNudgesDependencies component={component} />
+        <ChatContextTarget
+          id={`${componentName}-build-settings`}
+          label="Build settings"
+          description="Build pipeline plan and component dependencies"
+        >
+          <ComponentBuildSettings component={component} />
+          <ComponentNudgesDependencies component={component} />
+        </ChatContextTarget>
       </DetailsSection>
       <DetailsSection
         title="Registry Login Information"
@@ -72,7 +91,13 @@ const ComponentDetailsTab: React.FC = () => {
           </>
         }
       >
-        <ComponentRegistryLogin />
+        <ChatContextTarget
+          id={`${componentName}-registry-login`}
+          label="Registry login information"
+          description="Credentials for accessing the registry for build images"
+        >
+          <ComponentRegistryLogin />
+        </ChatContextTarget>
       </DetailsSection>
     </div>
   );

@@ -16,6 +16,7 @@ import {
   Bullseye,
   Spinner,
 } from '@patternfly/react-core';
+import { ChatContextTarget } from '~/components/AIChat';
 import GitRepoLink from '~/components/GitLink/GitRepoLink';
 import MetadataList from '~/components/MetadataList';
 import { useModalLauncher } from '~/components/modal/ModalProvider';
@@ -206,11 +207,22 @@ const PipelineRunDetailsTab: React.FC = () => {
           {getErrorState(taskRunError, taskRunsLoaded, 'task runs', true)}
         </div>
       ) : (
-        <PipelineRunVisualization pipelineRun={pipelineRun} error={error} taskRuns={taskRuns} />
+        <ChatContextTarget
+          id={`${pipelineRunName}-visualization`}
+          label="Pipeline visualization"
+          description="Pipeline run task graph and status"
+        >
+          <PipelineRunVisualization pipelineRun={pipelineRun} error={error} taskRuns={taskRuns} />
+        </ChatContextTarget>
       )}
       {!error && (
         <>
-          <Flex direction={{ default: 'row' }}>
+          <ChatContextTarget
+            id={`${pipelineRunName}-details`}
+            label="Pipeline run details"
+            description="Summary metadata and status fields"
+          >
+            <Flex direction={{ default: 'row' }}>
             <FlexItem style={{ flex: 1 }}>
               <DescriptionList
                 data-test="pipelinerun-details"
@@ -460,19 +472,32 @@ const PipelineRunDetailsTab: React.FC = () => {
               </DescriptionList>
             </FlexItem>
           </Flex>
+          </ChatContextTarget>
 
           {patchedResultsForProxy?.length ? (
             <>
               <Divider style={{ padding: 'var(--pf-v5-global--spacer--lg) 0' }} />
-              <RunResultsList results={patchedResultsForProxy} status={pipelineStatus} />
+              <ChatContextTarget
+                id={`${pipelineRunName}-results`}
+                label="Pipeline run results"
+                description="Output results from the pipeline run"
+              >
+                <RunResultsList results={patchedResultsForProxy} status={pipelineStatus} />
+              </ChatContextTarget>
             </>
           ) : null}
 
-          {patchedSpecParamsForProxy?.length && (
-            <div style={{ marginTop: 'var(--pf-v5-global--spacer--lg)' }}>
-              <RunParamsList params={patchedSpecParamsForProxy} />
-            </div>
-          )}
+          {patchedSpecParamsForProxy?.length ? (
+            <ChatContextTarget
+              id={`${pipelineRunName}-params`}
+              label="Pipeline run parameters"
+              description="Input parameters for the pipeline run"
+            >
+              <div style={{ marginTop: 'var(--pf-v5-global--spacer--lg)' }}>
+                <RunParamsList params={patchedSpecParamsForProxy} />
+              </div>
+            </ChatContextTarget>
+          ) : null}
         </>
       )}
     </>

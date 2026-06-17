@@ -1,10 +1,13 @@
 import * as React from 'react';
 import { Bullseye, EmptyState, EmptyStateBody, Spinner } from '@patternfly/react-core';
+import { ChatContextTarget, withChatContextRowPropsIfEnabled } from '~/components/AIChat';
+import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useTaskRunsForPipelineRuns } from '~/hooks/useTaskRunsV2';
 import { textMatch } from '~/utils/text-filter-utils';
 import { Table, useDeepCompareMemoize } from '../../shared';
 import FilteredEmptyState from '../../shared/components/empty-state/FilteredEmptyState';
 import { getErrorState } from '../../shared/utils/error-utils';
+import { TaskRunKind } from '../../types';
 import { FilterContext } from '../Filter/generic/FilterContext';
 import { BaseTextFilterToolbar } from '../Filter/toolbars/BaseTextFIlterToolbar';
 import { TaskRunListHeader } from './TaskRunListHeader';
@@ -21,6 +24,8 @@ const TaskRunListView: React.FC<React.PropsWithChildren<Props>> = ({
   pipelineRunName,
   taskName,
 }) => {
+  const isChatEnabled = useIsOnFeatureFlag('ai-chat');
+  const tableContextId = `pipeline-run-task-runs-${pipelineRunName}`;
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
   const filters = useDeepCompareMemoize({
     name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
@@ -76,13 +81,31 @@ const TaskRunListView: React.FC<React.PropsWithChildren<Props>> = ({
         dataTest="taskrun-list-toolbar"
       />
       {filteredTaskRun.length > 0 ? (
-        <Table
-          data={filteredTaskRun}
-          aria-label="TaskRun List"
-          Header={TaskRunListHeader}
-          Row={TaskRunListRow}
-          loaded={loaded}
-        />
+        <ChatContextTarget
+          id={tableContextId}
+          label="Task runs table"
+          description="Task runs for this pipeline run"
+        >
+          <Table
+            data={filteredTaskRun}
+            aria-label="TaskRun List"
+            Header={TaskRunListHeader}
+            Row={TaskRunListRow}
+            loaded={loaded}
+            getRowProps={(obj: TaskRunKind) =>
+              withChatContextRowPropsIfEnabled(
+                isChatEnabled,
+                { id: obj.metadata.uid },
+                {
+                  id: `task-run-row-${pipelineRunName}-${obj.metadata.name}`,
+                  label: obj.metadata.name,
+                  description: 'Task run table row',
+                  parentContextId: tableContextId,
+                },
+              )
+            }
+          />
+        </ChatContextTarget>
       ) : (
         <FilteredEmptyState onClearFilters={() => onClearFilters()} />
       )}

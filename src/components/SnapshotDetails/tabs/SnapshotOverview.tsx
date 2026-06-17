@@ -10,6 +10,7 @@ import {
   Skeleton,
   Title,
 } from '@patternfly/react-core';
+import { ChatContextTarget } from '~/components/AIChat';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { SnapshotLabels } from '../../../consts/snapshots';
@@ -70,7 +71,12 @@ const SnapshotOverviewTab: React.FC = () => {
       <Title headingLevel="h4" className="pf-v5-c-title pf-v5-u-mt-lg pf-v5-u-mb-lg" size="lg">
         Snapshot details
       </Title>
-      <Flex>
+      <ChatContextTarget
+        id={`${snapshotName}-details`}
+        label="Snapshot details"
+        description="Snapshot metadata, trigger commit, and vulnerability scan results"
+      >
+        <Flex>
         <Flex flex={{ default: 'flex_3' }}>
           <FlexItem>
             <DescriptionList
@@ -134,7 +140,8 @@ const SnapshotOverviewTab: React.FC = () => {
             </DescriptionList>
           </FlexItem>
         </Flex>
-      </Flex>
+        </Flex>
+      </ChatContextTarget>
       <div id="snapshot-components" className="pf-vf-u-mt-lg">
         <FilterContextProvider filterParams={['name']}>
           <SnapshotComponentsList

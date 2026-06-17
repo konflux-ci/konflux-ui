@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Bullseye, ButtonVariant, Spinner, Text, TextVariants } from '@patternfly/react-core';
 import isFunction from 'lodash/isFunction';
 import isObject from 'lodash/isObject';
+import { ChatContextTarget } from '~/components/AIChat';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { getErrorState } from '~/shared/utils/error-utils';
 import pipelineImg from '../../../assets/Pipeline.svg';
@@ -72,35 +73,41 @@ const ComponentDetailsView: React.FC = () => {
         data-test="component-details-test-id"
         headTitle={component.spec.componentName}
         preComponent={
-          <GettingStartedCard
-            imgClassName="component-details__gs-image"
-            localStorageKey={COMPONENTS_GS_LOCAL_STORAGE_KEY}
-            title="For maximum security, upgrade the build pipeline plans for your component."
-            imgSrc={pipelineImg}
-            imgAlt="build pipeline plans"
-            isLight
+          <ChatContextTarget
+            id={`${componentName}-pipeline-upgrade`}
+            label="Build pipeline upgrade"
+            description="Recommendation to upgrade build pipeline plans for added security"
           >
-            <div>
-              Using the Advanced or Custom build pipeline, you can enable all additional tasks for
-              added security.
-            </div>
-            <ButtonWithAccessTooltip
-              className="pf-u-mt-xl"
-              variant={ButtonVariant.secondary}
-              isDisabled={!canPatchComponent}
-              tooltip="You don't have access to edit the build pipeline plan"
-              onClick={() =>
-                showModal(
-                  createCustomizeComponentPipelineModalLauncher(
-                    component.metadata.name,
-                    component.metadata.namespace,
-                  ),
-                )
-              }
+            <GettingStartedCard
+              imgClassName="component-details__gs-image"
+              localStorageKey={COMPONENTS_GS_LOCAL_STORAGE_KEY}
+              title="For maximum security, upgrade the build pipeline plans for your component."
+              imgSrc={pipelineImg}
+              imgAlt="build pipeline plans"
+              isLight
             >
-              Edit build pipeline plan
-            </ButtonWithAccessTooltip>
-          </GettingStartedCard>
+              <div>
+                Using the Advanced or Custom build pipeline, you can enable all additional tasks for
+                added security.
+              </div>
+              <ButtonWithAccessTooltip
+                className="pf-u-mt-xl"
+                variant={ButtonVariant.secondary}
+                isDisabled={!canPatchComponent}
+                tooltip="You don't have access to edit the build pipeline plan"
+                onClick={() =>
+                  showModal(
+                    createCustomizeComponentPipelineModalLauncher(
+                      component.metadata.name,
+                      component.metadata.namespace,
+                    ),
+                  )
+                }
+              >
+                Edit build pipeline plan
+              </ButtonWithAccessTooltip>
+            </GettingStartedCard>
+          </ChatContextTarget>
         }
         breadcrumbs={[
           ...applicationBreadcrumbs,

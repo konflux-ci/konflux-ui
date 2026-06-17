@@ -11,6 +11,7 @@ import { ACTIVITY_PATH_LATEST_COMMIT, COMMIT_DETAILS_PATH } from '../../../route
 import { RouterParams } from '../../../routes/utils';
 import ErrorEmptyState from '../../../shared/components/empty-state/ErrorEmptyState';
 import { createCommitObjectFromPLR, getCommitShortName } from '../../../utils/commits-utils';
+import { ChatContextTarget } from '../../AIChat';
 import { useApplicationBreadcrumbs } from '../../Applications/breadcrumbs/breadcrumb-utils';
 import { DetailsPage } from '../../DetailsPage';
 import SidePanelHost from '../../SidePanel/SidePanelHost';
@@ -95,7 +96,13 @@ const CommitDetailsView: React.FC = () => {
               <CommitIcon isPR={commit.isPullRequest} className="commit-details__title-icon" />{' '}
               <b>{commit.shaTitle}</b>
             </span>
-            <StatusIconWithTextLabel status={commitStatus} />
+            <ChatContextTarget
+              id={`${commitName}-status`}
+              label="Commit status"
+              description="Current commit build and test status"
+            >
+              <StatusIconWithTextLabel status={commitStatus} />
+            </ChatContextTarget>
             <FeatureFlagIndicator flags={['pipelineruns-kubearchive']} />
           </Text>
         }

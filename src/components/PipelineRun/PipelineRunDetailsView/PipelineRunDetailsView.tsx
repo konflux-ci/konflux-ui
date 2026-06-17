@@ -20,6 +20,7 @@ import { isResourceEnterpriseContract } from '../../../utils/conforma-utils';
 import { pipelineRunCancel, pipelineRunStop } from '../../../utils/pipeline-actions';
 import { isTaskRunInPipelineRun, pipelineRunStatus } from '../../../utils/pipeline-utils';
 import { useAccessReviewForModel } from '../../../utils/rbac';
+import { ChatContextTarget } from '../../AIChat';
 import { useApplicationBreadcrumbs } from '../../Applications/breadcrumbs/breadcrumb-utils';
 import { DetailsPage } from '../../DetailsPage';
 import { StatusIconWithTextLabel } from '../../StatusIcon/StatusIcon';
@@ -111,7 +112,15 @@ export const PipelineRunDetailsView: React.FC = () => {
       title={
         <>
           <span className="pf-v5-u-mr-sm">{pipelineRunName}</span>
-          <StatusIconWithTextLabel status={plrStatus} />
+          <ChatContextTarget
+            id={`${pipelineRunName}-status`}
+            label="Pipeline run status"
+            description="Current pipeline run phase and conditions"
+          >
+            <span>
+              <StatusIconWithTextLabel status={plrStatus} />
+            </span>
+          </ChatContextTarget>
         </>
       }
       actions={[

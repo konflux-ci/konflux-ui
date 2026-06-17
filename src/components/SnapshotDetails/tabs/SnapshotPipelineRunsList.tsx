@@ -1,8 +1,10 @@
 import * as React from 'react';
 import { Bullseye, Spinner, Title } from '@patternfly/react-core';
+import { ChatContextTarget, withChatContextRowPropsIfEnabled } from '~/components/AIChat';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { createFilterObj } from '~/components/Filter/utils/filter-utils';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
+import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import {
   PIPELINE_RUN_COLUMNS_DEFINITIONS,
   DEFAULT_VISIBLE_PIPELINE_RUN_COLUMNS_SNAPSHOT_CONTEXT,
@@ -31,6 +33,7 @@ import { PipelineRunListRowWithColumns } from '../../PipelineRun/PipelineRunList
 type SnapshotPipelineRunListProps = {
   snapshotPipelineRuns: PipelineRunKind[];
   applicationName: string;
+  snapshotName: string;
   loaded: boolean;
   getNextPage;
   customFilter?: (plr: PipelineRunKind) => boolean;
@@ -39,11 +42,14 @@ type SnapshotPipelineRunListProps = {
 const SnapshotPipelineRunsList: React.FC<React.PropsWithChildren<SnapshotPipelineRunListProps>> = ({
   snapshotPipelineRuns,
   applicationName,
+  snapshotName,
   loaded,
   getNextPage,
   nextPageProps,
   customFilter,
 }) => {
+  const isChatEnabled = useIsOnFeatureFlag('ai-chat');
+  const tableContextId = `snapshot-pipeline-runs-${snapshotName}`;
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
   const filters: PipelineRunsFilterState = useDeepCompareMemoize({
     name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
@@ -133,38 +139,53 @@ const SnapshotPipelineRunsList: React.FC<React.PropsWithChildren<SnapshotPipelin
           totalColumns={PIPELINE_RUN_COLUMNS_DEFINITIONS.length}
         />
       )}
-      <Table
-        key={`${snapshotPipelineRuns.length}-${vulnerabilities.fetchedPipelineRuns.length}`}
-        data={filteredPLRs}
-        aria-label="Pipeline run List"
-        customData={vulnerabilities}
-        Header={getPipelineRunListHeader(safeVisibleColumns)}
-        Row={(props) => (
-          <PipelineRunListRowWithColumns
-            obj={props.obj as PipelineRunKind}
-            columns={props.columns || []}
-            customData={vulnerabilities}
-            index={props.index}
-            visibleColumns={safeVisibleColumns}
-          />
-        )}
-        unfilteredData={snapshotPipelineRuns}
-        EmptyMsg={isFiltered ? EmptyMsg : NoDataEmptyMsg}
-        loaded
-        getRowProps={(obj: PipelineRunKind) => ({
-          id: obj.metadata.name,
-        })}
-        isInfiniteLoading
-        infiniteLoaderProps={{
-          isRowLoaded: (args) => {
-            return !!filteredPLRs[args.index];
-          },
-          loadMoreRows: () => {
-            nextPageProps.hasNextPage && !nextPageProps.isFetchingNextPage && getNextPage?.();
-          },
-          rowCount: nextPageProps.hasNextPage ? filteredPLRs.length + 1 : filteredPLRs.length,
-        }}
-      />
+      <ChatContextTarget
+        id={tableContextId}
+        label="Snapshot pipeline runs table"
+        description="Pipeline runs associated with this snapshot"
+      >
+        <Table
+          key={`${snapshotPipelineRuns.length}-${vulnerabilities.fetchedPipelineRuns.length}`}
+          data={filteredPLRs}
+          aria-label="Pipeline run List"
+          customData={vulnerabilities}
+          Header={getPipelineRunListHeader(safeVisibleColumns)}
+          Row={(props) => (
+            <PipelineRunListRowWithColumns
+              obj={props.obj as PipelineRunKind}
+              columns={props.columns || []}
+              customData={vulnerabilities}
+              index={props.index}
+              visibleColumns={safeVisibleColumns}
+            />
+          )}
+          unfilteredData={snapshotPipelineRuns}
+          EmptyMsg={isFiltered ? EmptyMsg : NoDataEmptyMsg}
+          loaded
+          getRowProps={(obj: PipelineRunKind) =>
+            withChatContextRowPropsIfEnabled(
+              isChatEnabled,
+              { id: obj.metadata.name },
+              {
+                id: `snapshot-pipeline-run-row-${snapshotName}-${obj.metadata.name}`,
+                label: obj.metadata.name,
+                description: 'Snapshot pipeline run table row',
+                parentContextId: tableContextId,
+              },
+            )
+          }
+          isInfiniteLoading
+          infiniteLoaderProps={{
+            isRowLoaded: (args) => {
+              return !!filteredPLRs[args.index];
+            },
+            loadMoreRows: () => {
+              nextPageProps.hasNextPage && !nextPageProps.isFetchingNextPage && getNextPage?.();
+            },
+            rowCount: nextPageProps.hasNextPage ? filteredPLRs.length + 1 : filteredPLRs.length,
+          }}
+        />
+      </ChatContextTarget>
       <ColumnManagement<PipelineRunColumnKeys>
         isOpen={isColumnManagementOpen}
         onClose={() => setIsColumnManagementOpen(false)}

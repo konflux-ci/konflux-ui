@@ -172,6 +172,7 @@ const TestedComponent = ({ name, pipelineruns, loaded }) => (
   <FilterContextProvider filterParams={['name', 'status', 'type']}>
     <SnapshotPipelineRunsList
       applicationName={name}
+      snapshotName="test-snapshot"
       getNextPage={null}
       snapshotPipelineRuns={pipelineruns}
       loaded={loaded}

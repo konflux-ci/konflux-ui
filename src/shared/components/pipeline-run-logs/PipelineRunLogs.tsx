@@ -2,6 +2,13 @@ import * as React from 'react';
 import { Nav, NavItem, NavList } from '@patternfly/react-core';
 import { css } from '@patternfly/react-styles';
 import get from 'lodash/get';
+import {
+  CONTEXT_DESCRIPTION_ATTR,
+  CONTEXT_ID_ATTR,
+  CONTEXT_LABEL_ATTR,
+  CONTEXT_TARGET_ATTR,
+  CONTEXT_TARGET_CLASS,
+} from '~/consts/ai-chat-context';
 import { PipelineRunLabel, runStatus } from '~/consts/pipelinerun';
 import { ColoredStatusIcon } from '../../../components/topology/StatusIcon';
 import { PodGroupVersionKind } from '../../../models/pod';
@@ -141,6 +148,25 @@ class PipelineRunLogs extends React.Component<PipelineRunLogsProps, PipelineRunL
     });
   };
 
+  getContextId = (pipelineRunName: string, suffix: string) =>
+    `${pipelineRunName}-${suffix}`.replace(/[^a-zA-Z0-9-_]/g, '-').replace(/-+/g, '-');
+
+  getTaskContextProps = (pipelineRunName: string, taskRunName: string, label: string) => ({
+    [CONTEXT_TARGET_ATTR]: 'true',
+    [CONTEXT_ID_ATTR]: this.getContextId(pipelineRunName, `task-${taskRunName}`),
+    [CONTEXT_LABEL_ATTR]: label,
+    [CONTEXT_DESCRIPTION_ATTR]: 'Pipeline task',
+    className: `pipeline-run-logs__namespan ${CONTEXT_TARGET_CLASS}`,
+  });
+
+  getLogViewerContextProps = (pipelineRunName: string, taskLabel: string) => ({
+    [CONTEXT_TARGET_ATTR]: 'true',
+    [CONTEXT_ID_ATTR]: this.getContextId(pipelineRunName, `log-${taskLabel}`),
+    [CONTEXT_LABEL_ATTR]: `${taskLabel} logs`,
+    [CONTEXT_DESCRIPTION_ATTR]: 'Task log output',
+    className: `pipeline-run-logs__container ${CONTEXT_TARGET_CLASS}`,
+  });
+
   render() {
     const { className, obj, taskRuns } = this.props;
     const { activeItem } = this.state;
@@ -187,6 +213,9 @@ class PipelineRunLogs extends React.Component<PipelineRunLogsProps, PipelineRunL
       }
     };
 
+    const pipelineRunName = obj.metadata?.name ?? 'pipeline-run';
+    const activeTaskLabel = this.getTaskRunLabel(activeTaskRun, activeItem ?? '') || taskName;
+
     return (
       <div className={css('pipeline-run-logs', className)}>
         <div className="pipeline-run-logs__tasklist" data-test="logs-tasklist">
@@ -204,7 +233,13 @@ class PipelineRunLogs extends React.Component<PipelineRunLogsProps, PipelineRunL
                     >
                       <span ref={activeItem === taskRunName ? selectedItemRef : undefined}>
                         <ColoredStatusIcon status={taskRunStatus(taskRun)} />
-                        <span className="pipeline-run-logs__namespan">
+                        <span
+                          {...this.getTaskContextProps(
+                            pipelineRunName,
+                            taskRunName,
+                            this.getTaskRunLabel(taskRun, taskRunName) || taskRunName,
+                          )}
+                        >
                           {this.getTaskRunLabel(taskRun, taskRunName) || '-'}
                         </span>
                       </span>
@@ -217,7 +252,7 @@ class PipelineRunLogs extends React.Component<PipelineRunLogsProps, PipelineRunL
             <div className="pipeline-run-logs__nav">{'No task runs found'}</div>
           )}
         </div>
-        <div className="pipeline-run-logs__container">
+        <div {...this.getLogViewerContextProps(pipelineRunName, activeTaskLabel)}>
           {activeItem && resource ? (
             <LogsWrapperComponent
               resource={resource}

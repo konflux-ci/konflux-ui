@@ -1,8 +1,10 @@
 import * as React from 'react';
 import { useParams } from 'react-router-dom';
 import { Bullseye, Spinner, Stack, Title } from '@patternfly/react-core';
+import { ChatContextTarget, withChatContextRowPropsIfEnabled } from '~/components/AIChat';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { createFilterObj } from '~/components/Filter/utils/filter-utils';
+import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { usePipelineRunsForCommitV2 } from '~/hooks/usePipelineRunsForCommitV2';
 import { useDeepCompareMemoize } from '~/k8s/hooks/useK8sQueryWatch';
 import { getErrorState } from '~/shared/utils/error-utils';
@@ -36,6 +38,8 @@ import { PipelineRunListRowWithColumns } from '../../../PipelineRun/PipelineRunL
 const CommitsPipelineRunTab: React.FC = () => {
   const { applicationName, commitName } = useParams<RouterParams>();
   const namespace = useNamespace();
+  const isChatEnabled = useIsOnFeatureFlag('ai-chat');
+  const tableContextId = `commit-pipeline-runs-${commitName}`;
   const [
     testPipelineRuns,
     testPlrLoaded,
@@ -153,48 +157,63 @@ const CommitsPipelineRunTab: React.FC = () => {
             totalColumns={PIPELINE_RUN_COLUMNS_DEFINITIONS.length}
           />
         )}
-        <Table
-          key={`${pipelineRuns.length}-${vulnerabilities.fetchedPipelineRuns.length}`}
-          unfilteredData={pipelineRuns}
-          data={filteredPLRs}
-          aria-label="Pipelinerun List"
-          Header={getPipelineRunListHeader(safeVisibleColumns)}
-          loaded={isFetchingNextPage || pipelineRunsLoaded}
-          customData={vulnerabilities}
-          EmptyMsg={isFiltered ? EmptyMsg : NoDataEmptyMsg}
-          NoDataEmptyMsg={NoDataEmptyMsg}
-          Row={(props) => (
-            <PipelineRunListRowWithColumns
-              obj={props.obj as PipelineRunKind}
-              columns={props.columns || []}
-              customData={vulnerabilities}
-              index={props.index}
-              visibleColumns={safeVisibleColumns}
-            />
-          )}
-          getRowProps={(obj: PipelineRunKind) => ({
-            id: obj.metadata.name,
-          })}
-          isInfiniteLoading
-          infiniteLoaderProps={{
-            isRowLoaded: (args) => {
-              return !!filteredPLRs[args.index];
-            },
-            loadMoreRows: () => {
-              if (testPlrHasNextPage && !testPlrIsFetchingNextPage && testPlrLoaded) {
-                testPlrGetNextPage?.();
-              } else if (
-                testPlrLoaded &&
-                !testPlrHasNextPage &&
-                buildPlrHasNextPage &&
-                !buildPlrIsFetchingNextPage
-              ) {
-                buildPlrGetNextPage?.();
-              }
-            },
-            rowCount: hasNextPage ? filteredPLRs.length + 1 : filteredPLRs.length,
-          }}
-        />
+        <ChatContextTarget
+          id={tableContextId}
+          label="Commit pipeline runs table"
+          description="Pipeline runs triggered by this commit"
+        >
+          <Table
+            key={`${pipelineRuns.length}-${vulnerabilities.fetchedPipelineRuns.length}`}
+            unfilteredData={pipelineRuns}
+            data={filteredPLRs}
+            aria-label="Pipelinerun List"
+            Header={getPipelineRunListHeader(safeVisibleColumns)}
+            loaded={isFetchingNextPage || pipelineRunsLoaded}
+            customData={vulnerabilities}
+            EmptyMsg={isFiltered ? EmptyMsg : NoDataEmptyMsg}
+            NoDataEmptyMsg={NoDataEmptyMsg}
+            Row={(props) => (
+              <PipelineRunListRowWithColumns
+                obj={props.obj as PipelineRunKind}
+                columns={props.columns || []}
+                customData={vulnerabilities}
+                index={props.index}
+                visibleColumns={safeVisibleColumns}
+              />
+            )}
+            getRowProps={(obj: PipelineRunKind) =>
+              withChatContextRowPropsIfEnabled(
+                isChatEnabled,
+                { id: obj.metadata.name },
+                {
+                  id: `commit-pipeline-run-row-${commitName}-${obj.metadata.name}`,
+                  label: obj.metadata.name,
+                  description: 'Pipeline run table row',
+                  parentContextId: tableContextId,
+                },
+              )
+            }
+            isInfiniteLoading
+            infiniteLoaderProps={{
+              isRowLoaded: (args) => {
+                return !!filteredPLRs[args.index];
+              },
+              loadMoreRows: () => {
+                if (testPlrHasNextPage && !testPlrIsFetchingNextPage && testPlrLoaded) {
+                  testPlrGetNextPage?.();
+                } else if (
+                  testPlrLoaded &&
+                  !testPlrHasNextPage &&
+                  buildPlrHasNextPage &&
+                  !buildPlrIsFetchingNextPage
+                ) {
+                  buildPlrGetNextPage?.();
+                }
+              },
+              rowCount: hasNextPage ? filteredPLRs.length + 1 : filteredPLRs.length,
+            }}
+          />
+        </ChatContextTarget>
         {isFetchingNextPage ? (
           <Stack style={{ marginTop: 'var(--pf-v5-global--spacer--md)' }} hasGutter>
             <Bullseye>

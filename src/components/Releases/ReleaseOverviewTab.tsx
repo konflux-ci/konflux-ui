@@ -11,6 +11,7 @@ import {
   Spinner,
   Title,
 } from '@patternfly/react-core';
+import { ChatContextTarget } from '~/components/AIChat';
 import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { useRelease } from '../../hooks/useReleases';
@@ -52,7 +53,12 @@ const ReleaseOverviewTab: React.FC = () => {
       <Title headingLevel="h4" className="pf-v5-c-title pf-v5-u-mt-lg pf-v5-u-mb-lg" size="lg">
         Release details
       </Title>
-      <Flex className="pf-v5-u-py-lg">
+      <ChatContextTarget
+        id={`${releaseName}-overview`}
+        label="Release details"
+        description="Release metadata and status"
+      >
+        <Flex className="pf-v5-u-py-lg">
         <FlexItem flex={{ default: 'flex_3' }}>
           <DescriptionList
             data-test="release-details"
@@ -139,7 +145,8 @@ const ReleaseOverviewTab: React.FC = () => {
             </DescriptionList>
           </FlexItem>
         </Flex>
-      </Flex>
+        </Flex>
+      </ChatContextTarget>
     </>
   );
 };

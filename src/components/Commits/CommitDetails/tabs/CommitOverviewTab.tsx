@@ -11,6 +11,7 @@ import {
   Spinner,
   Text,
 } from '@patternfly/react-core';
+import { ChatContextTarget } from '~/components/AIChat';
 import { usePipelineRunsForCommitV2 } from '~/hooks/usePipelineRunsForCommitV2';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { PipelineRunType } from '../../../../consts/pipelinerun';
@@ -63,8 +64,19 @@ const CommitOverviewTab: React.FC = () => {
   return (
     <>
       <Text className="pf-v5-u-my-lg">Events progression triggered by the commit.</Text>
-      <CommitVisualization commit={commit} />
-      <Flex className="pf-v5-u-py-lg">
+      <ChatContextTarget
+        id={`${commitName}-workflow`}
+        label="Commit workflow"
+        description="Events progression triggered by the commit"
+      >
+        <CommitVisualization commit={commit} />
+      </ChatContextTarget>
+      <ChatContextTarget
+        id={`${commitName}-details`}
+        label="Commit details"
+        description="Commit metadata and components"
+      >
+        <Flex className="pf-v5-u-py-lg">
         <FlexItem flex={{ default: 'flex_3' }}>
           <DescriptionList
             data-test="commit-details"
@@ -149,7 +161,8 @@ const CommitOverviewTab: React.FC = () => {
             </DescriptionList>
           </FlexItem>
         </Flex>
-      </Flex>
+        </Flex>
+      </ChatContextTarget>
     </>
   );
 };

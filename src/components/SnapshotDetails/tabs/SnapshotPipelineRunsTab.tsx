@@ -78,6 +78,7 @@ const SnapshotPipelineRunTab: React.FC = () => {
         snapshotPipelineRuns={sortedPipelineRuns}
         loaded={allLoaded}
         applicationName={applicationName}
+        snapshotName={snapshotName}
         getNextPage={getNextPage}
         nextPageProps={nextPageProps}
       />

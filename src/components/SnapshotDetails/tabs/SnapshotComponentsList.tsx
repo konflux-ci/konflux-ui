@@ -1,7 +1,11 @@
 import * as React from 'react';
+import { useParams } from 'react-router-dom';
 import { PageSection, PageSectionVariants, Text, Title } from '@patternfly/react-core';
+import { ChatContextTarget, withChatContextRowPropsIfEnabled } from '~/components/AIChat';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
+import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
+import { RouterParams } from '~/routes/utils';
 import { filterByText } from '~/utils/text-filter-utils';
 import { Table, useDeepCompareMemoize } from '../../../shared';
 import FilteredEmptyState from '../../../shared/components/empty-state/FilteredEmptyState';
@@ -19,6 +23,9 @@ const SnapshotComponentsList: React.FC<React.PropsWithChildren<SnapshotComponent
   applicationName,
   components,
 }) => {
+  const { snapshotName } = useParams<RouterParams>();
+  const isChatEnabled = useIsOnFeatureFlag('ai-chat');
+  const tableContextId = `snapshot-components-${snapshotName}`;
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
   const filters = useDeepCompareMemoize({
     name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
@@ -49,16 +56,31 @@ const SnapshotComponentsList: React.FC<React.PropsWithChildren<SnapshotComponent
               dataTest="component-list-toolbar"
             />
             {filteredComponents.length > 0 ? (
-              <Table
-                data={filteredComponents}
-                aria-label="Component List"
-                Header={SnapshotComponentsListHeader}
-                Row={SnapshotComponentsListRow}
-                loaded
-                getRowProps={(obj: ComponentKind) => ({
-                  id: obj.metadata.uid,
-                })}
-              />
+              <ChatContextTarget
+                id={tableContextId}
+                label="Snapshot components table"
+                description="Component builds included in this snapshot"
+              >
+                <Table
+                  data={filteredComponents}
+                  aria-label="Component List"
+                  Header={SnapshotComponentsListHeader}
+                  Row={SnapshotComponentsListRow}
+                  loaded
+                  getRowProps={(obj: ComponentKind) =>
+                    withChatContextRowPropsIfEnabled(
+                      isChatEnabled,
+                      { id: obj.metadata.uid },
+                      {
+                        id: `snapshot-component-row-${snapshotName}-${obj.metadata.name}`,
+                        label: obj.metadata.name,
+                        description: 'Snapshot component table row',
+                        parentContextId: tableContextId,
+                      },
+                    )
+                  }
+                />
+              </ChatContextTarget>
             ) : (
               <FilteredEmptyState onClearFilters={() => onClearFilters()} />
             )}

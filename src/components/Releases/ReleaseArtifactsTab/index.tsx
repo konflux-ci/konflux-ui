@@ -2,6 +2,8 @@ import * as React from 'react';
 import { useParams } from 'react-router-dom';
 import { Bullseye, debounce, Spinner, Stack, StackItem, Title } from '@patternfly/react-core';
 import { SortByDirection } from '@patternfly/react-table';
+import { ChatContextTarget, withChatContextRowPropsIfEnabled } from '~/components/AIChat';
+import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { filterByText } from '~/utils/text-filter-utils';
 import { useRelease } from '../../../hooks/useReleases';
 import { useSearchParam } from '../../../hooks/useSearchParam';
@@ -30,6 +32,7 @@ const sortPaths: Record<SortableHeaders, string> = {
 const ReleaseArtifactsTab: React.FC = () => {
   const { releaseName } = useParams<RouterParams>();
   const namespace = useNamespace();
+  const isChatEnabled = useIsOnFeatureFlag('ai-chat');
   const [release, releaseLoaded] = useRelease(namespace, releaseName);
 
   const [activeSortIndex, setActiveSortIndex] = React.useState<number>(
@@ -83,42 +86,65 @@ const ReleaseArtifactsTab: React.FC = () => {
       <DetailsSection title="Release artifacts">
         <Stack style={{ marginTop: 'var(--pf-v5-global--spacer--2xl)' }}>
           <StackItem>
-            <ReleaseURLsDescriptionList release={release} />
+            <ChatContextTarget
+              id={`${releaseName}-artifact-urls`}
+              label="Release artifact URLs"
+              description="Published release URLs"
+            >
+              <ReleaseURLsDescriptionList release={release} />
+            </ChatContextTarget>
           </StackItem>
           <StackItem style={{ paddingTop: 'var(--pf-v5-global--spacer--xl)' }}>
             <Title headingLevel="h5" size="md">
               Components
             </Title>
-            <Table
-              virtualize
-              data={filteredArtifactsImages}
-              unfilteredData={sortedArtifactsImages}
-              NoDataEmptyMsg={ReleaseArtifactsEmptyState}
-              aria-label="Release Artifacts List"
-              Header={ArtifactsListHeader}
-              Toolbar={
-                <ReleaseArtifactsToolbar
-                  value={nameFilter}
-                  onSearchInputChange={handleNameFilterChange}
-                />
-              }
-              Row={(props) => {
-                const obj = props.obj as ReleaseArtifactsImages;
-                return <ReleaseArtifactsListRow {...props} obj={obj} />;
-              }}
-              loaded={releaseLoaded}
-              getRowProps={(obj: ReleaseArtifactsImages) => ({
-                id: `${obj.name}-release-artifacts-list-item`,
-                'aria-label': obj.name,
-              })}
-              expand
-              ExpandedContent={(props) => {
-                const releaseArtifactImage = props.obj as ReleaseArtifactsImages;
-                return (
-                  <ReleaseArtifactsListExpandedRow releaseArtifactImage={releaseArtifactImage} />
-                );
-              }}
-            />
+            <ChatContextTarget
+              id={`${releaseName}-artifact-components`}
+              label="Release artifact components"
+              description="Container images included in this release"
+            >
+              <Table
+                virtualize
+                data={filteredArtifactsImages}
+                unfilteredData={sortedArtifactsImages}
+                NoDataEmptyMsg={ReleaseArtifactsEmptyState}
+                aria-label="Release Artifacts List"
+                Header={ArtifactsListHeader}
+                Toolbar={
+                  <ReleaseArtifactsToolbar
+                    value={nameFilter}
+                    onSearchInputChange={handleNameFilterChange}
+                  />
+                }
+                Row={(props) => {
+                  const obj = props.obj as ReleaseArtifactsImages;
+                  return <ReleaseArtifactsListRow {...props} obj={obj} />;
+                }}
+                loaded={releaseLoaded}
+                getRowProps={(obj: ReleaseArtifactsImages) =>
+                  withChatContextRowPropsIfEnabled(
+                    isChatEnabled,
+                    {
+                      id: `${obj.name}-release-artifacts-list-item`,
+                      'aria-label': obj.name,
+                    },
+                    {
+                      id: `release-artifact-row-${releaseName}-${obj.name}`,
+                      label: obj.name,
+                      description: 'Release artifact component row',
+                      parentContextId: `${releaseName}-artifact-components`,
+                    },
+                  )
+                }
+                expand
+                ExpandedContent={(props) => {
+                  const releaseArtifactImage = props.obj as ReleaseArtifactsImages;
+                  return (
+                    <ReleaseArtifactsListExpandedRow releaseArtifactImage={releaseArtifactImage} />
+                  );
+                }}
+              />
+            </ChatContextTarget>
           </StackItem>
 
           <StackItem>
