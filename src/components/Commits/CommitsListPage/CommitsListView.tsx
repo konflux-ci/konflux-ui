@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Bullseye, Spinner } from '@patternfly/react-core';
 import { SortByDirection } from '@patternfly/react-table';
+import { ChatContextTarget, withChatContextRowProps } from '~/components/AIChat';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { MultiSelect } from '~/components/Filter/generic/MultiSelect';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
@@ -286,40 +287,54 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
 
   return (
     <>
-      <Table
-        virtualize
-        data={sortedCommits}
-        unfilteredData={commits}
-        EmptyMsg={EmptyMessage}
-        NoDataEmptyMsg={NoDataEmptyMessage}
-        Toolbar={DataToolbar}
-        aria-label="Commit List"
-        Header={CommitsListHeaderWithSorting}
-        Row={(props) => {
-          const commit = props.obj as Commit;
-          return (
-            <CommitsListRow
-              obj={props.obj as Commit}
-              visibleColumns={visibleColumns}
-              status={commitStatusMap[commit.sha] || runStatus.Unknown}
-            />
-          );
-        }}
-        loaded={loaded && !(hasNextPage && buildPipelineRuns?.length === 0)}
-        getRowProps={(obj: Commit) => ({
-          id: obj.sha,
-        })}
-        onRowsRendered={({ stopIndex }) => {
-          if (
-            loaded &&
-            stopIndex === sortedCommits.length - 1 &&
-            hasNextPage &&
-            !isFetchingNextPage
-          ) {
-            getNextPage?.();
+      <ChatContextTarget
+        id={`commits-${applicationName}${componentName ? `-${componentName}` : ''}`}
+        label="Commits table"
+        description="Latest commits for this application"
+      >
+        <Table
+          virtualize
+          data={sortedCommits}
+          unfilteredData={commits}
+          EmptyMsg={EmptyMessage}
+          NoDataEmptyMsg={NoDataEmptyMessage}
+          Toolbar={DataToolbar}
+          aria-label="Commit List"
+          Header={CommitsListHeaderWithSorting}
+          Row={(props) => {
+            const commit = props.obj as Commit;
+            return (
+              <CommitsListRow
+                obj={props.obj as Commit}
+                visibleColumns={visibleColumns}
+                status={commitStatusMap[commit.sha] || runStatus.Unknown}
+              />
+            );
+          }}
+          loaded={loaded && !(hasNextPage && buildPipelineRuns?.length === 0)}
+          getRowProps={(obj: Commit) =>
+            withChatContextRowProps(
+              { id: obj.sha },
+              {
+                id: `commit-row-${obj.sha}`,
+                label: obj.shaTitle || obj.sha.slice(0, 7),
+                description: 'Commit table row',
+                parentContextId: `commits-${applicationName}${componentName ? `-${componentName}` : ''}`,
+              },
+            )
           }
-        }}
-      />
+          onRowsRendered={({ stopIndex }) => {
+            if (
+              loaded &&
+              stopIndex === sortedCommits.length - 1 &&
+              hasNextPage &&
+              !isFetchingNextPage
+            ) {
+              getNextPage?.();
+            }
+          }}
+        />
+      </ChatContextTarget>
       <ColumnManagement<CommitColumnKeys>
         isOpen={isColumnManagementOpen}
         onClose={() => setIsColumnManagementOpen(false)}

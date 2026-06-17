@@ -9,6 +9,7 @@ import {
   Title,
   EmptyStateActions,
 } from '@patternfly/react-core';
+import { ChatContextTarget, withChatContextRowProps } from '~/components/AIChat';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 import { getErrorState } from '~/shared/utils/error-utils';
@@ -129,22 +130,36 @@ const IntegrationTestsListView: React.FC<React.PropsWithChildren> = () => {
           Add an integration test to test all your components after you commit code.
         </Text>
       </TextContent>
-      <Table
-        virtualize={false}
-        data-test="integration-tests__table"
-        data={filteredIntegrationTests}
-        unfilteredData={integrationTests}
-        aria-label="Integration tests"
-        EmptyMsg={EmptyMsg}
-        NoDataEmptyMsg={NoDataEmptyMsg}
-        Toolbar={DataToolbar}
-        Header={IntegrationTestListHeader}
-        Row={IntegrationTestListRow}
-        loaded={integrationTestsLoaded}
-        getRowProps={(obj: IntegrationTestScenarioKind) => ({
-          id: obj.metadata.name,
-        })}
-      />
+      <ChatContextTarget
+        id={`integration-tests-${applicationName}`}
+        label="Integration tests table"
+        description="All integration tests for this application"
+      >
+        <Table
+          virtualize={false}
+          data-test="integration-tests__table"
+          data={filteredIntegrationTests}
+          unfilteredData={integrationTests}
+          aria-label="Integration tests"
+          EmptyMsg={EmptyMsg}
+          NoDataEmptyMsg={NoDataEmptyMsg}
+          Toolbar={DataToolbar}
+          Header={IntegrationTestListHeader}
+          Row={IntegrationTestListRow}
+          loaded={integrationTestsLoaded}
+          getRowProps={(obj: IntegrationTestScenarioKind) =>
+            withChatContextRowProps(
+              { id: obj.metadata.name },
+              {
+                id: `integration-test-row-${obj.metadata.name}`,
+                label: obj.metadata.name,
+                description: 'Integration test table row',
+                parentContextId: `integration-tests-${applicationName}`,
+              },
+            )
+          }
+        />
+      </ChatContextTarget>
     </>
   );
 };

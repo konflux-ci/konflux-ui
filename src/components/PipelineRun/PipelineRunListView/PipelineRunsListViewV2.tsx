@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { Bullseye, Flex, Spinner, Stack } from '@patternfly/react-core';
+import { ChatContextTarget, withChatContextRowProps } from '~/components/AIChat';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import PipelineRunsFilterToolbar from '~/components/Filter/toolbars/PipelineRunsFilterToolbar';
 import { createFilterObj } from '~/components/Filter/utils/filter-utils';
@@ -164,38 +165,52 @@ const PipelineRunsListViewV2: React.FC<React.PropsWithChildren<PipelineRunsListV
           totalColumns={PIPELINE_RUN_COLUMNS_DEFINITIONS.length}
         />
       )}
-      <Table
-        data={filteredPLRs}
-        unfilteredData={sortedPipelineRuns}
-        EmptyMsg={isFiltered ? EmptyMsg : NoDataEmptyMsg}
-        aria-label="Pipeline run List"
-        customData={vulnerabilities}
-        Header={getPipelineRunListHeader(visibleColumns)}
-        Row={(props) => (
-          // TODO: use new rows which use the new component model
-          <PipelineRunListRowWithColumns
-            obj={props.obj as PipelineRunKind}
-            columns={props.columns || []}
-            customData={vulnerabilities}
-            index={props.index}
-            visibleColumns={visibleColumns}
-          />
-        )}
-        loaded={isFetchingNextPage || plrLoaded}
-        getRowProps={(obj: PipelineRunKind) => ({
-          id: obj.metadata.name,
-        })}
-        isInfiniteLoading
-        infiniteLoaderProps={{
-          isRowLoaded: (args) => {
-            return !!filteredPLRs[args.index];
-          },
-          loadMoreRows: () => {
-            hasNextPage && !isFetchingNextPage && getNextPage?.();
-          },
-          rowCount: hasNextPage ? filteredPLRs.length + 1 : filteredPLRs.length,
-        }}
-      />
+      <ChatContextTarget
+        id={`pipeline-runs-${componentName}`}
+        label="Pipeline runs table"
+        description="All pipeline runs for this component"
+      >
+        <Table
+          data={filteredPLRs}
+          unfilteredData={sortedPipelineRuns}
+          EmptyMsg={isFiltered ? EmptyMsg : NoDataEmptyMsg}
+          aria-label="Pipeline run List"
+          customData={vulnerabilities}
+          Header={getPipelineRunListHeader(visibleColumns)}
+          Row={(props) => (
+            // TODO: use new rows which use the new component model
+            <PipelineRunListRowWithColumns
+              obj={props.obj as PipelineRunKind}
+              columns={props.columns || []}
+              customData={vulnerabilities}
+              index={props.index}
+              visibleColumns={visibleColumns}
+            />
+          )}
+          loaded={isFetchingNextPage || plrLoaded}
+          getRowProps={(obj: PipelineRunKind) =>
+            withChatContextRowProps(
+              { id: obj.metadata.name },
+              {
+                id: `pipeline-run-row-${obj.metadata.name}`,
+                label: obj.metadata.name,
+                description: 'Pipeline run table row',
+                parentContextId: `pipeline-runs-${componentName}`,
+              },
+            )
+          }
+          isInfiniteLoading
+          infiniteLoaderProps={{
+            isRowLoaded: (args) => {
+              return !!filteredPLRs[args.index];
+            },
+            loadMoreRows: () => {
+              hasNextPage && !isFetchingNextPage && getNextPage?.();
+            },
+            rowCount: hasNextPage ? filteredPLRs.length + 1 : filteredPLRs.length,
+          }}
+        />
+      </ChatContextTarget>
       {isFetchingNextPage ? (
         <Stack style={{ marginTop: 'var(--pf-v5-global--spacer--md)' }} hasGutter>
           <Bullseye>

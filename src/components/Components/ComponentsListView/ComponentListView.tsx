@@ -16,6 +16,7 @@ import {
   Title,
 } from '@patternfly/react-core';
 import { capitalize } from 'lodash-es';
+import { ChatContextTarget, withChatContextRowProps } from '~/components/AIChat';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { MultiSelect } from '~/components/Filter/generic/MultiSelect';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
@@ -299,25 +300,41 @@ const ComponentListView: React.FC<React.PropsWithChildren<ComponentListViewProps
           customize. Merge the pull request to set up a build pipeline for your component.
         </Alert>
       ) : null}
-      <div data-test="component-list">
-        <Table
-          virtualize={false}
-          data={filteredComponents}
-          unfilteredData={componentsWithLatestBuild}
-          EmptyMsg={EmptyMessage}
-          NoDataEmptyMsg={NoDataEmptyMessage}
-          Toolbar={toolbar}
-          aria-label="Components List"
-          Header={ComponentsListHeader}
-          Row={ComponentsListRow}
-          loaded={componentsLoaded}
-          customData={{ pipelineRunsLoaded }}
-          getRowProps={(obj: ComponentKind) => ({
-            id: `${obj.metadata.name}-component-list-item`,
-            'aria-label': obj.metadata.name,
-          })}
-        />
-      </div>
+      <ChatContextTarget
+        id={`components-${applicationName}`}
+        label="Components table"
+        description="All components in this application"
+      >
+        <div data-test="component-list">
+          <Table
+            virtualize={false}
+            data={filteredComponents}
+            unfilteredData={componentsWithLatestBuild}
+            EmptyMsg={EmptyMessage}
+            NoDataEmptyMsg={NoDataEmptyMessage}
+            Toolbar={toolbar}
+            aria-label="Components List"
+            Header={ComponentsListHeader}
+            Row={ComponentsListRow}
+            loaded={componentsLoaded}
+            customData={{ pipelineRunsLoaded }}
+            getRowProps={(obj: ComponentKind) =>
+              withChatContextRowProps(
+                {
+                  id: `${obj.metadata.name}-component-list-item`,
+                  'aria-label': obj.metadata.name,
+                },
+                {
+                  id: `component-row-${obj.metadata.name}`,
+                  label: obj.metadata.name,
+                  description: 'Component table row',
+                  parentContextId: `components-${applicationName}`,
+                },
+              )
+            }
+          />
+        </div>
+      </ChatContextTarget>
     </>
   );
 };

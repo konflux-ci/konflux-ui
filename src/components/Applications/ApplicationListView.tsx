@@ -21,6 +21,7 @@ import FilteredEmptyState from '../../shared/components/empty-state/FilteredEmpt
 import { useNamespace } from '../../shared/providers/Namespace';
 import { ApplicationKind } from '../../types';
 import { useAccessReviewForModel } from '../../utils/rbac';
+import { ChatContextTarget, withChatContextRowProps } from '../AIChat';
 import { ButtonWithAccessTooltip } from '../ButtonWithAccessTooltip';
 import { FilterContext } from '../Filter/generic/FilterContext';
 import { BaseTextFilterToolbar } from '../Filter/toolbars/BaseTextFIlterToolbar';
@@ -148,16 +149,30 @@ const ApplicationListView: React.FC<React.PropsWithChildren<unknown>> = () => {
                 </ButtonWithAccessTooltip>
               </BaseTextFilterToolbar>
               {sortedApplications.length !== 0 ? (
-                <Table
-                  data={sortedApplications}
-                  aria-label="Application List"
-                  Header={ApplicationListHeader}
-                  Row={ApplicationListRow}
-                  loaded
-                  getRowProps={(obj: ApplicationKind) => ({
-                    id: obj.metadata?.name,
-                  })}
-                />
+                <ChatContextTarget
+                  id="application-list"
+                  label="Applications list"
+                  description="List of applications in the workspace"
+                >
+                  <Table
+                    data={sortedApplications}
+                    aria-label="Application List"
+                    Header={ApplicationListHeader}
+                    Row={ApplicationListRow}
+                    loaded
+                    getRowProps={(obj: ApplicationKind) =>
+                      withChatContextRowProps(
+                        { id: obj.metadata?.name },
+                        {
+                          id: `application-row-${obj.metadata?.name}`,
+                          label: obj.spec.displayName ?? obj.metadata?.name ?? 'Application',
+                          description: 'Application table row',
+                          parentContextId: 'application-list',
+                        },
+                      )
+                    }
+                  />
+                </ChatContextTarget>
               ) : (
                 <FilteredEmptyState onClearFilters={() => onClearFilters()} />
               )}
