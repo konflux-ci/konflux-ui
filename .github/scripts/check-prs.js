@@ -211,6 +211,7 @@ const checkNeedsAuthorFollowupPRs = async () => {
           'github-actions',
           'fullsend-ai-review',
           'red-hat-konflux',
+          'fullsend-ai-coder'
         ].includes(login) || user.type === 'Bot'
       );
     };
