@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Flex, FlexItem, Label, pluralize } from '@patternfly/react-core';
 import { SortByDirection } from '@patternfly/react-table';
+import { ChatContextTarget, withChatContextRowPropsIfEnabled } from '~/components/AIChat';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { MENU_DIVIDER } from '~/components/Filter/generic/MultiSelect.tsx';
 import MonitoredReleasesFilterToolbar from '~/components/Filter/toolbars/MonitoredReleasesFilterToolbar';
@@ -11,6 +12,7 @@ import {
 } from '~/components/Filter/utils/monitoredreleases-filter-utils';
 import PageLayout from '~/components/PageLayout/PageLayout';
 import { PipelineRunLabel } from '~/consts/pipelinerun';
+import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { getReleaseStatus } from '~/hooks/useReleaseStatus';
 import { useSortedResources } from '~/hooks/useSortedResources';
 import { Table } from '~/shared';
@@ -34,6 +36,7 @@ const sortPaths: Record<SortableHeaders, string> = {
 };
 
 const ReleaseMonitorListView: React.FunctionComponent = () => {
+  const isChatEnabled = useIsOnFeatureFlag('ai-chat');
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
 
   const parseMonitoredFilters = (filters: FilterType): MonitoredReleasesFilterState => {
@@ -439,17 +442,35 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
         </>
       )}
 
-      <Table
-        virtualize
-        data={sortedFilteredData}
-        unfilteredData={sortedFilteredData}
-        EmptyMsg={EmptyMsg}
-        NoDataEmptyMsg={MonitoredReleaseEmptyState}
-        aria-label="Release List"
-        Header={ReleasesListHeader}
-        Row={ReleaseListRow}
-        loaded={!loading || releases.length > 0}
-      />
+      <ChatContextTarget
+        id="release-monitor-table"
+        label="Release monitor table"
+        description="Monitored releases across namespaces"
+      >
+        <Table
+          virtualize
+          data={sortedFilteredData}
+          unfilteredData={sortedFilteredData}
+          EmptyMsg={EmptyMsg}
+          NoDataEmptyMsg={MonitoredReleaseEmptyState}
+          aria-label="Release List"
+          Header={ReleasesListHeader}
+          Row={ReleaseListRow}
+          loaded={!loading || releases.length > 0}
+          getRowProps={(obj: MonitoredReleaseKind) =>
+            withChatContextRowPropsIfEnabled(
+              isChatEnabled,
+              { id: obj.metadata.name },
+              {
+                id: `monitored-release-row-${obj.metadata.namespace}-${obj.metadata.name}`,
+                label: obj.metadata.name,
+                description: 'Monitored release table row',
+                parentContextId: 'release-monitor-table',
+              },
+            )
+          }
+        />
+      </ChatContextTarget>
     </PageLayout>
   );
 };

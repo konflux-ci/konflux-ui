@@ -2,8 +2,10 @@ import * as React from 'react';
 import { useParams } from 'react-router-dom';
 import { Bullseye, Spinner, Title } from '@patternfly/react-core';
 import { RouterParams } from '@routes/utils';
+import { ChatContextTarget, withChatContextRowPropsIfEnabled } from '~/components/AIChat';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
+import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useReleasePlan } from '~/hooks/useReleasePlans';
 import { useRelease } from '~/hooks/useReleases';
 import { Table } from '~/shared';
@@ -91,6 +93,7 @@ const createPipelineRunEntry = (
 const ReleasePipelineRunTab: React.FC = () => {
   const { releaseName } = useParams<RouterParams>();
   const namespace = useNamespace();
+  const isChatEnabled = useIsOnFeatureFlag('ai-chat');
 
   const { filters, setFilters, onClearFilters } = React.useContext(FilterContext);
 
@@ -144,39 +147,54 @@ const ReleasePipelineRunTab: React.FC = () => {
       <Title headingLevel="h3" className="pf-v5-c-title pf-v5-u-mt-lg pf-v5-u-pl-lg">
         Pipeline runs
       </Title>
-      <Table
-        data={filteredRuns}
-        unfilteredData={allRuns}
-        EmptyMsg={EmptyMessage}
-        NoDataEmptyMsg={() => <ReleasesEmptyState />}
-        Toolbar={
-          <BaseTextFilterToolbar
-            text={filters.name as string}
-            label="name"
-            setText={(name) => setFilters({ ...filters, name })}
-            onClearFilters={onClearFilters}
-            data-test="release-pipeline-runs-toolbar"
-            totalColumns={pipelineRunColumns.length}
-            openColumnManagement={() => setIsColumnManagementOpen(true)}
-          />
-        }
-        aria-label="release-pipeline-runs-table"
-        Header={() => ReleasePipelineListHeader({ visibleColumns })}
-        Row={(props) => (
-          <ReleasePipelineListRow
-            obj={props.obj as PipelineRunProcessing}
-            releasePlan={releasePlan}
-            releaseName={releaseName}
-            namespace={namespace}
-            visibleColumns={visibleColumns}
-          />
-        )}
-        loaded={releasePlanLoaded}
-        getRowProps={(obj: PipelineRunProcessing) => ({
-          id: obj.pipelineRun,
-        })}
-        virtualize
-      />
+      <ChatContextTarget
+        id={`${releaseName}-release-pipeline-runs`}
+        label="Release pipeline runs table"
+        description="Pipeline runs for this release"
+      >
+        <Table
+          data={filteredRuns}
+          unfilteredData={allRuns}
+          EmptyMsg={EmptyMessage}
+          NoDataEmptyMsg={() => <ReleasesEmptyState />}
+          Toolbar={
+            <BaseTextFilterToolbar
+              text={filters.name as string}
+              label="name"
+              setText={(name) => setFilters({ ...filters, name })}
+              onClearFilters={onClearFilters}
+              data-test="release-pipeline-runs-toolbar"
+              totalColumns={pipelineRunColumns.length}
+              openColumnManagement={() => setIsColumnManagementOpen(true)}
+            />
+          }
+          aria-label="release-pipeline-runs-table"
+          Header={() => ReleasePipelineListHeader({ visibleColumns })}
+          Row={(props) => (
+            <ReleasePipelineListRow
+              obj={props.obj as PipelineRunProcessing}
+              releasePlan={releasePlan}
+              releaseName={releaseName}
+              namespace={namespace}
+              visibleColumns={visibleColumns}
+            />
+          )}
+          loaded={releasePlanLoaded}
+          getRowProps={(obj: PipelineRunProcessing) =>
+            withChatContextRowPropsIfEnabled(
+              isChatEnabled,
+              { id: obj.pipelineRun },
+              {
+                id: `release-pipeline-run-row-${releaseName}-${obj.pipelineRun}`,
+                label: obj.pipelineRun,
+                description: `${obj.type} pipeline run`,
+                parentContextId: `${releaseName}-release-pipeline-runs`,
+              },
+            )
+          }
+          virtualize
+        />
+      </ChatContextTarget>
       <ColumnManagement<ReleasePipelineRunColumnKeys>
         isOpen={isColumnManagementOpen}
         onClose={() => setIsColumnManagementOpen(false)}

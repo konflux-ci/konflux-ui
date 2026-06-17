@@ -8,6 +8,8 @@ import {
   Spinner,
 } from '@patternfly/react-core';
 import { USER_ACCESS_GRANT_PAGE } from '@routes/paths';
+import { ChatContextTarget, withChatContextRowPropsIfEnabled } from '~/components/AIChat';
+import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { textMatch } from '~/utils/text-filter-utils';
 import emptyStateImgUrl from '../../assets/Integration-test.svg';
@@ -63,6 +65,8 @@ const UserAccessEmptyState: React.FC<
 
 export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = () => {
   const namespace = useNamespace();
+  const isChatEnabled = useIsOnFeatureFlag('ai-chat');
+  const tableContextId = `user-access-${namespace}`;
   const [canCreateRB] = useAccessReviewForModel(RoleBindingModel, 'create');
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
   const filters = useDeepCompareMemoize({
@@ -123,16 +127,31 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
       </BaseTextFilterToolbar>
       <Divider style={{ paddingTop: 'var(--pf-v5-global--spacer--md)' }} />
       {filterRBs.length ? (
-        <Table
-          data={filterRBs}
-          aria-label="User access list"
-          Header={RBListHeader}
-          Row={RBListRow}
-          loaded
-          getRowProps={(obj: RoleBinding) => ({
-            id: obj.metadata.name,
-          })}
-        />
+        <ChatContextTarget
+          id={tableContextId}
+          label="User access table"
+          description="Users and roles with access to this namespace"
+        >
+          <Table
+            data={filterRBs}
+            aria-label="User access list"
+            Header={RBListHeader}
+            Row={RBListRow}
+            loaded
+            getRowProps={(obj: RoleBinding) =>
+              withChatContextRowPropsIfEnabled(
+                isChatEnabled,
+                { id: obj.metadata.name },
+                {
+                  id: `user-access-row-${obj.metadata.name}`,
+                  label: obj.subjects?.[0]?.name || obj.metadata.name,
+                  description: 'User access table row',
+                  parentContextId: tableContextId,
+                },
+              )
+            }
+          />
+        </ChatContextTarget>
       ) : (
         <FilteredEmptyState onClearFilters={() => onClearFilters()} />
       )}

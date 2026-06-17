@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Spinner, Bullseye, Stack } from '@patternfly/react-core';
 import { SortByDirection } from '@patternfly/react-table';
+import { ChatContextTarget, withChatContextRowProps } from '~/components/AIChat';
 import { useSortedResources } from '../../../hooks/useSortedResources';
 import { Table } from '../../../shared';
 import { Snapshot } from '../../../types/coreBuildService';
@@ -79,33 +80,49 @@ const SnapshotsList: React.FC<React.PropsWithChildren<SnapshotsListProps>> = ({
 
   return (
     <>
-      <Table
-        virtualize
-        data={sortedSnapshots}
-        aria-label="Snapshots List"
-        Header={SnapshotsListHeaderWithSorting}
-        Row={SnapshotsListRow}
-        loaded
-        customData={{ applicationName, getSource }}
-        getRowProps={(obj: Snapshot) => ({
-          id: `${obj.metadata.name}-snapshot-list-item`,
-          'aria-label': obj.metadata.name,
-        })}
-        isInfiniteLoading
-        infiniteLoaderProps={{
-          isRowLoaded: (args) => {
-            return !!sortedSnapshots[args.index];
-          },
-          loadMoreRows: () => {
-            infiniteLoadingProps?.hasNextPage &&
-              !infiniteLoadingProps?.isFetchingNextPage &&
-              infiniteLoadingProps?.fetchNextPage?.();
-          },
-          rowCount: infiniteLoadingProps?.hasNextPage
-            ? sortedSnapshots.length + 1
-            : sortedSnapshots.length,
-        }}
-      />
+      <ChatContextTarget
+        id={`snapshots-${applicationName}`}
+        label="Snapshots table"
+        description="All snapshots for this application"
+      >
+        <Table
+          virtualize
+          data={sortedSnapshots}
+          aria-label="Snapshots List"
+          Header={SnapshotsListHeaderWithSorting}
+          Row={SnapshotsListRow}
+          loaded
+          customData={{ applicationName, getSource }}
+          getRowProps={(obj: Snapshot) =>
+            withChatContextRowProps(
+              {
+                id: `${obj.metadata.name}-snapshot-list-item`,
+                'aria-label': obj.metadata.name,
+              },
+              {
+                id: `snapshot-row-${obj.metadata.name}`,
+                label: obj.metadata.name,
+                description: 'Snapshot table row',
+                parentContextId: `snapshots-${applicationName}`,
+              },
+            )
+          }
+          isInfiniteLoading
+          infiniteLoaderProps={{
+            isRowLoaded: (args) => {
+              return !!sortedSnapshots[args.index];
+            },
+            loadMoreRows: () => {
+              infiniteLoadingProps?.hasNextPage &&
+                !infiniteLoadingProps?.isFetchingNextPage &&
+                infiniteLoadingProps?.fetchNextPage?.();
+            },
+            rowCount: infiniteLoadingProps?.hasNextPage
+              ? sortedSnapshots.length + 1
+              : sortedSnapshots.length,
+          }}
+        />
+      </ChatContextTarget>
       {infiniteLoadingProps?.isFetchingNextPage ? (
         <Stack style={{ marginTop: 'var(--pf-v5-global--spacer--md)' }} hasGutter>
           <Bullseye>

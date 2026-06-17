@@ -1,7 +1,9 @@
 import * as React from 'react';
 import { Bullseye, PageSection, PageSectionVariants, Spinner } from '@patternfly/react-core';
+import { ChatContextTarget, withChatContextRowPropsIfEnabled } from '~/components/AIChat';
 import { FilterContext, FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
+import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { filterByText } from '~/utils/text-filter-utils';
 import { FULL_APPLICATION_TITLE } from '../../../consts/labels';
@@ -19,6 +21,8 @@ import ReleasePlanAdmissionListRow from './ReleasePlanAdmissionListRow';
 
 const ReleasePlanAdmissionListView: React.FC<React.PropsWithChildren<unknown>> = () => {
   const namespace = useNamespace();
+  const isChatEnabled = useIsOnFeatureFlag('ai-chat');
+  const tableContextId = `release-plan-admissions-${namespace}`;
   const [releasePlanAdmissions, rpaLoaded, rpaError] = useReleasePlanAdmissions(namespace);
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
   const filters = useDeepCompareMemoize({
@@ -61,21 +65,36 @@ const ReleasePlanAdmissionListView: React.FC<React.PropsWithChildren<unknown>> =
       {!filteredReleasePlanAdmission?.length ? (
         <FilteredEmptyState onClearFilters={() => onClearFilters()} />
       ) : (
-        <Table
-          data-test="release-plan-admission__table"
-          data={filteredReleasePlanAdmission}
-          aria-label="Release Plan Admission List"
-          Header={ReleasePlanAdmissionListHeader}
-          Row={(props) => {
-            const obj = props.obj as ReleasePlanAdmissionKind;
+        <ChatContextTarget
+          id={tableContextId}
+          label="Release plan admissions table"
+          description="All release plan admissions in this namespace"
+        >
+          <Table
+            data-test="release-plan-admission__table"
+            data={filteredReleasePlanAdmission}
+            aria-label="Release Plan Admission List"
+            Header={ReleasePlanAdmissionListHeader}
+            Row={(props) => {
+              const obj = props.obj as ReleasePlanAdmissionKind;
 
-            return <ReleasePlanAdmissionListRow {...props} obj={obj} />;
-          }}
-          loaded
-          getRowProps={(obj: ReleasePlanAdmissionKind) => ({
-            id: obj.metadata.uid,
-          })}
-        />
+              return <ReleasePlanAdmissionListRow {...props} obj={obj} />;
+            }}
+            loaded
+            getRowProps={(obj: ReleasePlanAdmissionKind) =>
+              withChatContextRowPropsIfEnabled(
+                isChatEnabled,
+                { id: obj.metadata.uid },
+                {
+                  id: `release-plan-admission-row-${obj.metadata.name}`,
+                  label: obj.metadata.name,
+                  description: 'Release plan admission table row',
+                  parentContextId: tableContextId,
+                },
+              )
+            }
+          />
+        </ChatContextTarget>
       )}
     </PageSection>
   );

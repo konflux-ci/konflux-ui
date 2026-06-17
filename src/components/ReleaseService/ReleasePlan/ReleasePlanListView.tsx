@@ -1,7 +1,9 @@
 import * as React from 'react';
 import { Bullseye, PageSection, PageSectionVariants, Spinner } from '@patternfly/react-core';
+import { ChatContextTarget, withChatContextRowPropsIfEnabled } from '~/components/AIChat';
 import { FilterContext, FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
+import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useApplications } from '~/hooks/useApplications';
 import { useLocalStorage } from '~/shared/hooks/useLocalStorage';
 import { getErrorState } from '~/shared/utils/error-utils';
@@ -28,6 +30,8 @@ import ReleasePlanListRow, { ReleasePlanWithApplicationData } from './ReleasePla
 
 const ReleasePlanListView: React.FC<React.PropsWithChildren<unknown>> = () => {
   const namespace = useNamespace();
+  const isChatEnabled = useIsOnFeatureFlag('ai-chat');
+  const tableContextId = `release-plans-${namespace}`;
   const [applications, appLoaded, appError] = useApplications(namespace);
   const [releasePlans, releasePlansLoaded, releasePlansError] = useReleasePlans(namespace);
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
@@ -102,18 +106,33 @@ const ReleasePlanListView: React.FC<React.PropsWithChildren<unknown>> = () => {
       {!filteredReleasePlans?.length ? (
         <FilteredEmptyState onClearFilters={() => onClearFilters()} />
       ) : (
-        <Table
-          data-test="release-plan__table"
-          data={filteredReleasePlans}
-          aria-label="Release List"
-          Header={getReleasePlanListHeader(safeVisibleColumns)}
-          Row={ReleasePlanListRow}
-          customData={{ visibleColumns: safeVisibleColumns }}
-          loaded
-          getRowProps={(obj: ReleaseKind) => ({
-            id: obj.metadata.uid,
-          })}
-        />
+        <ChatContextTarget
+          id={tableContextId}
+          label="Release plans table"
+          description="All release plans in this namespace"
+        >
+          <Table
+            data-test="release-plan__table"
+            data={filteredReleasePlans}
+            aria-label="Release List"
+            Header={getReleasePlanListHeader(safeVisibleColumns)}
+            Row={ReleasePlanListRow}
+            customData={{ visibleColumns: safeVisibleColumns }}
+            loaded
+            getRowProps={(obj: ReleaseKind) =>
+              withChatContextRowPropsIfEnabled(
+                isChatEnabled,
+                { id: obj.metadata.uid },
+                {
+                  id: `release-plan-row-${obj.metadata.name}`,
+                  label: obj.metadata.name,
+                  description: 'Release plan table row',
+                  parentContextId: tableContextId,
+                },
+              )
+            }
+          />
+        </ChatContextTarget>
       )}
       <ColumnManagement<ReleasePlanColumnKeys>
         isOpen={isColumnManagementOpen}

@@ -2,6 +2,8 @@ import * as React from 'react';
 import { useParams } from 'react-router-dom';
 import { PageSection, PageSectionVariants, Title, Spinner, Bullseye } from '@patternfly/react-core';
 import { SortByDirection } from '@patternfly/react-table';
+import { ChatContextTarget, withChatContextRowPropsIfEnabled } from '~/components/AIChat';
+import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { textMatch } from '~/utils/text-filter-utils';
 import { SESSION_STORAGE_KEYS } from '../../consts/constants';
 import { PipelineRunLabel } from '../../consts/pipelinerun';
@@ -47,6 +49,7 @@ const sortPaths: Record<SortableHeaders, string> = {
 const ReleasesListView: React.FC = () => {
   const { applicationName } = useParams<RouterParams>();
   const namespace = useNamespace();
+  const isChatEnabled = useIsOnFeatureFlag('ai-chat');
 
   // Column management state
   const [visibleColumns, setVisibleColumns] = useVisibleColumns(
@@ -148,43 +151,58 @@ const ReleasesListView: React.FC = () => {
         {!sortedReleases?.length ? (
           <FilteredEmptyState onClearFilters={() => onClearFilters()} />
         ) : (
-          <Table
-            data-test="releases__table"
-            data={sortedReleases}
-            aria-label="Release List"
-            Header={getReleasesListHeader(
-              activeSortIndex,
-              activeSortDirection,
-              (_, index: number, direction: SortByDirection) => {
-                setActiveSortIndex(index);
-                setActiveSortDirection(direction);
-              },
-              visibleColumns,
-            )}
-            Row={(props) => (
-              <ReleasesListRow
-                obj={props.obj as ReleaseKind}
-                columns={props.columns || []}
-                customData={props.customData as { applicationName: string }}
-                visibleColumns={visibleColumns}
-              />
-            )}
-            loaded={!isLoading || releases.length > 0}
-            getRowProps={(obj: ReleaseKind) => ({
-              id: obj?.metadata?.uid,
-            })}
-            customData={{ applicationName }}
-            isInfiniteLoading={hasNextPage}
-            infiniteLoaderProps={{
-              isRowLoaded: (args) => {
-                return !!sortedReleases[args.index];
-              },
-              loadMoreRows: () => {
-                hasNextPage && !isFetchingNextPage && fetchNextPage?.();
-              },
-              rowCount: hasNextPage ? sortedReleases.length + 1 : sortedReleases.length,
-            }}
-          />
+          <ChatContextTarget
+            id={`releases-${applicationName}`}
+            label="Releases table"
+            description="All releases for this application"
+          >
+            <Table
+              data-test="releases__table"
+              data={sortedReleases}
+              aria-label="Release List"
+              Header={getReleasesListHeader(
+                activeSortIndex,
+                activeSortDirection,
+                (_, index: number, direction: SortByDirection) => {
+                  setActiveSortIndex(index);
+                  setActiveSortDirection(direction);
+                },
+                visibleColumns,
+              )}
+              Row={(props) => (
+                <ReleasesListRow
+                  obj={props.obj as ReleaseKind}
+                  columns={props.columns || []}
+                  customData={props.customData as { applicationName: string }}
+                  visibleColumns={visibleColumns}
+                />
+              )}
+              loaded={!isLoading || releases.length > 0}
+              getRowProps={(obj: ReleaseKind) =>
+                withChatContextRowPropsIfEnabled(
+                  isChatEnabled,
+                  { id: obj.metadata.name },
+                  {
+                    id: `release-row-${obj.metadata.name}`,
+                    label: obj.metadata.name,
+                    description: 'Release table row',
+                    parentContextId: `releases-${applicationName}`,
+                  },
+                )
+              }
+              customData={{ applicationName }}
+              isInfiniteLoading={hasNextPage}
+              infiniteLoaderProps={{
+                isRowLoaded: (args) => {
+                  return !!sortedReleases[args.index];
+                },
+                loadMoreRows: () => {
+                  hasNextPage && !isFetchingNextPage && fetchNextPage?.();
+                },
+                rowCount: hasNextPage ? sortedReleases.length + 1 : sortedReleases.length,
+              }}
+            />
+          </ChatContextTarget>
         )}
         <ColumnManagement<ReleaseColumnKeys>
           isOpen={isColumnManagementOpen}
