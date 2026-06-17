@@ -1,0 +1,68 @@
+.ai-chat-context-target {
+  display: block;
+  inline-size: 100%;
+  position: relative;
+}
+
+tr.ai-chat-context-target {
+  display: table-row;
+}
+
+.ai-chat-context--hover {
+  cursor: crosshair;
+  outline: 2px solid var(--konflux-chat-context-color, #f4511e);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 4px rgb(244 81 30 / 28%);
+  z-index: 2;
+}
+
+tr.ai-chat-context-target.ai-chat-context--hover,
+tr.ai-chat-context-target.ai-chat-context--selected {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--konflux-chat-context-color, #f4511e);
+}
+
+tr.ai-chat-context-target.ai-chat-context--hover {
+  background-color: rgb(244 81 30 / 10%);
+}
+
+tr.ai-chat-context-target.ai-chat-context--selected {
+  background-color: rgb(244 81 30 / 14%);
+}
+
+.ai-chat-context--selected {
+  outline: 2px solid var(--konflux-chat-context-color, #f4511e);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 4px rgb(244 81 30 / 38%);
+  z-index: 1;
+}
+
+.ai-chat-context--hover.ai-chat-context--selected {
+  box-shadow: 0 0 0 4px rgb(244 81 30 / 48%);
+}
+
+.ai-chat-context-picking {
+  cursor: crosshair;
+}
+
+.ai-chat-context-picking *:not([data-ai-chat-context]):not([data-ai-chat-context] *) {
+  cursor: crosshair;
+}
+
+.pf-v5-theme-dark {
+  --konflux-chat-context-color: #ff9d76;
+}
+
+.pf-v5-theme-dark .ai-chat-context--hover,
+.pf-v5-theme-dark .ai-chat-context--selected {
+  box-shadow: 0 0 0 4px rgb(255 157 118 / 32%);
+}
+
+.pf-v5-theme-dark tr.ai-chat-context-target.ai-chat-context--hover {
+  background-color: rgb(255 157 118 / 12%);
+}
+
+.ai-chat-page-context-boundary.ai-chat-context-target {
+  display: block;
+  min-block-size: 100%;
+}

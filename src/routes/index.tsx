@@ -1,5 +1,6 @@
 import { createBrowserRouter } from 'react-router-dom';
 import { AppRoot } from '../AppRoot/AppRoot';
+import { AIChatProvider } from '../components/AIChat';
 import { GithubRedirect, githubRedirectLoader } from '../components/GithubRedirect';
 import { ModalProvider } from '../components/modal/ModalProvider';
 import { Overview } from '../components/Overview/Overview';
@@ -35,7 +36,9 @@ export const router = createBrowserRouter([
     element: (
       <NamespaceProvider>
         <ModalProvider>
-          <AppRoot />
+          <AIChatProvider>
+            <AppRoot />
+          </AIChatProvider>
         </ModalProvider>
       </NamespaceProvider>
     ),
