@@ -8,6 +8,7 @@
     "node": ">=24.0.0"
   },
   "scripts": {
+    "setup": "./setup.sh",
     "build": "webpack -c ./webpack.prod.config.js",
     "build:instrumented": "webpack -c ./webpack.instrumented.config.js",
     "start": "dotenvx run -- webpack server --open -c ./webpack.dev.config.js",
@@ -17,6 +18,7 @@
     "lint:ts": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "lint:restricted-imports": "eslint . --ext ts,tsx --config .eslintrc.restrict-imports.cjs --no-eslintrc --max-warnings 0",
     "lint:sass": "stylelint 'src/**/*.scss' --config .stylelintrc.json",
+    "audit": "yarn npm audit --all --recursive --severity critical",
     "type-checks": "tsc --noEmit",
     "prepare": "husky",
     "analyze": "source-map-explorer 'dist/*.js'",
@@ -148,7 +150,11 @@
       "eslint --config .eslintrc.restrict-imports.cjs"
     ],
     "*.{scss,css}": [
+      "prettier --write",
       "stylelint --config .stylelintrc.json"
+    ],
+    "*.{json,md}": [
+      "prettier --write"
     ]
   },
   "packageManager": "yarn@4.12.0"
