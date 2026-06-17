@@ -1,4 +1,5 @@
 import { MultiSelect } from '../generic/MultiSelect';
+import { createTextSearchFilterObj } from '../utils/filter-utils';
 import { PipelineRunsFilterState } from '../utils/pipelineruns-filter-utils';
 import { BaseTextFilterToolbar } from './BaseTextFIlterToolbar';
 
@@ -6,10 +7,9 @@ type PipelineRunsFilterToolbarProps = {
   filters: PipelineRunsFilterState;
   setFilters: (filters: PipelineRunsFilterState) => void;
   onClearFilters: () => void;
-  typeOptions: { [key: string]: number };
-  statusOptions: { [key: string]: number };
-  versionOptions?: { [key: string]: number };
-  versionLabels?: Record<string, string>;
+  typeOptions?: { key: string; count?: number; label?: string }[];
+  statusOptions?: { key: string; count?: number; label?: string }[];
+  searchOptions?: string[];
   openColumnManagement?: () => void;
   totalColumns?: number;
 };
@@ -20,8 +20,7 @@ const PipelineRunsFilterToolbar: React.FC<PipelineRunsFilterToolbarProps> = ({
   onClearFilters,
   typeOptions,
   statusOptions,
-  versionOptions,
-  versionLabels,
+  searchOptions,
   openColumnManagement,
   totalColumns,
 }: PipelineRunsFilterToolbarProps) => {
@@ -29,35 +28,32 @@ const PipelineRunsFilterToolbar: React.FC<PipelineRunsFilterToolbarProps> = ({
 
   return (
     <BaseTextFilterToolbar
-      text={name}
+      text={name || (version ?? '')}
       label="name"
-      setText={(newName) => setFilters({ ...filters, name: newName })}
+      setText={(newName, searchType) =>
+        createTextSearchFilterObj(newName, searchType, filters, setFilters)
+      }
       onClearFilters={onClearFilters}
       openColumnManagement={openColumnManagement}
       totalColumns={totalColumns}
+      searchOptions={searchOptions}
     >
-      <MultiSelect
-        label="Status"
-        filterKey="status"
-        values={status}
-        setValues={(newFilters) => setFilters({ ...filters, status: newFilters })}
-        options={statusOptions}
-      />
-      <MultiSelect
-        label="Type"
-        filterKey="type"
-        values={type}
-        setValues={(newFilters) => setFilters({ ...filters, type: newFilters })}
-        options={typeOptions}
-      />
-      {versionOptions && (
+      {statusOptions && (
         <MultiSelect
-          label="Version"
-          filterKey="version"
-          values={version ?? []}
-          setValues={(newFilters) => setFilters({ ...filters, version: newFilters })}
-          options={versionOptions}
-          optionLabels={versionLabels}
+          label="Status"
+          filterKey="status"
+          values={status}
+          setValues={(newFilters) => setFilters({ ...filters, status: newFilters })}
+          options={statusOptions}
+        />
+      )}
+      {typeOptions && (
+        <MultiSelect
+          label="Type"
+          filterKey="type"
+          values={type}
+          setValues={(newFilters) => setFilters({ ...filters, type: newFilters })}
+          options={typeOptions}
         />
       )}
     </BaseTextFilterToolbar>
