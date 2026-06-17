@@ -21,6 +21,7 @@ import { css } from '@patternfly/react-styles';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { FlagKey } from '~/feature-flags/flags';
 import BreadCrumbs from '../../shared/components/breadcrumbs/BreadCrumbs';
+import { ChatContextTarget } from '../AIChat';
 import { TabsLayout } from '../TabsLayout/TabsLayout';
 import { Action, DetailsPageTabProps } from './types';
 import './DetailsPage.scss';
@@ -140,12 +141,18 @@ const DetailsPage: React.FC<React.PropsWithChildren<DetailsPageProps>> = ({
           ''
         )}
         <Flex style={{ paddingTop: 'var(--pf-v5-global--spacer--lg)' }}>
-          <FlexItem>
-            <TextContent>
-              {renderTitle()}
-              {description && <Text component="p">{description}</Text>}
-            </TextContent>
-          </FlexItem>
+          <ChatContextTarget
+            id={headTitle}
+            label={headTitle}
+            description="Page title section"
+          >
+            <FlexItem>
+              <TextContent>
+                {renderTitle()}
+                {description && <Text component="p">{description}</Text>}
+              </TextContent>
+            </FlexItem>
+          </ChatContextTarget>
           <Flex align={{ default: 'alignRight' }}>
             {featureFlags && <FeatureFlagIndicator flags={featureFlags} />}
             {actions?.length ? (
@@ -175,7 +182,7 @@ const DetailsPage: React.FC<React.PropsWithChildren<DetailsPageProps>> = ({
         </Flex>
       </PageSection>
       {preComponent}
-      {tabs?.length && (
+      {tabs?.length ? (
         <PageSection className="app-details__tabs" isFilled variant={PageSectionVariants.light}>
           <TabsLayout
             id="app-details"
@@ -185,7 +192,7 @@ const DetailsPage: React.FC<React.PropsWithChildren<DetailsPageProps>> = ({
             baseURL={baseURL}
           />
         </PageSection>
-      )}
+      ) : null}
       {footer && (
         <PageSection variant={PageSectionVariants.light} isFilled={false}>
           {footer}

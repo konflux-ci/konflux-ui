@@ -2,7 +2,8 @@ import * as React from 'react';
 import { Outlet } from 'react-router-dom';
 import { Page, PageSection } from '@patternfly/react-core';
 import { NAMESPACE_LIST_PATH, RELEASE_MONITOR_PATH } from '@routes/paths';
-import { AIChatDock } from '~/components/AIChat';
+import { AIChatDock, ChatContextPicker } from '~/components/AIChat';
+import { ChatPageContextBoundary } from '~/components/AIChat/context/ChatPageContextBoundary';
 import NotificationCenter from '~/components/KonfluxSystemNotifications/NotificationList';
 import SidePanelHost from '~/components/SidePanel/SidePanelHost';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
@@ -58,13 +59,16 @@ export const AppRoot: React.FC = () => {
             </PageSection>
           ) : null}
 
-          <Outlet />
+          <ChatPageContextBoundary>
+            <Outlet />
+          </ChatPageContextBoundary>
         </SidePanelHost>
       </Page>
       {isSystemNotificationsEnabled && (
         <NotificationCenter isDrawerExpanded={isDrawerExpanded} closeDrawer={closeDrawer} />
       )}
       <AIChatDock />
+      <ChatContextPicker />
     </>
   );
 };
