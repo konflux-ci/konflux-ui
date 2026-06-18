@@ -28,6 +28,13 @@ const createMockRow = (overrides: Partial<ConformaResultRow> = {}): ConformaResu
   ...overrides,
 });
 
+const noOpRefresh = {
+  lastFetchedAt: 0,
+  isRefreshing: false,
+  hasLiveUpdatesPaused: false,
+  onRefresh: jest.fn(),
+};
+
 const emptyResults: ApplicationConformaResults = {
   componentStatuses: [],
   allResults: [],
@@ -39,6 +46,7 @@ const emptyResults: ApplicationConformaResults = {
   loaded: true,
   settling: false,
   error: undefined,
+  refresh: noOpRefresh,
 };
 
 const populatedResults: ApplicationConformaResults = {
@@ -88,6 +96,7 @@ const populatedResults: ApplicationConformaResults = {
   loaded: true,
   settling: false,
   error: undefined,
+  refresh: noOpRefresh,
 };
 
 describe('ConformaResultsTab', () => {

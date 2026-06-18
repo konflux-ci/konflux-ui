@@ -37,6 +37,7 @@ const ConformaResultsTabContent: React.FC = () => {
     totalSuccesses,
     loaded,
     error,
+    refresh,
   } = useApplicationConformaResults(applicationName);
 
   const { filters: unparsedFilters } = React.useContext(FilterContext);
@@ -145,6 +146,7 @@ const ConformaResultsTabContent: React.FC = () => {
           onGroupByChange={handleGroupByChange}
           allExpanded={allExpanded}
           onToggleExpandAll={handleToggleExpandAll}
+          refresh={refresh}
         />
 
         {isEmpty ? (
