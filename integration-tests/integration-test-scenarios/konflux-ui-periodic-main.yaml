@@ -36,6 +36,6 @@ spec:
       - name: revision
         value: main
       - name: pathInRepo
-        value: integration-test/pipelines/e2e-periodic-main-pipeline.yaml
+        value: integration-tests/pipelines/e2e-periodic-main-pipeline.yaml
     resolver: git
     resourceKind: pipeline

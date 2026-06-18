@@ -195,7 +195,7 @@ spec:
       when:
         - input: '$(tasks.konflux-ui-pr-metadata.results.pull-request-author)'
           operator: notin
-          values: ['red-hat-konflux[bot]']
+          values: ['red-hat-konflux[bot]', 'fullsend-ai-coder[bot]', 'konflux-ci-coder[bot]']
       runAfter:
         - deploy-konflux
       taskRef:
@@ -206,7 +206,7 @@ spec:
           - name: revision
             value: main
           - name: pathInRepo
-            value: integration-tests/tasks/run-periodic-konflux-ui.yaml
+            value: integration-tests/tasks/run-e2e-periodic-konflux-ui.yaml
       params:
         - name: test-image
           value: 'quay.io/konflux_ui_qe/konflux-ui-tests:latest'
@@ -227,7 +227,7 @@ spec:
         - name: oci-storage
           value: '$(params.e2e-artifacts-repo)'
         - name: oci-credentials-secret
-          value: '$(tasks.konflux-ui-pr-metadata.results.git-revision)'
+          value: '$(params.oci-credentials-secret)'
         - name: job-spec
           value: '$(tasks.konflux-ui-pr-metadata.results.job-spec)'
         - name: component-image
