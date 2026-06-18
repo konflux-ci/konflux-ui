@@ -1,10 +1,11 @@
 import * as React from 'react';
-import { useQueries } from '@tanstack/react-query';
-import { PipelineRunLabel, PipelineRunType } from '~/consts/pipelinerun';
-import { CONFORMA_TASK, EC_TASK } from '~/consts/security';
+import { useQueries, useQueryClient } from '@tanstack/react-query';
+import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useComponents } from '~/hooks/useComponents';
 import { useTaskRunsV2 } from '~/hooks/useTaskRunsV2';
+import { useK8sWatchResource } from '~/k8s/hooks/useK8sWatchResource';
+import { TaskRunModel } from '~/models/taskruns';
 import { useNamespace } from '~/shared/providers/Namespace';
 import type { TaskRunKind } from '~/types';
 import {
@@ -14,6 +15,7 @@ import {
 import type {
   ApplicationConformaResults,
   ComponentConformaStatus,
+  ConformaRefreshState,
   ConformaResultRow,
 } from '~/types/conforma';
 import { TektonResourceLabel } from '~/types/coreTekton';
@@ -22,6 +24,17 @@ import {
   mapConformaResultData,
   resolveConformaResultFromTaskRun,
 } from './conforma-fetchers';
+import {
+  buildConformaSecurityTaskRunQueryKey,
+  buildConformaSecurityTaskRunWatchOptions,
+} from './conforma-taskrun-query';
+
+const NO_OP_REFRESH: ConformaRefreshState = {
+  lastFetchedAt: 0,
+  isRefreshing: false,
+  hasLiveUpdatesPaused: false,
+  onRefresh: () => undefined,
+};
 
 const EMPTY_RESULTS: ApplicationConformaResults = {
   componentStatuses: [],
@@ -34,6 +47,7 @@ const EMPTY_RESULTS: ApplicationConformaResults = {
   loaded: false,
   settling: false,
   error: undefined,
+  refresh: NO_OP_REFRESH,
 };
 
 function aggregateCounts(components: ComponentConformaResult[]) {
@@ -72,26 +86,57 @@ export const useApplicationConformaResults = (
     applicationName,
   );
 
-  const selector = React.useMemo(
-    () => ({
-      matchLabels: {
-        [PipelineRunLabel.APPLICATION]: applicationName,
-        [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.TEST,
-      },
-      matchExpressions: [
-        {
-          key: TektonResourceLabel.pipelineTask,
-          operator: 'In' as const,
-          values: [EC_TASK, CONFORMA_TASK],
-        },
-      ],
-    }),
-    [applicationName],
+  // Shared watch options — used by both useTaskRunsV2 (selector) and the
+  // direct useK8sWatchResource below so both operations share the same cache.
+  const watchOptions = React.useMemo(
+    () =>
+      namespace?.length
+        ? buildConformaSecurityTaskRunWatchOptions(namespace, applicationName)
+        : null,
+    [namespace, applicationName],
+  );
+
+  const taskRunQueryKey = React.useMemo(
+    () =>
+      namespace?.length
+        ? buildConformaSecurityTaskRunQueryKey(namespace, applicationName)
+        : [],
+    [namespace, applicationName],
   );
 
   const [securityTaskRuns, taskRunsLoaded, taskRunsError] = useTaskRunsV2(
     namespace?.length ? namespace : null,
-    { selector },
+    { selector: watchOptions?.selector },
+  );
+
+  // Direct subscription to get query metadata (dataUpdatedAt, isFetching,
+  // isWatchDegraded) for the refresh UI. React Query deduplicates the HTTP
+  // request because useTaskRunsV2 already uses the same query key internally.
+  const taskRunClusterQuery = useK8sWatchResource<TaskRunKind[]>(
+    watchOptions,
+    TaskRunModel,
+    { retry: false },
+  );
+
+  const queryClient = useQueryClient();
+
+  const onRefresh = React.useCallback(() => {
+    void queryClient.invalidateQueries({ queryKey: taskRunQueryKey });
+  }, [queryClient, taskRunQueryKey]);
+
+  const refresh = React.useMemo(
+    (): ConformaRefreshState => ({
+      lastFetchedAt: taskRunClusterQuery.dataUpdatedAt,
+      isRefreshing: taskRunClusterQuery.isFetching,
+      hasLiveUpdatesPaused: taskRunClusterQuery.isWatchDegraded,
+      onRefresh,
+    }),
+    [
+      taskRunClusterQuery.dataUpdatedAt,
+      taskRunClusterQuery.isFetching,
+      taskRunClusterQuery.isWatchDegraded,
+      onRefresh,
+    ],
   );
 
   const latestPerComponent = React.useMemo((): Map<string, TaskRunKind> => {
@@ -236,6 +281,7 @@ export const useApplicationConformaResults = (
       loaded,
       settling,
       error: aggregateError,
+      refresh,
     };
   }, [
     aggregateError,
@@ -246,5 +292,6 @@ export const useApplicationConformaResults = (
     settling,
     logData,
     namespace?.length,
+    refresh,
   ]);
 };

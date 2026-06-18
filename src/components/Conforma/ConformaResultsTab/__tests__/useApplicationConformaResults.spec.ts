@@ -4,6 +4,7 @@ import { renderHook, act } from '@testing-library/react-hooks';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useComponents } from '~/hooks/useComponents';
 import { useTaskRunsV2 } from '~/hooks/useTaskRunsV2';
+import { useK8sWatchResource } from '~/k8s/hooks/useK8sWatchResource';
 import { useNamespace } from '~/shared/providers/Namespace';
 import type { ComponentKind, TaskRunKind } from '~/types';
 import {
@@ -20,6 +21,10 @@ jest.mock('~/hooks/useComponents', () => ({
 
 jest.mock('~/hooks/useTaskRunsV2', () => ({
   useTaskRunsV2: jest.fn(),
+}));
+
+jest.mock('~/k8s/hooks/useK8sWatchResource', () => ({
+  useK8sWatchResource: jest.fn(),
 }));
 
 jest.mock('~/shared/providers/Namespace', () => ({
@@ -43,9 +48,18 @@ jest.mock('~/monitoring/logger', () => ({
 
 const mockUseComponents = useComponents as jest.Mock;
 const mockUseTaskRunsV2 = useTaskRunsV2 as jest.Mock;
+const mockUseK8sWatchResource = useK8sWatchResource as jest.Mock;
 const mockUseNamespace = useNamespace as jest.Mock;
 const mockUseIsOnFeatureFlag = useIsOnFeatureFlag as jest.Mock;
 const mockResolveConforma = resolveConformaResultFromTaskRun as jest.Mock;
+
+const DEFAULT_CLUSTER_QUERY = {
+  data: [],
+  isLoading: false,
+  isFetching: false,
+  dataUpdatedAt: 1000,
+  isWatchDegraded: false,
+};
 
 const createComponent = (name: string): ComponentKind => ({
   apiVersion: 'appstudio.redhat.com/v1alpha1',
@@ -170,6 +184,7 @@ describe('useApplicationConformaResults', () => {
     mockUseIsOnFeatureFlag.mockReturnValue(false);
     mockUseComponents.mockReturnValue([[], true, undefined]);
     mockUseTaskRunsV2.mockReturnValue([[], true, undefined, jest.fn(), {}]);
+    mockUseK8sWatchResource.mockReturnValue(DEFAULT_CLUSTER_QUERY);
     mockResolveConforma.mockResolvedValue(undefined);
   });
 
@@ -195,6 +210,12 @@ describe('useApplicationConformaResults', () => {
       loaded: false,
       settling: false,
       error: undefined,
+      refresh: expect.objectContaining({
+        lastFetchedAt: 0,
+        isRefreshing: false,
+        hasLiveUpdatesPaused: false,
+        onRefresh: expect.any(Function),
+      }),
     });
   });
 
@@ -535,6 +556,82 @@ describe('useApplicationConformaResults', () => {
       false,
     );
     expect(result.current.componentStatuses[0].pipelineRunName).toBe('pr-new');
+  });
+
+  it('exposes refresh.lastFetchedAt from useK8sWatchResource dataUpdatedAt', async () => {
+    mockUseK8sWatchResource.mockReturnValue({
+      ...DEFAULT_CLUSTER_QUERY,
+      dataUpdatedAt: 9999,
+    });
+    setupTaskRunPipeline();
+    mockResolveConforma.mockResolvedValue(mockConformaResult);
+
+    const { result } = renderHook(() => useApplicationConformaResults('test-app'), {
+      wrapper: createWrapper(),
+    });
+
+    await flushEffects();
+
+    expect(result.current.refresh.lastFetchedAt).toBe(9999);
+  });
+
+  it('exposes refresh.isRefreshing from useK8sWatchResource isFetching', async () => {
+    mockUseK8sWatchResource.mockReturnValue({
+      ...DEFAULT_CLUSTER_QUERY,
+      isFetching: true,
+    });
+    setupTaskRunPipeline();
+    mockResolveConforma.mockResolvedValue(mockConformaResult);
+
+    const { result } = renderHook(() => useApplicationConformaResults('test-app'), {
+      wrapper: createWrapper(),
+    });
+
+    await flushEffects();
+
+    expect(result.current.refresh.isRefreshing).toBe(true);
+  });
+
+  it('exposes refresh.hasLiveUpdatesPaused from useK8sWatchResource isWatchDegraded', async () => {
+    mockUseK8sWatchResource.mockReturnValue({
+      ...DEFAULT_CLUSTER_QUERY,
+      isWatchDegraded: true,
+    });
+    setupTaskRunPipeline();
+    mockResolveConforma.mockResolvedValue(mockConformaResult);
+
+    const { result } = renderHook(() => useApplicationConformaResults('test-app'), {
+      wrapper: createWrapper(),
+    });
+
+    await flushEffects();
+
+    expect(result.current.refresh.hasLiveUpdatesPaused).toBe(true);
+  });
+
+  it('refresh.onRefresh calls queryClient.invalidateQueries with the TaskRun query key', async () => {
+    setupTaskRunPipeline();
+    mockResolveConforma.mockResolvedValue(mockConformaResult);
+
+    const invalidateQueriesSpy = jest.spyOn(queryClient, 'invalidateQueries');
+
+    const { result } = renderHook(() => useApplicationConformaResults('test-app'), {
+      wrapper: createWrapper(),
+    });
+
+    await flushEffects();
+
+    act(() => {
+      result.current.refresh.onRefresh();
+    });
+
+    expect(invalidateQueriesSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        queryKey: expect.arrayContaining([
+          expect.objectContaining({ group: 'tekton.dev', kind: 'TaskRun' }),
+        ]),
+      }),
+    );
   });
 
   it('breaks timestamp ties by choosing the lexicographically greater TaskRun name', async () => {
