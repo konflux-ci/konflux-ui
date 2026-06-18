@@ -28,6 +28,7 @@ type BaseTextFilterToolbarProps = {
   showSearchInput?: boolean;
   noLeftPadding?: boolean;
   searchOptions?: string[];
+  className?: string;
 };
 
 export const BaseTextFilterToolbar: React.FC<BaseTextFilterToolbarProps> = ({
@@ -42,6 +43,7 @@ export const BaseTextFilterToolbar: React.FC<BaseTextFilterToolbarProps> = ({
   showSearchInput = true,
   noLeftPadding = false,
   searchOptions = [],
+  className,
 }) => {
   const [isOpen, setIsOpen] = React.useState<boolean>(false);
   const [searchOption, setSearchOption] = React.useState<string>(searchOptions?.[0] ?? '');
@@ -97,7 +99,12 @@ export const BaseTextFilterToolbar: React.FC<BaseTextFilterToolbarProps> = ({
   );
 
   return (
-    <Toolbar data-test={dataTest} usePageInsets clearAllFilters={onClearFilters}>
+    <Toolbar
+      data-test={dataTest}
+      usePageInsets
+      clearAllFilters={onClearFilters}
+      className={className}
+    >
       <ToolbarContent style={{ paddingLeft: noLeftPadding ? '0' : undefined }}>
         {showSearchInput && (
           <ToolbarItem className="pf-v5-u-ml-0">
