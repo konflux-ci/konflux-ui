@@ -271,7 +271,7 @@ const ComponentListView: React.FC<React.PropsWithChildren<ComponentListViewProps
       {gettingStartedCard}
       {componentsLoaded && pipelineRunsLoaded && pendingCount > 0 && !mergeAlertHidden ? (
         <Alert
-          className="pf-v6-u-mt-md"
+          className="pf-v6-u-my-md"
           variant={AlertVariant.warning}
           isInline
           title={`${pluralize(
