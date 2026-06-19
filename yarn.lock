@@ -5048,6 +5048,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@vscode/l10n@npm:^0.0.18":
+  version: 0.0.18
+  resolution: "@vscode/l10n@npm:0.0.18"
+  checksum: 10/82e2d02ab28d1733340c3c8829ee39dfb40a7a6637bf3fc71b0d1a74f2d46cf35f551dacd18c34832d377fe8717ecc2f3d196e3d1c64fca1e55751ce67273daf
+  languageName: node
+  linkType: hard
+
 "@webassemblyjs/ast@npm:1.14.1, @webassemblyjs/ast@npm:^1.14.1":
   version: 1.14.1
   resolution: "@webassemblyjs/ast@npm:1.14.1"
@@ -12030,9 +12037,10 @@ __metadata:
   linkType: hard
 
 "monaco-yaml@npm:^5.3.1":
-  version: 5.4.0
-  resolution: "monaco-yaml@npm:5.4.0"
+  version: 5.5.1
+  resolution: "monaco-yaml@npm:5.5.1"
   dependencies:
+    "@vscode/l10n": "npm:^0.0.18"
     jsonc-parser: "npm:^3.0.0"
     monaco-languageserver-types: "npm:^0.4.0"
     monaco-marker-data-provider: "npm:^1.0.0"
@@ -12040,13 +12048,14 @@ __metadata:
     monaco-worker-manager: "npm:^2.0.0"
     path-browserify: "npm:^1.0.0"
     prettier: "npm:^3.0.0"
+    proxy-disposable: "npm:^1.0.0"
     vscode-languageserver-textdocument: "npm:^1.0.0"
     vscode-languageserver-types: "npm:^3.0.0"
     vscode-uri: "npm:^3.0.0"
     yaml: "npm:^2.0.0"
   peerDependencies:
     monaco-editor: ">=0.36"
-  checksum: 10/84c88539c4193bcfcc3d6794d256f55183713b5d2f73f4d0579fe25650eafad09220dc4d7fdbfcbe0e7c4a56f2f89dd333f5bcdccf3f0b59f339663689e78116
+  checksum: 10/8142d73092bb0a815fd3e8f24eb8922dd4f6ea518383522548122d8903caca2ee78fe0a5e00859b52e2f005b3c2c6b6b45f98cb6e8fe61e3199ca5d81652c0ac
   languageName: node
   linkType: hard
 
@@ -13404,6 +13413,13 @@ __metadata:
     forwarded: "npm:0.2.0"
     ipaddr.js: "npm:1.9.1"
   checksum: 10/f24a0c80af0e75d31e3451398670d73406ec642914da11a2965b80b1898ca6f66a0e3e091a11a4327079b2b268795f6fa06691923fef91887215c3d0e8ea3f68
+  languageName: node
+  linkType: hard
+
+"proxy-disposable@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "proxy-disposable@npm:1.0.0"
+  checksum: 10/135debf9adf2fcd142ec972f723530e8ef7fe6554eac9e295d5a1ac0ad08164d31982f550e2f608f8209682cf5cabf08df8e4baacd7d621182dcdf48c63f73a1
   languageName: node
   linkType: hard
 
