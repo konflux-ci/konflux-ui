@@ -1868,8 +1868,8 @@ __metadata:
   linkType: hard
 
 "@dotenvx/dotenvx@npm:^1.7.0":
-  version: 1.71.2
-  resolution: "@dotenvx/dotenvx@npm:1.71.2"
+  version: 1.71.3
+  resolution: "@dotenvx/dotenvx@npm:1.71.3"
   dependencies:
     commander: "npm:^11.1.0"
     dotenv: "npm:^17.2.1"
@@ -1884,7 +1884,7 @@ __metadata:
     yocto-spinner: "npm:^1.1.0"
   bin:
     dotenvx: src/cli/dotenvx.js
-  checksum: 10/8d8cc972bc8bd1767008a237ff284a887f44e2c3713ac3ffdc130f91861d16c8aa1beda6f27d50761d3daf204ee8722d5b1cb58449022b27943824bf040157d0
+  checksum: 10/761dc0ef93396d3c03f56d9c31de6bcab256eacbddf93a7f84e5ff4a5494d7f5cd7fe616bac6998efb73dd2fe6e3a7c3d15b0b4693ff91c4e98338a3e976edc7
   languageName: node
   linkType: hard
 
