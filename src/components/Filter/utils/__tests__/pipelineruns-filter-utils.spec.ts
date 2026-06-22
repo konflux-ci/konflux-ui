@@ -151,35 +151,57 @@ describe('pipelineruns-filter-utils', () => {
       expect(resultNames.sort()).toStrictEqual(expectedNames.sort());
     });
 
-    it('should filter pipeline runs by a single version', () => {
+    it('should filter pipeline runs by version using textMatch', () => {
       const filters = {
         name: '',
         status: [],
         type: [],
-        version: ['v2.0'],
+        version: 'v2.0',
       };
       const result = filterPipelineRuns(pipelineRuns, filters);
       expect(result).toHaveLength(1);
       expect(result[0].metadata.name).toBe('basic-node-js-second');
     });
 
-    it('should filter pipeline runs by multiple versions', () => {
+    it('should match multiple pipeline runs when version text is shared', () => {
       const filters = {
         name: '',
         status: [],
         type: [],
-        version: ['v1.0', 'v2.0'],
+        version: 'v1.0',
+      };
+      const result = filterPipelineRuns(pipelineRuns, filters);
+      expect(result).toHaveLength(2);
+    });
+
+    it('should filter pipeline runs by component name when componentName is provided', () => {
+      const filters = {
+        name: '',
+        status: [],
+        type: [],
+      };
+      const result = filterPipelineRuns(pipelineRuns, filters, undefined, 'sample-component');
+      expect(result).toHaveLength(2);
+      expect(result.map((plr) => plr.metadata.name).sort()).toStrictEqual(
+        ['basic-node-js-first', 'basic-node-js-third'].sort(),
+      );
+    });
+
+    it('should not filter by status or type when they are undefined', () => {
+      const filters = {
+        name: '',
+        version: '',
       };
       const result = filterPipelineRuns(pipelineRuns, filters);
       expect(result).toHaveLength(3);
     });
 
-    it('should return all pipeline runs when version is an empty array', () => {
+    it('should return all pipeline runs when version is an empty string', () => {
       const filters = {
         name: '',
         status: [],
         type: [],
-        version: [],
+        version: '',
       };
       const result = filterPipelineRuns(pipelineRuns, filters);
       expect(result).toHaveLength(3);

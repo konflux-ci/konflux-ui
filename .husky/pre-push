@@ -1,0 +1,32 @@
+#!/bin/bash
+set -euo pipefail
+
+# Block force push and branch deletion on protected branches.
+PROTECTED_BRANCHES=(main master)
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+  [ -n "$remote_ref" ] || continue
+
+  case "$remote_ref" in
+    refs/heads/*) branch="${remote_ref#refs/heads/}" ;;
+    *) continue ;;
+  esac
+
+  for protected in "${PROTECTED_BRANCHES[@]}"; do
+    [ "$branch" = "$protected" ] || continue
+
+    # Block branch deletion
+    if [ "$local_sha" = "0000000000000000000000000000000000000000" ]; then
+      echo "husky (pre-push): refusing to delete protected branch '$branch'"
+      exit 1
+    fi
+
+    # Block non-fast-forward (force) push
+    if [ "$remote_sha" != "0000000000000000000000000000000000000000" ]; then
+      if ! git merge-base --is-ancestor "$remote_sha" "$local_sha" 2>/dev/null; then
+        echo "husky (pre-push): refusing force push to protected branch '$branch'"
+        exit 1
+      fi
+    fi
+  done
+done

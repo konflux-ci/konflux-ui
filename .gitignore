@@ -20,11 +20,12 @@ coverage/
 .nyc_output/
 
 node_modules
+.npm/
 dist
 dist-ssr
 *.local
 *.local.*
-tsconfig.tsbuildinfo
+*.tsbuildinfo
 
 # Editor directories and files
 .vscode/*
@@ -36,6 +37,9 @@ tsconfig.tsbuildinfo
 *.njsproj
 *.sln
 *.sw?
+*.swp
+*.swo
+
 
 **/.gitconfig*
 
@@ -49,3 +53,4 @@ CLAUDE.local.md
 
 # Snyk Security Extension - AI Rules (auto-generated)
 .cursor/rules/snyk_rules.mdc
+

@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Flex, FlexItem, Label, pluralize } from '@patternfly/react-core';
 import { SortByDirection } from '@patternfly/react-table';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
-import { MENU_DIVIDER } from '~/components/Filter/generic/MultiSelect.tsx';
+import { MENU_DIVIDER } from '~/components/Filter/generic/MultiSelect';
 import MonitoredReleasesFilterToolbar from '~/components/Filter/toolbars/MonitoredReleasesFilterToolbar';
 import { createFilterObj, FilterType } from '~/components/Filter/utils/filter-utils';
 import {
@@ -223,73 +223,85 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
   const filterOptions = React.useMemo(() => {
     if (releases.length === 0 && namespaces.length === 0) {
       return {
-        statusOptions: {},
-        applicationOptions: {},
-        releasePlanOptions: {},
-        namespaceOptions: {},
-        componentOptions: {},
-        productOptions: {},
-        productVersionOptions: {},
+        statusOptions: [],
+        applicationOptions: [],
+        releasePlanOptions: [],
+        namespaceOptions: [],
+        componentOptions: [],
+        productOptions: [],
+        productVersionOptions: [],
       };
     }
     const nsKeys = namespaces.map((ns) => ns.metadata.name);
+    const buildOptionsWithNoValue = (
+      options: { key: string; count?: number; label?: string }[],
+      noValueLabel: string,
+      missingCount: number,
+    ) => {
+      const filteredOptions = options.filter((option) => option.key !== 'undefined');
+      if (missingCount > 0) {
+        return [
+          { key: noValueLabel, count: missingCount },
+          { key: MENU_DIVIDER },
+          ...filteredOptions,
+        ];
+      }
+      return filteredOptions;
+    };
+
     const applicationOptions = createFilterObj(
       releases,
-      (mr) => mr?.metadata.labels[PipelineRunLabel.APPLICATION],
+      (mr) => mr?.metadata.labels[PipelineRunLabel.APPLICATION] ?? 'undefined',
+      undefined,
+      undefined,
+      true,
     );
-    const noApplication = applicationOptions.undefined;
-    delete applicationOptions.undefined;
-
-    const applicationFilterOptions =
-      noApplication > 0
-        ? {
-            'No application': noApplication,
-            [MENU_DIVIDER]: 1,
-            ...applicationOptions,
-          }
-        : applicationOptions;
+    const noApplication =
+      applicationOptions.find((option) => option.key === 'undefined')?.count ?? 0;
+    const applicationFilterOptions = buildOptionsWithNoValue(
+      applicationOptions,
+      'No application',
+      noApplication,
+    );
 
     const componentOptions = createFilterObj(
       releases,
-      (mr) => mr?.metadata.labels[PipelineRunLabel.COMPONENT],
+      (mr) => mr?.metadata.labels[PipelineRunLabel.COMPONENT] ?? 'undefined',
+      undefined,
+      undefined,
+      true,
     );
-    const noComponent = componentOptions.undefined;
-    delete componentOptions.undefined;
+    const noComponent = componentOptions.find((option) => option.key === 'undefined')?.count ?? 0;
+    const componentFilterOptions = buildOptionsWithNoValue(
+      componentOptions,
+      'No component',
+      noComponent,
+    );
 
-    const componentFilterOptions =
-      noComponent > 0
-        ? {
-            'No component': noComponent,
-            [MENU_DIVIDER]: 1,
-            ...componentOptions,
-          }
-        : componentOptions;
+    const productOptions = createFilterObj(
+      releases,
+      (mr) => mr?.product ?? 'undefined',
+      undefined,
+      undefined,
+      true,
+    );
+    const noProduct = productOptions.find((option) => option.key === 'undefined')?.count ?? 0;
+    const productFilterOptions = buildOptionsWithNoValue(productOptions, 'No product', noProduct);
 
-    const productOptions = createFilterObj(releases, (mr) => mr?.product);
-    const noProduct = productOptions.undefined;
-    delete productOptions.undefined;
-
-    const productFilterOptions =
-      noProduct > 0
-        ? {
-            'No product': noProduct,
-            [MENU_DIVIDER]: 1,
-            ...productOptions,
-          }
-        : productOptions;
-
-    const productVersionOptions = createFilterObj(releases, (mr) => mr?.productVersion);
-    const noProductVersion = productVersionOptions.undefined;
-    delete productVersionOptions.undefined;
-
-    const productVersionFilterOptions =
-      noProductVersion > 0
-        ? {
-            'No product version': noProductVersion,
-            [MENU_DIVIDER]: 1,
-            ...productVersionOptions,
-          }
-        : productVersionOptions;
+    const productVersionOptions = createFilterObj(
+      releases,
+      (mr) => mr?.productVersion ?? 'undefined',
+      undefined,
+      undefined,
+      true,
+    );
+    const noProductVersion =
+      productVersionOptions.find((option) => option.key === 'undefined')?.count ?? 0;
+    const productVersionFilterOptions = buildOptionsWithNoValue(
+      productVersionOptions,
+      'No product version',
+      noProductVersion,
+    );
 
     return {
       statusOptions: createFilterObj(releases, (mr) => getReleaseStatus(mr), statuses),
