@@ -154,7 +154,7 @@ format_slack_message() {
             end
         ) as $includes |
         "• <\(.url)|#\(.number)> " + $includes + "- \(.title) by @\(.author.login) at \(.createdAt | split("T")[0])"
-    ' | sed 's/$/\\n/' | tr -d '\n')
+    ')
 
     # Return plain text message
     printf '📋 *%s infra-deployments PRs (%s):*\n%s' "${state_display}" "${pr_count}" "${pr_list}"

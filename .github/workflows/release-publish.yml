@@ -165,7 +165,8 @@ jobs:
 
       # --- Slack shipped notification ---
       - name: Notify Slack — shipped
-        uses: slackapi/slack-github-action@v3.0.3
+        continue-on-error: true
+        uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c # v3.0.3
         with:
           method: chat.postMessage
           token: ${{ secrets.SLACK_BOT_TOKEN }}
@@ -176,6 +177,7 @@ jobs:
                 text:
                   type: plain_text
                   text: ":tada: Shipped to production — ${{ steps.meta.outputs.release_date }}"
+                  emoji: true
               - type: section
                 text:
                   type: mrkdwn

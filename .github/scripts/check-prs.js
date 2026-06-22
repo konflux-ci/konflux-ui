@@ -38,7 +38,7 @@
  * - Only human activity affects the categorization
  *
  * OUTPUT MODES:
- * - Production: Sends formatted report to Slack webhook
+ * - Production: Writes JSON payload to file for GitHub Action to send via Slack bot
  * - TEST_MODE: Logs report to console for validation
  *
  * ENVIRONMENT VARIABLES:
@@ -175,7 +175,7 @@ const getCommits = (prNumber) =>
  * 5. Generate formatted Slack message with all categories
  * 6. Send to Slack (or log if in TEST_MODE)
  *
- * @throws {Error} If GitHub API calls fail or Slack webhook rejects the message
+ * @throws {Error} If GitHub API calls fail
  */
 const checkNeedsAuthorFollowupPRs = async () => {
   try {
@@ -213,7 +213,7 @@ const checkNeedsAuthorFollowupPRs = async () => {
           'github-actions',
           'fullsend-ai-review',
           'red-hat-konflux',
-          'fullsend-ai-coder'
+          'fullsend-ai-coder',
         ].includes(login) || user.type === 'Bot'
       );
     };

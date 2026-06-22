@@ -35,7 +35,7 @@ jobs:
         run: node .github/scripts/check-prs.js
 
       - name: Send stale PR report to Slack
-        uses: slackapi/slack-github-action@v3.0.3
+        uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c # v3.0.3
         with:
           method: chat.postMessage
           token: ${{ secrets.SLACK_BOT_TOKEN }}
@@ -49,7 +49,7 @@ jobs:
         run: ./.github/scripts/check-infra-deployments-prs.sh
 
       - name: Send infra PR report to Slack
-        uses: slackapi/slack-github-action@v3.0.3
+        uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c # v3.0.3
         with:
           method: chat.postMessage
           token: ${{ secrets.SLACK_BOT_TOKEN }}

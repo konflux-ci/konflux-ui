@@ -120,7 +120,8 @@ jobs:
         if: |
           steps.parity.outputs.is_release_week == 'true' &&
           steps.decide.outputs.should_release == 'false'
-        uses: slackapi/slack-github-action@v3.0.3
+        continue-on-error: true
+        uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c # v3.0.3
         with:
           method: chat.postMessage
           token: ${{ secrets.SLACK_BOT_TOKEN }}
@@ -279,7 +280,8 @@ jobs:
 
       # --- Slack notification ---
       - name: Notify Slack — release cut
-        uses: slackapi/slack-github-action@v3.0.3
+        continue-on-error: true
+        uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c # v3.0.3
         with:
           method: chat.postMessage
           token: ${{ secrets.SLACK_BOT_TOKEN }}
@@ -290,6 +292,7 @@ jobs:
                 text:
                   type: plain_text
                   text: ":rocket: Release cut — ${{ needs.preflight.outputs.release_date }}"
+                  emoji: true
               - type: section
                 text:
                   type: mrkdwn
