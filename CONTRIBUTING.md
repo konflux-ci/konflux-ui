@@ -85,6 +85,37 @@ Please ensure your PR is complete and clear — this helps reviewers respond fas
 
 ---
 
+## Git hooks and local checks
+
+Commits are enforced by **Husky** (installed via `yarn install` → `prepare` script):
+
+- **pre-commit:** auto-format staged files via `lint-staged` (Prettier, ESLint restricted imports, Stylelint); block deletion or rename of protected repo files
+- **pre-push:** block force push and branch deletion on `main` / `master`
+
+### Protected repo files
+
+The pre-commit hook refuses to commit **deletions or renames** (source or destination) of infrastructure files that are easy for agents or bulk edits to remove by mistake. Content edits are not blocked.
+
+| Path | Rationale |
+| --- | --- |
+| `.husky/pre-commit`, `.husky/commit-msg`, `.husky/pre-push` | Git hooks; deletion disables local checks |
+| `package.json`, `yarn.lock` | Dependency and script definitions; deletion breaks installs and CI |
+| `.gitignore` | Prevents accidental commits of build artifacts, secrets, or local config |
+| `AGENTS.md` | Canonical AI agent instructions (`CLAUDE.md` is a symlink to this file) |
+| `setup.sh` | Documented onboarding entry point (also invoked by `yarn setup`) |
+
+**Legitimate deletion or rename:** set `SKIP_PROTECTED_PATH_CHECK=1` for that commit only, after maintainer agreement:
+
+```bash
+SKIP_PROTECTED_PATH_CHECK=1 git commit -m "chore: remove setup.sh"
+```
+
+Do not use `--no-verify`; that skips lint-staged and other pre-commit checks too.
+
+**Maintenance:** when adding a new repo-critical file that should never be deleted casually, add a pattern to `is_protected_path` in `.husky/pre-commit` and add a row to the table above in the same PR.
+
+---
+
 ## Development Environment
 
 - For detailed instructions on how to build and run the project, refer to the [README](./README.md).
