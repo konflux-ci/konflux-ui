@@ -1,6 +1,7 @@
 import React from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Bullseye, Spinner } from '@patternfly/react-core';
+import { useComponents } from '~/hooks/useComponents';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { useApplication } from '../../hooks/useApplications';
@@ -21,8 +22,8 @@ import DetailsPage from '../DetailsPage/DetailsPage';
 import { useModalLauncher } from '../modal/ModalProvider';
 import { applicationDeleteModal } from '../modal/resource-modals';
 import { ApplicationHeader } from './ApplicationHeader';
-
 import './ApplicationDetails.scss';
+
 
 export const ApplicationDetails: React.FC<React.PropsWithChildren> = () => {
   const { applicationName } = useParams();
@@ -39,6 +40,9 @@ export const ApplicationDetails: React.FC<React.PropsWithChildren> = () => {
 
   const navigate = useNavigate();
   const showModal = useModalLauncher();
+
+  const [components, componentsLoaded, componentsError] = useComponents(namespace, applicationName);
+  const hasComponents = componentsLoaded && components.length > 0 && !componentsError;
 
   const [application, applicationLoaded, applicationError] = useApplication(
     namespace,
@@ -86,8 +90,10 @@ export const ApplicationDetails: React.FC<React.PropsWithChildren> = () => {
               });
               showModal(createCustomizeAllPipelinesModalLauncher(applicationName, namespace));
             },
-            disabledTooltip: 'You do not have access to manage build pipelines',
-            isDisabled: !canPatchComponent,
+            disabledTooltip: !canPatchComponent
+              ? 'You do not have access to manage build pipelines'
+              : 'Add component to manage build pipelines',
+            isDisabled: !canPatchComponent || !hasComponents,
             key: 'manage-build-pipelines',
             label: 'Manage build pipelines',
           },
@@ -131,15 +137,19 @@ export const ApplicationDetails: React.FC<React.PropsWithChildren> = () => {
                 Add integration test
               </Link>
             ),
-            isDisabled: !canCreateIntegrationTest,
-            disabledTooltip: "You don't have access to add an integration test",
+            isDisabled: !canCreateIntegrationTest || !hasComponents,
+            disabledTooltip: !canCreateIntegrationTest
+              ? "You don't have access to add an integration test"
+              : 'Add component to add an integration test',
           },
           defineComponentRelationAction(),
           {
             key: triggerReleaseKey,
             label: triggerReleaseLabel,
-            isDisabled: triggerReleaseIsDisabled,
-            disabledTooltip: triggerReleaseDisableTooltip,
+            isDisabled: triggerReleaseIsDisabled || !hasComponents,
+            disabledTooltip: triggerReleaseDisableTooltip
+              ? triggerReleaseDisableTooltip
+              : 'Add component to trigger release',
             onClick: triggerReleaseCta,
           },
           {
