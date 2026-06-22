@@ -28,6 +28,8 @@ export default {
   collectCoverageFrom: [
     'src/**/*.{js,jsx,ts,tsx}',
     '!src/**/stories/*',
+    '!src/**/__stories__/**',
+    '!src/**/*.stories.{ts,tsx}',
     '!src/utils/test-utils.tsx',
     '!src/unit-test-utils/**/*.{ts,tsx,js,jsx}',
   ],

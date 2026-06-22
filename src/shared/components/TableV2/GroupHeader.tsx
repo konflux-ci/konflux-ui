@@ -47,7 +47,7 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
   onToggle,
   groupIndex,
 }) => (
-  <Tr data-test={`group-header-${groupId}`}>
+  <Tr role="row" data-test={`group-header-${groupId}`}>
     <Td
       expand={{
         rowIndex: groupIndex,

@@ -32,7 +32,13 @@ export const TableRow = <TData,>({
   enableExpansion,
 }: TableRowProps<TData>) => {
   return (
-    <Tr data-test="table-row" data-id={rowId} data-index={virtualIndex} ref={measureElement}>
+    <Tr
+      role="row"
+      data-test="table-row"
+      data-id={rowId}
+      data-index={virtualIndex}
+      ref={measureElement}
+    >
       {enableExpansion && (
         <Td
           expand={{
