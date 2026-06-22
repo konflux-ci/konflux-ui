@@ -5,6 +5,7 @@ import {
   BUILD_REQUEST_ANNOTATION,
   BuildRequest,
   ComponentBuildState,
+  getComponentBuildStatus,
   getConfigurationTime,
   getPACProvision,
   SAMPLE_ANNOTATION,
@@ -13,6 +14,9 @@ import { useApplicationPipelineGitHubApp } from './useApplicationPipelineGitHubA
 import { useApplication } from './useApplications';
 import { PACState } from './usePACState';
 import { usePipelineRunsV2 } from './usePipelineRunsV2';
+
+export const PAC_STATE_DONE_MESSAGE = 'done';
+export const PAC_STATE_ENABLED_MESSAGE = 'enabled';
 
 export type PacStatesForComponents = {
   [componentName: string]: PACState;
@@ -90,7 +94,11 @@ const usePACStatesForComponents = (components: ComponentKind[]): PacStatesForCom
             {
               key: PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL,
               operator: 'In',
-              values: [PipelineRunEventType.PUSH, PipelineRunEventType.GITLAB_PUSH],
+              values: [
+                PipelineRunEventType.PUSH,
+                PipelineRunEventType.GITLAB_PUSH,
+                PipelineRunEventType.INCOMING,
+              ],
             },
           ],
         },
@@ -107,6 +115,7 @@ const usePACStatesForComponents = (components: ComponentKind[]): PacStatesForCom
 
       neededNames.forEach((componentName) => {
         const component = components.find((c) => c.metadata.name === componentName);
+        const buildStatus = getComponentBuildStatus(component);
         const configurationTime: string = getConfigurationTime(component);
 
         const runsForComponent = pipelineBuildRuns?.filter(
@@ -123,7 +132,11 @@ const usePACStatesForComponents = (components: ComponentKind[]): PacStatesForCom
         if (prMerged) {
           updates[componentName] = PACState.ready;
           update = true;
-        } else if (!getNextPage) {
+        } else if (
+          !getNextPage &&
+          buildStatus?.pac?.state !== PAC_STATE_ENABLED_MESSAGE &&
+          buildStatus?.message !== PAC_STATE_DONE_MESSAGE
+        ) {
           updates[componentName] = PACState.pending;
           update = true;
         } else {
