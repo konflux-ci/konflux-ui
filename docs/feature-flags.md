@@ -53,13 +53,13 @@ src/
    export const FLAGS = {
      kubearchive: {
        key: 'kubearchive',          // must match object key
-       description: 'Kubearchive integration',
+       description: 'KubeArchive integration',
        defaultEnabled: false,        // off by default in prod
        status: 'wip',                // 'wip' | 'ready'
        // Optional: Add guards for conditional enablement
        guard: {
          allOf: ['isKubearchiveEnabled'],
-         reason: 'Kubearchive service must be available',
+         reason: 'KubeArchive service must be available',
          visible: true,
        },
      },

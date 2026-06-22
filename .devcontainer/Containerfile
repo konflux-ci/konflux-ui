@@ -1,10 +1,10 @@
 FROM quay.io/fedora/fedora:44
 
-# Install Node.js 22 and development tools
+# Install Node.js 24 and development tools
 RUN dnf update -y && \
     dnf install -y \
-    nodejs \
-    npm \
+    nodejs24 \
+    yarnpkg \
     git \
     gh \
     curl \
@@ -29,9 +29,6 @@ RUN groupadd --gid 1000 vscode \
 RUN echo vscode ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/vscode \
     && chmod 0440 /etc/sudoers.d/vscode
 
-# Enable Yarn Berry via corepack
-RUN corepack enable
-
 # Create directories for git configuration
 RUN mkdir -p /home/vscode/.ssh \
     && chown -R vscode:vscode /home/vscode/.ssh \
@@ -45,13 +42,8 @@ COPY --chown=vscode:vscode container-files /container-files/
 RUN node --version && \
     npm --version && \
     gh --version && \
-    git --version
-
-# Set up the working directory
-WORKDIR /workspaces/konflux-ui
-
-# Change ownership to vscode user
-RUN chown -R vscode:vscode /workspaces
+    git --version && \
+    yarn --version
 
 # Switch to vscode user
 USER vscode

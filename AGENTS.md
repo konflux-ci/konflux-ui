@@ -12,11 +12,11 @@
 | Type check | `yarn type-checks` |
 | Start dev server| `yarn start` |
 
-CI runs: `yarn lint` -> `yarn lint:restricted-imports` -> `yarn type-checks` -> `yarn test` (Node 20 + 22).
+CI runs two parallel jobs on Node 24: **lint** (`yarn lint` -> `yarn lint:restricted-imports` -> `yarn type-checks`) and **test** (`yarn test`).
 
 ## Setup
 
-One-command setup: ./setup.sh (checks Node.js >= 20, enables Corepack, installs dependencies, starts dev server)
+One-command setup: `yarn setup` or `./setup.sh` (checks Node.js >= 24, enables Corepack, installs dependencies, starts dev server)
 
 ## Key Conventions
 
@@ -49,6 +49,9 @@ Detailed guides for AI agents and developers:
 | `docs/guidelines/hooks-and-data-fetching.md` | Using K8s hooks, React Query, RBAC, state management |
 | `docs/guidelines/patternfly-guidelines.md` | PatternFly components, layout, design tokens, SCSS |
 | `docs/guidelines/unit-testing.md` | Writing unit tests (mocks, renderers, patterns) |
+| `docs/guidelines/single-file-verification.md` | Fast per-file lint/type-check workflow (overview) |
+| `docs/guidelines/single-file-lint.md` | Lint one `.ts`, `.tsx`, or `.scss` file |
+| `docs/guidelines/single-file-type-check.md` | Type-check one file (or fall back to project-wide) |
 
 ## Other Documentation (docs/)
 

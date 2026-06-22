@@ -119,7 +119,7 @@ export default defineConfig({
         LOCAL_CLUSTER: false,
         LOGIN_PROVIDER: '',
         PERIODIC_RUN_STAGE: false,
-        PIPELINE: 'docker-build-oci-ta',
+        PIPELINE: 'docker-build-oci-ta-min',
         SOURCE_REPO_OWNER: 'hac-test',
         SOURCE_REPO_NAME: 'devfile-sample-code-with-quarkus',
         resolution: 'high',
@@ -141,7 +141,7 @@ export default defineConfig({
       config.env.HAC_WORKSPACE = config.env.USERNAME.toLowerCase();
       if (!config.env.HAC_NAMESPACE) {
         if (config.env.LOCAL_CLUSTER === true) {
-          config.env.HAC_NAMESPACE = `user-ns2`;
+          config.env.HAC_NAMESPACE = `default-tenant`;
         } else {
           config.env.HAC_NAMESPACE = `${config.env.HAC_WORKSPACE}-tenant`;
         }

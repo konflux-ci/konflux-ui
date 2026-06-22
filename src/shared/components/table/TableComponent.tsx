@@ -1,8 +1,7 @@
 import * as React from 'react';
 import { RouteMatch } from 'react-router-dom';
 import { InfiniteLoader } from 'react-virtualized';
-import { TableGridBreakpoint } from '@patternfly/react-table';
-import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
+import { Table, TableGridBreakpoint, Thead, Tr, Th, Tbody } from '@patternfly/react-table';
 import { AutoSizer, WindowScroller } from '@patternfly/react-virtualized-extension';
 import { useDeepCompareMemoize } from '../../hooks';
 import { WithScrollContainer } from '../../utils';
@@ -161,18 +160,25 @@ const TableComponent: React.FC<React.PropsWithChildren<TableProps>> = ({
   return (
     <div className="table">
       <TableWrapper virtualize={virtualize} ariaLabel={ariaLabel} ariaRowCount={ariaRowCount}>
-        <PfTable
+        <Table
           className="table__header"
-          cells={columns}
           gridBreakPoint={gridBreakPoint}
           role={virtualize ? 'presentation' : 'grid'}
           aria-label={virtualize ? null : ariaLabel}
           variant="compact"
-          borders={false}
+          borders={true}
         >
-          <TableHeader role="rowgroup" />
-          {!virtualize ? <tbody>{data.map((obj, index) => rowRenderer(obj, index))}</tbody> : null}
-        </PfTable>
+          <Thead role="rowgroup">
+            <Tr>
+              {columns.map((col, i) => (
+                <Th key={i} {...(col.props ?? {})}>
+                  {col.title}
+                </Th>
+              ))}
+            </Tr>
+          </Thead>
+          {!virtualize ? <Tbody>{data.map((obj, index) => rowRenderer(obj, index))}</Tbody> : null}
+        </Table>
         {virtualize && <WithScrollContainer>{renderVirtualizedTable}</WithScrollContainer>}
       </TableWrapper>
     </div>

@@ -1,5 +1,27 @@
 import Prism from 'prismjs';
-import type { MatchRange } from './types';
+import type { LogSection, MatchRange } from './types';
+
+// ANSI escape code regex for removing color codes from terminal output
+// ESC character (\u001b) is a control character but necessary for ANSI escape sequences
+// eslint-disable-next-line no-control-regex
+const ANSI_ESCAPE_REGEX = /\u001b\[[0-9;]*m/g;
+
+export const normalizeLineEndings = (value: string): string => value.replace(/\r\n?/g, '\n');
+
+export const stripAnsiCodes = (value: string): string => value.replace(ANSI_ESCAPE_REGEX, '');
+
+export const buildLines = (sections: LogSection[]): string[] => {
+  const result: string[] = [];
+  for (const section of sections) {
+    if (section.containerName) {
+      result.push(section.containerName);
+    }
+    if (section.data) {
+      result.push(...stripAnsiCodes(normalizeLineEndings(section.data)).split('\n'));
+    }
+  }
+  return result;
+};
 
 /** Recursively flattens nested Prism tokens into plain text */
 export function flattenTokenText(token: string | Prism.Token): string {
