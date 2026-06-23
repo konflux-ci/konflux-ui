@@ -3,9 +3,7 @@
   width: 100% !important;
 
   &.log-content__with-gutter {
-    display: flex;
     padding-bottom: var(--pf-v5-global--spacer--xs);
-    box-sizing: border-box;
 
     // Enable keyboard navigation
     &:focus {
@@ -19,9 +17,42 @@
   }
 }
 
-.log-content__content-column {
+// Per-row gutter cell — sticky left column rendered inline within each virtual row.
+.log-content__gutter {
+  position: sticky;
+  left: 0;
+  flex-shrink: 0;
+  width: var(--pf-v5-global--spacer--3xl);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: var(--pf-v5-global--spacer--sm);
+  background-color: var(--pf-v5-global--BackgroundColor--200);
+  border-right: var(--pf-v5-global--BorderWidth--sm) solid var(--pf-v5-global--BorderColor--100);
+  user-select: none;
+  overflow: hidden;
+
+  &--highlighted {
+    background-color: var(--pf-v5-global--palette--gold-100);
+  }
+
+  .pf-m-dark & {
+    background-color: var(--pf-v5-global--BackgroundColor--dark-100);
+    border-right-color: var(--pf-v5-global--BorderColor--dark-100);
+  }
+
+  .pf-m-dark &--highlighted {
+    background-color: var(--pf-v5-global--palette--gold-400);
+  }
+}
+
+// Content cell within each virtual row (flex sibling of .log-content__gutter)
+.log-content__row-content {
   flex: 1;
   min-width: 0;
+}
+
+.log-content__container {
   position: relative;
 }
 

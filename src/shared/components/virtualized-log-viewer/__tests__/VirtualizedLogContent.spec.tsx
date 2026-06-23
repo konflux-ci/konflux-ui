@@ -134,7 +134,7 @@ describe('VirtualizedLogContent Integration Tests', () => {
       );
 
       // Text may be split across multiple elements due to tokenization
-      const logContent = container.querySelector('.log-content__content-column');
+      const logContent = container.querySelector('.log-content__list');
       expect(logContent).toBeInTheDocument();
       expect(logContent?.textContent).toContain('line 1');
       expect(logContent?.textContent).toContain('line 2');
@@ -147,7 +147,7 @@ describe('VirtualizedLogContent Integration Tests', () => {
       );
 
       // Use container queries since tokenization splits text across elements
-      const logContent = container.querySelector('.log-content__content-column');
+      const logContent = container.querySelector('.log-content__list');
       expect(logContent?.textContent).toContain('line 1');
       expect(logContent?.textContent).toContain('line 2');
       expect(logContent?.textContent).toContain('line 3');
@@ -326,7 +326,7 @@ describe('VirtualizedLogContent Integration Tests', () => {
       expect(listElement).toBeInTheDocument();
 
       // Should render the lines - use container queries since tokenization splits text
-      const logContent = container.querySelector('.log-content__content-column');
+      const logContent = container.querySelector('.log-content__list');
       expect(logContent?.textContent).toContain('line 1');
       expect(logContent?.textContent).toContain('line 2');
     });
@@ -497,7 +497,7 @@ Another short line`;
     it('should render line number gutter', () => {
       renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
 
-      const gutter = document.querySelector('.line-number__gutter');
+      const gutter = document.querySelector('.log-content__gutter');
       expect(gutter).toBeInTheDocument();
     });
 
@@ -515,10 +515,10 @@ Another short line`;
       expect(container).toBeInTheDocument();
     });
 
-    it('should render content in separate column from gutter', () => {
+    it('should render content alongside gutter in each row', () => {
       renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
 
-      const contentColumn = document.querySelector('.log-content__content-column');
+      const contentColumn = document.querySelector('.log-content__row-content');
       expect(contentColumn).toBeInTheDocument();
     });
 
@@ -542,15 +542,13 @@ Another short line`;
       });
     });
 
-    it('should align gutter cells with content lines', () => {
+    it('should align gutter cells with content rows', () => {
       renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
 
-      const gutterCells = document.querySelectorAll('.line-number__gutter-cell');
-      const contentItems = document.querySelectorAll(
-        '.log-content__content-column .pf-v5-c-log-viewer__list-item',
-      );
+      const gutterCells = document.querySelectorAll('.log-content__gutter');
+      const contentItems = document.querySelectorAll('.log-content__row-content');
 
-      // Should have matching number of visible items
+      // Each virtual row has exactly one gutter cell and one content area
       expect(gutterCells.length).toBe(contentItems.length);
     });
   });
@@ -570,7 +568,7 @@ Another short line`;
       renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
 
       // Should highlight gutter cell
-      const highlightedCells = document.querySelectorAll('.line-number__gutter-cell--highlighted');
+      const highlightedCells = document.querySelectorAll('.log-content__gutter--highlighted');
       expect(highlightedCells.length).toBeGreaterThan(0);
 
       // Should highlight line content
@@ -584,7 +582,7 @@ Another short line`;
       renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
 
       // Range should be highlighted
-      const highlightedCells = document.querySelectorAll('.line-number__gutter-cell--highlighted');
+      const highlightedCells = document.querySelectorAll('.log-content__gutter--highlighted');
       expect(highlightedCells.length).toBeGreaterThan(0);
 
       const highlightedLines = document.querySelectorAll('.log-content__line--highlighted');
@@ -702,8 +700,8 @@ Another short line`;
 
   describe('Foldable sections', () => {
     const multiSections: LogSection[] = [
-      { containerName: 'build', data: 'compile\nlink', isCompleted: true },
-      { containerName: 'test', data: 'running tests', isCompleted: false },
+      { containerName: 'BUILD', data: 'compile\nlink', isCompleted: true },
+      { containerName: 'TEST', data: 'running tests', isCompleted: false },
     ];
 
     it('should render section headers for each pipeline step', () => {
@@ -711,8 +709,8 @@ Another short line`;
         <VirtualizedLogContent {...defaultProps} sections={multiSections} />,
       );
 
-      expect(screen.getByTestId('fold-header-build')).toBeInTheDocument();
-      expect(screen.getByTestId('fold-header-test')).toBeInTheDocument();
+      expect(screen.getByTestId('fold-header-BUILD')).toBeInTheDocument();
+      expect(screen.getByTestId('fold-header-TEST')).toBeInTheDocument();
       expect(screen.getByText('BUILD')).toBeInTheDocument();
       expect(screen.getByText('TEST')).toBeInTheDocument();
     });
@@ -734,12 +732,12 @@ Another short line`;
 
       expect(screen.getByText('running tests')).toBeInTheDocument();
 
-      fireEvent.click(screen.getByTestId('fold-header-test'));
+      fireEvent.click(screen.getByTestId('fold-header-TEST'));
 
       expect(screen.queryByText('running tests')).not.toBeInTheDocument();
-      expect(screen.getByText('··· 1 lines hidden')).toBeInTheDocument();
+      expect(screen.getByText('··· 1 line hidden')).toBeInTheDocument();
 
-      fireEvent.click(screen.getByTestId('fold-header-test'));
+      fireEvent.click(screen.getByTestId('fold-header-TEST'));
 
       expect(screen.getByText('running tests')).toBeInTheDocument();
     });
@@ -751,7 +749,7 @@ Another short line`;
 
       expect(screen.queryByText('compile')).not.toBeInTheDocument();
 
-      fireEvent.click(screen.getByTestId('fold-header-build'));
+      fireEvent.click(screen.getByTestId('fold-header-BUILD'));
 
       expect(screen.getByText('compile')).toBeInTheDocument();
       expect(screen.getByText('link')).toBeInTheDocument();
@@ -762,14 +760,14 @@ Another short line`;
         <VirtualizedLogContent {...defaultProps} sections={multiSections} height={120} />,
       );
 
-      expect(screen.queryByTestId('sticky-header-build')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('sticky-header-BUILD')).not.toBeInTheDocument();
 
       const listElement = document.querySelector('.log-content__list');
       if (!listElement) throw new Error('Expected scroll container');
       Object.defineProperty(listElement, 'scrollTop', { value: 80, configurable: true });
       fireEvent.scroll(listElement);
 
-      expect(screen.getByTestId('sticky-header-build')).toBeInTheDocument();
+      expect(screen.getByTestId('sticky-header-BUILD')).toBeInTheDocument();
     });
   });
 });

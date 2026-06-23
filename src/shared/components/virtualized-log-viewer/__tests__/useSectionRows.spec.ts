@@ -1,15 +1,11 @@
 import { renderHook } from '@testing-library/react';
-import type { LogSection } from '../types';
+import { normalizeLogLines } from '../log-viewer-utils';
+import type { NormalizedLogSection } from '../types';
 import { useSectionRows } from '../useSectionRows';
 
-const section = (
-  containerName: string,
-  data: string,
-  isCompleted?: boolean,
-): LogSection => ({
+const normSection = (containerName: string, data: string): NormalizedLogSection => ({
   containerName,
-  data,
-  isCompleted,
+  lines: normalizeLogLines(data),
 });
 
 describe('useSectionRows', () => {
@@ -22,8 +18,8 @@ describe('useSectionRows', () => {
 
   it('should render content rows when expanded and fold indicators when collapsed', () => {
     const sections = [
-      section('build', 'compile\nlink', true),
-      section('test', 'running', false),
+      normSection('build', 'compile\nlink'),
+      normSection('test', 'running'),
     ];
     const expanded = new Set([1]);
     const { result } = renderHook(() => useSectionRows(sections, expanded));
@@ -38,7 +34,7 @@ describe('useSectionRows', () => {
   });
 
   it('should map search lines to display rows and flat line indexes', () => {
-    const sections = [section('build', 'line one\nline two', false)];
+    const sections = [normSection('build', 'line one\nline two')];
     const expanded = new Set([0]);
     const { result } = renderHook(() => useSectionRows(sections, expanded));
 
@@ -59,8 +55,8 @@ describe('useSectionRows', () => {
 
   it('should add a blank search line between multi-section blocks', () => {
     const sections = [
-      section('build', 'a', true),
-      section('test', 'b', false),
+      normSection('build', 'a'),
+      normSection('test', 'b'),
     ];
     const expanded = new Set([0, 1]);
     const { result } = renderHook(() => useSectionRows(sections, expanded));

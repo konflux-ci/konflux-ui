@@ -19,7 +19,7 @@ export function computeStickySectionHeader(options: {
 
   const sectionHeaderRowIndices: number[] = [];
   for (let i = 0; i < displayRows.length; i++) {
-    if (displayRows[i].kind === 'section-header') sectionHeaderRowIndices.push(i);
+    if (isSectionHeaderRow(displayRows[i])) sectionHeaderRowIndices.push(i);
   }
   if (sectionHeaderRowIndices.length === 0) {
     return { stickyRow: null, pushUpOffset: 0 };
@@ -27,7 +27,7 @@ export function computeStickySectionHeader(options: {
 
   const headerTopByIndex = new Map<number, number>();
   for (const vItem of virtualItems) {
-    if (displayRows[vItem.index]?.kind === 'section-header') {
+    if (isSectionHeaderRow(displayRows[vItem.index])) {
       headerTopByIndex.set(vItem.index, vItem.start);
     }
   }

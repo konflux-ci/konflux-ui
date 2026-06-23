@@ -24,6 +24,12 @@ export interface LogSection {
   isCompleted?: boolean;
 }
 
+/** A LogSection whose data has been normalized (ANSI stripped, line endings unified, split into lines) */
+export interface NormalizedLogSection {
+  containerName: string;
+  lines: string[];
+}
+
 export type SectionHeaderRow = {
   readonly kind: 'section-header';
   readonly sectionName: string;

@@ -1,6 +1,5 @@
 import React from 'react';
-import { normalizeLogLines } from './log-viewer-utils';
-import type { LogDisplayRow, LogSection } from './types';
+import type { LogDisplayRow, NormalizedLogSection } from './types';
 
 export interface SectionRowsResult {
   displayRows: LogDisplayRow[];
@@ -24,27 +23,16 @@ const EMPTY_SECTION_ROWS: SectionRowsResult = {
 };
 
 export const useSectionRows = (
-  sections: readonly LogSection[],
+  sections: readonly NormalizedLogSection[],
   expandedSections: Set<number>,
 ): SectionRowsResult => {
-  const normalizedSections = React.useMemo(
-    () =>
-      sections.length === 0
-        ? []
-        : sections.map((s) => ({
-            containerName: s.containerName,
-            lines: normalizeLogLines(s.data),
-          })),
+  const allLines = React.useMemo(
+    () => sections.flatMap((s) => s.lines),
     [sections],
   );
 
-  const allLines = React.useMemo(
-    () => normalizedSections.flatMap((s) => s.lines),
-    [normalizedSections],
-  );
-
   return React.useMemo(() => {
-    if (normalizedSections.length === 0) return EMPTY_SECTION_ROWS;
+    if (sections.length === 0) return EMPTY_SECTION_ROWS;
     const rows: LogDisplayRow[] = [];
     const searchToDisplay = new Map<number, number>();
     const searchToFlatLine = new Map<number, number>();
@@ -55,8 +43,8 @@ export const useSectionRows = (
     let flatLineIndex = 0;
     let searchLine = 0;
 
-    for (let i = 0; i < normalizedSections.length; i++) {
-      const { containerName, lines: sectionLines } = normalizedSections[i];
+    for (let i = 0; i < sections.length; i++) {
+      const { containerName, lines: sectionLines } = sections[i];
       const isExpanded = expandedSections.has(i);
 
       const headerDisplayIdx = rows.length;
@@ -99,7 +87,7 @@ export const useSectionRows = (
       globalLineNumber += sectionLines.length;
       flatLineIndex += sectionLines.length;
 
-      if (i < normalizedSections.length - 1) {
+      if (i < sections.length - 1) {
         searchLine++;
       }
     }
@@ -112,5 +100,5 @@ export const useSectionRows = (
       searchLineToSectionIndex: searchToSection,
       lineNumberToDisplayRow: lineNumToDisplay,
     };
-  }, [normalizedSections, allLines, expandedSections]);
+  }, [sections, allLines, expandedSections]);
 };

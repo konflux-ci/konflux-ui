@@ -1,5 +1,5 @@
 import Prism from 'prismjs';
-import type { LogSection, MatchRange } from './types';
+import type { LogSection, MatchRange, NormalizedLogSection } from './types';
 
 // ANSI escape code regex for removing color codes from terminal output
 // ESC character (\u001b) is a control character but necessary for ANSI escape sequences
@@ -12,6 +12,10 @@ const stripAnsiCodes = (value: string): string => value.replace(ANSI_ESCAPE_REGE
 
 export function normalizeLogLines(data: string): string[] {
   return stripAnsiCodes(normalizeLineEndings(data)).split('\n');
+}
+
+export function normalizeSection(section: LogSection): NormalizedLogSection {
+  return { containerName: section.containerName, lines: normalizeLogLines(section.data) };
 }
 
 export function singleLogSection(

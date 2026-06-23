@@ -1,11 +1,11 @@
 import React from 'react';
-import { Flex, Text } from '@patternfly/react-core';
+import { Text } from '@patternfly/react-core';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { LineNumberGutter } from './LineNumberGutter';
-import { StickySectionHeaderBar } from './section-log-ui';
+import { normalizeSection } from './log-viewer-utils';
 import { SectionedVirtualRow } from './SectionedVirtualRow';
+import { StickySectionHeaderBar } from './SectionLogUI';
 import { computeStickySectionHeader } from './sticky-section-header';
-import type { LogSection, SearchedWord } from './types';
+import type { LogSection, NormalizedLogSection, SearchedWord } from './types';
 import { useKeyboardNavigation } from './useKeyboardNavigation';
 import { useLineNumberNavigation } from './useLineNumberNavigation';
 import { useLineRenderer } from './useLineRenderer';
@@ -28,6 +28,8 @@ import './VirtualizedLogContent.scss';
 
 export interface VirtualizedLogContentProps {
   sections: LogSection[];
+  /** Pre-normalized sections. When provided by the parent, internal normalization is skipped. */
+  normalizedSections?: NormalizedLogSection[];
   height: number;
   width: string | number;
   scrollToRow?: number;
@@ -44,6 +46,7 @@ export interface VirtualizedLogContentProps {
 
 export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
   sections,
+  normalizedSections: normalizedSectionsProp,
   height,
   width,
   scrollToRow,
@@ -58,6 +61,13 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
 
   const isMultiSection = sections.length > 1;
   const { expandedSections, toggleSection, expandSection } = useSectionFold(sections);
+
+  const internalNormalizedSections = React.useMemo(
+    () => (normalizedSectionsProp ? null : sections.map(normalizeSection)),
+    [normalizedSectionsProp, sections],
+  );
+  const effectiveNormalizedSections = normalizedSectionsProp ?? internalNormalizedSections ?? [];
+
   const {
     displayRows,
     allLines,
@@ -65,7 +75,7 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
     searchLineToFlatLineIndex,
     searchLineToSectionIndex,
     lineNumberToDisplayRow,
-  } = useSectionRows(sections, expandedSections);
+  } = useSectionRows(effectiveNormalizedSections, expandedSections);
 
   const rowCount = displayRows.length;
 
@@ -193,18 +203,8 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
     itemSize,
   });
 
-  const getGutterLineNumber = React.useCallback(
-    (virtualItemIndex: number): number | null => {
-      const row = displayRows[virtualItemIndex];
-      if (row?.kind === 'section-header') return row.lineNumber;
-      if (row?.kind === 'content') return row.globalLineNumber;
-      return null;
-    },
-    [displayRows],
-  );
-
   return (
-    <Flex style={{ position: 'relative' }}>
+    <div className="log-content__container">
       <div
         ref={measureCallbackRef}
         className="pf-v5-c-log-viewer__list-item"
@@ -235,41 +235,32 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
         }}
         onClick={() => scrollRef.current?.focus()}
       >
-        <Flex
+        <div
           style={{
             height: `${virtualizer.getTotalSize()}px`,
             width: '100%',
             position: 'relative',
           }}
         >
-          <LineNumberGutter
-            virtualItems={virtualItems}
-            itemSize={itemSize}
-            getLineNumber={getGutterLineNumber}
-            onLineClick={handleLineClick}
-            isLineHighlighted={isLineHighlighted}
-          />
-
-          <Flex className="log-content__content-column" flex={{ default: 'flex_1' }}>
-            {virtualItems.map((virtualItem) => {
-              const row = displayRows[virtualItem.index];
-              if (!row) return null;
-              return (
-                <SectionedVirtualRow
-                  key={virtualItem.key}
-                  virtualIndex={virtualItem.index}
-                  start={virtualItem.start}
-                  row={row}
-                  measureElement={virtualizer.measureElement}
-                  isLineHighlighted={isLineHighlighted}
-                  onToggleSection={toggleSection}
-                  renderLogLine={renderLine}
-                />
-              );
-            })}
-          </Flex>
-        </Flex>
+          {virtualItems.map((virtualItem) => {
+            const row = displayRows[virtualItem.index];
+            if (!row) return null;
+            return (
+              <SectionedVirtualRow
+                key={virtualItem.key}
+                virtualIndex={virtualItem.index}
+                start={virtualItem.start}
+                row={row}
+                measureElement={virtualizer.measureElement}
+                isLineHighlighted={isLineHighlighted}
+                onToggleSection={toggleSection}
+                renderLogLine={renderLine}
+                onLineClick={handleLineClick}
+              />
+            );
+          })}
+        </div>
       </div>
-    </Flex>
+    </div>
   );
 };
