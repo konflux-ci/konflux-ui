@@ -14,6 +14,7 @@ import { useLightspeedChat } from '~/components/AIChat/hooks/useLightspeedChat';
 
 import '@patternfly/react-core-v6/dist/styles/base-no-reset.css';
 import '@patternfly/chatbot/dist/css/main.css';
+import './AIChat.scss';
 
 const displayMode = ChatbotDisplayMode.default;
 
@@ -64,7 +65,7 @@ export const AIChatDock: React.FC = () => {
   );
 
   return createPortal(
-    <div className="pf-v6 konflux-ai-chat">
+    <div className="pf-v6 pf-v6-m-legacy-font konflux-ai-chat">
       <ChatbotToggle
         className="konflux-ai-chat__toggle"
         tooltipLabel={KONFLUX_AI_TOGGLE_TOOLTIP}
