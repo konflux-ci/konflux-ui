@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { useParams } from 'react-router-dom';
-import { screen } from '@testing-library/react';
+import { act, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { useApplication, useApplications } from '../../../hooks/useApplications';
 import { ComponentGroupVersionKind, PipelineRunGroupVersionKind } from '../../../models';
 import { WatchK8sResource } from '../../../types/k8s';
@@ -108,5 +109,71 @@ describe('ApplicationDetails', () => {
     watchResourceMock.mockReturnValueOnce([mockApplication, true]);
     renderWithQueryClientAndRouter(<ApplicationDetails />);
     expect(screen.queryByTestId('applications-breadcrumb-link')).toBeInTheDocument();
+  });
+
+  describe('action disabled state based on component availability', () => {
+    const openActionsMenu = async () => {
+      const actionsButton = screen.getByRole('button', { name: /Actions/i });
+      await act(async () => {
+        await userEvent.click(actionsButton);
+      });
+    };
+
+    it('should disable "Manage build pipelines" when there are no components', async () => {
+      workflowMocks.useComponentsMock.mockReturnValue([[], true, undefined]);
+      renderWithQueryClientAndRouter(<ApplicationDetails />);
+      await openActionsMenu();
+      const action = screen.getByText('Manage build pipelines');
+      expect(action.closest('button, a')).toHaveAttribute('aria-disabled', 'true');
+    });
+
+    it('should enable "Manage build pipelines" when components exist and user has patch permission', async () => {
+      renderWithQueryClientAndRouter(<ApplicationDetails />);
+      await openActionsMenu();
+      const action = screen.getByText('Manage build pipelines');
+      expect(action.closest('button, a')).not.toHaveAttribute('aria-disabled', 'true');
+    });
+
+    it('should disable "Add integration test" when there are no components', async () => {
+      workflowMocks.useComponentsMock.mockReturnValue([[], true, undefined]);
+      renderWithQueryClientAndRouter(<ApplicationDetails />);
+      await openActionsMenu();
+      const action = screen.getByText('Add integration test');
+      expect(action.closest('button, a')).toHaveAttribute('aria-disabled', 'true');
+    });
+
+    it('should enable "Add integration test" when components exist and user has create permission', async () => {
+      renderWithQueryClientAndRouter(<ApplicationDetails />);
+      await openActionsMenu();
+      const action = screen.getByText('Add integration test');
+      expect(action.closest('button, a')).not.toHaveAttribute('aria-disabled', 'true');
+    });
+
+    it('should disable "Trigger release" when there are no components', async () => {
+      workflowMocks.useComponentsMock.mockReturnValue([[], true, undefined]);
+      renderWithQueryClientAndRouter(<ApplicationDetails />);
+      await openActionsMenu();
+      const action = screen.getByText('Trigger release');
+      expect(action.closest('button, a')).toHaveAttribute('aria-disabled', 'true');
+    });
+
+    it('should enable "Trigger release" when components exist and user has release permission', async () => {
+      renderWithQueryClientAndRouter(<ApplicationDetails />);
+      await openActionsMenu();
+      const action = screen.getByText('Trigger release');
+      expect(action.closest('button, a')).not.toHaveAttribute('aria-disabled', 'true');
+    });
+
+    it('should disable "Manage build pipelines" when user lacks patch permission regardless of components', async () => {
+      const useAccessReviewForModelMock = jest.requireMock('../../../utils/rbac')
+        .useAccessReviewForModel as jest.Mock;
+      useAccessReviewForModelMock.mockImplementation(
+        (_model: unknown, verb: string) => (verb === 'patch' ? [false, true] : [true, true]),
+      );
+      renderWithQueryClientAndRouter(<ApplicationDetails />);
+      await openActionsMenu();
+      const action = screen.getByText('Manage build pipelines');
+      expect(action.closest('button, a')).toHaveAttribute('aria-disabled', 'true');
+    });
   });
 });
