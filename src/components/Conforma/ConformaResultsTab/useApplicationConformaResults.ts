@@ -1,0 +1,440 @@
+import * as React from 'react';
+import { useLocation } from 'react-router-dom';
+import {
+  aggregateCounts,
+  listSecurityTaskRuns,
+  resolveConformaResultFromTaskRun,
+  securityTaskForPipeline,
+} from '~/components/Conforma/conforma-fetch-utils';
+import { PipelineRunLabel, PipelineRunType } from '~/consts/pipelinerun';
+import { CONFORMA_TASK, EC_TASK } from '~/consts/security';
+import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
+import { useComponents } from '~/hooks/useComponents';
+import { usePipelineRunsV2 } from '~/hooks/usePipelineRunsV2';
+import { sortTaskRunsByTime } from '~/hooks/useTaskRuns';
+import { logger } from '~/monitoring/logger';
+import { useDeepCompareMemoize } from '~/shared/hooks/useDeepCompareMemoize';
+import { useNamespace } from '~/shared/providers/Namespace';
+import type { PipelineRunKind } from '~/types';
+import { ComponentConformaResult, CONFORMA_RESULT_STATUS, UIConformaData } from '~/types/conforma';
+
+export type ConformaResultRow = UIConformaData & {
+  image?: string;
+};
+
+export type ComponentConformaStatus = {
+  componentName: string;
+  status: 'pass' | 'warning' | 'fail' | 'unknown';
+  violationCount: number;
+  warningCount: number;
+  successCount: number;
+  pipelineRunName?: string;
+};
+
+export type ApplicationConformaResults = {
+  componentStatuses: ComponentConformaStatus[];
+  allResults: ConformaResultRow[];
+  totalComponents: number;
+  totalFailed: number;
+  totalViolations: number;
+  totalWarnings: number;
+  totalSuccesses: number;
+  loaded: boolean;
+  error: unknown;
+};
+
+type QualifyingPipeline = {
+  componentName: string;
+  pipelineRun: PipelineRunKind;
+  securityTaskName: typeof EC_TASK | typeof CONFORMA_TASK;
+};
+
+type ConformaByComponentEntry =
+  | { state: 'ok'; components: ComponentConformaResult[]; pipelineRunName: string }
+  | { state: 'error'; err: unknown; pipelineRunName?: string }
+  | { state: 'skipped' };
+
+// Removes individual 404-artifact violation entries from each component, leaving all
+// other violations intact. Intentionally different from the shared
+// `filterInvalidImageConformaRows` in `conforma-fetch-utils`, which removes entire
+// components that have only a single 404 violation. Here we do per-row surgery so a
+// component with a mix of real and 404 violations still surfaces the real ones.
+const filterPerComponent404Violations = (
+  components: ComponentConformaResult[],
+): ComponentConformaResult[] =>
+  components.map((comp) => ({
+    ...comp,
+    violations: comp.violations?.filter((v) => !(v.msg?.includes('404 Not Found') && !v.metadata)),
+  }));
+
+async function fetchConformaForPipeline(
+  namespace: string,
+  pipelineRunName: string,
+  securityTaskName: QualifyingPipeline['securityTaskName'],
+  isKubearchiveLogsEnabled: boolean,
+): Promise<ComponentConformaResult[]> {
+  const listed = sortTaskRunsByTime(
+    await listSecurityTaskRuns(namespace, pipelineRunName, securityTaskName),
+  );
+  const taskRun = listed[0];
+  if (!taskRun) return [];
+  const conformaRaw = await resolveConformaResultFromTaskRun(
+    namespace,
+    taskRun,
+    isKubearchiveLogsEnabled,
+  );
+  return filterPerComponent404Violations(conformaRaw?.components ?? []);
+}
+
+function statusFromCounts(
+  violationCount: number,
+  warningCount: number,
+  successCount: number,
+  hasData: boolean,
+): ComponentConformaStatus['status'] {
+  if (!hasData) return 'unknown';
+  if (violationCount > 0) return 'fail';
+  if (warningCount > 0) return 'warning';
+  if (successCount > 0) return 'pass';
+  return 'unknown';
+}
+
+/**
+ * Maps ComponentConformaResult[] to ConformaResultRow[], preserving the
+ * container image reference that UIConformaData normally drops.
+ */
+const mapConformaResultDataWithImage = (
+  conformaComponents: ComponentConformaResult[],
+): ConformaResultRow[] => {
+  const rows: ConformaResultRow[] = [];
+
+  for (const comp of conformaComponents) {
+    const image = comp.containerImage;
+
+    comp.violations?.forEach((v) => {
+      rows.push({
+        title: v.metadata?.title,
+        description: v.metadata?.description,
+        status: CONFORMA_RESULT_STATUS.violations,
+        timestamp: v.metadata?.effective_on,
+        component: comp.name,
+        msg: v.msg,
+        collection: v.metadata?.collections,
+        solution: v.metadata?.solution,
+        image,
+      });
+    });
+
+    comp.warnings?.forEach((v) => {
+      rows.push({
+        title: v.metadata?.title,
+        description: v.metadata?.description,
+        status: CONFORMA_RESULT_STATUS.warnings,
+        timestamp: v.metadata?.effective_on,
+        component: comp.name,
+        msg: v.msg,
+        collection: v.metadata?.collections,
+        solution: v.metadata?.solution,
+        image,
+      });
+    });
+
+    comp.successes?.forEach((v) => {
+      rows.push({
+        title: v.metadata?.title,
+        description: v.metadata?.description,
+        status: CONFORMA_RESULT_STATUS.successes,
+        component: comp.name,
+        collection: v.metadata?.collections,
+        image,
+      });
+    });
+  }
+
+  return rows;
+};
+
+export const useApplicationConformaResults = (
+  applicationName: string,
+): ApplicationConformaResults => {
+  const { search } = useLocation();
+  const useMock =
+    process.env.NODE_ENV === 'development' && new URLSearchParams(search).has('mock', 'conforma');
+
+  const namespace = useNamespace();
+  const isKubearchiveLogsEnabled = useIsOnFeatureFlag('kubearchive-logs');
+
+  const [appComponents, componentsLoaded, componentsError] = useComponents(
+    namespace,
+    applicationName,
+  );
+
+  const [testRuns, pipelinesLoaded, pipelinesError] = usePipelineRunsV2(
+    namespace?.length ? namespace : null,
+    {
+      selector: {
+        matchLabels: {
+          [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.TEST,
+          [PipelineRunLabel.APPLICATION]: applicationName,
+        },
+      },
+    },
+  );
+
+  const latestQualifyingPerComponent = React.useMemo((): QualifyingPipeline[] => {
+    const newestByComp = new Map<string, PipelineRunKind>();
+
+    for (const pr of testRuns ?? []) {
+      const comp = pr.metadata?.labels?.[PipelineRunLabel.COMPONENT];
+      const prName = pr.metadata?.name;
+      if (!comp || !prName) continue;
+
+      const candidateTs = pr.metadata?.creationTimestamp ?? '';
+      const existing = newestByComp.get(comp);
+      const existingTs = existing?.metadata?.creationTimestamp ?? '';
+
+      if (
+        !existing ||
+        candidateTs.localeCompare(existingTs) > 0 ||
+        (candidateTs === existingTs && prName.localeCompare(existing.metadata?.name ?? '') > 0)
+      ) {
+        newestByComp.set(comp, pr);
+      }
+    }
+
+    const qualifiers: QualifyingPipeline[] = [];
+    for (const [componentName, pr] of newestByComp.entries()) {
+      const securityTaskName = securityTaskForPipeline(pr);
+      if (securityTaskName) {
+        qualifiers.push({ componentName, pipelineRun: pr, securityTaskName });
+      }
+    }
+    return qualifiers;
+  }, [testRuns]);
+
+  // Stabilize the qualifier list so the fetch effect doesn't re-fire when
+  // usePipelineRunsV2 returns a new array reference with identical content.
+  const stableQualifiers = useDeepCompareMemoize(
+    latestQualifyingPerComponent.map((q) => ({
+      componentName: q.componentName,
+      pipelineRunName: q.pipelineRun.metadata?.name,
+      securityTaskName: q.securityTaskName,
+    })),
+  );
+
+  // S2: Load mock data via dynamic import so the mock module is excluded from
+  // the production bundle's dependency graph entirely.
+  const [mockResults, setMockResults] = React.useState<ApplicationConformaResults | null>(null);
+  React.useEffect(() => {
+    if (!useMock) return;
+    let cancelled = false;
+    void import('./__data__/mockConformaResults')
+      .then(({ generateMockResults }) => {
+        if (!cancelled) setMockResults(generateMockResults());
+      })
+      .catch((err) => {
+        logger.warn('Failed to load mock Conforma data', { error: err });
+        if (!cancelled) {
+          setMockResults({
+            componentStatuses: [],
+            allResults: [],
+            totalComponents: 0,
+            totalFailed: 0,
+            totalViolations: 0,
+            totalWarnings: 0,
+            totalSuccesses: 0,
+            loaded: true,
+            error: err,
+          });
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [useMock]);
+
+  const [conformaByComponent, setConformaByComponent] = React.useState<
+    Record<string, ConformaByComponentEntry | undefined>
+  >({});
+  const [conformaBatchFinished, setConformaBatchFinished] = React.useState(false);
+
+  const readyToFetch = Boolean(namespace?.length && pipelinesLoaded && componentsLoaded);
+
+  React.useEffect(() => {
+    if (useMock) return;
+    if (!readyToFetch) return;
+
+    if (!stableQualifiers?.length) {
+      setConformaByComponent({});
+      setConformaBatchFinished(true);
+      return;
+    }
+
+    let aborted = false;
+    setConformaBatchFinished(false);
+
+    const runFetch = async () => {
+      const next: Record<string, ConformaByComponentEntry | undefined> = {};
+
+      await Promise.all(
+        stableQualifiers.map(async (sq) => {
+          const prName = sq.pipelineRunName;
+          if (!prName) return;
+          try {
+            const components = await fetchConformaForPipeline(
+              namespace,
+              prName,
+              sq.securityTaskName,
+              isKubearchiveLogsEnabled,
+            );
+            if (!aborted) {
+              next[sq.componentName] = {
+                state: 'ok',
+                components,
+                pipelineRunName: prName,
+              };
+            }
+          } catch (e) {
+            if (!aborted) {
+              next[sq.componentName] = { state: 'error', err: e, pipelineRunName: prName };
+            }
+          }
+        }),
+      );
+
+      if (aborted) return;
+      setConformaByComponent(next);
+      setConformaBatchFinished(true);
+    };
+
+    void runFetch();
+    return () => {
+      aborted = true;
+    };
+  }, [readyToFetch, stableQualifiers, namespace, isKubearchiveLogsEnabled, useMock]);
+
+  const loaded = Boolean(
+    namespace?.length && componentsLoaded && pipelinesLoaded && conformaBatchFinished,
+  );
+
+  const batchError = React.useMemo(() => {
+    const entries = Object.values(conformaByComponent);
+    const errorEntries = entries.filter((v) => v?.state === 'error');
+    const allFailed = entries.length > 0 && entries.every((v) => v?.state === 'error');
+    return allFailed && errorEntries[0]?.state === 'error' ? errorEntries[0].err : undefined;
+  }, [conformaByComponent]);
+
+  React.useEffect(() => {
+    const errorEntries = Object.values(conformaByComponent).filter((v) => v?.state === 'error');
+    for (const e of errorEntries) {
+      if (e?.state === 'error') {
+        logger.warn('Conforma aggregate: component-level fetch error', { error: e.err });
+      }
+    }
+  }, [conformaByComponent]);
+
+  const aggregateError = componentsError ?? pipelinesError ?? batchError;
+
+  return React.useMemo((): ApplicationConformaResults => {
+    if (useMock) {
+      return (
+        mockResults ?? {
+          componentStatuses: [],
+          allResults: [],
+          totalComponents: 0,
+          totalFailed: 0,
+          totalViolations: 0,
+          totalWarnings: 0,
+          totalSuccesses: 0,
+          loaded: false,
+          error: undefined,
+        }
+      );
+    }
+
+    if (!namespace?.length) {
+      return {
+        componentStatuses: [],
+        allResults: [],
+        totalComponents: 0,
+        totalFailed: 0,
+        totalViolations: 0,
+        totalWarnings: 0,
+        totalSuccesses: 0,
+        loaded: false,
+        error: undefined,
+      };
+    }
+
+    const componentStatuses: ComponentConformaStatus[] = appComponents.map((c) => {
+      const name = c.metadata?.name;
+      if (!name) {
+        return {
+          componentName: '',
+          status: 'unknown' as const,
+          violationCount: 0,
+          warningCount: 0,
+          successCount: 0,
+        };
+      }
+
+      const entry = conformaByComponent[name];
+      if (!entry || entry.state === 'skipped' || entry.state === 'error') {
+        return {
+          componentName: name,
+          status: 'unknown' as const,
+          violationCount: 0,
+          warningCount: 0,
+          successCount: 0,
+          pipelineRunName: entry?.state === 'error' ? entry.pipelineRunName : undefined,
+        };
+      }
+
+      const { violationCount, warningCount, successCount } = aggregateCounts(entry.components);
+      const hasData = entry.components.length > 0;
+
+      return {
+        componentName: name,
+        status: statusFromCounts(violationCount, warningCount, successCount, hasData),
+        violationCount,
+        warningCount,
+        successCount,
+        pipelineRunName: entry.pipelineRunName,
+      };
+    });
+
+    const mergedConformaRows: ComponentConformaResult[] = [];
+    for (const v of Object.values(conformaByComponent)) {
+      if (v?.state === 'ok') {
+        mergedConformaRows.push(...v.components);
+      }
+    }
+
+    const allResults = mapConformaResultDataWithImage(mergedConformaRows);
+
+    const totalViolations = allResults.filter(
+      (r) => r.status === CONFORMA_RESULT_STATUS.violations,
+    ).length;
+    const totalWarnings = allResults.filter(
+      (r) => r.status === CONFORMA_RESULT_STATUS.warnings,
+    ).length;
+    const totalSuccesses = allResults.filter(
+      (r) => r.status === CONFORMA_RESULT_STATUS.successes,
+    ).length;
+
+    const totalComponents = componentStatuses.length;
+    const totalFailed = componentStatuses.filter((c) => c.status === 'fail').length;
+
+    return {
+      componentStatuses,
+      allResults,
+      totalComponents,
+      totalFailed,
+      totalViolations,
+      totalWarnings,
+      totalSuccesses,
+      loaded,
+      error: aggregateError,
+    };
+  }, [aggregateError, appComponents, conformaByComponent, loaded, mockResults, namespace?.length, useMock]);
+};

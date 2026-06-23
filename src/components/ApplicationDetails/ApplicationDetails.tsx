@@ -1,6 +1,7 @@
 import React from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Bullseye, Spinner } from '@patternfly/react-core';
+import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { useApplication } from '../../hooks/useApplications';
@@ -45,6 +46,7 @@ export const ApplicationDetails: React.FC<React.PropsWithChildren> = () => {
     applicationName,
   );
   const track = useTrackEvent();
+  const isConformaPolicyEnabled = useIsOnFeatureFlag('conforma-policy');
   const appDisplayName = application?.spec?.displayName || application?.metadata?.name || '';
   const applicationBreadcrumbs = useApplicationBreadcrumbs(appDisplayName, false);
 
@@ -193,6 +195,15 @@ export const ApplicationDetails: React.FC<React.PropsWithChildren> = () => {
             label: 'Releases',
             isFilled: true,
           },
+          ...(isConformaPolicyEnabled
+            ? [
+                {
+                  key: 'conforma-results',
+                  label: 'Conforma Results',
+                  isFilled: true,
+                },
+              ]
+            : []),
         ]}
       />
     </React.Fragment>

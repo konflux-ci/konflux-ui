@@ -1,0 +1,22 @@
+.conforma-violations-card {
+  &__app-list {
+    max-height: 22.5rem;
+    overflow-y: auto;
+  }
+
+  &__violation-count {
+    color: var(--pf-v5-global--danger-color--100);
+  }
+
+  &__warning-count {
+    color: var(--pf-v5-global--warning-color--100);
+  }
+
+  &__violation-icon {
+    color: var(--pf-v5-global--danger-color--100);
+  }
+
+  &__success-icon {
+    color: var(--pf-v5-global--success-color--100);
+  }
+}

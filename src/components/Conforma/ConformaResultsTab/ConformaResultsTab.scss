@@ -1,0 +1,12 @@
+.conforma-results-tab {
+  &__summary-wrapper {
+    margin-top: var(--pf-v5-global--spacer--md);
+  }
+}
+
+.conforma-grouped-table {
+  &__secondary-text {
+    font-size: var(--pf-v5-global--FontSize--sm);
+    color: var(--pf-v5-global--Color--200);
+  }
+}
