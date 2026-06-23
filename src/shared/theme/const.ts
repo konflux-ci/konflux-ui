@@ -14,3 +14,6 @@ export const THEME_LABELS = {
   [THEME_DARK]: 'Dark',
   [THEME_LIGHT]: 'Light',
 } as const;
+
+export const PF5_DARK_THEME_CLASS = 'pf-v5-theme-dark';
+export const PF6_DARK_THEME_CLASS = 'pf-v6-theme-dark';

@@ -6,6 +6,8 @@ import {
   THEME_LIGHT,
   PREFERS_COLOR_SCHEME_DARK,
   THEME_PREFERENCES,
+  PF5_DARK_THEME_CLASS,
+  PF6_DARK_THEME_CLASS,
 } from './const';
 import { Theme, ThemePreference } from './types';
 
@@ -24,7 +26,7 @@ export const ThemeContext = React.createContext<ThemeContextValue>({
 });
 
 const THEME_STORAGE_KEY = 'konflux-theme-preference';
-const DARK_THEME_CLASS = 'pf-v5-theme-dark';
+const DARK_THEME_CLASSES = [PF5_DARK_THEME_CLASS, PF6_DARK_THEME_CLASS] as const;
 
 const getSystemPreference = (): Theme => {
   return window.matchMedia(PREFERS_COLOR_SCHEME_DARK).matches ? THEME_DARK : THEME_LIGHT;
@@ -40,11 +42,13 @@ const getStoredPreference = (): ThemePreference => {
 
 const applyTheme = (theme: Theme) => {
   const htmlElement = document.documentElement;
-  if (theme === THEME_DARK) {
-    htmlElement.classList.add(DARK_THEME_CLASS);
-  } else {
-    htmlElement.classList.remove(DARK_THEME_CLASS);
-  }
+  DARK_THEME_CLASSES.forEach((darkThemeClass) => {
+    if (theme === THEME_DARK) {
+      htmlElement.classList.add(darkThemeClass);
+    } else {
+      htmlElement.classList.remove(darkThemeClass);
+    }
+  });
 };
 
 export const ThemeProvider: React.FC<React.PropsWithChildren> = ({ children }) => {

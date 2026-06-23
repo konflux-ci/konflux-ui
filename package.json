@@ -26,10 +26,12 @@
     "generate:analytics-types": "node scripts/generate-analytics-types.mjs"
   },
   "dependencies": {
+    "@patternfly/chatbot": "^6.6.0",
     "@patternfly/patternfly": "^5.3.1",
     "@patternfly/react-charts": "7.4.5",
     "@patternfly/react-code-editor": "^5.3.1",
     "@patternfly/react-core": "5.3.4",
+    "@patternfly/react-core-v6": "npm:@patternfly/react-core@^6.5.1",
     "@patternfly/react-icons": "^5.3.2",
     "@patternfly/react-log-viewer": "5.3.0",
     "@patternfly/react-styles": "^5.3.1",

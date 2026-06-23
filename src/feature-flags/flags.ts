@@ -131,6 +131,12 @@ const InternalFLAGS = {
     defaultEnabled: true,
     status: 'wip',
   },
+  'ai-chat': {
+    key: 'ai-chat',
+    description: 'AI chat assistant powered by PatternFly chatbot',
+    defaultEnabled: true,
+    status: 'wip',
+  },
 } satisfies Record<string, FeatureMeta>;
 
 export type FlagKey = keyof typeof InternalFLAGS;

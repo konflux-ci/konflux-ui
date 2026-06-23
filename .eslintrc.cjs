@@ -64,6 +64,7 @@ module.exports = {
           'application_url',
           'sbom_server',
           'release_name',
+          'conversation_id',
         ],
       },
     ],
