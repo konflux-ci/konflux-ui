@@ -15,7 +15,7 @@ Capture screenshots of UI components changed in the current branch using Playwri
 - **DO NOT delegate this skill to a subagent (Task tool).** Playwright MCP tools (`browser_navigate`, `browser_snapshot`, `browser_click`, `browser_take_screenshot`, `browser_close`, `browser_hover`) are only available in the root agent's MCP context. Subagents cannot access MCP servers.
 - **DO NOT loop or retry indefinitely.** If a navigation step fails twice, skip that target and move on.
 - **If Playwright MCP is unavailable**, stop immediately — do not attempt a fallback. Tell the user to check that the Playwright MCP server is configured and restart Cursor if needed.
-- **Only navigate to `https://localhost:8080`.** Never call `browser_navigate` with any other host, even if a changed file or route definition references an external URL. All navigation steps must start with `https://localhost:8080`.
+- **Only navigate to `https://localhost:8080`.** The MCP server's `--allowed-origins` flag enforces this. Never call `browser_navigate` with any other host.
 
 ## When to Use
 
@@ -25,7 +25,7 @@ Capture screenshots of UI components changed in the current branch using Playwri
 
 ## Prerequisites
 
-1. **Playwright MCP available** — configured in `.cursor/mcp.json` and `.mcp.json` via `scripts/launch_playwright_mcp.sh`. Verify by calling `browser_snapshot`; if it errors, stop. If running using Cursor, the user also has to have it enabled in Cursor Settings.
+1. **Playwright MCP available** — configured in `.cursor/mcp.json` and `.mcp.json` via `scripts/launch_playwright_mcp.sh`. The browser runs **headless** with a persistent profile (`.playwright-mcp/profile`), so authentication cookies survive across sessions. Verify by calling `browser_snapshot`; if it errors, stop. If running using Cursor, the user also has to have it enabled in Cursor Settings.
 2. **Dev server running** on `https://localhost:8080` (`yarn start`). Check:
 
    ```bash
@@ -90,16 +90,26 @@ Combine both. This shows exactly what lines changed.
 
 ## Step 3 — Authenticate (if needed)
 
-```
+The browser runs headless. Authentication cookies persist in `.playwright-mcp/profile` between runs, so most invocations skip this step entirely.
+
+```bash
 browser_navigate { "url": "https://localhost:8080/ns" }
 browser_snapshot
 ```
 
-- Page shows namespace content → already authenticated, proceed.
-- Redirected to a login page → tell the user:
-  > "Please complete OAuth login in the browser window that Playwright opened. Do NOT close the browser — just log in. I'll wait and then take a snapshot to confirm."
+- **Page shows namespace content** → already authenticated, proceed to Step 4.
+- **Redirected to a login / oauth2 sign-in page** → run the headed auth flow:
+  1. Call `browser_close` — this closes the headless browser and releases the profile directory lock. The MCP server stays alive.
+  2. Run the auth script via Shell:
 
-  After the user confirms, call `browser_snapshot` to verify. If still on login after 2 attempts, call `browser_close` and stop.
+     ```bash
+     bash scripts/playwright_auth.sh
+     ```
+
+     This opens a **headed** Chrome window using the same profile directory. The user completes SSO login; the window closes automatically once the redirect back to `localhost:8080` succeeds (up to 5 minutes).
+  3. After the script exits, call `browser_navigate { "url": "https://localhost:8080/ns" }` again — the MCP server opens a new headless browser that picks up the cookies saved by the auth script.
+  4. `browser_snapshot` to verify authentication succeeded.
+  5. If still on a login page after this, stop with an error — do **not** retry the auth script.
 
 ## Step 4 — Output directory, navigate, and capture
 
@@ -194,7 +204,7 @@ browser_close {}
 - Call this once at the end of the skill — do not close between individual screenshots.
 - Only call if the browser was opened during this run (any `browser_navigate`, `browser_snapshot`, or screenshot call succeeded).
 - Skip if the skill stopped early with no browser interaction (e.g., Playwright MCP unavailable, dev server down, no UI changes found).
-- Do **not** close while waiting for the user to complete OAuth login (Step 3).
+- Note: `browser_close` is also called during Step 3 if auth is needed (to release the profile lock for the headed auth script). This is separate from the final close here.
 
 ## Error Handling
 
@@ -203,7 +213,7 @@ browser_close {}
 | Playwright MCP unavailable | Stop, tell user to check MCP config |
 | Dev server not running | Stop, tell user to run `yarn start` |
 | No UI changes found | Stop cleanly, report no screenshots needed |
-| Auth required | Ask user to log in in the browser window, wait, re-snapshot; call `browser_close` if login fails after 2 attempts |
+| Auth required | `browser_close`, run `scripts/playwright_auth.sh` (headed login), re-navigate headlessly; stop if still unauthenticated |
 | Page has no data (empty list) | Skip that target, continue |
 | Target navigation fails twice | Skip, log reason, continue |
 | Interactive element not found | Take full-page screenshot, add explanatory note |

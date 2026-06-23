@@ -11,10 +11,14 @@ If you find a bug or want to request a feature, feel free to open an issue as we
 
 **Prerequisites:** Node.js >= 24
 
+Clone the repository, then run a single setup command (enables Corepack, installs dependencies, and starts the dev server):
+
 ```bash
 git clone https://github.com/konflux-ci/konflux-ui.git && cd konflux-ui
-./setup.sh
+yarn setup
 ```
+
+Equivalent: `./setup.sh`
 
 ## Setting up development environment
 
