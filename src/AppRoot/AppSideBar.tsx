@@ -20,6 +20,7 @@ import { SavedViewNavItems, SavedViewsConfig } from '~/shared/components/SavedVi
 import { useActiveRouteChecker } from '../../src/hooks/useActiveRouteChecker';
 import { useNamespace } from '../shared/providers/Namespace';
 import './AppSideBar.scss';
+import { IssueNavItemContent } from '~/components/Issues/IssuesNavItemContent';
 
 export const AppSideBar: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
   const isActive = useActiveRouteChecker();
@@ -84,7 +85,7 @@ export const AppSideBar: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
                 <Link
                   to={namespace ? ISSUES_PATH.createPath({ workspaceName: namespace }) : undefined}
                 >
-                  Issues <FeatureFlagIndicator flags={['issues-dashboard']} />
+                  <IssueNavItemContent namespace={namespace} />
                 </Link>
               </NavItem>
             </IfFeature>
