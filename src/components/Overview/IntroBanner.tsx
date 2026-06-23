@@ -30,6 +30,7 @@ const IntroBanner: React.FC = () => {
           className="intro-banner__content"
           isLarge
           isFullHeight
+          isPlain
           data-test="intro-banner-content"
         >
           <CardTitle>
