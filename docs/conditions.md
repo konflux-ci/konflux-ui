@@ -565,5 +565,6 @@ For experimental routes behind a feature flag, use `ensureFeatureFlagOnLoader` i
 - `'isKubearchiveEnabled'` — KubeArchive service available
 - `'isKiteServiceEnabled'` — Kite plugin health check passes (used by the Issues route)
 - `'isStagingCluster'` — Running in staging environment
+- `'isLightspeedAvailable'` — Konflux AI Lightspeed liveness check passed
 
 That's it! You now know everything you need to use conditions

@@ -130,6 +130,17 @@ const InternalFLAGS = {
     defaultEnabled: true,
     status: 'wip',
   },
+  'ai-chat': {
+    key: 'ai-chat',
+    description: 'Enable AI chat assistant',
+    defaultEnabled: false,
+    status: 'wip',
+    guard: {
+      allOf: ['isLightspeedAvailable', 'isStagingCluster'],
+      failureReason: 'Konflux AI is not available on this cluster',
+      visibleInFeatureFlagPanel: true,
+    },
+  },
   'pipeline-runs-page': {
     key: 'pipeline-runs-page',
     description:
