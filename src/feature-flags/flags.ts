@@ -141,6 +141,12 @@ const InternalFLAGS = {
     defaultEnabled: true,
     status: 'wip',
   },
+  'ai-chat': {
+    key: 'ai-chat',
+    description: 'AI chat assistant powered by PatternFly chatbot',
+    defaultEnabled: true,
+    status: 'wip',
+  },
   'pipeline-runs-page': {
     key: 'pipeline-runs-page',
     description:
