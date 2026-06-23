@@ -9,7 +9,7 @@
 # can be collected by Cypress tests using @cypress/code-coverage plugin.
 ##
 
-FROM registry.access.redhat.com/ubi9/nodejs-24@sha256:1a996f1d6422b12eef84bb217e9b107609a2055eabb58f73b3094ccf4387215a AS builder
+FROM registry.access.redhat.com/ubi9/nodejs-24@sha256:34a1e3360745b5248f2ad19e45ddf6ba2494789b6c3f6c13d589ec4f36a4af2f AS builder
 
 # Run as root in builder stage (final image uses non-root USER 1001)
 USER 0
