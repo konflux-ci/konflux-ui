@@ -21,7 +21,7 @@ export const useDocumentTitle = (title: string, options?: UseDocumentTitleOption
     let cancelled = false;
 
     document.title = title;
-    if (faviconStatus !== undefined) {
+    if (faviconStatus != null) {
       acquireFaviconBadge();
       void applyFaviconBadge(faviconStatus, () => cancelled);
     }
@@ -29,7 +29,7 @@ export const useDocumentTitle = (title: string, options?: UseDocumentTitleOption
     return () => {
       cancelled = true;
       document.title = 'Konflux';
-      if (faviconStatus !== undefined) {
+      if (faviconStatus != null) {
         releaseFaviconBadge();
       }
     };

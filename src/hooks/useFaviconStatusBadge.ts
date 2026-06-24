@@ -14,12 +14,16 @@ export const useFaviconStatusBadge = (status: runStatus | null | undefined): voi
   React.useEffect(() => {
     let cancelled = false;
 
-    acquireFaviconBadge();
-    void applyFaviconBadge(status, () => cancelled);
+    if (status != null) {
+      acquireFaviconBadge();
+      void applyFaviconBadge(status, () => cancelled);
+    }
 
     return () => {
       cancelled = true;
-      releaseFaviconBadge();
+      if (status != null) {
+        releaseFaviconBadge();
+      }
     };
   }, [status]);
 };

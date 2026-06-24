@@ -300,7 +300,7 @@ describe('favicon-badge', () => {
       expect(link.href).toContain('/favicon.ico');
     });
 
-    it('does not restore baseline while another consumer remains active', async () => {
+    it('does not reset baseline while another consumer remains active', async () => {
       const link = document.createElement('link');
       link.rel = 'icon';
       link.href = 'https://example.com/favicon.ico';
@@ -325,6 +325,9 @@ describe('favicon-badge', () => {
       acquireFaviconBadge();
       acquireFaviconBadge();
       await applyFaviconBadge(runStatus.Running);
+      expect(link.href).toBe('data:image/png;base64,active-badged');
+
+      await applyFaviconBadge(null);
       expect(link.href).toBe('data:image/png;base64,active-badged');
 
       releaseFaviconBadge();

@@ -1,4 +1,4 @@
-import { renderHook } from '@testing-library/react-hooks';
+import { renderHook } from '@testing-library/react';
 import { runStatus } from '~/consts/pipelinerun';
 import * as faviconBadge from '~/shared/utils/favicon-badge';
 import { useFaviconStatusBadge } from '../useFaviconStatusBadge';
@@ -47,14 +47,22 @@ describe('useFaviconStatusBadge', () => {
     expect(releaseFaviconBadgeMock).toHaveBeenCalled();
   });
 
-  it('restores favicon when status becomes null', () => {
+  it('does not acquire or apply when status is null', () => {
+    renderHook(() => useFaviconStatusBadge(null));
+
+    expect(acquireFaviconBadgeMock).not.toHaveBeenCalled();
+    expect(applyFaviconBadgeMock).not.toHaveBeenCalled();
+  });
+
+  it('releases favicon ownership when status becomes null', () => {
     const { rerender } = renderHook(({ status }) => useFaviconStatusBadge(status), {
       initialProps: { status: runStatus.Running as runStatus | null },
     });
 
     rerender({ status: null });
 
-    expect(applyFaviconBadgeMock).toHaveBeenLastCalledWith(null, expect.any(Function));
+    expect(applyFaviconBadgeMock).toHaveBeenCalledTimes(1);
+    expect(applyFaviconBadgeMock).toHaveBeenLastCalledWith(runStatus.Running, expect.any(Function));
     expect(releaseFaviconBadgeMock).toHaveBeenCalled();
   });
 
