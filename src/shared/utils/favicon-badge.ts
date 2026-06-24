@@ -8,7 +8,27 @@ import { global_warning_color_100 as warningColor } from '@patternfly/react-toke
 
 const DEFAULT_FAVICON_HREF = '/favicon.ico';
 
-let originalFaviconHref: string | null = null;
+let activeConsumers = 0;
+let baselineFaviconHref: string | null = null;
+
+const readFaviconHref = (): string => {
+  const link = document.querySelector<HTMLLinkElement>('link[rel~="icon"]');
+  return link?.href || DEFAULT_FAVICON_HREF;
+};
+
+export const getFaviconLink = (): HTMLLinkElement => {
+  let link = document.querySelector<HTMLLinkElement>('link[rel~="icon"]');
+  if (!link) {
+    link = document.createElement('link');
+    link.rel = 'icon';
+    document.head.appendChild(link);
+  }
+  return link;
+};
+
+const resetToBaselineFavicon = (): void => {
+  getFaviconLink().href = baselineFaviconHref ?? DEFAULT_FAVICON_HREF;
+};
 
 export const getFaviconBadgeColor = (status: string): string => {
   switch (status) {
@@ -38,32 +58,35 @@ export const getFaviconBadgeColor = (status: string): string => {
   }
 };
 
-export const getFaviconLink = (): HTMLLinkElement => {
-  let link = document.querySelector<HTMLLinkElement>('link[rel~="icon"]');
-  if (!link) {
-    link = document.createElement('link');
-    link.rel = 'icon';
-    document.head.appendChild(link);
+/** Acquire shared favicon ownership for a consumer (e.g. a React effect). */
+export const acquireFaviconBadge = (): void => {
+  if (activeConsumers === 0) {
+    baselineFaviconHref = readFaviconHref();
   }
-  return link;
+  activeConsumers += 1;
 };
 
-export const captureOriginalFaviconHref = (): void => {
-  if (originalFaviconHref === null) {
-    const link = document.querySelector<HTMLLinkElement>('link[rel~="icon"]');
-    originalFaviconHref = link?.href || DEFAULT_FAVICON_HREF;
+/** Release shared favicon ownership; restores baseline only when the last consumer exits. */
+export const releaseFaviconBadge = (): void => {
+  if (activeConsumers === 0) {
+    return;
   }
+
+  activeConsumers -= 1;
+  if (activeConsumers === 0) {
+    resetToBaselineFavicon();
+    baselineFaviconHref = null;
+  }
+};
+
+/** Resets ownership state between unit tests. */
+export const resetFaviconBadgeStateForTests = (): void => {
+  activeConsumers = 0;
+  baselineFaviconHref = null;
 };
 
 export const setFaviconHref = (href: string): void => {
-  captureOriginalFaviconHref();
   getFaviconLink().href = href;
-};
-
-export const restoreFavicon = (): void => {
-  const href = originalFaviconHref ?? DEFAULT_FAVICON_HREF;
-  getFaviconLink().href = href;
-  originalFaviconHref = null;
 };
 
 export const compositeFaviconWithBadge = (
@@ -112,14 +135,14 @@ export const applyFaviconBadge = async (
   isCancelled?: () => boolean,
 ): Promise<void> => {
   if (!status) {
-    restoreFavicon();
+    if (activeConsumers > 0) {
+      resetToBaselineFavicon();
+    }
     return;
   }
 
   const badgeColor = getFaviconBadgeColor(status);
-
-  captureOriginalFaviconHref();
-  const baseHref = originalFaviconHref ?? DEFAULT_FAVICON_HREF;
+  const baseHref = baselineFaviconHref ?? readFaviconHref();
 
   try {
     const img = await loadFaviconImage(baseHref);
@@ -130,12 +153,12 @@ export const applyFaviconBadge = async (
     const dataUrl = compositeFaviconWithBadge(img, badgeColor);
     if (dataUrl && !isCancelled?.()) {
       setFaviconHref(dataUrl);
-    } else if (!dataUrl) {
-      restoreFavicon();
+    } else if (!dataUrl && !isCancelled?.()) {
+      resetToBaselineFavicon();
     }
   } catch {
     if (!isCancelled?.()) {
-      restoreFavicon();
+      resetToBaselineFavicon();
     }
   }
 };

@@ -1,6 +1,10 @@
 import * as React from 'react';
 import { runStatus } from '~/consts/pipelinerun';
-import { applyFaviconBadge, restoreFavicon } from '~/shared/utils/favicon-badge';
+import {
+  acquireFaviconBadge,
+  applyFaviconBadge,
+  releaseFaviconBadge,
+} from '~/shared/utils/favicon-badge';
 
 export type UseDocumentTitleOptions = {
   faviconStatus?: runStatus | null;
@@ -18,6 +22,7 @@ export const useDocumentTitle = (title: string, options?: UseDocumentTitleOption
 
     document.title = title;
     if (faviconStatus !== undefined) {
+      acquireFaviconBadge();
       void applyFaviconBadge(faviconStatus, () => cancelled);
     }
 
@@ -25,7 +30,7 @@ export const useDocumentTitle = (title: string, options?: UseDocumentTitleOption
       cancelled = true;
       document.title = 'Konflux';
       if (faviconStatus !== undefined) {
-        restoreFavicon();
+        releaseFaviconBadge();
       }
     };
   }, [title, faviconStatus]);

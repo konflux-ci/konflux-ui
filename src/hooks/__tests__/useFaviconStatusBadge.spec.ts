@@ -5,11 +5,13 @@ import { useFaviconStatusBadge } from '../useFaviconStatusBadge';
 
 jest.mock('~/shared/utils/favicon-badge', () => ({
   applyFaviconBadge: jest.fn().mockResolvedValue(undefined),
-  restoreFavicon: jest.fn(),
+  acquireFaviconBadge: jest.fn(),
+  releaseFaviconBadge: jest.fn(),
 }));
 
 const applyFaviconBadgeMock = faviconBadge.applyFaviconBadge as jest.Mock;
-const restoreFaviconMock = faviconBadge.restoreFavicon as jest.Mock;
+const acquireFaviconBadgeMock = faviconBadge.acquireFaviconBadge as jest.Mock;
+const releaseFaviconBadgeMock = faviconBadge.releaseFaviconBadge as jest.Mock;
 
 describe('useFaviconStatusBadge', () => {
   beforeEach(() => {
@@ -19,6 +21,7 @@ describe('useFaviconStatusBadge', () => {
   it('applies favicon badge when status is provided', () => {
     renderHook(() => useFaviconStatusBadge(runStatus.Running));
 
+    expect(acquireFaviconBadgeMock).toHaveBeenCalled();
     expect(applyFaviconBadgeMock).toHaveBeenCalledWith(runStatus.Running, expect.any(Function));
   });
 
@@ -41,7 +44,7 @@ describe('useFaviconStatusBadge', () => {
 
     unmount();
 
-    expect(restoreFaviconMock).toHaveBeenCalled();
+    expect(releaseFaviconBadgeMock).toHaveBeenCalled();
   });
 
   it('restores favicon when status becomes null', () => {
@@ -52,7 +55,7 @@ describe('useFaviconStatusBadge', () => {
     rerender({ status: null });
 
     expect(applyFaviconBadgeMock).toHaveBeenLastCalledWith(null, expect.any(Function));
-    expect(restoreFaviconMock).toHaveBeenCalled();
+    expect(releaseFaviconBadgeMock).toHaveBeenCalled();
   });
 
   it('passes a cancellation callback that applyFaviconBadge can use', () => {

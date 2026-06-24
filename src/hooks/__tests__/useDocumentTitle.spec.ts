@@ -5,11 +5,13 @@ import { useDocumentTitle } from '../useDocumentTitle';
 
 jest.mock('~/shared/utils/favicon-badge', () => ({
   applyFaviconBadge: jest.fn().mockResolvedValue(undefined),
-  restoreFavicon: jest.fn(),
+  acquireFaviconBadge: jest.fn(),
+  releaseFaviconBadge: jest.fn(),
 }));
 
 const applyFaviconBadgeMock = faviconBadge.applyFaviconBadge as jest.Mock;
-const restoreFaviconMock = faviconBadge.restoreFavicon as jest.Mock;
+const acquireFaviconBadgeMock = faviconBadge.acquireFaviconBadge as jest.Mock;
+const releaseFaviconBadgeMock = faviconBadge.releaseFaviconBadge as jest.Mock;
 
 describe('useDocumentTitle', () => {
   beforeEach(() => {
@@ -26,7 +28,7 @@ describe('useDocumentTitle', () => {
 
     expect(document.title).toBe('Konflux');
     expect(applyFaviconBadgeMock).not.toHaveBeenCalled();
-    expect(restoreFaviconMock).not.toHaveBeenCalled();
+    expect(releaseFaviconBadgeMock).not.toHaveBeenCalled();
   });
 
   it('updates title when it changes', () => {
@@ -42,6 +44,7 @@ describe('useDocumentTitle', () => {
   it('applies favicon badge when faviconStatus is provided', () => {
     renderHook(() => useDocumentTitle('Pipeline | Konflux', { faviconStatus: runStatus.Running }));
 
+    expect(acquireFaviconBadgeMock).toHaveBeenCalled();
     expect(applyFaviconBadgeMock).toHaveBeenCalledWith(runStatus.Running, expect.any(Function));
   });
 
@@ -53,6 +56,6 @@ describe('useDocumentTitle', () => {
     unmount();
 
     expect(document.title).toBe('Konflux');
-    expect(restoreFaviconMock).toHaveBeenCalled();
+    expect(releaseFaviconBadgeMock).toHaveBeenCalled();
   });
 });
