@@ -1,10 +1,6 @@
 .context-switcher {
   z-index: var(--pf-t--global--z-index--md);
 
-  &__dropdown {
-    padding-left: 0;
-    padding-right: 0.6rem;
-  }
   &__menu {
     --pf-v6-c-menu--Width: 360px;
 

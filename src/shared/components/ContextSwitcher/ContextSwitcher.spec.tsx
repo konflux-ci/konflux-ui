@@ -86,6 +86,7 @@ describe('ContextSwitcher', () => {
       expect.objectContaining({ lastTab: { resource: 0 } }),
     );
 
+    act(() => screen.getByText('All').click());
     act(() => screen.getByText('Test 1').click());
     expect(setStorageMock).toHaveBeenCalledWith(
       expect.objectContaining({

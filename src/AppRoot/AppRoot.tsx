@@ -52,7 +52,7 @@ export const AppRoot: React.FC = () => {
         <ActivePageAlert />
         <SidePanelHost>
           {!showSwitcher ? (
-            <PageSection hasBodyWrapper={false} style={{ paddingBlock: 0 }} hasShadowBottom>
+            <PageSection className="pf-v6-u-py-sm" hasShadowBottom>
               <NamespaceSwitcher />
             </PageSection>
           ) : null}

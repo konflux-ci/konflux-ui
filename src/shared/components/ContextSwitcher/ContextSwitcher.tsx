@@ -169,7 +169,6 @@ export const ContextSwitcher: React.FC<React.PropsWithChildren<ContextSwitcherPr
     <MenuToggle
       ref={defaultToggleRef}
       id="toggle-context-switcher"
-      className="context-switcher__dropdown"
       aria-label="toggle context switcher menu"
       onClick={() => setIsOpen((val) => !val)}
       variant="plain"
@@ -220,23 +219,21 @@ export const ContextSwitcher: React.FC<React.PropsWithChildren<ContextSwitcherPr
               />
             </MenuSearchInput>
           </MenuSearch>
+          {/* Tabs must be outside MenuContent to avoid being clipped by PF v6's overflow:hidden */}
+          <Tabs activeKey={activeTab} onSelect={onTabChange} isFilled>
+            <Tab eventKey={ContextTab.Recent} title={<TabTitleText>Recent</TabTitleText>} />
+            <Tab eventKey={ContextTab.All} title={<TabTitleText>All</TabTitleText>} />
+          </Tabs>
           <MenuContent menuHeight={`${menuHeights[activeMenu]}px`}>
-            <Tabs activeKey={activeTab} onSelect={onTabChange} isFilled>
-              <Tab eventKey={ContextTab.Recent} title={<TabTitleText>Recent</TabTitleText>}>
-                <MenuList>
-                  {filteredRecentItems.map((item) => (
+            <MenuList>
+              {activeTab === ContextTab.Recent
+                ? filteredRecentItems.map((item) => (
+                    <ContextMenuListItem key={item.key} item={item} />
+                  ))
+                : filteredAllItems.map((item) => (
                     <ContextMenuListItem key={item.key} item={item} />
                   ))}
-                </MenuList>
-              </Tab>
-              <Tab eventKey={ContextTab.All} title={<TabTitleText>All</TabTitleText>}>
-                <MenuList>
-                  {filteredAllItems.map((item) => (
-                    <ContextMenuListItem key={item.key} item={item} />
-                  ))}
-                </MenuList>
-              </Tab>
-            </Tabs>
+            </MenuList>
           </MenuContent>
           {footer && <MenuFooter>{footer}</MenuFooter>}
         </Menu>
