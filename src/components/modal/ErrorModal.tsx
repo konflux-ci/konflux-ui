@@ -1,37 +1,24 @@
 import React from 'react';
-import {
-  Button,
-  Content,
-  Modal,
-  ModalBody,
-  ModalFooter,
-  ModalHeader,
-} from '@patternfly/react-core';
+import { Button, Content } from '@patternfly/react-core';
+import { ComponentProps } from './createModalLauncher';
 
-interface ErrorModalProps {
-  title: string;
+type ErrorModalProps = ComponentProps & {
   errorMessage: string;
-  isOpen: boolean;
-  onClose: () => void;
-}
+};
 
-const ErrorModal: React.FC<ErrorModalProps> = ({ title, errorMessage, isOpen, onClose }) => {
+const ErrorModal: React.FC<ErrorModalProps> = ({ errorMessage, onClose }) => {
   return (
-    <Modal isOpen={isOpen} onClose={onClose} aria-label="Error details modal" variant="small">
-      <ModalHeader title={title} />
-      <ModalBody>
-        <Content>
-          <Content component="pre" style={{ whiteSpace: 'pre-wrap' }}>
-            {errorMessage}
-          </Content>
+    <>
+      <Content>
+        <Content component="pre" style={{ whiteSpace: 'pre-wrap' }}>
+          {errorMessage}
         </Content>
-      </ModalBody>
-      <ModalFooter>
-        <Button key="close" variant="primary" onClick={onClose}>
-          Close
-        </Button>
-      </ModalFooter>
-    </Modal>
+      </Content>
+
+      <Button key="close" variant="primary" onClick={onClose} className="pf-v6-u-mt-md">
+        Close
+      </Button>
+    </>
   );
 };
 
