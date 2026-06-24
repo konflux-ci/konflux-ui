@@ -66,62 +66,102 @@ const IntegrationTestSidePanel: React.FC<
 
   return (
     <>
-      <div className="commit-side-panel__head">
-        <DrawerHead data-test="int-test-side-panel-head">
-          <span className="commit-side-panel__head-title">
-            {integrationTestPipeline ? (
-              <Link
-                to={INTEGRATION_TEST_DETAILS_PATH.createPath({
-                  applicationName: workflowData.application,
-                  workspaceName: namespace,
-                  integrationTestName: workflowNode.getLabel(),
-                })}
-              >
-                {workflowNode.getLabel()}
-              </Link>
-            ) : (
+      <DrawerHead data-test="int-test-side-panel-head">
+        <span className="commit-side-panel__head-title">
+          {integrationTestPipeline ? (
+            <Link
+              to={INTEGRATION_TEST_DETAILS_PATH.createPath({
+                applicationName: workflowData.application,
+                workspaceName: namespace,
+                integrationTestName: workflowNode.getLabel(),
+              })}
+            >
+              {workflowNode.getLabel()}
+            </Link>
+          ) : (
+            workflowNode.getLabel()
+          )}
+          <StatusIconWithTextLabel status={workflowNode.getData().status} />
+        </span>
+        <span className="pf-v6-u-mt-xs commit-side-panel__subtext">
+          <PipelineIcon role="img" aria-label="Pipeline run" /> Integration test{' '}
+          <FeatureFlagIndicator flags={['taskruns-kubearchive']} />
+        </span>
+        <DrawerActions>
+          <DrawerCloseButton onClick={onClose} />
+        </DrawerActions>
+      </DrawerHead>
+      <DrawerPanelBody data-test="int-test-side-panel-body">
+        <DescriptionList
+          data-test="pipeline-run-details"
+          columnModifier={{
+            default: '2Col',
+          }}
+        >
+          <DescriptionListGroup>
+            <DescriptionListTerm>Started</DescriptionListTerm>
+            <DescriptionListDescription>
+              <Timestamp timestamp={integrationTestPipeline?.metadata?.creationTimestamp ?? '-'} />
+            </DescriptionListDescription>
+          </DescriptionListGroup>
+          <DescriptionListGroup>
+            <DescriptionListTerm>Duration</DescriptionListTerm>
+            <DescriptionListDescription>{duration ?? '-'}</DescriptionListDescription>
+          </DescriptionListGroup>
+          <DescriptionListGroup>
+            <DescriptionListTerm>Type</DescriptionListTerm>
+            <DescriptionListDescription>Test</DescriptionListDescription>
+          </DescriptionListGroup>
+          <DescriptionListGroup>
+            <DescriptionListTerm>Pipeline</DescriptionListTerm>
+            <DescriptionListDescription>
+              {integrationTestPipeline?.metadata?.namespace ?? '-'}
+            </DescriptionListDescription>
+          </DescriptionListGroup>
+        </DescriptionList>
+        <DescriptionList
+          className="pf-v6-u-mt-lg"
+          data-test="pipeline-run-details"
+          columnModifier={{
+            default: '1Col',
+          }}
+        >
+          <DescriptionListGroup>
+            <DescriptionListTerm>Component</DescriptionListTerm>
+            <DescriptionListDescription>
+              {integrationTestPipeline?.metadata?.labels?.[PipelineRunLabel.COMPONENT] ? (
+                integrationTestPipeline?.metadata?.labels?.[PipelineRunLabel.APPLICATION] ? (
+                  <Link
+                    to={COMPONENT_DETAILS_PATH.createPath({
+                      applicationName:
+                        integrationTestPipeline.metadata.labels[PipelineRunLabel.APPLICATION],
+                      componentName:
+                        integrationTestPipeline.metadata.labels[PipelineRunLabel.COMPONENT],
+                      workspaceName: namespace,
+                    })}
+                  >
+                    {integrationTestPipeline.metadata.labels[PipelineRunLabel.COMPONENT]}
+                  </Link>
+                ) : (
+                  integrationTestPipeline?.metadata.labels[PipelineRunLabel.COMPONENT]
+                )
+              ) : (
+                '-'
+              )}
+            </DescriptionListDescription>
+          </DescriptionListGroup>
+          <CommitIntegrationTestsList
+            componentName={integrationTestPipeline?.metadata?.labels?.[PipelineRunLabel.COMPONENT]}
+            integrationTestScenario={
+              integrationTestPipeline?.metadata?.labels?.[PipelineRunLabel.TEST_SERVICE_SCENARIO] ??
               workflowNode.getLabel()
-            )}
-            <StatusIconWithTextLabel status={workflowNode.getData().status} />
-          </span>
-          <span className="pf-v6-u-mt-xs commit-side-panel__subtext">
-            <PipelineIcon role="img" aria-label="Pipeline run" /> Integration test{' '}
-            <FeatureFlagIndicator flags={['taskruns-kubearchive']} />
-          </span>
-          <DrawerActions>
-            <DrawerCloseButton onClick={onClose} />
-          </DrawerActions>
-        </DrawerHead>
-        <DrawerPanelBody data-test="int-test-side-panel-body">
-          <DescriptionList
-            data-test="pipeline-run-details"
-            columnModifier={{
-              default: '2Col',
-            }}
-          >
-            <DescriptionListGroup>
-              <DescriptionListTerm>Started</DescriptionListTerm>
-              <DescriptionListDescription>
-                <Timestamp
-                  timestamp={integrationTestPipeline?.metadata?.creationTimestamp ?? '-'}
-                />
-              </DescriptionListDescription>
-            </DescriptionListGroup>
-            <DescriptionListGroup>
-              <DescriptionListTerm>Duration</DescriptionListTerm>
-              <DescriptionListDescription>{duration ?? '-'}</DescriptionListDescription>
-            </DescriptionListGroup>
-            <DescriptionListGroup>
-              <DescriptionListTerm>Type</DescriptionListTerm>
-              <DescriptionListDescription>Test</DescriptionListDescription>
-            </DescriptionListGroup>
-            <DescriptionListGroup>
-              <DescriptionListTerm>Pipeline</DescriptionListTerm>
-              <DescriptionListDescription>
-                {integrationTestPipeline?.metadata?.namespace ?? '-'}
-              </DescriptionListDescription>
-            </DescriptionListGroup>
-          </DescriptionList>
+            }
+          />
+          {integrationTestPipeline && taskRunsLoaded && !taskRunsError ? (
+            <ScanDescriptionListGroup taskRuns={taskRuns} hideIfNotFound showLogsLink />
+          ) : null}
+        </DescriptionList>
+        {Object.keys(pipelineRunFailed).length > 0 && (
           <DescriptionList
             className="pf-v6-u-mt-lg"
             data-test="pipeline-run-details"
@@ -130,89 +170,42 @@ const IntegrationTestSidePanel: React.FC<
             }}
           >
             <DescriptionListGroup>
-              <DescriptionListTerm>Component</DescriptionListTerm>
+              <DescriptionListTerm>Message</DescriptionListTerm>
               <DescriptionListDescription>
-                {integrationTestPipeline?.metadata?.labels?.[PipelineRunLabel.COMPONENT] ? (
-                  integrationTestPipeline?.metadata?.labels?.[PipelineRunLabel.APPLICATION] ? (
-                    <Link
-                      to={COMPONENT_DETAILS_PATH.createPath({
-                        applicationName:
-                          integrationTestPipeline.metadata.labels[PipelineRunLabel.APPLICATION],
-                        componentName:
-                          integrationTestPipeline.metadata.labels[PipelineRunLabel.COMPONENT],
-                        workspaceName: namespace,
-                      })}
-                    >
-                      {integrationTestPipeline.metadata.labels[PipelineRunLabel.COMPONENT]}
-                    </Link>
-                  ) : (
-                    integrationTestPipeline?.metadata.labels[PipelineRunLabel.COMPONENT]
-                  )
-                ) : (
-                  '-'
-                )}
+                {pipelineRunFailed.title ?? '-'}
               </DescriptionListDescription>
             </DescriptionListGroup>
-            <CommitIntegrationTestsList
-              componentName={
-                integrationTestPipeline?.metadata?.labels?.[PipelineRunLabel.COMPONENT]
-              }
-              integrationTestScenario={
-                integrationTestPipeline?.metadata?.labels?.[
-                  PipelineRunLabel.TEST_SERVICE_SCENARIO
-                ] ?? workflowNode.getLabel()
-              }
-            />
-            {integrationTestPipeline && taskRunsLoaded && !taskRunsError ? (
-              <ScanDescriptionListGroup taskRuns={taskRuns} hideIfNotFound showLogsLink />
-            ) : null}
+            <DescriptionListGroup>
+              <DescriptionListTerm>Log snippet</DescriptionListTerm>
+              <DescriptionListDescription>
+                <CodeBlock>
+                  <CodeBlockCode id="code-content">
+                    {pipelineRunFailed.staticMessage ?? '-'}
+                  </CodeBlockCode>
+                </CodeBlock>
+                {integrationTestPipeline ? (
+                  <Button
+                    variant="link"
+                    isInline
+                    component={(props) => (
+                      <Link
+                        {...props}
+                        to={PIPELINE_RUNS_LOG_PATH.createPath({
+                          applicationName: workflowData.application,
+                          pipelineRunName: integrationTestPipeline.metadata?.name,
+                          workspaceName: namespace,
+                        })}
+                      />
+                    )}
+                  >
+                    See logs
+                  </Button>
+                ) : null}
+              </DescriptionListDescription>
+            </DescriptionListGroup>
           </DescriptionList>
-          {Object.keys(pipelineRunFailed).length > 0 && (
-            <DescriptionList
-              className="pf-v6-u-mt-lg"
-              data-test="pipeline-run-details"
-              columnModifier={{
-                default: '1Col',
-              }}
-            >
-              <DescriptionListGroup>
-                <DescriptionListTerm>Message</DescriptionListTerm>
-                <DescriptionListDescription>
-                  {pipelineRunFailed.title ?? '-'}
-                </DescriptionListDescription>
-              </DescriptionListGroup>
-              <DescriptionListGroup>
-                <DescriptionListTerm>Log snippet</DescriptionListTerm>
-                <DescriptionListDescription>
-                  <CodeBlock>
-                    <CodeBlockCode id="code-content">
-                      {pipelineRunFailed.staticMessage ?? '-'}
-                    </CodeBlockCode>
-                  </CodeBlock>
-                  {integrationTestPipeline ? (
-                    <Button
-                      variant="link"
-                      isInline
-                      component={(props) => (
-                        <Link
-                          {...props}
-                          to={PIPELINE_RUNS_LOG_PATH.createPath({
-                            applicationName: workflowData.application,
-                            pipelineRunName: integrationTestPipeline.metadata?.name,
-                            workspaceName: namespace,
-                          })}
-                        />
-                      )}
-                    >
-                      See logs
-                    </Button>
-                  ) : null}
-                </DescriptionListDescription>
-              </DescriptionListGroup>
-            </DescriptionList>
-          )}
-        </DrawerPanelBody>
-      </div>
+        )}
+      </DrawerPanelBody>
     </>
   );
 };
