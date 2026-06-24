@@ -78,7 +78,6 @@ const ComponentDetailsView: React.FC = () => {
             title="For maximum security, upgrade the build pipeline plans for your component."
             imgSrc={pipelineImg}
             imgAlt="build pipeline plans"
-            isLight
           >
             <div>
               Using the Advanced or Custom build pipeline, you can enable all additional tasks for
