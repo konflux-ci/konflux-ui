@@ -40,12 +40,15 @@ A step by step series of examples that tell you how to get a development environ
 1. Clone the repository
 
 2. Enable Corepack (required for Yarn Berry)
+
    ```bash
    corepack enable
    ```
+
    > On some systems you may need `sudo corepack enable`
 
 3. Install dependencies
+
    ```bash
    yarn install
    ```

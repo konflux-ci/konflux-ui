@@ -4,6 +4,7 @@ import { Form } from '@patternfly/react-core';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RenderOptions, render } from '@testing-library/react';
 import { FormikValues, Formik } from 'formik';
+import { NuqsTestingAdapter } from 'nuqs/adapters/testing';
 import * as NamespaceUtils from '../shared/providers/Namespace/namespace-context';
 import { createTestQueryClient } from './mock-react-query';
 
@@ -59,7 +60,9 @@ export function renderWithQueryClientAndRouter(
   function Wrapper({ children }: { children: React.ReactNode }) {
     return (
       <ReactRouterDom.BrowserRouter>
-        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+        <NuqsTestingAdapter hasMemory>
+          <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+        </NuqsTestingAdapter>
       </ReactRouterDom.BrowserRouter>
     );
   }

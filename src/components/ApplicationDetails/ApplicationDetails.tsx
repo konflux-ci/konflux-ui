@@ -24,7 +24,6 @@ import { applicationDeleteModal } from '../modal/resource-modals';
 import { ApplicationHeader } from './ApplicationHeader';
 import './ApplicationDetails.scss';
 
-
 export const ApplicationDetails: React.FC<React.PropsWithChildren> = () => {
   const { applicationName } = useParams();
   // const track = useTrackEvent();

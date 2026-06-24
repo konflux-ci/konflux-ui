@@ -10,11 +10,11 @@ Fast feedback on one changed file — no webpack build. Use `yarn` so tool versi
 
 ## Guides
 
-| Document | Use When |
-|---|---|
-| [single-file-lint.md](./single-file-lint.md) | Lint one `.ts`, `.tsx`, or `.scss` file |
+| Document                                                 | Use When                                           |
+| -------------------------------------------------------- | -------------------------------------------------- |
+| [single-file-lint.md](./single-file-lint.md)             | Lint one `.ts`, `.tsx`, or `.scss` file            |
 | [single-file-type-check.md](./single-file-type-check.md) | Type-check one file (or fall back to project-wide) |
-| [unit-testing.md](./unit-testing.md) | Run one unit test file |
+| [unit-testing.md](./unit-testing.md)                     | Run one unit test file                             |
 
 ## CI equivalence
 
