@@ -1,29 +1,19 @@
-import { renderHook } from '@testing-library/react-hooks';
-import { testTaskRuns } from '../../components/TaskRunListView/__data__/mock-TaskRun-data';
-import { useTaskRuns } from '../useTaskRuns';
-jest.mock('../usePipelineRuns', () => ({
-  useTaskRuns: jest.fn(),
-}));
+import { testTaskRuns } from '~/components/TaskRunListView/__data__/mock-TaskRun-data';
+import { sortTaskRunsByTime } from '~/hooks/useTaskRuns';
 
-const usePipelineRunsTaskRunsMock: jest.Mock =
-  jest.requireMock('~/hooks/usePipelineRuns').useTaskRuns;
-
-describe('useTaskRuns', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
+describe('sortTaskRunsByTime', () => {
+  it('returns empty array when task runs are undefined or empty', () => {
+    expect(sortTaskRunsByTime()).toEqual([]);
+    expect(sortTaskRunsByTime([])).toEqual([]);
   });
 
-  it('should return sorted taskruns', () => {
-    usePipelineRunsTaskRunsMock.mockReturnValue([testTaskRuns, true, undefined]);
-    const { result } = renderHook(() => useTaskRuns('test-ns', 'test-pipelinerun', 'test-task'));
+  it('sorts alphabetically by name when completion times are equal', () => {
+    const sorted = sortTaskRunsByTime(testTaskRuns);
 
-    const [taskRuns, loaded] = result.current;
-    expect(loaded).toBe(true);
-    // Both TaskRuns have identical completion times, so sorted alphabetically by name
-    expect(taskRuns.map((tr) => tr.metadata?.name)).toEqual(['example', 'example-234']);
+    expect(sorted.map((tr) => tr.metadata?.name)).toEqual(['example', 'example-234']);
   });
 
-  it('should sort the taskruns based on the completionTime', () => {
+  it('sorts completed task runs before runs without completionTime', () => {
     const taskRuns = [
       testTaskRuns[0],
       {
@@ -39,18 +29,33 @@ describe('useTaskRuns', () => {
       },
     ];
 
-    usePipelineRunsTaskRunsMock.mockReturnValue([taskRuns, true, undefined]);
-    const { result } = renderHook(() => useTaskRuns('test-ns', 'test-pipelinerun', 'test-task'));
+    const sorted = sortTaskRunsByTime(taskRuns);
 
-    const [tRuns, loaded] = result.current;
-    expect(loaded).toBe(true);
-    expect(tRuns.map((tr) => tr.metadata?.name)).toEqual(['example', 'example-task-running']);
+    expect(sorted.map((tr) => tr.metadata?.name)).toEqual(['example', 'example-task-running']);
   });
 
-  it('returns empty array if results are not fetched', () => {
-    usePipelineRunsTaskRunsMock.mockReturnValue([[], false, undefined]);
-    const { result } = renderHook(() => useTaskRuns('test-ns', 'test'));
+  it('sorts by completionTime with newest first', () => {
+    const taskRuns = [
+      {
+        ...testTaskRuns[0],
+        metadata: { ...testTaskRuns[0].metadata, name: 'older-run' },
+        status: {
+          ...testTaskRuns[0].status,
+          completionTime: '2022-08-15T14:14:08Z',
+        },
+      },
+      {
+        ...testTaskRuns[1],
+        metadata: { ...testTaskRuns[1].metadata, name: 'newer-run' },
+        status: {
+          ...testTaskRuns[1].status,
+          completionTime: '2022-08-16T14:14:08Z',
+        },
+      },
+    ];
 
-    expect(result.current).toEqual([[], false, undefined]);
+    const sorted = sortTaskRunsByTime(taskRuns);
+
+    expect(sorted.map((tr) => tr.metadata?.name)).toEqual(['newer-run', 'older-run']);
   });
 });
