@@ -173,6 +173,39 @@ describe('favicon-badge', () => {
       jest.restoreAllMocks();
     });
 
+    it('applies a gray badged favicon for an empty string status', async () => {
+      const link = document.createElement('link');
+      link.rel = 'icon';
+      link.href = '/favicon.ico';
+      document.head.appendChild(link);
+
+      const mockContext = {
+        drawImage: jest.fn(),
+        beginPath: jest.fn(),
+        arc: jest.fn(),
+        fill: jest.fn(),
+        stroke: jest.fn(),
+        fillStyle: '',
+        strokeStyle: '',
+        lineWidth: 0,
+      };
+      jest
+        .spyOn(HTMLCanvasElement.prototype, 'getContext')
+        .mockReturnValue(mockContext as unknown as CanvasRenderingContext2D);
+      jest
+        .spyOn(HTMLCanvasElement.prototype, 'toDataURL')
+        .mockReturnValue('data:image/png;base64,empty-badged');
+
+      mockFaviconImageLoadSuccess();
+
+      acquireFaviconBadge();
+      await applyFaviconBadge('');
+
+      expect(link.href).toBe('data:image/png;base64,empty-badged');
+      expect(mockContext.fillStyle).toBe(grayColor.value);
+      releaseFaviconBadge();
+    });
+
     it('restores favicon when status is null', async () => {
       const link = document.createElement('link');
       link.rel = 'icon';

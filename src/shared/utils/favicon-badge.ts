@@ -134,7 +134,7 @@ export const applyFaviconBadge = async (
   status: string | null | undefined,
   isCancelled?: () => boolean,
 ): Promise<void> => {
-  if (!status) {
+  if (status == null) {
     if (activeConsumers === 1) {
       resetToBaselineFavicon();
     }
