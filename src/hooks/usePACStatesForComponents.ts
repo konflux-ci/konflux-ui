@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { PipelineRunEventType, PipelineRunLabel, PipelineRunType } from '../consts/pipelinerun';
+import { PUSH_BUILD_EVENT_TYPES, PipelineRunLabel, PipelineRunType } from '../consts/pipelinerun';
 import { ComponentKind } from '../types';
 import {
   BUILD_REQUEST_ANNOTATION,
@@ -90,7 +90,7 @@ const usePACStatesForComponents = (components: ComponentKind[]): PacStatesForCom
             {
               key: PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL,
               operator: 'In',
-              values: [PipelineRunEventType.PUSH, PipelineRunEventType.GITLAB_PUSH],
+              values: PUSH_BUILD_EVENT_TYPES,
             },
           ],
         },
