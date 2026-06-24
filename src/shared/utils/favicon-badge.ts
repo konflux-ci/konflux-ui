@@ -5,36 +5,34 @@ import { global_palette_gold_400 as goldColor } from '@patternfly/react-tokens/d
 import { global_palette_orange_300 as orangeColor } from '@patternfly/react-tokens/dist/js/global_palette_orange_300';
 import { global_success_color_100 as greenColor } from '@patternfly/react-tokens/dist/js/global_success_color_100';
 import { global_warning_color_100 as warningColor } from '@patternfly/react-tokens/dist/js/global_warning_color_100';
-import { runStatus } from '~/consts/pipelinerun';
-import { logger } from '~/monitoring/logger';
 
 const DEFAULT_FAVICON_HREF = '/favicon.ico';
 
 let originalFaviconHref: string | null = null;
 
-export const getFaviconBadgeColor = (status: runStatus): string => {
+export const getFaviconBadgeColor = (status: string): string => {
   switch (status) {
-    case runStatus.Succeeded:
+    case 'Succeeded':
       return greenColor.value;
-    case runStatus.Failed:
-    case runStatus.FailedToStart:
-    case runStatus.TestFailed:
+    case 'Failed':
+    case 'FailedToStart':
+    case 'Test Failures':
       return redColor.value;
-    case runStatus.Running:
-    case runStatus['In Progress']:
+    case 'Running':
+    case 'In Progress':
       return blueColor.value;
-    case runStatus.Cancelled:
-    case runStatus.Cancelling:
+    case 'Cancelled':
+    case 'Cancelling':
       return goldColor.value;
-    case runStatus.TestWarning:
+    case 'Test Warnings':
       return warningColor.value;
-    case runStatus.PipelineNotStarted:
+    case 'Starting':
       return orangeColor.value;
-    case runStatus.Idle:
-    case runStatus.Pending:
-    case runStatus.Skipped:
-    case runStatus.Unknown:
-    case runStatus.NeedsMerge:
+    case 'Idle':
+    case 'Pending':
+    case 'Skipped':
+    case 'Unknown':
+    case 'PR needs merge':
     default:
       return grayColor.value;
   }
@@ -79,7 +77,6 @@ export const compositeFaviconWithBadge = (
 
   const ctx = canvas.getContext('2d');
   if (!ctx) {
-    logger.error('Failed to get canvas 2d context for favicon badge compositing');
     return null;
   }
 
@@ -111,7 +108,7 @@ const loadFaviconImage = (href: string): Promise<HTMLImageElement> =>
   });
 
 export const applyFaviconBadge = async (
-  status: runStatus | null | undefined,
+  status: string | null | undefined,
   isCancelled?: () => boolean,
 ): Promise<void> => {
   if (!status) {
@@ -136,12 +133,7 @@ export const applyFaviconBadge = async (
     } else if (!dataUrl) {
       restoreFavicon();
     }
-  } catch (error) {
-    logger.error(
-      'Failed to apply favicon status badge',
-      error instanceof Error ? error : new Error(String(error)),
-      { status },
-    );
+  } catch {
     if (!isCancelled?.()) {
       restoreFavicon();
     }

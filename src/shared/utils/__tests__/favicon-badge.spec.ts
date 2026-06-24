@@ -16,18 +16,6 @@ import {
   setFaviconHref,
 } from '~/shared/utils/favicon-badge';
 
-jest.mock('~/monitoring/logger', () => ({
-  logger: {
-    error: jest.fn(),
-    warn: jest.fn(),
-    info: jest.fn(),
-    debug: jest.fn(),
-  },
-}));
-
-const { logger: loggerMock }: { logger: Record<string, jest.Mock> } =
-  jest.requireMock('~/monitoring/logger');
-
 type MockImageElement = {
   onload: (() => void) | null;
   onerror: (() => void) | null;
@@ -126,16 +114,13 @@ describe('favicon-badge', () => {
       expect(result).toBe('data:image/png;base64,mock');
     });
 
-    it('logs an error and returns null when canvas context is unavailable', () => {
+    it('returns null when canvas context is unavailable', () => {
       jest.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
 
       const image = { naturalWidth: 32, width: 32 } as HTMLImageElement;
       const result = compositeFaviconWithBadge(image, blueColor.value);
 
       expect(result).toBeNull();
-      expect(loggerMock.error).toHaveBeenCalledWith(
-        'Failed to get canvas 2d context for favicon badge compositing',
-      );
     });
   });
 
@@ -291,7 +276,7 @@ describe('favicon-badge', () => {
       expect(link.href).toContain('/favicon.ico');
     });
 
-    it('logs an error and restores favicon when image load fails', async () => {
+    it('restores favicon when image load fails', async () => {
       const link = document.createElement('link');
       link.rel = 'icon';
       link.href = '/favicon.ico';
@@ -301,11 +286,6 @@ describe('favicon-badge', () => {
 
       await applyFaviconBadge(runStatus.Failed);
 
-      expect(loggerMock.error).toHaveBeenCalledWith(
-        'Failed to apply favicon status badge',
-        expect.any(Error),
-        { status: runStatus.Failed },
-      );
       expect(link.href).toContain('/favicon.ico');
     });
   });
