@@ -1,12 +1,7 @@
 import * as React from 'react';
-import {
-  Button,
-  Content,
-  Modal,
-  ModalBody,
-  ModalHeader,
-  ModalVariant,
-} from '@patternfly/react-core';
+import { Button, Content, ModalVariant } from '@patternfly/react-core';
+import { ComponentProps, createModalLauncher } from '../../../components/modal/createModalLauncher';
+import { useModalLauncher } from '../../../components/modal/ModalProvider';
 
 const DEFAULT_MAX_LENGTH = 80;
 
@@ -17,17 +12,29 @@ export type TruncateProps = {
   'data-test'?: string;
 };
 
+type TruncateModalProps = ComponentProps & {
+  content: string;
+};
+
+const TruncateModal: React.FC<React.PropsWithChildren<TruncateModalProps>> = ({ content }) => {
+  return (
+    <Content>
+      <Content component="p" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+        {content}
+      </Content>
+    </Content>
+  );
+};
+
 export const Truncate: React.FC<TruncateProps> = ({
   content,
   modalTitle,
   maxLength = DEFAULT_MAX_LENGTH,
   'data-test': dataTest,
 }) => {
-  const [isModalOpen, setIsModalOpen] = React.useState(false);
-  const shouldTruncate = content.length > maxLength;
+  const showModal = useModalLauncher();
 
-  const handleOpen = () => setIsModalOpen(true);
-  const handleClose = () => setIsModalOpen(false);
+  const shouldTruncate = content.length > maxLength;
 
   if (!shouldTruncate) {
     return <span data-test={dataTest}>{content}</span>;
@@ -41,27 +48,20 @@ export const Truncate: React.FC<TruncateProps> = ({
       <Button
         variant="link"
         isInline
-        onClick={handleOpen}
+        onClick={() =>
+          showModal(
+            createModalLauncher(TruncateModal, {
+              'data-test': dataTest ? `${dataTest}-modal` : 'truncate-modal',
+              variant: ModalVariant.medium,
+              title: modalTitle,
+            })({ content }),
+          )
+        }
         data-test={dataTest}
         style={{ textAlign: 'left' }}
       >
         more
       </Button>
-      <Modal
-        isOpen={isModalOpen}
-        onClose={handleClose}
-        variant={ModalVariant.medium}
-        data-test={dataTest ? `${dataTest}-modal` : 'truncate-modal'}
-      >
-        {modalTitle && <ModalHeader title={modalTitle} />}
-        <ModalBody>
-          <Content>
-            <Content component="p" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-              {content}
-            </Content>
-          </Content>
-        </ModalBody>
-      </Modal>
     </>
   );
 };
