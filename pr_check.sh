@@ -19,12 +19,6 @@ build_ui_image() {
     fi
     export TARGET_BRANCH=${TARGET_BRANCH##*/}
 
-    # Update konflux-ui image name and tag in konflux-ci kustomize files
-    local ui_kustomize_yaml_path="${script_path}/konflux-ci/konflux-ci/ui/core/kustomization.yaml"
-    yq eval --inplace "del(.images[] | select(.name == \"*konflux-ui*\") | .digest)" "${ui_kustomize_yaml_path}"
-    yq eval --inplace "(.images[] | select(.name == \"*konflux-ui*\")) |=.newTag=\"${IMAGE_TAG}\"" "${ui_kustomize_yaml_path}"
-    yq eval --inplace "(.images[] | select(.name == \"*konflux-ui*\")) |=.newName=\"${IMAGE_NAME}\"" "${ui_kustomize_yaml_path}"
-
     export COMPONENT=konflux-ui
 
     # Build instrumented image for e2e coverage collection

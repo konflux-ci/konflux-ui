@@ -17,10 +17,7 @@ describe('Duration', () => {
 
   it('should display static duration when both startTime and endTime are provided', () => {
     const { container } = render(
-      <Duration
-        startTime="2022-11-28T12:00:00Z"
-        endTime="2022-11-28T12:05:30Z"
-      />,
+      <Duration startTime="2022-11-28T12:00:00Z" endTime="2022-11-28T12:05:30Z" />,
     );
     expect(container.textContent).toBe('5 minutes 30 seconds');
   });
@@ -29,9 +26,7 @@ describe('Duration', () => {
     const now = new Date('2022-11-28T12:05:00Z').getTime();
     jest.setSystemTime(now);
 
-    const { container } = render(
-      <Duration startTime="2022-11-28T12:00:00Z" />,
-    );
+    const { container } = render(<Duration startTime="2022-11-28T12:00:00Z" />);
 
     const initialText = container.textContent;
     expect(initialText).toBe('5 minutes');
@@ -45,10 +40,7 @@ describe('Duration', () => {
 
   it('should stop updating when endTime is provided', () => {
     const { container } = render(
-      <Duration
-        startTime="2022-11-28T12:00:00Z"
-        endTime="2022-11-28T12:02:00Z"
-      />,
+      <Duration startTime="2022-11-28T12:00:00Z" endTime="2022-11-28T12:02:00Z" />,
     );
 
     const initialText = container.textContent;
@@ -63,9 +55,7 @@ describe('Duration', () => {
   it('should clean up interval on unmount', () => {
     const clearIntervalSpy = jest.spyOn(global, 'clearInterval');
 
-    const { unmount } = render(
-      <Duration startTime="2022-11-28T12:00:00Z" />,
-    );
+    const { unmount } = render(<Duration startTime="2022-11-28T12:00:00Z" />);
 
     unmount();
     expect(clearIntervalSpy).toHaveBeenCalled();

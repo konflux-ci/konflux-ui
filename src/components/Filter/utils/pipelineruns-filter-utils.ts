@@ -5,9 +5,9 @@ import { textMatch } from '~/utils/text-filter-utils';
 
 export type PipelineRunsFilterState = {
   name: string;
-  status: string[];
-  type: string[];
-  version?: string[];
+  status?: string[];
+  type?: string[];
+  version?: string;
 };
 
 export const filterPipelineRuns = (
@@ -25,10 +25,9 @@ export const filterPipelineRuns = (
         textMatch(plr.metadata.name, name) &&
         (!componentName ||
           textMatch(plr.metadata.labels?.[PipelineRunLabel.COMPONENT], componentName)) &&
-        (!status.length || status.includes(pipelineRunStatus(plr))) &&
-        (!type.length || type.includes(runType)) &&
-        (!version?.length ||
-          version.includes(plr?.metadata.labels[PipelineRunLabel.COMPONENT_VERSION]))
+        (!status?.length || status.includes(pipelineRunStatus(plr))) &&
+        (!type?.length || type.includes(runType)) &&
+        (!version || textMatch(plr?.metadata.labels[PipelineRunLabel.COMPONENT_VERSION], version))
       );
     })
     .filter((plr) => !customFilter || customFilter(plr));
