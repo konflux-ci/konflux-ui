@@ -62,6 +62,13 @@ export enum PipelineRunEventType {
   RETEST = 'retest-all-comment',
 }
 
+/** Event types that represent post-merge / manually re-triggered build pipelines. */
+export const PUSH_BUILD_EVENT_TYPES = [
+  PipelineRunEventType.PUSH,
+  PipelineRunEventType.GITLAB_PUSH,
+  PipelineRunEventType.INCOMING,
+];
+
 export enum TaskRunLabel {
   TARGET_PLATFORM = 'build.appstudio.redhat.com/target-platform',
 }
