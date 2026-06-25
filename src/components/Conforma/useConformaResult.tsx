@@ -2,23 +2,21 @@ import * as React from 'react';
 import { CONFORMA_TASK, EC_TASK } from '~/consts/security';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { usePipelineRunV2 } from '~/hooks/usePipelineRunsV2';
-import { KUBEARCHIVE_PATH_PREFIX } from '~/kubearchive/const';
-import { logger } from '~/monitoring/logger';
 import {
   ComponentConformaResult,
-  CONFORMA_RESULT_STATUS,
   ConformaResult,
   UIConformaData,
 } from '~/types/conforma';
 import { isResourceEnterpriseContract } from '~/utils/conforma-utils';
 import { isTaskRunInPipelineRun } from '~/utils/pipeline-utils';
 import { useTaskRunsForPipelineRuns } from '../../hooks/useTaskRunsV2';
-import { commonFetchJSON, getK8sResourceURL } from '../../k8s';
-import { PodModel } from '../../models/pod';
 import { useNamespace } from '../../shared/providers/Namespace';
-import { getPipelineRunFromTaskRunOwnerRef } from '../../utils/common-utils';
-import { getTaskRunLog } from '../../utils/tekton-results';
-import { extractConformaResultsFromTaskRunLogs } from './utils';
+import {
+  mapConformaResultData,
+  resolveConformaResultFromTaskRun,
+} from './ConformaResultsTab/conforma-fetchers';
+
+export { mapConformaResultData };
 
 export const useConformaResultFromLogs = (
   pipelineRunName: string,
@@ -49,113 +47,41 @@ export const useConformaResultFromLogs = (
     pipelineRunName,
     securityTaskRunName,
   );
-  const [fetchArchive, setFetchArchive] = React.useState<boolean>(false);
-  const [crJson, setCrJson] = React.useState<ConformaResult>();
+  const [crJson, setCrJson] = React.useState<ConformaResult | undefined>();
   const [crLoaded, setCrLoaded] = React.useState<boolean>(false);
   const [taskRun] = taskRuns ?? [];
-  const podName = taskRunLoaded && !taskRunError ? taskRun?.status?.podName : null;
 
-  const taskRunUid = taskRun?.metadata?.uid;
-  const taskRunNs = taskRun?.metadata?.namespace;
-  const pipelineRunUid = taskRun?.metadata
-    ? getPipelineRunFromTaskRunOwnerRef(taskRun)?.uid
-    : undefined;
-
-  const crResultOpts = React.useMemo(() => {
-    return podName
-      ? {
-          ns: namespace,
-          name: podName,
-          path: 'log',
-          queryParams: {
-            container: 'step-report-json',
-            follow: 'true',
-          },
-        }
-      : null;
-  }, [podName, namespace]);
+  // Keep a ref to the latest taskRun so the effect body always reads the
+  // current value without adding the (potentially unstable) object reference
+  // to the dep array. A stable primitive derived from the task run is used as
+  // the dep instead: prefer uid when available, fall back to podName so that
+  // task runs without metadata (e.g. some test/edge-case runs) are still served.
+  const taskRunRef = React.useRef(taskRun);
+  taskRunRef.current = taskRun;
+  const taskRunId = taskRun?.metadata?.uid ?? taskRun?.status?.podName;
 
   React.useEffect(() => {
-    let unmount = false;
-    if (taskRunLoaded && securityTaskRunName && !crResultOpts) {
-      setFetchArchive(true);
-      return;
-    }
-    if (crResultOpts) {
-      commonFetchJSON(getK8sResourceURL(PodModel, undefined, crResultOpts))
-        .then((res: ConformaResult) => {
-          if (unmount) return;
-          setCrJson(res);
+    if (!taskRunLoaded || !securityTaskRunName || !taskRunId) return;
+
+    const currentTaskRun = taskRunRef.current;
+    if (!currentTaskRun) return;
+
+    let cancelled = false;
+    resolveConformaResultFromTaskRun(namespace, currentTaskRun, isKubearchiveEnabled)
+      .then((result) => {
+        if (!cancelled) {
+          setCrJson(result);
           setCrLoaded(true);
-        })
-        .catch((err) => {
-          if (unmount) return;
-          if (err.code === 404) {
-            setFetchArchive(true);
-          } else {
-            setCrLoaded(true);
-          }
-          logger.warn('Error while fetching Conforma result from logs', { error: err });
-        });
-    }
-    return () => {
-      unmount = true;
-    };
-  }, [crResultOpts, taskRunLoaded, securityTaskRunName]);
-
-  React.useEffect(() => {
-    let unmount = false;
-    if (!fetchArchive || crLoaded) {
-      return;
-    }
-
-    if (isKubearchiveEnabled && crResultOpts) {
-      commonFetchJSON(getK8sResourceURL(PodModel, undefined, crResultOpts), {
-        pathPrefix: KUBEARCHIVE_PATH_PREFIX,
+        }
       })
-        .then((res: ConformaResult) => {
-          if (unmount) return;
-          setCrJson(res);
-          setCrLoaded(true);
-        })
-        .catch((karchErr) => {
-          if (unmount) return;
-          setCrLoaded(true);
-          logger.warn('Error while fetching Conforma result from KubeArchive', {
-            error: karchErr,
-          });
-        });
-    } else if (taskRunUid && taskRunNs && pipelineRunUid) {
-      const fetchLogs = async () => {
-        try {
-          const logs = await getTaskRunLog(taskRunNs, taskRunUid, pipelineRunUid);
-          if (unmount) return;
-          const json = extractConformaResultsFromTaskRunLogs(logs);
-          setCrJson(json);
-          setCrLoaded(true);
-        } catch (e) {
-          if (unmount) return;
-          setCrLoaded(true);
-          logger.warn('Error while fetching Conforma result from tekton results logs', {
-            error: e,
-          });
-        }
-      };
-      void fetchLogs();
-    }
+      .catch(() => {
+        if (!cancelled) setCrLoaded(true);
+      });
 
     return () => {
-      unmount = true;
+      cancelled = true;
     };
-  }, [
-    fetchArchive,
-    crLoaded,
-    isKubearchiveEnabled,
-    crResultOpts,
-    taskRunUid,
-    taskRunNs,
-    pipelineRunUid,
-  ]);
+  }, [taskRunLoaded, taskRunId, securityTaskRunName, namespace, isKubearchiveEnabled]);
 
   const conformaResult = React.useMemo(() => {
     // filter out components for which Conforma didn't execute because invalid image URL
@@ -174,50 +100,6 @@ export const useConformaResultFromLogs = (
   const error = pipelineRunError ?? taskRunError;
 
   return [conformaResult, error ? true : crLoaded, error];
-};
-
-export const mapConformaResultData = (
-  conformaResult: ComponentConformaResult[],
-): UIConformaData[] => {
-  return conformaResult.reduce((acc, compResult) => {
-    compResult?.violations?.forEach((v) => {
-      const rule: UIConformaData = {
-        title: v.metadata?.title,
-        description: v.metadata?.description,
-        status: CONFORMA_RESULT_STATUS.violations,
-        timestamp: v.metadata?.effective_on,
-        component: compResult.name,
-        msg: v.msg,
-        collection: v.metadata?.collections,
-        solution: v.metadata?.solution,
-      };
-      acc.push(rule);
-    });
-    compResult?.warnings?.forEach((v) => {
-      const rule: UIConformaData = {
-        title: v.metadata?.title,
-        description: v.metadata?.description,
-        status: CONFORMA_RESULT_STATUS.warnings,
-        timestamp: v.metadata?.effective_on,
-        component: compResult.name,
-        msg: v.msg,
-        collection: v.metadata?.collections,
-      };
-      acc.push(rule);
-    });
-    compResult?.successes?.forEach((v) => {
-      const rule: UIConformaData = {
-        title: v.metadata?.title,
-        description: v.metadata?.description,
-        status: CONFORMA_RESULT_STATUS.successes,
-        component: compResult.name,
-        collection: v.metadata?.collections,
-      };
-      acc.push(rule);
-    });
-
-    return acc;
-  }, []);
 };
 
 export const useConformaResult = (
