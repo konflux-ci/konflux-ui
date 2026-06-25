@@ -5,7 +5,10 @@ interface ColumnManagementButtonProps {
   onClick: () => void;
   totalColumns?: number;
 }
-
+/**
+ * @deprecated This component is deprecated and will be removed in the future.
+ * Use ColumnManagement from ~/components/ColumnManagement/ColumnManagement instead.
+ */
 const ColumnManagementButton: React.FC<ColumnManagementButtonProps> = ({
   onClick,
   totalColumns = 0,

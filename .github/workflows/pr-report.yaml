@@ -27,11 +27,11 @@ jobs:
       - name: Install dependencies
         run: yarn add @octokit/rest dayjs
 
-      - name: Run stale PR checker
+      - name: Run PR checker
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-        run: node .github/scripts/check-stale-prs.js
+        run: node .github/scripts/check-prs.js
 
       - name: Check infra-deployments PRs
         env:

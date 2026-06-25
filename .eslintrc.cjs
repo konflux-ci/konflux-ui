@@ -19,7 +19,7 @@ module.exports = {
       jsx: true,
     },
     sourceType: 'module',
-    project: './tsconfig.json',
+    project: ['./tsconfig.json', './tsconfig.storybook.json'],
     tsconfigRootDir: './',
     extraFileExtensions: ['.json'],
   },

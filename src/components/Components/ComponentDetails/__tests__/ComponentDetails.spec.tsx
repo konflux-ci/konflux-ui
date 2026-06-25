@@ -27,12 +27,6 @@ jest.mock('../../../../hooks/useComponents', () => ({
   useAllComponents: jest.fn(() => [[], true, undefined]),
 }));
 
-jest.mock('../../../../hooks/usePipelineRuns', () => ({
-  ...jest.requireActual('../../../../hooks/usePipelineRuns'),
-  useLatestSuccessfulBuildPipelineRunForComponent: jest.fn(),
-  useLatestPushBuildPipelineRunForComponent: jest.fn(),
-}));
-
 jest.mock('react-router-dom', () => {
   const actual = jest.requireActual('react-router-dom');
   return {

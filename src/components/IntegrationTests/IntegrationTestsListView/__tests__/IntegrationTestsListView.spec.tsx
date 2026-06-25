@@ -1,13 +1,22 @@
 import { MemoryRouter } from 'react-router-dom';
 import { fireEvent, waitFor, render, screen, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
-import { createK8sWatchResourceMock } from '../../../../utils/test-utils';
+import { NuqsTestingAdapter } from 'nuqs/adapters/testing';
+import { setupVirtualizerMock } from '~/unit-test-utils';
+import { createK8sWatchResourceMock } from '~/utils/test-utils';
 import { MockIntegrationTests } from '../__data__/mock-integration-tests';
 import IntegrationTestsListView from '../IntegrationTestsListView';
 
 const navigateMock = jest.fn();
 jest.useFakeTimers();
+
+jest.mock('@tanstack/react-virtual', () => ({
+  useVirtualizer: jest.fn(),
+}));
+
+beforeEach(() => {
+  setupVirtualizerMock();
+});
 
 jest.mock('react-router-dom', () => ({
   ...jest.requireActual('react-router-dom'),
@@ -32,9 +41,9 @@ const useK8sWatchResourceMock = createK8sWatchResourceMock();
 
 const IntegrationTestsList = (
   <MemoryRouter>
-    <FilterContextProvider filterParams={['name']}>
+    <NuqsTestingAdapter>
       <IntegrationTestsListView />
-    </FilterContextProvider>
+    </NuqsTestingAdapter>
   </MemoryRouter>
 );
 
@@ -56,7 +65,6 @@ describe('IntegrationTestsListView', () => {
     const wrapper = render(IntegrationTestsList);
 
     expect(wrapper.container.getElementsByTagName('table')).toHaveLength(1);
-    expect(wrapper.container.getElementsByTagName('tr')).toHaveLength(4);
     expect(screen.getByText('test-app-test-1'));
     expect(screen.getByText('test-app-test-2'));
   });
@@ -65,7 +73,7 @@ describe('IntegrationTestsListView', () => {
     useK8sWatchResourceMock.mockReturnValue([MockIntegrationTests, true, undefined]);
     render(IntegrationTestsList);
 
-    const filter = screen.getByPlaceholderText<HTMLInputElement>('Filter by name...');
+    const filter = screen.getByRole<HTMLInputElement>('textbox', { name: 'Name' });
     fireEvent.change(filter, {
       target: { value: 'test-app-test-1' },
     });
@@ -81,7 +89,7 @@ describe('IntegrationTestsListView', () => {
     useK8sWatchResourceMock.mockReturnValue([MockIntegrationTests, true, undefined]);
     render(IntegrationTestsList);
 
-    const filter = screen.getByPlaceholderText<HTMLInputElement>('Filter by name...');
+    const filter = screen.getByRole<HTMLInputElement>('textbox', { name: 'Name' });
     fireEvent.change(filter, {
       target: { value: 'unmatched-name' },
     });
