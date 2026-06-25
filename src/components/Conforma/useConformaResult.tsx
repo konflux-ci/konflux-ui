@@ -5,7 +5,7 @@ import { usePipelineRunV2 } from '~/hooks/usePipelineRunsV2';
 import {
   ComponentConformaResult,
   ConformaResult,
-  UIConformaData,
+  ConformaResultRow,
 } from '~/types/conforma';
 import { isResourceEnterpriseContract } from '~/utils/conforma-utils';
 import { isTaskRunInPipelineRun } from '~/utils/pipeline-utils';
@@ -104,7 +104,7 @@ export const useConformaResultFromLogs = (
 
 export const useConformaResult = (
   pipelineRunName: string,
-): [UIConformaData[], boolean, unknown] => {
+): [ConformaResultRow[], boolean, unknown] => {
   const [cr, crLoaded, crError] = useConformaResultFromLogs(pipelineRunName);
   const conformaResult = React.useMemo(() => {
     return crLoaded && cr && !crError ? mapConformaResultData(cr) : undefined;

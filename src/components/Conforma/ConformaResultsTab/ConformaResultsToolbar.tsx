@@ -17,7 +17,6 @@ import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { MultiSelect } from '~/components/Filter/generic/MultiSelect';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 import { createFilterObj } from '~/components/Filter/utils/filter-utils';
-import { useDeepCompareMemoize } from '~/shared';
 import { fromNow } from '~/shared/components/timestamp/datetime';
 import {
   CONFORMA_RESULT_STATUS,
@@ -25,6 +24,7 @@ import {
   type ConformaResultRow,
 } from '~/types/conforma';
 import type { GroupByMode } from './conforma-grouping-utils';
+import { useConformaFilters } from './useConformaFilters';
 
 type ConformaResultsToolbarProps = {
   allResults: ConformaResultRow[];
@@ -69,11 +69,8 @@ export const ConformaResultsToolbar: React.FC<ConformaResultsToolbarProps> = ({
   onToggleExpandAll,
   refresh,
 }) => {
-  const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
-  const filters = useDeepCompareMemoize({
-    name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
-    status: unparsedFilters.status ? (unparsedFilters.status as string[]) : [],
-  });
+  const { setFilters, onClearFilters } = React.useContext(FilterContext);
+  const filters = useConformaFilters();
   const { name: nameFilter, status: statusFilter } = filters;
 
   const [isGroupByOpen, setIsGroupByOpen] = React.useState(false);

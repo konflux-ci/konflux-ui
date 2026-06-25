@@ -3,7 +3,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, act } from '@testing-library/react-hooks';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useComponents } from '~/hooks/useComponents';
-import { useTaskRunsV2 } from '~/hooks/useTaskRunsV2';
 import { useK8sWatchResource } from '~/k8s/hooks/useK8sWatchResource';
 import { useNamespace } from '~/shared/providers/Namespace';
 import type { ComponentKind, TaskRunKind } from '~/types';
@@ -17,10 +16,6 @@ import '@testing-library/jest-dom';
 
 jest.mock('~/hooks/useComponents', () => ({
   useComponents: jest.fn(),
-}));
-
-jest.mock('~/hooks/useTaskRunsV2', () => ({
-  useTaskRunsV2: jest.fn(),
 }));
 
 jest.mock('~/k8s/hooks/useK8sWatchResource', () => ({
@@ -47,7 +42,6 @@ jest.mock('~/monitoring/logger', () => ({
 }));
 
 const mockUseComponents = useComponents as jest.Mock;
-const mockUseTaskRunsV2 = useTaskRunsV2 as jest.Mock;
 const mockUseK8sWatchResource = useK8sWatchResource as jest.Mock;
 const mockUseNamespace = useNamespace as jest.Mock;
 const mockUseIsOnFeatureFlag = useIsOnFeatureFlag as jest.Mock;
@@ -56,6 +50,7 @@ const mockResolveConforma = resolveConformaResultFromTaskRun as jest.Mock;
 const DEFAULT_CLUSTER_QUERY = {
   data: [],
   isLoading: false,
+  error: undefined as Error | undefined,
   isFetching: false,
   dataUpdatedAt: 1000,
   isWatchDegraded: false,
@@ -165,7 +160,7 @@ const setupTaskRunPipeline = () => {
   const taskRuns = [createSecurityTaskRun('tr-1', 'comp-a', 'pod-1')];
 
   mockUseComponents.mockReturnValue([components, true, undefined]);
-  mockUseTaskRunsV2.mockReturnValue([taskRuns, true, undefined, jest.fn(), {}]);
+  mockUseK8sWatchResource.mockReturnValue({ ...DEFAULT_CLUSTER_QUERY, data: taskRuns });
 
   return { components, taskRuns };
 };
@@ -183,7 +178,6 @@ describe('useApplicationConformaResults', () => {
     mockUseNamespace.mockReturnValue('test-ns');
     mockUseIsOnFeatureFlag.mockReturnValue(false);
     mockUseComponents.mockReturnValue([[], true, undefined]);
-    mockUseTaskRunsV2.mockReturnValue([[], true, undefined, jest.fn(), {}]);
     mockUseK8sWatchResource.mockReturnValue(DEFAULT_CLUSTER_QUERY);
     mockResolveConforma.mockResolvedValue(undefined);
   });
@@ -221,7 +215,7 @@ describe('useApplicationConformaResults', () => {
 
   it('returns loading state when components are not loaded yet', () => {
     mockUseComponents.mockReturnValue([[], false, undefined]);
-    mockUseTaskRunsV2.mockReturnValue([[], false, undefined, jest.fn(), {}]);
+    mockUseK8sWatchResource.mockReturnValue({ ...DEFAULT_CLUSTER_QUERY, isLoading: true });
 
     const { result } = renderHook(() => useApplicationConformaResults('test-app'), {
       wrapper: createWrapper(),
@@ -233,7 +227,6 @@ describe('useApplicationConformaResults', () => {
   it('returns loaded empty state when there are no task runs', async () => {
     const components = [createComponent('comp-a'), createComponent('comp-b')];
     mockUseComponents.mockReturnValue([components, true, undefined]);
-    mockUseTaskRunsV2.mockReturnValue([[], true, undefined, jest.fn(), {}]);
 
     const { result } = renderHook(() => useApplicationConformaResults('test-app'), {
       wrapper: createWrapper(),
@@ -261,9 +254,9 @@ describe('useApplicationConformaResults', () => {
     expect(result.current.error).toBe(componentsError);
   });
 
-  it('returns taskRuns error when useTaskRunsV2 has an error', async () => {
+  it('returns taskRuns error when useK8sWatchResource has an error', async () => {
     const taskRunsError = new Error('taskrun error');
-    mockUseTaskRunsV2.mockReturnValue([[], true, taskRunsError, jest.fn(), {}]);
+    mockUseK8sWatchResource.mockReturnValue({ ...DEFAULT_CLUSTER_QUERY, error: taskRunsError });
 
     const { result } = renderHook(() => useApplicationConformaResults('test-app'), {
       wrapper: createWrapper(),
@@ -417,7 +410,7 @@ describe('useApplicationConformaResults', () => {
     const components = [createComponent('comp-a'), createComponent('comp-b')];
     const taskRuns = [createSecurityTaskRun('tr-1', 'comp-a', 'pod-1')];
     mockUseComponents.mockReturnValue([components, true, undefined]);
-    mockUseTaskRunsV2.mockReturnValue([taskRuns, true, undefined, jest.fn(), {}]);
+    mockUseK8sWatchResource.mockReturnValue({ ...DEFAULT_CLUSTER_QUERY, data: taskRuns });
     mockResolveConforma.mockResolvedValue(undefined);
 
     const { result } = renderHook(() => useApplicationConformaResults('test-app'), {
@@ -464,7 +457,7 @@ describe('useApplicationConformaResults', () => {
     } as unknown as TaskRunKind;
 
     mockUseComponents.mockReturnValue([[createComponent('comp-a')], true, undefined]);
-    mockUseTaskRunsV2.mockReturnValue([[trNoLabel], true, undefined, jest.fn(), {}]);
+    mockUseK8sWatchResource.mockReturnValue({ ...DEFAULT_CLUSTER_QUERY, data: [trNoLabel] });
 
     const { result } = renderHook(() => useApplicationConformaResults('test-app'), {
       wrapper: createWrapper(),
@@ -540,7 +533,7 @@ describe('useApplicationConformaResults', () => {
     const olderTr = createSecurityTaskRun('tr-old', 'comp-a', 'pod-old', '2025-01-01T00:00:00Z', 'pr-old');
     const newerTr = createSecurityTaskRun('tr-new', 'comp-a', 'pod-new', '2026-06-01T00:00:00Z', 'pr-new');
     mockUseComponents.mockReturnValue([components, true, undefined]);
-    mockUseTaskRunsV2.mockReturnValue([[olderTr, newerTr], true, undefined, jest.fn(), {}]);
+    mockUseK8sWatchResource.mockReturnValue({ ...DEFAULT_CLUSTER_QUERY, data: [olderTr, newerTr] });
     mockResolveConforma.mockResolvedValue(mockConformaResult);
 
     const { result } = renderHook(() => useApplicationConformaResults('test-app'), {
@@ -559,11 +552,12 @@ describe('useApplicationConformaResults', () => {
   });
 
   it('exposes refresh.lastFetchedAt from useK8sWatchResource dataUpdatedAt', async () => {
+    const { taskRuns } = setupTaskRunPipeline();
     mockUseK8sWatchResource.mockReturnValue({
       ...DEFAULT_CLUSTER_QUERY,
+      data: taskRuns,
       dataUpdatedAt: 9999,
     });
-    setupTaskRunPipeline();
     mockResolveConforma.mockResolvedValue(mockConformaResult);
 
     const { result } = renderHook(() => useApplicationConformaResults('test-app'), {
@@ -576,11 +570,12 @@ describe('useApplicationConformaResults', () => {
   });
 
   it('exposes refresh.isRefreshing from useK8sWatchResource isFetching', async () => {
+    const { taskRuns } = setupTaskRunPipeline();
     mockUseK8sWatchResource.mockReturnValue({
       ...DEFAULT_CLUSTER_QUERY,
+      data: taskRuns,
       isFetching: true,
     });
-    setupTaskRunPipeline();
     mockResolveConforma.mockResolvedValue(mockConformaResult);
 
     const { result } = renderHook(() => useApplicationConformaResults('test-app'), {
@@ -593,11 +588,12 @@ describe('useApplicationConformaResults', () => {
   });
 
   it('exposes refresh.hasLiveUpdatesPaused from useK8sWatchResource isWatchDegraded', async () => {
+    const { taskRuns } = setupTaskRunPipeline();
     mockUseK8sWatchResource.mockReturnValue({
       ...DEFAULT_CLUSTER_QUERY,
+      data: taskRuns,
       isWatchDegraded: true,
     });
-    setupTaskRunPipeline();
     mockResolveConforma.mockResolvedValue(mockConformaResult);
 
     const { result } = renderHook(() => useApplicationConformaResults('test-app'), {
@@ -640,7 +636,7 @@ describe('useApplicationConformaResults', () => {
     const trAlpha = createSecurityTaskRun('tr-alpha', 'comp-a', 'pod-a', sameTimestamp, 'pr-alpha');
     const trBeta = createSecurityTaskRun('tr-beta', 'comp-a', 'pod-b', sameTimestamp, 'pr-beta');
     mockUseComponents.mockReturnValue([components, true, undefined]);
-    mockUseTaskRunsV2.mockReturnValue([[trAlpha, trBeta], true, undefined, jest.fn(), {}]);
+    mockUseK8sWatchResource.mockReturnValue({ ...DEFAULT_CLUSTER_QUERY, data: [trAlpha, trBeta] });
     mockResolveConforma.mockResolvedValue(mockConformaResult);
 
     renderHook(() => useApplicationConformaResults('test-app'), {
@@ -657,14 +653,14 @@ describe('useApplicationConformaResults', () => {
     );
   });
 
-  it('does not set error when only some component queries fail', async () => {
+  it('surfaces error when only some component queries fail', async () => {
     const components = [createComponent('comp-a'), createComponent('comp-b')];
     const taskRuns = [
       createSecurityTaskRun('tr-1', 'comp-a', 'pod-1'),
       createSecurityTaskRun('tr-2', 'comp-b', 'pod-2'),
     ];
     mockUseComponents.mockReturnValue([components, true, undefined]);
-    mockUseTaskRunsV2.mockReturnValue([taskRuns, true, undefined, jest.fn(), {}]);
+    mockUseK8sWatchResource.mockReturnValue({ ...DEFAULT_CLUSTER_QUERY, data: taskRuns });
     mockResolveConforma
       .mockResolvedValueOnce(mockConformaResult)
       .mockRejectedValueOnce(new Error('network error'));
@@ -675,7 +671,7 @@ describe('useApplicationConformaResults', () => {
 
     await flushEffects();
 
-    expect(result.current.error).toBeUndefined();
+    expect(result.current.error).toBeTruthy();
   });
 
   it('sets error when all component queries fail', async () => {
@@ -685,7 +681,7 @@ describe('useApplicationConformaResults', () => {
       createSecurityTaskRun('tr-2', 'comp-b', 'pod-2'),
     ];
     mockUseComponents.mockReturnValue([components, true, undefined]);
-    mockUseTaskRunsV2.mockReturnValue([taskRuns, true, undefined, jest.fn(), {}]);
+    mockUseK8sWatchResource.mockReturnValue({ ...DEFAULT_CLUSTER_QUERY, data: taskRuns });
     mockResolveConforma.mockRejectedValue(new Error('total failure'));
 
     const { result } = renderHook(() => useApplicationConformaResults('test-app'), {
@@ -697,13 +693,12 @@ describe('useApplicationConformaResults', () => {
     expect(result.current.error).toBeTruthy();
   });
 
-  it('passes the correct selector to useTaskRunsV2', () => {
+  it('passes the correct watch options to useK8sWatchResource', () => {
     renderHook(() => useApplicationConformaResults('test-app'), {
       wrapper: createWrapper(),
     });
 
-    expect(mockUseTaskRunsV2).toHaveBeenCalledWith(
-      'test-ns',
+    expect(mockUseK8sWatchResource).toHaveBeenCalledWith(
       expect.objectContaining({
         selector: expect.objectContaining({
           matchLabels: expect.objectContaining({
@@ -719,6 +714,8 @@ describe('useApplicationConformaResults', () => {
           ],
         }),
       }),
+      expect.anything(),
+      expect.anything(),
     );
   });
 
@@ -754,7 +751,7 @@ describe('useApplicationConformaResults', () => {
       createSecurityTaskRun('tr-2', 'comp-b', 'pod-2'),
     ];
     mockUseComponents.mockReturnValue([components, true, undefined]);
-    mockUseTaskRunsV2.mockReturnValue([taskRuns, true, undefined, jest.fn(), {}]);
+    mockUseK8sWatchResource.mockReturnValue({ ...DEFAULT_CLUSTER_QUERY, data: taskRuns });
 
     let resolveSecond: (v: ConformaResult) => void;
     const pendingSecond = new Promise<ConformaResult>((r) => {

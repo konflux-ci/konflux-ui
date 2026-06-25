@@ -3,7 +3,6 @@ import { useQueries, useQueryClient } from '@tanstack/react-query';
 import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useComponents } from '~/hooks/useComponents';
-import { useTaskRunsV2 } from '~/hooks/useTaskRunsV2';
 import { useK8sWatchResource } from '~/k8s/hooks/useK8sWatchResource';
 import { TaskRunModel } from '~/models/taskruns';
 import { useNamespace } from '~/shared/providers/Namespace';
@@ -104,19 +103,15 @@ export const useApplicationConformaResults = (
     [namespace, applicationName],
   );
 
-  const [securityTaskRuns, taskRunsLoaded, taskRunsError] = useTaskRunsV2(
-    namespace?.length ? namespace : null,
-    { selector: watchOptions?.selector },
-  );
-
-  // Direct subscription to get query metadata (dataUpdatedAt, isFetching,
-  // isWatchDegraded) for the refresh UI. React Query deduplicates the HTTP
-  // request because useTaskRunsV2 already uses the same query key internally.
   const taskRunClusterQuery = useK8sWatchResource<TaskRunKind[]>(
     watchOptions,
     TaskRunModel,
     { retry: false },
   );
+
+  const securityTaskRuns = taskRunClusterQuery.data;
+  const taskRunsLoaded = !taskRunClusterQuery.isLoading;
+  const taskRunsError = taskRunClusterQuery.error;
 
   const queryClient = useQueryClient();
 
@@ -179,7 +174,9 @@ export const useApplicationConformaResults = (
       logData: results.map((q) => q.data),
       allSettled: results.every((q) => !q.isLoading),
       aggregatedLogError:
-        results.length > 0 && results.every((q) => q.isError) ? results[0].error : undefined,
+        results.length > 0 && results.some((q) => q.isError)
+          ? results.find((q) => q.isError)?.error
+          : undefined,
     }),
   });
 
