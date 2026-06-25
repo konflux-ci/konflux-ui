@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "patternfly": {
+      "command": "npx",
+      "args": ["-y", "@patternfly/patternfly-mcp@latest"]
+    },
+    "playwright": {
+      "command": "bash",
+      "args": ["scripts/launch_playwright_mcp.sh"]
+    }
+  }
+}

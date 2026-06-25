@@ -61,12 +61,12 @@ const InternalFLAGS = {
   },
   'kubearchive-logs': {
     key: 'kubearchive-logs',
-    description: 'Use Kubearchive to fetch logs instead of Tekton',
+    description: 'Use KubeArchive to fetch logs instead of Tekton',
     defaultEnabled: true,
     status: 'ready',
     guard: {
       allOf: ['isKubearchiveEnabled'],
-      failureReason: 'Kubearchive is not available on this cluster',
+      failureReason: 'KubeArchive is not available on this cluster',
       visibleInFeatureFlagPanel: true,
     },
   },
@@ -83,12 +83,12 @@ const InternalFLAGS = {
   },
   'taskruns-kubearchive': {
     key: 'taskruns-kubearchive',
-    description: 'Use Kubearchive as data source for TaskRuns instead of Tekton results',
+    description: 'Use KubeArchive as data source for TaskRuns instead of Tekton Results',
     defaultEnabled: true,
     status: 'ready',
     guard: {
       allOf: ['isKubearchiveEnabled'],
-      failureReason: 'Kubearchive is not available on this cluster',
+      failureReason: 'KubeArchive is not available on this cluster',
       visibleInFeatureFlagPanel: true,
     },
   },
@@ -99,7 +99,7 @@ const InternalFLAGS = {
     status: 'ready',
     guard: {
       allOf: ['isKubearchiveEnabled'],
-      failureReason: 'Kubearchive is not available on this cluster',
+      failureReason: 'KubeArchive is not available on this cluster',
       visibleInFeatureFlagPanel: true,
     },
   },
@@ -129,6 +129,13 @@ const InternalFLAGS = {
     key: 'edit-secret-page',
     description: 'Editing existing secrets',
     defaultEnabled: true,
+    status: 'wip',
+  },
+  'pipeline-runs-page': {
+    key: 'pipeline-runs-page',
+    description:
+      'Cross-application Pipeline Runs page with saved views, advanced filters, and column management',
+    defaultEnabled: false,
     status: 'wip',
   },
 } satisfies Record<string, FeatureMeta>;

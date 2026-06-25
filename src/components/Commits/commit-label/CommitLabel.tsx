@@ -4,6 +4,7 @@ import { BitbucketIcon } from '@patternfly/react-icons/dist/esm/icons/bitbucket-
 import { GithubIcon } from '@patternfly/react-icons/dist/esm/icons/github-icon';
 import { GitlabIcon } from '@patternfly/react-icons/dist/esm/icons/gitlab-icon';
 import { css } from '@patternfly/react-styles';
+import ForgejoLogo from '../../../shared/assets/forgejo-logo.svg';
 import { GitProvider } from '../../../shared/utils/git-utils';
 import { getCommitShortName } from '../../../utils/commits-utils';
 
@@ -19,6 +20,14 @@ const providerIcon = {
   [GitProvider.GITHUB]: <GithubIcon data-test="git-hub-icon" />,
   [GitProvider.GITLAB]: <GitlabIcon data-test="git-lab-icon" />,
   [GitProvider.BITBUCKET]: <BitbucketIcon data-test="bit-bucket-icon" />,
+  [GitProvider.FORGEJO]: (
+    <ForgejoLogo
+      role="img"
+      aria-label="Forgejo"
+      data-test="forgejo-icon"
+      style={{ width: '1em', height: '1em', color: 'inherit' }}
+    />
+  ),
 };
 
 type CommitLabelProps = {

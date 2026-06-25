@@ -1,0 +1,14 @@
+.test-result-cell {
+  display: flex;
+  gap: var(--pf-v5-global--spacer--sm);
+  flex-wrap: wrap;
+  &__result {
+    align-items: center;
+    display: flex;
+    gap: var(--pf-v5-global--spacer--xs);
+    flex-wrap: nowrap;
+  }
+  &__result-count {
+    font-weight: var(--pf-v5-global--FontWeight--bold);
+  }
+}

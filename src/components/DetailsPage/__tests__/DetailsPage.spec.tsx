@@ -121,11 +121,6 @@ describe('DetailsPage', () => {
   describe('Actions Dropdown', () => {
     const actions = [
       {
-        type: 'section-label',
-        key: 'group1',
-        label: 'Group 1',
-      },
-      {
         key: 'action1',
         label: 'Action 1',
         onClick: jest.fn(),
@@ -151,7 +146,6 @@ describe('DetailsPage', () => {
         await userEvent.click(actionsButton);
       });
 
-      expect(screen.getByText('Group 1')).toBeInTheDocument();
       expect(screen.getByText('Action 1')).toBeInTheDocument();
       expect(screen.getByText('Action 2')).toBeInTheDocument();
     });
@@ -198,27 +192,25 @@ describe('DetailsPage', () => {
       expect(onClick).toHaveBeenCalled();
     });
 
-    it('should handle separators with labels correctly', async () => {
-      const actionsWithLabeledSeparator = [
+    it('should render actions with a component element correctly', async () => {
+      const componentActions = [
         {
-          type: 'separator',
-          key: 'sep',
-          label: 'Section',
-        },
-        {
-          key: 'action',
-          label: 'Action',
+          key: 'link-action',
+          label: 'Link Action',
+          component: <a href="/test">Link Text</a>,
         },
       ];
 
-      routerRenderer(<DetailsPage {...defaultProps} actions={actionsWithLabeledSeparator} />);
+      routerRenderer(<DetailsPage {...defaultProps} actions={componentActions} />);
 
       const actionsButton = screen.getByRole('button', { name: /Actions/i });
       await act(async () => {
         await userEvent.click(actionsButton);
       });
 
-      expect(screen.getByText('Section')).toBeInTheDocument();
+      const link = screen.getByText('Link Text');
+      expect(link).toBeInTheDocument();
+      expect(screen.getByRole('menuitem', { name: 'Link Text' })).toBeInTheDocument();
     });
   });
 });

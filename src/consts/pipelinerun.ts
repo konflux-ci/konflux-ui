@@ -62,6 +62,13 @@ export enum PipelineRunEventType {
   RETEST = 'retest-all-comment',
 }
 
+/** Event types that represent post-merge / manually re-triggered build pipelines. */
+export const PUSH_BUILD_EVENT_TYPES = [
+  PipelineRunEventType.PUSH,
+  PipelineRunEventType.GITLAB_PUSH,
+  PipelineRunEventType.INCOMING,
+];
+
 export enum TaskRunLabel {
   TARGET_PLATFORM = 'build.appstudio.redhat.com/target-platform',
 }
@@ -123,11 +130,3 @@ export const UNFINISHED_PLR_STATUSES = [
   runStatus.Idle,
   runStatus.Cancelling,
 ];
-
-export enum TestOutputResult {
-  SUCCESS = 'SUCCESS',
-  FAILURE = 'FAILURE',
-  ERROR = 'ERROR',
-  WARNING = 'WARNING',
-  SKIPPED = 'SKIPPED',
-}

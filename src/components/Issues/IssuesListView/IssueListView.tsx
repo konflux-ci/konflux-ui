@@ -15,6 +15,7 @@ import AppEmptyState from '~/shared/components/empty-state/AppEmptyState';
 import FilteredEmptyState from '~/shared/components/empty-state/FilteredEmptyState';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
+import { textMatch } from '~/utils/text-filter-utils';
 import { IssuesTableHeader, SortableIssuesHeaders } from './IssuesListHeader';
 import IssuesListRow from './IssuesListRow';
 
@@ -70,12 +71,11 @@ const IssueListView = () => {
   const filteredIssues = React.useMemo(
     () =>
       issues.filter((issue) => {
-        const matchesName =
-          !nameFilter || issue.title.toLowerCase().includes(nameFilter.toLowerCase());
-        const matchesStatus = !statusFilter?.length || statusFilter.includes(issue.state);
-        const matchesSeverity = !severityFilter?.length || severityFilter.includes(issue.severity);
-
-        return matchesName && matchesStatus && matchesSeverity;
+        return (
+          textMatch(issue.title, nameFilter) &&
+          (!statusFilter?.length || statusFilter.includes(issue.state)) &&
+          (!severityFilter?.length || severityFilter.includes(issue.severity))
+        );
       }),
     [issues, statusFilter, severityFilter, nameFilter],
   );

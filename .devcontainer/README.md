@@ -64,8 +64,8 @@ While this documentation highlights the installation process for VS Code and oth
 
 ## What's Included
 
-- **Node.js 20**: Latest LTS version as required by the project
-- **Yarn 1.22.22**: Package manager as specified in the project requirements
+- **Node.js 24**: Fedora 44 `nodejs24` package (`/usr/bin/node` → `node-24`)
+- **Yarn Berry (4.12.0)**: Committed release at `.yarn/releases/yarn-4.12.0.cjs` (see `yarnPath` in `.yarnrc.yml`); no Corepack or global Yarn install
 - **VS Code Extensions**: Pre-configured with useful extensions for React/TypeScript development
 - **Development Tools**: ESLint, Prettier, Stylelint, and more
 
@@ -243,6 +243,7 @@ After making changes to the pipeline selection feature:
 
 ### General Issues
 
+- **Build fails with `corepack: command not found`**: This devcontainer does not use Corepack; Yarn comes from `.yarn/releases/`. Rebuild after pulling `.devcontainer` changes.
 - **Dependencies not installing**: Try rebuilding the container (`F1` → "Dev Containers: Rebuild Container")
 - **Port conflicts**: Check that ports 3000 and 9000 aren't already in use on your host machine
 

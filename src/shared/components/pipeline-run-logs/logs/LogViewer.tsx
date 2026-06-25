@@ -2,11 +2,11 @@ import React from 'react';
 import {
   Alert,
   Banner,
-  Bullseye,
   Button,
   Checkbox,
   Flex,
   FlexItem,
+  Popover,
   Spinner,
   Toolbar,
   ToolbarContent,
@@ -18,6 +18,7 @@ import {
   CompressIcon,
   DownloadIcon,
   ExpandIcon,
+  OutlinedKeyboardIcon,
   OutlinedPlayCircleIcon,
 } from '@patternfly/react-icons/dist/esm/icons';
 import {
@@ -30,10 +31,16 @@ import { saveAs } from 'file-saver';
 import { debounce } from 'lodash-es';
 import { v4 as uuidv4 } from 'uuid';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
+import { logger } from '~/monitoring/logger';
+import {
+  KeyboardShortcutHint,
+  type ShortcutEntry,
+} from '~/shared/components/keyboard-shortcut-hint';
 import { useAutoScrollWithResume } from '~/shared/components/pipeline-run-logs/logs/useAutoScrollWithResume';
 import { useLogViewerSearch } from '~/shared/components/pipeline-run-logs/logs/useLogViewerSearch';
 import { LoadingInline } from '~/shared/components/status-box/StatusBox';
-import { VirtualizedLogViewer } from '~/shared/components/virtualized-log-viewer';
+import { VirtualizedLogViewer, type LogSection } from '~/shared/components/virtualized-log-viewer';
+import { buildLines } from '~/shared/components/virtualized-log-viewer/log-viewer-utils';
 import { useFullscreen } from '~/shared/hooks/fullscreen';
 import { TaskRunKind } from '~/types';
 import LogsTaskDuration from './LogsTaskDuration';
@@ -41,14 +48,18 @@ import { useLogViewerTheme } from './useLogViewerTheme';
 
 import './LogViewer.scss';
 
-// ANSI escape code regex for removing color codes from terminal output
-// ESC character (\u001b) is a control character but necessary for ANSI escape sequences
-// eslint-disable-next-line no-control-regex
-const ANSI_ESCAPE_REGEX = /\u001b\[[0-9;]*m/g;
+const LOG_VIEWER_SHORTCUTS: ShortcutEntry[] = [
+  { keys: 'Arrow Up', macKeys: 'Arrow Up', description: 'Scroll up one line' },
+  { keys: 'Arrow Down', macKeys: 'Arrow Down', description: 'Scroll down one line' },
+  { keys: 'PageUp', macKeys: 'Fn + Arrow Up', description: 'Scroll up one page' },
+  { keys: 'PageDown', macKeys: 'Fn + Arrow Down', description: 'Scroll down one page' },
+  { keys: 'Home', macKeys: 'Fn + Arrow Left', description: 'Scroll to top' },
+  { keys: 'End', macKeys: 'Fn + Arrow Right', description: 'Scroll to bottom' },
+];
 
 export type Props = {
   showSearch?: boolean;
-  data: string;
+  sections: LogSection[];
   allowAutoScroll?: boolean;
   downloadAllLabel?: string;
   onDownloadAll?: () => Promise<Error>;
@@ -65,7 +76,7 @@ export type Props = {
 const LogViewer: React.FC<Props> = ({
   showSearch = true,
   allowAutoScroll,
-  data = '',
+  sections,
   downloadAllLabel,
   onDownloadAll,
   taskRun,
@@ -84,13 +95,7 @@ const LogViewer: React.FC<Props> = ({
       onScroll: onScrollProp,
     });
 
-  // Console rewind action adds \r to the logs, this replaces them not to cause line overlap
-  // Remove ANSI escape codes for plain text display
-  const processedData = React.useMemo(() => {
-    return data.replace(/\r/g, '\n').replace(ANSI_ESCAPE_REGEX, '');
-  }, [data]);
-
-  const lines = React.useMemo(() => processedData.split('\n'), [processedData]);
+  const lines = React.useMemo(() => buildLines(sections), [sections]);
 
   // Search state and context management
   const { logViewerContextValue, toolbarContextValue, scrolledRow } = useLogViewerSearch({
@@ -101,10 +106,17 @@ const LogViewer: React.FC<Props> = ({
   const [isFullscreen, fullscreenRef, fullscreenToggle, isFullscreenSupported] =
     useFullscreen<HTMLDivElement>();
   const [downloadAllStatus, setDownloadAllStatus] = React.useState(false);
+  const [showShortcutHint, setShowShortcutHint] = React.useState(false);
+
+  const downloadData = React.useMemo(() => {
+    return sections
+      .map((s) => (s.containerName ? `${s.containerName}\n${s.data}` : s.data))
+      .join('\n\n');
+  }, [sections]);
 
   const downloadLogs = () => {
-    if (!data) return;
-    const blob = new Blob([data], {
+    if (!downloadData) return;
+    const blob = new Blob([downloadData], {
       type: 'text/plain;charset=utf-8',
     });
     saveAs(blob, `${taskName || `task-run-${uuidv4()}`}.log`);
@@ -112,14 +124,13 @@ const LogViewer: React.FC<Props> = ({
 
   const startDownloadAll = () => {
     setDownloadAllStatus(true);
-    onDownloadAll()
+    onDownloadAll?.()
       .then(() => {
         setDownloadAllStatus(false);
       })
       .catch((err: Error) => {
         setDownloadAllStatus(false);
-        // eslint-disable-next-line no-console
-        console.warn(err.message || 'Error downloading logs.');
+        logger.warn(err.message || 'Error downloading logs.');
       });
   };
 
@@ -242,28 +253,70 @@ const LogViewer: React.FC<Props> = ({
                       </Button>
                     </ToolbarItem>
                   )}
+                  <ToolbarItem variant="separator" className="log-viewer__divider" />
+                  <ToolbarItem>
+                    <Popover
+                      aria-label="Keyboard shortcuts"
+                      isVisible={showShortcutHint}
+                      shouldClose={() => setShowShortcutHint(false)}
+                      bodyContent={
+                        <KeyboardShortcutHint
+                          shortcuts={LOG_VIEWER_SHORTCUTS}
+                          title="Keyboard shortcuts"
+                          helperText="Click the log area to enable these shortcuts."
+                        />
+                      }
+                      hasAutoWidth
+                    >
+                      <Button
+                        variant="plain"
+                        aria-label="Show keyboard shortcuts"
+                        onClick={() => setShowShortcutHint((prev) => !prev)}
+                      >
+                        <OutlinedKeyboardIcon />
+                      </Button>
+                    </Popover>
+                  </ToolbarItem>
                 </ToolbarGroup>
               </ToolbarContent>
             </Toolbar>
           </div>
 
           {/* Header */}
-          <Banner data-testid="logs-taskName">
-            <Flex gap={{ default: 'gapSm' }}>
-              {taskName && (
-                <FlexItem flex={{ default: 'flex_1' }} className="log-viewer__task-name">
-                  <Truncate content={taskName} />
+          <Banner data-test="logs-taskName">
+            <Flex
+              alignItems={{ default: 'alignItemsCenter' }}
+              flexWrap={{ default: 'nowrap' }}
+              justifyContent={{ default: 'justifyContentSpaceBetween' }}
+            >
+              {(taskName || isLoading) && (
+                <FlexItem className="log-viewer__task-name-group">
+                  <Flex
+                    gap={{ default: 'gapSm' }}
+                    alignItems={{ default: 'alignItemsCenter' }}
+                    flexWrap={{ default: 'nowrap' }}
+                  >
+                    {taskName && (
+                      <FlexItem flex={{ default: 'flex_1' }} className="log-viewer__task-name">
+                        <Truncate content={taskName} />
+                      </FlexItem>
+                    )}
+                    {isLoading && (
+                      <FlexItem flex={{ default: 'flexNone' }}>
+                        <Spinner
+                          isInline
+                          aria-label="Loading logs"
+                          className="log-viewer__task-name-spinner"
+                        />
+                      </FlexItem>
+                    )}
+                  </Flex>
                 </FlexItem>
               )}
               <FlexItem flex={{ default: 'flexNone' }}>
                 <LogsTaskDuration taskRun={taskRun} />
               </FlexItem>
             </Flex>
-            {isLoading && (
-              <Bullseye>
-                <Spinner size="lg" />
-              </Bullseye>
-            )}
             {errorMessage && <Alert variant="danger" isInline title={errorMessage} />}
           </Banner>
 
@@ -272,7 +325,7 @@ const LogViewer: React.FC<Props> = ({
             {viewerHeight && (
               <VirtualizedLogViewer
                 key={taskRun?.metadata?.uid || 'default'}
-                data={processedData}
+                sections={sections}
                 height={viewerHeight}
                 scrollToRow={scrolledRow}
                 onScroll={handleScroll}
@@ -284,7 +337,7 @@ const LogViewer: React.FC<Props> = ({
           {showResumeStreamButton && (
             <div className="log-viewer__resume-stream-button-wrapper">
               <Button
-                data-testid="resume-log-stream"
+                data-test="resume-log-stream"
                 variant="primary"
                 isBlock
                 onClick={handleResumeClick}

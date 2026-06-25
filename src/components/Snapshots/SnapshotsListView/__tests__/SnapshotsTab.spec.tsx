@@ -1,15 +1,43 @@
 import '@testing-library/jest-dom';
-import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
-import { act, fireEvent, screen } from '@testing-library/react';
+import { useVirtualizer } from '@tanstack/react-virtual';
+import { act, fireEvent, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useK8sAndKarchResources } from '~/hooks/useK8sAndKarchResources';
 import { createUseParamsMock, renderWithQueryClientAndRouter } from '~/utils/test-utils';
 import { mockSnapshots } from '../../../../__data__/mock-snapshots';
 import { mockUseNamespaceHook } from '../../../../unit-test-utils/mock-namespace';
-import SnapshotsListRow from '../SnapshotsListRow';
 import { SnapshotsListViewTab } from '../SnapshotsTab';
 
 jest.useFakeTimers();
+
+jest.mock('@tanstack/react-virtual', () => ({
+  useVirtualizer: jest.fn(),
+}));
+
+const mockUseVirtualizer = jest.mocked(useVirtualizer);
+
+beforeEach(() => {
+  mockUseVirtualizer.mockImplementation((opts) => {
+    const items = Array.from({ length: opts.count }, (_, i) => ({
+      index: i,
+      key: i,
+      start: i * 44,
+      end: (i + 1) * 44,
+      size: 44,
+      lane: 0,
+    }));
+    return {
+      getVirtualItems: () => items,
+      getTotalSize: () => opts.count * 44,
+      measureElement: () => undefined,
+      scrollToIndex: () => undefined,
+      scrollToOffset: () => undefined,
+      measure: () => undefined,
+      getOffsetForIndex: () => [0, 0] as [number, number],
+      options: { count: opts.count },
+    } as unknown as ReturnType<typeof useVirtualizer>;
+  });
+});
 
 jest.mock('~/hooks/useK8sAndKarchResources', () => ({
   useK8sAndKarchResources: jest.fn(),
@@ -23,35 +51,13 @@ jest.mock('react-router-dom', () => {
   };
 });
 
-jest.mock('../../../../shared/components/table', () => {
-  const actual = jest.requireActual('../../../../shared/components/table');
-  return {
-    ...actual,
-    Table: (props) => {
-      const { data, filters, selected, match, kindObj } = props;
-      const cProps = { data, filters, selected, match, kindObj };
-      const columns = props.Header(cProps);
-      return (
-        <PfTable role="table" aria-label="table" cells={columns} variant="compact" borders={false}>
-          <TableHeader role="rowgroup" />
-          <tbody>
-            {props.data.map((obj, i) => (
-              <tr key={i}>
-                <SnapshotsListRow obj={obj} columns={null} customData={props.customData} />
-              </tr>
-            ))}
-          </tbody>
-        </PfTable>
-      );
-    },
-  };
-});
 
 const useMockSnapshots = useK8sAndKarchResources as jest.Mock;
 
 describe('SnapshotsListViewTab', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.clearAllTimers();
     mockUseNamespaceHook('test-namespace');
     useMockSnapshots.mockReturnValue({
       data: mockSnapshots,
@@ -71,7 +77,7 @@ describe('SnapshotsListViewTab', () => {
     expect(screen.getByText('my-app-snapshot-1')).toBeInTheDocument();
 
     // Filter by name
-    const filter = screen.getByPlaceholderText<HTMLInputElement>('Filter by name...');
+    const filter = screen.getByRole<HTMLInputElement>('textbox', { name: 'Name' });
     act(() => {
       fireEvent.change(filter, {
         target: { value: 'my-app-snapshot-invalid' },
@@ -92,7 +98,7 @@ describe('SnapshotsListViewTab', () => {
     renderWithQueryClientAndRouter(<SnapshotsListViewTab />);
 
     // Filter by name
-    const filter = screen.getByPlaceholderText<HTMLInputElement>('Filter by name...');
+    const filter = screen.getByRole<HTMLInputElement>('textbox', { name: 'Name' });
     act(() => {
       fireEvent.change(filter, {
         target: { value: 'my-app-snapshot-1' },
@@ -111,10 +117,12 @@ describe('SnapshotsListViewTab', () => {
 
     renderWithQueryClientAndRouter(<SnapshotsListViewTab />);
 
-    const filterDropdown = screen.getByTestId('snapshots-list-filter-dropdown');
+    // Open the switchable search dropdown and select "Commit message"
+    const filterContainer = screen.getByTestId('switchable-search-filter-searchField');
+    const filterDropdown = within(filterContainer).getByRole('button', { name: /name/i });
     await user.click(filterDropdown);
 
-    const option = screen.getByRole('option', { name: /commit message/i });
+    const option = screen.getByRole('menuitem', { name: /commit message/i });
     await user.click(option);
 
     const input = screen.getByRole('textbox');
@@ -124,9 +132,7 @@ describe('SnapshotsListViewTab', () => {
       jest.advanceTimersByTime(700);
     });
 
-    const rows = screen.getAllByRole('row');
-    expect(rows).toHaveLength(2);
-    expect(rows[1]).toHaveTextContent('my-app-snapshot-1');
+    expect(screen.getByText('my-app-snapshot-1')).toBeInTheDocument();
   });
 
   it('should display the filtered empty state when no results match the filter by commit message', async () => {
@@ -135,10 +141,14 @@ describe('SnapshotsListViewTab', () => {
 
     renderWithQueryClientAndRouter(<SnapshotsListViewTab />);
 
-    const filterDropdown = screen.getByTestId('snapshots-list-filter-dropdown');
+    // Open the switchable search dropdown and select "Commit message"
+    const filterContainer2 = screen.getByTestId('switchable-search-filter-searchField');
+    const filterDropdown = within(filterContainer2).getByRole('button', {
+      name: /name|commit message/i,
+    });
     await user.click(filterDropdown);
 
-    const option = screen.getByRole('option', { name: /commit message/i });
+    const option = screen.getByRole('menuitem', { name: /commit message/i });
     await user.click(option);
 
     const input = screen.getByRole('textbox');

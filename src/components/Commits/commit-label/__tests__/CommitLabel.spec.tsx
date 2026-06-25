@@ -1,3 +1,4 @@
+import * as React from 'react';
 import { render } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { renderWithQueryClientAndRouter } from '~/unit-test-utils/rendering-utils';
@@ -13,6 +14,11 @@ jest.mock('react-router-dom', () => {
     useNavigate: () => mockNavigate,
   };
 });
+
+jest.mock(
+  '../../../../shared/assets/forgejo-logo.svg',
+  () => (props: { 'aria-label'?: string }) => React.createElement('svg', props),
+);
 
 const sha = '9135b3ad0a2c16726523b12cf3b8f0365be33566';
 const shaURL =
@@ -41,6 +47,11 @@ describe('CommitLabel', () => {
     label = render(<CommitLabel gitProvider={GitProvider.BITBUCKET} sha={sha} shaURL={shaURL} />);
     icon = label.queryByTestId(`bit-bucket-icon`);
     expect(icon).toBeInTheDocument();
+    label.unmount();
+
+    label = render(<CommitLabel gitProvider={GitProvider.FORGEJO} sha={sha} shaURL={shaURL} />);
+    const forgejoIcon = label.container.querySelector('svg[aria-label="Forgejo"]');
+    expect(forgejoIcon).toBeInTheDocument();
     label.unmount();
 
     label = render(<CommitLabel gitProvider={GitProvider.UNSURE} sha={sha} shaURL={shaURL} />);
