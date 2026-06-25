@@ -27,7 +27,7 @@ import { textMatch } from '~/utils/text-filter-utils';
 import emptyStateImgUrl from '../../../assets/Components.svg';
 import pipelineImg from '../../../assets/Pipeline.svg';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
-import { useComponents, useURLForComponentPRs } from '../../../hooks/useComponents';
+import { useComponents } from '../../../hooks/useComponents';
 import { useLatestPushBuildPipelines } from '../../../hooks/useLatestPushBuildPipelines';
 import { PACState } from '../../../hooks/usePACState';
 import usePACStatesForComponents from '../../../hooks/usePACStatesForComponents';
@@ -36,7 +36,6 @@ import { IMPORT_PATH } from '../../../routes/paths';
 import { Table, useDeepCompareMemoize } from '../../../shared';
 import AppEmptyState from '../../../shared/components/empty-state/AppEmptyState';
 import FilteredEmptyState from '../../../shared/components/empty-state/FilteredEmptyState';
-import ExternalLink from '../../../shared/components/links/ExternalLink';
 import { useNamespace } from '../../../shared/providers/Namespace/useNamespaceInfo';
 import { ComponentKind } from '../../../types';
 import { useAccessReviewForModel } from '../../../utils/rbac';
@@ -80,7 +79,6 @@ const ComponentListView: React.FC<React.PropsWithChildren<ComponentListViewProps
 
   const showModal = useModalLauncher();
 
-  const prURL = useURLForComponentPRs(components);
   const componentNames = React.useMemo(() => components.map((c) => c.metadata.name), [components]);
 
   const [pipelineRuns, pipelineRunsLoaded, pipelineRunsError] = useLatestPushBuildPipelines(
@@ -290,7 +288,6 @@ const ComponentListView: React.FC<React.PropsWithChildren<ComponentListViewProps
               >
                 Manage build pipelines
               </AlertActionLink>
-              <ExternalLink href={prURL}>View all pull requests in Github</ExternalLink>
             </>
           }
           data-test="components-unmerged-build-pr"

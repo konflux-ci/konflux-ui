@@ -35,6 +35,7 @@
     ".*.cjs",
     "node_modules",
     "config/*",
-    "scripts/*"
+    "scripts/*",
+    "**/__stories__/**"
   ]
 }

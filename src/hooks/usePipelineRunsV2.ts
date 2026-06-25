@@ -26,6 +26,8 @@ interface UsePipelineRunsV2Options
   selector?: KubearchiveFilterTransformSelector;
   /** Same semantics as commits list Tekton search; TR uses CEL, KubeArchive/cluster filter in memory. */
   commitSearchTerm?: string;
+  /** When false, skip KubeArchive and Tekton Results queries. Defaults to true for backward compatibility. */
+  enableArchive?: boolean;
 }
 
 type UsePipelineRunsV2Result = [
@@ -138,8 +140,15 @@ export const usePipelineRunsV2 = (
     );
   }, [runs, isLoading, error]);
 
+  // When enableArchive is explicitly false, skip external sources entirely
+  const archiveEnabled = optionsMemo?.enableArchive !== false;
+
   // Decide when to query external sources (TR or KubeArchive)
   const shouldQueryExternalSources = React.useMemo(() => {
+    if (!archiveEnabled) {
+      return false;
+    }
+
     if (!namespace) {
       return false;
     }
@@ -163,6 +172,7 @@ export const usePipelineRunsV2 = (
 
     return false;
   }, [
+    archiveEnabled,
     namespace,
     options?.limit,
     optionsMemo?.commitSearchTerm,

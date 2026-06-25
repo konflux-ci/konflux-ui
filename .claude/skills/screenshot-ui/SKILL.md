@@ -54,6 +54,7 @@ git diff --cached --name-only              # staged but not yet committed
 ```
 
 Deduplicate the combined list. Keep only files that meet **all** of:
+
 - Path is `.tsx` (not `.ts`, `.scss`, etc.)
 - Under `src/components/` or `src/shared/components/`
 - Does not contain `/__tests__/`, `/__mocks__/`, `.spec.`, or `.test.` in the path
@@ -77,12 +78,14 @@ Combine both. This shows exactly what lines changed.
 **2b. Read the file** to understand its component structure.
 
 **2c. Determine the target page** by tracing imports upward:
+
 - Search for files that import this component: `rg --files-with-matches 'from.*<basename>'`
 - If the importer is in `src/routes/page-routes/`, you have found the route file — read it to understand the URL pattern.
 - If the importer is another component, repeat from that file.
 - Continue until you reach a route file or exhaust reasonable depth (4-5 levels). If no route is found, use the namespace overview (`/ns`) as a fallback page.
 
 **2d. Decide whether interaction is needed** by reading the diff and file together:
+
 - Look at where the changed lines sit in the JSX tree.
 - If the changed code is **inside the body/content** of an interactive element (e.g., inside `<Popover bodyContent={...}>`, inside a `<Modal>` body, inside a `<Tooltip>` content, inside an `<ExpandableSection>` body), the content is hidden behind a user action — you need to trigger it first.
 - If the changed code is **the trigger element itself** (a button label, surrounding layout, or anything visible without interaction), a full-page screenshot suffices.
@@ -107,6 +110,7 @@ browser_snapshot
      ```
 
      This opens a **headed** Chrome window using the same profile directory. The user completes SSO login; the window closes automatically once the redirect back to `localhost:8080` succeeds (up to 5 minutes).
+
   3. After the script exits, call `browser_navigate { "url": "https://localhost:8080/ns" }` again — the MCP server opens a new headless browser that picks up the cookies saved by the auth script.
   4. `browser_snapshot` to verify authentication succeeded.
   5. If still on a login page after this, stop with an error — do **not** retry the auth script.
@@ -136,6 +140,7 @@ The timestamp folder keeps each run separate; the branch folder groups runs for 
 For each target page, navigate using Playwright MCP. Always call `browser_snapshot` after every action to verify the page state and find element refs.
 
 **Navigation pattern:**
+
 1. `browser_navigate { "url": "https://localhost:8080/ns" }` → snapshot → click first namespace in table
 2. Navigate to the relevant section using sidebar links or by constructing the list URL from the namespace you just discovered (`https://localhost:8080/ns/<namespace>/applications`, etc.)
 3. If the component lives on a detail page, click the first relevant row in the list
@@ -143,6 +148,7 @@ For each target page, navigate using Playwright MCP. Always call `browser_snapsh
 5. Once on the target page, snapshot to confirm content loaded
 
 **Navigation rules:**
+
 - Always read element refs from the snapshot — never guess or hardcode resource names.
 - If a table or list is empty (no resources to click), skip this target with a note.
 - If a step fails, retry once. If it fails again, skip and move to the next target.
@@ -184,12 +190,8 @@ Write **`${OUTPUT_DIR}/manifest.json`** (one manifest per run — do not overwri
   "branchSlug": "<BRANCH_SLUG>",
   "runId": "<RUN_ID>",
   "outputDir": "<OUTPUT_DIR>",
-  "screenshots": [
-    { "label": "...", "path": "<OUTPUT_DIR>/<label>.png", "file": "src/..." }
-  ],
-  "skipped": [
-    { "file": "src/...", "reason": "..." }
-  ]
+  "screenshots": [{ "label": "...", "path": "<OUTPUT_DIR>/<label>.png", "file": "src/..." }],
+  "skipped": [{ "file": "src/...", "reason": "..." }]
 }
 ```
 
@@ -208,15 +210,15 @@ browser_close {}
 
 ## Error Handling
 
-| Condition | Action |
-|---|---|
-| Playwright MCP unavailable | Stop, tell user to check MCP config |
-| Dev server not running | Stop, tell user to run `yarn start` |
-| No UI changes found | Stop cleanly, report no screenshots needed |
-| Auth required | `browser_close`, run `scripts/playwright_auth.sh` (headed login), re-navigate headlessly; stop if still unauthenticated |
-| Page has no data (empty list) | Skip that target, continue |
-| Target navigation fails twice | Skip, log reason, continue |
-| Interactive element not found | Take full-page screenshot, add explanatory note |
+| Condition                     | Action                                                                                                                  |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Playwright MCP unavailable    | Stop, tell user to check MCP config                                                                                     |
+| Dev server not running        | Stop, tell user to run `yarn start`                                                                                     |
+| No UI changes found           | Stop cleanly, report no screenshots needed                                                                              |
+| Auth required                 | `browser_close`, run `scripts/playwright_auth.sh` (headed login), re-navigate headlessly; stop if still unauthenticated |
+| Page has no data (empty list) | Skip that target, continue                                                                                              |
+| Target navigation fails twice | Skip, log reason, continue                                                                                              |
+| Interactive element not found | Take full-page screenshot, add explanatory note                                                                         |
 
 ## Anti-patterns
 

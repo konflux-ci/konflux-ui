@@ -141,6 +141,13 @@ const InternalFLAGS = {
     defaultEnabled: true,
     status: 'wip',
   },
+  'pipeline-runs-page': {
+    key: 'pipeline-runs-page',
+    description:
+      'Cross-application Pipeline Runs page with saved views, advanced filters, and column management',
+    defaultEnabled: false,
+    status: 'wip',
+  },
 } satisfies Record<string, FeatureMeta>;
 
 export type FlagKey = keyof typeof InternalFLAGS;

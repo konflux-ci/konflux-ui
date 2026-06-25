@@ -167,8 +167,8 @@ describe('ApplicationDetails', () => {
     it('should disable "Manage build pipelines" when user lacks patch permission regardless of components', async () => {
       const useAccessReviewForModelMock = jest.requireMock('../../../utils/rbac')
         .useAccessReviewForModel as jest.Mock;
-      useAccessReviewForModelMock.mockImplementation(
-        (_model: unknown, verb: string) => (verb === 'patch' ? [false, true] : [true, true]),
+      useAccessReviewForModelMock.mockImplementation((_model: unknown, verb: string) =>
+        verb === 'patch' ? [false, true] : [true, true],
       );
       renderWithQueryClientAndRouter(<ApplicationDetails />);
       await openActionsMenu();
