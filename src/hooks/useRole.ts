@@ -10,9 +10,23 @@ export type RoleKind = 'ClusterRole' | 'Role';
 
 export type RoleMap = {
   roleMap: RoleAndNameMap;
+  /** Higher value = more privileged; derived from `konflux-public-info` rbac list order (first entry is highest). */
+  roleRefWeights: Record<string, number>;
   roleKind: RoleKind;
   roleDescription: RoleAndNameMap;
 };
+
+/** Derive privilege rank from rbac config order (earlier entries are more privileged). */
+export const buildRoleRefWeightsFromRbacItems = (
+  rbacItems: KonfluxRbacItem[],
+): Record<string, number> =>
+  rbacItems.reduce<Record<string, number>>((weights, item, index) => {
+    const roleRefName = item.roleRef?.name;
+    if (roleRefName) {
+      weights[roleRefName] = rbacItems.length - index;
+    }
+    return weights;
+  }, {});
 
 export const useRoleMap = (): [RoleMap, boolean, unknown] => {
   const [konfluxInfo, loaded, error] = useKonfluxPublicInfo();
@@ -48,8 +62,15 @@ export const useRoleMap = (): [RoleMap, boolean, unknown] => {
         return accumulator;
       }, {});
 
+      const roleRefWeights = buildRoleRefWeightsFromRbacItems(rbacItems);
+
       // format final data
-      const roleMap: RoleMap = { roleMap: roleAndNameMap, roleKind, roleDescription };
+      const roleMap: RoleMap = {
+        roleMap: roleAndNameMap,
+        roleRefWeights,
+        roleKind,
+        roleDescription,
+      };
 
       return roleMap;
     }

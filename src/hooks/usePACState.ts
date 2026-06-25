@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { PipelineRunEventType, PipelineRunLabel, PipelineRunType } from '../consts/pipelinerun';
+import { PUSH_BUILD_EVENT_TYPES, PipelineRunLabel, PipelineRunType } from '../consts/pipelinerun';
 import { ComponentKind } from '../types';
 import {
   SAMPLE_ANNOTATION,
@@ -45,8 +45,14 @@ const usePACState = (component: ComponentKind) => {
             [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.BUILD,
             [PipelineRunLabel.APPLICATION]: component.spec.application,
             [PipelineRunLabel.COMPONENT]: component.metadata.name,
-            [PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL]: PipelineRunEventType.PUSH,
           },
+          matchExpressions: [
+            {
+              key: PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL,
+              operator: 'In',
+              values: PUSH_BUILD_EVENT_TYPES,
+            },
+          ],
         },
         // this limit is based on the assumption that user merges the PR after the component is created
         limit: 10,

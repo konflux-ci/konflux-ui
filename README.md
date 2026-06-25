@@ -11,10 +11,14 @@ If you find a bug or want to request a feature, feel free to open an issue as we
 
 **Prerequisites:** Node.js >= 24
 
+Clone the repository, then run a single setup command (enables Corepack, installs dependencies, and starts the dev server):
+
 ```bash
 git clone https://github.com/konflux-ci/konflux-ui.git && cd konflux-ui
-./setup.sh
+yarn setup
 ```
+
+Equivalent: `./setup.sh`
 
 ## Setting up development environment
 
@@ -36,12 +40,15 @@ A step by step series of examples that tell you how to get a development environ
 1. Clone the repository
 
 2. Enable Corepack (required for Yarn Berry)
+
    ```bash
    corepack enable
    ```
+
    > On some systems you may need `sudo corepack enable`
 
 3. Install dependencies
+
    ```bash
    yarn install
    ```

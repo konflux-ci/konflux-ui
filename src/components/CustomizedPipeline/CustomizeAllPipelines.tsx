@@ -11,7 +11,7 @@ import {
 import { getErrorState } from '~/shared/utils/error-utils';
 import { useComponents } from '../../hooks/useComponents';
 import { ComponentModel } from '../../models';
-import { APPLICATION_DETAILS_PATH } from '../../routes/paths';
+import { IMPORT_PATH } from '../../routes/paths';
 import { ComponentKind } from '../../types';
 import { useAccessReviewForModel } from '../../utils/rbac';
 import { ButtonWithAccessTooltip } from '../ButtonWithAccessTooltip';
@@ -64,10 +64,11 @@ const CustomizeAllPipelines: React.FC<React.PropsWithChildren<Props>> = ({
               component={(props) => (
                 <Link
                   {...props}
-                  to={APPLICATION_DETAILS_PATH.createPath({
-                    workspaceName: namespace,
-                    applicationName,
-                  })}
+                  to={`${IMPORT_PATH.createPath({ workspaceName: namespace })}?application=${applicationName}`}
+                  onClick={(event) => {
+                    props.onClick?.(event);
+                    onClose?.();
+                  }}
                 />
               )}
               isDisabled={!canCreateComponent}

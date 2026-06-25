@@ -1,7 +1,7 @@
 import { renderHook } from '@testing-library/react-hooks';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useKubearchiveListResourceQuery } from '~/kubearchive/hooks';
-import { PipelineRunLabel } from '../../consts/pipelinerun';
+import { PUSH_BUILD_EVENT_TYPES, PipelineRunLabel } from '../../consts/pipelinerun';
 import { useTRPipelineRuns } from '../../hooks/useTektonResults';
 import { ComponentKind } from '../../types';
 import {
@@ -160,6 +160,28 @@ describe('usePACState', () => {
     useTRPipelineRunsMock.mockReturnValueOnce([[], false]);
     const component = createComponent(ComponentBuildState.enabled);
     expect(renderHook(() => usePACState(component)).result.current).toBe(PACState.loading);
+  });
+
+  it('should query push build event types using PUSH_BUILD_EVENT_TYPES', () => {
+    useK8sWatchResourceMock.mockReturnValueOnce([[], true]);
+    const component = createComponent(ComponentBuildState.enabled);
+    renderHook(() => usePACState(component));
+
+    const callArgs = useK8sWatchResourceMock.mock.calls[0];
+    const watchResource = callArgs[0];
+    const matchExpressions = watchResource?.selector?.matchExpressions || [];
+    const eventTypeExpression = matchExpressions.find(
+      (expr: { key: string }) => expr.key === PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL,
+    );
+
+    expect(eventTypeExpression).toEqual({
+      key: PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL,
+      operator: 'In',
+      values: PUSH_BUILD_EVENT_TYPES,
+    });
+    expect(
+      watchResource?.selector?.matchLabels?.[PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL],
+    ).toBeUndefined();
   });
 
   it('should not filter out PUSH pipeline runs with PR label', () => {

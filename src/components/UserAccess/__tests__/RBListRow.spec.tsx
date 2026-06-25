@@ -1,43 +1,75 @@
-import { render } from '@testing-library/react';
-import { defaultKonfluxRoleMap } from '../../../__data__/role-data';
-import { mockRoleBinding } from '../../../__data__/rolebinding-data';
-import { useRoleMap } from '../../../hooks/useRole';
-import { createK8sWatchResourceMock } from '../../../utils/test-utils';
-import { RBListRow } from '../RBListRow';
+import { render, screen } from '@testing-library/react';
+import { defaultKonfluxRoleMap } from '~/__data__/role-data';
+import { mockRoleBinding } from '~/__data__/rolebinding-data';
+import { useRoleMap } from '~/hooks/useRole';
+import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
+import { useAccessReviewForModel } from '~/utils/rbac';
+import { UserAccessTableBodyRow } from '../RBListRow';
+import { UserAccessTableRow } from '../userAccessTableRows';
 
 jest.mock('react-router-dom', () => ({
   Link: (props) => <a href={props.to}>{props.children}</a>,
 }));
 
-jest.mock('../../../hooks/useRole', () => ({
+jest.mock('~/hooks/useRole', () => ({
   useRoleMap: jest.fn(),
 }));
 
-const watchMock = createK8sWatchResourceMock();
+jest.mock('~/utils/rbac', () => ({
+  useAccessReviewForModel: jest.fn(),
+}));
 
-describe('RBListRow', () => {
-  it('should render correct user info', () => {
-    const mockUseRoleMap = useRoleMap as jest.Mock;
-    watchMock.mockReturnValueOnce([mockRoleBinding, false]);
-    mockUseRoleMap.mockReturnValueOnce([defaultKonfluxRoleMap, true, null]);
-    const wrapper = render(<RBListRow obj={mockRoleBinding} columns={[]} />, {
-      container: document.createElement('tr'),
-    });
-    const cells = wrapper.container.getElementsByTagName('td');
-    wrapper.debug();
+jest.mock('~/components/modal/ModalProvider', () => ({
+  useModalLauncher: () => jest.fn(),
+}));
 
-    expect(cells[0]).toHaveTextContent('user1');
-    expect(cells[1]).toHaveTextContent('Contributor');
-    expect(cells[2]).toHaveTextContent('metadata-name');
+const mockNamespace = 'test-ns';
+const useNamespaceMock = mockUseNamespaceHook(mockNamespace);
+
+const mockRow = (rb: typeof mockRoleBinding): UserAccessTableRow => ({
+  roleBinding: rb,
+  subject: rb.subjects?.[0] ?? null,
+  rowKey: `${rb.metadata.name}__0__User__${rb.subjects?.[0]?.name ?? 'subject'}`,
+});
+
+function renderRow(row: UserAccessTableRow) {
+  return render(
+    <table>
+      <tbody>
+        <UserAccessTableBodyRow obj={row} rowIndex={0} isSelected={false} onSelectRow={jest.fn()} />
+      </tbody>
+    </table>,
+  );
+}
+
+describe('UserAccessTableBodyRow', () => {
+  const mockUseRoleMap = useRoleMap as jest.Mock;
+  const mockUseAccessReview = useAccessReviewForModel as jest.Mock;
+
+  beforeEach(() => {
+    useNamespaceMock.mockReturnValue(mockNamespace);
+    mockUseAccessReview.mockReturnValue([true]);
   });
 
-  it('should render spinner', () => {
-    const mockUseRoleMap = useRoleMap as jest.Mock;
-    watchMock.mockReturnValueOnce([mockRoleBinding, false]);
-    mockUseRoleMap.mockReturnValueOnce([defaultKonfluxRoleMap, true, null]);
-    const wrapper = render(<RBListRow obj={mockRoleBinding} columns={[]} />, {
-      container: document.createElement('div'),
-    });
-    wrapper.container.getElementsByTagName('spinner');
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('should render username, role, and role binding name', () => {
+    mockUseRoleMap.mockReturnValue([defaultKonfluxRoleMap, true]);
+
+    renderRow(mockRow(mockRoleBinding));
+
+    expect(screen.getByText('user1')).toBeInTheDocument();
+    expect(screen.getByText('Contributor')).toBeInTheDocument();
+    expect(screen.getByText('metadata-name')).toBeInTheDocument();
+  });
+
+  it('should render skeleton for role while the role map is loading', () => {
+    mockUseRoleMap.mockReturnValue([defaultKonfluxRoleMap, false]);
+
+    const { container } = renderRow(mockRow(mockRoleBinding));
+
+    expect(container.querySelector('.pf-v5-c-skeleton')).toBeInTheDocument();
   });
 });

@@ -9,7 +9,7 @@
 # can be collected by Cypress tests using @cypress/code-coverage plugin.
 ##
 
-FROM registry.access.redhat.com/ubi9/nodejs-24@sha256:1a996f1d6422b12eef84bb217e9b107609a2055eabb58f73b3094ccf4387215a AS builder
+FROM registry.access.redhat.com/ubi9/nodejs-24@sha256:0239b92593b8ebda6a2fe31f1aa4237bfdb3e769ddbd3674df25e93eb9bce322 AS builder
 
 # Run as root in builder stage (final image uses non-root USER 1001)
 USER 0
@@ -41,7 +41,7 @@ COPY aliases.config.js aliases.config.js
 RUN yarn install --immutable
 RUN yarn build:instrumented
 
-FROM registry.access.redhat.com/ubi9/nginx-120@sha256:aea08753a83bc509c8abf72866a8a69ffcf824a640bd3c3257887fdd515b3aa3
+FROM registry.access.redhat.com/ubi9/nginx-120@sha256:c87583992711392d385573eb3dd60f47356b6bed46296c88d34915ca00e5ee55
 
 COPY --from=builder /opt/app-root/src/dist/* /opt/app-root/src/
 
