@@ -1,8 +1,13 @@
 import { renderHook } from '@testing-library/react';
-import { K8S_QUERY_KEY_SECRET_TABLE, SECRET_POLLING_INTERVAL } from '~/k8s/consts/k8s-accept';
-import { createSecretListTableQueryOptions } from '~/k8s/secret-table';
+import { K8S_QUERY_KEY_SECRET_TABLE } from '~/k8s/consts/k8s-accept';
 import { SecretGroupVersionKind, SecretModel } from '~/models';
 import { createK8sWatchResourceMock } from '~/unit-test-utils';
+import { createSecretListTableQueryOptions } from '~/utils/secrets/secret-table-query';
+import {
+  SECRET_TABLE_K8S_FETCH_OPTIONS,
+  selectSecretList,
+  type K8sTable,
+} from '~/utils/secrets/secret-table-utils';
 import { mockedSecret, mockedSecrets } from '../__data__/mock-data';
 import { useSecret, useSecrets } from '../useSecrets';
 
@@ -115,10 +120,10 @@ describe('useSecrets', () => {
         expect.objectContaining({ watch: false }),
         SecretModel,
         expect.objectContaining({
-          refetchInterval: SECRET_POLLING_INTERVAL,
+          select: expect.any(Function),
           queryFn: expect.any(Function),
         }),
-        {},
+        SECRET_TABLE_K8S_FETCH_OPTIONS,
       );
     });
 
@@ -131,12 +136,18 @@ describe('useSecrets', () => {
       expect(queryOptions.queryKey).toContain(K8S_QUERY_KEY_SECRET_TABLE);
     });
 
-    it('should pass secret table queryFn', () => {
+    it('should pass secret table select and queryFn', () => {
       renderHook(() => useSecrets('test-ns', true, { metadataOnly: true }));
 
       const queryOptions = useK8sWatchResourceMock.mock.calls[0][2];
 
       expect(typeof queryOptions.queryFn).toBe('function');
+      expect(typeof queryOptions.select).toBe('function');
+      expect(
+        queryOptions.select({ kind: 'Table', apiVersion: 'meta.k8s.io/v1', rows: [] } as K8sTable),
+      ).toEqual(
+        selectSecretList('test-ns')({ kind: 'Table', apiVersion: 'meta.k8s.io/v1', rows: [] }),
+      );
     });
 
     it('should still filter deleted secrets when loaded', () => {

@@ -1,4 +1,4 @@
-import { K8sQuerySecretListTableItems } from '../../../k8s/secret-table';
+import { K8sQuerySecretListTableItems } from '~/utils/secrets/secret-table-query';
 import { ServiceAccountModel } from '../../../models';
 import { RouterParams } from '../../../routes/utils';
 import { createLoaderWithAccessCheck } from '../../../utils/rbac';

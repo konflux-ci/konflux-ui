@@ -1,13 +1,20 @@
-import type { UseQueryOptions } from '@tanstack/react-query';
-import { K8S_ACCEPT_TABLE, K8S_QUERY_KEY_SECRET_TABLE } from '~/k8s/consts/k8s-accept';
+import { K8S_ACCEPT_TABLE } from '~/k8s/consts/k8s-accept';
 import { commonFetchJSON } from '~/k8s/fetch';
+import type { K8sResourceListOptions } from '~/k8s/k8s-fetch';
 import { getK8sResourceURL } from '~/k8s/k8s-utils';
-import { queryClient } from '~/k8s/query/core';
-import { createQueryKeys } from '~/k8s/query/utils';
 import { SecretModel } from '~/models';
 import { SecretKind } from '~/types';
 
 const defaultTimeout = 60_000;
+
+export const SECRET_TABLE_FETCH_OPTIONS = {
+  headers: { Accept: K8S_ACCEPT_TABLE },
+} as const;
+
+/** Shape for `useK8sWatchResource` fourth argument / `K8sResourceBaseOptions.fetchOptions`. */
+export const SECRET_TABLE_K8S_FETCH_OPTIONS = {
+  requestInit: SECRET_TABLE_FETCH_OPTIONS,
+} as const;
 
 /** `meta.k8s.io` Table (v1) — only fields used for Secret list/get. */
 export type K8sTable = {
@@ -109,58 +116,32 @@ export const parseSecretTableToSecretKinds = (
   });
 };
 
-export const fetchSecretListTable = async (namespace: string): Promise<SecretKind[]> => {
-  const url = getK8sResourceURL(SecretModel, undefined, {
-    ns: namespace,
-    queryParams: {},
+export const selectSecretMetadata =
+  (namespace: string, name: string) =>
+  (table: K8sTable): SecretKind | undefined =>
+    parseSecretTableToSecretKinds(table, namespace).find(
+      (secret) => secret.metadata?.name === name,
+    );
+
+export const selectSecretList =
+  (namespace: string) =>
+  (table: K8sTable): SecretKind[] =>
+    parseSecretTableToSecretKinds(table, namespace);
+
+/** @internal Exported for query-option builders that need the same list fetch as metadata-only hooks. */
+export const fetchK8sSecretTableList = ({
+  model,
+  queryOptions = {},
+  fetchOptions = {},
+}: K8sResourceListOptions): Promise<K8sTable> => {
+  const url = getK8sResourceURL(model, undefined, {
+    ns: queryOptions.ns,
+    queryParams: queryOptions.queryParams,
   });
-  const table = await commonFetchJSON<K8sTable>(
+  return commonFetchJSON<K8sTable>(
     url,
-    {
-      headers: { Accept: K8S_ACCEPT_TABLE },
-    },
-    defaultTimeout,
+    fetchOptions.requestInit,
+    fetchOptions.timeout ?? defaultTimeout,
     true,
   );
-  return parseSecretTableToSecretKinds(table, namespace);
-};
-
-export const createSecretListTableQueryKey = (namespace: string) => [
-  ...createQueryKeys({ model: SecretModel, queryOptions: { ns: namespace } }),
-  K8S_QUERY_KEY_SECRET_TABLE,
-];
-
-export const createSecretListTableQueryOptions = (
-  namespace: string,
-  options?: Omit<UseQueryOptions<SecretKind[]>, 'queryKey' | 'queryFn'>,
-): UseQueryOptions<SecretKind[]> => ({
-  queryKey: createSecretListTableQueryKey(namespace),
-  queryFn: () => fetchSecretListTable(namespace),
-  ...options,
-});
-
-export const K8sQuerySecretListTableItems = (
-  namespace: string,
-  options?: Omit<UseQueryOptions<SecretKind[]>, 'queryKey' | 'queryFn'>,
-): Promise<SecretKind[]> =>
-  queryClient.ensureQueryData(createSecretListTableQueryOptions(namespace, options));
-
-export const fetchSecretGetTable = async (
-  namespace: string,
-  name: string,
-): Promise<SecretKind | undefined> => {
-  const url = getK8sResourceURL(SecretModel, undefined, {
-    ns: namespace,
-    name,
-  });
-  const table = await commonFetchJSON<K8sTable>(
-    url,
-    {
-      headers: { Accept: K8S_ACCEPT_TABLE },
-    },
-    defaultTimeout,
-    true,
-  );
-  const items = parseSecretTableToSecretKinds(table, namespace);
-  return items.find((s) => s.metadata?.name === name);
 };

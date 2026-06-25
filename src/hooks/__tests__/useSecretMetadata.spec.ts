@@ -1,128 +1,123 @@
-import * as React from 'react';
-import { QueryClient, QueryClientProvider, UseQueryOptions } from '@tanstack/react-query';
-import { renderHook, waitFor } from '@testing-library/react';
-import { K8S_QUERY_KEY_SECRET_TABLE, SECRET_POLLING_INTERVAL } from '~/k8s/consts/k8s-accept';
-import { createQueryKeys } from '~/k8s/query/utils';
-import { fetchSecretGetTable } from '~/k8s/secret-table';
-import { SecretModel } from '~/models';
-import { SecretKind } from '~/types';
-import { createTestQueryClient } from '~/unit-test-utils/mock-react-query';
+import { renderHook } from '@testing-library/react';
+import { K8S_QUERY_KEY_SECRET_TABLE } from '~/k8s/consts/k8s-accept';
+import { SecretGroupVersionKind, SecretModel } from '~/models';
+import { createK8sWatchResourceMock } from '~/unit-test-utils';
+import {
+  SECRET_TABLE_K8S_FETCH_OPTIONS,
+  selectSecretMetadata,
+  type K8sTable,
+} from '~/utils/secrets/secret-table-utils';
 import { mockedSecret } from '../__data__/mock-data';
 import { useSecretMetadata } from '../useSecretMetadata';
 
-jest.mock('~/k8s/secret-table', () => ({
-  ...jest.requireActual('~/k8s/secret-table'),
-  fetchSecretGetTable: jest.fn(),
-}));
-
-const fetchSecretGetTableMock = fetchSecretGetTable as jest.MockedFunction<
-  typeof fetchSecretGetTable
->;
-
-const metadataOnlySecret = {
-  ...mockedSecret,
-  metadata: {
-    ...mockedSecret.metadata,
-    name: 'my-secret',
-    namespace: 'test-ns',
-    deletionTimestamp: undefined,
-  },
-  data: undefined,
-  stringData: undefined,
-};
+const useK8sWatchResourceMock = createK8sWatchResourceMock();
 
 describe('useSecretMetadata', () => {
-  let queryClient: QueryClient;
-
-  const renderHookWithQueryClient = <T>(hook: () => T) =>
-    renderHook(hook, {
-      wrapper: ({ children }) =>
-        React.createElement(QueryClientProvider, { client: queryClient }, children),
-    });
-
   beforeEach(() => {
-    queryClient = createTestQueryClient();
     jest.clearAllMocks();
+    useK8sWatchResourceMock.mockReturnValue([undefined, false, null]);
   });
 
-  it('returns secret metadata when loaded', async () => {
-    fetchSecretGetTableMock.mockResolvedValue(metadataOnlySecret);
-
-    const { result } = renderHookWithQueryClient(() => useSecretMetadata('test-ns', 'my-secret'));
-
-    await waitFor(() => {
-      expect(result.current[1]).toBe(true);
+  it('returns secret metadata when loaded', () => {
+    useK8sWatchResourceMock.mockReturnValue({
+      data: mockedSecret,
+      isLoading: false,
+      error: null,
     });
 
-    expect(result.current[0]?.metadata.name).toBe('my-secret');
-    expect(result.current[0]?.type).toBe('kubernetes.io/dockerconfigjson');
+    const { result } = renderHook(() => useSecretMetadata('test-ns', 'my-secret'));
+
+    expect(result.current[0]?.metadata.name).toBe('a036c-image-pull');
+    expect(result.current[1]).toBe(true);
     expect(result.current[2]).toBeNull();
   });
 
   it('returns undefined while loading', () => {
-    fetchSecretGetTableMock.mockImplementation(() => new Promise(() => {}));
+    useK8sWatchResourceMock.mockReturnValue({
+      data: undefined,
+      isLoading: true,
+      error: null,
+    });
 
-    const { result } = renderHookWithQueryClient(() => useSecretMetadata('test-ns', 'my-secret'));
+    const { result } = renderHook(() => useSecretMetadata('test-ns', 'my-secret'));
 
     expect(result.current).toEqual([undefined, false, null]);
   });
 
-  it('returns error when fetch fails', async () => {
+  it('returns error when fetch fails', () => {
     const mockError = new Error('An API error happened');
-    fetchSecretGetTableMock.mockRejectedValue(mockError);
-
-    const { result } = renderHookWithQueryClient(() => useSecretMetadata('test-ns', 'my-secret'));
-
-    await waitFor(() => {
-      expect(result.current[1]).toBe(true);
+    useK8sWatchResourceMock.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: mockError,
     });
+
+    const { result } = renderHook(() => useSecretMetadata('test-ns', 'my-secret'));
 
     expect(result.current).toEqual([undefined, true, mockError]);
   });
 
-  it('does not fetch when namespace is missing', () => {
-    renderHookWithQueryClient(() => useSecretMetadata('', 'my-secret'));
+  it('calls useK8sWatchResource with watch disabled and table fetch options', () => {
+    renderHook(() => useSecretMetadata('test-ns', 'my-secret'));
 
-    expect(fetchSecretGetTableMock).not.toHaveBeenCalled();
-  });
-
-  it('does not fetch when name is missing', () => {
-    renderHookWithQueryClient(() => useSecretMetadata('test-ns', ''));
-
-    expect(fetchSecretGetTableMock).not.toHaveBeenCalled();
-  });
-
-  it('calls fetchSecretGetTable with namespace and name', async () => {
-    fetchSecretGetTableMock.mockResolvedValue(metadataOnlySecret);
-
-    renderHookWithQueryClient(() => useSecretMetadata('test-ns', 'my-secret'));
-
-    await waitFor(() => {
-      expect(fetchSecretGetTableMock).toHaveBeenCalledWith('test-ns', 'my-secret');
-    });
-  });
-
-  it('uses secret table query key and polling interval', async () => {
-    fetchSecretGetTableMock.mockResolvedValue(metadataOnlySecret);
-
-    renderHookWithQueryClient(() => useSecretMetadata('test-ns', 'my-secret'));
-
-    await waitFor(() => {
-      expect(fetchSecretGetTableMock).toHaveBeenCalled();
-    });
-
-    const expectedQueryKey = [
-      ...createQueryKeys({
-        model: SecretModel,
-        queryOptions: { ns: 'test-ns', name: 'my-secret' },
+    expect(useK8sWatchResourceMock).toHaveBeenCalledWith(
+      {
+        groupVersionKind: SecretGroupVersionKind,
+        namespace: 'test-ns',
+        name: 'my-secret',
+        watch: false,
+      },
+      SecretModel,
+      expect.objectContaining({
+        enabled: true,
+        select: expect.any(Function),
+        queryKey: expect.arrayContaining([K8S_QUERY_KEY_SECRET_TABLE]),
       }),
-      K8S_QUERY_KEY_SECRET_TABLE,
-    ];
-    const query = queryClient.getQueryCache().find({ queryKey: expectedQueryKey });
-
-    expect(query?.queryKey).toEqual(expectedQueryKey);
-    expect((query?.options as UseQueryOptions<SecretKind>).refetchInterval).toBe(
-      SECRET_POLLING_INTERVAL,
+      SECRET_TABLE_K8S_FETCH_OPTIONS,
     );
+  });
+
+  it('disables fetch when namespace is missing', () => {
+    renderHook(() => useSecretMetadata('', 'my-secret'));
+
+    expect(useK8sWatchResourceMock).toHaveBeenCalledWith(
+      expect.anything(),
+      SecretModel,
+      expect.objectContaining({ enabled: false }),
+      SECRET_TABLE_K8S_FETCH_OPTIONS,
+    );
+  });
+
+  it('disables fetch when name is missing', () => {
+    renderHook(() => useSecretMetadata('test-ns', ''));
+
+    expect(useK8sWatchResourceMock).toHaveBeenCalledWith(
+      expect.anything(),
+      SecretModel,
+      expect.objectContaining({ enabled: false }),
+      SECRET_TABLE_K8S_FETCH_OPTIONS,
+    );
+  });
+
+  it('uses selectSecretMetadata for the select function', () => {
+    renderHook(() => useSecretMetadata('test-ns', 'my-secret'));
+
+    const queryOptions = useK8sWatchResourceMock.mock.calls[0][2];
+    const table = {
+      kind: 'Table',
+      apiVersion: 'meta.k8s.io/v1',
+      columnDefinitions: [{ name: 'Name' }, { name: 'Type' }],
+      rows: [
+        {
+          cells: ['my-secret', 'kubernetes.io/dockerconfigjson'],
+          object: {
+            kind: 'PartialObjectMetadata',
+            metadata: { name: 'my-secret', namespace: 'test-ns' },
+          },
+        },
+      ],
+    } as K8sTable;
+
+    expect(queryOptions.select(table)).toEqual(selectSecretMetadata('test-ns', 'my-secret')(table));
   });
 });
