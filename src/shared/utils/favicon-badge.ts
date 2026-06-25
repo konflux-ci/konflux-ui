@@ -5,6 +5,7 @@ import { global_palette_gold_400 as goldColor } from '@patternfly/react-tokens/d
 import { global_palette_orange_300 as orangeColor } from '@patternfly/react-tokens/dist/js/global_palette_orange_300';
 import { global_success_color_100 as greenColor } from '@patternfly/react-tokens/dist/js/global_success_color_100';
 import { global_warning_color_100 as warningColor } from '@patternfly/react-tokens/dist/js/global_warning_color_100';
+import { runStatus } from '~/consts/pipelinerun';
 
 const DEFAULT_FAVICON_HREF = '/favicon.ico';
 
@@ -30,29 +31,29 @@ const resetToBaselineFavicon = (): void => {
   getFaviconLink().href = baselineFaviconHref ?? DEFAULT_FAVICON_HREF;
 };
 
-export const getFaviconBadgeColor = (status: string): string => {
+export const getFaviconBadgeColor = (status: runStatus): string => {
   switch (status) {
-    case 'Succeeded':
+    case runStatus.Succeeded:
       return greenColor.value;
-    case 'Failed':
-    case 'FailedToStart':
-    case 'Test Failures':
+    case runStatus.Failed:
+    case runStatus.FailedToStart:
+    case runStatus.TestFailed:
       return redColor.value;
-    case 'Running':
-    case 'In Progress':
+    case runStatus.Running:
+    case runStatus['In Progress']:
       return blueColor.value;
-    case 'Cancelled':
-    case 'Cancelling':
+    case runStatus.Cancelled:
+    case runStatus.Cancelling:
       return goldColor.value;
-    case 'Test Warnings':
+    case runStatus.TestWarning:
       return warningColor.value;
-    case 'Starting':
+    case runStatus.PipelineNotStarted:
       return orangeColor.value;
-    case 'Idle':
-    case 'Pending':
-    case 'Skipped':
-    case 'Unknown':
-    case 'PR needs merge':
+    case runStatus.Idle:
+    case runStatus.Pending:
+    case runStatus.Skipped:
+    case runStatus.Unknown:
+    case runStatus.NeedsMerge:
     default:
       return grayColor.value;
   }
@@ -131,7 +132,7 @@ const loadFaviconImage = (href: string): Promise<HTMLImageElement> =>
   });
 
 export const applyFaviconBadge = async (
-  status: string | null | undefined,
+  status: runStatus | null | undefined,
   isCancelled?: () => boolean,
 ): Promise<void> => {
   if (status == null) {

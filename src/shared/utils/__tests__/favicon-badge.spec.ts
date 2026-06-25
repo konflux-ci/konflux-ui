@@ -173,7 +173,7 @@ describe('favicon-badge', () => {
       jest.restoreAllMocks();
     });
 
-    it('applies a gray badged favicon for an empty string status', async () => {
+    it('applies a gray badged favicon for unknown statuses', async () => {
       const link = document.createElement('link');
       link.rel = 'icon';
       link.href = '/favicon.ico';
@@ -194,14 +194,14 @@ describe('favicon-badge', () => {
         .mockReturnValue(mockContext as unknown as CanvasRenderingContext2D);
       jest
         .spyOn(HTMLCanvasElement.prototype, 'toDataURL')
-        .mockReturnValue('data:image/png;base64,empty-badged');
+        .mockReturnValue('data:image/png;base64,unknown-badged');
 
       mockFaviconImageLoadSuccess();
 
       acquireFaviconBadge();
-      await applyFaviconBadge('');
+      await applyFaviconBadge(runStatus.Unknown);
 
-      expect(link.href).toBe('data:image/png;base64,empty-badged');
+      expect(link.href).toBe('data:image/png;base64,unknown-badged');
       expect(mockContext.fillStyle).toBe(grayColor.value);
       releaseFaviconBadge();
     });
