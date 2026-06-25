@@ -284,6 +284,50 @@ const MyComponent = () => {
 
 ---
 
+## Imperative Condition Checks with `ensureConditionIsOn`
+
+React hooks (`createConditionsHook`) are the right tool inside components. For **non-React imperative code** — data hooks, fetch helpers, utility modules — use `ensureConditionIsOn` from `src/feature-flags/utils.ts`.
+
+It returns a **predicate function** that checks whether every listed condition is currently `true` in `FeatureFlagsStore.conditions`. It does **not** throw; the caller decides how to handle a `false` result.
+
+```ts
+import { ensureConditionIsOn } from '~/feature-flags/utils';
+
+// Factory: call the returned function when you need the current snapshot
+export const isKubeArchiveEnabled = ensureConditionIsOn(['isKubearchiveEnabled']);
+
+// Usage in imperative code
+if (isKubeArchiveEnabled()) {
+  await fetchArchiveData();
+}
+```
+
+This pattern is used in domain `conditional-checks.ts` modules alongside their React hook counterparts:
+
+```ts
+// src/kubearchive/conditional-checks.ts
+
+// React component — reactive, re-renders when conditions change
+export const useIsKubeArchiveEnabled = createConditionsHook(['isKubearchiveEnabled']);
+
+// Non-React code — reads the cached snapshot on demand
+export const isKubeArchiveEnabled = ensureConditionIsOn(['isKubearchiveEnabled']);
+```
+
+Conditions are evaluated at app startup via `FeatureFlagsStore.ensureConditions(getAllConditionsKeysFromFlags())` in `src/main.tsx`. The predicate reads that cached snapshot from `FeatureFlagsStore.conditions`.
+
+**Multiple conditions (AND logic):**
+
+```ts
+const isArchiveReady = ensureConditionIsOn(['isKubearchiveEnabled', 'isStagingCluster']);
+
+if (isArchiveReady()) {
+  // both conditions are true
+}
+```
+
+---
+
 ## Debugging & Troubleshooting
 
 ### My condition isn't working
@@ -376,6 +420,17 @@ const conditions = useMyConditions(); // { myCondition: boolean }
 
 // Show different UI based on conditions
 {conditions.myCondition ? <AvailableFeature /> : <UnavailableMessage />}
+```
+
+### Imperative condition checks (non-React):
+```ts
+import { ensureConditionIsOn } from '~/feature-flags/utils';
+
+const isKubeArchiveEnabled = ensureConditionIsOn(['isKubearchiveEnabled']);
+
+if (isKubeArchiveEnabled()) {
+  // condition snapshot is true
+}
 ```
 
 ### Available conditions:
