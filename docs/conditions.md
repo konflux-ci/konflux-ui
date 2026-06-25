@@ -24,17 +24,20 @@ const showKubearchive = useIsOnFeatureFlag('kubearchive-integration');
 
 1. **Guarded feature flags**: Prevent users from enabling flags when conditions aren't met
 2. **Independent conditions**: Show/hide UI based on runtime conditions without involving feature flags
+3. **Route guards**: Block navigation to stable pages when a required service is unavailable (503 → `ServiceUnavailablePage`)
 
 | Use Case | When to Use | Example |
 |----------|-------------|---------|
 | **Guarded Flags** | Feature depends on external service/environment | KubeArchive integration only works if KubeArchive is installed |
 | **Independent Conditions** | UI needs to adapt to environment without feature flags | Show "staging environment" banner, hide unavailable features |
+| **Route Guards** | Stable page requires a cluster service | Archive page requires KubeArchive (`isKubearchiveEnabled`) |
 
 ### Already available conditions
 
 ```ts
 // These are already set up for you:
 'isKubearchiveEnabled' // → true if KubeArchive service is available
+'isKiteServiceEnabled' // → true if Kite plugin health check passes
 'isStagingCluster'     // → true if running in staging environment
 ```
 
@@ -294,37 +297,83 @@ It returns a **predicate function** that checks whether every listed condition i
 import { ensureConditionIsOn } from '~/feature-flags/utils';
 
 // Factory: call the returned function when you need the current snapshot
-export const isKubeArchiveEnabled = ensureConditionIsOn(['isKubearchiveEnabled']);
+export const isKiteServiceEnabled = ensureConditionIsOn(['isKiteServiceEnabled']);
 
 // Usage in imperative code
-if (isKubeArchiveEnabled()) {
-  await fetchArchiveData();
+if (isKiteServiceEnabled()) {
+  await fetchIssues();
 }
 ```
 
 This pattern is used in domain `conditional-checks.ts` modules alongside their React hook counterparts:
 
 ```ts
-// src/kubearchive/conditional-checks.ts
+// src/kite/conditional-checks.ts
+
+export const checkIfKiteServiceIsEnabled = async () => {
+  const response = await commonFetch('/api/v1/health/', { pathPrefix: 'plugins/kite' });
+  return response.ok;
+};
 
 // React component — reactive, re-renders when conditions change
-export const useIsKubeArchiveEnabled = createConditionsHook(['isKubearchiveEnabled']);
+export const useIsKiteServiceEnabled = createConditionsHook(['isKiteServiceEnabled']);
 
 // Non-React code — reads the cached snapshot on demand
-export const isKubeArchiveEnabled = ensureConditionIsOn(['isKubearchiveEnabled']);
+export const isKiteServiceEnabled = ensureConditionIsOn(['isKiteServiceEnabled']);
 ```
 
-Conditions are evaluated at app startup via `FeatureFlagsStore.ensureConditions(getAllConditionsKeysFromFlags())` in `src/main.tsx`. The predicate reads that cached snapshot from `FeatureFlagsStore.conditions`.
+Conditions referenced by feature-flag guards are evaluated at app startup via `FeatureFlagsStore.ensureConditions(getAllConditionsKeysFromFlags())` in `src/main.tsx`. Independent conditions such as `isKiteServiceEnabled` are evaluated when `useIsKiteServiceEnabled()` mounts or when `FeatureFlagsStore.ensureConditions(['isKiteServiceEnabled'])` is called.
 
 **Multiple conditions (AND logic):**
 
 ```ts
-const isArchiveReady = ensureConditionIsOn(['isKubearchiveEnabled', 'isStagingCluster']);
+const isKiteReady = ensureConditionIsOn(['isKiteServiceEnabled', 'isStagingCluster']);
 
-if (isArchiveReady()) {
+if (isKiteReady()) {
   // both conditions are true
 }
 ```
+
+---
+
+## Route Guards with `ensureConditionOnLoader`
+
+For **React Router loaders and `lazy()` functions**, use `ensureConditionOnLoader` from `src/feature-flags/utils.ts`.
+
+It throws a `Response` with status **503** when any listed condition is `false` or missing. React Router renders the route's `errorElement` — `RouteErrorBoundry` shows `ServiceUnavailablePage` for 503 errors.
+
+Use this when a route is stable (not behind a feature flag) but depends on a cluster service such as Kite. For experimental routes, use `ensureFeatureFlagOnLoader` instead (throws **404** — see [feature-flags.md](./feature-flags.md)).
+
+```ts
+import { issuesPageLoader } from '~/components/Issues';
+import { ensureConditionOnLoader } from '~/feature-flags/utils';
+import { ISSUES_PATH } from '../paths';
+import { RouteErrorBoundry } from '../RouteErrorBoundary';
+
+const issuesRoutes = [
+  {
+    path: ISSUES_PATH.path,
+    lazy: async () => {
+      await ensureConditionOnLoader(['isKiteServiceEnabled']);
+      const { default: Component } = await import('~/components/Issues/Issues');
+      return { Component };
+    },
+    errorElement: <RouteErrorBoundry />,
+    children: [/* ... */],
+  },
+];
+```
+
+- Accepts one or more `ConditionKey` values — **all** must be `true` (AND logic, same as `ensureConditionIsOn`).
+- Throws a **503** `Response` when any condition is `false` or missing from the cached snapshot in `FeatureFlagsStore.conditions`.
+- Pair with `<RouteErrorBoundry />` without props — **503** errors render `ServiceUnavailablePage` (page-specific messages come from `condition-messages.ts` based on the URL).
+
+**Compared to `ensureConditionIsOn`:**
+
+| Utility | Context | On failure |
+|---------|---------|------------|
+| `ensureConditionIsOn` | Imperative code (hooks, fetch helpers) | Returns `false` — caller decides |
+| `ensureConditionOnLoader` | Route `loader` / `lazy()` | Throws **503** → `ServiceUnavailablePage` |
 
 ---
 
@@ -433,8 +482,17 @@ if (isKubeArchiveEnabled()) {
 }
 ```
 
+### Route guards (loaders/lazy):
+```ts
+import { ensureConditionOnLoader } from '~/feature-flags/utils';
+
+await ensureConditionOnLoader(['isKubearchiveEnabled']);
+// errorElement: <RouteErrorBoundry /> → ServiceUnavailablePage on 503
+```
+
 ### Available conditions:
-- `'isKubearchiveEnabled'` - KubeArchive service available
-- `'isStagingCluster'` - Running in staging environment
+- `'isKubearchiveEnabled'` — KubeArchive service available
+- `'isKiteServiceEnabled'` — Kite plugin health check passes (used by the Issues route)
+- `'isStagingCluster'` — Running in staging environment
 
 That's it! You now know everything you need to use conditions
