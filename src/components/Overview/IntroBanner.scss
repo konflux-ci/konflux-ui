@@ -1,5 +1,9 @@
 .intro-banner {
   background: linear-gradient(90deg, var(--banner-gradient, white) 0%, var(--banner-gradient, white) 40%, var(--banner-gradient-end, #D1D1D1) 100%);
+  border-width: var(--pf-t--global--border--width--box--default);
+  border-color: var(--pf-t--global--border--color--subtle);
+  border-style: solid;
+  border-radius: var(--pf-t--global--border--radius--medium);
 
   &__content {
     background-color: transparent;
