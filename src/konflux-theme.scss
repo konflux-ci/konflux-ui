@@ -1,0 +1,58 @@
+// Konflux Brand Theme
+// Overrides --pf-t--global--color--brand--* globally to Konflux orange.
+// For non-primary buttons, resets the global brand back to PF blue within
+// the button scope so secondary, link, tertiary variants stay PF default.
+// NOT overridden (stays PF default):
+//   --pf-t--global--border--color--hover/clicked (input borders)
+//   --pf-t--global--text--color--link--*          (links)
+//   --pf-t--global--focus-ring--color--*          (focus ring)
+
+// ---------------------------------------------------------------------------
+// 1. Konflux Brand Variables
+// ---------------------------------------------------------------------------
+:root {
+  --konflux-brand-primary: #fc783d;
+  --konflux-brand-primary-hover: #d36634;
+  --konflux-brand-primary-clicked: #b85a2e;
+  --konflux-icon-color: var(--pf-t--global--icon--color--regular);
+}
+
+html.pf-v6-theme-dark {
+  --konflux-brand-primary: #f97f4d;
+  --konflux-brand-primary-hover: #fb8f63;
+  --konflux-brand-primary-clicked: #f2722f;
+}
+
+// ---------------------------------------------------------------------------
+// 2. Global Brand Color Override
+// ---------------------------------------------------------------------------
+:root:where(.pf-v6-theme-konflux) {
+  --pf-t--global--border--color--brand--accent--clicked: var(--konflux-brand-primary-clicked);
+  --pf-t--global--border--color--brand--accent--default: var(--konflux-brand-primary);
+  --pf-t--global--border--color--brand--accent--hover: var(--konflux-brand-primary-hover);
+  --pf-t--global--color--brand--accent--clicked: var(--konflux-brand-primary-clicked);
+  --pf-t--global--color--brand--accent--default: var(--konflux-brand-primary);
+  --pf-t--global--color--brand--accent--hover: var(--konflux-brand-primary-hover);
+  --pf-t--global--icon--color--brand--default: var(--konflux-brand-primary);
+  --pf-t--global--icon--color--brand--hover: var(--konflux-brand-primary-hover);
+  --pf-t--global--icon--color--brand--clicked: var(--konflux-brand-primary-clicked);
+
+  .pf-v6-c-button.pf-m-primary {
+    --pf-v6-c-button--m-primary--BackgroundColor: var(--konflux-brand-primary);
+    --pf-v6-c-button--m-primary--hover--BackgroundColor: var(--konflux-brand-primary-hover);
+    --pf-v6-c-button--m-primary--m-clicked--BackgroundColor: var(--konflux-brand-primary-clicked);
+  }
+
+  .pf-v6-c-menu-toggle.pf-m-primary {
+    --pf-v6-c-menu-toggle--m-primary--BackgroundColor: var(--konflux-brand-primary);
+    --pf-v6-c-menu-toggle--m-primary--hover--BackgroundColor: var(--konflux-brand-primary-hover);
+    --pf-v6-c-menu-toggle--m-primary--expanded--BackgroundColor: var(
+      --konflux-brand-primary-clicked
+    );
+  }
+
+  // experimental theme not used anywhere yet, for future use
+  &:where(.pf-v6-theme-glass) {
+    --pf-t--global--background--image--glass: url(./assets/theme/global-background.svg);
+  }
+}
