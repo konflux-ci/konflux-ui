@@ -6,7 +6,9 @@ import { K8sQueryCreateResource, K8sQueryPatchResource } from '../../k8s';
 import { SecretModel } from '../../models';
 import {
   AddSecretFormValues,
+  BuildTimeSecret,
   ImagePullSecretType,
+  ImportSecret,
   K8sSecretType,
   RemoteSecretStatusReason,
   RemoteSecretStatusType,
@@ -19,8 +21,10 @@ import {
   SecretTypeDisplayLabel,
   SecretTypeDropdownLabel,
   SourceSecretType,
-  BuildTimeSecret,
+  Source,
+  KeyValueEntry,
 } from '../../types';
+import type { Patch } from '../../types/k8s';
 
 export { SecretForComponentOption };
 
@@ -71,6 +75,25 @@ export const isPartnerTask = (
   return !!Object.values(arr).find((secret) => secret.name === secretName);
 };
 
+export const getAuthType = (
+  type: SecretType,
+): ImagePullSecretType | SourceSecretType | SecretTypeDropdownLabel | undefined => {
+  switch (type) {
+    case SecretType.dockerconfigjson:
+      return ImagePullSecretType.ImageRegistryCreds;
+    case SecretType.dockercfg:
+      return ImagePullSecretType.UploadConfigFile;
+    case SecretType.basicAuth:
+      return SourceSecretType.basic;
+    case SecretType.sshAuth:
+      return SourceSecretType.ssh;
+    case SecretType.opaque:
+      return SecretTypeDropdownLabel.opaque;
+    default:
+      return undefined;
+  }
+};
+
 export const getSupportedPartnerTaskKeyValuePairs = (
   secretName?: string,
   arr: { [key: string]: BuildTimeSecret } = supportedPartnerTasksSecrets,
@@ -108,11 +131,31 @@ export const typeToDropdownLabel = (type: string) => {
       return type;
   }
 };
+/**
+ * Normalizes uploaded Docker config JSON to the shape expected for
+ * `kubernetes.io/dockerconfigjson` (`.dockerconfigjson` data key).
+ * Legacy `~/.dockercfg` files (flat registry → auth map) are wrapped as `{ auths: ... }`.
+ * Modern `config.json` content (with `auths`) is returned as-is.
+ */
+export const normalizeDockerConfigForDockerconfigjson = (
+  parsed: unknown,
+): Record<string, unknown> => {
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    return { auths: {} };
+  }
+  const obj = parsed as Record<string, unknown>;
+  if (obj.auths != null && typeof obj.auths === 'object' && !Array.isArray(obj.auths)) {
+    return obj;
+  }
+  return { auths: obj };
+};
+
 export const getKubernetesSecretType = (values: AddSecretFormValues) => {
-  let type = values.type;
   if (values.type === SecretTypeDropdownLabel.image) {
-    type = values.image.authType;
-  } else if (values.type === SecretTypeDropdownLabel.source) {
+    return SecretType.dockerconfigjson;
+  }
+  let type = values.type;
+  if (values.type === SecretTypeDropdownLabel.source) {
     type = values.source.authType;
   }
   return K8sSecretType[type];
@@ -140,14 +183,19 @@ export const getSecretFormData = (values: AddSecretFormValues, namespace: string
       data = dockerconfigjson
         ? { ['.dockerconfigjson']: Base64.btoa(JSON.stringify(dockerconfigjson)) }
         : '';
+    } else if (values.image.dockerconfig) {
+      let parsedDockerConfig: unknown;
+      try {
+        parsedDockerConfig = JSON.parse(Base64.decode(values.image.dockerconfig));
+      } catch {
+        parsedDockerConfig = {};
+      }
+      const normalized = normalizeDockerConfigForDockerconfigjson(parsedDockerConfig);
+      data = {
+        ['.dockerconfigjson']: Base64.btoa(JSON.stringify(normalized)),
+      };
     } else {
-      data = values.image.dockerconfig
-        ? {
-            ['.dockercfg']: Base64.encode(
-              JSON.stringify(JSON.parse(Base64.decode(values.image.dockerconfig))),
-            ),
-          }
-        : '';
+      data = '';
     }
   } else if (values.type === SecretTypeDropdownLabel.source) {
     if (values.source.authType === SourceSecretType.basic) {
@@ -175,6 +223,37 @@ export const getSecretFormData = (values: AddSecretFormValues, namespace: string
   return secretResource;
 };
 
+const REGISTRY_CREDS_DEFAULT = [{ registry: '', username: '', password: '', email: '' }];
+
+export const getRegistryCreds = (secretData: SecretKind) => {
+  if ((secretData.type as SecretType) !== SecretType.dockerconfigjson) {
+    return REGISTRY_CREDS_DEFAULT;
+  }
+
+  const encoded = secretData.data?.['.dockerconfigjson'];
+  if (!encoded) {
+    return REGISTRY_CREDS_DEFAULT;
+  }
+
+  try {
+    const parsed = JSON.parse(Base64.decode(encoded)) as {
+      auths?: { [key: string]: { username: string; password: string; email: string } };
+    };
+    if (parsed?.auths && typeof parsed.auths === 'object') {
+      const creds = Object.entries(parsed.auths).map(([registryName, authData]) => ({
+        registry: registryName,
+        username: authData.username,
+        password: authData.password,
+        email: authData.email ?? '',
+      }));
+      return creds.length > 0 ? creds : REGISTRY_CREDS_DEFAULT;
+    }
+  } catch {
+    return REGISTRY_CREDS_DEFAULT;
+  }
+  return REGISTRY_CREDS_DEFAULT;
+};
+
 export const getTargetLabelsForRemoteSecret = (
   values: AddSecretFormValues,
 ): { [key: string]: string } => {
@@ -185,7 +264,13 @@ export const getTargetLabelsForRemoteSecret = (
   return labels;
 };
 
-export const getLabelsForSecret = (values: AddSecretFormValues): { [key: string]: string } => {
+type SecretLabelInput = {
+  source?: Source;
+  labels?: KeyValueEntry[];
+  secretForComponentOption?: null | SecretForComponentOption;
+};
+
+export const getLabelsForSecret = (values: SecretLabelInput): { [key: string]: string } => {
   const addCommonSecretLabel = values?.secretForComponentOption === SecretForComponentOption.all;
 
   if (
@@ -219,12 +304,37 @@ export const getLabelsForSecret = (values: AddSecretFormValues): { [key: string]
   return labels;
 };
 
-export const getAnnotationForSecret = (values: AddSecretFormValues): { [key: string]: string } => {
+export const getAnnotationForSecret = (
+  values: AddSecretFormValues | ImportSecret,
+): { [key: string]: string } => {
   if (!values.source?.repo) {
     // get scm annotation for repository
     return null;
   }
   return { [SecretLabels.REPO_ANNOTATION]: values.source.repo };
+};
+
+export const createK8sSecretResource = (
+  values: AddSecretFormValues,
+  secretResource: SecretKind,
+): SecretKind => {
+  const labels = getLabelsForSecret(values);
+  const annotations = getAnnotationForSecret(values);
+
+  const k8sSecretResource = {
+    ...secretResource,
+    metadata: {
+      ...secretResource.metadata,
+      labels: {
+        ...labels,
+      },
+      annotations: {
+        ...annotations,
+      },
+    },
+  };
+
+  return k8sSecretResource;
 };
 
 export const statusFromConditions = (
@@ -278,10 +388,71 @@ export const createSecretResource = async (
     resource: secretResource,
   });
 
-export const getAddSecretBreadcrumbs = (namespace) => {
+/** Ensures JSON Patch always receives an object; `null`/missing maps become `{}` to clear metadata on the server. */
+const metadataMapForPatch = (
+  map: Record<string, string> | null | undefined,
+): Record<string, string> => (map && typeof map === 'object' && !Array.isArray(map) ? map : {});
+
+const updateSecretResource = async (newK8sSecretResource: SecretKind) => {
+  const patches: Patch[] = [
+    {
+      op: 'add',
+      path: '/metadata/labels',
+      value: metadataMapForPatch(newK8sSecretResource.metadata?.labels),
+    },
+    {
+      op: 'add',
+      path: '/metadata/annotations',
+      value: metadataMapForPatch(newK8sSecretResource.metadata?.annotations),
+    },
+    {
+      op: 'replace',
+      path: '/data',
+      value: newK8sSecretResource.data,
+    },
+  ];
+
+  return await K8sQueryPatchResource({
+    model: SecretModel,
+    queryOptions: {
+      name: newK8sSecretResource.metadata.name,
+      ns: newK8sSecretResource.metadata.namespace,
+    },
+    patches,
+  });
+};
+
+export const editSecretResource = (
+  updatedSecret: AddSecretFormValues,
+  namespace: string,
+  existingSecret?: SecretKind,
+) => {
+  const secretResource: SecretKind = getSecretFormData(updatedSecret, namespace);
+  let newK8sSecretResource = createK8sSecretResource(updatedSecret, secretResource);
+
+  // Preserve annotations not represented in the form (e.g. kubectl/CLI), while applying UI-driven keys.
+  if (existingSecret) {
+    const existingAnnotations = metadataMapForPatch(existingSecret.metadata?.annotations);
+    const formAnnotations = metadataMapForPatch(newK8sSecretResource.metadata?.annotations);
+    newK8sSecretResource = {
+      ...newK8sSecretResource,
+      metadata: {
+        ...newK8sSecretResource.metadata,
+        annotations: {
+          ...existingAnnotations,
+          ...formAnnotations,
+        },
+      },
+    };
+  }
+
+  return updateSecretResource(newK8sSecretResource);
+};
+
+export const getSecretBreadcrumbs = (namespace: string, operation: string) => {
   return [
     { path: SECRET_LIST_PATH.createPath({ workspaceName: namespace }), name: 'Secrets' },
-    { path: '#', name: 'Add secret' },
+    { path: '#', name: `${operation} secret` },
   ];
 };
 

@@ -10,8 +10,9 @@ const buildStatusString = (status: runStatus) => {
     case runStatus.Succeeded:
     case runStatus.TestWarning:
     case runStatus.Skipped:
-    case runStatus.Cancelled:
       return 'Build completed';
+    case runStatus.Cancelled:
+      return 'Build cancelled';
     case runStatus.Failed:
     case runStatus.FailedToStart:
     case runStatus.TestFailed:
@@ -20,8 +21,9 @@ const buildStatusString = (status: runStatus) => {
     case runStatus.Pending:
     case runStatus.Running:
     case runStatus.Idle:
-    case runStatus.Cancelling:
       return 'Build running';
+    case runStatus.Cancelling:
+      return 'Build cancelling';
     case runStatus.PipelineNotStarted:
       return 'Build not started';
     default:

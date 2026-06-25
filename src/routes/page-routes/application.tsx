@@ -54,11 +54,7 @@ const applicationRoutes = [
         path: 'integrationtests',
         loader: integrationListPageLoader,
         errorElement: <RouteErrorBoundry />,
-        element: (
-          <FilterContextProvider filterParams={['name']}>
-            <IntegrationTestsListView />
-          </FilterContextProvider>
-        ),
+        element: <IntegrationTestsListView />,
       },
       {
         path: 'snapshots',

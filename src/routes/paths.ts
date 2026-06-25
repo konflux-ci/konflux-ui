@@ -23,6 +23,8 @@ export const SECRET_LIST_PATH = WORKSPACE_PATH.extend(`secrets`);
 
 export const SECRET_CREATE_PATH = SECRET_LIST_PATH.extend('create');
 
+export const SECRET_EDIT_PATH = SECRET_LIST_PATH.extend('edit');
+
 export const APPLICATION_DETAILS_PATH = APPLICATION_LIST_PATH.extend(
   `:${RouterParams.applicationName}`,
 );
@@ -155,3 +157,5 @@ export const USER_ACCESS_GRANT_PAGE = USER_ACCESS_LIST_PAGE.extend('grant');
 export const USER_ACCESS_EDIT_PAGE = USER_ACCESS_LIST_PAGE.extend(
   `edit/:${RouterParams.bindingName}`,
 );
+
+export const PIPELINE_RUNS_PAGE_PATH = WORKSPACE_PATH.extend('prns');

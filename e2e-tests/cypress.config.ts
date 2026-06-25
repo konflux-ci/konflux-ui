@@ -117,7 +117,11 @@ export default defineConfig({
         KUBECONFIG: '~/.kube/appstudio-config',
         CLEAN_NAMESPACE: 'false',
         LOCAL_CLUSTER: false,
+        LOGIN_PROVIDER: '',
         PERIODIC_RUN_STAGE: false,
+        PIPELINE: 'docker-build-oci-ta-min',
+        SOURCE_REPO_OWNER: 'hac-test',
+        SOURCE_REPO_NAME: 'devfile-sample-code-with-quarkus',
         resolution: 'high',
         REMOVE_APP_ON_FAIL: false,
         SNYK_TOKEN: '',
@@ -135,10 +139,12 @@ export default defineConfig({
       }
 
       config.env.HAC_WORKSPACE = config.env.USERNAME.toLowerCase();
-      if (config.env.LOCAL_CLUSTER === true) {
-        config.env.HAC_NAMESPACE = `user-ns2`;
-      } else {
-        config.env.HAC_NAMESPACE = `${config.env.HAC_WORKSPACE}-tenant`;
+      if (!config.env.HAC_NAMESPACE) {
+        if (config.env.LOCAL_CLUSTER === true) {
+          config.env.HAC_NAMESPACE = `default-tenant`;
+        } else {
+          config.env.HAC_NAMESPACE = `${config.env.HAC_WORKSPACE}-tenant`;
+        }
       }
 
       require('cypress-high-resolution')(on, config);

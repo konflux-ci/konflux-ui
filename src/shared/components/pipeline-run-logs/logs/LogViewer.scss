@@ -28,8 +28,19 @@
     flex-direction: column;
   }
 
+  &__task-name-group {
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: 100%;
+    width: fit-content;
+  }
+
   &__task-name {
     min-width: 0;
+  }
+
+  &__task-name-spinner {
+    display: flex;
   }
 
   &__content {

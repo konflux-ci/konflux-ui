@@ -1,7 +1,6 @@
 import { renderHook, act } from '@testing-library/react';
 import { useLineNumberNavigation } from '../useLineNumberNavigation';
 
-
 const createMouseEvent = (shiftKey: boolean): React.MouseEvent => {
   const event = new MouseEvent('click') as unknown as React.MouseEvent;
   Object.defineProperty(event, 'shiftKey', { value: shiftKey });
@@ -33,7 +32,6 @@ const changeHash = (hash: string) => {
     window.dispatchEvent(new HashChangeEvent('hashchange'));
   });
 };
-
 
 describe('useLineNumberNavigation', () => {
   let originalLocation: Location;
@@ -101,14 +99,10 @@ describe('useLineNumberNavigation', () => {
     const { result } = renderHook(() => useLineNumberNavigation());
 
     act(() => {
-      result.current.handleLineClick(42, createMouseEvent(true));
+      result.current.handleLineClick(42, createMouseEvent(false));
     });
 
-    expect(pushStateSpy).toHaveBeenCalledWith(
-      { source: 'line-click' },
-      '',
-      '#L42'
-    );
+    expect(pushStateSpy).toHaveBeenCalledWith({ source: 'line-click' }, '', '#L42');
 
     expect(result.current.highlightedLines).toEqual({
       start: 42,
@@ -129,11 +123,7 @@ describe('useLineNumberNavigation', () => {
       result.current.handleLineClick(20, createMouseEvent(true));
     });
 
-    expect(pushStateSpy).toHaveBeenLastCalledWith(
-      { source: 'line-click' },
-      '',
-      '#L10-L20'
-    );
+    expect(pushStateSpy).toHaveBeenLastCalledWith({ source: 'line-click' }, '', '#L10-L20');
 
     expect(result.current.highlightedLines).toEqual({
       start: 10,

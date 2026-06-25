@@ -1,9 +1,9 @@
 import '@testing-library/jest-dom';
-import { defaultKonfluxRoleMap } from '../../../../__data__/role-data';
-import { mockRoleBinding } from '../../../../__data__/rolebinding-data';
-import { NamespaceRole } from '../../../../types';
-import { createK8sUtilMock } from '../../../../utils/test-utils';
-import { createRBs, editRB } from '../form-utils';
+import { defaultKonfluxRoleMap } from '~/__data__/role-data';
+import { mockRoleBinding } from '~/__data__/rolebinding-data';
+import { NamespaceRole, RoleBinding } from '~/types';
+import { createK8sUtilMock } from '~/unit-test-utils';
+import { createRBs, editRB, restoreRB } from '../form-utils';
 
 const k8sCreateMock = createK8sUtilMock('K8sQueryCreateResource');
 const k8sGetMock = createK8sUtilMock('K8sQueryListResourceItems');
@@ -116,5 +116,30 @@ describe('editRBs', () => {
     expect(k8sCreateMock).toHaveBeenCalledTimes(1);
     // delete should not be called during dry run
     expect(k8sDeleteMock).toHaveBeenCalledTimes(0);
+  });
+});
+
+describe('restoreRB', () => {
+  it('creates from snapshot without server-managed metadata', async () => {
+    k8sCreateMock.mockImplementation((req: { resource: RoleBinding }) => req.resource);
+    const snapshot: RoleBinding = {
+      ...mockRoleBinding,
+      metadata: {
+        ...mockRoleBinding.metadata,
+        uid: 'uid-1',
+        resourceVersion: '42',
+        creationTimestamp: '2020-01-01T00:00:00Z',
+      },
+    };
+    await restoreRB(snapshot);
+    expect(k8sCreateMock).toHaveBeenCalledTimes(1);
+    const created = (k8sCreateMock.mock.calls[0][0] as { resource: RoleBinding }).resource;
+    expect(created.metadata).toEqual({
+      name: mockRoleBinding.metadata.name,
+      namespace: mockRoleBinding.metadata.namespace,
+    });
+    expect(created.metadata).not.toHaveProperty('uid');
+    expect(created.subjects).toEqual(mockRoleBinding.subjects);
+    expect(created.roleRef).toEqual(mockRoleBinding.roleRef);
   });
 });

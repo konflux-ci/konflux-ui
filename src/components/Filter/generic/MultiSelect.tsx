@@ -1,11 +1,17 @@
 import * as React from 'react';
-import { Divider, ToolbarFilter } from '@patternfly/react-core';
 import {
+  Badge,
+  Divider,
+  MenuSearch,
+  MenuSearchInput,
+  MenuToggle,
+  SearchInput,
   Select,
   SelectGroup,
+  SelectList,
   SelectOption,
-  SelectVariant,
-} from '@patternfly/react-core/deprecated';
+  ToolbarFilter,
+} from '@patternfly/react-core';
 import { FilterIcon } from '@patternfly/react-icons/dist/esm/icons/filter-icon';
 
 export const MENU_DIVIDER = '--divider--';
@@ -18,9 +24,7 @@ type MultiSelectProps = {
   toggleAriaLabel?: string;
   values: string[];
   setValues: (filters: string[]) => void;
-  options: { [key: string]: number };
-  /** Optional map from option key to display label. When provided, the option key is used as the value but the label is shown in the UI. */
-  optionLabels?: Record<string, string>;
+  options: { key: string; count?: number; label?: string }[];
   hasInlineFilter?: boolean;
   inlineFilterPlaceholderText?: string;
   inlineFilterThreshold?: number;
@@ -35,66 +39,61 @@ const MultiSelectComponent = ({
   values,
   setValues,
   options,
-  optionLabels,
   hasInlineFilter = false,
   inlineFilterPlaceholderText,
   inlineFilterThreshold = 20,
 }: MultiSelectProps) => {
   const [expanded, setExpanded] = React.useState(defaultExpanded ?? false);
+  const [filterValue, setFilterValue] = React.useState('');
 
-  // Determine if inline filter should be shown based on threshold
   const showInlineFilter = React.useMemo(() => {
     if (!hasInlineFilter) return false;
-    const itemCount = Object.keys(options).filter((key) => !key.startsWith(MENU_DIVIDER)).length;
+    const itemCount = options.filter((o) => !o.key.startsWith(MENU_DIVIDER)).length;
     return itemCount > inlineFilterThreshold;
   }, [hasInlineFilter, options, inlineFilterThreshold]);
 
-  // Memoize the options to prevent re-creating them on every render
   const selectOptions = React.useMemo(() => {
-    return Object.keys(options).map((filter) =>
-      filter.startsWith(MENU_DIVIDER) ? (
-        <Divider key={filter} />
-      ) : (
-        <SelectOption key={filter} value={filter} itemCount={options[filter] ?? 0}>
-          {optionLabels?.[filter] ?? filter}
-        </SelectOption>
-      ),
-    );
-  }, [optionLabels, options]);
+    const lowerFilter = filterValue?.toLowerCase();
 
-  const onFilter = React.useCallback(
-    (_event: React.ChangeEvent<HTMLInputElement> | null, value: string) => {
-      const keys = Object.keys(options);
-      const lowerFilter = value?.toLowerCase();
-
-      return keys
-        .filter((key) => {
-          if (!value?.trim()) return true;
-          return !key.startsWith(MENU_DIVIDER) && key.toLowerCase().includes(lowerFilter);
-        })
-        .map((filter) =>
-          filter.startsWith(MENU_DIVIDER) ? (
-            <Divider key={filter} />
-          ) : (
-            <SelectOption key={filter} value={filter} itemCount={options[filter] ?? 0}>
-              {optionLabels?.[filter] ?? filter}
-            </SelectOption>
-          ),
+    return options
+      .filter((option) => {
+        if (!showInlineFilter) return true;
+        if (!filterValue?.trim()) return true;
+        return (
+          !option.key.startsWith(MENU_DIVIDER) &&
+          (option.label ?? option.key).toLowerCase().includes(lowerFilter)
         );
-    },
-    [optionLabels, options],
-  );
+      })
+      .map((option) =>
+        option.key.startsWith(MENU_DIVIDER) ? (
+          <Divider component="li" key={option.key} />
+        ) : (
+          <SelectOption
+            hasCheckbox
+            key={option.key}
+            value={option.key}
+            isSelected={values.includes(option.key)}
+          >
+            {option.label ?? option.key}
+          </SelectOption>
+        ),
+      );
+  }, [filterValue, options, showInlineFilter, values]);
 
-  const chipLabels = optionLabels ? values.map((v) => optionLabels[v] ?? v) : values;
-  const labelToKey = optionLabels
-    ? Object.fromEntries(Object.entries(optionLabels).map(([k, v]) => [v, k]))
-    : undefined;
+  const chipLabels = values.map((v) => options.find((o) => o.key === v)?.label ?? v);
+  const labelToKey = options.reduce(
+    (acc, curr) => {
+      acc[curr.label ?? curr.key] = curr.key;
+      return acc;
+    },
+    {} as Record<string, string>,
+  );
 
   return (
     <ToolbarFilter
       chips={chipLabels}
       deleteChip={(_type, chip) => {
-        const key = labelToKey ? labelToKey[chip as string] ?? chip : chip;
+        const key = labelToKey[chip as string] ?? chip;
         setValues(values.filter((v) => v !== key));
       }}
       deleteChipGroup={() => {
@@ -103,37 +102,50 @@ const MultiSelectComponent = ({
       categoryName={label}
     >
       <Select
-        placeholderText={placeholderText ?? label}
-        toggleIcon={<FilterIcon />}
-        toggleAriaLabel={toggleAriaLabel ?? `${label} filter menu`}
-        variant={SelectVariant.checkbox}
+        role="menu"
         isOpen={expanded}
-        onToggle={(_, exp: boolean) => {
-          setExpanded(exp);
-        }}
-        onSelect={(event, selection) => {
-          const checked = (event.target as HTMLInputElement).checked;
+        selected={values}
+        onSelect={(_, selection) => {
+          const value = String(selection);
           setValues(
-            checked
-              ? [...values, String(selection)]
-              : values.filter((value) => value !== selection),
+            values.includes(value) ? values.filter((v) => v !== value) : [...values, value],
           );
         }}
-        selections={values}
-        isGrouped
-        {...(showInlineFilter && {
-          hasInlineFilter: true,
-          onFilter,
-          inlineFilterPlaceholderText:
-            inlineFilterPlaceholderText ?? `Filter ${label.toLowerCase()}`,
-        })}
-        maxHeight="400px"
+        onOpenChange={setExpanded}
+        toggle={(toggleRef) => (
+          <MenuToggle
+            ref={toggleRef}
+            onClick={() => {
+              setExpanded(!expanded);
+              if (showInlineFilter) {
+                setFilterValue('');
+              }
+            }}
+            isExpanded={expanded}
+            icon={<FilterIcon />}
+            aria-label={toggleAriaLabel ?? `${label} filter menu`}
+          >
+            {placeholderText ?? label}
+            {values.length > 0 && <Badge isRead>{values.length}</Badge>}
+          </MenuToggle>
+        )}
+        isScrollable
       >
-        {[
-          <SelectGroup label={label} key={filterKey}>
-            {selectOptions}
-          </SelectGroup>,
-        ]}
+        {showInlineFilter && (
+          <MenuSearch>
+            <MenuSearchInput>
+              <SearchInput
+                value={filterValue}
+                onChange={(_event, value) => setFilterValue(value)}
+                placeholder={inlineFilterPlaceholderText ?? `Filter ${label.toLowerCase()}`}
+                aria-label={inlineFilterPlaceholderText ?? `Filter ${label.toLowerCase()}`}
+              />
+            </MenuSearchInput>
+          </MenuSearch>
+        )}
+        <SelectGroup label={label} key={filterKey}>
+          <SelectList>{selectOptions}</SelectList>
+        </SelectGroup>
       </Select>
     </ToolbarFilter>
   );

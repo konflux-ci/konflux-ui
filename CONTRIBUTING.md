@@ -12,16 +12,18 @@ We welcome contributions of all kinds! Follow these steps to get started:
 1. Fork the repository and create your branch from `main`.
 
 2. Enable Corepack and install dependencies:
+
    ```bash
    # Enable Corepack (required for Yarn Berry)
    corepack enable
-   
+
    # Install dependencies in the root directory
    yarn install
-   
+
    # Install e2e-tests dependencies
    cd e2e-tests && yarn install && cd ..
    ```
+
    > **Note:** This project uses [Yarn Berry (v4.x)](https://yarnpkg.com/). The correct version is automatically managed via Corepack.
 
 3. Make sure your code builds and passes all checks:
@@ -75,13 +77,43 @@ We welcome contributions of all kinds! Follow these steps to get started:
    - ✅ Ensure tests pass and all required checks are green.
 
    > Tip: You or someone with the write permissions to the repository can re-run failing GitHub Action "PR Check Test" in the job's web page. Others have to update their branch to trigger the job.
-
    - ✅ Get at least **2 approvals** from reviewers.
    - ✅ Make sure there are no pending **requested changes**.
 
    After that, you (or someone with write access) can add the PR to the **merge queue** for merging.
 
 Please ensure your PR is complete and clear — this helps reviewers respond faster.
+
+---
+
+## Git hooks and local checks
+
+Commits are enforced by **Husky** (installed via `yarn install` → `prepare` script):
+
+- **pre-commit:** auto-format staged files via `lint-staged` (Prettier, ESLint restricted imports, Stylelint); block deletion or rename of protected repo files
+- **pre-push:** block force push and branch deletion on `main` / `master`
+
+### Protected repo files
+
+The pre-commit hook refuses to commit **deletions or renames** (source or destination) of infrastructure files that are easy for agents or bulk edits to remove by mistake. Content edits are not blocked.
+
+| Path                                                        | Rationale                                                                |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `.husky/pre-commit`, `.husky/commit-msg`, `.husky/pre-push` | Git hooks; deletion disables local checks                                |
+| `package.json`, `yarn.lock`                                 | Dependency and script definitions; deletion breaks installs and CI       |
+| `.gitignore`                                                | Prevents accidental commits of build artifacts, secrets, or local config |
+| `AGENTS.md`                                                 | Canonical AI agent instructions (`CLAUDE.md` is a symlink to this file)  |
+| `setup.sh`                                                  | Documented onboarding entry point (also invoked by `yarn setup`)         |
+
+**Legitimate deletion or rename:** set `SKIP_PROTECTED_PATH_CHECK=1` for that commit only, after maintainer agreement:
+
+```bash
+SKIP_PROTECTED_PATH_CHECK=1 git commit -m "chore: remove setup.sh"
+```
+
+Do not use `--no-verify`; that skips lint-staged and other pre-commit checks too.
+
+**Maintenance:** when adding a new repo-critical file that should never be deleted casually, add a pattern to `is_protected_path` in `.husky/pre-commit` and add a row to the table above in the same PR.
 
 ---
 
@@ -102,13 +134,13 @@ This project uses **Yarn Berry (v4.x)** as the package manager. Key points:
 
 **Common Yarn Berry commands:**
 
-| Command | Description |
-| ------- | ----------- |
-| `yarn install` | Install dependencies |
+| Command                    | Description                                               |
+| -------------------------- | --------------------------------------------------------- |
+| `yarn install`             | Install dependencies                                      |
 | `yarn install --immutable` | Install dependencies (CI mode, fails if lockfile changes) |
-| `yarn add <package>` | Add a dependency |
-| `yarn add -D <package>` | Add a dev dependency |
-| `yarn remove <package>` | Remove a dependency |
+| `yarn add <package>`       | Add a dependency                                          |
+| `yarn add -D <package>`    | Add a dev dependency                                      |
+| `yarn remove <package>`    | Remove a dependency                                       |
 
 ---
 

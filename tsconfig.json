@@ -14,7 +14,6 @@
     "useDefineForClassFields": true,
     "module": "ESNext",
     "skipLibCheck": true,
-    /* Bundler mode */
     "moduleResolution": "node",
     "allowImportingTsExtensions": true,
     "allowSyntheticDefaultImports": true,
@@ -23,7 +22,6 @@
     "moduleDetection": "force",
     "noEmit": true,
     "jsx": "react-jsx",
-    /* Linting */
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
@@ -37,6 +35,7 @@
     ".*.cjs",
     "node_modules",
     "config/*",
-    "scripts/*"
+    "scripts/*",
+    "**/__stories__/**"
   ]
 }

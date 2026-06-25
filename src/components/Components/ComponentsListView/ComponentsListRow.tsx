@@ -74,6 +74,7 @@ const ComponentsListRow: React.FC<
                 imageUrl={latestImage}
                 namespace={component.metadata.namespace}
                 componentName={component.metadata.name}
+                applicationName={applicationName}
               />
             </FlexItem>
           )}
