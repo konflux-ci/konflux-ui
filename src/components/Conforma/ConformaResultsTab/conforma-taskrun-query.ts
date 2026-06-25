@@ -1,3 +1,4 @@
+import { QueryKey } from '@tanstack/react-query';
 import { PipelineRunLabel, PipelineRunType } from '~/consts/pipelinerun';
 import { CONFORMA_TASK, EC_TASK } from '~/consts/security';
 import { convertToK8sQueryParams } from '~/k8s/k8s-utils';
@@ -8,9 +9,8 @@ import { WatchK8sResource } from '~/types/k8s';
 
 /**
  * Returns the WatchK8sResource descriptor for the Conforma security TaskRun
- * list query. Shared between useTaskRunsV2 (via selector) and the direct
- * useK8sWatchResource call inside useApplicationConformaResults so both
- * operations target the same React Query cache entry.
+ * list query. The selector is passed to useTaskRunsV2 inside
+ * useApplicationConformaResults for integrated TaskRun data fetching.
  */
 export const buildConformaSecurityTaskRunWatchOptions = (
   namespace: string,
@@ -43,7 +43,7 @@ export const buildConformaSecurityTaskRunWatchOptions = (
 export const buildConformaSecurityTaskRunQueryKey = (
   namespace: string,
   applicationName: string,
-): unknown[] =>
+): QueryKey =>
   createQueryKeys({
     model: TaskRunModel,
     queryOptions: convertToK8sQueryParams(

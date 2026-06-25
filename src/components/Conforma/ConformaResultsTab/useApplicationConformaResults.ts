@@ -1,11 +1,10 @@
 import * as React from 'react';
-import { useQueries, useQueryClient } from '@tanstack/react-query';
+import { useQueries } from '@tanstack/react-query';
 import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useComponents } from '~/hooks/useComponents';
 import { useTaskRunsV2 } from '~/hooks/useTaskRunsV2';
-import { useK8sWatchResource } from '~/k8s/hooks/useK8sWatchResource';
-import { TaskRunModel } from '~/models/taskruns';
+import { logger } from '~/monitoring/logger';
 import { useNamespace } from '~/shared/providers/Namespace';
 import type { TaskRunKind } from '~/types';
 import {
@@ -24,10 +23,7 @@ import {
   mapConformaResultData,
   resolveConformaResultFromTaskRun,
 } from './conforma-fetchers';
-import {
-  buildConformaSecurityTaskRunQueryKey,
-  buildConformaSecurityTaskRunWatchOptions,
-} from './conforma-taskrun-query';
+import { buildConformaSecurityTaskRunWatchOptions } from './conforma-taskrun-query';
 
 const NO_OP_REFRESH: ConformaRefreshState = {
   lastFetchedAt: 0,
@@ -47,6 +43,7 @@ const EMPTY_RESULTS: ApplicationConformaResults = {
   loaded: false,
   settling: false,
   error: undefined,
+  partialLogError: undefined,
   refresh: NO_OP_REFRESH,
 };
 
@@ -86,8 +83,8 @@ export const useApplicationConformaResults = (
     applicationName,
   );
 
-  // Shared watch options — used by both useTaskRunsV2 (selector) and the
-  // direct useK8sWatchResource below so both operations share the same cache.
+  // Conforma security TaskRun selector — passed to useTaskRunsV2 so list data
+  // comes from the shared TaskRun data source (cluster watch + Tekton Results / KubeArchive).
   const watchOptions = React.useMemo(
     () =>
       namespace?.length
@@ -96,45 +93,26 @@ export const useApplicationConformaResults = (
     [namespace, applicationName],
   );
 
-  const taskRunQueryKey = React.useMemo(
-    () =>
-      namespace?.length
-        ? buildConformaSecurityTaskRunQueryKey(namespace, applicationName)
-        : [],
-    [namespace, applicationName],
+  const [securityTaskRuns, taskRunsLoaded, taskRunsError, , , taskRunWatchMeta] = useTaskRunsV2(
+    namespace,
+    watchOptions ? { selector: watchOptions.selector } : undefined,
   );
-
-  const [securityTaskRuns, taskRunsLoaded, taskRunsError] = useTaskRunsV2(
-    namespace?.length ? namespace : null,
-    { selector: watchOptions?.selector },
-  );
-
-  // Direct subscription to get query metadata (dataUpdatedAt, isFetching,
-  // isWatchDegraded) for the refresh UI. React Query deduplicates the HTTP
-  // request because useTaskRunsV2 already uses the same query key internally.
-  const taskRunClusterQuery = useK8sWatchResource<TaskRunKind[]>(
-    watchOptions,
-    TaskRunModel,
-    { retry: false },
-  );
-
-  const queryClient = useQueryClient();
 
   const onRefresh = React.useCallback(() => {
-    void queryClient.invalidateQueries({ queryKey: taskRunQueryKey });
-  }, [queryClient, taskRunQueryKey]);
+    void taskRunWatchMeta.refetch();
+  }, [taskRunWatchMeta]);
 
   const refresh = React.useMemo(
     (): ConformaRefreshState => ({
-      lastFetchedAt: taskRunClusterQuery.dataUpdatedAt,
-      isRefreshing: taskRunClusterQuery.isFetching,
-      hasLiveUpdatesPaused: taskRunClusterQuery.isWatchDegraded,
+      lastFetchedAt: taskRunWatchMeta.dataUpdatedAt,
+      isRefreshing: taskRunWatchMeta.isFetching,
+      hasLiveUpdatesPaused: taskRunWatchMeta.isWatchDegraded,
       onRefresh,
     }),
     [
-      taskRunClusterQuery.dataUpdatedAt,
-      taskRunClusterQuery.isFetching,
-      taskRunClusterQuery.isWatchDegraded,
+      taskRunWatchMeta.dataUpdatedAt,
+      taskRunWatchMeta.isFetching,
+      taskRunWatchMeta.isWatchDegraded,
       onRefresh,
     ],
   );
@@ -179,7 +157,9 @@ export const useApplicationConformaResults = (
       logData: results.map((q) => q.data),
       allSettled: results.every((q) => !q.isLoading),
       aggregatedLogError:
-        results.length > 0 && results.every((q) => q.isError) ? results[0].error : undefined,
+        results.length > 0 && results.some((q) => q.isError)
+          ? results.find((q) => q.isError)?.error
+          : undefined,
     }),
   });
 
@@ -188,7 +168,13 @@ export const useApplicationConformaResults = (
   );
   const settling = !allSettled;
 
-  const aggregateError = componentsError ?? taskRunsError ?? aggregatedLogError;
+  const fatalError = componentsError ?? taskRunsError;
+
+  React.useEffect(() => {
+    if (aggregatedLogError) {
+      logger.warn('Partial Conforma log fetch failure', { error: aggregatedLogError });
+    }
+  }, [aggregatedLogError]);
 
   return React.useMemo((): ApplicationConformaResults => {
     if (!namespace?.length) {
@@ -280,12 +266,14 @@ export const useApplicationConformaResults = (
       totalSuccesses,
       loaded,
       settling,
-      error: aggregateError,
+      error: fatalError,
+      partialLogError: aggregatedLogError,
       refresh,
     };
   }, [
-    aggregateError,
+    aggregatedLogError,
     appComponents,
+    fatalError,
     latestPerComponent,
     latestTaskRuns,
     loaded,

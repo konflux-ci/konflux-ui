@@ -201,6 +201,26 @@ describe('conforma-grouping-utils', () => {
       expect(results[0].component).toBe('auth-service');
     });
 
+    it('filters by search text matching rule code (case-insensitive)', () => {
+      const rowsWithCode = [
+        mockRow({
+          code: 'cve-scan-required',
+          title: 'Missing scan metadata',
+          component: 'api-gateway',
+        }),
+        mockRow({
+          code: 'base-image-allowed',
+          title: 'Base image allowed',
+          component: 'auth-service',
+        }),
+      ];
+
+      const results = filterResults(rowsWithCode, 'CVE-SCAN', []);
+
+      expect(results).toHaveLength(1);
+      expect(results[0].code).toBe('cve-scan-required');
+    });
+
     it('filters by status array', () => {
       const results = filterResults(sampleRows, '', [CONFORMA_RESULT_STATUS.violations]);
       expect(results).toHaveLength(1);

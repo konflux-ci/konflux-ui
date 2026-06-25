@@ -97,8 +97,8 @@ describe('ConformaGroupedTable', () => {
     const onToggle = jest.fn();
     routerRenderer(<ConformaGroupedTable {...defaultProps} onToggleGroup={onToggle} />);
 
-    const toggleButtons = screen.getAllByRole('button');
-    fireEvent.click(toggleButtons[0]);
+    const expandButton = screen.getAllByRole('button', { name: /details/i })[0];
+    fireEvent.click(expandButton);
 
     expect(onToggle).toHaveBeenCalledWith('Missing CVE scan');
   });

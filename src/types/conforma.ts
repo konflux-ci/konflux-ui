@@ -59,7 +59,7 @@ export type ConformaResult = {
   components: ComponentConformaResult[];
 };
 
-export type UIConformaData = {
+export type ConformaResultRow = {
   title: string;
   description: string;
   status: CONFORMA_RESULT_STATUS;
@@ -72,8 +72,6 @@ export type UIConformaData = {
   /** Policy rule code — stable identifier used as primary group key. Optional for backward-compat. */
   code?: string;
 };
-
-export type ConformaResultRow = UIConformaData;
 
 export type ComponentConformaStatus = {
   componentName: string;
@@ -105,6 +103,9 @@ export type ApplicationConformaResults = {
   totalSuccesses: number;
   loaded: boolean;
   settling: boolean;
+  /** Fatal errors that prevent the tab from loading (components or TaskRun list). */
   error: unknown;
+  /** Non-fatal log fetch failures for one or more components; results may still be partial. */
+  partialLogError?: unknown;
   refresh: ConformaRefreshState;
 };
