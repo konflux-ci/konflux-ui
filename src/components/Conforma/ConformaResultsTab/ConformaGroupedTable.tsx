@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Text, TextContent, Truncate as PfTruncate } from '@patternfly/react-core';
+import { Text, TextContent, Tooltip, Truncate as PfTruncate } from '@patternfly/react-core';
 import {
   ExpandableRowContent,
   Table,
@@ -14,6 +14,7 @@ import type { ComponentProps } from '~/shared/components/table/Table';
 import { Truncate } from '~/shared/components/truncate-text/Truncate';
 import type { ConformaResultRow } from '~/types/conforma';
 import type { GroupByMode, GroupedConformaRow } from './conforma-grouping-utils';
+import { getCommonImageName } from './conforma-grouping-utils';
 import { getConformaGroupedHeader } from './ConformaResultsListHeader';
 import ConformaResultsListRow from './ConformaResultsListRow';
 import './ConformaResultsTab.scss';
@@ -26,7 +27,12 @@ type ConformaGroupedTableProps = {
 };
 
 const DetailSubTable: React.FC<{ rows: ConformaResultRow[] }> = ({ rows }) => (
-  <Table aria-label="Conforma detail rows" variant="compact" borders={false}>
+  <Table
+    aria-label="Conforma detail rows"
+    variant="compact"
+    borders={false}
+    className="conforma-results-tab__detail-table"
+  >
     <Thead>
       <Tr>
         <Th width={20}>Rule</Th>
@@ -37,39 +43,65 @@ const DetailSubTable: React.FC<{ rows: ConformaResultRow[] }> = ({ rows }) => (
       </Tr>
     </Thead>
     <Tbody>
-      {rows.map((row, idx) => (
-        <Tr key={`${row.component}-${row.title}-${idx}`}>
-          <Td dataLabel="Rule">
-            <TextContent>
-              <Text component="p">
-                <strong>{row.title ?? '-'}</strong>
-              </Text>
-              {row.description && <Text component="small">{row.description}</Text>}
-            </TextContent>
-          </Td>
-          <Td dataLabel="Component">{row.component}</Td>
-          <Td dataLabel="Image">
-            {row.image ? <PfTruncate content={row.image} /> : '-'}
-          </Td>
-          <Td dataLabel="Status">{getRuleStatus(row.status)}</Td>
-          <Td dataLabel="Message">
-            <TextContent>
-              <Text component="p">
-                {row.msg != null ? (
-                  <Truncate
-                    content={row.msg}
-                    expandInline
-                    data-test="conforma-violation-msg"
-                  />
-                ) : (
-                  '-'
-                )}
-              </Text>
-              {row.solution && <Text component="small">Solution: {row.solution}</Text>}
-            </TextContent>
-          </Td>
-        </Tr>
-      ))}
+      {rows.map((row, idx) => {
+        const commonName = row.images.length > 1 ? getCommonImageName(row.images) : undefined;
+        return (
+          <Tr key={`${row.component}-${row.title}-${idx}`}>
+            <Td dataLabel="Rule">
+              <TextContent>
+                <Text component="p">
+                  <strong>{row.title ?? '-'}</strong>
+                </Text>
+                {row.description && <Text component="small">{row.description}</Text>}
+              </TextContent>
+            </Td>
+            <Td dataLabel="Component">{row.component}</Td>
+            <Td dataLabel="Image">
+              {row.images.length > 1 ? (
+                <Tooltip
+                  content={
+                    <ul>
+                      {row.images.map((img) => (
+                        <li key={img}>{img}</li>
+                      ))}
+                    </ul>
+                  }
+                >
+                  <TextContent>
+                    {commonName ? (
+                      <>
+                        <Text component="p">
+                          <PfTruncate content={commonName} />
+                        </Text>
+                        <Text component="small">{row.images.length} arch variants</Text>
+                      </>
+                    ) : (
+                      <Text component="p">Affects {row.images.length} images</Text>
+                    )}
+                  </TextContent>
+                </Tooltip>
+              ) : row.images.length === 1 ? (
+                <PfTruncate content={row.images[0]} />
+              ) : (
+                '-'
+              )}
+            </Td>
+            <Td dataLabel="Status">{getRuleStatus(row.status)}</Td>
+            <Td dataLabel="Message">
+              <TextContent>
+                <Text component="p">
+                  {row.msg != null ? (
+                    <Truncate content={row.msg} expandInline data-test="conforma-violation-msg" />
+                  ) : (
+                    '-'
+                  )}
+                </Text>
+                {row.solution && <Text component="small">Solution: {row.solution}</Text>}
+              </TextContent>
+            </Td>
+          </Tr>
+        );
+      })}
     </Tbody>
   </Table>
 );
