@@ -8,6 +8,8 @@ import {
   Button,
   ButtonType,
   ButtonVariant,
+  Flex,
+  FlexItem,
 } from '@patternfly/react-core';
 import { K8sQueryDeleteResource } from '../../k8s';
 import { RoleBindingModel } from '../../models';
@@ -66,21 +68,33 @@ export const RevokeAccessModal: React.FC<React.PropsWithChildren<Props>> = ({
             </Alert>
           )}
         </StackItem>
-      </Stack>
 
-      <Button
-        type={ButtonType.submit}
-        variant={ButtonVariant.danger}
-        isLoading={submitting}
-        onClick={handleSubmit}
-        isDisabled={submitting}
-        data-test="revoke-access"
-      >
-        Revoke
-      </Button>
-      <Button variant={ButtonVariant.link} onClick={() => onClose(null, { submitClicked: false })}>
-        Cancel
-      </Button>
+        <StackItem>
+          <Flex>
+            <FlexItem>
+              <Button
+                type={ButtonType.submit}
+                variant={ButtonVariant.danger}
+                isLoading={submitting}
+                onClick={handleSubmit}
+                isDisabled={submitting}
+                data-test="revoke-access"
+              >
+                Revoke
+              </Button>
+            </FlexItem>
+
+            <FlexItem>
+              <Button
+                variant={ButtonVariant.link}
+                onClick={() => onClose(null, { submitClicked: false })}
+              >
+                Cancel
+              </Button>
+            </FlexItem>
+          </Flex>
+        </StackItem>
+      </Stack>
     </>
   );
 };
