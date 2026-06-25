@@ -1,37 +1,14 @@
 import * as React from 'react';
-import { runStatus } from '~/consts/pipelinerun';
-import {
-  acquireFaviconBadge,
-  applyFaviconBadge,
-  releaseFaviconBadge,
-} from '~/shared/utils/favicon-badge';
-
-export type UseDocumentTitleOptions = {
-  faviconStatus?: runStatus | null;
-};
 
 /**
- * Dynamically updates the page title and optionally the favicon status badge.
- * Restores the default title and favicon on unmount.
+ * This hook allows you to dynamically update the title of a webpage based on a specified `title` string.
+ * @param {string} title Title to update
  */
-export const useDocumentTitle = (title: string, options?: UseDocumentTitleOptions): void => {
-  const faviconStatus = options?.faviconStatus;
-
+export const useDocumentTitle = (title: string): void => {
   React.useEffect(() => {
-    let cancelled = false;
-
     document.title = title;
-    if (faviconStatus != null) {
-      acquireFaviconBadge();
-      void applyFaviconBadge(faviconStatus, () => cancelled);
-    }
-
     return () => {
-      cancelled = true;
       document.title = 'Konflux';
-      if (faviconStatus != null) {
-        releaseFaviconBadge();
-      }
     };
-  }, [title, faviconStatus]);
+  }, [title]);
 };
