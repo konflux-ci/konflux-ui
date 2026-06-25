@@ -1,12 +1,12 @@
 import React from 'react';
 import {
+  Badge,
+  Divider,
+  HelperText,
+  HelperTextItem,
   Select,
   SelectList,
   SelectOption,
-  Badge,
-  HelperText,
-  HelperTextItem,
-  Divider,
   ValidatedOptions,
   MenuToggle,
   TextInputGroup,
@@ -14,9 +14,9 @@ import {
   TextInputGroupUtilities,
   Button,
 } from '@patternfly/react-core';
-import './BasicDropdown.scss';
 import { TimesIcon } from '@patternfly/react-icons/dist/esm/icons/times-icon';
 import { NO_RESULTS } from '~/consts/constants';
+import { filterByText } from '~/utils/text-filter-utils';
 
 export type DropdownItemObject = {
   key: string;
@@ -61,9 +61,7 @@ const BasicDropdown: React.FC<BasicDropdownProps> = ({
     let newItems = items;
 
     if (filterValue) {
-      newItems = items.filter((item) =>
-        item.value.toLowerCase().includes(filterValue.toLowerCase()),
-      );
+      newItems = filterByText(items, filterValue, (item) => item.value);
 
       // When no options are found after filtering, display 'No results found'
       if (!newItems.length) {
@@ -199,19 +197,16 @@ const BasicDropdown: React.FC<BasicDropdownProps> = ({
                 key={key}
                 value={value}
                 role="menuitem"
-                description={value}
+                description={description}
                 ref={null}
                 isDisabled={isDisabled}
               >
-                <div>
-                  {label}
-                  {value === recommended && (
-                    <>
-                      &nbsp;<Badge isRead>Recommended</Badge>
-                    </>
-                  )}
-                </div>
-                {description && <div className="dropdown-item-description">{description}</div>}
+                {label ?? value}
+                {value === recommended && (
+                  <>
+                    &nbsp;<Badge isRead>Recommended</Badge>
+                  </>
+                )}
               </SelectOption>
             ),
           )}

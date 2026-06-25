@@ -1,6 +1,10 @@
 import common = require('mocha/lib/interfaces/common');
 import { NavItem, pageTitles } from '../support/constants/PageTitle';
-import { localKonfluxLoginPO, stageLoginPO } from '../support/pageObjects/login-po';
+import {
+  localKonfluxLoginPO,
+  openshiftLoginPO,
+  stageLoginPO,
+} from '../support/pageObjects/login-po';
 import { GetStartedPage, GetAppStartedPage } from '../support/pages/GetStartedPage';
 import { Common } from './Common';
 import { goToApplicationsPagePo, namespacesPagePO } from '../support/pageObjects/pages-po';
@@ -31,7 +35,30 @@ export class Login {
     cy.get(localKonfluxLoginPO.username).type(username);
     cy.get(localKonfluxLoginPO.password).type(password, { log: false });
     cy.get(localKonfluxLoginPO.loginButton).click();
-    cy.contains(localKonfluxLoginPO.grantAccessClass, localKonfluxLoginPO.grantAccessText).click();
+    this.waitForApps();
+  }
+
+  static openshiftLogin(
+    username: string = Cypress.env('USERNAME'),
+    password: string = Cypress.env('PASSWORD'),
+  ) {
+    cy.visit(Cypress.env('KONFLUX_BASE_URL'));
+    // Wait for either the login form (not authenticated) or the app sidebar (already authenticated)
+    cy.get(`${openshiftLoginPO.username}, ${openshiftLoginPO.sidebar}`, { timeout: 30000 }).should('exist');
+    cy.get('body').then(($body) => {
+      if ($body.find(openshiftLoginPO.username).length > 0) {
+        cy.get(openshiftLoginPO.username).type(username);
+        cy.get(openshiftLoginPO.password).type(password, { log: false });
+        cy.get(openshiftLoginPO.loginButton).should('be.enabled').click();
+        // Click through OAuth consent page if it appears
+        cy.get(`${openshiftLoginPO.approveButton}, ${openshiftLoginPO.sidebar}`, { timeout: 60000 }).first().then(($el) => {
+          if ($el.is(openshiftLoginPO.approveButton)) {
+            cy.wrap($el).click();
+          }
+        });
+        cy.get(openshiftLoginPO.sidebar, { timeout: 60000 }).should('exist');
+      }
+    });
     this.waitForApps();
   }
 

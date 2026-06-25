@@ -1,5 +1,6 @@
 import React from 'react';
 import { Divider, DrilldownMenu, Flex, MenuItem } from '@patternfly/react-core';
+import { textMatch } from '~/utils/text-filter-utils';
 import { ContextMenuItem } from './ContextSwitcher';
 
 export const ContextMenuListItem: React.FC<React.PropsWithChildren<{ item: ContextMenuItem }>> = ({
@@ -48,7 +49,7 @@ export const ContextMenuListItem: React.FC<React.PropsWithChildren<{ item: Conte
 export const filteredItems = (items: ContextMenuItem[], filter: string) => {
   const filtered: ContextMenuItem[] = [];
   items.forEach((item) => {
-    if (item.name.toLowerCase().includes(filter)) {
+    if (textMatch(item.name, filter)) {
       let filteredSubItems: ContextMenuItem[];
       if (item.subItems) {
         filteredSubItems = filteredItems(item.subItems, filter);

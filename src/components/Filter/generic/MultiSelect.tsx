@@ -1,11 +1,14 @@
 import { useState } from 'react';
-import { Divider, ToolbarFilter } from '@patternfly/react-core';
 import {
+  Badge,
+  Divider,
+  MenuToggle,
   Select,
   SelectGroup,
+  SelectList,
   SelectOption,
-  SelectVariant,
-} from '@patternfly/react-core/deprecated';
+  ToolbarFilter,
+} from '@patternfly/react-core';
 import { FilterIcon } from '@patternfly/react-icons/dist/esm/icons/filter-icon';
 
 export const MENU_DIVIDER = '--divider--';
@@ -18,9 +21,7 @@ type MultiSelectProps = {
   toggleAriaLabel?: string;
   values: string[];
   setValues: (filters: string[]) => void;
-  options: { [key: string]: number };
-  /** Optional map from option key to display label. When provided, the option key is used as the value but the label is shown in the UI. */
-  optionLabels?: Record<string, string>;
+  options: { key: string; count?: number; label?: string }[];
 };
 
 export const MultiSelect = ({
@@ -32,20 +33,23 @@ export const MultiSelect = ({
   values,
   setValues,
   options,
-  optionLabels,
 }: MultiSelectProps) => {
   const [expanded, setExpanded] = useState(defaultExpanded ?? false);
 
-  const chipLabels = optionLabels ? values.map((v) => optionLabels[v] ?? v) : values;
-  const labelToKey = optionLabels
-    ? Object.fromEntries(Object.entries(optionLabels).map(([k, v]) => [v, k]))
-    : undefined;
+  const chipLabels = values.map((v) => options.find((o) => o.key === v)?.label ?? v);
+  const labelToKey = options.reduce(
+    (acc, curr) => {
+      acc[curr.label ?? curr.key] = curr.key;
+      return acc;
+    },
+    {} as Record<string, string>,
+  );
 
   return (
     <ToolbarFilter
       chips={chipLabels}
       deleteChip={(_type, chip) => {
-        const key = labelToKey ? labelToKey[chip as string] ?? chip : chip;
+        const key = labelToKey[chip as string] ?? chip;
         setValues(values.filter((v) => v !== key));
       }}
       deleteChipGroup={() => {
@@ -54,41 +58,47 @@ export const MultiSelect = ({
       categoryName={label}
     >
       <Select
-        placeholderText={placeholderText ?? label}
-        toggleIcon={<FilterIcon />}
-        toggleAriaLabel={toggleAriaLabel ?? `${label} filter menu`}
-        variant={SelectVariant.checkbox}
+        role="menu"
         isOpen={expanded}
-        onToggle={(_, exp: boolean) => setExpanded(exp)}
-        onSelect={(event, selection) => {
-          const checked = (event.target as HTMLInputElement).checked;
+        selected={values}
+        onSelect={(_, selection) => {
+          const value = String(selection);
           setValues(
-            checked
-              ? [...values, String(selection)]
-              : values.filter((value) => value !== selection),
+            values.includes(value) ? values.filter((v) => v !== value) : [...values, value],
           );
         }}
-        selections={values}
-        isGrouped
+        onOpenChange={setExpanded}
+        toggle={(toggleRef) => (
+          <MenuToggle
+            ref={toggleRef}
+            onClick={() => setExpanded(!expanded)}
+            isExpanded={expanded}
+            icon={<FilterIcon />}
+            aria-label={toggleAriaLabel ?? `${label} filter menu`}
+          >
+            {placeholderText ?? label}
+            {values.length > 0 && <Badge isRead>{values.length}</Badge>}
+          </MenuToggle>
+        )}
       >
-        {[
-          <SelectGroup label={label} key={filterKey}>
-            {Object.keys(options).map((filter) =>
-              filter.startsWith(MENU_DIVIDER) ? (
-                <Divider key={filter} />
+        <SelectGroup label={label} key={filterKey}>
+          <SelectList>
+            {options.map((filter) =>
+              filter.key.startsWith(MENU_DIVIDER) ? (
+                <Divider component="li" key={filter.key} />
               ) : (
                 <SelectOption
-                  key={filter}
-                  value={filter}
-                  isChecked={values.includes(filter)}
-                  // TODO: remove the item count from other components, it is not accurate anyway as it only counts fetched resources
+                  hasCheckbox
+                  key={filter.key}
+                  value={filter.key}
+                  isSelected={values.includes(filter.key)}
                 >
-                  {optionLabels?.[filter] ?? filter}
+                  {filter.label ?? filter.key}
                 </SelectOption>
               ),
             )}
-          </SelectGroup>,
-        ]}
+          </SelectList>
+        </SelectGroup>
       </Select>
     </ToolbarFilter>
   );

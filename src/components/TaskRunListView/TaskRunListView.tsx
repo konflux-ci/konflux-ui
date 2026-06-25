@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Bullseye, EmptyState, EmptyStateBody, Spinner } from '@patternfly/react-core';
 import { useTaskRunsForPipelineRuns } from '~/hooks/useTaskRunsV2';
+import { textMatch } from '~/utils/text-filter-utils';
 import { Table, useDeepCompareMemoize } from '../../shared';
 import FilteredEmptyState from '../../shared/components/empty-state/FilteredEmptyState';
 import { getErrorState } from '../../shared/utils/error-utils';
@@ -35,14 +36,11 @@ const TaskRunListView: React.FC<React.PropsWithChildren<Props>> = ({
   // TaskRuns are already sorted by useTaskRunsForPipelineRuns, no need to re-sort
   const filteredTaskRun = React.useMemo(
     () =>
-      nameFilter
-        ? taskRuns.filter(
-            (taskrun) =>
-              taskrun.metadata.name.indexOf(nameFilter) !== -1 ||
-              (taskrun.spec?.taskRef?.name &&
-                taskrun.spec?.taskRef?.name?.indexOf(nameFilter) !== -1),
-          )
-        : taskRuns,
+      taskRuns.filter(
+        (taskrun) =>
+          textMatch(taskrun.metadata.name, nameFilter) ||
+          textMatch(taskrun.spec?.taskRef?.name, nameFilter),
+      ),
     [nameFilter, taskRuns],
   );
 

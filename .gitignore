@@ -20,11 +20,12 @@ coverage/
 .nyc_output/
 
 node_modules
+.npm/
 dist
 dist-ssr
 *.local
 *.local.*
-tsconfig.tsbuildinfo
+*.tsbuildinfo
 
 # Editor directories and files
 .vscode/*
@@ -36,6 +37,9 @@ tsconfig.tsbuildinfo
 *.njsproj
 *.sln
 *.sw?
+*.swp
+*.swo
+
 
 **/.gitconfig*
 
@@ -43,5 +47,18 @@ tsconfig.tsbuildinfo
 CLAUDE.local.md
 .claude/worktrees/**/*
 
+# Screenshot UI automation outputs (Playwright MCP; layout: .screenshots/<branch>/<run-id>/)
+.screenshots/
+.playwright-mcp/
+
 # Snyk Security Extension - AI Rules (auto-generated)
 .cursor/rules/snyk_rules.mdc
+
+# Storybook
+storybook-static/
+
+# Worktrees
+.worktrees/
+
+# Snapshots (no snapshot tests)
+**/__snapshots__/

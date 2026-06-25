@@ -43,12 +43,12 @@ const useModalLauncherMock = useModalLauncher as jest.Mock;
 
 const mockedComponent = componentCRMocks[0];
 
-const normalizeCta = (cta) =>
+const normalizeCta = (cta: unknown) =>
   typeof cta === 'function'
     ? expect.any(Function)
     : expect.objectContaining({ href: expect.any(String) });
 
-const normalizeMockedActions = (disabled = false, includeManagedLinkedSecrets = true) =>
+const normalizeMockedActions = (disabled = false, includeManagedLinkedSecrets = true): unknown[] =>
   mockedActions
     .filter((ma) => includeManagedLinkedSecrets || ma.label !== 'Manage linked secrets')
     .map(({ cta, ...rest }) =>
