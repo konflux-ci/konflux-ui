@@ -31,10 +31,10 @@ jest.mock('~/components/Issues', () => ({
   issuesPageLoader: jest.fn(() => ({ data: 'test-data' })),
 }));
 
-// Mock ensureFeatureFlagOnLoader so lazy() doesn't throw HttpError(404)
+// Mock ensureConditionOnLoader so lazy() doesn't throw HttpError(503)
 jest.mock('~/feature-flags/utils', () => ({
   ...jest.requireActual('~/feature-flags/utils'),
-  ensureFeatureFlagOnLoader: jest.fn(),
+  ensureConditionOnLoader: jest.fn(),
 }));
 
 describe('Issues Routes Configuration', () => {
