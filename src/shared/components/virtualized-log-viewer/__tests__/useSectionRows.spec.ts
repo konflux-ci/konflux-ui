@@ -51,6 +51,10 @@ describe('useSectionRows', () => {
     expect(result.current.lineNumberToDisplayRow.get(1)).toBe(0);
     expect(result.current.lineNumberToDisplayRow.get(2)).toBe(1);
     expect(result.current.lineNumberToDisplayRow.get(3)).toBe(2);
+
+    expect(result.current.lineNumberToSectionIndex.get(1)).toBe(0);
+    expect(result.current.lineNumberToSectionIndex.get(2)).toBe(0);
+    expect(result.current.lineNumberToSectionIndex.get(3)).toBe(0);
   });
 
   it('should add a blank search line between multi-section blocks', () => {

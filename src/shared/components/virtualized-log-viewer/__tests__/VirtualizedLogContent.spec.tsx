@@ -673,6 +673,63 @@ Another short line`;
       expect(listElement).toBeInTheDocument();
     });
 
+    it('should highlight gutter cell and row when a line number link is clicked', () => {
+      renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
+
+      // No highlights initially
+      expect(document.querySelectorAll('.log-content__gutter--highlighted').length).toBe(0);
+      expect(document.querySelectorAll('.log-content__line--highlighted').length).toBe(0);
+
+      // Click the link for content line 2 (first content row; section header occupies line 1)
+      const link = document.querySelector('[href="#L2"]');
+      expect(link).not.toBeNull();
+      fireEvent.click(link);
+
+      // Gutter cell for that line should be highlighted
+      const highlightedGutters = document.querySelectorAll('.log-content__gutter--highlighted');
+      expect(highlightedGutters.length).toBeGreaterThan(0);
+
+      // Row content for that line should be highlighted
+      const highlightedLines = document.querySelectorAll('.log-content__line--highlighted');
+      expect(highlightedLines.length).toBeGreaterThan(0);
+    });
+
+    it('should create a range highlight when shift-clicking a second line number', () => {
+      renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
+
+      // Click first line (content row 1 = globalLineNumber 2)
+      const firstLink = document.querySelector('[href="#L2"]');
+      fireEvent.click(firstLink);
+
+      // Shift-click line 4 (content row 3 = globalLineNumber 4)
+      const secondLink = document.querySelector('[href="#L4"]');
+      fireEvent.click(secondLink, { shiftKey: true });
+
+      // All lines in the range [2..4] should be highlighted
+      const highlightedLines = document.querySelectorAll('.log-content__line--highlighted');
+      expect(highlightedLines.length).toBeGreaterThanOrEqual(3);
+    });
+
+    it('should call scrollToIndex when a line number is clicked', () => {
+      const originalRAF = window.requestAnimationFrame;
+      window.requestAnimationFrame = (cb: FrameRequestCallback) => {
+        cb(0);
+        return 0;
+      };
+      scrollToIndexSpy = jest.fn();
+
+      renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
+      scrollToIndexSpy.mockClear();
+
+      const link = document.querySelector('[href="#L2"]');
+      fireEvent.click(link);
+
+      expect(scrollToIndexSpy).toHaveBeenCalled();
+
+      scrollToIndexSpy = null;
+      window.requestAnimationFrame = originalRAF;
+    });
+
     it('should use instant scroll (behavior: auto) for hash navigation', () => {
       window.location.hash = '#L2';
 
@@ -703,6 +760,10 @@ Another short line`;
       { containerName: 'BUILD', data: 'compile\nlink', isCompleted: true },
       { containerName: 'TEST', data: 'running tests', isCompleted: false },
     ];
+
+    afterEach(() => {
+      window.location.hash = '';
+    });
 
     it('should render section headers for each pipeline step', () => {
       renderWithQueryClientAndRouter(
@@ -753,6 +814,32 @@ Another short line`;
 
       expect(screen.getByText('compile')).toBeInTheDocument();
       expect(screen.getByText('link')).toBeInTheDocument();
+    });
+
+    it('should expand a folded section when URL hash targets a line inside it', () => {
+      window.location.hash = '#L2';
+
+      renderWithQueryClientAndRouter(
+        <VirtualizedLogContent {...defaultProps} sections={multiSections} />,
+      );
+
+      expect(screen.getByText('compile')).toBeInTheDocument();
+      expect(screen.getByText('link')).toBeInTheDocument();
+    });
+
+    it('should allow folding a section after URL hash navigation expanded it', () => {
+      window.location.hash = '#L2';
+
+      renderWithQueryClientAndRouter(
+        <VirtualizedLogContent {...defaultProps} sections={multiSections} />,
+      );
+
+      expect(screen.getByText('compile')).toBeInTheDocument();
+
+      fireEvent.click(screen.getByTestId('fold-header-BUILD'));
+
+      expect(screen.queryByText('compile')).not.toBeInTheDocument();
+      expect(screen.getByText('··· 2 lines hidden')).toBeInTheDocument();
     });
 
     it('should show a sticky header after scrolling in multi-section mode', () => {

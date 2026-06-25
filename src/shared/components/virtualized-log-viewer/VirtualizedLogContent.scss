@@ -1,4 +1,6 @@
 .log-content__list {
+  position: relative;
+  z-index: 1;
   overflow-x: hidden !important;
   width: 100% !important;
 
@@ -54,6 +56,7 @@
 
 .log-content__container {
   position: relative;
+  isolation: isolate;
 }
 
 .log-content__line--highlighted {

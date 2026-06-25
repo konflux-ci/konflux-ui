@@ -40,7 +40,8 @@ export const StickySectionHeaderBar: React.FC<{
   pushUpOffset: number;
   itemSize: number;
   onToggle: () => void;
-}> = ({ row, pushUpOffset, itemSize, onToggle }) => (
+  onLineClick: (lineNumber: number, event: React.MouseEvent) => void;
+}> = ({ row, pushUpOffset, itemSize, onToggle, onLineClick }) => (
   <div
     className="log-content__sticky-header"
     style={{
@@ -49,8 +50,19 @@ export const StickySectionHeaderBar: React.FC<{
     }}
     data-test={`sticky-header-${row.sectionName}`}
   >
-    <div className="log-content__gutter" style={{ height: `${itemSize}px` }}>
-      {row.lineNumber}
+    <div className="log-content__gutter log-content__gutter--sticky" style={{ height: `${itemSize}px` }}>
+      <a
+        href={`#L${row.lineNumber}`}
+        className="line-number__line-number"
+        aria-label={`Jump to line ${row.lineNumber}`}
+        data-line-number={row.lineNumber}
+        onClick={(e) => {
+          e.preventDefault();
+          onLineClick(row.lineNumber, e);
+        }}
+      >
+        {row.lineNumber}
+      </a>
     </div>
     <div
       className="log-content__row-content log-content__sticky-header-content pf-v5-c-log-viewer__list-item"

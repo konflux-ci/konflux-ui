@@ -9,6 +9,8 @@ export interface SectionRowsResult {
   searchLineToFlatLineIndex: Map<number, number>;
   /** Search line index → section index (used to expand folded steps before scroll) */
   searchLineToSectionIndex: Map<number, number>;
+  /** Global line number → section index (used to expand folded steps for URL hash navigation) */
+  lineNumberToSectionIndex: Map<number, number>;
   lineNumberToDisplayRow: Map<number, number>;
 }
 
@@ -19,6 +21,7 @@ const EMPTY_SECTION_ROWS: SectionRowsResult = {
   searchLineToDisplayRow: EMPTY_SEARCH_MAP,
   searchLineToFlatLineIndex: EMPTY_SEARCH_MAP,
   searchLineToSectionIndex: EMPTY_SEARCH_MAP,
+  lineNumberToSectionIndex: EMPTY_SEARCH_MAP,
   lineNumberToDisplayRow: EMPTY_SEARCH_MAP,
 };
 
@@ -37,6 +40,7 @@ export const useSectionRows = (
     const searchToDisplay = new Map<number, number>();
     const searchToFlatLine = new Map<number, number>();
     const searchToSection = new Map<number, number>();
+    const lineNumToSection = new Map<number, number>();
     const lineNumToDisplay = new Map<number, number>();
 
     let globalLineNumber = 1;
@@ -59,12 +63,14 @@ export const useSectionRows = (
       searchToDisplay.set(searchLine, headerDisplayIdx);
       searchToSection.set(searchLine, i);
       lineNumToDisplay.set(globalLineNumber, headerDisplayIdx);
+      lineNumToSection.set(globalLineNumber, i);
       searchLine++;
       globalLineNumber++;
 
       for (let j = 0; j < sectionLines.length; j++) {
         searchToFlatLine.set(searchLine + j, flatLineIndex + j);
         searchToSection.set(searchLine + j, i);
+        lineNumToSection.set(globalLineNumber + j, i);
       }
 
       if (isExpanded) {
@@ -98,6 +104,7 @@ export const useSectionRows = (
       searchLineToDisplayRow: searchToDisplay,
       searchLineToFlatLineIndex: searchToFlatLine,
       searchLineToSectionIndex: searchToSection,
+      lineNumberToSectionIndex: lineNumToSection,
       lineNumberToDisplayRow: lineNumToDisplay,
     };
   }, [sections, allLines, expandedSections]);
