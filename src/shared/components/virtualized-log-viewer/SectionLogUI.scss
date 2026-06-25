@@ -10,6 +10,11 @@
   box-shadow: var(--pf-v5-global--BoxShadow--sm);
 }
 
+// Restore pointer events for clickable children inside the pointer-events:none sticky bar
+.log-content__gutter--sticky {
+  pointer-events: auto;
+}
+
 .log-content__sticky-header-content {
   display: flex;
   align-items: center;

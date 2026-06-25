@@ -79,6 +79,11 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
 
   const rowCount = displayRows.length;
 
+  // Keep a ref so the expand-on-search effect always reads the latest map
+  // without listing it as a dep (which would re-trigger on every fold/unfold).
+  const searchLineToSectionIndexRef = React.useRef(searchLineToSectionIndex);
+  searchLineToSectionIndexRef.current = searchLineToSectionIndex;
+
   useResizeObserverFix();
 
   const deferredSearchText = React.useDeferredValue(searchText);
@@ -96,10 +101,10 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
 
   React.useEffect(() => {
     if (!isMultiSection || !expandSearchTargetRow || expandSearchTargetRow <= 0) return;
-    const sectionIndex = searchLineToSectionIndex.get(expandSearchTargetRow - 1);
+    const sectionIndex = searchLineToSectionIndexRef.current.get(expandSearchTargetRow - 1);
     if (sectionIndex === undefined) return;
     expandSection(sectionIndex);
-  }, [isMultiSection, expandSearchTargetRow, searchLineToSectionIndex, expandSection]);
+  }, [isMultiSection, expandSearchTargetRow, expandSection]);
 
   const measureCallbackRef = React.useCallback((node: HTMLDivElement | null) => {
     if (node) {
@@ -155,7 +160,9 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
   const highlightScrollTargetIndex = React.useMemo((): number | null => {
     if (!highlightedLines || rowCount === 0) return null;
     const displayIdx = lineNumberToDisplayRow.get(highlightedLines.start);
-    return displayIdx ?? null;
+    // Exact line found — scroll to it; if the requested line is beyond the available
+    // log (e.g. stale URL hash or log still streaming), fall back to the last row.
+    return displayIdx ?? rowCount - 1;
   }, [highlightedLines, rowCount, lineNumberToDisplayRow]);
 
   React.useEffect(() => {
@@ -221,6 +228,7 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
           pushUpOffset={pushUpOffset}
           itemSize={itemSize}
           onToggle={() => toggleSection(stickyRow.sectionIndex)}
+          onLineClick={handleLineClick}
         />
       )}
 
@@ -233,7 +241,7 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
           width: typeof width === 'number' ? `${width}px` : width,
           overflow: 'auto',
         }}
-        onClick={() => scrollRef.current?.focus()}
+        onClick={() => scrollRef.current?.focus({ preventScroll: true })}
       >
         <div
           style={{
