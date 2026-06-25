@@ -7,10 +7,7 @@ import { useComponents } from '~/hooks/useComponents';
 import { useTaskRunsV2 } from '~/hooks/useTaskRunsV2';
 import { useNamespace } from '~/shared/providers/Namespace';
 import type { TaskRunKind } from '~/types';
-import {
-  ComponentConformaResult,
-  CONFORMA_RESULT_STATUS,
-} from '~/types/conforma';
+import { ComponentConformaResult } from '~/types/conforma';
 import type {
   ApplicationConformaResults,
   ComponentConformaStatus,
@@ -28,9 +25,6 @@ const EMPTY_RESULTS: ApplicationConformaResults = {
   allResults: [],
   totalComponents: 0,
   totalFailed: 0,
-  totalViolations: 0,
-  totalWarnings: 0,
-  totalSuccesses: 0,
   loaded: false,
   settling: false,
   error: undefined,
@@ -205,22 +199,20 @@ export const useApplicationConformaResults = (
       };
     });
 
-    const mergedConformaRows: ComponentConformaResult[] = [];
-    for (const components of conformaByComponent.values()) {
-      mergedConformaRows.push(...components);
+    const allResults: ConformaResultRow[] = [];
+    for (const [realComponentName, components] of conformaByComponent.entries()) {
+      const rows = mapConformaResultData(components);
+      // The EC/Conforma report assigns its own per-image `name` to each
+      // components[] entry (see ComponentConformaResult), which is NOT the
+      // real K8s component name and can differ across architecture images
+      // of the same logical component. Overwrite it with the authoritative
+      // name so rows stay associated with the correct component regardless
+      // of how many arch-specific images were evaluated for it.
+      rows.forEach((row) => {
+        row.component = realComponentName;
+      });
+      allResults.push(...rows);
     }
-
-    const allResults: ConformaResultRow[] = mapConformaResultData(mergedConformaRows);
-
-    const { totalViolations, totalWarnings, totalSuccesses } = allResults.reduce(
-      (acc, r) => {
-        if (r.status === CONFORMA_RESULT_STATUS.violations) acc.totalViolations++;
-        else if (r.status === CONFORMA_RESULT_STATUS.warnings) acc.totalWarnings++;
-        else if (r.status === CONFORMA_RESULT_STATUS.successes) acc.totalSuccesses++;
-        return acc;
-      },
-      { totalViolations: 0, totalWarnings: 0, totalSuccesses: 0 },
-    );
 
     const totalComponents = componentStatuses.length;
     const totalFailed = componentStatuses.filter((c) => c.status === 'fail').length;
@@ -230,9 +222,6 @@ export const useApplicationConformaResults = (
       allResults,
       totalComponents,
       totalFailed,
-      totalViolations,
-      totalWarnings,
-      totalSuccesses,
       loaded,
       settling,
       error: aggregateError,

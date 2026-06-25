@@ -68,7 +68,12 @@ export type UIConformaData = {
   msg?: string;
   collection?: string[];
   solution?: string;
-  image?: string;
+  /**
+   * Affected image digest(s). Populated with a single-element array for a
+   * non-collapsed row, and with every unique digest in the group once
+   * `collapseArchDuplicates` has merged arch-duplicate rows together.
+   */
+  images: string[];
   /** Policy rule code — stable identifier used as primary group key. Optional for backward-compat. */
   code?: string;
 };
@@ -89,9 +94,6 @@ export type ApplicationConformaResults = {
   allResults: ConformaResultRow[];
   totalComponents: number;
   totalFailed: number;
-  totalViolations: number;
-  totalWarnings: number;
-  totalSuccesses: number;
   loaded: boolean;
   settling: boolean;
   error: unknown;

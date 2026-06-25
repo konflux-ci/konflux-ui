@@ -93,3 +93,43 @@ export const filterResults = (
 
     return true;
   });
+
+/**
+ * Extracts the shared image name (everything before `@`) from an array of
+ * image references.  Returns `undefined` when the images do not share a
+ * common repository prefix or the array is empty.
+ */
+export const getCommonImageName = (images: string[]): string | undefined => {
+  if (images.length === 0) return undefined;
+  const names = images.map((img) => {
+    const atIdx = img.lastIndexOf('@');
+    return atIdx > 0 ? img.substring(0, atIdx) : img;
+  });
+  const first = names[0];
+  return names.every((n) => n === first) ? first : undefined;
+};
+
+/**
+ * Merges rows that share the same title, msg, component, and status (i.e. the
+ * same policy violation but across different architecture images) into a single
+ * row.  The merged row carries an `images` array with every unique image digest
+ * from the group.  Rows without an image are handled gracefully — they collapse
+ * with other rows whose only difference is the image field.
+ */
+export const collapseArchDuplicates = (rows: ConformaResultRow[]): ConformaResultRow[] => {
+  const map = new Map<string, ConformaResultRow>();
+  for (const row of rows) {
+    const key = `${row.code ?? row.title}\0${row.msg ?? ''}\0${row.component}\0${row.status}`;
+    const existing = map.get(key);
+    if (existing) {
+      for (const image of row.images) {
+        if (!existing.images.includes(image)) {
+          existing.images = [...existing.images, image];
+        }
+      }
+    } else {
+      map.set(key, { ...row, images: [...row.images] });
+    }
+  }
+  return Array.from(map.values());
+};

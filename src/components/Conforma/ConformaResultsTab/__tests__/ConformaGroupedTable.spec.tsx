@@ -12,6 +12,7 @@ const createRow = (overrides: Partial<ConformaResultRow> = {}): ConformaResultRo
   status: CONFORMA_RESULT_STATUS.violations,
   component: 'test-component',
   msg: 'Test message',
+  images: [],
   ...overrides,
 });
 
@@ -130,6 +131,137 @@ describe('ConformaGroupedTable', () => {
     expect(screen.getAllByText('Message').length).toBeGreaterThanOrEqual(1);
   });
 
+  it('shows common image name and arch variant count when row has multiple images', () => {
+    const groupsWithMultipleImages: GroupedConformaRow[] = [
+      {
+        groupKey: 'Multi-arch rule',
+        violations: 1,
+        warnings: 0,
+        successes: 0,
+        rows: [
+          createRow({
+            images: ['quay.io/test/img@sha256:aaa', 'quay.io/test/img@sha256:bbb', 'quay.io/test/img@sha256:ccc'],
+          }),
+        ],
+      },
+    ];
+    const expandedGroups = new Set(['Multi-arch rule']);
+    routerRenderer(
+      <ConformaGroupedTable
+        {...defaultProps}
+        groups={groupsWithMultipleImages}
+        expandedGroups={expandedGroups}
+      />,
+    );
+
+    expect(screen.getByText('quay.io/test/img')).toBeInTheDocument();
+    expect(screen.getByText('3 arch variants')).toBeInTheDocument();
+  });
+
+  it('falls back to "Affects N images" when images have different repo names', () => {
+    const groupsWithDifferentImages: GroupedConformaRow[] = [
+      {
+        groupKey: 'Mixed images rule',
+        violations: 1,
+        warnings: 0,
+        successes: 0,
+        rows: [
+          createRow({
+            images: ['quay.io/test/img-a@sha256:aaa', 'quay.io/test/img-b@sha256:bbb'],
+          }),
+        ],
+      },
+    ];
+    const expandedGroups = new Set(['Mixed images rule']);
+    routerRenderer(
+      <ConformaGroupedTable
+        {...defaultProps}
+        groups={groupsWithDifferentImages}
+        expandedGroups={expandedGroups}
+      />,
+    );
+
+    expect(screen.getByText('Affects 2 images')).toBeInTheDocument();
+  });
+
+  it('shows truncated image when row has a single image', () => {
+    const groupsWithSingleImage: GroupedConformaRow[] = [
+      {
+        groupKey: 'Single-image rule',
+        violations: 1,
+        warnings: 0,
+        successes: 0,
+        rows: [createRow({ images: ['quay.io/test/img@sha256:only'] })],
+      },
+    ];
+    const expandedGroups = new Set(['Single-image rule']);
+    routerRenderer(
+      <ConformaGroupedTable
+        {...defaultProps}
+        groups={groupsWithSingleImage}
+        expandedGroups={expandedGroups}
+      />,
+    );
+
+    expect(screen.queryByText(/affects.*images/i)).not.toBeInTheDocument();
+  });
+
+  it('multi-image tooltip trigger is keyboard focusable', () => {
+    const groupsWithMultipleImages: GroupedConformaRow[] = [
+      {
+        groupKey: 'Multi-arch rule',
+        violations: 1,
+        warnings: 0,
+        successes: 0,
+        rows: [
+          createRow({
+            images: ['quay.io/test/img@sha256:aaa', 'quay.io/test/img@sha256:bbb'],
+          }),
+        ],
+      },
+    ];
+    const expandedGroups = new Set(['Multi-arch rule']);
+    routerRenderer(
+      <ConformaGroupedTable
+        {...defaultProps}
+        groups={groupsWithMultipleImages}
+        expandedGroups={expandedGroups}
+      />,
+    );
+
+    const trigger = screen.getByLabelText(
+      'Affects 2 images: quay.io/test/img@sha256:aaa, quay.io/test/img@sha256:bbb',
+    );
+    expect(trigger).toHaveAttribute('tabIndex', '0');
+  });
+
+  it('renders single collapsed image via images[0] without a tooltip', () => {
+    const groupsWithSingleCollapsedImage: GroupedConformaRow[] = [
+      {
+        groupKey: 'Single-collapsed rule',
+        violations: 1,
+        warnings: 0,
+        successes: 0,
+        rows: [
+          createRow({
+            images: ['quay.io/test/img@sha256:only'],
+          }),
+        ],
+      },
+    ];
+    const expandedGroups = new Set(['Single-collapsed rule']);
+    routerRenderer(
+      <ConformaGroupedTable
+        {...defaultProps}
+        groups={groupsWithSingleCollapsedImage}
+        expandedGroups={expandedGroups}
+      />,
+    );
+
+    expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/Affects 1 images/)).not.toBeInTheDocument();
+  });
+
   it('shows dash when row has no image', () => {
     const groupsWithImage: GroupedConformaRow[] = [
       {
@@ -138,8 +270,8 @@ describe('ConformaGroupedTable', () => {
         warnings: 0,
         successes: 0,
         rows: [
-          createRow({ image: 'quay.io/test/img@sha256:abc' }),
-          createRow({ image: undefined }),
+          createRow({ images: ['quay.io/test/img@sha256:abc'] }),
+          createRow({ images: [] }),
         ],
       },
     ];
