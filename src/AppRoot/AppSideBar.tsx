@@ -14,13 +14,13 @@ import {
   SECRET_LIST_PATH,
   USER_ACCESS_LIST_PAGE,
 } from '@routes/paths';
+import { IssueNavItemContent } from '~/components/Issues/IssuesNavItemContent';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { IfFeature } from '~/feature-flags/hooks';
 import { SavedViewNavItems, SavedViewsConfig } from '~/shared/components/SavedViews';
 import { useActiveRouteChecker } from '../../src/hooks/useActiveRouteChecker';
 import { useNamespace } from '../shared/providers/Namespace';
 import './AppSideBar.scss';
-import { IssueNavItemContent } from '~/components/Issues/IssuesNavItemContent';
 
 export const AppSideBar: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
   const isActive = useActiveRouteChecker();

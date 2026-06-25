@@ -27,6 +27,10 @@ jest.mock('~/feature-flags/FeatureFlagIndicator', () => ({
   FeatureFlagIndicator: () => null,
 }));
 
+jest.mock('~/components/Issues/IssuesNavItemContent', () => ({
+  IssueNavItemContent: () => <>Issues</>,
+}));
+
 describe('AppSideBar', () => {
   beforeEach(() => {
     jest.clearAllMocks();
