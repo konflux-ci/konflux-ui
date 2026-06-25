@@ -41,6 +41,49 @@ const emptyResults: ApplicationConformaResults = {
   error: undefined,
 };
 
+const archDupeResults: ApplicationConformaResults = {
+  componentStatuses: [
+    {
+      componentName: 'api-gateway',
+      status: 'fail',
+      violationCount: 3,
+      warningCount: 0,
+      successCount: 0,
+    },
+  ],
+  allResults: [
+    createMockRow({
+      title: 'CVE rule',
+      component: 'api-gateway',
+      msg: 'CVE-2024-001 found',
+      status: CONFORMA_RESULT_STATUS.violations,
+      image: 'quay.io/test/img@sha256:aaa',
+    }),
+    createMockRow({
+      title: 'CVE rule',
+      component: 'api-gateway',
+      msg: 'CVE-2024-001 found',
+      status: CONFORMA_RESULT_STATUS.violations,
+      image: 'quay.io/test/img@sha256:bbb',
+    }),
+    createMockRow({
+      title: 'CVE rule',
+      component: 'api-gateway',
+      msg: 'CVE-2024-001 found',
+      status: CONFORMA_RESULT_STATUS.violations,
+      image: 'quay.io/test/img@sha256:ccc',
+    }),
+  ],
+  totalComponents: 1,
+  totalFailed: 1,
+  totalViolations: 3,
+  totalWarnings: 0,
+  totalSuccesses: 0,
+  loaded: true,
+  settling: false,
+  error: undefined,
+};
+
 const populatedResults: ApplicationConformaResults = {
   componentStatuses: [
     {
@@ -193,6 +236,46 @@ describe('ConformaResultsTab', () => {
     fireEvent.click(toggleButtons[0]);
     // After collapse, detail sub-table content is hidden (S3 assertion)
     expect(screen.queryAllByText('Test message').length).toBe(0);
+  });
+
+  it('renders "Show multi-arch duplicates" switch unchecked by default (duplicates collapsed)', () => {
+    mockUseApplicationConformaResults.mockReturnValue(archDupeResults);
+
+    routerRenderer(<ConformaResultsTab />);
+
+    expect(screen.getByRole('checkbox', { name: /show multi-arch duplicates/i })).not.toBeChecked();
+  });
+
+  it('collapses arch-duplicate rows by default and shows image name with variant count', () => {
+    mockUseApplicationConformaResults.mockReturnValue(archDupeResults);
+
+    routerRenderer(<ConformaResultsTab />);
+
+    // Expand the single collapsed group
+    const toggleButtons = screen.getAllByRole('button', { name: /details/i });
+    fireEvent.click(toggleButtons[0]);
+
+    expect(screen.getByText('quay.io/test/img')).toBeInTheDocument();
+    expect(screen.getByText('3 arch variants')).toBeInTheDocument();
+  });
+
+  it('shows all raw rows after enabling the show duplicates switch', () => {
+    mockUseApplicationConformaResults.mockReturnValue(archDupeResults);
+
+    routerRenderer(<ConformaResultsTab />);
+
+    // Turn on the show duplicates switch
+    fireEvent.click(screen.getByRole('checkbox', { name: /show multi-arch duplicates/i }));
+
+    // Expand the group — now all 3 raw rows are visible
+    const toggleButtons = screen.getAllByRole('button', { name: /details/i });
+    fireEvent.click(toggleButtons[0]);
+
+    expect(screen.queryByText(/affects.*images/i)).not.toBeInTheDocument();
+    // All 3 image digests appear individually
+    expect(screen.getByText(/sha256:aaa/)).toBeInTheDocument();
+    expect(screen.getByText(/sha256:bbb/)).toBeInTheDocument();
+    expect(screen.getByText(/sha256:ccc/)).toBeInTheDocument();
   });
 
   it('shows "no results match" when filters exclude all results', () => {

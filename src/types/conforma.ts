@@ -68,7 +68,10 @@ export type UIConformaData = {
   msg?: string;
   collection?: string[];
   solution?: string;
+  /** Raw image digest for a single non-collapsed result row. Source field that collapseArchDuplicates uses to populate `images`. */
   image?: string;
+  /** All affected image digests when arch-duplicate rows have been collapsed into one. */
+  images?: string[];
   /** Policy rule code — stable identifier used as primary group key. Optional for backward-compat. */
   code?: string;
 };
@@ -89,9 +92,6 @@ export type ApplicationConformaResults = {
   allResults: ConformaResultRow[];
   totalComponents: number;
   totalFailed: number;
-  totalViolations: number;
-  totalWarnings: number;
-  totalSuccesses: number;
   loaded: boolean;
   settling: boolean;
   error: unknown;
