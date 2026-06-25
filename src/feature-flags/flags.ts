@@ -81,6 +81,16 @@ const InternalFLAGS = {
       visibleInFeatureFlagPanel: true,
     },
   },
+  'conforma-policy': {
+    key: 'conforma-policy',
+    description: 'Show the Conforma Results tab on application details',
+    defaultEnabled: false,
+    status: 'wip',
+    guard: {
+      failureReason: 'Conforma policy view is work in progress',
+      visibleInFeatureFlagPanel: true,
+    },
+  },
   'taskruns-kubearchive': {
     key: 'taskruns-kubearchive',
     description: 'Use KubeArchive as data source for TaskRuns instead of Tekton Results',
