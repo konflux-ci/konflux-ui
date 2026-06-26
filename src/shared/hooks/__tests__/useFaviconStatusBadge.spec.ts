@@ -1,5 +1,6 @@
+import { global_palette_blue_300 as blueColor } from '@patternfly/react-tokens/dist/js/global_palette_blue_300';
+import { global_success_color_100 as greenColor } from '@patternfly/react-tokens/dist/js/global_success_color_100';
 import { renderHook } from '@testing-library/react';
-import { runStatus } from '~/consts/pipelinerun';
 import * as faviconBadge from '~/shared/utils/favicon-badge';
 import { useFaviconStatusBadge } from '../useFaviconStatusBadge';
 
@@ -18,62 +19,43 @@ describe('useFaviconStatusBadge', () => {
     jest.clearAllMocks();
   });
 
-  it('applies favicon badge when status is provided', () => {
-    renderHook(() => useFaviconStatusBadge(runStatus.Running));
+  it('applies favicon badge when color is provided', () => {
+    renderHook(() => useFaviconStatusBadge(blueColor.value));
 
     expect(acquireFaviconBadgeMock).toHaveBeenCalled();
-    expect(applyFaviconBadgeMock).toHaveBeenCalledWith(runStatus.Running, expect.any(Function));
+    expect(applyFaviconBadgeMock).toHaveBeenCalledWith(blueColor.value, expect.any(Function));
   });
 
-  it('applies favicon badge when status changes', () => {
-    const { rerender } = renderHook(({ status }) => useFaviconStatusBadge(status), {
-      initialProps: { status: runStatus.Running },
-    });
+  it('applies favicon badge when color changes', () => {
+    const { rerender } = renderHook(
+      ({ color }: { color: string }) => useFaviconStatusBadge(color),
+      {
+        initialProps: { color: blueColor.value },
+      },
+    );
 
-    rerender({ status: runStatus.Succeeded });
+    rerender({ color: greenColor.value });
 
     expect(applyFaviconBadgeMock).toHaveBeenCalledTimes(2);
-    expect(applyFaviconBadgeMock).toHaveBeenLastCalledWith(
-      runStatus.Succeeded,
-      expect.any(Function),
-    );
+    expect(applyFaviconBadgeMock).toHaveBeenLastCalledWith(greenColor.value, expect.any(Function));
   });
 
   it('restores favicon on unmount', () => {
-    const { unmount } = renderHook(() => useFaviconStatusBadge(runStatus.Running));
+    const { unmount } = renderHook(() => useFaviconStatusBadge(blueColor.value));
 
     unmount();
 
     expect(releaseFaviconBadgeMock).toHaveBeenCalled();
   });
 
-  it('does not acquire or apply when status is null', () => {
-    renderHook(() => useFaviconStatusBadge(null));
-
-    expect(acquireFaviconBadgeMock).not.toHaveBeenCalled();
-    expect(applyFaviconBadgeMock).not.toHaveBeenCalled();
-  });
-
-  it('releases favicon ownership when status becomes null', () => {
-    const { rerender } = renderHook(({ status }) => useFaviconStatusBadge(status), {
-      initialProps: { status: runStatus.Running as runStatus | null },
-    });
-
-    rerender({ status: null });
-
-    expect(applyFaviconBadgeMock).toHaveBeenCalledTimes(1);
-    expect(applyFaviconBadgeMock).toHaveBeenLastCalledWith(runStatus.Running, expect.any(Function));
-    expect(releaseFaviconBadgeMock).toHaveBeenCalled();
-  });
-
   it('passes a cancellation callback that applyFaviconBadge can use', () => {
     let isCancelled: (() => boolean) | undefined;
-    applyFaviconBadgeMock.mockImplementation((_status, cancelled) => {
+    applyFaviconBadgeMock.mockImplementation((_color, cancelled) => {
       isCancelled = cancelled;
       return Promise.resolve();
     });
 
-    const { unmount } = renderHook(() => useFaviconStatusBadge(runStatus.Running));
+    const { unmount } = renderHook(() => useFaviconStatusBadge(blueColor.value));
 
     expect(isCancelled?.()).toBe(false);
     unmount();

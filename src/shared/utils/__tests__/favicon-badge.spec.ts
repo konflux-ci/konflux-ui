@@ -1,16 +1,10 @@
 import { global_danger_color_100 as redColor } from '@patternfly/react-tokens/dist/js/global_danger_color_100';
 import { global_palette_black_400 as grayColor } from '@patternfly/react-tokens/dist/js/global_palette_black_400';
 import { global_palette_blue_300 as blueColor } from '@patternfly/react-tokens/dist/js/global_palette_blue_300';
-import { global_palette_gold_400 as goldColor } from '@patternfly/react-tokens/dist/js/global_palette_gold_400';
-import { global_palette_orange_300 as orangeColor } from '@patternfly/react-tokens/dist/js/global_palette_orange_300';
-import { global_success_color_100 as greenColor } from '@patternfly/react-tokens/dist/js/global_success_color_100';
-import { global_warning_color_100 as warningColor } from '@patternfly/react-tokens/dist/js/global_warning_color_100';
-import { runStatus } from '~/consts/pipelinerun';
 import {
   acquireFaviconBadge,
   applyFaviconBadge,
   compositeFaviconWithBadge,
-  getFaviconBadgeColor,
   getFaviconLink,
   releaseFaviconBadge,
   resetFaviconBadgeStateForTests,
@@ -53,28 +47,6 @@ describe('favicon-badge', () => {
     jest.clearAllMocks();
     resetFaviconBadgeStateForTests();
     document.head.innerHTML = '';
-  });
-
-  describe('getFaviconBadgeColor', () => {
-    it.each([
-      [runStatus.Succeeded, greenColor.value],
-      [runStatus.Failed, redColor.value],
-      [runStatus.FailedToStart, redColor.value],
-      [runStatus.TestFailed, redColor.value],
-      [runStatus.Running, blueColor.value],
-      [runStatus['In Progress'], blueColor.value],
-      [runStatus.Cancelled, goldColor.value],
-      [runStatus.Cancelling, goldColor.value],
-      [runStatus.TestWarning, warningColor.value],
-      [runStatus.PipelineNotStarted, orangeColor.value],
-      [runStatus.Idle, grayColor.value],
-      [runStatus.Pending, grayColor.value],
-      [runStatus.Skipped, grayColor.value],
-      [runStatus.Unknown, grayColor.value],
-      [runStatus.NeedsMerge, grayColor.value],
-    ])('maps %s to %s', (status, expected) => {
-      expect(getFaviconBadgeColor(status)).toBe(expected);
-    });
   });
 
   describe('compositeFaviconWithBadge', () => {
@@ -173,7 +145,7 @@ describe('favicon-badge', () => {
       jest.restoreAllMocks();
     });
 
-    it('applies a gray badged favicon for unknown statuses', async () => {
+    it('applies a badged favicon for the given color', async () => {
       const link = document.createElement('link');
       link.rel = 'icon';
       link.href = '/favicon.ico';
@@ -199,14 +171,14 @@ describe('favicon-badge', () => {
       mockFaviconImageLoadSuccess();
 
       acquireFaviconBadge();
-      await applyFaviconBadge(runStatus.Unknown);
+      await applyFaviconBadge(grayColor.value);
 
       expect(link.href).toBe('data:image/png;base64,unknown-badged');
       expect(mockContext.fillStyle).toBe(grayColor.value);
       releaseFaviconBadge();
     });
 
-    it('restores favicon when status is null', async () => {
+    it('restores favicon when consumer releases ownership', () => {
       const link = document.createElement('link');
       link.rel = 'icon';
       link.href = '/favicon.ico';
@@ -214,14 +186,12 @@ describe('favicon-badge', () => {
 
       acquireFaviconBadge();
       setFaviconHref('data:image/png;base64,badged');
-
-      await applyFaviconBadge(null);
+      releaseFaviconBadge();
 
       expect(link.href).toContain('/favicon.ico');
-      releaseFaviconBadge();
     });
 
-    it('applies a gray badged favicon for inactive statuses', async () => {
+    it('applies a gray badged favicon for gray colors', async () => {
       const link = document.createElement('link');
       link.rel = 'icon';
       link.href = '/favicon.ico';
@@ -247,7 +217,7 @@ describe('favicon-badge', () => {
       mockFaviconImageLoadSuccess();
 
       acquireFaviconBadge();
-      await applyFaviconBadge(runStatus.Pending);
+      await applyFaviconBadge(grayColor.value);
 
       expect(link.href).toBe('data:image/png;base64,gray-badged');
       expect(mockContext.fillStyle).toBe(grayColor.value);
@@ -277,7 +247,7 @@ describe('favicon-badge', () => {
       mockFaviconImageLoadSuccess();
 
       acquireFaviconBadge();
-      await applyFaviconBadge(runStatus.Running);
+      await applyFaviconBadge(blueColor.value);
 
       expect(link.href).toBe('data:image/png;base64,badged');
       releaseFaviconBadge();
@@ -309,7 +279,7 @@ describe('favicon-badge', () => {
 
       let cancelled = false;
       acquireFaviconBadge();
-      const applyPromise = applyFaviconBadge(runStatus.Running, () => cancelled);
+      const applyPromise = applyFaviconBadge(blueColor.value, () => cancelled);
       cancelled = true;
       resolveLoad?.();
       await applyPromise;
@@ -327,7 +297,7 @@ describe('favicon-badge', () => {
       mockFaviconImageLoadError();
 
       acquireFaviconBadge();
-      await applyFaviconBadge(runStatus.Failed);
+      await applyFaviconBadge(redColor.value);
       releaseFaviconBadge();
 
       expect(link.href).toContain('/favicon.ico');
@@ -357,10 +327,7 @@ describe('favicon-badge', () => {
 
       acquireFaviconBadge();
       acquireFaviconBadge();
-      await applyFaviconBadge(runStatus.Running);
-      expect(link.href).toBe('data:image/png;base64,active-badged');
-
-      await applyFaviconBadge(null);
+      await applyFaviconBadge(blueColor.value);
       expect(link.href).toBe('data:image/png;base64,active-badged');
 
       releaseFaviconBadge();

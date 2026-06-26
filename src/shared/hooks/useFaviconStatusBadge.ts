@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { runStatus } from '~/consts/pipelinerun';
 import {
   acquireFaviconBadge,
   applyFaviconBadge,
@@ -8,22 +7,18 @@ import {
 
 /**
  * Updates the browser tab favicon with a colored status badge overlay.
- * Restores the original favicon on unmount or when status is cleared.
+ * Restores the original favicon on unmount.
  */
-export const useFaviconStatusBadge = (status: runStatus | null | undefined): void => {
+export const useFaviconStatusBadge = (color: string): void => {
   React.useEffect(() => {
     let cancelled = false;
 
-    if (status != null) {
-      acquireFaviconBadge();
-      void applyFaviconBadge(status, () => cancelled);
-    }
+    acquireFaviconBadge();
+    void applyFaviconBadge(color, () => cancelled);
 
     return () => {
       cancelled = true;
-      if (status != null) {
-        releaseFaviconBadge();
-      }
+      releaseFaviconBadge();
     };
-  }, [status]);
+  }, [color]);
 };

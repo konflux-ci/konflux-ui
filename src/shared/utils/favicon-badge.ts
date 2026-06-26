@@ -1,12 +1,3 @@
-import { global_danger_color_100 as redColor } from '@patternfly/react-tokens/dist/js/global_danger_color_100';
-import { global_palette_black_400 as grayColor } from '@patternfly/react-tokens/dist/js/global_palette_black_400';
-import { global_palette_blue_300 as blueColor } from '@patternfly/react-tokens/dist/js/global_palette_blue_300';
-import { global_palette_gold_400 as goldColor } from '@patternfly/react-tokens/dist/js/global_palette_gold_400';
-import { global_palette_orange_300 as orangeColor } from '@patternfly/react-tokens/dist/js/global_palette_orange_300';
-import { global_success_color_100 as greenColor } from '@patternfly/react-tokens/dist/js/global_success_color_100';
-import { global_warning_color_100 as warningColor } from '@patternfly/react-tokens/dist/js/global_warning_color_100';
-import { runStatus } from '~/consts/pipelinerun';
-
 const DEFAULT_FAVICON_HREF = '/favicon.ico';
 
 let activeConsumers = 0;
@@ -29,34 +20,6 @@ export const getFaviconLink = (): HTMLLinkElement => {
 
 const resetToBaselineFavicon = (): void => {
   getFaviconLink().href = baselineFaviconHref ?? DEFAULT_FAVICON_HREF;
-};
-
-export const getFaviconBadgeColor = (status: runStatus): string => {
-  switch (status) {
-    case runStatus.Succeeded:
-      return greenColor.value;
-    case runStatus.Failed:
-    case runStatus.FailedToStart:
-    case runStatus.TestFailed:
-      return redColor.value;
-    case runStatus.Running:
-    case runStatus['In Progress']:
-      return blueColor.value;
-    case runStatus.Cancelled:
-    case runStatus.Cancelling:
-      return goldColor.value;
-    case runStatus.TestWarning:
-      return warningColor.value;
-    case runStatus.PipelineNotStarted:
-      return orangeColor.value;
-    case runStatus.Idle:
-    case runStatus.Pending:
-    case runStatus.Skipped:
-    case runStatus.Unknown:
-    case runStatus.NeedsMerge:
-    default:
-      return grayColor.value;
-  }
 };
 
 /** Acquire shared favicon ownership for a consumer (e.g. a React effect). */
@@ -132,17 +95,9 @@ const loadFaviconImage = (href: string): Promise<HTMLImageElement> =>
   });
 
 export const applyFaviconBadge = async (
-  status: runStatus | null | undefined,
+  color: string,
   isCancelled?: () => boolean,
 ): Promise<void> => {
-  if (status == null) {
-    if (activeConsumers === 1) {
-      resetToBaselineFavicon();
-    }
-    return;
-  }
-
-  const badgeColor = getFaviconBadgeColor(status);
   const baseHref = baselineFaviconHref ?? readFaviconHref();
 
   try {
@@ -151,7 +106,7 @@ export const applyFaviconBadge = async (
       return;
     }
 
-    const dataUrl = compositeFaviconWithBadge(img, badgeColor);
+    const dataUrl = compositeFaviconWithBadge(img, color);
     if (dataUrl && !isCancelled?.()) {
       setFaviconHref(dataUrl);
     } else if (!dataUrl && !isCancelled?.()) {
