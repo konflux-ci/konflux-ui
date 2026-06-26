@@ -1,19 +1,6 @@
 import { featureFlagsPO } from '../support/pageObjects/featureFlags-po';
 
 describe('Test Features Flags', function () {
-  // skipping the Issue Dashboard test because we need to enable Kite first.
-  it('issueDashboard', function () {
-    cy.visit(Cypress.env('KONFLUX_BASE_URL'));
-    cy.prompt(['Open Experimental Features', 'Click Reset to Defaults button']);
-    cy.get(featureFlagsPO.issueDashboard).click({ force: true });
-    cy.prompt([
-      'Close the modal',
-      'Click Issues in the menu',
-      'Verify that the title is Issues',
-      'Verify that Overview and Issues tabs are present on the page',
-    ]);
-  });
-
   it('System Notifications', function () {
     cy.visit(Cypress.env('KONFLUX_BASE_URL'));
     cy.prompt(['Open Experimental Features', 'Click Reset to Defaults button']);
