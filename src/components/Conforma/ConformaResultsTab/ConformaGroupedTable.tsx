@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Text, TextContent, Truncate } from '@patternfly/react-core';
+import { Text, TextContent, Truncate as PfTruncate } from '@patternfly/react-core';
 import {
   ExpandableRowContent,
   Table,
@@ -11,6 +11,7 @@ import {
 } from '@patternfly/react-table';
 import { getRuleStatus } from '~/components/Conforma/utils';
 import type { ComponentProps } from '~/shared/components/table/Table';
+import { Truncate } from '~/shared/components/truncate-text/Truncate';
 import type { ConformaResultRow } from '~/types/conforma';
 import type { GroupByMode, GroupedConformaRow } from './conforma-grouping-utils';
 import { getConformaGroupedHeader } from './ConformaResultsListHeader';
@@ -48,12 +49,22 @@ const DetailSubTable: React.FC<{ rows: ConformaResultRow[] }> = ({ rows }) => (
           </Td>
           <Td dataLabel="Component">{row.component}</Td>
           <Td dataLabel="Image">
-            {row.image ? <Truncate content={row.image} /> : '-'}
+            {row.image ? <PfTruncate content={row.image} /> : '-'}
           </Td>
           <Td dataLabel="Status">{getRuleStatus(row.status)}</Td>
           <Td dataLabel="Message">
             <TextContent>
-              <Text component="p">{row.msg ?? '-'}</Text>
+              <Text component="p">
+                {row.msg ? (
+                  <Truncate
+                    content={row.msg}
+                    expandInline
+                    data-test="conforma-violation-msg"
+                  />
+                ) : (
+                  '-'
+                )}
+              </Text>
               {row.solution && <Text component="small">Solution: {row.solution}</Text>}
             </TextContent>
           </Td>
