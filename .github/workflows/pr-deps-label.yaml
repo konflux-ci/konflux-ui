@@ -1,0 +1,60 @@
+name: PR Dependency Update Label
+
+on:
+  pull_request_target:
+    types: [opened, edited, reopened]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  label-deps-pr:
+    if: >-
+      github.event.action == 'opened' ||
+      github.event.action == 'reopened' ||
+      (github.event.action == 'edited' && github.event.changes.title)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Label dependency update pull requests
+        uses: actions/github-script@v9.0.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const label = 'update of dependencies';
+            const { owner, repo } = context.repo;
+
+            const addLabelIfNeeded = async (prNumber, title) => {
+              const isDepsPr = title.startsWith('chore(deps)') || title.startsWith('fix(deps)');
+              if (!isDepsPr) {
+                console.log(`Skipping PR #${prNumber} — not a dependency update PR`);
+                return;
+              }
+
+              const labels = await github.paginate(github.rest.issues.listLabelsOnIssue, {
+                owner,
+                repo,
+                issue_number: prNumber,
+              });
+              const hasLabel = labels.some((entry) => entry.name === label);
+
+              if (hasLabel) {
+                console.log(`PR #${prNumber} already has label "${label}"`);
+                return;
+              }
+
+              await github.rest.issues.addLabels({
+                owner,
+                repo,
+                issue_number: prNumber,
+                labels: [label],
+              });
+              console.log(`Added label "${label}" to PR #${prNumber}`);
+            };
+
+            const pullRequest = context.payload.pull_request;
+            await addLabelIfNeeded(pullRequest.number, pullRequest.title);
