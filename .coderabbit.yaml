@@ -16,6 +16,7 @@ knowledge_base:
 reviews:
   profile: assertive
   poem: false
+  skip_drafts: true
 
   path_instructions:
     - path: "src/**/*.{ts,tsx}"
