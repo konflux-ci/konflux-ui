@@ -15,7 +15,7 @@ const ColumnManagementButton: React.FC<ColumnManagementButtonProps> = ({
   }
 
   return (
-    <Button variant="secondary" aria-label="Manage columns" onClick={onClick}>
+    <Button variant="primary" aria-label="Manage columns" onClick={onClick}>
       Manage columns
     </Button>
   );
