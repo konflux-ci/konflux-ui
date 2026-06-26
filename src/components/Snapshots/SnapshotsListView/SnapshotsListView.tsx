@@ -209,7 +209,6 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
               <Switch
                 id="show-merged-snapshots-only-switch"
                 label="Hide Pull Request Snapshots"
-                className="pf-v5-u-py-xs"
                 isChecked={showMergedOnly}
                 onChange={(_event, checked) =>
                   setFilters({ ...unparsedFilters, showMergedOnly: checked })
@@ -218,7 +217,6 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
               <Switch
                 id="releasable"
                 label="Show only releasable snapshots"
-                className="pf-v5-u-py-xs"
                 isChecked={releasableFilter}
                 onChange={(_event, checked) =>
                   setFilters({ ...unparsedFilters, releasable: checked })
