@@ -16,7 +16,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Enable Corepack 📦
+      - name: Enable Corepack
         run: corepack enable
 
       - name: Setup Node.js
@@ -30,11 +30,27 @@ jobs:
       - name: Run PR checker
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_CHANNEL_ID: ${{ vars.SLACK_CHANNEL_ID }}
+          OUTPUT_FILE: /tmp/stale-prs-payload.json
         run: node .github/scripts/check-prs.js
+
+      - name: Send stale PR report to Slack
+        uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c # v3.0.3
+        with:
+          method: chat.postMessage
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          payload-file-path: /tmp/stale-prs-payload.json
 
       - name: Check infra-deployments PRs
         env:
           GH_TOKEN: ${{ secrets.HAC_TEST_GH_TOKEN }}
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_CHANNEL_ID: ${{ vars.SLACK_CHANNEL_ID }}
+          OUTPUT_FILE: /tmp/infra-prs-payload.json
         run: ./.github/scripts/check-infra-deployments-prs.sh
+
+      - name: Send infra PR report to Slack
+        uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c # v3.0.3
+        with:
+          method: chat.postMessage
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          payload-file-path: /tmp/infra-prs-payload.json

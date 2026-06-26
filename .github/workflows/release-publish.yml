@@ -165,34 +165,25 @@ jobs:
 
       # --- Slack shipped notification ---
       - name: Notify Slack — shipped
-        env:
-          RELEASE_DATE: ${{ steps.meta.outputs.release_date }}
-          TAG: ${{ steps.tag.outputs.tag }}
-          NEW_SHA: ${{ steps.meta.outputs.new_sha }}
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-        run: |
-          RELEASE_URL="https://github.com/${KONFLUX_UI_REPO}/releases/tag/${TAG}"
-          SHORT_SHA="${NEW_SHA:0:7}"
-
-          curl -sf -X POST "$SLACK_WEBHOOK_URL" \
-            -H 'Content-Type: application/json' \
-            -d "$(jq -n \
-              --arg date "$RELEASE_DATE" \
-              --arg tag "$TAG" \
-              --arg sha "$SHORT_SHA" \
-              --arg url "$RELEASE_URL" \
-              '{
-                "blocks": [
-                  {
-                    "type": "header",
-                    "text": { "type": "plain_text", "text": ("Shipped to production — " + $date) }
-                  },
-                  {
-                    "type": "section",
-                    "text": {
-                      "type": "mrkdwn",
-                      "text": ("*Tag:* `" + $tag + "`\n*Commit:* `" + $sha + "`\n\n<" + $url + "|View GitHub Release>")
-                    }
-                  }
-                ]
-              }')" || echo "::warning::Failed to send Slack notification"
+        continue-on-error: true
+        uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c # v3.0.3
+        with:
+          method: chat.postMessage
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          payload: |
+            channel: ${{ vars.SLACK_CHANNEL_ID }}
+            blocks:
+              - type: header
+                text:
+                  type: plain_text
+                  text: ":tada: Shipped to production — ${{ steps.meta.outputs.release_date }}"
+                  emoji: true
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: "<!subteam^${{ vars.SLACK_KONFLUX_UI_GROUP_ID }}> A new release is live in production!\n\n:label: *Tag:* `${{ steps.tag.outputs.tag }}`\n:package: *Commit:* `${{ steps.meta.outputs.new_sha }}`\n\n:link: <https://github.com/${{ env.KONFLUX_UI_REPO }}/releases/tag/${{ steps.tag.outputs.tag }}|View GitHub Release>"
+              - type: context
+                elements:
+                  - type: mrkdwn
+                    text: ":white_check_mark: The tracking issue has been closed and a GitHub release has been published."
+            text: "Shipped to production — ${{ steps.meta.outputs.release_date }}: ${{ steps.tag.outputs.tag }}"
