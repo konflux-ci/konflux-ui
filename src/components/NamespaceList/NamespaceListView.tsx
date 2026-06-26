@@ -70,7 +70,7 @@ const NamespaceListView: React.FC<React.PropsWithChildren<unknown>> = () => {
   return (
     <>
       <PageLayout title="Namespaces" description="A namespace contains 1 or more applications">
-        <PageSection hasBodyWrapper={false} padding={{ default: 'noPadding' }} isFilled>
+        <PageSection hasBodyWrapper={false} isFilled>
           {!namespaces || namespaces.length === 0 ? (
             <AppEmptyState
               className="pf-v6-u-mx-lg"
