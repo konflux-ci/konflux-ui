@@ -70,17 +70,6 @@ const InternalFLAGS = {
       visibleInFeatureFlagPanel: true,
     },
   },
-  'issues-dashboard': {
-    key: 'issues-dashboard',
-    description: 'Show Summary of Issues in your Konflux content',
-    defaultEnabled: false,
-    status: 'wip',
-    guard: {
-      allOf: ['isKiteServiceEnabled'],
-      failureReason: 'Kite Service is not enabled',
-      visibleInFeatureFlagPanel: true,
-    },
-  },
   'conforma-policy': {
     key: 'conforma-policy',
     description: 'Show the Conforma Results tab on application details',

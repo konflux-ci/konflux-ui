@@ -61,6 +61,7 @@ describe('AppSideBar', () => {
     expect(screen.getByText('Applications').closest('li')).toHaveClass(
       'app-side-bar__nav-item--disabled',
     );
+    expect(screen.getByText('Issues').closest('li')).toHaveClass('app-side-bar__nav-item--disabled');
     expect(screen.getByText('Pipeline Runs').closest('li')).toHaveClass(
       'app-side-bar__nav-item--disabled',
     );
@@ -85,6 +86,7 @@ describe('AppSideBar', () => {
       'href',
       '/ns/test-namespace/applications',
     );
+    expect(screen.getByText('Issues')).toHaveAttribute('href', '/ns/test-namespace/issues');
     expect(screen.getByText('Pipeline Runs')).toHaveAttribute('href', '/ns/test-namespace/prns');
     expect(screen.getByText('Secrets')).toHaveAttribute('href', '/ns/test-namespace/secrets');
     expect(screen.getByText('Releases')).toHaveAttribute('href', '/ns/test-namespace/release');
@@ -125,6 +127,7 @@ describe('AppSideBar', () => {
 
     expect(screen.getByText('Namespaces')).toHaveAttribute('href', '/ns');
     expect(screen.getByText('Applications')).toHaveAttribute('href', '/');
+    expect(screen.getByText('Issues')).toHaveAttribute('href', '/');
     expect(screen.getByText('Pipeline Runs')).toHaveAttribute('href', '/');
     expect(screen.getByText('Secrets')).toHaveAttribute('href', '/');
     expect(screen.getByText('Releases')).toHaveAttribute('href', '/');
