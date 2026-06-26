@@ -22,9 +22,22 @@ import {
 } from '@patternfly/react-core';
 import { MinusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/minus-circle-icon';
 import { PlusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/plus-circle-icon';
-import { FieldArray, useField } from 'formik';
+import { FieldArray, useField, useFormikContext } from 'formik';
 import { InputField } from 'formik-pf';
 import { Param } from '../../types/coreBuildService';
+
+const trimParamString = (value: string): string => value.trim();
+
+const sanitizeParams = (params?: Param[]): Param[] => {
+  if (!Array.isArray(params)) {
+    return [];
+  }
+  return params.map((param) => ({
+    ...param,
+    name: trimParamString(param.name ?? ''),
+    values: param.values?.map(trimParamString),
+  }));
+};
 
 interface IntegrationTestParamsProps {
   heading?: React.ReactNode;
@@ -37,7 +50,17 @@ const FormikParamsField: React.FC<React.PropsWithChildren<IntegrationTestParamsP
   fieldName,
   initExpanded = false,
 }) => {
-  const [, { value: parameters, error }] = useField<Param[]>(fieldName);
+  const { setFieldValue } = useFormikContext();
+  const [, { value: rawParameters, error }] = useField<Param[]>(fieldName);
+  const parameters = sanitizeParams(rawParameters);
+
+  const trimFieldOnBlur =
+    (fieldPath: string) => (event: React.FocusEvent<HTMLInputElement>) => {
+      const trimmed = trimParamString(event.target.value);
+      if (trimmed !== event.target.value) {
+        void setFieldValue(fieldPath, trimmed);
+      }
+    };
 
   const initExpandedState = React.useMemo(() => {
     const state = [];
@@ -158,6 +181,7 @@ const FormikParamsField: React.FC<React.PropsWithChildren<IntegrationTestParamsP
                                         <InputField
                                           name={`${fieldName}[${i}].name`}
                                           data-test={`param-${i}-name`}
+                                          onBlur={trimFieldOnBlur(`${fieldName}[${i}].name`)}
                                         />
                                       </FormGroup>
                                     </DataListCell>,
@@ -182,6 +206,9 @@ const FormikParamsField: React.FC<React.PropsWithChildren<IntegrationTestParamsP
                                                       key={`value${i}${j}`}
                                                       name={`${fieldName}[${i}].values[${j}]`}
                                                       data-test={`param-${i}-value-${j}`}
+                                                      onBlur={trimFieldOnBlur(
+                                                        `${fieldName}[${i}].values[${j}]`,
+                                                      )}
                                                     />
                                                     <Button
                                                       className="pf-v5-u-ml-md"

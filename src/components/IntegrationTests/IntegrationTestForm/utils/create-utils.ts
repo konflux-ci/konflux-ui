@@ -35,11 +35,15 @@ export const formatParams = (params): Param[] => {
   if (!params || !Array.isArray(params) || params.length === 0) return null;
   const newParams = [];
   params.forEach((param) => {
-    const formattedValues = param.values?.filter((v) => !!v);
-    if (formattedValues?.length === 1) {
-      newParams.push({ name: param.name, value: formattedValues[0] });
+    const formattedValues = param.values?.map((v) => v.trim()).filter((v) => !!v);
+    const name = param.name?.trim();
+    if (!name || !formattedValues?.length) {
+      return;
+    }
+    if (formattedValues.length === 1) {
+      newParams.push({ name, value: formattedValues[0] });
     } else {
-      newParams.push({ name: param.name, values: formattedValues });
+      newParams.push({ name, values: formattedValues });
     }
   });
 
