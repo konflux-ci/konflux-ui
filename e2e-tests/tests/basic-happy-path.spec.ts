@@ -15,6 +15,7 @@ import { Applications } from '../utils/Applications';
 import { Common } from '../utils/Common';
 import { Features } from '../utils/Features';
 import { UIhelper } from '../utils/UIhelper';
+import { createCheckpoint, measureCheckpoint, submitData, saveArtifacts } from '../utils/PerformanceTesting';
 
 describe('Basic Happy Path', () => {
   const applicationName = Common.generateAppName();
@@ -72,13 +73,22 @@ describe('Basic Happy Path', () => {
   });
 
   it('Create an Application with a component', () => {
+    var checkpoint = createCheckpoint();
     Applications.createApplication(applicationName);
+    measureCheckpoint(checkpoint, "createApplication");
+    checkpoint = createCheckpoint();
     Applications.createComponent(publicRepo, componentName, pipeline);
+    measureCheckpoint(checkpoint, "createComponent");
+    checkpoint = createCheckpoint();
     Applications.checkComponentInListView(
       componentName,
       applicationName,
       /Build not started|Build running/,
     );
+    measureCheckpoint(checkpoint, "checkComponentInListView ");
+    cy.log(Cypress.env('performanceMetrics'));
+    submitData();
+    saveArtifacts();
   });
 
   it('Check default Integration Test', () => {
