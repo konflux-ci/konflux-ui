@@ -6,6 +6,11 @@ export const defaultKonfluxRoleMap = {
     'konflux-contributor-user-actions': 'Contributor',
     'konflux-maintainer-user-actions': 'Maintainer',
   },
+  roleRefWeights: {
+    'konflux-admin-user-actions': 3,
+    'konflux-maintainer-user-actions': 2,
+    'konflux-contributor-user-actions': 1,
+  },
   roleKind: 'ClusterRole' as RoleKind,
   roleDescription: {
     'konflux-admin-user-actions': 'Full access to Konflux resources including secrets',
