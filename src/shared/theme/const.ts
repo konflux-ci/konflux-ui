@@ -3,14 +3,29 @@ export const THEME_SYSTEM = 'system';
 export const THEME_DARK = 'dark';
 export const THEME_LIGHT = 'light';
 
-// Media query constant
+// Contrast preference constants
+export const CONTRAST_SYSTEM = 'system';
+export const CONTRAST_DEFAULT = 'default';
+export const CONTRAST_HIGH = 'high-contrast';
+
+// Media query constants
 export const PREFERS_COLOR_SCHEME_DARK = '(prefers-color-scheme: dark)';
+export const PREFERS_CONTRAST_MORE = '(prefers-contrast: more)';
+export const FORCED_COLORS_ACTIVE = '(forced-colors: active)';
 
-// Theme preferences array for validation
+// Validation arrays
 export const THEME_PREFERENCES = [THEME_SYSTEM, THEME_DARK, THEME_LIGHT] as const;
+export const CONTRAST_PREFERENCES = [CONTRAST_SYSTEM, CONTRAST_DEFAULT, CONTRAST_HIGH] as const;
 
-export const THEME_LABELS = {
+// Labels
+export const THEME_PREFERENCE_LABELS = {
   [THEME_SYSTEM]: 'System',
-  [THEME_DARK]: 'Dark',
   [THEME_LIGHT]: 'Light',
+  [THEME_DARK]: 'Dark',
+} as const;
+
+export const CONTRAST_PREFERENCE_LABELS = {
+  [CONTRAST_SYSTEM]: 'System',
+  [CONTRAST_DEFAULT]: 'Default',
+  [CONTRAST_HIGH]: 'High Contrast',
 } as const;
