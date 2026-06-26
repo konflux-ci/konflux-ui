@@ -9,6 +9,7 @@ import {
 import { useFormikContext } from 'formik';
 import { InputField } from 'formik-pf';
 import { useNamespace } from '../../../shared/providers/Namespace';
+import { MAX_RESOURCE_NAME_LENGTH } from '../../../utils/validation-utils';
 import GitRepoLink from '../../GitLink/GitRepoLink';
 import { ImportFormValues } from '../type';
 import { SourceSection } from './SourceSection';
@@ -37,6 +38,7 @@ export const ComponentSection = () => {
         label="Component name"
         isRequired
         data-test="component-name"
+        maxLength={MAX_RESOURCE_NAME_LENGTH}
       />
       <HelperText>
         <HelperTextItem>
