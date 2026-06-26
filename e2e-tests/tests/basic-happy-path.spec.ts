@@ -1,5 +1,6 @@
 import { NavItem, pageTitles } from '../support/constants/PageTitle';
 import { actions } from '../support/pageObjects/global-po';
+import { issuesPagePO } from '../support/pageObjects/pages-po';
 import { ApplicationDetailPage } from '../support/pages/ApplicationDetailPage';
 import { ComponentDetailsPage } from '../support/pages/ComponentDetailsPage';
 import { ComponentPage } from '../support/pages/ComponentsPage';
@@ -242,6 +243,23 @@ describe('Basic Happy Path', () => {
 
     it('Verify deployed image exists', () => {
       ComponentDetailsPage.checkBuildImage();
+    });
+  });
+
+  describe('Check Issues page', () => {
+    it('Navigate to Issues page from the sidebar', () => {
+      Common.navigateTo(NavItem.issues);
+
+      cy.get('body').then(($body) => {
+        if ($body.find(issuesPagePO.page).length) {
+          cy.get(issuesPagePO.page).should('exist');
+          cy.get(issuesPagePO.overviewTab).should('exist');
+          cy.get(issuesPagePO.issuesTab).should('exist');
+        } else {
+          cy.get(issuesPagePO.serviceUnavailableState).should('exist');
+          cy.contains(issuesPagePO.serviceUnavailableTitle).should('exist');
+        }
+      });
     });
   });
 
