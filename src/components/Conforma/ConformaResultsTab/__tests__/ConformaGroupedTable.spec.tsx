@@ -1,4 +1,5 @@
-import { fireEvent, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { CONFORMA_RESULT_STATUS } from '~/types/conforma';
 import type { ConformaResultRow } from '~/types/conforma';
 import { routerRenderer } from '~/unit-test-utils/mock-react-router';
@@ -93,12 +94,13 @@ describe('ConformaGroupedTable', () => {
     expect(screen.getAllByText('Component').length).toBeGreaterThanOrEqual(1);
   });
 
-  it('calls onToggleGroup when expand button is clicked', () => {
+  it('calls onToggleGroup when expand button is clicked', async () => {
+    const user = userEvent.setup();
     const onToggle = jest.fn();
     routerRenderer(<ConformaGroupedTable {...defaultProps} onToggleGroup={onToggle} />);
 
     const toggleButtons = screen.getAllByRole('button');
-    fireEvent.click(toggleButtons[0]);
+    await user.click(toggleButtons[0]);
 
     expect(onToggle).toHaveBeenCalledWith('Missing CVE scan');
   });
@@ -153,5 +155,38 @@ describe('ConformaGroupedTable', () => {
     );
 
     expect(screen.getAllByText('-').length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('renders truncated message with expand/collapse toggle for long msg', async () => {
+    const user = userEvent.setup();
+    const longMsg =
+      'This violation message is intentionally very long and exceeds eighty characters so that truncation kicks in and the user must click more to read the rest';
+    const groupsWithLongMsg: GroupedConformaRow[] = [
+      {
+        groupKey: 'Long message rule',
+        violations: 1,
+        warnings: 0,
+        successes: 0,
+        rows: [createRow({ msg: longMsg })],
+      },
+    ];
+    const expandedGroups = new Set(['Long message rule']);
+
+    routerRenderer(
+      <ConformaGroupedTable
+        {...defaultProps}
+        groups={groupsWithLongMsg}
+        expandedGroups={expandedGroups}
+      />,
+    );
+
+    expect(screen.getByText(`${longMsg.slice(0, 80)}...`)).toBeInTheDocument();
+    const moreButton = screen.getByRole('button', { name: 'more' });
+    expect(moreButton).toBeInTheDocument();
+
+    await user.click(moreButton);
+
+    expect(screen.getByText(longMsg)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'less' })).toBeInTheDocument();
   });
 });
