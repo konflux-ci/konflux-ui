@@ -12,6 +12,7 @@ export enum NavItem {
   overview = 'Overview',
   namespaces = 'Namespaces',
   applications = 'Applications',
+  issues = 'Issues',
   secrets = 'Secrets',
   releases = 'Releases',
   userAcces = 'User Access',
