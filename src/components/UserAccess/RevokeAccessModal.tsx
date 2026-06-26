@@ -8,8 +8,9 @@ import {
   Button,
   ButtonType,
   ButtonVariant,
+  Flex,
+  FlexItem,
 } from '@patternfly/react-core';
-import { Modal, ModalVariant } from '@patternfly/react-core/deprecated';
 import { K8sQueryDeleteResource } from '../../k8s';
 import { RoleBindingModel } from '../../models';
 import { RoleBinding } from '../../types';
@@ -24,15 +25,12 @@ export const RevokeAccessModal: React.FC<React.PropsWithChildren<Props>> = ({
   rb,
   username,
   onClose,
-  modalProps,
 }) => {
   const [error, setError] = React.useState<string>();
   const [submitting, setSubmitting] = React.useState(false);
   const handleSubmit = React.useCallback(
     async (e) => {
       e.preventDefault();
-      // We need to set submitting as true, this ensure the 'Revoke' button cannot be
-      // reclicked during the resource is deleting.
       setSubmitting(true);
       setError(null);
       try {
@@ -52,7 +50,7 @@ export const RevokeAccessModal: React.FC<React.PropsWithChildren<Props>> = ({
   );
 
   return (
-    <Modal {...modalProps} variant={ModalVariant.small}>
+    <>
       <Stack hasGutter>
         <StackItem>
           <Content>
@@ -69,24 +67,34 @@ export const RevokeAccessModal: React.FC<React.PropsWithChildren<Props>> = ({
               {error}
             </Alert>
           )}
-          <Button
-            type={ButtonType.submit}
-            variant={ButtonVariant.danger}
-            isLoading={submitting}
-            onClick={handleSubmit}
-            isDisabled={submitting}
-            data-test="revoke-access"
-          >
-            Revoke
-          </Button>
-          <Button
-            variant={ButtonVariant.link}
-            onClick={() => onClose(null, { submitClicked: false })}
-          >
-            Cancel
-          </Button>
+        </StackItem>
+
+        <StackItem>
+          <Flex>
+            <FlexItem>
+              <Button
+                type={ButtonType.submit}
+                variant={ButtonVariant.danger}
+                isLoading={submitting}
+                onClick={handleSubmit}
+                isDisabled={submitting}
+                data-test="revoke-access"
+              >
+                Revoke
+              </Button>
+            </FlexItem>
+
+            <FlexItem>
+              <Button
+                variant={ButtonVariant.link}
+                onClick={() => onClose(null, { submitClicked: false })}
+              >
+                Cancel
+              </Button>
+            </FlexItem>
+          </Flex>
         </StackItem>
       </Stack>
-    </Modal>
+    </>
   );
 };

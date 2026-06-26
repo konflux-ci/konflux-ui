@@ -1,6 +1,5 @@
 import * as React from 'react';
-import { Button, Flex, FlexItem, capitalize } from '@patternfly/react-core';
-import { ModalVariant } from '@patternfly/react-core/deprecated';
+import { Button, Flex, FlexItem, ModalVariant, capitalize } from '@patternfly/react-core';
 import { createModalLauncher } from '~/components/modal/createModalLauncher';
 import { useModalLauncher } from '~/components/modal/ModalProvider';
 import { Issue, IssueState } from '~/kite/issue-type';
@@ -73,7 +72,6 @@ const IssuesListRow: React.FC<RowFunctionArgs<Issue>> = ({ obj: issue }) => {
                   showModal(
                     createModalLauncher(LinksModal, {
                       'data-test': 'modal-links',
-                      bodyAriaLabel: 'Scrollable modal content',
                       variant: ModalVariant.small,
                       title: 'All links',
                     })(),

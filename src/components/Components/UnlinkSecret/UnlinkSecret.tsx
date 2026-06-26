@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { useParams } from 'react-router-dom';
-import { Button, Flex, FlexItem, Content, Alert } from '@patternfly/react-core';
-import { ModalVariant } from '@patternfly/react-core/deprecated';
+import { Button, Flex, FlexItem, Content, Alert, ModalVariant } from '@patternfly/react-core';
 import { RouterParams } from '@routes/utils';
 import { COMMON_SECRETS_LABEL } from '~/consts/pipeline';
 import { useComponent } from '~/hooks/useComponents';

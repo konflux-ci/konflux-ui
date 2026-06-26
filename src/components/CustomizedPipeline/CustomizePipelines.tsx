@@ -7,14 +7,12 @@ import {
   pluralize,
   Content,
   ContentVariants,
+  Modal,
+  ModalBody,
+  ModalFooter,
+  ModalHeader,
   Truncate,
 } from '@patternfly/react-core';
-import {
-  Modal,
-  ModalBoxBody,
-  ModalBoxFooter,
-  ModalBoxHeader,
-} from '@patternfly/react-core/deprecated';
 import { Tbody, Thead, Th, Tr, Td, Table } from '@patternfly/react-table';
 import SendIconUrl from '../../assets/send.svg';
 import SuccessIconUrl from '../../assets/success.svg';
@@ -296,10 +294,12 @@ const CustomizePipeline: React.FC<React.PropsWithChildren<Props>> = ({
     onClose();
   }, [onClose, applicationName, namespace, track]);
 
+  const { isOpen, appendTo, ...rest } = modalProps || {};
+
   return (
-    <Modal {...modalProps} onClose={trackedOnClose}>
-      <ModalBoxHeader />
-      <ModalBoxBody>
+    <Modal {...rest} isOpen={isOpen} onClose={trackedOnClose} appendTo={appendTo} variant="large">
+      <ModalHeader title="Manage build pipelines" />
+      <ModalBody>
         <>
           <Content
             className="pf-v6-u-pt-lg"
@@ -383,8 +383,8 @@ const CustomizePipeline: React.FC<React.PropsWithChildren<Props>> = ({
             </p>
           ) : undefined}
         </>
-      </ModalBoxBody>
-      <ModalBoxFooter>
+      </ModalBody>
+      <ModalFooter>
         <AnalyticsButton
           variant={ButtonVariant.secondary}
           onClick={trackedOnClose}
@@ -392,7 +392,7 @@ const CustomizePipeline: React.FC<React.PropsWithChildren<Props>> = ({
         >
           Close
         </AnalyticsButton>
-      </ModalBoxFooter>
+      </ModalFooter>
     </Modal>
   );
 };

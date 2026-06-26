@@ -1,4 +1,4 @@
-import { ModalVariant } from '@patternfly/react-core/deprecated';
+import { ModalVariant } from '@patternfly/react-core';
 import { SecretFormValues, BuildTimeSecret, CurrentComponentRef, ImportSecret } from '../../types';
 import { createRawModalLauncher } from '../modal/createModalLauncher';
 import SecretModal from './SecretModal';
@@ -24,6 +24,5 @@ export const SecretModalLauncher = ({
   createRawModalLauncher(SecretModal, {
     'data-test': 'create-secret-modal',
     variant: ModalVariant.large,
-    hasNoBodyWrapper: true,
     onClose,
   })({ onSubmit, existingSecrets, currentComponent, initialSecret, isEdit });
