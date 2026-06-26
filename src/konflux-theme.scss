@@ -26,7 +26,7 @@ html.pf-v6-theme-dark {
 // ---------------------------------------------------------------------------
 // 2. Global Brand Color Override
 // ---------------------------------------------------------------------------
-:root:where(.pf-v6-theme-konflux) {
+:root:where(.konflux-ui__theme) {
   --pf-t--global--border--color--brand--accent--clicked: var(--konflux-brand-primary-clicked);
   --pf-t--global--border--color--brand--accent--default: var(--konflux-brand-primary);
   --pf-t--global--border--color--brand--accent--hover: var(--konflux-brand-primary-hover);
