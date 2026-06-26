@@ -1,5 +1,11 @@
 import { CONFORMA_RESULT_STATUS, type ConformaResultRow } from '~/types/conforma';
-import { filterResults, groupByComponent, groupByRule } from '../conforma-grouping-utils';
+import {
+  collapseArchDuplicates,
+  filterResults,
+  getCommonImageName,
+  groupByComponent,
+  groupByRule,
+} from '../conforma-grouping-utils';
 
 const mockRow = (overrides: Partial<ConformaResultRow> = {}): ConformaResultRow => ({
   title: 'Test rule',
@@ -163,6 +169,150 @@ describe('conforma-grouping-utils', () => {
 
       expect(groups).toHaveLength(1);
       expect(groups[0].groupKey).toBe('api');
+    });
+  });
+
+  describe('collapseArchDuplicates', () => {
+    it('merges rows with the same title, msg, component, and status but different images', () => {
+      const rows = [
+        mockRow({ title: 'CVE rule', msg: 'CVE-2024-001', component: 'api', image: 'img@sha256:aaa' }),
+        mockRow({ title: 'CVE rule', msg: 'CVE-2024-001', component: 'api', image: 'img@sha256:bbb' }),
+        mockRow({ title: 'CVE rule', msg: 'CVE-2024-001', component: 'api', image: 'img@sha256:ccc' }),
+      ];
+
+      const result = collapseArchDuplicates(rows);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].images).toEqual(['img@sha256:aaa', 'img@sha256:bbb', 'img@sha256:ccc']);
+    });
+
+    it('preserves distinct violations that differ in msg as separate rows', () => {
+      const rows = [
+        mockRow({ title: 'CVE rule', msg: 'CVE-2024-001', component: 'api', image: 'img@sha256:aaa' }),
+        mockRow({ title: 'CVE rule', msg: 'CVE-2024-002', component: 'api', image: 'img@sha256:bbb' }),
+      ];
+
+      const result = collapseArchDuplicates(rows);
+
+      expect(result).toHaveLength(2);
+    });
+
+    it('preserves distinct violations that differ in component as separate rows', () => {
+      const rows = [
+        mockRow({ title: 'CVE rule', msg: 'CVE-2024-001', component: 'comp-a', image: 'img@sha256:aaa' }),
+        mockRow({ title: 'CVE rule', msg: 'CVE-2024-001', component: 'comp-b', image: 'img@sha256:bbb' }),
+      ];
+
+      const result = collapseArchDuplicates(rows);
+
+      expect(result).toHaveLength(2);
+    });
+
+    it('sets images array with all unique digests', () => {
+      const rows = [
+        mockRow({ image: 'img@sha256:111' }),
+        mockRow({ image: 'img@sha256:222' }),
+      ];
+
+      const result = collapseArchDuplicates(rows);
+
+      expect(result[0].images).toEqual(['img@sha256:111', 'img@sha256:222']);
+    });
+
+    it('deduplicates identical image digests', () => {
+      const rows = [
+        mockRow({ image: 'img@sha256:aaa' }),
+        mockRow({ image: 'img@sha256:aaa' }),
+      ];
+
+      const result = collapseArchDuplicates(rows);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].images).toEqual(['img@sha256:aaa']);
+    });
+
+    it('returns the array unchanged when no duplicates exist', () => {
+      const rows = [
+        mockRow({ title: 'Rule A', component: 'comp-1', image: 'img@sha256:111' }),
+        mockRow({ title: 'Rule B', component: 'comp-2', image: 'img@sha256:222' }),
+      ];
+
+      const result = collapseArchDuplicates(rows);
+
+      expect(result).toHaveLength(2);
+      expect(result[0].images).toEqual(['img@sha256:111']);
+      expect(result[1].images).toEqual(['img@sha256:222']);
+    });
+
+    it('handles rows with no image gracefully', () => {
+      const rows = [
+        mockRow({ image: undefined }),
+        mockRow({ image: undefined }),
+      ];
+
+      const result = collapseArchDuplicates(rows);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].images).toEqual([]);
+    });
+
+    it('returns an empty array for empty input', () => {
+      expect(collapseArchDuplicates([])).toEqual([]);
+    });
+
+    it('seeds single-image rows with a one-element images array', () => {
+      const rows = [mockRow({ image: 'img@sha256:only' })];
+
+      const result = collapseArchDuplicates(rows);
+
+      expect(result[0].images).toEqual(['img@sha256:only']);
+    });
+
+    it('collapses rows where msg is undefined using empty-string sentinel', () => {
+      const rows: ConformaResultRow[] = [
+        mockRow({ title: 'rule', msg: undefined, component: 'comp', image: 'img@sha256:aaa' }),
+        mockRow({ title: 'rule', msg: undefined, component: 'comp', image: 'img@sha256:bbb' }),
+      ];
+
+      const result = collapseArchDuplicates(rows);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].images).toEqual(['img@sha256:aaa', 'img@sha256:bbb']);
+    });
+  });
+
+  describe('getCommonImageName', () => {
+    it('returns the shared repo prefix when all images share the same name', () => {
+      expect(
+        getCommonImageName([
+          'quay.io/org/img@sha256:aaa',
+          'quay.io/org/img@sha256:bbb',
+          'quay.io/org/img@sha256:ccc',
+        ]),
+      ).toBe('quay.io/org/img');
+    });
+
+    it('returns undefined when images have different repo names', () => {
+      expect(
+        getCommonImageName([
+          'quay.io/org/img-a@sha256:aaa',
+          'quay.io/org/img-b@sha256:bbb',
+        ]),
+      ).toBeUndefined();
+    });
+
+    it('returns undefined for an empty array', () => {
+      expect(getCommonImageName([])).toBeUndefined();
+    });
+
+    it('returns the full string when images have no @ separator', () => {
+      expect(getCommonImageName(['quay.io/org/img', 'quay.io/org/img'])).toBe(
+        'quay.io/org/img',
+      );
+    });
+
+    it('returns the name for a single-element array', () => {
+      expect(getCommonImageName(['quay.io/org/img@sha256:only'])).toBe('quay.io/org/img');
     });
   });
 
