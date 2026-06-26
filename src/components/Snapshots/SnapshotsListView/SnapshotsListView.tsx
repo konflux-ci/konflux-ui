@@ -2,13 +2,10 @@ import * as React from 'react';
 import {
   Bullseye,
   EmptyStateBody,
-  PageSection,
   Spinner,
   Title,
   Content,
-  ContentVariants,
   Flex,
-  FlexItem,
   Switch,
   Select,
   MenuToggle,
@@ -142,19 +139,12 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
   const isFiltered = nameFilter || releasableFilter || commitMessageFilter || showMergedOnly;
 
   return (
-    <PageSection hasBodyWrapper={false} padding={{ default: 'noPadding' }} isFilled>
-      <Flex
-        justifyContent={{ default: 'justifyContentSpaceBetween' }}
-        alignItems={{ default: 'alignItemsCenter' }}
-      >
-        <FlexItem>
-          <Title size="lg" headingLevel="h3" className="pf-v6-c-title pf-v6-u-mt-lg pf-v6-u-mb-sm">
-            Snapshots
-          </Title>
-        </FlexItem>
-      </Flex>
+    <>
+      <Title size="lg" headingLevel="h3" className="pf-v6-c-title pf-v6-u-mt-lg pf-v6-u-mb-sm">
+        Snapshots
+      </Title>
 
-      <Content component={ContentVariants.p}>
+      <Content>
         A snapshot is a point-in-time, immutable record of an application&apos;s container images.{' '}
         <ExternalLink href={LEARN_MORE_SNAPSHOTS}>Learn more</ExternalLink>
       </Content>
@@ -173,7 +163,7 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
         </AppEmptyState>
       ) : (
         <>
-          <Flex spaceItems={{ default: 'spaceItemsNone' }} className="pf-v5-u-mt-sm">
+          <Flex spaceItems={{ default: 'spaceItemsMd' }}>
             <Select
               toggle={(toggleRef) => (
                 <MenuToggle
@@ -215,12 +205,10 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
               onClearFilters={onClearFilters}
               totalColumns={snapshotColumns.length}
               noLeftPadding={true}
-              className="pf-v5-u-py-xs"
             >
               <Switch
                 id="show-merged-snapshots-only-switch"
                 label="Hide Pull Request Snapshots"
-                className="pf-v5-u-py-xs"
                 isChecked={showMergedOnly}
                 onChange={(_event, checked) =>
                   setFilters({ ...unparsedFilters, showMergedOnly: checked })
@@ -229,7 +217,6 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
               <Switch
                 id="releasable"
                 label="Show only releasable snapshots"
-                className="pf-v5-u-py-xs"
                 isChecked={releasableFilter}
                 onChange={(_event, checked) =>
                   setFilters({ ...unparsedFilters, releasable: checked })
@@ -250,7 +237,7 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
           )}
         </>
       )}
-    </PageSection>
+    </>
   );
 };
 
