@@ -1,15 +1,5 @@
-// Konflux Brand Theme
-// Overrides --pf-t--global--color--brand--* globally to Konflux orange.
-// For non-primary buttons, resets the global brand back to PF blue within
-// the button scope so secondary, link, tertiary variants stay PF default.
-// NOT overridden (stays PF default):
-//   --pf-t--global--border--color--hover/clicked (input borders)
-//   --pf-t--global--text--color--link--*          (links)
-//   --pf-t--global--focus-ring--color--*          (focus ring)
-
-// ---------------------------------------------------------------------------
-// 1. Konflux Brand Variables
-// ---------------------------------------------------------------------------
+// Konflux brand color variables and theme overrides.
+// Scoped under .konflux-ui__theme so the theme can be toggled.
 :root {
   --konflux-brand-primary: #fc783d;
   --konflux-brand-primary-hover: #d36634;
@@ -23,9 +13,7 @@ html.pf-v6-theme-dark {
   --konflux-brand-primary-clicked: #f2722f;
 }
 
-// ---------------------------------------------------------------------------
-// 2. Global Brand Color Override
-// ---------------------------------------------------------------------------
+// Brand accent and primary button/menu-toggle overrides
 :root:where(.konflux-ui__theme) {
   --pf-t--global--border--color--brand--accent--clicked: var(--konflux-brand-primary-clicked);
   --pf-t--global--border--color--brand--accent--default: var(--konflux-brand-primary);
