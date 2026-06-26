@@ -19,6 +19,7 @@ jobs:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       KONFLUX_UI_REPO: konflux-ci/konflux-ui
       INFRA_REPO: redhat-appstudio/infra-deployments
+      CHANGELOG_PATH: /tmp/changelog.md
 
     steps:
       # --- Parse tracking issue metadata ---
@@ -133,9 +134,9 @@ jobs:
             -b "$OLD_SHA" \
             -t "$NEW_SHA" \
             -d "$(pwd)" \
-            -o /tmp/changelog.md
+            -o "$CHANGELOG_PATH"
 
-          CHANGELOG=$(cat /tmp/changelog.md)
+          CHANGELOG=$(cat "$CHANGELOG_PATH")
 
           # Idempotency: skip if release already exists
           if gh release view "$TAG" --repo "$KONFLUX_UI_REPO" >/dev/null 2>&1; then
@@ -146,6 +147,14 @@ jobs:
               --title "Production release ${RELEASE_DATE}" \
               --notes "$CHANGELOG"
           fi
+
+      - name: Close Jira issues
+        env:
+          JIRA_USER: ${{ secrets.JIRA_USER }}
+          JIRA_TOKEN: ${{ secrets.JIRA_TOKEN }}
+        run: |
+          chmod +x .github/scripts/close-jira-issues.sh
+          .github/scripts/close-jira-issues.sh
 
       # --- Update tracking issue with completion status ---
       - name: Update tracking issue

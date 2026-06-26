@@ -15,7 +15,7 @@ set -euo pipefail
 #   -b  Base SHA (older commit)
 #   -t  Target SHA (newer commit)
 #   -d  Optional: existing git repository directory
-#   -o  Output file path for changelog
+#   -o  Output file path for changelog (defaults to CHANGELOG_PATH env var)
 
 # --- Helper Functions ---
 log_info() { echo "[INFO] $(date '+%Y-%m-%d %H:%M:%S') $*"; }
@@ -24,14 +24,14 @@ log_warn() { echo "[WARN] $(date '+%Y-%m-%d %H:%M:%S') $*" >&2; }
 
 usage() {
   cat >&2 << 'USAGE'
-Usage: generate-release-changelog.sh -r <owner/repo> -b <base_sha> -t <target_sha> [-d <repo_dir>] -o <out_file>
+Usage: generate-release-changelog.sh -r <owner/repo> -b <base_sha> -t <target_sha> [-d <repo_dir>] [-o <out_file>]
 
 Arguments:
   -r  Repository in owner/repo format (e.g., konflux-ci/konflux-ui)
   -b  Base SHA (older commit, production)
   -t  Target SHA (newer commit, staging)
   -d  Optional: existing git repository directory (skips clone)
-  -o  Output file path for changelog
+  -o  Output file path for changelog (defaults to CHANGELOG_PATH env var)
 USAGE
 }
 
@@ -70,6 +70,10 @@ while getopts ":r:b:t:d:o:h" opt; do
     *) log_error "Unknown option: -$OPTARG"; usage; exit 2 ;;
   esac
 done
+
+if [[ -z "$OUT_FILE" ]]; then
+  OUT_FILE="${CHANGELOG_PATH:-}"
+fi
 
 # --- Validate Inputs ---
 if [[ -z "$REPO" || -z "$BASE_SHA" || -z "$TARGET_SHA" || -z "$OUT_FILE" ]]; then
