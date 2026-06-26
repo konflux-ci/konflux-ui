@@ -1,15 +1,15 @@
 import { global_palette_blue_300 as blueColor } from '@patternfly/react-tokens/dist/js/global_palette_blue_300';
 import { renderHook } from '@testing-library/react';
 import { runStatus } from '~/consts/pipelinerun';
-import * as statusColorUtils from '~/shared/utils/status-color-utils';
-import * as useFaviconStatusBadgeModule from '../useFaviconStatusBadge';
+import * as useFaviconStatusBadgeModule from '~/shared/hooks/useFaviconStatusBadge';
+import * as statusColorUtils from '~/utils/status-color-utils';
 import { usePipelineRunStatusOnFavicon } from '../usePipelineRunStatusOnFavicon';
 
 jest.mock('~/shared/hooks/useFaviconStatusBadge', () => ({
   useFaviconStatusBadge: jest.fn(),
 }));
 
-jest.mock('~/shared/utils/status-color-utils', () => ({
+jest.mock('~/utils/status-color-utils', () => ({
   getColorForPipelineStatus: jest.fn(),
   getColorForReleaseStatus: jest.fn(),
 }));

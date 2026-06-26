@@ -9,7 +9,7 @@ import { runStatus } from '~/consts/pipelinerun';
 import {
   getColorForPipelineStatus,
   getColorForReleaseStatus,
-} from '~/shared/utils/status-color-utils';
+} from '~/utils/status-color-utils';
 
 describe('getColorForPipelineStatus', () => {
   it.each([

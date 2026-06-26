@@ -1,6 +1,6 @@
 import { runStatus } from '~/consts/pipelinerun';
-import { getColorForReleaseStatus } from '~/shared/utils/status-color-utils';
-import { useFaviconStatusBadge } from './useFaviconStatusBadge';
+import { useFaviconStatusBadge } from '~/shared/hooks/useFaviconStatusBadge';
+import { getColorForReleaseStatus } from '~/utils/status-color-utils';
 
 /** Updates the favicon badge based on a release status. */
 export const useReleaseStatusOnFavicon = (status: runStatus): void => {
