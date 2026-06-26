@@ -12,7 +12,7 @@ import {
 import { CONFORMA_POLICY_AVAILABLE_RULE_COLLECTIONS_URL } from '~/consts/documentation';
 import { useDeepCompareMemoize } from '~/shared';
 import { getErrorState } from '~/shared/utils/error-utils';
-import { CONFORMA_RESULT_STATUS, UIConformaData } from '~/types/conforma';
+import { CONFORMA_RESULT_STATUS, ConformaResultRow } from '~/types/conforma';
 import { textMatch } from '~/utils/text-filter-utils';
 import FilteredEmptyState from '../../shared/components/empty-state/FilteredEmptyState';
 import { FilterContext } from '../Filter/generic/FilterContext';
@@ -81,7 +81,7 @@ export const SecurityConformaTab: React.FC<
   // filter data in table
   const filteredCRResult = React.useMemo(() => {
     return crLoaded && conformaResult
-      ? conformaResult?.filter((rule: UIConformaData) => {
+      ? conformaResult?.filter((rule: ConformaResultRow) => {
           return (
             textMatch(rule.title, ruleFilter) &&
             (!statusFilter.length || statusFilter.includes(rule.status)) &&

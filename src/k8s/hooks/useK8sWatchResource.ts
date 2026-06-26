@@ -14,6 +14,11 @@ import { useK8sQueryWatch } from './useK8sQueryWatch';
 
 const POLLING_INTERVAL = 10000;
 
+export type K8sWatchResult<R> = UseQueryResult<R> & {
+  /** True when the WebSocket connection degraded to polling after max retries. */
+  isWatchDegraded: boolean;
+};
+
 export const useK8sWatchResource = <R extends K8sResourceCommon | K8sResourceCommon[]>(
   resourceInit: WatchK8sResource,
   model: K8sModelCommon,
@@ -21,7 +26,7 @@ export const useK8sWatchResource = <R extends K8sResourceCommon | K8sResourceCom
   options: Partial<
     WebSocketOptions & RequestInit & { wsPrefix?: string; pathPrefix?: string }
   > = {},
-): UseQueryResult<R> => {
+): K8sWatchResult<R> => {
   const k8sQueryOptions = convertToK8sQueryParams(resourceInit);
   const wsError = useK8sQueryWatch(
     resourceInit?.watch ? { model, queryOptions: k8sQueryOptions } : null,
@@ -52,5 +57,6 @@ export const useK8sWatchResource = <R extends K8sResourceCommon | K8sResourceCom
     ) as UseQueryOptions<R>;
   };
 
-  return useQuery<R>(getQueryOptions());
+  const query = useQuery<R>(getQueryOptions());
+  return { ...query, isWatchDegraded: wsError !== null };
 };
