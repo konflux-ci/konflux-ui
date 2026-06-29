@@ -31,6 +31,7 @@ const EMPTY_RESULTS: ApplicationConformaResults = {
   totalViolations: 0,
   totalWarnings: 0,
   totalSuccesses: 0,
+  kubearchiveFailedCount: 0,
   loaded: false,
   settling: false,
   error: undefined,
@@ -123,7 +124,7 @@ export const useApplicationConformaResults = (
     [latestPerComponent],
   );
 
-  const { logData, allSettled, aggregatedLogError } = useQueries({
+  const { logData, allSettled, aggregatedLogError, kubearchiveFailedCount } = useQueries({
     queries: latestTaskRuns.map((tr) => ({
       queryKey: ['conforma-log', namespace, tr.metadata?.uid, isKubearchiveLogsEnabled] as const,
       queryFn: () => resolveConformaResultFromTaskRun(namespace, tr, isKubearchiveLogsEnabled),
@@ -135,6 +136,7 @@ export const useApplicationConformaResults = (
       allSettled: results.every((q) => !q.isLoading),
       aggregatedLogError:
         results.length > 0 && results.every((q) => q.isError) ? results[0].error : undefined,
+      kubearchiveFailedCount: results.filter((q) => q.data?.kubearchiveFailed).length,
     }),
   });
 
@@ -155,11 +157,12 @@ export const useApplicationConformaResults = (
       const comp = tr.metadata?.labels?.[PipelineRunLabel.COMPONENT];
       if (!comp) return;
 
-      const data = logData[idx];
-      if (data) {
+      const fetchResult = logData[idx];
+      const conformaResult = fetchResult?.result;
+      if (conformaResult) {
         conformaByComponent.set(
           comp,
-          filterInvalidImageConformaRows(data.components ?? []),
+          filterInvalidImageConformaRows(conformaResult.components ?? []),
         );
       }
     });
@@ -233,6 +236,7 @@ export const useApplicationConformaResults = (
       totalViolations,
       totalWarnings,
       totalSuccesses,
+      kubearchiveFailedCount,
       loaded,
       settling,
       error: aggregateError,
@@ -240,6 +244,7 @@ export const useApplicationConformaResults = (
   }, [
     aggregateError,
     appComponents,
+    kubearchiveFailedCount,
     latestPerComponent,
     latestTaskRuns,
     loaded,

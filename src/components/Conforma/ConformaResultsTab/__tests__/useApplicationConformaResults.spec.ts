@@ -10,7 +10,7 @@ import {
   CONFORMA_RESULT_STATUS,
   type ConformaResult,
 } from '~/types/conforma';
-import { resolveConformaResultFromTaskRun } from '../conforma-fetchers';
+import { type ConformaFetchResult, resolveConformaResultFromTaskRun } from '../conforma-fetchers';
 import { useApplicationConformaResults } from '../useApplicationConformaResults';
 import '@testing-library/jest-dom';
 
@@ -170,7 +170,7 @@ describe('useApplicationConformaResults', () => {
     mockUseIsOnFeatureFlag.mockReturnValue(false);
     mockUseComponents.mockReturnValue([[], true, undefined]);
     mockUseTaskRunsV2.mockReturnValue([[], true, undefined, jest.fn(), {}]);
-    mockResolveConforma.mockResolvedValue(undefined);
+    mockResolveConforma.mockResolvedValue({ result: undefined, source: 'tekton-results' } as ConformaFetchResult);
   });
 
   afterEach(() => {
@@ -192,6 +192,7 @@ describe('useApplicationConformaResults', () => {
       totalViolations: 0,
       totalWarnings: 0,
       totalSuccesses: 0,
+      kubearchiveFailedCount: 0,
       loaded: false,
       settling: false,
       error: undefined,
@@ -256,7 +257,7 @@ describe('useApplicationConformaResults', () => {
 
   it('fetches and aggregates conforma results for security TaskRuns', async () => {
     setupTaskRunPipeline();
-    mockResolveConforma.mockResolvedValue(mockConformaResult);
+    mockResolveConforma.mockResolvedValue({ result: mockConformaResult, source: 'tekton-results' } as ConformaFetchResult);
 
     const { result } = renderHook(() => useApplicationConformaResults('test-app'), {
       wrapper: createWrapper(),
@@ -275,7 +276,7 @@ describe('useApplicationConformaResults', () => {
 
   it('maps violation rows with solution and image fields', async () => {
     setupTaskRunPipeline();
-    mockResolveConforma.mockResolvedValue(mockConformaResult);
+    mockResolveConforma.mockResolvedValue({ result: mockConformaResult, source: 'tekton-results' } as ConformaFetchResult);
 
     const { result } = renderHook(() => useApplicationConformaResults('test-app'), {
       wrapper: createWrapper(),
@@ -293,7 +294,7 @@ describe('useApplicationConformaResults', () => {
 
   it('maps warning rows with solution field', async () => {
     setupTaskRunPipeline();
-    mockResolveConforma.mockResolvedValue(mockConformaResult);
+    mockResolveConforma.mockResolvedValue({ result: mockConformaResult, source: 'tekton-results' } as ConformaFetchResult);
 
     const { result } = renderHook(() => useApplicationConformaResults('test-app'), {
       wrapper: createWrapper(),
@@ -310,7 +311,7 @@ describe('useApplicationConformaResults', () => {
 
   it('maps success rows correctly', async () => {
     setupTaskRunPipeline();
-    mockResolveConforma.mockResolvedValue(mockConformaResult);
+    mockResolveConforma.mockResolvedValue({ result: mockConformaResult, source: 'tekton-results' } as ConformaFetchResult);
 
     const { result } = renderHook(() => useApplicationConformaResults('test-app'), {
       wrapper: createWrapper(),
@@ -347,7 +348,7 @@ describe('useApplicationConformaResults', () => {
       ],
     };
     setupTaskRunPipeline();
-    mockResolveConforma.mockResolvedValue(passResult);
+    mockResolveConforma.mockResolvedValue({ result: passResult, source: 'tekton-results' } as ConformaFetchResult);
 
     const { result } = renderHook(() => useApplicationConformaResults('test-app'), {
       wrapper: createWrapper(),
@@ -381,7 +382,7 @@ describe('useApplicationConformaResults', () => {
       ],
     };
     setupTaskRunPipeline();
-    mockResolveConforma.mockResolvedValue(warnResult);
+    mockResolveConforma.mockResolvedValue({ result: warnResult, source: 'tekton-results' } as ConformaFetchResult);
 
     const { result } = renderHook(() => useApplicationConformaResults('test-app'), {
       wrapper: createWrapper(),
@@ -397,7 +398,7 @@ describe('useApplicationConformaResults', () => {
     const taskRuns = [createSecurityTaskRun('tr-1', 'comp-a', 'pod-1')];
     mockUseComponents.mockReturnValue([components, true, undefined]);
     mockUseTaskRunsV2.mockReturnValue([taskRuns, true, undefined, jest.fn(), {}]);
-    mockResolveConforma.mockResolvedValue(undefined);
+    mockResolveConforma.mockResolvedValue({ result: undefined, source: 'tekton-results' } as ConformaFetchResult);
 
     const { result } = renderHook(() => useApplicationConformaResults('test-app'), {
       wrapper: createWrapper(),
@@ -479,7 +480,7 @@ describe('useApplicationConformaResults', () => {
       ],
     };
     setupTaskRunPipeline();
-    mockResolveConforma.mockResolvedValue(resultWith404AndValid);
+    mockResolveConforma.mockResolvedValue({ result: resultWith404AndValid, source: 'tekton-results' } as ConformaFetchResult);
 
     const { result } = renderHook(() => useApplicationConformaResults('test-app'), {
       wrapper: createWrapper(),
@@ -503,7 +504,7 @@ describe('useApplicationConformaResults', () => {
       ],
     };
     setupTaskRunPipeline();
-    mockResolveConforma.mockResolvedValue(resultWith404Only);
+    mockResolveConforma.mockResolvedValue({ result: resultWith404Only, source: 'tekton-results' } as ConformaFetchResult);
 
     const { result } = renderHook(() => useApplicationConformaResults('test-app'), {
       wrapper: createWrapper(),
@@ -520,7 +521,7 @@ describe('useApplicationConformaResults', () => {
     const newerTr = createSecurityTaskRun('tr-new', 'comp-a', 'pod-new', '2026-06-01T00:00:00Z', 'pr-new');
     mockUseComponents.mockReturnValue([components, true, undefined]);
     mockUseTaskRunsV2.mockReturnValue([[olderTr, newerTr], true, undefined, jest.fn(), {}]);
-    mockResolveConforma.mockResolvedValue(mockConformaResult);
+    mockResolveConforma.mockResolvedValue({ result: mockConformaResult, source: 'tekton-results' } as ConformaFetchResult);
 
     const { result } = renderHook(() => useApplicationConformaResults('test-app'), {
       wrapper: createWrapper(),
@@ -544,7 +545,7 @@ describe('useApplicationConformaResults', () => {
     const trBeta = createSecurityTaskRun('tr-beta', 'comp-a', 'pod-b', sameTimestamp, 'pr-beta');
     mockUseComponents.mockReturnValue([components, true, undefined]);
     mockUseTaskRunsV2.mockReturnValue([[trAlpha, trBeta], true, undefined, jest.fn(), {}]);
-    mockResolveConforma.mockResolvedValue(mockConformaResult);
+    mockResolveConforma.mockResolvedValue({ result: mockConformaResult, source: 'tekton-results' } as ConformaFetchResult);
 
     renderHook(() => useApplicationConformaResults('test-app'), {
       wrapper: createWrapper(),
@@ -569,7 +570,7 @@ describe('useApplicationConformaResults', () => {
     mockUseComponents.mockReturnValue([components, true, undefined]);
     mockUseTaskRunsV2.mockReturnValue([taskRuns, true, undefined, jest.fn(), {}]);
     mockResolveConforma
-      .mockResolvedValueOnce(mockConformaResult)
+      .mockResolvedValueOnce({ result: mockConformaResult, source: 'tekton-results' } as ConformaFetchResult)
       .mockRejectedValueOnce(new Error('network error'));
 
     const { result } = renderHook(() => useApplicationConformaResults('test-app'), {
@@ -600,6 +601,47 @@ describe('useApplicationConformaResults', () => {
     expect(result.current.error).toBeTruthy();
   });
 
+  it('reports kubearchiveFailedCount=0 when all components succeed via kubearchive', async () => {
+    setupTaskRunPipeline();
+    mockResolveConforma.mockResolvedValue({ result: mockConformaResult, source: 'kubearchive' } as ConformaFetchResult);
+
+    const { result } = renderHook(() => useApplicationConformaResults('test-app'), {
+      wrapper: createWrapper(),
+    });
+
+    await flushEffects();
+
+    expect(result.current.kubearchiveFailedCount).toBe(0);
+  });
+
+  it('reports kubearchiveFailedCount matching number of components that fell back to tekton-results', async () => {
+    const components = [createComponent('comp-a'), createComponent('comp-b')];
+    const taskRuns = [
+      createSecurityTaskRun('tr-1', 'comp-a', 'pod-1'),
+      createSecurityTaskRun('tr-2', 'comp-b', 'pod-2'),
+    ];
+    mockUseComponents.mockReturnValue([components, true, undefined]);
+    mockUseTaskRunsV2.mockReturnValue([taskRuns, true, undefined, jest.fn(), {}]);
+    mockResolveConforma
+      .mockResolvedValueOnce({
+        result: mockConformaResult,
+        source: 'tekton-results',
+        kubearchiveFailed: true,
+      } as ConformaFetchResult)
+      .mockResolvedValueOnce({
+        result: mockConformaResult,
+        source: 'kubearchive',
+      } as ConformaFetchResult);
+
+    const { result } = renderHook(() => useApplicationConformaResults('test-app'), {
+      wrapper: createWrapper(),
+    });
+
+    await flushEffects();
+
+    expect(result.current.kubearchiveFailedCount).toBe(1);
+  });
+
   it('passes the correct selector to useTaskRunsV2', () => {
     renderHook(() => useApplicationConformaResults('test-app'), {
       wrapper: createWrapper(),
@@ -627,8 +669,8 @@ describe('useApplicationConformaResults', () => {
 
   it('reports loaded=true and settling=true while log queries are in-flight', async () => {
     setupTaskRunPipeline();
-    let resolvePromise: (v: ConformaResult) => void;
-    const pending = new Promise<ConformaResult>((r) => {
+    let resolvePromise: (v: ConformaFetchResult) => void;
+    const pending = new Promise<ConformaFetchResult>((r) => {
       resolvePromise = r;
     });
     mockResolveConforma.mockReturnValue(pending);
@@ -641,7 +683,7 @@ describe('useApplicationConformaResults', () => {
     expect(result.current.settling).toBe(true);
 
     await act(async () => {
-      resolvePromise(mockConformaResult);
+      resolvePromise({ result: mockConformaResult, source: 'tekton-results' });
       await pending;
     });
     await flushEffects();
@@ -659,12 +701,12 @@ describe('useApplicationConformaResults', () => {
     mockUseComponents.mockReturnValue([components, true, undefined]);
     mockUseTaskRunsV2.mockReturnValue([taskRuns, true, undefined, jest.fn(), {}]);
 
-    let resolveSecond: (v: ConformaResult) => void;
-    const pendingSecond = new Promise<ConformaResult>((r) => {
+    let resolveSecond: (v: ConformaFetchResult) => void;
+    const pendingSecond = new Promise<ConformaFetchResult>((r) => {
       resolveSecond = r;
     });
     mockResolveConforma
-      .mockResolvedValueOnce(mockConformaResult)
+      .mockResolvedValueOnce({ result: mockConformaResult, source: 'tekton-results' } as ConformaFetchResult)
       .mockReturnValueOnce(pendingSecond);
 
     const { result } = renderHook(() => useApplicationConformaResults('test-app'), {
@@ -678,7 +720,7 @@ describe('useApplicationConformaResults', () => {
     expect(result.current.allResults.length).toBeGreaterThan(0);
 
     await act(async () => {
-      resolveSecond(mockConformaResult);
+      resolveSecond({ result: mockConformaResult, source: 'tekton-results' });
       await pendingSecond;
     });
     await flushEffects();
@@ -688,7 +730,7 @@ describe('useApplicationConformaResults', () => {
 
   it('settling becomes false when all queries complete', async () => {
     setupTaskRunPipeline();
-    mockResolveConforma.mockResolvedValue(mockConformaResult);
+    mockResolveConforma.mockResolvedValue({ result: mockConformaResult, source: 'tekton-results' } as ConformaFetchResult);
 
     const { result } = renderHook(() => useApplicationConformaResults('test-app'), {
       wrapper: createWrapper(),
@@ -702,7 +744,7 @@ describe('useApplicationConformaResults', () => {
 
   it('preserves pipelineRunName on componentStatuses from TaskRun labels', async () => {
     setupTaskRunPipeline();
-    mockResolveConforma.mockResolvedValue(mockConformaResult);
+    mockResolveConforma.mockResolvedValue({ result: mockConformaResult, source: 'tekton-results' } as ConformaFetchResult);
 
     const { result } = renderHook(() => useApplicationConformaResults('test-app'), {
       wrapper: createWrapper(),

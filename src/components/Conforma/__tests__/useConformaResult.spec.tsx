@@ -36,6 +36,7 @@ jest.mock('~/feature-flags/hooks', () => ({
 
 const mockGetTaskRunLogs = getTaskRunLog as jest.Mock;
 const mockCommmonFetchJSON = createK8sUtilMock('commonFetchJSON');
+const mockCommonFetchText = createK8sUtilMock('commonFetchText');
 const mockUseTaskRunsForPipelineRuns = useTaskRunsForPipelineRuns as jest.Mock;
 const mockUsePipelineRunV2 = usePipelineRunV2 as jest.Mock;
 const mockUseIsOnFeatureFlag = useIsOnFeatureFlag as jest.Mock;
@@ -342,15 +343,17 @@ describe('useConformaResult', () => {
     expect(ecResult[0].violations.length).toEqual(1);
   });
 
-  it('should show empty state when kubearchive fetch fails', async () => {
+  it('shows empty state when kubearchive and tekton-results both fail', async () => {
     mockUseIsOnFeatureFlag.mockReturnValue(true);
-    mockCommmonFetchJSON.mockRejectedValue(new Error('KubeArchive error'));
+    mockCommmonFetchJSON.mockRejectedValue(new Error('KubeArchive JSON error'));
+    mockCommonFetchText.mockRejectedValue(new Error('KubeArchive text error'));
+    mockGetTaskRunLogs.mockRejectedValue(new Error('Tekton Results error'));
 
     const { result, waitForNextUpdate } = renderHookWithQueryClient('dummy-abcd');
     await waitForNextUpdate();
 
     expect(mockCommmonFetchJSON).toHaveBeenCalledTimes(1);
-    expect(mockGetTaskRunLogs).not.toHaveBeenCalled();
+    expect(mockGetTaskRunLogs).toHaveBeenCalledWith('test-ns', 'test-uid', 'pipeline-run-uid');
 
     const [ecResult, loaded] = result.current;
     expect(loaded).toBe(true);

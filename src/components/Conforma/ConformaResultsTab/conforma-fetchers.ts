@@ -1,5 +1,5 @@
 import { extractConformaResultsFromTaskRunLogs } from '~/components/Conforma/utils';
-import { commonFetchJSON, getK8sResourceURL } from '~/k8s';
+import { commonFetchJSON, commonFetchText, getK8sResourceURL } from '~/k8s';
 import { KUBEARCHIVE_PATH_PREFIX } from '~/kubearchive/const';
 import { PodModel } from '~/models/pod';
 import type { TaskRunKind } from '~/types';
@@ -47,6 +47,12 @@ export const mapConformaResultData = (
   }, [] as UIConformaData[]);
 };
 
+export type ConformaFetchResult = {
+  result: ConformaResult | undefined;
+  source: 'kubearchive' | 'tekton-results';
+  kubearchiveFailed?: boolean;
+};
+
 export async function fetchConformaLogFromKubearchive(
   namespace: string,
   taskRun: TaskRunKind,
@@ -63,10 +69,21 @@ export async function fetchConformaLogFromKubearchive(
     queryParams: { container: 'step-report-json', follow: 'true' },
   };
 
-  return commonFetchJSON<ConformaResult>(
-    getK8sResourceURL(PodModel, undefined, podLogOpts),
-    { pathPrefix: KUBEARCHIVE_PATH_PREFIX },
-  );
+  const url = getK8sResourceURL(PodModel, undefined, podLogOpts);
+  const fetchOpts = { pathPrefix: KUBEARCHIVE_PATH_PREFIX };
+
+  try {
+    return await commonFetchJSON<ConformaResult>(url, fetchOpts);
+  } catch {
+    // KubeArchive pod log endpoint may return text/plain — attempt manual parse
+    const rawText = await commonFetchText(url, fetchOpts);
+    try {
+      return JSON.parse(rawText.trim()) as ConformaResult;
+    } catch {
+      // Last resort: the response might use the Tekton Results bundled-log format
+      return extractConformaResultsFromTaskRunLogs(rawText);
+    }
+  }
 }
 
 export async function fetchConformaLogFromTektonResults(
@@ -89,11 +106,28 @@ export async function resolveConformaResultFromTaskRun(
   namespace: string,
   taskRun: TaskRunKind,
   isKubearchiveLogsEnabled: boolean,
-): Promise<ConformaResult | undefined> {
-  if (isKubearchiveLogsEnabled) {
-    return fetchConformaLogFromKubearchive(namespace, taskRun);
+): Promise<ConformaFetchResult> {
+  const hasPodName = !!taskRun.status?.podName;
+
+  if (isKubearchiveLogsEnabled && hasPodName) {
+    try {
+      const result = await fetchConformaLogFromKubearchive(namespace, taskRun);
+      return { result, source: 'kubearchive' };
+    } catch {
+      // KubeArchive fetch failed — fall back to Tekton Results but surface the failure
+      const result = await fetchConformaLogFromTektonResults(namespace, taskRun);
+      return { result, source: 'tekton-results', kubearchiveFailed: true };
+    }
   }
-  return fetchConformaLogFromTektonResults(namespace, taskRun);
+
+  if (isKubearchiveLogsEnabled && !hasPodName) {
+    // Archived TaskRun lacks podName — must use Tekton Results, flag it so the UI can warn
+    const result = await fetchConformaLogFromTektonResults(namespace, taskRun);
+    return { result, source: 'tekton-results', kubearchiveFailed: true };
+  }
+
+  const result = await fetchConformaLogFromTektonResults(namespace, taskRun);
+  return { result, source: 'tekton-results' };
 }
 
 /**

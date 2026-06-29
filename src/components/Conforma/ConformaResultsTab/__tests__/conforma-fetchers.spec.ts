@@ -1,5 +1,5 @@
 import { extractConformaResultsFromTaskRunLogs } from '~/components/Conforma/utils';
-import { commonFetchJSON, getK8sResourceURL } from '~/k8s';
+import { commonFetchJSON, commonFetchText, getK8sResourceURL } from '~/k8s';
 import { KUBEARCHIVE_PATH_PREFIX } from '~/kubearchive/const';
 import { PodModel } from '~/models/pod';
 import type { TaskRunKind } from '~/types';
@@ -17,6 +17,7 @@ import '@testing-library/jest-dom';
 
 jest.mock('~/k8s', () => ({
   commonFetchJSON: jest.fn(),
+  commonFetchText: jest.fn(),
   getK8sResourceURL: jest.fn(() => '/fake-url'),
 }));
 jest.mock('~/utils/tekton-results', () => ({ getTaskRunLog: jest.fn() }));
@@ -71,7 +72,7 @@ describe('fetchConformaLogFromKubearchive', () => {
     jest.mocked(getK8sResourceURL).mockReturnValue('/fake-url');
   });
 
-  it('fetches pod log via kubearchive pathPrefix', async () => {
+  it('fetches pod log via kubearchive pathPrefix when JSON succeeds', async () => {
     jest.mocked(commonFetchJSON).mockResolvedValue(mockConformaResult);
 
     const result = await fetchConformaLogFromKubearchive(
@@ -95,20 +96,43 @@ describe('fetchConformaLogFromKubearchive', () => {
     expect(result).toEqual(mockConformaResult);
   });
 
+  it('falls back to text parse when JSON fetch fails but text is valid JSON', async () => {
+    jest.mocked(commonFetchJSON).mockRejectedValue(new Error('Content-Type mismatch'));
+    jest.mocked(commonFetchText).mockResolvedValue(JSON.stringify(mockConformaResult));
+
+    const result = await fetchConformaLogFromKubearchive(
+      NAMESPACE,
+      createTaskRun('tr-1', 'pod-1'),
+    );
+
+    expect(commonFetchText).toHaveBeenCalledWith('/fake-url', {
+      pathPrefix: KUBEARCHIVE_PATH_PREFIX,
+    });
+    expect(result).toEqual(mockConformaResult);
+  });
+
+  it('falls back to extractConformaResultsFromTaskRunLogs when text is not raw JSON', async () => {
+    jest.mocked(commonFetchJSON).mockRejectedValue(new Error('not json'));
+    jest.mocked(commonFetchText).mockResolvedValue('step-report-json :-\n{...bundled...}');
+    jest.mocked(extractConformaResultsFromTaskRunLogs).mockReturnValue(mockConformaResult);
+
+    const result = await fetchConformaLogFromKubearchive(
+      NAMESPACE,
+      createTaskRun('tr-1', 'pod-1'),
+    );
+
+    expect(extractConformaResultsFromTaskRunLogs).toHaveBeenCalledWith(
+      'step-report-json :-\n{...bundled...}',
+    );
+    expect(result).toEqual(mockConformaResult);
+  });
+
   it('throws when TaskRun has no podName', async () => {
     await expect(
       fetchConformaLogFromKubearchive(NAMESPACE, createTaskRun('tr-1')),
     ).rejects.toThrow('TaskRun has no podName');
 
     expect(commonFetchJSON).not.toHaveBeenCalled();
-  });
-
-  it('throws when the fetch fails', async () => {
-    jest.mocked(commonFetchJSON).mockRejectedValue(new Error('kubearchive down'));
-
-    await expect(
-      fetchConformaLogFromKubearchive(NAMESPACE, createTaskRun('tr-1', 'pod-1')),
-    ).rejects.toThrow('kubearchive down');
   });
 });
 
@@ -175,8 +199,8 @@ describe('resolveConformaResultFromTaskRun', () => {
     jest.mocked(extractConformaResultsFromTaskRunLogs).mockReturnValue(mockConformaResult);
   });
 
-  it('delegates to kubearchive when flag is ON', async () => {
-    const result = await resolveConformaResultFromTaskRun(
+  it('delegates to kubearchive and returns source=kubearchive when flag is ON and fetch succeeds', async () => {
+    const fetchResult = await resolveConformaResultFromTaskRun(
       NAMESPACE,
       createTaskRun('tr-1', 'pod-1'),
       true,
@@ -186,21 +210,48 @@ describe('resolveConformaResultFromTaskRun', () => {
       pathPrefix: KUBEARCHIVE_PATH_PREFIX,
     });
     expect(getTaskRunLog).not.toHaveBeenCalled();
-    expect(result).toEqual(mockConformaResult);
+    expect(fetchResult).toEqual({
+      result: mockConformaResult,
+      source: 'kubearchive',
+    });
   });
 
-  it('throws when flag is ON and kubearchive fails — tekton-results is never called', async () => {
+  it('falls back to tekton-results with kubearchiveFailed=true when flag is ON and kubearchive fails', async () => {
     jest.mocked(commonFetchJSON).mockRejectedValue(new Error('kubearchive down'));
+    jest.mocked(commonFetchText).mockRejectedValue(new Error('text fetch also down'));
 
-    await expect(
-      resolveConformaResultFromTaskRun(NAMESPACE, createTaskRun('tr-1', 'pod-1'), true),
-    ).rejects.toThrow('kubearchive down');
+    const fetchResult = await resolveConformaResultFromTaskRun(
+      NAMESPACE,
+      createTaskRun('tr-1', 'pod-1'),
+      true,
+    );
 
-    expect(getTaskRunLog).not.toHaveBeenCalled();
+    expect(getTaskRunLog).toHaveBeenCalledWith('test-ns', 'uid-tr-1', 'pr-uid-1');
+    expect(fetchResult).toEqual({
+      result: mockConformaResult,
+      source: 'tekton-results',
+      kubearchiveFailed: true,
+    });
   });
 
-  it('delegates to tekton-results when flag is OFF', async () => {
-    const result = await resolveConformaResultFromTaskRun(
+  it('uses tekton-results with kubearchiveFailed=true when flag is ON but TaskRun has no podName', async () => {
+    const fetchResult = await resolveConformaResultFromTaskRun(
+      NAMESPACE,
+      createTaskRun('tr-1'),
+      true,
+    );
+
+    expect(commonFetchJSON).not.toHaveBeenCalled();
+    expect(getTaskRunLog).toHaveBeenCalledWith('test-ns', 'uid-tr-1', 'pr-uid-1');
+    expect(fetchResult).toEqual({
+      result: mockConformaResult,
+      source: 'tekton-results',
+      kubearchiveFailed: true,
+    });
+  });
+
+  it('delegates to tekton-results and returns source=tekton-results when flag is OFF', async () => {
+    const fetchResult = await resolveConformaResultFromTaskRun(
       NAMESPACE,
       createTaskRun('tr-1', 'pod-1'),
       false,
@@ -208,10 +259,13 @@ describe('resolveConformaResultFromTaskRun', () => {
 
     expect(getTaskRunLog).toHaveBeenCalledWith('test-ns', 'uid-tr-1', 'pr-uid-1');
     expect(commonFetchJSON).not.toHaveBeenCalled();
-    expect(result).toEqual(mockConformaResult);
+    expect(fetchResult).toEqual({
+      result: mockConformaResult,
+      source: 'tekton-results',
+    });
   });
 
-  it('throws when flag is OFF and tekton-results fails — kubearchive is never called', async () => {
+  it('throws when flag is OFF and tekton-results fails', async () => {
     jest.mocked(getTaskRunLog).mockRejectedValue(new Error('tekton-results down'));
 
     await expect(

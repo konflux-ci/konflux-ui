@@ -92,6 +92,8 @@ export type ApplicationConformaResults = {
   totalViolations: number;
   totalWarnings: number;
   totalSuccesses: number;
+  /** Number of components where KubeArchive log fetch failed and fell back to Tekton Results. */
+  kubearchiveFailedCount: number;
   loaded: boolean;
   settling: boolean;
   error: unknown;
