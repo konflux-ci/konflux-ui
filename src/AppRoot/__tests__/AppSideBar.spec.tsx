@@ -1,5 +1,7 @@
 import React from 'react';
 import { screen } from '@testing-library/react';
+import { Issue, IssueSeverity, IssueState, IssueType } from '~/kite/issue-type';
+import { useIssuesWithSeverity } from '~/kite/kite-hooks';
 import { useActiveRouteChecker } from '../../../src/hooks/useActiveRouteChecker';
 import { useNamespace } from '../../shared/providers/Namespace';
 import { routerRenderer } from '../../utils/test-utils';
@@ -27,9 +29,57 @@ jest.mock('~/feature-flags/FeatureFlagIndicator', () => ({
   FeatureFlagIndicator: () => null,
 }));
 
+jest.mock('~/kite/kite-hooks', () => ({
+  useIssuesWithSeverity: jest.fn(),
+}));
+
+const mockUseIssuesWithSeverity = useIssuesWithSeverity as jest.Mock;
+
+const createMockIssue = (severity: IssueSeverity, state: IssueState, id: string): Issue => ({
+  id,
+  title: `Test Issue ${id}`,
+  description: 'Test description',
+  severity,
+  issueType: IssueType.BUILD,
+  state,
+  detectedAt: '2023-10-01T12:00:00Z',
+  namespace: 'test-namespace',
+  scope: {
+    resourceType: 'test-resource',
+    resourceName: 'test-name',
+    resourceNamespace: 'test-namespace',
+  },
+  links: [],
+  relatedFrom: [],
+  relatedTo: [],
+  createdAt: '2023-10-01T12:00:00Z',
+  updatedAt: '2023-10-01T12:00:00Z',
+});
+
 describe('AppSideBar', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // Default mock - no issues
+    mockUseIssuesWithSeverity.mockReturnValue({
+      data: [
+        {
+          severity: IssueSeverity.CRITICAL,
+          issues: [],
+          total: 0,
+          isLoading: false,
+          error: null,
+        },
+        {
+          severity: IssueSeverity.MAJOR,
+          issues: [],
+          total: 0,
+          isLoading: false,
+          error: null,
+        },
+      ],
+      isLoaded: true,
+      hasError: false,
+    });
   });
 
   it('should render the sidebar', () => {
@@ -129,5 +179,35 @@ describe('AppSideBar', () => {
     expect(screen.getByText('Secrets')).toHaveAttribute('href', '/');
     expect(screen.getByText('Releases')).toHaveAttribute('href', '/');
     expect(screen.getByText('User Access')).toHaveAttribute('href', '/');
+  });
+
+  it('should render critical issues icon when active critical issues exist', () => {
+    (useActiveRouteChecker as jest.Mock).mockReturnValue(() => false);
+    (useNamespace as jest.Mock).mockReturnValue('test-namespace');
+
+    mockUseIssuesWithSeverity.mockReturnValue({
+      data: [
+        {
+          severity: IssueSeverity.CRITICAL,
+          issues: [createMockIssue(IssueSeverity.CRITICAL, IssueState.ACTIVE, 'crit-1')],
+          total: 1,
+          isLoading: false,
+          error: null,
+        },
+        {
+          severity: IssueSeverity.MAJOR,
+          issues: [],
+          total: 0,
+          isLoading: false,
+          error: null,
+        },
+      ],
+      isLoaded: true,
+      hasError: false,
+    });
+
+    routerRenderer(<AppSideBar isOpen={true} />);
+
+    expect(screen.getByTestId('critical-issues-icon')).toBeInTheDocument();
   });
 });
