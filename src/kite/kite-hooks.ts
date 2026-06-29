@@ -1,7 +1,13 @@
 import React from 'react';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import {
+  IssueCounts,
+  IssueQuery,
+  IssueSeverity,
+  IssueType,
+  IssuesWithSeverityResult,
+} from '~/kite/issue-type';
 import { STALE_TIME } from './const';
-import { IssueCounts, IssueQuery, IssueSeverity, IssueState, IssueType } from './issue-type';
 import { createGetIssueQueryOptions, createInfiniteIssueQueryOptions } from './kite-query';
 
 export const useIssues = (issueQuery: IssueQuery) => {
@@ -12,32 +18,16 @@ export const useInfiniteIssues = (issueQuery: IssueQuery) => {
   return useInfiniteQuery(createInfiniteIssueQueryOptions(issueQuery));
 };
 
-export const useIssueCountsBySeverity = (namespace: string, noRefetch?: boolean): IssueCounts => {
+export const useIssueCountsBySeverity = (namespace: string): IssueCounts => {
   const baseQuery: IssueQuery = {
     namespace,
     limit: 1,
-    state: IssueState.ACTIVE,
   };
 
-  const queryOptions = noRefetch
-    ? {
-        staleTime: STALE_TIME,
-        refetchOnMount: false as const,
-      }
-    : null;
-
-  const criticalResult = useQuery(
-    createGetIssueQueryOptions({ severity: IssueSeverity.CRITICAL, ...baseQuery }, queryOptions),
-  );
-  const majorResult = useQuery(
-    createGetIssueQueryOptions({ severity: IssueSeverity.MAJOR, ...baseQuery }, queryOptions),
-  );
-  const minorResult = useQuery(
-    createGetIssueQueryOptions({ severity: IssueSeverity.MINOR, ...baseQuery }, queryOptions),
-  );
-  const infoResult = useQuery(
-    createGetIssueQueryOptions({ severity: IssueSeverity.INFO, ...baseQuery }, queryOptions),
-  );
+  const criticalResult = useIssues({ severity: IssueSeverity.CRITICAL, ...baseQuery });
+  const majorResult = useIssues({ severity: IssueSeverity.MAJOR, ...baseQuery });
+  const minorResult = useIssues({ severity: IssueSeverity.MINOR, ...baseQuery });
+  const infoResult = useIssues({ severity: IssueSeverity.INFO, ...baseQuery });
 
   return React.useMemo(() => {
     const allResults = [criticalResult, majorResult, minorResult, infoResult];
@@ -96,4 +86,80 @@ export const useIssueCountsByType = (namespace: string): IssueCounts => {
       error,
     };
   }, [buildResult, testResult, releaseResult, dependencyResult, pipelineResult]);
+};
+
+// Helper function to create query options for a specific severity
+const createSeverityQueryOptions = (
+  severity: IssueSeverity,
+  baseQuery: IssueQuery,
+  severities: IssueSeverity[],
+  queryOptions: Record<string, unknown>,
+) => {
+  return createGetIssueQueryOptions(
+    { severity, ...baseQuery },
+    severities.includes(severity) ? queryOptions : { enabled: false },
+  );
+};
+
+export const useIssuesWithSeverity = (
+  namespace: string,
+  severities: IssueSeverity[],
+  noRefetch?: boolean,
+): IssuesWithSeverityResult => {
+  const baseQuery: IssueQuery = {
+    namespace,
+  };
+
+  const queryOptions = noRefetch
+    ? {
+        staleTime: STALE_TIME,
+        refetchOnMount: false as const,
+      }
+    : {};
+
+  // Create queries for each severity level using the helper function
+  const criticalResult = useQuery(
+    createSeverityQueryOptions(IssueSeverity.CRITICAL, baseQuery, severities, queryOptions),
+  );
+
+  const majorResult = useQuery(
+    createSeverityQueryOptions(IssueSeverity.MAJOR, baseQuery, severities, queryOptions),
+  );
+
+  const minorResult = useQuery(
+    createSeverityQueryOptions(IssueSeverity.MINOR, baseQuery, severities, queryOptions),
+  );
+
+  const infoResult = useQuery(
+    createSeverityQueryOptions(IssueSeverity.INFO, baseQuery, severities, queryOptions),
+  );
+
+  return React.useMemo(() => {
+    const severityResultMap = {
+      [IssueSeverity.CRITICAL]: criticalResult,
+      [IssueSeverity.MAJOR]: majorResult,
+      [IssueSeverity.MINOR]: minorResult,
+      [IssueSeverity.INFO]: infoResult,
+    };
+
+    const data = severities.map((severity) => {
+      const result = severityResultMap[severity];
+      return {
+        severity,
+        issues: result.data?.data ?? [],
+        total: result.data?.total ?? 0,
+        isLoading: result.isLoading,
+        error: result.error,
+      };
+    });
+
+    const isLoaded = data.every((item) => !item.isLoading);
+    const hasError = data.some((item) => item.error);
+
+    return {
+      data,
+      isLoaded,
+      hasError,
+    };
+  }, [severities, criticalResult, majorResult, minorResult, infoResult]);
 };
