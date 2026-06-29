@@ -2,34 +2,63 @@ import React from 'react';
 import { Icon } from '@patternfly/react-core';
 import { ExclamationCircleIcon } from '@patternfly/react-icons/dist/esm/icons/exclamation-circle-icon';
 import { ExclamationTriangleIcon } from '@patternfly/react-icons/dist/esm/icons/exclamation-triangle-icon';
-import { useIssueCountsBySeverity } from '~/kite/kite-hooks';
+import { IssueSeverity, IssueState } from '~/kite/issue-type';
+import { useIssuesWithSeverity } from '~/kite/kite-hooks';
 
-export const IssueNavItemContent: React.FC<{ namespace: string }> = ({ namespace }) => {
-  const { counts, isLoaded, error } = useIssueCountsBySeverity(namespace);
+const SEVERITIES = [IssueSeverity.CRITICAL, IssueSeverity.MAJOR];
+
+export const IssuesNavItemContent: React.FC<{ namespace: string }> = ({ namespace }) => {
+  const { data, isLoaded, hasError } = useIssuesWithSeverity(
+    namespace,
+    SEVERITIES,
+    true, // noRefetch
+  );
 
   const statusIcon = React.useMemo(() => {
-    if (!isLoaded || error) {
+    if (!isLoaded || hasError) {
       return null;
     }
 
-    const hasCriticalIssues = counts?.critical && counts.critical > 0;
+    // Find critical and major severity groups
+    const criticalGroup = data.find((group) => group.severity === IssueSeverity.CRITICAL);
+    const majorGroup = data.find((group) => group.severity === IssueSeverity.MAJOR);
+
+    // Check if there are active critical issues
+    const hasCriticalIssues = criticalGroup?.issues.some(
+      (issue) => issue.state === IssueState.ACTIVE,
+    );
+
     if (hasCriticalIssues) {
       return (
-        <Icon status="danger" data-test="critical-issues-icon">
+        <Icon
+          status="danger"
+          data-test="critical-issues-icon"
+          aria-label="Critical issues present"
+          className="pf-v5-u-ml-sm"
+        >
           <ExclamationCircleIcon />
         </Icon>
       );
     }
-    const hasMajorIssues = counts?.major && counts.major > 0;
+
+    // Check if there are active major issues
+    const hasMajorIssues = majorGroup?.issues.some((issue) => issue.state === IssueState.ACTIVE);
+
     if (hasMajorIssues) {
       return (
-        <Icon status="warning" data-test="major-issues-icon">
+        <Icon
+          status="warning"
+          data-test="major-issues-icon"
+          aria-label="Major issues present"
+          className="pf-v5-u-ml-sm"
+        >
           <ExclamationTriangleIcon />
         </Icon>
       );
     }
+
     return null;
-  }, [isLoaded, error, counts]);
+  }, [isLoaded, hasError, data]);
 
   return <>Issues {statusIcon}</>;
 };

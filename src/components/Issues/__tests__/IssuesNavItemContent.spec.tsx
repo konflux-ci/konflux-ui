@@ -1,17 +1,39 @@
 import { screen } from '@testing-library/react';
-import { useIssueCountsBySeverity } from '~/kite/kite-hooks';
+import { Issue, IssueSeverity, IssueState, IssueType } from '~/kite/issue-type';
+import { useIssuesWithSeverity } from '~/kite/kite-hooks';
 import { renderWithQueryClientAndRouter } from '~/unit-test-utils/rendering-utils';
-import { IssueNavItemContent } from '../IssuesNavItemContent';
+import { IssuesNavItemContent } from '../IssuesNavItemContent';
 
 jest.mock('~/kite/kite-hooks', () => ({
-  useIssueCountsBySeverity: jest.fn(),
+  useIssuesWithSeverity: jest.fn(),
 }));
 
 jest.mock('~/feature-flags/FeatureFlagIndicator', () => ({
   FeatureFlagIndicator: () => null,
 }));
 
-const mockUseIssueCountsBySeverity = useIssueCountsBySeverity as jest.Mock;
+const mockUseIssuesWithSeverity = useIssuesWithSeverity as jest.Mock;
+
+const createMockIssue = (severity: IssueSeverity, state: IssueState, id: string): Issue => ({
+  id,
+  title: `Test Issue ${id}`,
+  description: 'Test description',
+  severity,
+  issueType: IssueType.BUILD,
+  state,
+  detectedAt: '2023-10-01T12:00:00Z',
+  namespace: 'test-namespace',
+  scope: {
+    resourceType: 'test-resource',
+    resourceName: 'test-name',
+    resourceNamespace: 'test-namespace',
+  },
+  links: [],
+  relatedFrom: [],
+  relatedTo: [],
+  createdAt: '2023-10-01T12:00:00Z',
+  updatedAt: '2023-10-01T12:00:00Z',
+});
 
 describe('IssueNavItemContent', () => {
   beforeEach(() => {
@@ -20,13 +42,13 @@ describe('IssueNavItemContent', () => {
 
   describe('Loading state', () => {
     it('should render only text without icon when loading', () => {
-      mockUseIssueCountsBySeverity.mockReturnValue({
-        counts: undefined,
+      mockUseIssuesWithSeverity.mockReturnValue({
+        data: [],
         isLoaded: false,
-        error: null,
+        hasError: false,
       });
 
-      renderWithQueryClientAndRouter(<IssueNavItemContent namespace="test-namespace" />);
+      renderWithQueryClientAndRouter(<IssuesNavItemContent namespace="test-namespace" />);
 
       expect(screen.getByText(/Issues/)).toBeInTheDocument();
       expect(screen.queryByRole('img')).not.toBeInTheDocument();
@@ -35,13 +57,13 @@ describe('IssueNavItemContent', () => {
 
   describe('Error state', () => {
     it('should render only text without icon when there is an error', () => {
-      mockUseIssueCountsBySeverity.mockReturnValue({
-        counts: undefined,
+      mockUseIssuesWithSeverity.mockReturnValue({
+        data: [],
         isLoaded: true,
-        error: { code: 500, message: 'Server error' },
+        hasError: true,
       });
 
-      renderWithQueryClientAndRouter(<IssueNavItemContent namespace="test-namespace" />);
+      renderWithQueryClientAndRouter(<IssuesNavItemContent namespace="test-namespace" />);
 
       expect(screen.getByText(/Issues/)).toBeInTheDocument();
       expect(screen.queryByRole('img')).not.toBeInTheDocument();
@@ -50,41 +72,71 @@ describe('IssueNavItemContent', () => {
 
   describe('Empty state', () => {
     it('should render only text without icon when no issues exist', () => {
-      mockUseIssueCountsBySeverity.mockReturnValue({
-        counts: { critical: 0, major: 0, minor: 0, info: 0 },
+      mockUseIssuesWithSeverity.mockReturnValue({
+        data: [
+          {
+            severity: IssueSeverity.CRITICAL,
+            issues: [],
+            total: 0,
+            isLoading: false,
+            error: null,
+          },
+          {
+            severity: IssueSeverity.MAJOR,
+            issues: [],
+            total: 0,
+            isLoading: false,
+            error: null,
+          },
+        ],
         isLoaded: true,
-        error: null,
+        hasError: false,
       });
 
-      renderWithQueryClientAndRouter(<IssueNavItemContent namespace="test-namespace" />);
+      renderWithQueryClientAndRouter(<IssuesNavItemContent namespace="test-namespace" />);
 
       expect(screen.getByText(/Issues/)).toBeInTheDocument();
       expect(screen.queryByTestId('critical-issues-icon')).not.toBeInTheDocument();
       expect(screen.queryByTestId('major-issues-icon')).not.toBeInTheDocument();
     });
 
-    it('should render only text without icon when counts is null', () => {
-      mockUseIssueCountsBySeverity.mockReturnValue({
-        counts: null,
+    it('should render only text without icon when data is empty array', () => {
+      mockUseIssuesWithSeverity.mockReturnValue({
+        data: [],
         isLoaded: true,
-        error: null,
+        hasError: false,
       });
 
-      renderWithQueryClientAndRouter(<IssueNavItemContent namespace="test-namespace" />);
+      renderWithQueryClientAndRouter(<IssuesNavItemContent namespace="test-namespace" />);
 
       expect(screen.getByText(/Issues/)).toBeInTheDocument();
       expect(screen.queryByTestId('critical-issues-icon')).not.toBeInTheDocument();
       expect(screen.queryByTestId('major-issues-icon')).not.toBeInTheDocument();
     });
 
-    it('should render only text without icon when counts is undefined', () => {
-      mockUseIssueCountsBySeverity.mockReturnValue({
-        counts: undefined,
+    it('should render only text without icon when only resolved issues exist', () => {
+      mockUseIssuesWithSeverity.mockReturnValue({
+        data: [
+          {
+            severity: IssueSeverity.CRITICAL,
+            issues: [createMockIssue(IssueSeverity.CRITICAL, IssueState.RESOLVED, 'crit-1')],
+            total: 1,
+            isLoading: false,
+            error: null,
+          },
+          {
+            severity: IssueSeverity.MAJOR,
+            issues: [createMockIssue(IssueSeverity.MAJOR, IssueState.RESOLVED, 'major-1')],
+            total: 1,
+            isLoading: false,
+            error: null,
+          },
+        ],
         isLoaded: true,
-        error: null,
+        hasError: false,
       });
 
-      renderWithQueryClientAndRouter(<IssueNavItemContent namespace="test-namespace" />);
+      renderWithQueryClientAndRouter(<IssuesNavItemContent namespace="test-namespace" />);
 
       expect(screen.getByText(/Issues/)).toBeInTheDocument();
       expect(screen.queryByTestId('critical-issues-icon')).not.toBeInTheDocument();
@@ -93,27 +145,57 @@ describe('IssueNavItemContent', () => {
   });
 
   describe('Critical issues', () => {
-    it('should render danger icon when unresolved critical issues exist', () => {
-      mockUseIssueCountsBySeverity.mockReturnValue({
-        counts: { critical: 1, major: 0, minor: 0, info: 0 },
+    it('should render danger icon when active critical issues exist', () => {
+      mockUseIssuesWithSeverity.mockReturnValue({
+        data: [
+          {
+            severity: IssueSeverity.CRITICAL,
+            issues: [createMockIssue(IssueSeverity.CRITICAL, IssueState.ACTIVE, 'crit-1')],
+            total: 1,
+            isLoading: false,
+            error: null,
+          },
+          {
+            severity: IssueSeverity.MAJOR,
+            issues: [],
+            total: 0,
+            isLoading: false,
+            error: null,
+          },
+        ],
         isLoaded: true,
-        error: null,
+        hasError: false,
       });
 
-      renderWithQueryClientAndRouter(<IssueNavItemContent namespace="test-namespace" />);
+      renderWithQueryClientAndRouter(<IssuesNavItemContent namespace="test-namespace" />);
 
       expect(screen.getByText(/Issues/)).toBeInTheDocument();
       expect(screen.getByTestId('critical-issues-icon')).toBeInTheDocument();
     });
 
     it('should not render icon when critical issue is resolved', () => {
-      mockUseIssueCountsBySeverity.mockReturnValue({
-        counts: { critical: 0, major: 0, minor: 0, info: 0 },
+      mockUseIssuesWithSeverity.mockReturnValue({
+        data: [
+          {
+            severity: IssueSeverity.CRITICAL,
+            issues: [createMockIssue(IssueSeverity.CRITICAL, IssueState.RESOLVED, 'crit-1')],
+            total: 1,
+            isLoading: false,
+            error: null,
+          },
+          {
+            severity: IssueSeverity.MAJOR,
+            issues: [],
+            total: 0,
+            isLoading: false,
+            error: null,
+          },
+        ],
         isLoaded: true,
-        error: null,
+        hasError: false,
       });
 
-      renderWithQueryClientAndRouter(<IssueNavItemContent namespace="test-namespace" />);
+      renderWithQueryClientAndRouter(<IssuesNavItemContent namespace="test-namespace" />);
 
       expect(screen.getByText(/Issues/)).toBeInTheDocument();
       expect(screen.queryByTestId('critical-issues-icon')).not.toBeInTheDocument();
@@ -121,13 +203,28 @@ describe('IssueNavItemContent', () => {
     });
 
     it('should prioritize critical over major issues', () => {
-      mockUseIssueCountsBySeverity.mockReturnValue({
-        counts: { critical: 1, major: 1, minor: 0, info: 0 },
+      mockUseIssuesWithSeverity.mockReturnValue({
+        data: [
+          {
+            severity: IssueSeverity.CRITICAL,
+            issues: [createMockIssue(IssueSeverity.CRITICAL, IssueState.ACTIVE, 'crit-1')],
+            total: 1,
+            isLoading: false,
+            error: null,
+          },
+          {
+            severity: IssueSeverity.MAJOR,
+            issues: [createMockIssue(IssueSeverity.MAJOR, IssueState.ACTIVE, 'major-1')],
+            total: 1,
+            isLoading: false,
+            error: null,
+          },
+        ],
         isLoaded: true,
-        error: null,
+        hasError: false,
       });
 
-      renderWithQueryClientAndRouter(<IssueNavItemContent namespace="test-namespace" />);
+      renderWithQueryClientAndRouter(<IssuesNavItemContent namespace="test-namespace" />);
 
       expect(screen.getByTestId('critical-issues-icon')).toBeInTheDocument();
       expect(screen.queryByTestId('major-issues-icon')).not.toBeInTheDocument();
@@ -135,27 +232,57 @@ describe('IssueNavItemContent', () => {
   });
 
   describe('Major issues', () => {
-    it('should render warning icon when unresolved major issues exist', () => {
-      mockUseIssueCountsBySeverity.mockReturnValue({
-        counts: { critical: 0, major: 1, minor: 0, info: 0 },
+    it('should render warning icon when active major issues exist', () => {
+      mockUseIssuesWithSeverity.mockReturnValue({
+        data: [
+          {
+            severity: IssueSeverity.CRITICAL,
+            issues: [],
+            total: 0,
+            isLoading: false,
+            error: null,
+          },
+          {
+            severity: IssueSeverity.MAJOR,
+            issues: [createMockIssue(IssueSeverity.MAJOR, IssueState.ACTIVE, 'major-1')],
+            total: 1,
+            isLoading: false,
+            error: null,
+          },
+        ],
         isLoaded: true,
-        error: null,
+        hasError: false,
       });
 
-      renderWithQueryClientAndRouter(<IssueNavItemContent namespace="test-namespace" />);
+      renderWithQueryClientAndRouter(<IssuesNavItemContent namespace="test-namespace" />);
 
       expect(screen.getByText(/Issues/)).toBeInTheDocument();
       expect(screen.getByTestId('major-issues-icon')).toBeInTheDocument();
     });
 
     it('should not render icon when major issue is resolved', () => {
-      mockUseIssueCountsBySeverity.mockReturnValue({
-        counts: { critical: 0, major: 0, minor: 0, info: 0 },
+      mockUseIssuesWithSeverity.mockReturnValue({
+        data: [
+          {
+            severity: IssueSeverity.CRITICAL,
+            issues: [],
+            total: 0,
+            isLoading: false,
+            error: null,
+          },
+          {
+            severity: IssueSeverity.MAJOR,
+            issues: [createMockIssue(IssueSeverity.MAJOR, IssueState.RESOLVED, 'major-1')],
+            total: 1,
+            isLoading: false,
+            error: null,
+          },
+        ],
         isLoaded: true,
-        error: null,
+        hasError: false,
       });
 
-      renderWithQueryClientAndRouter(<IssueNavItemContent namespace="test-namespace" />);
+      renderWithQueryClientAndRouter(<IssuesNavItemContent namespace="test-namespace" />);
 
       expect(screen.getByText(/Issues/)).toBeInTheDocument();
       expect(screen.queryByTestId('critical-issues-icon')).not.toBeInTheDocument();
@@ -164,28 +291,30 @@ describe('IssueNavItemContent', () => {
   });
 
   describe('Minor and Info issues', () => {
-    it('should not render icon for unresolved minor issues', () => {
-      mockUseIssueCountsBySeverity.mockReturnValue({
-        counts: { critical: 0, major: 0, minor: 1, info: 0 },
+    it('should not render icon when only minor issues exist (not fetched)', () => {
+      // Minor severity is not in the fetched severities array
+      mockUseIssuesWithSeverity.mockReturnValue({
+        data: [
+          {
+            severity: IssueSeverity.CRITICAL,
+            issues: [],
+            total: 0,
+            isLoading: false,
+            error: null,
+          },
+          {
+            severity: IssueSeverity.MAJOR,
+            issues: [],
+            total: 0,
+            isLoading: false,
+            error: null,
+          },
+        ],
         isLoaded: true,
-        error: null,
+        hasError: false,
       });
 
-      renderWithQueryClientAndRouter(<IssueNavItemContent namespace="test-namespace" />);
-
-      expect(screen.getByText(/Issues/)).toBeInTheDocument();
-      expect(screen.queryByTestId('critical-issues-icon')).not.toBeInTheDocument();
-      expect(screen.queryByTestId('major-issues-icon')).not.toBeInTheDocument();
-    });
-
-    it('should not render icon for unresolved info issues', () => {
-      mockUseIssueCountsBySeverity.mockReturnValue({
-        counts: { critical: 0, major: 0, minor: 0, info: 1 },
-        isLoaded: true,
-        error: null,
-      });
-
-      renderWithQueryClientAndRouter(<IssueNavItemContent namespace="test-namespace" />);
+      renderWithQueryClientAndRouter(<IssuesNavItemContent namespace="test-namespace" />);
 
       expect(screen.getByText(/Issues/)).toBeInTheDocument();
       expect(screen.queryByTestId('critical-issues-icon')).not.toBeInTheDocument();
@@ -195,55 +324,87 @@ describe('IssueNavItemContent', () => {
 
   describe('Multiple issues', () => {
     it('should handle multiple issues with different states correctly', () => {
-      mockUseIssueCountsBySeverity.mockReturnValue({
-        counts: { critical: 0, major: 0, minor: 1, info: 0 },
+      mockUseIssuesWithSeverity.mockReturnValue({
+        data: [
+          {
+            severity: IssueSeverity.CRITICAL,
+            issues: [
+              createMockIssue(IssueSeverity.CRITICAL, IssueState.RESOLVED, 'crit-1'),
+              createMockIssue(IssueSeverity.CRITICAL, IssueState.ACTIVE, 'crit-2'),
+            ],
+            total: 2,
+            isLoading: false,
+            error: null,
+          },
+          {
+            severity: IssueSeverity.MAJOR,
+            issues: [createMockIssue(IssueSeverity.MAJOR, IssueState.RESOLVED, 'major-1')],
+            total: 1,
+            isLoading: false,
+            error: null,
+          },
+        ],
         isLoaded: true,
-        error: null,
+        hasError: false,
       });
 
-      renderWithQueryClientAndRouter(<IssueNavItemContent namespace="test-namespace" />);
+      renderWithQueryClientAndRouter(<IssuesNavItemContent namespace="test-namespace" />);
 
       expect(screen.getByText(/Issues/)).toBeInTheDocument();
-      expect(screen.queryByTestId('critical-issues-icon')).not.toBeInTheDocument();
+      // Should show critical icon because there's at least one active critical issue
+      expect(screen.getByTestId('critical-issues-icon')).toBeInTheDocument();
       expect(screen.queryByTestId('major-issues-icon')).not.toBeInTheDocument();
     });
 
-    it('should handle zero counts explicitly', () => {
-      mockUseIssueCountsBySeverity.mockReturnValue({
-        counts: { critical: 0, major: 0, minor: 0, info: 0 },
+    it('should handle mix of active and resolved issues', () => {
+      mockUseIssuesWithSeverity.mockReturnValue({
+        data: [
+          {
+            severity: IssueSeverity.CRITICAL,
+            issues: [createMockIssue(IssueSeverity.CRITICAL, IssueState.RESOLVED, 'crit-1')],
+            total: 1,
+            isLoading: false,
+            error: null,
+          },
+          {
+            severity: IssueSeverity.MAJOR,
+            issues: [
+              createMockIssue(IssueSeverity.MAJOR, IssueState.RESOLVED, 'major-1'),
+              createMockIssue(IssueSeverity.MAJOR, IssueState.ACTIVE, 'major-2'),
+            ],
+            total: 2,
+            isLoading: false,
+            error: null,
+          },
+        ],
         isLoaded: true,
-        error: null,
+        hasError: false,
       });
 
-      renderWithQueryClientAndRouter(<IssueNavItemContent namespace="test-namespace" />);
+      renderWithQueryClientAndRouter(<IssuesNavItemContent namespace="test-namespace" />);
 
       expect(screen.getByText(/Issues/)).toBeInTheDocument();
+      // Should show major icon because critical has no active issues but major has one
       expect(screen.queryByTestId('critical-issues-icon')).not.toBeInTheDocument();
-      expect(screen.queryByTestId('major-issues-icon')).not.toBeInTheDocument();
+      expect(screen.getByTestId('major-issues-icon')).toBeInTheDocument();
     });
 
-    it('should not render critical icon when count is null', () => {
-      mockUseIssueCountsBySeverity.mockReturnValue({
-        counts: { critical: null, major: 0, minor: 0, info: 0 },
+    it('should handle when severity group is not found', () => {
+      mockUseIssuesWithSeverity.mockReturnValue({
+        data: [
+          {
+            severity: IssueSeverity.CRITICAL,
+            issues: [],
+            total: 0,
+            isLoading: false,
+            error: null,
+          },
+        ],
         isLoaded: true,
-        error: null,
+        hasError: false,
       });
 
-      renderWithQueryClientAndRouter(<IssueNavItemContent namespace="test-namespace" />);
-
-      expect(screen.getByText(/Issues/)).toBeInTheDocument();
-      expect(screen.queryByTestId('critical-issues-icon')).not.toBeInTheDocument();
-      expect(screen.queryByTestId('major-issues-icon')).not.toBeInTheDocument();
-    });
-
-    it('should not render major icon when count is undefined', () => {
-      mockUseIssueCountsBySeverity.mockReturnValue({
-        counts: { critical: 0, major: undefined, minor: 0, info: 0 },
-        isLoaded: true,
-        error: null,
-      });
-
-      renderWithQueryClientAndRouter(<IssueNavItemContent namespace="test-namespace" />);
+      renderWithQueryClientAndRouter(<IssuesNavItemContent namespace="test-namespace" />);
 
       expect(screen.getByText(/Issues/)).toBeInTheDocument();
       expect(screen.queryByTestId('critical-issues-icon')).not.toBeInTheDocument();

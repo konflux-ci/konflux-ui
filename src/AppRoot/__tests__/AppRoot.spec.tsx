@@ -1,6 +1,8 @@
 import { screen, fireEvent, waitFor } from '@testing-library/react';
 import { mockedValidBannerConfig } from '~/components/KonfluxBanner/__data__/banner-data';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
+import { IssueSeverity } from '~/kite/issue-type';
+import { useIssuesWithSeverity } from '~/kite/kite-hooks';
 import { useActiveRouteChecker } from '../../hooks/useActiveRouteChecker';
 import { createK8sUtilMock, routerRenderer } from '../../utils/test-utils';
 import { AppRoot } from '../AppRoot';
@@ -43,6 +45,7 @@ jest.mock('~/kite/kite-hooks', () => ({
     hasNextPage: false,
     isFetchingNextPage: false,
   })),
+  useIssuesWithSeverity: jest.fn(),
 }));
 
 // Mock shared hooks since KonfluxBanner now uses them
@@ -63,6 +66,7 @@ jest.mock('../../shared/hooks', () => ({
 
 const k8sWatchMock = createK8sUtilMock('useK8sWatchResource');
 const mockUseIsOnFeatureFlag = useIsOnFeatureFlag as jest.Mock;
+const mockUseIssuesWithSeverity = useIssuesWithSeverity as jest.Mock;
 
 // Mock window.matchMedia for PatternFly components to fix:
 // TypeError: window.matchMedia is not a function
@@ -87,6 +91,27 @@ describe('AppRoot', () => {
     // Default: enable system-notifications feature flag for tests
     mockUseIsOnFeatureFlag.mockImplementation((flag: string) => {
       return flag === 'system-notifications';
+    });
+    // Default mock - no issues
+    mockUseIssuesWithSeverity.mockReturnValue({
+      data: [
+        {
+          severity: IssueSeverity.CRITICAL,
+          issues: [],
+          total: 0,
+          isLoading: false,
+          error: null,
+        },
+        {
+          severity: IssueSeverity.MAJOR,
+          issues: [],
+          total: 0,
+          isLoading: false,
+          error: null,
+        },
+      ],
+      isLoaded: true,
+      hasError: false,
     });
   });
 
