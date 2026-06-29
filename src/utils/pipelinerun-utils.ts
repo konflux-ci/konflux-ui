@@ -8,7 +8,7 @@ import { PipelineRunKind } from '../types';
 import { K8sModelCommon, K8sResourceCommon } from '../types/k8s';
 import { getPipelineRuns, getTaskRuns, createTektonResultQueryOptions, EQ } from './tekton-results';
 
-export const stripQueryStringParams = (url: string) => {
+export const stripQueryStringParams = (url: string): string | undefined => {
   if (!url) return undefined;
 
   try {
@@ -19,7 +19,7 @@ export const stripQueryStringParams = (url: string) => {
   }
 };
 
-export const getSourceUrl = (pipelineRun: PipelineRunKind): string => {
+export const getSourceUrl = (pipelineRun: PipelineRunKind): string | undefined => {
   if (!pipelineRun) {
     return undefined;
   }

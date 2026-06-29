@@ -50,7 +50,7 @@ export const createCommitObjectFromPLR = (plr: PipelineRunKind): Commit => {
     plr.metadata.annotations?.[PipelineRunLabel.TEST_REPO_ORG_LABEL];
   const shaURL =
     plr.metadata.annotations?.[PipelineRunLabel.COMMIT_URL_ANNOTATION] ||
-    `${repoURL}/commit/${commitSHA}`;
+    (repoURL ? `${repoURL}/commit/${commitSHA}` : undefined);
   const shaTitle =
     plr.metadata.annotations?.[PipelineRunLabel.COMMIT_SHA_TITLE_ANNOTATION] || 'manual build';
   const gitProvider =
