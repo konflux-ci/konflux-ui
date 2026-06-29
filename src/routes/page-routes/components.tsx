@@ -1,3 +1,5 @@
+import { ComponentDependencyTab } from '~/components/Components/ComponentDependencyManager/ComponentDependencyTab';
+import { ensureFeatureFlagOnLoader } from '~/feature-flags/utils';
 import {
   ComponentActivityTab,
   ComponentDetailsTab,
@@ -28,6 +30,14 @@ const componentRoutes = [
       {
         path: `activity`,
         element: <ComponentActivityTab />,
+      },
+      {
+        path: `dependency-updates`,
+        loader: () => {
+          ensureFeatureFlagOnLoader('mintmaker');
+          return null;
+        },
+        element: <ComponentDependencyTab />,
       },
     ],
   },
