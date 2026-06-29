@@ -372,5 +372,79 @@ describe('favicon-badge', () => {
       releaseFaviconBadge();
       expect(link.href).toBe('https://example.com/favicon.ico');
     });
+
+    it('does not reset favicon on load failure while another consumer remains active', async () => {
+      const link = document.createElement('link');
+      link.rel = 'icon';
+      link.href = 'https://example.com/favicon.ico';
+      document.head.appendChild(link);
+
+      const mockContext = {
+        drawImage: jest.fn(),
+        beginPath: jest.fn(),
+        arc: jest.fn(),
+        fill: jest.fn(),
+        stroke: jest.fn(),
+      };
+      jest
+        .spyOn(HTMLCanvasElement.prototype, 'getContext')
+        .mockReturnValue(mockContext as unknown as CanvasRenderingContext2D);
+      jest
+        .spyOn(HTMLCanvasElement.prototype, 'toDataURL')
+        .mockReturnValue('data:image/png;base64,active-badged');
+
+      mockFaviconImageLoadSuccess();
+
+      acquireFaviconBadge();
+      acquireFaviconBadge();
+      await applyFaviconBadge(blueColor.value);
+      expect(link.href).toBe('data:image/png;base64,active-badged');
+
+      mockFaviconImageLoadError();
+      await applyFaviconBadge(redColor.value);
+      expect(link.href).toBe('data:image/png;base64,active-badged');
+
+      releaseFaviconBadge();
+      expect(link.href).toBe('data:image/png;base64,active-badged');
+
+      releaseFaviconBadge();
+      expect(link.href).toBe('https://example.com/favicon.ico');
+    });
+
+    it('does not reset favicon when canvas is unavailable while another consumer remains active', async () => {
+      const link = document.createElement('link');
+      link.rel = 'icon';
+      link.href = 'https://example.com/favicon.ico';
+      document.head.appendChild(link);
+
+      const mockContext = {
+        drawImage: jest.fn(),
+        beginPath: jest.fn(),
+        arc: jest.fn(),
+        fill: jest.fn(),
+        stroke: jest.fn(),
+      };
+      jest
+        .spyOn(HTMLCanvasElement.prototype, 'getContext')
+        .mockReturnValue(mockContext as unknown as CanvasRenderingContext2D);
+      jest
+        .spyOn(HTMLCanvasElement.prototype, 'toDataURL')
+        .mockReturnValue('data:image/png;base64,active-badged');
+
+      mockFaviconImageLoadSuccess();
+
+      acquireFaviconBadge();
+      acquireFaviconBadge();
+      await applyFaviconBadge(blueColor.value);
+      expect(link.href).toBe('data:image/png;base64,active-badged');
+
+      jest.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
+      await applyFaviconBadge(redColor.value);
+      expect(link.href).toBe('data:image/png;base64,active-badged');
+
+      releaseFaviconBadge();
+      releaseFaviconBadge();
+      expect(link.href).toBe('https://example.com/favicon.ico');
+    });
   });
 });

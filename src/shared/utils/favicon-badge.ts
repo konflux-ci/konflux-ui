@@ -18,7 +18,11 @@ export const getFaviconLink = (): HTMLLinkElement => {
   return link;
 };
 
+/** Resets only when no other consumer holds ownership (avoids clobbering active badges). */
 const resetToBaselineFavicon = (): void => {
+  if (activeConsumers > 1) {
+    return;
+  }
   getFaviconLink().href = baselineFaviconHref ?? DEFAULT_FAVICON_HREF;
 };
 

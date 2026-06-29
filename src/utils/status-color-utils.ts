@@ -7,6 +7,7 @@ import { global_success_color_100 as greenColor } from '@patternfly/react-tokens
 import { global_warning_color_100 as warningColor } from '@patternfly/react-tokens/dist/js/global_warning_color_100';
 import { runStatus } from '~/consts/pipelinerun';
 
+/** Canvas hex colors for favicon badges. For PatternFly Label colors, see getLabelColorFromStatus in pipeline-utils. */
 export const getColorForPipelineStatus = (status: runStatus): string => {
   switch (status) {
     case runStatus.Succeeded:
