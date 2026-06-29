@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { useParams } from 'react-router-dom';
 import {
+  Alert,
   Bullseye,
   PageSection,
   PageSectionVariants,
@@ -35,6 +36,7 @@ const ConformaResultsTabContent: React.FC = () => {
     totalViolations,
     totalWarnings,
     totalSuccesses,
+    kubearchiveFailedCount,
     loaded,
     error,
   } = useApplicationConformaResults(applicationName);
@@ -117,6 +119,17 @@ const ConformaResultsTabContent: React.FC = () => {
 
   return (
     <>
+      {kubearchiveFailedCount > 0 && (
+        <Alert
+          variant="warning"
+          isInline
+          title="Data source notice"
+          data-test="kubearchive-fallback-warning"
+        >
+          KubeArchive log fetch failed for {kubearchiveFailedCount} component
+          {kubearchiveFailedCount > 1 ? 's' : ''}. Showing results from Tekton Results instead.
+        </Alert>
+      )}
       <PageSection variant={PageSectionVariants.light} padding={{ default: 'noPadding' }}>
         <TextContent>
           <Title headingLevel="h3" className="pf-v5-c-title pf-v5-u-mt-lg pf-v5-u-mb-sm" size="lg">

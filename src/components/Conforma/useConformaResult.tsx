@@ -68,9 +68,9 @@ export const useConformaResultFromLogs = (
 
     let cancelled = false;
     resolveConformaResultFromTaskRun(namespace, currentTaskRun, isKubearchiveEnabled)
-      .then((result) => {
+      .then((fetchResult) => {
         if (!cancelled) {
-          setCrJson(result);
+          setCrJson(fetchResult.result);
           setCrLoaded(true);
         }
       })
