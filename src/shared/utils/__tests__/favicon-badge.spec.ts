@@ -224,6 +224,42 @@ describe('favicon-badge', () => {
       releaseFaviconBadge();
     });
 
+    it('updates the badged favicon when color changes without releasing ownership', async () => {
+      const link = document.createElement('link');
+      link.rel = 'icon';
+      link.href = '/favicon.ico';
+      document.head.appendChild(link);
+
+      const mockContext = {
+        drawImage: jest.fn(),
+        beginPath: jest.fn(),
+        arc: jest.fn(),
+        fill: jest.fn(),
+        stroke: jest.fn(),
+        fillStyle: '',
+        strokeStyle: '',
+        lineWidth: 0,
+      };
+      jest
+        .spyOn(HTMLCanvasElement.prototype, 'getContext')
+        .mockReturnValue(mockContext as unknown as CanvasRenderingContext2D);
+      jest
+        .spyOn(HTMLCanvasElement.prototype, 'toDataURL')
+        .mockImplementation(() => `data:image/png;base64,${mockContext.fillStyle}`);
+
+      mockFaviconImageLoadSuccess();
+
+      acquireFaviconBadge();
+      await applyFaviconBadge(grayColor.value);
+      expect(link.href).toBe(`data:image/png;base64,${grayColor.value}`);
+
+      await applyFaviconBadge(blueColor.value);
+      expect(link.href).toBe(`data:image/png;base64,${blueColor.value}`);
+      expect(link.href).not.toContain('/favicon.ico');
+
+      releaseFaviconBadge();
+    });
+
     it('applies a badged favicon when image loads successfully', async () => {
       const link = document.createElement('link');
       link.rel = 'icon';

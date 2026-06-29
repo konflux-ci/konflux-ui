@@ -36,6 +36,8 @@ describe('useFaviconStatusBadge', () => {
 
     rerender({ color: greenColor.value });
 
+    expect(acquireFaviconBadgeMock).toHaveBeenCalledTimes(1);
+    expect(releaseFaviconBadgeMock).not.toHaveBeenCalled();
     expect(applyFaviconBadgeMock).toHaveBeenCalledTimes(2);
     expect(applyFaviconBadgeMock).toHaveBeenLastCalledWith(greenColor.value, expect.any(Function));
   });

@@ -85,10 +85,20 @@ export const compositeFaviconWithBadge = (
   return canvas.toDataURL('image/png');
 };
 
+const isSameOriginHref = (href: string): boolean => {
+  try {
+    return new URL(href, window.location.href).origin === window.location.origin;
+  } catch {
+    return false;
+  }
+};
+
 const loadFaviconImage = (href: string): Promise<HTMLImageElement> =>
   new Promise((resolve, reject) => {
     const img = new Image();
-    img.crossOrigin = 'anonymous';
+    if (!href.startsWith('data:') && !isSameOriginHref(href)) {
+      img.crossOrigin = 'anonymous';
+    }
     img.onload = () => resolve(img);
     img.onerror = () => reject(new Error(`Failed to load favicon image: ${href}`));
     img.src = href;

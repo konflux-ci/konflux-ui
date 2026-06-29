@@ -11,14 +11,18 @@ import {
  */
 export const useFaviconStatusBadge = (color: string): void => {
   React.useEffect(() => {
-    let cancelled = false;
-
     acquireFaviconBadge();
+    return () => {
+      releaseFaviconBadge();
+    };
+  }, []);
+
+  React.useEffect(() => {
+    let cancelled = false;
     void applyFaviconBadge(color, () => cancelled);
 
     return () => {
       cancelled = true;
-      releaseFaviconBadge();
     };
   }, [color]);
 };
