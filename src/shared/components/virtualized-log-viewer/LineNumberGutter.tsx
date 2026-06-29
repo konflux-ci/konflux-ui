@@ -13,6 +13,8 @@ export interface LineNumberGutterProps {
   onLineClick: (lineNumber: number, event: React.MouseEvent) => void;
   /** Function to check if a line is highlighted */
   isLineHighlighted: (lineNumber: number) => boolean;
+  /** When omitted, uses virtualItem.index + 1. Return null to hide the gutter cell. */
+  getLineNumber?: (virtualItemIndex: number) => number | null;
 }
 
 /**
@@ -26,11 +28,13 @@ export const LineNumberGutter: React.FC<LineNumberGutterProps> = ({
   itemSize,
   onLineClick,
   isLineHighlighted,
+  getLineNumber,
 }) => {
   return (
     <Flex className="line-number__gutter" direction={{ default: 'column' }}>
       {virtualItems.map((virtualItem) => {
-        const lineNumber = virtualItem.index + 1;
+        const lineNumber = getLineNumber ? getLineNumber(virtualItem.index) : virtualItem.index + 1;
+        if (lineNumber === null) return null;
         const isHighlighted = isLineHighlighted(lineNumber);
         return (
           <div

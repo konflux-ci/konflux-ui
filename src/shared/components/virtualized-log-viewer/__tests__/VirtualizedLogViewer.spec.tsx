@@ -1,6 +1,7 @@
 import { LogViewerToolbarContext } from '@patternfly/react-log-viewer';
 import '@testing-library/jest-dom';
 import { renderWithQueryClientAndRouter } from '~/unit-test-utils/rendering-utils';
+import { singleLogSection } from '../log-viewer-utils';
 import { VirtualizedLogViewer } from '../VirtualizedLogViewer';
 
 // Mock lodash-es debounce to make tests synchronous
@@ -16,7 +17,7 @@ jest.mock('lodash-es', () => ({
 describe('VirtualizedLogViewer Integration Tests', () => {
   const mockData = 'line 1\nline 2\nline 3';
   const defaultProps = {
-    sections: [{ containerName: '', data: mockData }],
+    sections: [singleLogSection(mockData)],
     height: 600,
   };
 
@@ -75,10 +76,7 @@ describe('VirtualizedLogViewer Integration Tests', () => {
   describe('Data Handling and Integration', () => {
     it('should render custom data through VirtualizedLogContent', () => {
       const { container } = renderWithQueryClientAndRouter(
-        <VirtualizedLogViewer
-          {...defaultProps}
-          sections={[{ containerName: '', data: 'test data' }]}
-        />,
+        <VirtualizedLogViewer {...defaultProps} sections={[singleLogSection('test data')]} />,
       );
 
       expect(container.textContent).toContain('test data');
@@ -86,7 +84,7 @@ describe('VirtualizedLogViewer Integration Tests', () => {
 
     it('should handle empty data gracefully', () => {
       const { container } = renderWithQueryClientAndRouter(
-        <VirtualizedLogViewer {...defaultProps} sections={[{ containerName: '', data: '' }]} />,
+        <VirtualizedLogViewer {...defaultProps} sections={[]} />,
       );
 
       const logList = container.querySelector('.log-content__list');
@@ -96,10 +94,7 @@ describe('VirtualizedLogViewer Integration Tests', () => {
     it('should render multiline data correctly', () => {
       const multilineData = 'line 1\nline 2\nline 3\nline 4';
       const { container } = renderWithQueryClientAndRouter(
-        <VirtualizedLogViewer
-          {...defaultProps}
-          sections={[{ containerName: '', data: multilineData }]}
-        />,
+        <VirtualizedLogViewer {...defaultProps} sections={[singleLogSection(multilineData)]} />,
       );
 
       expect(container.textContent).toContain('line 1');
@@ -239,10 +234,7 @@ describe('VirtualizedLogViewer Integration Tests', () => {
     it('should handle very long data efficiently with virtualization', () => {
       const longData = Array.from({ length: 1000 }, (_, i) => `line ${i + 1}`).join('\n');
       const { container } = renderWithQueryClientAndRouter(
-        <VirtualizedLogViewer
-          {...defaultProps}
-          sections={[{ containerName: '', data: longData }]}
-        />,
+        <VirtualizedLogViewer {...defaultProps} sections={[singleLogSection(longData)]} />,
       );
 
       const logList = container.querySelector('.log-content__list');
@@ -256,10 +248,7 @@ describe('VirtualizedLogViewer Integration Tests', () => {
     it('should handle data with special characters', () => {
       const specialData = 'line with <html> tags\nline with & ampersand\nline with "quotes"';
       const { container } = renderWithQueryClientAndRouter(
-        <VirtualizedLogViewer
-          {...defaultProps}
-          sections={[{ containerName: '', data: specialData }]}
-        />,
+        <VirtualizedLogViewer {...defaultProps} sections={[singleLogSection(specialData)]} />,
       );
 
       expect(container.textContent).toContain('<html>');

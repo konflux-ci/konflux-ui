@@ -21,7 +21,7 @@ const getLastSectionsData = (): string => {
 
 jest.mock('../LogViewer', () => {
   return function MockLogViewer(props: {
-    sections: Array<{ containerName: string; data: string }>;
+    sections: Array<{ containerName: string; data: string; isCompleted?: boolean }>;
     allowAutoScroll: boolean;
     isLoading?: boolean;
     onScroll?: () => void;
@@ -229,8 +229,8 @@ describe('Logs', () => {
       expect(mockLogViewer).toHaveBeenLastCalledWith(
         expect.objectContaining({
           sections: expect.arrayContaining([
-            { containerName: 'CONTAINER1', data: 'log line 1\nlog line 2' },
-            { containerName: 'CONTAINER2', data: 'log line 3\nlog line 4' },
+            { containerName: 'CONTAINER1', data: 'log line 1\nlog line 2', isCompleted: true },
+            { containerName: 'CONTAINER2', data: 'log line 3\nlog line 4', isCompleted: true },
           ]),
         }),
       );
@@ -323,10 +323,11 @@ describe('Logs', () => {
         await Promise.resolve();
       });
 
-      // container2 has empty logs, so it should be filtered out by the sections memo
+      // Containers without logs are omitted from sections
       const lastCall = mockLogViewer.mock.calls[mockLogViewer.mock.calls.length - 1][0];
       expect(lastCall.sections).toHaveLength(1);
       expect(lastCall.sections[0].containerName).toBe('CONTAINER1');
+      expect(lastCall.sections[0].data).toBe('has logs');
     });
 
     it('should pass empty sections when no containers have logs', () => {

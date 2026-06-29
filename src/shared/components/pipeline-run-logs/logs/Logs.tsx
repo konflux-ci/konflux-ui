@@ -193,13 +193,18 @@ const Logs: React.FC<LogsProps> = ({
   }, [containers, resource?.status?.containerStatuses]);
 
   const sections = React.useMemo<LogSection[]>(() => {
+    const allStatuses: ContainerStatus[] = resource?.status?.containerStatuses ?? [];
     return containers
       .filter((c) => logSources[c.name])
-      .map((c) => ({
-        containerName: c.name.toUpperCase(),
-        data: logSources[c.name],
-      }));
-  }, [logSources, containers]);
+      .map((c) => {
+        const status = allStatuses.find((s) => s.name === c.name);
+        return {
+          containerName: c.name.toUpperCase(),
+          data: logSources[c.name],
+          isCompleted: containerToLogSourceStatus(status) === LOG_SOURCE_TERMINATED,
+        };
+      });
+  }, [logSources, containers, resource?.status?.containerStatuses]);
 
   return (
     <LogViewer
