@@ -11,8 +11,12 @@ import { getPipelineRuns, getTaskRuns, createTektonResultQueryOptions, EQ } from
 export const stripQueryStringParams = (url: string) => {
   if (!url) return undefined;
 
-  const { origin, pathname } = new URL(url);
-  return `${origin}${pathname}`;
+  try {
+    const { origin, pathname } = new URL(url);
+    return `${origin}${pathname}`;
+  } catch {
+    return undefined;
+  }
 };
 
 export const getSourceUrl = (pipelineRun: PipelineRunKind): string => {
