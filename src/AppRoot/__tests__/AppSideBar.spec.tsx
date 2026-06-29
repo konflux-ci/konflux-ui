@@ -27,8 +27,12 @@ jest.mock('~/feature-flags/FeatureFlagIndicator', () => ({
   FeatureFlagIndicator: () => null,
 }));
 
-jest.mock('~/components/Issues/IssuesNavItemContent', () => ({
-  IssueNavItemContent: () => <>Issues</>,
+jest.mock('~/kite/kite-hooks', () => ({
+  useIssueCountsBySeverity: jest.fn(() => ({
+    counts: { critical: 0, major: 0, minor: 0, info: 0 },
+    isLoaded: true,
+    error: null,
+  })),
 }));
 
 describe('AppSideBar', () => {

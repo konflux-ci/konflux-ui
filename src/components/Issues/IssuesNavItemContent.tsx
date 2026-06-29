@@ -3,42 +3,34 @@ import { Icon } from '@patternfly/react-core';
 import { ExclamationCircleIcon } from '@patternfly/react-icons/dist/esm/icons/exclamation-circle-icon';
 import { ExclamationTriangleIcon } from '@patternfly/react-icons/dist/esm/icons/exclamation-triangle-icon';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
-import { IssueSeverity, IssueState } from '~/kite/issue-type';
-import { useIssues } from '~/kite/kite-hooks';
+import { useIssueCountsBySeverity } from '~/kite/kite-hooks';
 
 export const IssueNavItemContent: React.FC<{ namespace: string }> = ({ namespace }) => {
-  const { data: issuesData, isLoading, error } = useIssues({ namespace });
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const issues = issuesData?.data || [];
+  const { counts, isLoaded, error } = useIssueCountsBySeverity(namespace);
 
   const statusIcon = React.useMemo(() => {
-    if (isLoading || error) {
+    if (!isLoaded || error) {
       return null;
     }
 
-    const hasCriticalIssues = issues.find(
-      (issue) => issue.severity === IssueSeverity.CRITICAL && issue.state !== IssueState.RESOLVED,
-    );
+    const hasCriticalIssues = counts?.critical && counts.critical > 0;
     if (hasCriticalIssues) {
       return (
-        <Icon status="danger">
+        <Icon status="danger" data-test="critical-issues-icon">
           <ExclamationCircleIcon />
         </Icon>
       );
     }
-    const hasMajorIssues = issues.find(
-      (issue) => issue.severity === IssueSeverity.MAJOR && issue.state !== IssueState.RESOLVED,
-    );
+    const hasMajorIssues = counts?.major && counts.major > 0;
     if (hasMajorIssues) {
       return (
-        <Icon status="warning">
+        <Icon status="warning" data-test="major-issues-icon">
           <ExclamationTriangleIcon />
         </Icon>
       );
     }
     return null;
-  }, [isLoading, error, issues]);
+  }, [isLoaded, error, counts]);
 
   return (
     <>

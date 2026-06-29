@@ -1,11 +1,11 @@
-import { UseInfiniteQueryOptions, QueryOptions as ReactQueryOptions } from '@tanstack/react-query';
+import { UseInfiniteQueryOptions, UseQueryOptions } from '@tanstack/react-query';
 import { PLUGIN_KITE, STALE_TIME } from './const';
 import { IssueQuery, IssueResponse } from './issue-type';
 import { fetchIssues } from './kite-fetch';
 
 export const createGetIssueQueryOptions = (
   issueQuery: IssueQuery,
-  options: Omit<ReactQueryOptions<IssueResponse>, 'queryKey' | 'queryFn'> = {},
+  options: Partial<Omit<UseQueryOptions<IssueResponse>, 'queryKey' | 'queryFn'>> = {},
 ) => {
   return {
     queryKey: [PLUGIN_KITE, issueQuery],

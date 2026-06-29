@@ -1,6 +1,7 @@
 import React from 'react';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
-import { IssueCounts, IssueQuery, IssueSeverity, IssueType } from './issue-type';
+import { STALE_TIME } from './const';
+import { IssueCounts, IssueQuery, IssueSeverity, IssueState, IssueType } from './issue-type';
 import { createGetIssueQueryOptions, createInfiniteIssueQueryOptions } from './kite-query';
 
 export const useIssues = (issueQuery: IssueQuery) => {
@@ -11,16 +12,32 @@ export const useInfiniteIssues = (issueQuery: IssueQuery) => {
   return useInfiniteQuery(createInfiniteIssueQueryOptions(issueQuery));
 };
 
-export const useIssueCountsBySeverity = (namespace: string): IssueCounts => {
+export const useIssueCountsBySeverity = (namespace: string, noRefetch?: boolean): IssueCounts => {
   const baseQuery: IssueQuery = {
     namespace,
     limit: 1,
+    state: IssueState.ACTIVE,
   };
 
-  const criticalResult = useIssues({ severity: IssueSeverity.CRITICAL, ...baseQuery });
-  const majorResult = useIssues({ severity: IssueSeverity.MAJOR, ...baseQuery });
-  const minorResult = useIssues({ severity: IssueSeverity.MINOR, ...baseQuery });
-  const infoResult = useIssues({ severity: IssueSeverity.INFO, ...baseQuery });
+  const queryOptions = noRefetch
+    ? {
+        staleTime: STALE_TIME,
+        refetchOnMount: false as const,
+      }
+    : null;
+
+  const criticalResult = useQuery(
+    createGetIssueQueryOptions({ severity: IssueSeverity.CRITICAL, ...baseQuery }, queryOptions),
+  );
+  const majorResult = useQuery(
+    createGetIssueQueryOptions({ severity: IssueSeverity.MAJOR, ...baseQuery }, queryOptions),
+  );
+  const minorResult = useQuery(
+    createGetIssueQueryOptions({ severity: IssueSeverity.MINOR, ...baseQuery }, queryOptions),
+  );
+  const infoResult = useQuery(
+    createGetIssueQueryOptions({ severity: IssueSeverity.INFO, ...baseQuery }, queryOptions),
+  );
 
   return React.useMemo(() => {
     const allResults = [criticalResult, majorResult, minorResult, infoResult];
