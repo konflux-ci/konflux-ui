@@ -18,6 +18,7 @@ export const AIChatDrawerFooter: React.FC<AIChatDrawerFooterProps> = ({
         void onSendMessage(message);
       }}
       isSendButtonDisabled={isSendButtonDisabled}
+      hasAttachButton={false}
       placeholder={KONFLUX_AI_MESSAGE_PLACEHOLDER}
     />
     <ChatbotFootnote label={KONFLUX_AI_FOOTNOTE} />

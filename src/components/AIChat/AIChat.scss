@@ -56,6 +56,11 @@
   .pf-chatbot__footnote {
     color: var(--pf-t--global--text--color--regular);
   }
+
+  .konflux-ai-chat__rename-modal,
+  .pf-v6-c-backdrop {
+    z-index: 600;
+  }
 }
 
 html.pf-v6-theme-dark .pf-v6.konflux-ai-chat {
