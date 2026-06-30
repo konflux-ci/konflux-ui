@@ -156,7 +156,7 @@ const InternalFLAGS = {
   'ai-chat': {
     key: 'ai-chat',
     description: 'AI chat assistant powered by PatternFly chatbot',
-    defaultEnabled: true,
+    defaultEnabled: false,
     status: 'wip',
   },
 } satisfies Record<string, FeatureMeta>;

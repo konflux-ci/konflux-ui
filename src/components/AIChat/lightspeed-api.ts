@@ -75,9 +75,11 @@ export const listConversations = (): Promise<LightspeedConversationsListResponse
 
 export const getConversation = (
   conversationId: string,
+  signal?: AbortSignal,
 ): Promise<LightspeedConversationResponse> =>
   lightspeedFetchJson<LightspeedConversationResponse>(
     `/v1/conversations/${encodeURIComponent(conversationId)}`,
+    { signal },
   );
 
 export const deleteConversation = (conversationId: string): Promise<void> =>

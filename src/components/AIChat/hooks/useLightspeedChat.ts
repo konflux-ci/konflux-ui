@@ -101,6 +101,7 @@ export const useLightspeedChat = (): UseLightspeedChatResult => {
     React.useState<RenameConversationTarget | null>(null);
   const [backendError, setBackendError] = React.useState<string>();
   const queryAbortRef = React.useRef<AbortController | null>(null);
+  const conversationLoadAbortRef = React.useRef<AbortController | null>(null);
   const isQueryInFlightRef = React.useRef(false);
   const activeConversationIdRef = React.useRef(activeConversationId);
   activeConversationIdRef.current = activeConversationId;
@@ -120,12 +121,14 @@ export const useLightspeedChat = (): UseLightspeedChatResult => {
   React.useEffect(
     () => () => {
       queryAbortRef.current?.abort();
+      conversationLoadAbortRef.current?.abort();
     },
     [],
   );
 
   const startNewChat = React.useCallback(() => {
     queryAbortRef.current?.abort();
+    conversationLoadAbortRef.current?.abort();
     setActiveConversationId(null);
     setMessages([]);
     setBackendError(undefined);
@@ -136,20 +139,38 @@ export const useLightspeedChat = (): UseLightspeedChatResult => {
       return;
     }
 
+    conversationLoadAbortRef.current?.abort();
+    const abortController = new AbortController();
+    conversationLoadAbortRef.current = abortController;
+
     setIsLoadingConversation(true);
     setBackendError(undefined);
     queryAbortRef.current?.abort();
 
     try {
-      const response = await getConversation(conversationId);
+      const response = await getConversation(conversationId, abortController.signal);
+
+      if (abortController.signal.aborted) {
+        return;
+      }
+
       setActiveConversationId(response.conversation_id);
       setMessages(chatHistoryToMessages(response.chat_history));
     } catch (error) {
+      if (abortController.signal.aborted) {
+        return;
+      }
+
       const message = error instanceof Error ? error.message : 'Failed to load conversation';
       setBackendError(message);
       logger.warn('Failed to load Lightspeed conversation', { conversationId, error: message });
     } finally {
-      setIsLoadingConversation(false);
+      if (
+        !abortController.signal.aborted &&
+        conversationLoadAbortRef.current === abortController
+      ) {
+        setIsLoadingConversation(false);
+      }
     }
   }, []);
 

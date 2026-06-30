@@ -1,6 +1,6 @@
 export type LightspeedChatMessage = {
   content: string;
-  type: 'user' | 'assistant' | string;
+  type: 'user' | 'assistant';
   referenced_documents?: unknown;
 };
 
