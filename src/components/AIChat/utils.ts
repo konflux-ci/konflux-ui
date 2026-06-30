@@ -2,14 +2,14 @@ import type { Conversation } from '@patternfly/chatbot/dist/dynamic/ChatbotConve
 import type { MessageProps } from '@patternfly/chatbot/dist/dynamic/Message';
 import dayjs from 'dayjs';
 import { v4 as uuidv4 } from 'uuid';
-import { logger } from '~/monitoring/logger';
-import { KONFLUX_ASSISTANT_NAME } from './consts';
+import { KONFLUX_ASSISTANT_NAME } from '~/components/AIChat/consts';
 import type {
   LightspeedConversationDetails,
   LightspeedConversationTurn,
   LightspeedErrorResponse,
   LightspeedQueryRequest,
-} from './types';
+} from '~/components/AIChat/types';
+import { logger } from '~/monitoring/logger';
 
 export const generateMessageId = (): string => {
   const id = uuidv4();
@@ -53,20 +53,24 @@ export const parseLightspeedError = async (response: Response): Promise<string> 
   }
 };
 
+const formatTurnTimestamp = (turn: LightspeedConversationTurn): string | undefined => {
+  const timestamp = turn.completed_at ?? turn.started_at;
+  return timestamp ? new Date(timestamp).toLocaleString() : undefined;
+};
+
 export const chatHistoryToMessages = (chatHistory: LightspeedConversationTurn[]): MessageProps[] => {
   const messages: MessageProps[] = [];
 
   chatHistory.forEach((turn) => {
     turn.messages.forEach((message) => {
       const isUser = message.type === 'user';
+      const timestamp = formatTurnTimestamp(turn);
       messages.push({
         id: generateMessageId(),
         role: isUser ? 'user' : 'bot',
         content: message.content,
         name: isUser ? 'You' : KONFLUX_ASSISTANT_NAME,
-        timestamp: turn.completed_at
-          ? new Date(turn.completed_at).toLocaleString()
-          : new Date().toLocaleString(),
+        ...(timestamp ? { timestamp } : {}),
       });
     });
   });
