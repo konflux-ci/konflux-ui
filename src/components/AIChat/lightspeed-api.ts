@@ -1,6 +1,8 @@
 import { LIGHTSPEED_API_BASE } from './consts';
 import type {
   LightspeedConversationResponse,
+  LightspeedConversationUpdateRequest,
+  LightspeedConversationUpdateResponse,
   LightspeedConversationsListResponse,
   LightspeedQueryRequest,
   LightspeedQueryResponse,
@@ -10,6 +12,10 @@ import { parseLightspeedError } from './utils';
 const QUERY_PAYLOAD_KEYS = {
   conversationId: 'conversation_id',
   generateTopicSummary: 'generate_topic_summary',
+} as const;
+
+const UPDATE_PAYLOAD_KEYS = {
+  topicSummary: 'topic_summary',
 } as const;
 
 const serializeQueryRequest = (request: LightspeedQueryRequest): Record<string, unknown> => {
@@ -24,6 +30,12 @@ const serializeQueryRequest = (request: LightspeedQueryRequest): Record<string, 
 
   return payload;
 };
+
+const serializeUpdateRequest = (
+  request: LightspeedConversationUpdateRequest,
+): Record<string, unknown> => ({
+  [UPDATE_PAYLOAD_KEYS.topicSummary]: request.topicSummary,
+});
 
 const lightspeedRequest = async (path: string, init: RequestInit = {}): Promise<Response> => {
   const response = await fetch(`${LIGHTSPEED_API_BASE}${path}`, {
@@ -72,6 +84,21 @@ export const deleteConversation = (conversationId: string): Promise<void> =>
   lightspeedFetchNoContent(`/v1/conversations/${encodeURIComponent(conversationId)}`, {
     method: 'DELETE',
   });
+
+export const updateConversationTopicSummary = (
+  conversationId: string,
+  request: LightspeedConversationUpdateRequest,
+): Promise<LightspeedConversationUpdateResponse> =>
+  lightspeedFetchJson<LightspeedConversationUpdateResponse>(
+    `/v1/conversations/${encodeURIComponent(conversationId)}`,
+    {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(serializeUpdateRequest(request)),
+    },
+  );
 
 export const query = (
   request: LightspeedQueryRequest,

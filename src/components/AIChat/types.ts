@@ -48,6 +48,16 @@ export type LightspeedQueryResponse = {
   output_tokens?: number;
 };
 
+export type LightspeedConversationUpdateRequest = {
+  topicSummary: string;
+};
+
+export type LightspeedConversationUpdateResponse = {
+  conversation_id: string;
+  success: boolean;
+  message: string;
+};
+
 export type LightspeedErrorResponse = {
   detail?: {
     cause?: string;

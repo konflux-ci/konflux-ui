@@ -30,6 +30,12 @@ export const getWebpackAliases = () => {
     aliases[formattedKey] = path.resolve(__dirname, baseUrl, targetPath);
   }
 
+  // PF6 components rendered inside @patternfly/chatbot must share its react-core instance.
+  aliases['@patternfly/chatbot-pf6-core'] = path.resolve(
+    __dirname,
+    'node_modules/@patternfly/chatbot/node_modules/@patternfly/react-core',
+  );
+
   return aliases;
 };
 

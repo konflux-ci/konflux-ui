@@ -6,6 +6,7 @@ import ChatbotToggle from '@patternfly/chatbot/dist/dynamic/ChatbotToggle';
 import { AIChatDrawerContent } from '~/components/AIChat/components/AIChatDrawerContent';
 import { AIChatDrawerFooter } from '~/components/AIChat/components/AIChatDrawerFooter';
 import { AIChatDrawerHeader } from '~/components/AIChat/components/AIChatDrawerHeader';
+import { AIChatRenameConversationModal } from '~/components/AIChat/components/AIChatRenameConversationModal';
 import {
   KONFLUX_AI_TOGGLE_BUTTON_LABEL,
   KONFLUX_AI_TOGGLE_TOOLTIP,
@@ -20,6 +21,7 @@ const displayMode = ChatbotDisplayMode.default;
 
 export const AIChatDock: React.FC = () => {
   const [isChatbotVisible, setIsChatbotVisible] = React.useState(false);
+  const chatRootRef = React.useRef<HTMLDivElement>(null);
   const {
     activeConversationId,
     messages,
@@ -28,13 +30,17 @@ export const AIChatDock: React.FC = () => {
     isSendButtonDisabled,
     isDrawerOpen,
     isLoadingConversation,
+    isRenamingConversation,
     backendError,
+    renameConversationTarget,
     setIsDrawerOpen,
     refreshConversations,
     startNewChat,
     selectConversation,
     filterConversations,
     sendMessage,
+    closeRenameConversation,
+    confirmRenameConversation,
   } = useLightspeedChat();
 
   const handleToggleDrawer = React.useCallback(() => {
@@ -65,7 +71,7 @@ export const AIChatDock: React.FC = () => {
   );
 
   return createPortal(
-    <div className="pf-v6 pf-v6-m-legacy-font konflux-ai-chat">
+    <div ref={chatRootRef} className="pf-v6 pf-v6-m-legacy-font konflux-ai-chat">
       <ChatbotToggle
         className="konflux-ai-chat__toggle"
         tooltipLabel={KONFLUX_AI_TOGGLE_TOOLTIP}
@@ -110,6 +116,16 @@ export const AIChatDock: React.FC = () => {
           }
         />
       </Chatbot>
+      <AIChatRenameConversationModal
+        appendTo={() => chatRootRef.current ?? document.body}
+        currentName={renameConversationTarget?.currentName ?? ''}
+        isOpen={renameConversationTarget !== null}
+        isSubmitting={isRenamingConversation}
+        onClose={closeRenameConversation}
+        onRename={(newName) => {
+          void confirmRenameConversation(newName);
+        }}
+      />
     </div>,
     document.body,
   );
