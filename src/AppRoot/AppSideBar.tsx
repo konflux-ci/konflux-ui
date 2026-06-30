@@ -76,18 +76,16 @@ export const AppSideBar: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
               <NavLink to={RELEASE_MONITOR_PATH.createPath({} as never)}>Release Monitor</NavLink>
             </NavItem>
 
-            <IfFeature flag="issues-dashboard">
-              <NavItem
-                className={css({ 'app-side-bar__nav-item--disabled': disabled })}
-                isActive={isActive(ISSUES_PATH.path)}
+            <NavItem
+              className={css({ 'app-side-bar__nav-item--disabled': disabled })}
+              isActive={isActive(ISSUES_PATH.path)}
+            >
+              <Link
+                to={namespace ? ISSUES_PATH.createPath({ workspaceName: namespace }) : undefined}
               >
-                <Link
-                  to={namespace ? ISSUES_PATH.createPath({ workspaceName: namespace }) : undefined}
-                >
-                  Issues <FeatureFlagIndicator flags={['issues-dashboard']} />
-                </Link>
-              </NavItem>
-            </IfFeature>
+                Issues
+              </Link>
+            </NavItem>
 
             <NavItem
               className={css({ 'app-side-bar__nav-item--disabled': disabled })}
