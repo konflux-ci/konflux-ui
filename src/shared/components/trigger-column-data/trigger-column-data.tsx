@@ -57,7 +57,7 @@ export const TriggerColumnData: React.FC<TriggerColumnData> = ({
           color="blue"
           isCompact
           variant="outline"
-          className="trigger-column-data__commit-label"
+          className="trigger-column-data__commit-label pf-v6-u-py-xs"
         >
           <ExternalLink href={shaUrl} text={commitShaText} />
         </Label>

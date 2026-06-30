@@ -214,7 +214,7 @@ const LogViewer: React.FC<Props> = ({
                   </ToolbarItem>
                   <ToolbarItem variant="separator" className="log-viewer__divider" />
                   <ToolbarItem>
-                    <Button variant="link" onClick={downloadLogs} isInline>
+                    <Button variant="link" onClick={downloadLogs}>
                       <DownloadIcon className="log-viewer__icon" />
                       Download
                     </Button>
@@ -227,7 +227,6 @@ const LogViewer: React.FC<Props> = ({
                           variant="link"
                           onClick={startDownloadAll}
                           isDisabled={downloadAllStatus}
-                          isInline
                         >
                           <DownloadIcon className="log-viewer__icon" />
                           {downloadAllLabel}
@@ -239,7 +238,7 @@ const LogViewer: React.FC<Props> = ({
                   )}
                   {fullscreenToggle && isFullscreenSupported && (
                     <ToolbarItem gap={{ default: 'gapMd' }}>
-                      <Button variant="link" onClick={fullscreenToggle} isInline>
+                      <Button variant="link" onClick={fullscreenToggle}>
                         {isFullscreen ? (
                           <>
                             <CompressIcon className="log-viewer__icon" />
