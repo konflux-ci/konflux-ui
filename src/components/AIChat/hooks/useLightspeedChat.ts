@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { flushSync } from 'react-dom';
 import type { Conversation } from '@patternfly/chatbot/dist/dynamic/ChatbotConversationHistoryNav';
 import type { MessageProps } from '@patternfly/chatbot/dist/dynamic/Message';
 import { logger } from '~/monitoring/logger';
@@ -8,7 +9,7 @@ import {
   deleteConversation,
   getConversation,
   listConversations,
-  query,
+  streamingQuery,
   updateConversationTopicSummary,
 } from '../lightspeed-api';
 import {
@@ -20,35 +21,35 @@ import {
 } from '../utils';
 
 type SendMessageErrorParams = {
-  botMessageId: string;
-  conversationId: string | null;
   error: unknown;
+  conversationId: string | null;
   setAnnouncement: React.Dispatch<React.SetStateAction<string | undefined>>;
   setBackendError: React.Dispatch<React.SetStateAction<string | undefined>>;
   setMessages: React.Dispatch<React.SetStateAction<MessageProps[]>>;
+  setStreamingMessage: React.Dispatch<React.SetStateAction<MessageProps | null>>;
 };
 
 const handleSendMessageError = ({
-  botMessageId,
   conversationId,
   error,
   setAnnouncement,
   setBackendError,
   setMessages,
+  setStreamingMessage,
 }: SendMessageErrorParams): void => {
   const errorMessage = error instanceof Error ? error.message : 'Failed to send message';
   setBackendError(errorMessage);
-  setMessages((currentMessages) =>
-    currentMessages.map((item) =>
-      item.id === botMessageId
-        ? {
-            ...item,
-            content: errorMessage,
-            isLoading: false,
-          }
-        : item,
-    ),
-  );
+  setStreamingMessage(null);
+  setMessages((currentMessages) => [
+    ...currentMessages,
+    {
+      id: generateMessageId(),
+      role: 'bot',
+      content: errorMessage,
+      name: KONFLUX_ASSISTANT_NAME,
+      timestamp: new Date().toLocaleString(),
+    },
+  ]);
   setAnnouncement(`Message from ${KONFLUX_ASSISTANT_NAME}: ${errorMessage}`);
   logger.error(
     'Lightspeed query failed',
@@ -65,6 +66,7 @@ type RenameConversationTarget = {
 type UseLightspeedChatResult = {
   activeConversationId: string | null;
   messages: MessageProps[];
+  streamingMessage: MessageProps | null;
   conversations: Record<string, Conversation[]> | Conversation[];
   announcement?: string;
   isSendButtonDisabled: boolean;
@@ -86,6 +88,8 @@ type UseLightspeedChatResult = {
 export const useLightspeedChat = (): UseLightspeedChatResult => {
   const [activeConversationId, setActiveConversationId] = React.useState<string | null>(null);
   const [messages, setMessages] = React.useState<MessageProps[]>([]);
+  const [streamingMessage, setStreamingMessage] = React.useState<MessageProps | null>(null);
+  const streamingContentRef = React.useRef('');
   const [allConversations, setAllConversations] = React.useState<Record<string, Conversation[]>>(
     {},
   );
@@ -131,6 +135,8 @@ export const useLightspeedChat = (): UseLightspeedChatResult => {
     conversationLoadAbortRef.current?.abort();
     setActiveConversationId(null);
     setMessages([]);
+    setStreamingMessage(null);
+    streamingContentRef.current = '';
     setBackendError(undefined);
   }, []);
 
@@ -146,6 +152,8 @@ export const useLightspeedChat = (): UseLightspeedChatResult => {
     setIsLoadingConversation(true);
     setBackendError(undefined);
     queryAbortRef.current?.abort();
+    setStreamingMessage(null);
+    streamingContentRef.current = '';
 
     try {
       const response = await getConversation(conversationId, abortController.signal);
@@ -269,46 +277,100 @@ export const useLightspeedChat = (): UseLightspeedChatResult => {
         timestamp,
       };
       const botMessageId = generateMessageId();
-      const loadingBotMessage: MessageProps = {
+      streamingContentRef.current = '';
+
+      setMessages((currentMessages) => [...currentMessages, userMessage]);
+      setStreamingMessage({
         id: botMessageId,
         role: 'bot',
         content: '',
         name: KONFLUX_ASSISTANT_NAME,
         isLoading: true,
         timestamp,
-      };
-
-      setMessages((currentMessages) => [...currentMessages, userMessage, loadingBotMessage]);
+      });
       setAnnouncement(`Message from you: ${trimmedMessage}. ${KONFLUX_ASSISTANT_NAME} is responding.`);
 
+      const updateStreamingMessage = (content: string, isLoading: boolean): void => {
+        flushSync(() => {
+          setStreamingMessage((currentStreamingMessage) =>
+            currentStreamingMessage
+              ? {
+                  ...currentStreamingMessage,
+                  content,
+                  isLoading,
+                }
+              : null,
+          );
+        });
+      };
+
       try {
-        const response = await query(
+        const result = await streamingQuery(
           buildQueryRequest(trimmedMessage, conversationId),
+          {
+            onStart: ({ conversationId: nextConversationId }) => {
+              setActiveConversationId(nextConversationId);
+            },
+            onToken: (token) => {
+              if (!token) {
+                return;
+              }
+
+              streamingContentRef.current += token;
+              updateStreamingMessage(streamingContentRef.current, false);
+            },
+            onTurnComplete: (response) => {
+              streamingContentRef.current = response;
+              updateStreamingMessage(response, false);
+            },
+          },
           abortController.signal,
         );
 
-        setActiveConversationId(response.conversation_id);
-        setMessages((currentMessages) =>
-          currentMessages.map((item) =>
-            item.id === botMessageId
-              ? { ...item, content: response.response, isLoading: false }
-              : item,
-          ),
-        );
-        setAnnouncement(`Message from ${KONFLUX_ASSISTANT_NAME}: ${response.response}`);
+        setActiveConversationId(result.conversationId);
+        setStreamingMessage(null);
+        setMessages((currentMessages) => [
+          ...currentMessages,
+          {
+            id: botMessageId,
+            role: 'bot',
+            content: result.response,
+            name: KONFLUX_ASSISTANT_NAME,
+            timestamp,
+          },
+        ]);
+        streamingContentRef.current = '';
+        setAnnouncement(`Message from ${KONFLUX_ASSISTANT_NAME}: ${result.response}`);
         await refreshConversations();
       } catch (error) {
         if (abortController.signal.aborted) {
+          const partialResponse = streamingContentRef.current.trim();
+          setStreamingMessage(null);
+          streamingContentRef.current = '';
+
+          if (partialResponse) {
+            setMessages((currentMessages) => [
+              ...currentMessages,
+              {
+                id: botMessageId,
+                role: 'bot',
+                content: partialResponse,
+                name: KONFLUX_ASSISTANT_NAME,
+                timestamp,
+              },
+            ]);
+          }
+
           return;
         }
 
         handleSendMessageError({
-          botMessageId,
           conversationId,
           error,
           setAnnouncement,
           setBackendError,
           setMessages,
+          setStreamingMessage,
         });
       } finally {
         isQueryInFlightRef.current = false;
@@ -321,6 +383,7 @@ export const useLightspeedChat = (): UseLightspeedChatResult => {
   return {
     activeConversationId,
     messages,
+    streamingMessage,
     conversations: conversationsWithMenuActions,
     announcement,
     isSendButtonDisabled,
