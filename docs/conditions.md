@@ -1,6 +1,6 @@
 # 🔍 Conditions System — Developer Guide
 
- The **conditions system** lets you create feature flags that automatically control themselves based on runtime conditions like environment, service availability, or user state. Think "smart feature flags."
+The **conditions system** lets you create feature flags that automatically control themselves based on runtime conditions like environment, service availability, or user state. Think "smart feature flags."
 
 ---
 
@@ -15,9 +15,9 @@
 const showKubearchive = useIsOnFeatureFlag('kubearchive-integration') && isKubearchiveInstalled;
 
 // New way: Condition-guarded flag
-const showKubearchive = useIsOnFeatureFlag('kubearchive-integration'); 
-// ✅ Flag is enabled AND Kubearchive is installed
-// ❌ Flag switch is disabled if Kubearchive isn't installed (user can't enable it)
+const showKubearchive = useIsOnFeatureFlag('kubearchive-integration');
+// ✅ Flag is enabled AND KubeArchive is installed
+// ❌ Flag switch is disabled if KubeArchive isn't installed (user can't enable it)
 ```
 
 ### Two main use cases:
@@ -25,17 +25,17 @@ const showKubearchive = useIsOnFeatureFlag('kubearchive-integration');
 1. **Guarded feature flags**: Prevent users from enabling flags when conditions aren't met
 2. **Independent conditions**: Show/hide UI based on runtime conditions without involving feature flags
 
-| Use Case | When to Use | Example |
-|----------|-------------|---------|
-| **Guarded Flags** | Feature depends on external service/environment | Kubearchive integration only works if Kubearchive is installed |
-| **Independent Conditions** | UI needs to adapt to environment without feature flags | Show "staging environment" banner, hide unavailable features |
+| Use Case                   | When to Use                                            | Example                                                        |
+| -------------------------- | ------------------------------------------------------ | -------------------------------------------------------------- |
+| **Guarded Flags**          | Feature depends on external service/environment        | KubeArchive integration only works if KubeArchive is installed |
+| **Independent Conditions** | UI needs to adapt to environment without feature flags | Show "staging environment" banner, hide unavailable features   |
 
 ### Already available conditions
 
 ```ts
 // These are already set up for you:
-'isKubearchiveEnabled' // → true if Kubearchive service is available
-'isStagingCluster'     // → true if running in staging environment
+'isKubearchiveEnabled'; // → true if KubeArchive service is available
+'isStagingCluster'; // → true if running in staging environment
 ```
 
 ---
@@ -54,9 +54,9 @@ export const FLAGS = {
     defaultEnabled: false,
     status: 'wip',
     guard: {
-      allOf: ['isKubearchiveEnabled'],  // Requires Kubearchive
-      failureReason: 'Kubearchive must be installed',
-      visibleInFeatureFlagPanel: true,  // when guard fails, show the flag entry disabled with the reason
+      allOf: ['isKubearchiveEnabled'], // Requires KubeArchive
+      failureReason: 'KubeArchive must be installed',
+      visibleInFeatureFlagPanel: true, // when guard fails, show the flag entry disabled with the reason
       // visibleInFeatureFlagPanel: true => show the flag disabled with its reason
       // visibleInFeatureFlagPanel: false => hide the flag entirely when guard conditions aren’t met
     },
@@ -70,23 +70,19 @@ export const FLAGS = {
 // In your React component - no changes needed!
 const MyComponent = () => {
   const showFeature = useIsOnFeatureFlag('my-new-feature');
-  
-  return (
-    <div>
-      {showFeature && <NewFeatureComponent />}
-    </div>
-  );
+
+  return <div>{showFeature && <NewFeatureComponent />}</div>;
 };
 ```
 
-**That's it!** The flag will automatically be `false` if Kubearchive isn't available, and users won't be able to enable it in the dev panel (the switch will be disabled).
+**That's it!** The flag will automatically be `false` if KubeArchive isn't available, and users won't be able to enable it in the dev panel (the switch will be disabled).
 
 ### Guard Options
 
 ```ts
 guard: {
   allOf: ['condition1', 'condition2'],  // ALL must be true (AND logic)
-  anyOf: ['condition3', 'condition4'],  // ANY can be true (OR logic)  
+  anyOf: ['condition3', 'condition4'],  // ANY can be true (OR logic)
   failureReason: 'Shown to users when disabled',
   visibleInFeatureFlagPanel: true,  // Show condition status in dev panel
 }
@@ -103,12 +99,12 @@ guard: {
 export const FLAGS = {
   'kubearchive-integration': {
     key: 'kubearchive-integration',
-    description: 'Kubearchive features',
+    description: 'KubeArchive features',
     defaultEnabled: false,
     status: 'wip',
     guard: {
-      allOf: ['isKubearchiveEnabled'], 
-      failureReason: 'Kubearchive not installed',
+      allOf: ['isKubearchiveEnabled'],
+      failureReason: 'KubeArchive not installed',
       visibleInFeatureFlagPanel: true,
     },
   },
@@ -117,9 +113,9 @@ export const FLAGS = {
 // In component - use flag normally
 const MyPage = () => {
   const showKubearchive = useIsOnFeatureFlag('kubearchive-integration');
-  // ✅ true only if flag is ON and Kubearchive is available
-  // ❌ false if Kubearchive isn't available (user can't enable flag)
-  
+  // ✅ true only if flag is ON and KubeArchive is available
+  // ❌ false if KubeArchive isn't available (user can't enable flag)
+
   return <div>{showKubearchive && <KubearchivePage />}</div>;
 };
 ```
@@ -132,14 +128,14 @@ const useKubearchive = createConditionsHook(['isKubearchiveEnabled']);
 
 const MyPage = () => {
   const conditions = useKubearchive();
-  
+
   // Always shows appropriate UI based on service availability
   return (
     <div>
       {conditions.isKubearchiveEnabled ? (
         <KubearchivePage />
       ) : (
-        <div>Kubearchive features unavailable</div>
+        <div>KubeArchive features unavailable</div>
       )}
     </div>
   );
@@ -165,18 +161,18 @@ guard: {
 // Need both staging AND kubearchive
 guard: {
   allOf: ['isStagingCluster', 'isKubearchiveEnabled'],
-  failureReason: 'Requires staging environment with Kubearchive',
+  failureReason: 'Requires staging environment with KubeArchive',
   visibleInFeatureFlagPanel: true,
 }
 ```
 
-### Service dependency features  
+### Service dependency features
 
 ```ts
-// Feature needs Kubearchive service
+// Feature needs KubeArchive service
 guard: {
   allOf: ['isKubearchiveEnabled'],
-  failureReason: 'Kubearchive service not available',
+  failureReason: 'KubeArchive service not available',
   visibleInFeatureFlagPanel: true,
 }
 ```
@@ -202,17 +198,21 @@ registerCondition('myCustomCheck', async () => {
 
 ```ts
 // Cache result for 5 minutes to avoid repeated API calls
-registerCondition('expensiveCheck', async () => {
-  const data = await fetch('/api/expensive-operation').then(r => r.json());
-  return data.isEnabled;
-}, 300000); // 5 minutes in milliseconds
+registerCondition(
+  'expensiveCheck',
+  async () => {
+    const data = await fetch('/api/expensive-operation').then((r) => r.json());
+    return data.isEnabled;
+  },
+  300000,
+); // 5 minutes in milliseconds
 ```
 
 ### Context-aware condition
 
 ```ts
 // Can receive context data
-registerCondition('hasPermission', async (context?: { user: User, action: string }) => {
+registerCondition('hasPermission', async (context?: { user: User; action: string }) => {
   if (!context) return false;
   return checkUserPermission(context.user, context.action);
 });
@@ -232,19 +232,19 @@ const useEnvironmentConditions = createConditionsHook(['isKubearchiveEnabled', '
 
 const MyComponent = () => {
   const conditions = useEnvironmentConditions();
-  
+
   return (
     <div>
       {/* Show staging banner regardless of any feature flag */}
       {conditions.isStagingCluster && <div>🚧 Staging Environment</div>}
-      
+
       {/* Show archive section only if service is available */}
       {conditions.isKubearchiveEnabled ? (
         <ArchiveSection />
       ) : (
-        <div>Archive features unavailable - Kubearchive not installed</div>
+        <div>Archive features unavailable - KubeArchive not installed</div>
       )}
-      
+
       <RegularContent />
     </div>
   );
@@ -252,6 +252,7 @@ const MyComponent = () => {
 ```
 
 **Use this when:**
+
 - You need to conditionally render UI based on environment/service availability
 - The condition logic is separate from any feature flag
 - You want to show different content based on what's available in the cluster
@@ -265,11 +266,11 @@ import { useAllFlagsConditions } from '~/feature-flags/hooks';
 
 const MyComponent = () => {
   const allConditions = useAllFlagsConditions();
-  
+
   // Has all conditions that any feature flag uses
   console.log(allConditions.isKubearchiveEnabled);
   console.log(allConditions.isStagingCluster);
-  
+
   return <div>...</div>;
 };
 ```
@@ -292,7 +293,7 @@ Check the browser dev console - conditions cache their results, so you might nee
 
 ```ts
 // In browser console:
-window.FeatureFlagsStore.conditions  // See current condition states
+window.FeatureFlagsStore.conditions; // See current condition states
 ```
 
 ### Force refresh a condition
@@ -300,7 +301,7 @@ window.FeatureFlagsStore.conditions  // See current condition states
 ```ts
 import { invalidateConditions } from '~/feature-flags/conditions';
 
-// Force re-check specific conditions  
+// Force re-check specific conditions
 invalidateConditions(['isKubearchiveEnabled']);
 
 // Or all conditions
@@ -314,18 +315,20 @@ Look in `src/registers.ts` - if your condition isn't there, it will always be `f
 ### My flag is always disabled
 
 1. Check that your condition is returning `true`:
+
    ```ts
    const conditions = await evaluateConditions(['yourCondition']);
    console.log(conditions.yourCondition); // Should be true
    ```
 
 2. Check your guard logic:
+
    ```ts
    // This requires BOTH to be true
-   allOf: ['condition1', 'condition2']  
-   
-   // This requires EITHER to be true  
-   anyOf: ['condition1', 'condition2']
+   allOf: ['condition1', 'condition2'];
+
+   // This requires EITHER to be true
+   anyOf: ['condition1', 'condition2'];
    ```
 
 ---
@@ -349,6 +352,7 @@ registerCondition('serviceHealth', expensiveApiCall); // Cached forever!
 ## Quick Reference
 
 ### Adding condition to feature flag:
+
 ```ts
 // src/feature-flags/flags.ts
 guard: {
@@ -359,14 +363,20 @@ guard: {
 ```
 
 ### Creating new condition:
-```ts  
+
+```ts
 // src/registers.ts
-registerCondition('myCondition', async () => {
-  // return true/false
-}, cacheTimeMs);
+registerCondition(
+  'myCondition',
+  async () => {
+    // return true/false
+  },
+  cacheTimeMs,
+);
 ```
 
 ### Using conditions in React components:
+
 ```ts
 import { createConditionsHook } from '~/feature-flags/hooks';
 
@@ -379,7 +389,8 @@ const conditions = useMyConditions(); // { myCondition: boolean }
 ```
 
 ### Available conditions:
-- `'isKubearchiveEnabled'` - Kubearchive service available
+
+- `'isKubearchiveEnabled'` - KubeArchive service available
 - `'isStagingCluster'` - Running in staging environment
 
 That's it! You now know everything you need to use conditions

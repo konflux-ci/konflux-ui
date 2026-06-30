@@ -21,9 +21,7 @@ type MultiSelectProps = {
   toggleAriaLabel?: string;
   values: string[];
   setValues: (filters: string[]) => void;
-  options: { [key: string]: number };
-  /** Optional map from option key to display label. When provided, the option key is used as the value but the label is shown in the UI. */
-  optionLabels?: Record<string, string>;
+  options: { key: string; count?: number; label?: string }[];
 };
 
 export const MultiSelect = ({
@@ -35,14 +33,17 @@ export const MultiSelect = ({
   values,
   setValues,
   options,
-  optionLabels,
 }: MultiSelectProps) => {
   const [expanded, setExpanded] = useState(defaultExpanded ?? false);
 
-  const chipLabels = optionLabels ? values.map((v) => optionLabels[v] ?? v) : values;
-  const labelToKey = optionLabels
-    ? Object.fromEntries(Object.entries(optionLabels).map(([k, v]) => [v, k]))
-    : undefined;
+  const chipLabels = values.map((v) => options.find((o) => o.key === v)?.label ?? v);
+  const labelToKey = options.reduce(
+    (acc, curr) => {
+      acc[curr.label ?? curr.key] = curr.key;
+      return acc;
+    },
+    {} as Record<string, string>,
+  );
 
   return (
     <ToolbarFilter
@@ -82,17 +83,17 @@ export const MultiSelect = ({
       >
         <SelectGroup label={label} key={filterKey}>
           <SelectList>
-            {Object.keys(options).map((filter) =>
-              filter.startsWith(MENU_DIVIDER) ? (
-                <Divider component="li" key={filter} />
+            {options.map((filter) =>
+              filter.key.startsWith(MENU_DIVIDER) ? (
+                <Divider component="li" key={filter.key} />
               ) : (
                 <SelectOption
                   hasCheckbox
-                  key={filter}
-                  value={filter}
-                  isSelected={values.includes(filter)}
+                  key={filter.key}
+                  value={filter.key}
+                  isSelected={values.includes(filter.key)}
                 >
-                  {optionLabels?.[filter] ?? filter}
+                  {filter.label ?? filter.key}
                 </SelectOption>
               ),
             )}

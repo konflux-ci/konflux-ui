@@ -47,6 +47,10 @@ export const SecurityConformaTab: React.FC<
   React.PropsWithChildren<{ pipelineRunName: string }>
 > = ({ pipelineRunName }) => {
   const [conformaResult, crLoaded, crError] = useConformaResult(pipelineRunName);
+  const componentOptions = React.useMemo(
+    () => Array.from(new Set(conformaResult?.map((cr) => cr.component) ?? [])),
+    [conformaResult],
+  );
 
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
   const filters = useDeepCompareMemoize({
@@ -61,13 +65,16 @@ export const SecurityConformaTab: React.FC<
     () =>
       crLoaded && conformaResult
         ? createFilterObj(conformaResult, (cr) => cr.status, statuses)
-        : {},
+        : [],
     [conformaResult, crLoaded],
   );
 
   const componentFilterObj = React.useMemo(
-    () => (crLoaded && conformaResult ? createFilterObj(conformaResult, (cr) => cr.component) : {}),
-    [conformaResult, crLoaded],
+    () =>
+      crLoaded && conformaResult
+        ? createFilterObj(conformaResult, (cr) => cr.component, componentOptions)
+        : [],
+    [conformaResult, crLoaded, componentOptions],
   );
 
   // filter data in table

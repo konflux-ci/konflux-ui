@@ -1,18 +1,18 @@
 /**
- * Stale PR Report Script
+ * PR Report Script
  *
  * This script analyzes open pull requests in the konflux-ui repository and generates
  * a comprehensive Slack report to help teams track PR health and identify bottlenecks.
  *
  * CATEGORIZATION LOGIC:
  *
- * 1. **Needs Author Followup (Stale PRs)**:
- *    - Reviewer provided feedback more than 2 business days ago
+ * 1. **Needs Author Followup**:
+ *    - Reviewer provided feedback and acted last
  *    - Author has not responded with commits or comments since then
  *    - Indicates author action is blocking PR progress
  *
  * 2. **Needs Review**:
- *    - Author last acted (via commit or comment) more than 2 business days ago
+ *    - Author last acted (via commit or comment), or no reviewer activity yet
  *    - No reviewer activity since, or author activity is more recent than reviewer
  *    - Indicates reviewer action is needed
  *
@@ -21,8 +21,8 @@
  *    - Not yet merged
  *    - Ready for final merge action
  *
- * 4. **Konflux Bot PRs**:
- *    - PRs raised by konflux-ci[bot]
+ * 4. **Bot PRs**:
+ *    - PRs raised by konflux-ci[bot] and fullsend-ai-coder[bot]
  *    - Excluded from "Needs Review" and "Needs Author Followup" categories
  *    - Tracked separately to avoid noise in human workflow tracking
  *
@@ -33,14 +33,9 @@
  *
  * 6. **Drafts**: Work-in-progress PRs marked as draft
  *
- * BUSINESS DAY CALCULATION:
- * - Only weekdays (Monday-Friday) are counted
- * - Weekends are excluded from staleness calculations
- * - Uses mathematical approach for performance
- *
  * BOT FILTERING:
  * - Bot activity (codecov, dependabot, github-actions, etc.) is excluded
- * - Only human activity affects staleness determination
+ * - Only human activity affects the categorization
  *
  * OUTPUT MODES:
  * - Production: Sends formatted report to Slack webhook
@@ -68,7 +63,8 @@ const TEST_MODE = process.env.TEST_MODE === 'true';
 
 /** Validate required environment variables */
 if (!GITHUB_TOKEN) throw new Error('GITHUB_TOKEN is not set');
-if (!TEST_MODE && !SLACK_WEBHOOK_URL) throw new Error('SLACK_WEBHOOK_URL is not set');
+if (!TEST_MODE && !SLACK_WEBHOOK_URL)
+  throw new Error('Set the SLACK_WEBHOOK_URL or TEST_MODE=true.');
 
 /** Initialize GitHub API client */
 const octokit = new Octokit({ auth: GITHUB_TOKEN });
@@ -82,64 +78,6 @@ const octokit = new Octokit({ auth: GITHUB_TOKEN });
  * @returns {string} "PR" if count is 1, "PRs" otherwise
  */
 const prLabel = (count) => (count === 1 ? 'PR' : 'PRs');
-
-/**
- * Calculates business days (weekdays) between two dates, excluding weekends.
- * Uses a mathematical approach for better performance than iterating day-by-day.
- *
- * Algorithm:
- * 1. Normalize dates to start of day for consistent comparison
- * 2. Calculate full weeks and multiply by 5 weekdays per week
- * 3. Count remaining weekdays in the partial week
- *
- * @param {import('dayjs').Dayjs} startDate - Earlier date (inclusive)
- * @param {import('dayjs').Dayjs} endDate - Later date (exclusive of the end date itself)
- * @returns {number} Number of business days between dates
- *
- * @example
- * // Friday to Monday (2 days apart, but 1 business days)
- * getBusinessDaysDiff(dayjs('2024-01-05'), dayjs('2024-01-08')) // Returns 1
- * @example
- * // Monday to Friday (4 business days)
- * getBusinessDaysDiff(dayjs('2024-01-08'), dayjs('2024-01-12')) // Returns 4
- */
-const getBusinessDaysDiff = (startDate, endDate) => {
-  // Ensure the dates are on the same day for consistent comparison,
-  // but only count full days that have passed.
-  const start = startDate.startOf('day');
-  const end = endDate.startOf('day');
-
-  // If start is after or same as end, no full business days have passed
-  if (start.isSame(end) || start.isAfter(end)) {
-    return 0;
-  }
-
-  // Calculate total number of days between the two dates (inclusive of start, exclusive of end)
-  const totalDays = end.diff(start, 'day');
-
-  // Total number of full weeks
-  const fullWeeks = Math.floor(totalDays / 7);
-
-  // Business days from full weeks
-  let businessDays = fullWeeks * 5;
-
-  // Remaining days (less than a week)
-  let remainingDays = totalDays % 7;
-  let currentDay = start.day(); // Start day of the week (0=Sunday, 6=Saturday)
-
-  // Iterate over remaining days
-  while (remainingDays > 0) {
-    // Check if the current day is a weekday (Monday=1 to Friday=5)
-    if (currentDay !== 0 && currentDay !== 6) {
-      businessDays++;
-    }
-    // Move to the next day of the week
-    currentDay = (currentDay + 1) % 7;
-    remainingDays--;
-  }
-
-  return businessDays;
-};
 
 // ----- GitHub API Helpers -----
 
@@ -237,25 +175,26 @@ const getCommits = (prNumber) =>
  *
  * @throws {Error} If GitHub API calls fail or Slack webhook rejects the message
  */
-const checkStalePRs = async () => {
+const checkNeedsAuthorFollowupPRs = async () => {
   try {
     const prs = await getPRs();
 
     // Initialize categorization arrays
     const draftPRs = []; // PRs marked as draft
-    const stalePRs = []; // PRs waiting for author followup (>2 business days)
-    const needsReview = []; // PRs waiting for reviewer action (>2 business days)
+    const needsAuthor = []; // PRs waiting for author followup
+    const needsReview = []; // PRs waiting for reviewer action
     const approvedButOpen = []; // PRs with 2+ approvals but not merged
     const openOver2Weeks = []; // PRs open 14-29 days
     const openOver1Month = []; // PRs open 30-59 days
     const openOver2Months = []; // PRs open 60+ days
     const konfluxBotPRs = []; // PRs raised by red-hat-konflux[bot]
+    const fullsendBotPRs = []; // PRs raised by fullsend-ai-coder[bot]
 
     const now = dayjs();
 
     /**
      * Helper to check if a user is a bot (should be excluded from activity tracking).
-     * Bot activity should not affect staleness calculations as it doesn't represent
+     * Bot activity should not affect calculations as it doesn't represent
      * human review or author response.
      *
      * @param {object | null | undefined} user - The user object from GitHub API
@@ -265,8 +204,15 @@ const checkStalePRs = async () => {
       if (!user || !user.login) return false;
       const login = user.login.toLowerCase();
       return (
-        ['codecov', 'coderabbitai', 'dependabot', 'github-actions'].includes(login) ||
-        user.type === 'Bot'
+        [
+          'codecov',
+          'coderabbitai',
+          'dependabot',
+          'github-actions',
+          'fullsend-ai-review',
+          'red-hat-konflux',
+          'fullsend-ai-coder',
+        ].includes(login) || user.type === 'Bot'
       );
     };
 
@@ -278,6 +224,10 @@ const checkStalePRs = async () => {
      */
     const isKonfluxBotPR = (pr) => {
       return pr.user?.login?.toLowerCase() === 'red-hat-konflux[bot]';
+    };
+
+    const isFullsendBotPR = (pr) => {
+      return pr.user?.login?.toLowerCase() === 'fullsend-ai-coder[bot]';
     };
 
     // Use Promise.all for concurrent processing of PR details (improves performance)
@@ -294,6 +244,12 @@ const checkStalePRs = async () => {
         const daysOpen = now.diff(dayjs(pr.created_at), 'day');
         const prInfo = { number: pr.number, author: pr.user.login };
 
+        // Skip draft PRs from analysis (they're tracked separately)
+        if (pr.draft) {
+          draftPRs.push(prInfo);
+          return;
+        }
+
         // Track konflux bot PRs separately for the bot section
         const isKonfluxBot = isKonfluxBotPR(pr);
         if (isKonfluxBot) {
@@ -301,15 +257,15 @@ const checkStalePRs = async () => {
           // Don't return - continue to process for age-based categories
         }
 
-        // Skip draft PRs from staleness analysis (they're tracked separately)
-        if (pr.draft) {
-          draftPRs.push(prInfo);
-          return;
+        const isFullsendBot = isFullsendBotPR(pr);
+        if (isFullsendBot) {
+          fullsendBotPRs.push(prInfo);
+          // Don't return - continue to process for age-based categories
         }
 
         // Skip action-based categorization for Konflux bot PRs
         // (but still process age-based categories below)
-        if (isKonfluxBot) {
+        if (isKonfluxBot || isFullsendBot) {
           // Skip to age-based categories at the end
         } else {
           // Track latest review state per reviewer (for approval counting)
@@ -400,46 +356,20 @@ const checkStalePRs = async () => {
           if (activeApprovals.length >= 2 && !pr.merged_at) {
             approvedButOpen.push(prInfo);
           }
-          // 2. Needs Review:
-          // - Author acted last and it's been >2 business days with no reviewer response
+          // 2. Needs Review: author acted last (or no reviewer activity yet)
           else if (
             !lastActivityByReviewer ||
             lastActivityByAuthor.isAfter(lastActivityByReviewer)
           ) {
-            // Author acted last (or no reviewer activity at all)
-            const businessDaysSinceAuthorActivity = getBusinessDaysDiff(lastActivityByAuthor, now);
-
-            if (businessDaysSinceAuthorActivity > 2) {
-              needsReview.push(prInfo);
-            }
-            // If within 2 business days, don't flag (give reviewer time to respond)
+            needsReview.push(prInfo);
           }
-          // - After author refreshed commit, just got 1 approval and no other comments in the past 2 business days
-          // This catches PRs that have 1 approval but need a second reviewer to approve
+          // Single approval — needs a second reviewer
           else if (activeApprovals.length === 1) {
-            // Check if the single approval came after the author's last activity
-            const approvalTimestamp = activeApprovals[0].submitted_at;
-            const businessDaysSinceApproval = getBusinessDaysDiff(approvalTimestamp, now);
-
-            // If approval was given >2 business days ago, needs another review
-            if (businessDaysSinceApproval > 2) {
-              needsReview.push(prInfo);
-            }
-            // If within 2 business days, don't flag (give second reviewer time to review)
+            needsReview.push(prInfo);
           }
-          // 3. Stale PR (Needs Author Followup): Reviewer acted last and it's been >2 business days
+          // 3. Needs Author Followup: reviewer acted last, author has not responded
           else {
-            // Reviewer acted last (lastActivityByReviewer is after lastActivityByAuthor)
-            const businessDaysSinceReviewerComment = getBusinessDaysDiff(
-              lastActivityByReviewer,
-              now,
-            );
-
-            if (businessDaysSinceReviewerComment > 2) {
-              // Reviewer commented >2 business days ago, author hasn't responded
-              stalePRs.push(prInfo);
-            }
-            // If reviewer commented within past 2 business days, don't flag (give author time)
+            needsAuthor.push(prInfo);
           }
         } // Close the else block for non-bot PRs
 
@@ -465,7 +395,7 @@ const checkStalePRs = async () => {
       {
         emoji: ':hourglass:',
         name: 'Needs Author Followup',
-        prs: stalePRs,
+        prs: needsAuthor,
         filterLink: null, // No GitHub filter exists for this custom logic
       },
       {
@@ -485,6 +415,12 @@ const checkStalePRs = async () => {
         name: 'Konflux Bot PRs',
         prs: konfluxBotPRs,
         filterLink: `https://github.com/${REPO_OWNER}/${REPO_NAME}/pulls?q=is:open+author:app/red-hat-konflux`,
+      },
+      {
+        emoji: ':fullsend-review:',
+        name: 'Fullsend Bot PRs',
+        prs: fullsendBotPRs,
+        filterLink: `https://github.com/${REPO_OWNER}/${REPO_NAME}/pulls?q=is:open+author:app/fullsend-ai-coder`,
       },
       {
         emoji: ':hourglass_flowing_sand:',
@@ -570,13 +506,13 @@ const checkStalePRs = async () => {
       console.log('✅ PR report sent to Slack successfully!');
     }
   } catch (err) {
-    console.error('❌ Error checking stale PRs:', err);
+    console.error('❌ Error checking PRs:', err);
     process.exit(1);
   }
 };
 
 // ----- Execute Script -----
-checkStalePRs().catch((err) => {
-  console.error('❌ Error checking stale PRs:', err);
+checkNeedsAuthorFollowupPRs().catch((err) => {
+  console.error('❌ Error checking PRs:', err);
   process.exit(1);
 });

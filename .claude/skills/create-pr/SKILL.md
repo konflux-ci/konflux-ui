@@ -22,7 +22,7 @@ Before creating the PR, scan for existing context to build a rich description:
 - **Command arguments**: if invoked via `/create-pr` with `$ARGUMENTS`, use those as input.
 - **Git state**: commits on the branch, diff against main, branch name.
 
-The PR description should reflect the full story of the change — not just a mechanical summary of the diff. Use conversation context to explain the *why* and *how*.
+The PR description should reflect the full story of the change — not just a mechanical summary of the diff. Use conversation context to explain the _why_ and _how_.
 
 ## Flow
 
@@ -55,9 +55,19 @@ Fill the PR template from `.github/PULL_REQUEST_TEMPLATE.md` using **all availab
 - **Fixes**: extract Jira ticket ID from branch name or commit messages (pattern: `KFLUXUI-\d+` or `KONFLUX-\d+`). Format as `Fixes: https://redhat.atlassian.net/browse/<TICKET-ID>`. If no ticket ID found, leave the placeholder comment.
 - **Description**: 2-3 sentences summarizing the change and motivation. Pull from conversation context — what problem was being solved, what approach was chosen, and why. Do not just restate the commit messages.
 - **Type of change**: check the applicable box(es) based on the diff.
-- **Screen shots / Gifs**: leave the placeholder comment if no UI changes. If UI was changed, note that screenshots should be added.
+- **Screen shots / Gifs**: see step 4.1.
 - **How to test or reproduce**: list concrete steps to verify the change. Pull from conversation context — if the user described testing steps or verified behavior during the session, include those.
 - **Browser conformance**: leave unchecked (manual verification).
+
+### Step 4.1 — Capture UI screenshots (optional)
+
+1. Invoke the **`screenshot-ui` skill** (`.claude/skills/screenshot-ui/SKILL.md`)
+   - This uses Playwright MCP to navigate the running dev server and capture screenshots into `.screenshots/<branch-slug>/<run-id>/`
+   - If it returns screenshots, inform the user to add them to the PR body
+   - If it fails or is skipped, note "Screenshots not available" in that section
+2. If no UI-visible changes detected, skip this step
+3. **Never block PR creation** on screenshot failures — always continue to Step 5
+4. Prerequisites: dev server running (`yarn start`) and Playwright MCP configured in `.mcp.json`
 
 ### Step 5 — Show and confirm (MANDATORY GATE)
 
@@ -75,6 +85,7 @@ Render the complete PR draft:
 ```
 
 Then ask:
+
 > Does this look good? Reply "yes" to create the PR, or tell me what to change.
 
 **Do NOT create the PR until the user explicitly confirms.**
@@ -91,10 +102,12 @@ Then ask:
 ### Step 7 — Jira ticket transition
 
 After the PR is created, check if a Jira ticket ID (pattern: `KFLUXUI-\d+` or `KONFLUX-\d+`) appears in:
+
 - The branch name
 - Any commit message on the branch
 
 If a ticket ID is found:
+
 1. Fetch the ticket's current status using `jira_get_issue`
 2. If the status is already one of: **Code Review**, **Review**, **Release Pending**, **Closed**, **Done**, **Resolved** — report the current status and take no action
 3. Otherwise, ask the user: "Move <TICKET-ID> from '<current status>' to 'Code Review'?"
@@ -107,6 +120,7 @@ If no ticket ID is found, skip this step silently.
 ### Step 8 — Report
 
 Output:
+
 - The PR URL
 - One-line summary of what was shipped
 - Jira ticket status (if applicable — current state and whether it was transitioned)
@@ -122,6 +136,6 @@ Output:
 
 1. **Mega-commits**: if unrelated changes are staged together, ask the user whether to split them into separate commits before proceeding.
 2. **Empty descriptions**: every PR section in the template must have content, not just the placeholder comments.
-3. **Diff-only descriptions**: the Description section should explain *why* and *how*, not just list what files changed. Use conversation context.
+3. **Diff-only descriptions**: the Description section should explain _why_ and _how_, not just list what files changed. Use conversation context.
 4. **Force pushing**: never force push. If the push fails, stop and report.
 5. **Skipping confirmation**: always show the draft and wait for user approval before creating.

@@ -173,7 +173,7 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
         </AppEmptyState>
       ) : (
         <>
-          <Flex spaceItems={{ default: 'spaceItemsNone' }}>
+          <Flex spaceItems={{ default: 'spaceItemsNone' }} className="pf-v5-u-mt-sm">
             <Select
               toggle={(toggleRef) => (
                 <MenuToggle
@@ -215,10 +215,12 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
               onClearFilters={onClearFilters}
               totalColumns={snapshotColumns.length}
               noLeftPadding={true}
+              className="pf-v5-u-py-xs"
             >
               <Switch
                 id="show-merged-snapshots-only-switch"
                 label="Hide Pull Request Snapshots"
+                className="pf-v5-u-py-xs"
                 isChecked={showMergedOnly}
                 onChange={(_event, checked) =>
                   setFilters({ ...unparsedFilters, showMergedOnly: checked })
@@ -227,6 +229,7 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
               <Switch
                 id="releasable"
                 label="Show only releasable snapshots"
+                className="pf-v5-u-py-xs"
                 isChecked={releasableFilter}
                 onChange={(_event, checked) =>
                   setFilters({ ...unparsedFilters, releasable: checked })

@@ -20,7 +20,7 @@ type GettingStartedCardProps = {
   title: string;
   imgSrc?: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   imgAlt?: string;
-  isLight?: boolean;
+  hasHorizontalPadding?: boolean;
 };
 
 const LOCAL_STORAGE_KEY = 'getting-started-card';
@@ -31,8 +31,8 @@ export const GettingStartedCard: React.FC<React.PropsWithChildren<GettingStarted
   title,
   imgSrc,
   imgAlt,
-  isLight,
   children,
+  hasHorizontalPadding = true,
 }) => {
   const [storageKeys, setStorageKeys] = useLocalStorage<{ [key: string]: boolean }>(
     LOCAL_STORAGE_KEY,
@@ -44,7 +44,10 @@ export const GettingStartedCard: React.FC<React.PropsWithChildren<GettingStarted
 
   return (
     !isDismissed && (
-      <PageSection hasBodyWrapper={false} variant={isLight ? 'secondary' : 'default'}>
+      <PageSection
+        hasBodyWrapper={false}
+        className={`pf-v6-u-py-xl ${hasHorizontalPadding ? '' : 'pf-v6-u-px-0'}`}
+      >
         <Card>
           <Split>
             {imgSrc && (

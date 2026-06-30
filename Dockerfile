@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi9/nodejs-24@sha256:1a996f1d6422b12eef84bb217e9b107609a2055eabb58f73b3094ccf4387215a AS builder
+FROM registry.access.redhat.com/ubi9/nodejs-24@sha256:34a1e3360745b5248f2ad19e45ddf6ba2494789b6c3f6c13d589ec4f36a4af2f AS builder
 
 # Run as root in builder stage (final image uses non-root USER 1001)
 USER 0
@@ -29,7 +29,7 @@ COPY aliases.config.js aliases.config.js
 RUN yarn install --immutable
 RUN yarn build
 
-FROM registry.access.redhat.com/ubi9/nginx-120@sha256:aea08753a83bc509c8abf72866a8a69ffcf824a640bd3c3257887fdd515b3aa3
+FROM registry.access.redhat.com/ubi9/nginx-120@sha256:a4fed3fb235535caf00fb690ec7f3c5aaef810cc0b361f5be43f0a00464fbf72
 
 COPY --from=builder /opt/app-root/src/dist/* /opt/app-root/src/
 
