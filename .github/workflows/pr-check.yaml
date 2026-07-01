@@ -15,14 +15,18 @@ jobs:
   check-ok-to-test-label:
     if: ${{ github.event_name != 'merge_group' }}
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
     steps:
       - name: Check for "ok-to-test" label on synchronize event type
         id: check-ok-to-test-on-synchronize
         env:
           GITHUB_TOKEN: ${{ github.token }}
+          EVENT_ACTION: ${{ github.event.action }}
+          PR_NUMBER: ${{ github.event.number }}
         run: |
-          if [[ "${{ github.event.action }}" == "synchronize" ]]; then
-            gh pr edit ${{ github.event.number }} --remove-label "ok-to-test"
+          if [[ "$EVENT_ACTION" == "synchronize" ]]; then
+            gh pr edit "$PR_NUMBER" --remove-label "ok-to-test"
           fi
   check-org-membership:
     needs: check-ok-to-test-label
@@ -41,7 +45,7 @@ jobs:
 
           ORG="${{ github.repository_owner }}"
           PR_AUTHOR=$(jq --raw-output .pull_request.user.login $GITHUB_EVENT_PATH)
-          PR_LABELS=$(jq --raw-output .pull_request.labels[].name $GITHUB_EVENT_PATH)
+          PR_LABELS=$(gh pr view ${{ github.event.number }} --repo ${{ github.repository }} --json labels --jq '.labels[].name')
 
           for BOT in "${WHITELISTED_BOTS[@]}"; do
             if [ "$PR_AUTHOR" == "$BOT" ]; then
