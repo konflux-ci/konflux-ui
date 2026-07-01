@@ -45,7 +45,7 @@ jobs:
 
           ORG="${{ github.repository_owner }}"
           PR_AUTHOR=$(jq --raw-output .pull_request.user.login $GITHUB_EVENT_PATH)
-          PR_LABELS=$(gh pr view ${{ github.event.number }} --repo ${{ github.repository }} --json labels --jq '.labels[].name')
+          PR_LABELS=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json labels --jq '.labels[].name')
 
           for BOT in "${WHITELISTED_BOTS[@]}"; do
             if [ "$PR_AUTHOR" == "$BOT" ]; then
@@ -81,6 +81,8 @@ jobs:
           exit 1
         env:
           GITHUB_TOKEN: ${{ secrets.HAC_TEST_GH_TOKEN }}
+          PR_NUMBER: ${{ github.event.number }}
+          REPO: ${{ github.repository }}
 
   deploy-konfux-ui:
     needs: check-org-membership
