@@ -1,11 +1,11 @@
 import { renderHook, act } from '@testing-library/react';
 import { useEventListener } from '../../hooks/useEventListener';
-import { THEME_SYSTEM, THEME_DARK, THEME_LIGHT } from '../const';
+import { THEME_SYSTEM, THEME_DARK, THEME_LIGHT, PF5_DARK_THEME_CLASS, PF6_DARK_THEME_CLASS } from '../const';
 import { ThemeProvider } from '../ThemeContext';
 import { useTheme } from '../useTheme';
 
 const THEME_STORAGE_KEY = 'konflux-theme-preference';
-const DARK_THEME_CLASS = 'pf-v5-theme-dark';
+const DARK_THEME_CLASSES = [PF5_DARK_THEME_CLASS, PF6_DARK_THEME_CLASS] as const;
 
 // Mock localStorage
 const mockLocalStorage = {
@@ -43,7 +43,9 @@ beforeEach(() => {
   mockUseEventListener.mockClear();
 
   // Clear any existing classes
-  document.documentElement.classList.remove(DARK_THEME_CLASS);
+  DARK_THEME_CLASSES.forEach((darkThemeClass) => {
+    document.documentElement.classList.remove(darkThemeClass);
+  });
 });
 
 const TestWrapper = ({ children }) => <ThemeProvider>{children}</ThemeProvider>;
@@ -102,7 +104,9 @@ describe('useTheme', () => {
 
     renderHook(() => useTheme(), { wrapper: TestWrapper });
 
-    expect(document.documentElement.classList.contains(DARK_THEME_CLASS)).toBe(true);
+    DARK_THEME_CLASSES.forEach((darkThemeClass) => {
+      expect(document.documentElement.classList.contains(darkThemeClass)).toBe(true);
+    });
   });
 
   it('should remove dark theme class when effective theme is light', () => {
@@ -115,7 +119,9 @@ describe('useTheme', () => {
 
     renderHook(() => useTheme(), { wrapper: TestWrapper });
 
-    expect(document.documentElement.classList.contains(DARK_THEME_CLASS)).toBe(false);
+    DARK_THEME_CLASSES.forEach((darkThemeClass) => {
+      expect(document.documentElement.classList.contains(darkThemeClass)).toBe(false);
+    });
   });
 
   it('should save preference to localStorage when changed', () => {

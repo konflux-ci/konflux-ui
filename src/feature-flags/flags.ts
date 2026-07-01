@@ -153,6 +153,17 @@ const InternalFLAGS = {
       visibleInFeatureFlagPanel: false,
     },
   },
+  'ai-chat': {
+    key: 'ai-chat',
+    description: 'AI chat assistant powered by PatternFly chatbot',
+    defaultEnabled: false,
+    status: 'wip',
+    guard: {
+      allOf: ['isLightspeedAvailable'],
+      failureReason: 'Konflux AI is not available on this cluster',
+      visibleInFeatureFlagPanel: true,
+    },
+  },
 } satisfies Record<string, FeatureMeta>;
 
 export type FlagKey = keyof typeof InternalFLAGS;

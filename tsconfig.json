@@ -7,6 +7,12 @@
       ],
       "~/*": [
         "src/*"
+      ],
+      "@patternfly/chatbot-pf6-core": [
+        "node_modules/@patternfly/chatbot/node_modules/@patternfly/react-core"
+      ],
+      "@patternfly/chatbot-pf6-core/*": [
+        "node_modules/@patternfly/chatbot/node_modules/@patternfly/react-core/*"
       ]
     },
     "composite": true,

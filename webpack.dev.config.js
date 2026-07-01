@@ -74,6 +74,17 @@ export default merge(commonConfig, {
         toProxy: true,
         // pathRewrite: { '^/wss/k8s': '' },
       },
+      {
+        // TODO: Ask Sahil if we want to have available lightspeed api in dev mode
+        // Proxy /api/lightspeed/* to konflux-lightspeed (default http://127.0.0.1:8080).
+        // Set LIGHTSPEED_URL in .env when lightspeed listens elsewhere (e.g. port-forward on 8081).
+        // Restart `yarn start` after changing this config.
+        context: ['/api/lightspeed'],
+        target: process.env.LIGHTSPEED_URL || 'http://127.0.0.1:8081',
+        secure: false,
+        changeOrigin: true,
+        pathRewrite: (path) => path.replace(/^\/api\/lightspeed/, ''),
+      },
     ],
   },
   module: {
