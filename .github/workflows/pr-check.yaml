@@ -12,7 +12,20 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  check-ok-to-test-label:
+    if: ${{ github.event_name != 'merge_group' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for "ok-to-test" label on synchronize event type
+        id: check-ok-to-test-on-synchronize
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          if [[ "${{ github.event.action }}" == "synchronize" ]]; then
+            gh pr edit ${{ github.event.number }} --remove-label "ok-to-test"
+          fi
   check-org-membership:
+    needs: check-ok-to-test-label
     if: ${{ github.event_name != 'merge_group' }}
     runs-on: ubuntu-latest
     steps:
@@ -108,7 +121,7 @@ jobs:
         run: |
           set -x
           df -h --total
-          free -m 
+          free -m
 
       # Redirect Cypress Cache to /mnt to free up disk space on /dev/root
       - name: Redirect Cypress Cache to /mnt
@@ -124,13 +137,13 @@ jobs:
           # Stop Docker completely
           sudo systemctl stop docker.socket
           sudo systemctl stop docker
-          
+
           sudo mkdir -p /mnt/docker
-          
+
           # Create a Systemd Override (This is more powerful than daemon.json)
           sudo mkdir -p /etc/systemd/system/docker.service.d
           printf '[Service]\nExecStart=\nExecStart=/usr/bin/dockerd --data-root=/mnt/docker -H fd://' | sudo tee /etc/systemd/system/docker.service.d/override.conf
-          
+
           sudo systemctl daemon-reload
           sudo systemctl start docker
 
@@ -149,7 +162,7 @@ jobs:
           # 1. Create the new storage directory
           sudo mkdir -p /mnt/podman_storage
           sudo chown -R runner:docker /mnt/podman_storage
-          
+
           # 2. Create/Override the Podman storage config
           mkdir -p ~/.config/containers
           cat <<EOF > ~/.config/containers/storage.conf
@@ -157,7 +170,7 @@ jobs:
           driver = "overlay"
           graphroot = "/mnt/podman_storage"
           EOF
-          
+
           # 3. Verify the change
           podman info --format '{{.Store.GraphRoot}}'
 
