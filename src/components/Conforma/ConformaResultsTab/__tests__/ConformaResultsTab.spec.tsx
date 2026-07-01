@@ -28,6 +28,13 @@ const createMockRow = (overrides: Partial<ConformaResultRow> = {}): ConformaResu
   ...overrides,
 });
 
+const noOpRefresh = {
+  lastFetchedAt: 0,
+  isRefreshing: false,
+  hasLiveUpdatesPaused: false,
+  onRefresh: jest.fn(),
+};
+
 const emptyResults: ApplicationConformaResults = {
   componentStatuses: [],
   allResults: [],
@@ -39,6 +46,7 @@ const emptyResults: ApplicationConformaResults = {
   loaded: true,
   settling: false,
   error: undefined,
+  refresh: noOpRefresh,
 };
 
 const populatedResults: ApplicationConformaResults = {
@@ -88,6 +96,7 @@ const populatedResults: ApplicationConformaResults = {
   loaded: true,
   settling: false,
   error: undefined,
+  refresh: noOpRefresh,
 };
 
 describe('ConformaResultsTab', () => {
@@ -106,7 +115,7 @@ describe('ConformaResultsTab', () => {
     expect(screen.getByRole('progressbar')).toBeInTheDocument();
   });
 
-  it('shows an error message when there is an error', () => {
+  it('shows an error message when there is a fatal error', () => {
     mockUseApplicationConformaResults.mockReturnValue({
       ...emptyResults,
       loaded: true,
@@ -116,6 +125,21 @@ describe('ConformaResultsTab', () => {
     routerRenderer(<ConformaResultsTab />);
 
     expect(screen.getByText('Unable to load Conforma results')).toBeInTheDocument();
+  });
+
+  it('shows inline warning and still renders results when partial log fetch fails', () => {
+    mockUseApplicationConformaResults.mockReturnValue({
+      ...populatedResults,
+      partialLogError: new Error('network error'),
+    });
+
+    routerRenderer(<ConformaResultsTab />);
+
+    expect(screen.getByTestId('conforma-partial-log-error')).toBeInTheDocument();
+    expect(screen.getByText('Some Conforma results could not be loaded')).toBeInTheDocument();
+    expect(screen.getByText('network error')).toBeInTheDocument();
+    expect(screen.getByTestId('conforma-grouped-table')).toBeInTheDocument();
+    expect(screen.queryByText('Unable to load Conforma results')).not.toBeInTheDocument();
   });
 
   it('shows empty state when allResults is empty', () => {

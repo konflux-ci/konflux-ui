@@ -10,11 +10,10 @@ import {
   Tr,
 } from '@patternfly/react-table';
 import { getRuleStatus } from '~/components/Conforma/utils';
-import type { ComponentProps } from '~/shared/components/table/Table';
 import type { ConformaResultRow } from '~/types/conforma';
 import type { GroupByMode, GroupedConformaRow } from './conforma-grouping-utils';
-import { getConformaGroupedHeader } from './ConformaResultsListHeader';
-import ConformaResultsListRow from './ConformaResultsListRow';
+import { getConformaGroupedColumns } from './ConformaGroupedTableHeader';
+import { ConformaResultsListRow } from './ConformaResultsListRow';
 import './ConformaResultsTab.scss';
 
 type ConformaGroupedTableProps = {
@@ -70,13 +69,7 @@ export const ConformaGroupedTable: React.FC<ConformaGroupedTableProps> = ({
   onToggleGroup,
 }) => {
   const groupLabel = groupBy === 'rule' ? 'Rule' : 'Component';
-
-  // Build column definitions using the shared createTableHeaders utility so
-  // the header config follows the same pattern as other table components.
-  const headerColumns = React.useMemo(
-    () => getConformaGroupedHeader(groupLabel)({} as ComponentProps<unknown>),
-    [groupLabel],
-  );
+  const headerColumns = React.useMemo(() => getConformaGroupedColumns(groupLabel), [groupLabel]);
 
   return (
     <Table aria-label="Conforma results grouped table" data-test="conforma-grouped-table">

@@ -1,14 +1,14 @@
 import * as React from 'react';
 import { SortByDirection } from '@patternfly/react-table';
 import { Table } from '~/shared';
-import { CONFORMA_RESULT_STATUS, UIConformaData } from '~/types/conforma';
+import { CONFORMA_RESULT_STATUS, ConformaResultRow } from '~/types/conforma';
 import { ConformaExpandedRowContent } from './ConformaExpandedRowContent';
 import getConformaHeader from './ConformaHeader';
 import { WrappedConformaRow } from './ConformaRow';
 import './ConformaTable.scss';
 
 type ConformaTableProps = {
-  conformaResult: UIConformaData[];
+  conformaResult: ConformaResultRow[];
 };
 
 const STATUS_SORT_ORDER = [
@@ -21,7 +21,7 @@ const COLUMN_ORDER = [undefined, 'title', 'status', 'msg', 'component'];
 export const getSortColumnFuntion = (key: string, activeSortDirection: string) => {
   switch (key) {
     case 'status':
-      return (a: UIConformaData, b: UIConformaData) => {
+      return (a: ConformaResultRow, b: ConformaResultRow) => {
         const aValue = STATUS_SORT_ORDER.indexOf(a[key]);
         const bValue = STATUS_SORT_ORDER.indexOf(b[key]);
         if (aValue < bValue) {
@@ -33,7 +33,7 @@ export const getSortColumnFuntion = (key: string, activeSortDirection: string) =
       };
 
     default:
-      return (a: UIConformaData, b: UIConformaData) => {
+      return (a: ConformaResultRow, b: ConformaResultRow) => {
         const aValue = a[key];
         const bValue = b[key];
         if (typeof aValue === 'string' && typeof bValue === 'string') {
@@ -78,11 +78,11 @@ export const ConformaTable: React.FC<React.PropsWithChildren<ConformaTableProps>
         aria-label="conforma-table"
         Header={ConformaHeader}
         ExpandedContent={(props) => {
-          const obj = props.obj as UIConformaData;
+          const obj = props.obj as ConformaResultRow;
           return <ConformaExpandedRowContent {...props} obj={obj} />;
         }}
         Row={(props) => {
-          const obj = props.obj as UIConformaData;
+          const obj = props.obj as ConformaResultRow;
 
           return (
             <WrappedConformaRow

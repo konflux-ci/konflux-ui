@@ -1,6 +1,8 @@
 import * as React from 'react';
 import { useParams } from 'react-router-dom';
 import {
+  Alert,
+  AlertVariant,
   Bullseye,
   PageSection,
   PageSectionVariants,
@@ -9,8 +11,7 @@ import {
   TextContent,
   Title,
 } from '@patternfly/react-core';
-import { FilterContext, FilterContextProvider } from '~/components/Filter/generic/FilterContext';
-import { useDeepCompareMemoize } from '~/shared';
+import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { getErrorState } from '~/shared/utils/error-utils';
 import type { GroupByMode } from './conforma-grouping-utils';
 import { filterResults, groupByComponent, groupByRule } from './conforma-grouping-utils';
@@ -18,6 +19,7 @@ import { ConformaGroupedTable } from './ConformaGroupedTable';
 import { ConformaResultsToolbar } from './ConformaResultsToolbar';
 import { ConformaSummaryBar } from './ConformaSummaryBar';
 import { useApplicationConformaResults } from './useApplicationConformaResults';
+import { useConformaFilters } from './useConformaFilters';
 import './ConformaResultsTab.scss';
 
 /**
@@ -37,14 +39,11 @@ const ConformaResultsTabContent: React.FC = () => {
     totalSuccesses,
     loaded,
     error,
+    partialLogError,
+    refresh,
   } = useApplicationConformaResults(applicationName);
 
-  const { filters: unparsedFilters } = React.useContext(FilterContext);
-  const filters = useDeepCompareMemoize({
-    name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
-    status: unparsedFilters.status ? (unparsedFilters.status as string[]) : [],
-  });
-  const { name: nameFilter, status: statusFilter } = filters;
+  const { name: nameFilter, status: statusFilter } = useConformaFilters();
 
   const [groupBy, setGroupBy] = React.useState<GroupByMode>('rule');
   const [expandedGroups, setExpandedGroups] = React.useState<Set<string>>(new Set());
@@ -145,7 +144,21 @@ const ConformaResultsTabContent: React.FC = () => {
           onGroupByChange={handleGroupByChange}
           allExpanded={allExpanded}
           onToggleExpandAll={handleToggleExpandAll}
+          refresh={refresh}
         />
+
+        {partialLogError ? (
+          <Alert
+            data-test="conforma-partial-log-error"
+            className="pf-v5-u-mt-md pf-v5-u-mx-lg"
+            variant={AlertVariant.warning}
+            isInline
+            title="Some Conforma results could not be loaded"
+          >
+            {(partialLogError as { message?: string })?.message ??
+              'One or more component log fetches failed. Results shown may be incomplete.'}
+          </Alert>
+        ) : null}
 
         {isEmpty ? (
           <Bullseye>
