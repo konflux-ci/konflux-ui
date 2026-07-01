@@ -1,7 +1,8 @@
 import React from 'react';
-import { Switch, Stack, StackItem, Button, Label, Tooltip } from '@patternfly/react-core';
+import { Switch, Stack, StackItem, Button, Label } from '@patternfly/react-core';
 import { FlaskIcon } from '@patternfly/react-icons/dist/esm/icons/flask-icon';
 import { createModalLauncher } from '~/components/modal/createModalLauncher';
+import HelpTooltipIcon from '~/shared/components/help-tooltip/HelpTooltipIcon';
 import { guardSatisfied } from './conditions';
 import { FlagKey, FLAGS, FLAGS_STATUS } from './flags';
 import { useAllFlagsConditions, useFeatureFlags } from './hooks';
@@ -27,29 +28,28 @@ export const FeatureFlagPanel: React.FC = () => {
         const isDisabled = !guardSatisfied(flag.guard, conditions);
         const flagKey = key as FlagKey;
 
-        const switchComponent = (
-          <Switch
-            id={flagKey}
-            label={
-              <>
-                {description}{' '}
-                <Label color={status === 'wip' ? 'orange' : 'green'}>{FLAGS_STATUS[status]}</Label>
-              </>
-            }
-            isDisabled={isDisabled}
-            isChecked={flags[flagKey]}
-            onChange={(_, checked) => {
-              setFlag(flagKey, checked);
-            }}
-          />
-        );
         return (
           <StackItem key={flagKey}>
-            {isDisabled && flag.guard?.failureReason ? (
-              <Tooltip content={flag.guard.failureReason}>{switchComponent}</Tooltip>
-            ) : (
-              switchComponent
-            )}
+            <Switch
+              id={flagKey}
+              label={
+                <>
+                  {description}{' '}
+                  <Label color={status === 'wip' ? 'orange' : 'green'}>{FLAGS_STATUS[status]}</Label>
+                  {isDisabled && flag.guard?.failureReason ? (
+                    <>
+                      {' '}
+                      <HelpTooltipIcon content={flag.guard.failureReason} />
+                    </>
+                  ) : null}
+                </>
+              }
+              isDisabled={isDisabled}
+              isChecked={flags[flagKey]}
+              onChange={(_, checked) => {
+                setFlag(flagKey, checked);
+              }}
+            />
           </StackItem>
         );
       })}
