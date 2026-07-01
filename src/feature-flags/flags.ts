@@ -146,6 +146,11 @@ const InternalFLAGS = {
     description: 'AI chat assistant powered by PatternFly chatbot',
     defaultEnabled: false,
     status: 'wip',
+    guard: {
+      allOf: ['isLightspeedAvailable'],
+      failureReason: 'Konflux AI is not available on this cluster',
+      visibleInFeatureFlagPanel: true,
+    },
   },
   'pipeline-runs-page': {
     key: 'pipeline-runs-page',
