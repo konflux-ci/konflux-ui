@@ -24,9 +24,10 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
           EVENT_ACTION: ${{ github.event.action }}
           PR_NUMBER: ${{ github.event.number }}
+          REPO: ${{ github.repository }}
         run: |
           if [[ "$EVENT_ACTION" == "synchronize" ]]; then
-            gh pr edit "$PR_NUMBER" --remove-label "ok-to-test"
+            gh pr edit "$PR_NUMBER" --repo "$REPO" --remove-label "ok-to-test"
           fi
   check-org-membership:
     needs: check-ok-to-test-label
