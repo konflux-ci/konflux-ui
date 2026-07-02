@@ -30,7 +30,9 @@ const showKubearchive = useIsOnFeatureFlag('kubearchive-integration');
 |----------|-------------|---------|
 | **Guarded Flags** | Feature depends on external service/environment | KubeArchive integration only works if KubeArchive is installed |
 | **Independent Conditions** | UI needs to adapt to environment without feature flags | Show "staging environment" banner, hide unavailable features |
-| **Route Guards** | Stable page requires a cluster service | Issues page requires Kite (`ensureConditionOnLoader`) |
+| **Route Guards** | Stable page requires a cluster service | Issues page requires Kite (`ensureConditionOnLoader` → **503**) |
+
+See [When to use 503](#when-to-use-503-service-unavailable) for how this differs from **404** and other condition patterns.
 
 ### Already available conditions
 
@@ -336,6 +338,41 @@ if (isKiteReady()) {
 
 ---
 
+## When to use 503 (Service Unavailable)
+
+HTTP **503** means: *this page exists in Konflux, but something required to run it is missing or down on this cluster right now.*
+
+Use `ensureConditionOnLoader` (which throws a **503** `Response`) when **all** of the following apply:
+
+| Criterion | Why |
+|-----------|-----|
+| The route is **stable** | The page is a normal, shipped part of the product — not experimental or behind a feature flag. |
+| The page **depends on an optional cluster service or plugin** | A condition such as `isKiteServiceEnabled` or `isKubearchiveEnabled` checks that the backend is reachable. |
+| You want to **block navigation at the route** | The loader/`lazy()` should stop before the page bundle loads when the service is unavailable. |
+| You want a **dedicated unavailable page** | `RouteErrorBoundry` renders `ServiceUnavailablePage` with a clear, page-specific message via `errorMessage`. |
+
+**Good fit:** The Issues dashboard is stable, but only works when the Kite plugin is installed and healthy.
+
+**Do not use 503 when:**
+
+| Instead use… | When… |
+|--------------|-------|
+| `ensureFeatureFlagOnLoader` (**404**) | The route is **experimental or WIP** and gated by a feature flag. A missing flag means "this page doesn't exist yet", not "a service is down". See [feature-flags.md](./feature-flags.md). |
+| `createConditionsHook` or `ensureConditionIsOn` | You only need to **adapt UI inside a page** (hide a section, show inline fallback) without blocking the whole route. |
+| Guarded feature flags | The feature is still **flag-controlled** and should be disabled in the dev panel when a condition fails — no route guard needed. |
+| RBAC / access checks | The user lacks permission — that is **403**, handled separately by `RouteErrorBoundry`. |
+
+**503 vs 404 at a glance:**
+
+| | **503** (`ensureConditionOnLoader`) | **404** (`ensureFeatureFlagOnLoader`) |
+|---|--------------------------------------|---------------------------------------|
+| **Meaning** | Page exists; required service unavailable | Page not enabled / not released |
+| **Route type** | Stable | Experimental (feature flag) |
+| **User sees** | `ServiceUnavailablePage` with custom message | Not-found style empty state |
+| **Example** | Issues page when Kite is down | Pipeline runs page when flag is off |
+
+---
+
 ## Route Guards with `ensureConditionOnLoader`
 
 For **React Router loaders and `lazy()` functions**, use `ensureConditionOnLoader` from `src/feature-flags/utils.ts`. It is a non-hook utility safe to call in loaders.
@@ -347,7 +384,7 @@ For **React Router loaders and `lazy()` functions**, use `ensureConditionOnLoade
 
 React Router exposes that body as `error.data` in the route's `errorElement`. `RouteErrorBoundry` passes it to `ServiceUnavailablePage` as the `errorMessage` prop.
 
-Use this when a route is stable (not behind a feature flag) but depends on a cluster service such as Kite. For experimental routes, use `ensureFeatureFlagOnLoader` instead (throws **404** — see [feature-flags.md](./feature-flags.md)).
+See [When to use 503](#when-to-use-503-service-unavailable) for when this is the right choice vs **404** or in-component condition checks.
 
 ```ts
 import { ensureConditionOnLoader } from '~/feature-flags/utils';
@@ -500,6 +537,7 @@ if (isKubeArchiveEnabled()) {
 
 ### Route guards (loaders/lazy):
 ```ts
+// Stable route + optional cluster service → 503 + ServiceUnavailablePage
 import { ensureConditionOnLoader } from '~/feature-flags/utils';
 
 await ensureConditionOnLoader(['isKiteServiceEnabled'], {
@@ -507,6 +545,8 @@ await ensureConditionOnLoader(['isKiteServiceEnabled'], {
 });
 // errorElement: <RouteErrorBoundry /> → ServiceUnavailablePage on 503 (message from response body)
 ```
+
+For experimental routes behind a feature flag, use `ensureFeatureFlagOnLoader` instead (**404** — see [feature-flags.md](./feature-flags.md)).
 
 ### Available conditions:
 - `'isKubearchiveEnabled'` — KubeArchive service available
