@@ -343,9 +343,9 @@ For **React Router loaders and `lazy()` functions**, use `ensureConditionOnLoade
 `ensureConditionOnLoader` is **async** and runs two steps:
 
 1. `await FeatureFlagsStore.ensureConditions(keys)` — evaluate and cache the listed conditions.
-2. Check the snapshot via `ensureConditionIsOn(keys)` — if any key is `false` or missing, throw `new Response('Service Unavailable', { status: 503 })`.
+2. Check the snapshot via `ensureConditionIsOn(keys)` — if any key is `false` or missing, throw a **503** `Response` whose **body** is the error message (defaults to `'Service Unavailable'`).
 
-React Router renders the route's `errorElement` — `RouteErrorBoundry` shows `ServiceUnavailablePage` for 503 errors.
+React Router exposes that body as `error.data` in the route's `errorElement`. `RouteErrorBoundry` passes it to `ServiceUnavailablePage` as the `errorMessage` prop.
 
 Use this when a route is stable (not behind a feature flag) but depends on a cluster service such as Kite. For experimental routes, use `ensureFeatureFlagOnLoader` instead (throws **404** — see [feature-flags.md](./feature-flags.md)).
 
@@ -358,7 +358,9 @@ const issuesRoutes = [
   {
     path: ISSUES_PATH.path,
     lazy: async () => {
-      await ensureConditionOnLoader(['isKiteServiceEnabled']);
+      await ensureConditionOnLoader(['isKiteServiceEnabled'], {
+        errorMessage: 'Issues dashboard is unavailable on the cluster.',
+      });
       const { default: Component } = await import('~/components/Issues/Issues');
       return { Component };
     },
@@ -368,9 +370,19 @@ const issuesRoutes = [
 ];
 ```
 
+**Signature:**
+
+```ts
+ensureConditionOnLoader(
+  keys: ConditionKey[],
+  options?: { errorMessage?: string },
+): Promise<void>
+```
+
 - Accepts one or more `ConditionKey` values — **all** must be `true` (AND logic, same as `ensureConditionIsOn`).
+- Optional `errorMessage` sets the **503 response body** shown on `ServiceUnavailablePage`. Omit it to use the default `'Service Unavailable'`.
 - Unlike `ensureConditionIsOn`, this utility **evaluates conditions first**, so it is appropriate for route entry where a stale or missing snapshot should block navigation.
-- Pair with `<RouteErrorBoundry />` without props — **503** errors render `ServiceUnavailablePage` (page-specific messages come from `condition-messages.ts` based on the URL).
+- Pair with `<RouteErrorBoundry />` without props — **503** errors render `ServiceUnavailablePage` with the message from the thrown response.
 
 **Compared to `ensureConditionIsOn`:**
 
@@ -490,8 +502,10 @@ if (isKubeArchiveEnabled()) {
 ```ts
 import { ensureConditionOnLoader } from '~/feature-flags/utils';
 
-await ensureConditionOnLoader(['isKiteServiceEnabled']);
-// errorElement: <RouteErrorBoundry /> → ServiceUnavailablePage on 503
+await ensureConditionOnLoader(['isKiteServiceEnabled'], {
+  errorMessage: 'Issues dashboard is unavailable on the cluster.',
+});
+// errorElement: <RouteErrorBoundry /> → ServiceUnavailablePage on 503 (message from response body)
 ```
 
 ### Available conditions:

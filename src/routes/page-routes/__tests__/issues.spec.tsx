@@ -60,6 +60,9 @@ jest.mock('~/feature-flags/utils', () => ({
 
 const getMainRoute = (): MainIssuesRoute => issuesRoutes[0] as MainIssuesRoute;
 
+const ISSUES_UNAVAILABLE_MESSAGE = 'Issues dashboard is unavailable on the cluster.';
+const ensureConditionOnLoaderOptions = { errorMessage: ISSUES_UNAVAILABLE_MESSAGE };
+
 describe('Issues Routes Configuration', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -109,7 +112,10 @@ describe('Issues Routes Configuration', () => {
 
       expect(lazyResult).toHaveProperty('Component');
       expect(typeof lazyResult.Component).toBe('function');
-      expect(mockEnsureConditionOnLoader).toHaveBeenCalledWith(['isKiteServiceEnabled']);
+      expect(mockEnsureConditionOnLoader).toHaveBeenCalledWith(
+        ['isKiteServiceEnabled'],
+        ensureConditionOnLoaderOptions,
+      );
     });
 
     it('should guard the route with ensureConditionOnLoader before loading the issues page', async () => {
@@ -122,12 +128,15 @@ describe('Issues Routes Configuration', () => {
       await mainRoute.lazy();
 
       expect(conditionChecked).toBe(true);
-      expect(mockEnsureConditionOnLoader).toHaveBeenCalledWith(['isKiteServiceEnabled']);
+      expect(mockEnsureConditionOnLoader).toHaveBeenCalledWith(
+        ['isKiteServiceEnabled'],
+        ensureConditionOnLoaderOptions,
+      );
     });
 
     it('should throw 503 when ensureConditionOnLoader rejects the kite condition', async () => {
       mockEnsureConditionOnLoader.mockImplementation(() => {
-        throw new Response('Service Unavailable', { status: 503 });
+        throw new Response(ISSUES_UNAVAILABLE_MESSAGE, { status: 503 });
       });
 
       await expect(mainRoute.lazy()).rejects.toMatchObject({
@@ -142,9 +151,10 @@ describe('Issues Routes Configuration', () => {
       mockConditions.isKiteServiceEnabled = false;
       mockEnsureConditionOnLoader.mockImplementation(realEnsureConditionOnLoader);
 
-      await expect(mainRoute.lazy()).rejects.toMatchObject({
-        status: 503,
-      });
+      const thrown = await mainRoute.lazy().catch((error) => error);
+
+      expect(thrown).toMatchObject({ status: 503 });
+      expect(await (thrown as Response).text()).toBe(ISSUES_UNAVAILABLE_MESSAGE);
       expect(mockEnsureConditions).toHaveBeenCalledWith(['isKiteServiceEnabled']);
     });
   });

@@ -3,6 +3,10 @@ import { ConditionKey } from './conditions';
 import { FLAGS, type FlagKey } from './flags';
 import { FeatureFlagsStore } from './store';
 
+type EnsureConditionOnLoaderOptions = {
+  errorMessage?: string;
+};
+
 export const isFeatureFlagOn = (flag: FlagKey): boolean => FeatureFlagsStore.isOn(flag);
 
 /**
@@ -40,11 +44,11 @@ export const ensureConditionIsOn = (keys: ConditionKey[]) => () => {
  * Compose helpers for data-router loaders/lazy to guard routes by conditions.
  * These are non-hook utilities and safe to call in loaders.
  */
-export const ensureConditionOnLoader = async (keys: ConditionKey[]): Promise<void> => {
+export const ensureConditionOnLoader = async (keys: ConditionKey[], options?: EnsureConditionOnLoaderOptions): Promise<void> => {
   await FeatureFlagsStore.ensureConditions(keys);
   const isConditionOn = ensureConditionIsOn(keys);
   if (!isConditionOn()) {
     // Let RouteErrorBoundary render a 503
-    throw new Response('Service Unavailable', { status: 503 });
+    throw new Response(options?.errorMessage ?? 'Service Unavailable', { status: 503 });
   }
 };

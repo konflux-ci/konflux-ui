@@ -1,61 +1,46 @@
 import '@testing-library/jest-dom';
 import { useNavigate } from 'react-router-dom';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import {
-  DEFAULT_SERVICE_UNAVAILABLE_MESSAGE,
-  SERVICE_UNAVAILABLE_MESSAGES,
-} from '../condition-messages';
 import ServiceUnavailablePage from '../ServiceUnavailablePage';
-
-let mockPathname = '/';
 
 jest.mock('react-router-dom', () => {
   const actual = jest.requireActual('react-router-dom');
   return {
     ...actual,
     useNavigate: jest.fn(),
-    useLocation: () => ({ pathname: mockPathname }),
   };
 });
 
 const useNavigateMock = useNavigate as jest.Mock;
 
+const DEFAULT_ERROR_MESSAGE = 'The required page is not available on the cluster.';
+const CUSTOM_ERROR_MESSAGE = 'Issues dashboard is unavailable on the cluster.';
+
 describe('ServiceUnavailablePage', () => {
   let navigateMock: jest.Mock;
 
   beforeEach(() => {
-    mockPathname = '/';
     navigateMock = jest.fn();
     useNavigateMock.mockImplementation(() => navigateMock);
   });
 
-  it('should render the service unavailable state with the default message', () => {
-    render(<ServiceUnavailablePage />);
+  it('should render the service unavailable state with the provided message', () => {
+    render(<ServiceUnavailablePage errorMessage={DEFAULT_ERROR_MESSAGE} />);
 
     screen.getByTestId('service-unavailable-state');
     screen.getByText('Service unavailable');
-    screen.getByText(DEFAULT_SERVICE_UNAVAILABLE_MESSAGE);
+    screen.getByText(DEFAULT_ERROR_MESSAGE);
     screen.getByText('Go to Overview page');
   });
 
-  it('should render the issues-specific message for namespace issues routes', () => {
-    mockPathname = '/ns/test-ns/issues';
+  it('should render a custom error message', () => {
+    render(<ServiceUnavailablePage errorMessage={CUSTOM_ERROR_MESSAGE} />);
 
-    render(<ServiceUnavailablePage />);
-
-    screen.getByText(SERVICE_UNAVAILABLE_MESSAGES.issues);
-  });
-
-  it('should render the default message for unknown namespace services', () => {
-    mockPathname = '/ns/test-ns/unknown-service';
-
-    render(<ServiceUnavailablePage />);
-
-    screen.getByText(DEFAULT_SERVICE_UNAVAILABLE_MESSAGE);
+    screen.getByText(CUSTOM_ERROR_MESSAGE);
   });
 
   it('should navigate to the overview page', async () => {
-    render(<ServiceUnavailablePage />);
+    render(<ServiceUnavailablePage errorMessage={DEFAULT_ERROR_MESSAGE} />);
 
     fireEvent.click(screen.getByTestId('service-unavailable-action'));
 

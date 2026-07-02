@@ -8,7 +8,7 @@ const issuesRoutes = [
   {
     path: ISSUES_PATH.path,
     lazy: async () => {
-      await ensureConditionOnLoader(['isKiteServiceEnabled']);
+      await ensureConditionOnLoader(['isKiteServiceEnabled'], { errorMessage: 'Issues dashboard is unavailable on the cluster.' });
       const { default: Component } = await import(
         '~/components/Issues/Issues' /* webpackChunkName: "issues" */
       );

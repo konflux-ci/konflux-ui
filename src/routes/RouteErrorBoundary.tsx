@@ -80,7 +80,7 @@ export const RouteErrorBoundry: React.FC<React.PropsWithChildren> = () => {
     return <NoAccessState />;
   }
   if (error.status === 503) {
-    return <ServiceUnavailablePage />;
+    return <ServiceUnavailablePage errorMessage={error.data} />;
   }
   if (error instanceof HttpError) {
     const httpError = error as HttpError;

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   Button,
   ButtonVariant,
@@ -12,20 +12,11 @@ import {
 } from '@patternfly/react-core';
 import { ExclamationCircleIcon } from '@patternfly/react-icons/dist/esm/icons/exclamation-circle-icon';
 import { css } from '@patternfly/react-styles';
-import { getServiceUnavailableMessage } from './condition-messages';
 
 import '~/shared/components/empty-state/EmptyState.scss';
 
-const getAccessedService = (pathname: string) => {
-  const pathnameParts = pathname.split('/');
-  return pathnameParts.length >= 4 && pathnameParts[1] === 'ns' ? pathnameParts[3] : undefined;
-};
-
-const ServiceUnavailablePage: React.FC = () => {
+const ServiceUnavailablePage: React.FC<{ errorMessage: string }> = ({ errorMessage }) => {
   const navigate = useNavigate();
-  const { pathname } = useLocation();
-  const accessedService = getAccessedService(pathname);
-  const message = getServiceUnavailableMessage(accessedService);
 
   return (
     <EmptyState
@@ -43,7 +34,7 @@ const ServiceUnavailablePage: React.FC = () => {
         }
         headingLevel="h2"
       />
-      <EmptyStateBody>{message}</EmptyStateBody>
+      <EmptyStateBody>{errorMessage}</EmptyStateBody>
       <EmptyStateFooter>
         <Button
           variant={ButtonVariant.primary}
