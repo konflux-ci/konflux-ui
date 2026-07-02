@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Text, TextContent, Truncate } from '@patternfly/react-core';
+import { Text, TextContent, Tooltip, Truncate } from '@patternfly/react-core';
 import {
   ExpandableRowContent,
   Table,
@@ -13,6 +13,7 @@ import { getRuleStatus } from '~/components/Conforma/utils';
 import type { ComponentProps } from '~/shared/components/table/Table';
 import type { ConformaResultRow } from '~/types/conforma';
 import type { GroupByMode, GroupedConformaRow } from './conforma-grouping-utils';
+import { getCommonImageName } from './conforma-grouping-utils';
 import { getConformaGroupedHeader } from './ConformaResultsListHeader';
 import ConformaResultsListRow from './ConformaResultsListRow';
 import './ConformaResultsTab.scss';
@@ -36,29 +37,64 @@ const DetailSubTable: React.FC<{ rows: ConformaResultRow[] }> = ({ rows }) => (
       </Tr>
     </Thead>
     <Tbody>
-      {rows.map((row, idx) => (
-        <Tr key={`${row.component}-${row.title}-${idx}`}>
-          <Td dataLabel="Rule">
-            <TextContent>
-              <Text component="p">
-                <strong>{row.title ?? '-'}</strong>
-              </Text>
-              {row.description && <Text component="small">{row.description}</Text>}
-            </TextContent>
-          </Td>
-          <Td dataLabel="Component">{row.component}</Td>
-          <Td dataLabel="Image">
-            {row.image ? <Truncate content={row.image} /> : '-'}
-          </Td>
-          <Td dataLabel="Status">{getRuleStatus(row.status)}</Td>
-          <Td dataLabel="Message">
-            <TextContent>
-              <Text component="p">{row.msg ?? '-'}</Text>
-              {row.solution && <Text component="small">Solution: {row.solution}</Text>}
-            </TextContent>
-          </Td>
-        </Tr>
-      ))}
+      {rows.map((row, idx) => {
+        const commonName = row.images.length > 1 ? getCommonImageName(row.images) : undefined;
+        return (
+          <Tr key={`${row.component}-${row.title}-${idx}`}>
+            <Td dataLabel="Rule">
+              <TextContent>
+                <Text component="p">
+                  <strong>{row.title ?? '-'}</strong>
+                </Text>
+                {row.description && <Text component="small">{row.description}</Text>}
+              </TextContent>
+            </Td>
+            <Td dataLabel="Component">{row.component}</Td>
+            <Td dataLabel="Image">
+              {row.images.length > 1 ? (
+                <Tooltip
+                  content={
+                    <ul>
+                      {row.images.map((img) => (
+                        <li key={img}>{img}</li>
+                      ))}
+                    </ul>
+                  }
+                >
+                  <span
+                    tabIndex={0}
+                    aria-label={`Affects ${row.images.length} images: ${row.images.join(', ')}`}
+                  >
+                    <TextContent>
+                      {commonName ? (
+                        <>
+                          <Text component="p">
+                            <Truncate content={commonName} />
+                          </Text>
+                          <Text component="small">{row.images.length} arch variants</Text>
+                        </>
+                      ) : (
+                        <Text component="p">Affects {row.images.length} images</Text>
+                      )}
+                    </TextContent>
+                  </span>
+                </Tooltip>
+              ) : row.images.length === 1 ? (
+                <Truncate content={row.images[0]} />
+              ) : (
+                '-'
+              )}
+            </Td>
+            <Td dataLabel="Status">{getRuleStatus(row.status)}</Td>
+            <Td dataLabel="Message">
+              <TextContent>
+                <Text component="p">{row.msg ?? '-'}</Text>
+                {row.solution && <Text component="small">Solution: {row.solution}</Text>}
+              </TextContent>
+            </Td>
+          </Tr>
+        );
+      })}
     </Tbody>
   </Table>
 );
