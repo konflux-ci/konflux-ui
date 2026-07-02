@@ -1,6 +1,6 @@
 import { createTableHeaders } from '~/shared/components/table/utils';
 
-export const ConformaTableColumnClasses = {
+export const conformaTableColumnClasses = {
   rules: 'pf-m-width-30 wrap-column',
   status: 'pf-m-width-10',
   message: 'pf-m-width-30 wrap-column',
@@ -14,10 +14,10 @@ export const enum SortableConformaHeaders {
 }
 
 const conformaColumns = [
-  { title: 'Rules', className: ConformaTableColumnClasses.rules, sortable: true },
-  { title: 'Status', className: ConformaTableColumnClasses.status, sortable: true },
-  { title: 'Message', className: ConformaTableColumnClasses.message },
-  { title: 'Component', className: ConformaTableColumnClasses.component, sortable: true },
+  { title: 'Rules', className: conformaTableColumnClasses.rules, sortable: true },
+  { title: 'Status', className: conformaTableColumnClasses.status, sortable: true },
+  { title: 'Message', className: conformaTableColumnClasses.message },
+  { title: 'Component', className: conformaTableColumnClasses.component, sortable: true },
 ];
 
 export default createTableHeaders(conformaColumns);

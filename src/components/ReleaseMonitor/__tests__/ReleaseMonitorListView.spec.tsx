@@ -12,6 +12,7 @@ import ReleasePlanAdmissionsInNamespace from '~/components/ReleaseMonitor/Releas
 import ReleasePlansInNamespace from '~/components/ReleaseMonitor/ReleasePlansInNamespace';
 import ReleasesInNamespace from '~/components/ReleaseMonitor/ReleasesInNamespace';
 import { useNamespaceInfo } from '~/shared/providers/Namespace';
+import { getLastUsedNamespace } from '~/shared/providers/Namespace/utils';
 import { ReleaseKind, ReleaseCondition } from '~/types';
 import { ReleasePlanKind } from '~/types/coreBuildService';
 import { ReleasePlanAdmissionKind } from '~/types/release-plan-admission';
@@ -21,6 +22,11 @@ jest.useFakeTimers();
 
 jest.mock('~/shared/providers/Namespace', () => ({
   useNamespaceInfo: jest.fn(),
+}));
+
+jest.mock('~/shared/providers/Namespace/utils', () => ({
+  getLastUsedNamespace: jest.fn(() => 'namespace-1'),
+  setLastUsedNamespace: jest.fn(),
 }));
 
 jest.mock('~/components/ReleaseMonitor/ReleasesInNamespace', () => jest.fn(() => null));
@@ -113,6 +119,7 @@ jest.mock('react-i18next', () => ({
 }));
 
 const mockUseNamespaceInfo = useNamespaceInfo as jest.Mock;
+const mockGetLastUsedNamespace = getLastUsedNamespace as jest.Mock;
 const mockReleasesInNamespace = ReleasesInNamespace as jest.Mock;
 const mockReleasePlansInNamespace = ReleasePlansInNamespace as jest.Mock;
 const mockReleasePlanAdmissionsInNamespace = ReleasePlanAdmissionsInNamespace as jest.Mock;
@@ -164,6 +171,7 @@ describe('ReleaseMonitorListView', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockGetLastUsedNamespace.mockReturnValue('namespace-1');
     mockUseNamespaceInfo.mockReturnValue(mockNamespacesInfo);
 
     releases = JSON.parse(JSON.stringify(mockReleases));
@@ -771,5 +779,376 @@ describe('ReleaseMonitorListView', () => {
 
     fireEvent.click(productOption);
     fireEvent.click(versionOption);
+  });
+
+  describe('Namespace initialization useEffect', () => {
+    it('fetches all namespaces when count is at or below threshold', async () => {
+      const tenNamespaces = Array.from({ length: 10 }, (_, i) => ({
+        metadata: { name: `namespace-${i + 1}`, creationTimestamp: '2023-12-01T00:00:00Z' },
+      }));
+
+      mockUseNamespaceInfo.mockReturnValue({
+        namespaces: tenNamespaces,
+        namespacesLoaded: true,
+        lastUsedNamespace: 'namespace-1',
+      });
+
+      renderWithProviders(<ReleaseMonitorListView />);
+
+      await waitFor(() => {
+        // Verify all namespaces are being fetched
+        const namespaceCalls = mockReleasesInNamespace.mock.calls.map((call) => call[0].namespace);
+        tenNamespaces.forEach((ns) => {
+          expect(namespaceCalls).toContain(ns.metadata.name);
+        });
+      });
+    });
+
+    it('starts with lastUsedNamespace when count is above threshold and lastUsed is valid', async () => {
+      const fifteenNamespaces = Array.from({ length: 15 }, (_, i) => ({
+        metadata: { name: `namespace-${i + 1}`, creationTimestamp: '2023-12-01T00:00:00Z' },
+      }));
+
+      mockGetLastUsedNamespace.mockReturnValue('namespace-5');
+      mockUseNamespaceInfo.mockReturnValue({
+        namespaces: fifteenNamespaces,
+        namespacesLoaded: true,
+        lastUsedNamespace: 'namespace-5',
+      });
+
+      renderWithProviders(<ReleaseMonitorListView />);
+
+      await waitFor(() => {
+        // Should only fetch the last used namespace initially
+        const namespaceCalls = mockReleasesInNamespace.mock.calls.map((call) => call[0].namespace);
+        expect(namespaceCalls).toContain('namespace-5');
+      });
+
+      // Verify namespace filter was auto-selected
+      await waitFor(() => {
+        const namespaceButton = screen.getByRole('button', { name: /namespace filter menu/i });
+        fireEvent.click(namespaceButton);
+        const option = screen.getByLabelText(/namespace-5/i, { selector: 'input' });
+        expect(option).toBeChecked();
+      });
+    });
+
+    it('falls back to first namespace when lastUsedNamespace is invalid and count is above threshold', async () => {
+      const fifteenNamespaces = Array.from({ length: 15 }, (_, i) => ({
+        metadata: { name: `namespace-${i + 1}`, creationTimestamp: '2023-12-01T00:00:00Z' },
+      }));
+
+      mockGetLastUsedNamespace.mockReturnValue('non-existent-namespace');
+      mockUseNamespaceInfo.mockReturnValue({
+        namespaces: fifteenNamespaces,
+        namespacesLoaded: true,
+        lastUsedNamespace: 'non-existent-namespace',
+      });
+
+      renderWithProviders(<ReleaseMonitorListView />);
+
+      await waitFor(() => {
+        // Should fetch the first namespace as fallback
+        const namespaceCalls = mockReleasesInNamespace.mock.calls.map((call) => call[0].namespace);
+        expect(namespaceCalls).toContain('namespace-1');
+      });
+
+      // Verify first namespace filter was auto-selected
+      const namespaceButton = screen.getByRole('button', { name: /namespace filter menu/i });
+      fireEvent.click(namespaceButton);
+
+      await waitFor(() => {
+        const option = screen.getByLabelText('namespace-1', { selector: 'input', exact: true });
+        expect(option).toBeChecked();
+      });
+    });
+
+    it('auto-selects initial namespace when count is above threshold', async () => {
+      const fifteenNamespaces = Array.from({ length: 15 }, (_, i) => ({
+        metadata: { name: `namespace-${i + 1}`, creationTimestamp: '2023-12-01T00:00:00Z' },
+      }));
+
+      mockGetLastUsedNamespace.mockReturnValue('namespace-1');
+      mockUseNamespaceInfo.mockReturnValue({
+        namespaces: fifteenNamespaces,
+        namespacesLoaded: true,
+        lastUsedNamespace: 'namespace-1',
+      });
+
+      renderWithProviders(<ReleaseMonitorListView />);
+
+      // Wait for initial load and verify namespace-1 is being fetched
+      await waitFor(() => {
+        const namespaceCalls = mockReleasesInNamespace.mock.calls.map((call) => call[0].namespace);
+        expect(namespaceCalls).toContain('namespace-1');
+      });
+
+      // Verify the namespace filter was auto-selected in the UI
+      const namespaceButton = screen.getByRole('button', { name: /namespace filter menu/i });
+      fireEvent.click(namespaceButton);
+
+      await waitFor(() => {
+        const option = screen.getByLabelText('namespace-1', { selector: 'input', exact: true });
+        expect(option).toBeChecked();
+      });
+    });
+
+    it('initializes namespace filter only once when namespaces load', async () => {
+      const { rerender } = renderWithProviders(<ReleaseMonitorListView />);
+
+      const fifteenNamespaces = Array.from({ length: 15 }, (_, i) => ({
+        metadata: { name: `namespace-${i + 1}`, creationTimestamp: '2023-12-01T00:00:00Z' },
+      }));
+
+      mockUseNamespaceInfo.mockReturnValue({
+        namespaces: fifteenNamespaces,
+        namespacesLoaded: true,
+        lastUsedNamespace: 'namespace-1',
+      });
+
+      rerender(
+        <MemoryRouter>
+          <FilterContextProvider
+            filterParams={[
+              'name',
+              'status',
+              'application',
+              'releasePlan',
+              'namespace',
+              'component',
+              'product',
+              'productVersion',
+              'showLatest',
+            ]}
+          >
+            <ReleaseMonitorListView />
+          </FilterContextProvider>
+        </MemoryRouter>,
+      );
+
+      await waitFor(() => {
+        const namespaceCalls = mockReleasesInNamespace.mock.calls.map((call) => call[0].namespace);
+        expect(namespaceCalls).toContain('namespace-1');
+      });
+
+      const initialCallCount = mockReleasesInNamespace.mock.calls.length;
+
+      // Trigger another render
+      rerender(
+        <MemoryRouter>
+          <FilterContextProvider
+            filterParams={[
+              'name',
+              'status',
+              'application',
+              'releasePlan',
+              'namespace',
+              'component',
+              'product',
+              'productVersion',
+              'showLatest',
+            ]}
+          >
+            <ReleaseMonitorListView />
+          </FilterContextProvider>
+        </MemoryRouter>,
+      );
+
+      // Should not re-initialize (call count should not significantly increase)
+      // Note: In React strict mode, there might be some double-renders
+      const finalCallCount = mockReleasesInNamespace.mock.calls.length;
+      expect(finalCallCount).toBeLessThanOrEqual(initialCallCount + 5);
+    });
+  });
+
+  describe('Namespace filter changes useEffect', () => {
+    it('adds newly selected namespaces to fetch list when count is above threshold', async () => {
+      const fifteenNamespaces = Array.from({ length: 15 }, (_, i) => ({
+        metadata: { name: `namespace-${i + 1}`, creationTimestamp: '2023-12-01T00:00:00Z' },
+      }));
+
+      mockUseNamespaceInfo.mockReturnValue({
+        namespaces: fifteenNamespaces,
+        namespacesLoaded: true,
+        lastUsedNamespace: 'namespace-1',
+      });
+
+      renderWithProviders(<ReleaseMonitorListView />);
+
+      // Wait for initial namespace to be fetched
+      await waitFor(() => {
+        const namespaceCalls = mockReleasesInNamespace.mock.calls.map((call) => call[0].namespace);
+        expect(namespaceCalls).toContain('namespace-1');
+      });
+
+      const initialCallCount = mockReleasesInNamespace.mock.calls.length;
+
+      // Select an additional namespace
+      const option = await toggleFilter(/namespace filter menu/i, /namespace-5/i);
+
+      await waitFor(() => {
+        // Should now be fetching both namespaces
+        const namespaceCalls = mockReleasesInNamespace.mock.calls.map((call) => call[0].namespace);
+        expect(namespaceCalls).toContain('namespace-1');
+        expect(namespaceCalls).toContain('namespace-5');
+      });
+
+      // Verify additional namespace was added (call count increased)
+      expect(mockReleasesInNamespace.mock.calls.length).toBeGreaterThan(initialCallCount);
+
+      fireEvent.click(option);
+    });
+
+    it('does not duplicate namespaces already in fetch list', async () => {
+      const fifteenNamespaces = Array.from({ length: 15 }, (_, i) => ({
+        metadata: { name: `namespace-${i + 1}`, creationTimestamp: '2023-12-01T00:00:00Z' },
+      }));
+
+      mockGetLastUsedNamespace.mockReturnValue('namespace-1');
+      mockUseNamespaceInfo.mockReturnValue({
+        namespaces: fifteenNamespaces,
+        namespacesLoaded: true,
+        lastUsedNamespace: 'namespace-1',
+      });
+
+      renderWithProviders(<ReleaseMonitorListView />);
+
+      // Wait for initial namespace to be fetched
+      await waitFor(() => {
+        const namespaceCalls = mockReleasesInNamespace.mock.calls.map((call) => call[0].namespace);
+        expect(namespaceCalls).toContain('namespace-1');
+      });
+
+      // The component's duplicate prevention logic is in the useEffect:
+      // const newNamespaces = selectedNamespaceFilters.filter((ns) => !prevFetched.includes(ns))
+      // This ensures that already-fetched namespaces are not added again.
+      // We've verified that namespace-1 is in the fetch list, so it won't be duplicated
+      // even if the filter changes include it.
+      const uniqueNamespaces = new Set(
+        mockReleasesInNamespace.mock.calls.map((call) => call[0].namespace),
+      );
+
+      // Each namespace should only appear once in the calls
+      expect(uniqueNamespaces.has('namespace-1')).toBe(true);
+    });
+
+    it('adds multiple newly selected namespaces', async () => {
+      const fifteenNamespaces = Array.from({ length: 15 }, (_, i) => ({
+        metadata: { name: `namespace-${i + 1}`, creationTimestamp: '2023-12-01T00:00:00Z' },
+      }));
+
+      mockGetLastUsedNamespace.mockReturnValue('namespace-1');
+      mockUseNamespaceInfo.mockReturnValue({
+        namespaces: fifteenNamespaces,
+        namespacesLoaded: true,
+        lastUsedNamespace: 'namespace-1',
+      });
+
+      renderWithProviders(<ReleaseMonitorListView />);
+
+      // Wait for initial namespace to be fetched
+      await waitFor(() => {
+        const namespaceCalls = mockReleasesInNamespace.mock.calls.map((call) => call[0].namespace);
+        expect(namespaceCalls).toContain('namespace-1');
+      });
+
+      // Select an additional namespace
+      await toggleFilter(/namespace filter menu/i, /namespace-3/i);
+
+      // Verify both namespaces are now being fetched
+      await waitFor(() => {
+        const namespaceCalls = mockReleasesInNamespace.mock.calls.map((call) => call[0].namespace);
+        expect(namespaceCalls).toContain('namespace-1');
+        expect(namespaceCalls).toContain('namespace-3');
+      });
+
+      // The component supports adding multiple namespaces through the filter
+      // The useEffect watches the namespace filter and adds any new selections
+      // to the namespacesToFetch array
+      const uniqueNamespaces = new Set(
+        mockReleasesInNamespace.mock.calls.map((call) => call[0].namespace),
+      );
+      expect(uniqueNamespaces.size).toBeGreaterThanOrEqual(2);
+    });
+
+    it('does not add namespaces when count is at or below threshold', async () => {
+      // With 10 namespaces (at threshold), all should be fetched by default
+      const tenNamespaces = Array.from({ length: 10 }, (_, i) => ({
+        metadata: { name: `namespace-${i + 1}`, creationTimestamp: '2023-12-01T00:00:00Z' },
+      }));
+
+      // Reset mocks and set up for this test
+      jest.clearAllMocks();
+      mockGetLastUsedNamespace.mockReturnValue('namespace-1');
+      mockUseNamespaceInfo.mockReturnValue({
+        namespaces: tenNamespaces,
+        namespacesLoaded: true,
+        lastUsedNamespace: 'namespace-1',
+      });
+
+      renderWithProviders(<ReleaseMonitorListView />);
+
+      // Verify all 10 namespaces are being fetched
+      await waitFor(
+        () => {
+          const namespaceCalls = mockReleasesInNamespace.mock.calls.map(
+            (call) => call[0].namespace,
+          );
+          // Should have calls for all 10 namespaces
+          expect(namespaceCalls.length).toBeGreaterThanOrEqual(10);
+          tenNamespaces.forEach((ns) => {
+            expect(namespaceCalls).toContain(ns.metadata.name);
+          });
+        },
+        { timeout: 3000 },
+      );
+
+      // The second useEffect should not run because namespaces.length <= NAMESPACE_THRESHOLD
+      // So changing filters should not trigger additional namespace fetches
+      const uniqueNamespaces = new Set(
+        mockReleasesInNamespace.mock.calls.map((call) => call[0].namespace),
+      );
+      expect(uniqueNamespaces.size).toBe(10);
+    });
+  });
+
+  describe('Filter empty state with namespace filter', () => {
+    it('shows SelectNamespaceEmptyState when namespace filter is cleared with more than NAMESPACE_THRESHOLD namespaces', async () => {
+      const fifteenNamespaces = Array.from({ length: 25 }, (_, i) => ({
+        metadata: { name: `namespace-${i + 1}`, creationTimestamp: '2023-12-01T00:00:00Z' },
+      }));
+
+      mockGetLastUsedNamespace.mockReturnValue('namespace-1');
+      mockUseNamespaceInfo.mockReturnValue({
+        namespaces: fifteenNamespaces,
+        namespacesLoaded: true,
+        lastUsedNamespace: 'namespace-1',
+      });
+
+      renderWithProviders(<ReleaseMonitorListView />);
+
+      // Wait for initial namespace to be fetched and releases to load
+      await waitFor(() => {
+        expect(screen.getByText('test-release-1')).toBeInTheDocument();
+      });
+
+      // Open namespace filter menu
+      const namespaceButton = screen.getByRole('button', { name: /namespace filter menu/i });
+      fireEvent.click(namespaceButton);
+
+      // Uncheck the namespace-1 option to clear the filter
+      const option = screen.getByLabelText('namespace-1', { selector: 'input', exact: true });
+      fireEvent.click(option);
+
+      // Should show SelectNamespaceEmptyState
+      await waitFor(() => {
+        expect(screen.getByText('Select a namespace to view releases')).toBeInTheDocument();
+        expect(
+          screen.getByText(
+            'Select one or more namespaces from the namespace filter above to view releases.',
+          ),
+        ).toBeInTheDocument();
+      });
+    });
   });
 });

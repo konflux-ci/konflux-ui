@@ -1,4 +1,4 @@
-import { renderHook } from '@testing-library/react';
+import { act, renderHook } from '@testing-library/react';
 import { NamespaceKind } from '~/types';
 import { mockAccessReviewUtil } from '../../../unit-test-utils/mock-access-review';
 import { useNamespaceActions } from '../useNamespaceActions';
@@ -58,11 +58,10 @@ describe('useNamespaceActions', () => {
 
     const { result } = renderHook(() => useNamespaceActions(mockNamespace));
 
-    // Call the toggle function to trigger permission check
-    result.current[2](true);
-
-    // Wait for the permission check to complete
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    await act(async () => {
+      result.current[2](true);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
 
     expect(mockCheckReviewAccesses).toHaveBeenCalledTimes(1);
   });
@@ -72,11 +71,10 @@ describe('useNamespaceActions', () => {
 
     const { result } = renderHook(() => useNamespaceActions(mockNamespace));
 
-    // Trigger permission check
-    result.current[2](true);
-
-    // Wait for the permission check to complete
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    await act(async () => {
+      result.current[2](true);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
 
     expect(result.current[0][0].disabled).toBe(true);
     expect(result.current[0][0].disabledTooltip).toBe(
@@ -92,11 +90,12 @@ describe('useNamespaceActions', () => {
 
     const { result } = renderHook(() => useNamespaceActions(mockNamespace));
 
-    // Trigger permission check
-    result.current[2](true);
+    await act(async () => {
+      result.current[2](true);
+      // Wait one tick — the 100 ms mock is still pending, so isChecking stays true
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
 
-    // Check loading state - need to wait for the async operation to start
-    await new Promise((resolve) => setTimeout(resolve, 0));
     expect(result.current[1]).toBe(true); // isChecking should be true
   });
 
@@ -105,9 +104,10 @@ describe('useNamespaceActions', () => {
 
     const { result } = renderHook(() => useNamespaceActions(mockNamespace));
 
-    // Trigger permission check first
-    result.current[2](true);
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    await act(async () => {
+      result.current[2](true);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
 
     // Now call the action
     const action = result.current[0][0];
