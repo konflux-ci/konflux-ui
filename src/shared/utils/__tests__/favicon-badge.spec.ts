@@ -2,12 +2,11 @@ import { global_danger_color_100 as redColor } from '@patternfly/react-tokens/di
 import { global_palette_black_400 as grayColor } from '@patternfly/react-tokens/dist/js/global_palette_black_400';
 import { global_palette_blue_300 as blueColor } from '@patternfly/react-tokens/dist/js/global_palette_blue_300';
 import {
-  acquireFaviconBadge,
   applyFaviconBadge,
   compositeFaviconWithBadge,
   getFaviconLink,
-  releaseFaviconBadge,
-  resetFaviconBadgeStateForTests,
+  readFaviconHref,
+  restoreFaviconHref,
   setFaviconHref,
 } from '~/shared/utils/favicon-badge';
 
@@ -45,7 +44,6 @@ const mockFaviconImageLoadDeferred = (loadPromise: Promise<void>): void => {
 describe('favicon-badge', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    resetFaviconBadgeStateForTests();
     document.head.innerHTML = '';
   });
 
@@ -114,23 +112,30 @@ describe('favicon-badge', () => {
       expect(getFaviconLink()).toBe(existing);
     });
 
-    it('captures the original favicon href before mutation', () => {
+    it('reads the current favicon href', () => {
       const link = document.createElement('link');
       link.rel = 'icon';
       link.href = 'https://example.com/favicon.ico';
       document.head.appendChild(link);
 
-      acquireFaviconBadge();
+      expect(readFaviconHref()).toBe('https://example.com/favicon.ico');
+    });
+
+    it('restores the original favicon href', () => {
+      const link = document.createElement('link');
+      link.rel = 'icon';
+      link.href = 'https://example.com/favicon.ico';
+      document.head.appendChild(link);
+
       setFaviconHref('data:image/png;base64,badged');
 
       expect(link.href).toBe('data:image/png;base64,badged');
-      releaseFaviconBadge();
+      restoreFaviconHref('https://example.com/favicon.ico');
       expect(link.href).toBe('https://example.com/favicon.ico');
     });
 
-    it('restores the default favicon when no consumer holds ownership', () => {
-      acquireFaviconBadge();
-      releaseFaviconBadge();
+    it('restores the default favicon when no href is provided', () => {
+      restoreFaviconHref();
 
       const link = getFaviconLink();
       expect(link.href).toContain('/favicon.ico');
@@ -170,25 +175,10 @@ describe('favicon-badge', () => {
 
       mockFaviconImageLoadSuccess();
 
-      acquireFaviconBadge();
-      await applyFaviconBadge(grayColor.value);
+      await applyFaviconBadge(grayColor.value, '/favicon.ico');
 
       expect(link.href).toBe('data:image/png;base64,unknown-badged');
       expect(mockContext.fillStyle).toBe(grayColor.value);
-      releaseFaviconBadge();
-    });
-
-    it('restores favicon when consumer releases ownership', () => {
-      const link = document.createElement('link');
-      link.rel = 'icon';
-      link.href = '/favicon.ico';
-      document.head.appendChild(link);
-
-      acquireFaviconBadge();
-      setFaviconHref('data:image/png;base64,badged');
-      releaseFaviconBadge();
-
-      expect(link.href).toContain('/favicon.ico');
     });
 
     it('applies a gray badged favicon for gray colors', async () => {
@@ -216,15 +206,13 @@ describe('favicon-badge', () => {
 
       mockFaviconImageLoadSuccess();
 
-      acquireFaviconBadge();
-      await applyFaviconBadge(grayColor.value);
+      await applyFaviconBadge(grayColor.value, '/favicon.ico');
 
       expect(link.href).toBe('data:image/png;base64,gray-badged');
       expect(mockContext.fillStyle).toBe(grayColor.value);
-      releaseFaviconBadge();
     });
 
-    it('updates the badged favicon when color changes without releasing ownership', async () => {
+    it('updates the badged favicon when color changes', async () => {
       const link = document.createElement('link');
       link.rel = 'icon';
       link.href = '/favicon.ico';
@@ -249,15 +237,12 @@ describe('favicon-badge', () => {
 
       mockFaviconImageLoadSuccess();
 
-      acquireFaviconBadge();
-      await applyFaviconBadge(grayColor.value);
+      await applyFaviconBadge(grayColor.value, '/favicon.ico');
       expect(link.href).toBe(`data:image/png;base64,${grayColor.value}`);
 
-      await applyFaviconBadge(blueColor.value);
+      await applyFaviconBadge(blueColor.value, '/favicon.ico');
       expect(link.href).toBe(`data:image/png;base64,${blueColor.value}`);
       expect(link.href).not.toContain('/favicon.ico');
-
-      releaseFaviconBadge();
     });
 
     it('applies a badged favicon when image loads successfully', async () => {
@@ -282,11 +267,9 @@ describe('favicon-badge', () => {
 
       mockFaviconImageLoadSuccess();
 
-      acquireFaviconBadge();
-      await applyFaviconBadge(blueColor.value);
+      await applyFaviconBadge(blueColor.value, '/favicon.ico');
 
       expect(link.href).toBe('data:image/png;base64,badged');
-      releaseFaviconBadge();
     });
 
     it('does not set favicon when cancelled before image load completes', async () => {
@@ -314,12 +297,10 @@ describe('favicon-badge', () => {
         .mockReturnValue('data:image/png;base64,badged');
 
       let cancelled = false;
-      acquireFaviconBadge();
-      const applyPromise = applyFaviconBadge(blueColor.value, () => cancelled);
+      const applyPromise = applyFaviconBadge(blueColor.value, '/favicon.ico', () => cancelled);
       cancelled = true;
       resolveLoad?.();
       await applyPromise;
-      releaseFaviconBadge();
 
       expect(link.href).toContain('/favicon.ico');
     });
@@ -332,119 +313,21 @@ describe('favicon-badge', () => {
 
       mockFaviconImageLoadError();
 
-      acquireFaviconBadge();
-      await applyFaviconBadge(redColor.value);
-      releaseFaviconBadge();
+      await applyFaviconBadge(redColor.value, '/favicon.ico');
 
       expect(link.href).toContain('/favicon.ico');
     });
 
-    it('does not reset baseline while another consumer remains active', async () => {
+    it('restores favicon when canvas is unavailable', async () => {
       const link = document.createElement('link');
       link.rel = 'icon';
       link.href = 'https://example.com/favicon.ico';
       document.head.appendChild(link);
 
-      const mockContext = {
-        drawImage: jest.fn(),
-        beginPath: jest.fn(),
-        arc: jest.fn(),
-        fill: jest.fn(),
-        stroke: jest.fn(),
-      };
-      jest
-        .spyOn(HTMLCanvasElement.prototype, 'getContext')
-        .mockReturnValue(mockContext as unknown as CanvasRenderingContext2D);
-      jest
-        .spyOn(HTMLCanvasElement.prototype, 'toDataURL')
-        .mockReturnValue('data:image/png;base64,active-badged');
-
       mockFaviconImageLoadSuccess();
-
-      acquireFaviconBadge();
-      acquireFaviconBadge();
-      await applyFaviconBadge(blueColor.value);
-      expect(link.href).toBe('data:image/png;base64,active-badged');
-
-      releaseFaviconBadge();
-      expect(link.href).toBe('data:image/png;base64,active-badged');
-
-      releaseFaviconBadge();
-      expect(link.href).toBe('https://example.com/favicon.ico');
-    });
-
-    it('does not reset favicon on load failure while another consumer remains active', async () => {
-      const link = document.createElement('link');
-      link.rel = 'icon';
-      link.href = 'https://example.com/favicon.ico';
-      document.head.appendChild(link);
-
-      const mockContext = {
-        drawImage: jest.fn(),
-        beginPath: jest.fn(),
-        arc: jest.fn(),
-        fill: jest.fn(),
-        stroke: jest.fn(),
-      };
-      jest
-        .spyOn(HTMLCanvasElement.prototype, 'getContext')
-        .mockReturnValue(mockContext as unknown as CanvasRenderingContext2D);
-      jest
-        .spyOn(HTMLCanvasElement.prototype, 'toDataURL')
-        .mockReturnValue('data:image/png;base64,active-badged');
-
-      mockFaviconImageLoadSuccess();
-
-      acquireFaviconBadge();
-      acquireFaviconBadge();
-      await applyFaviconBadge(blueColor.value);
-      expect(link.href).toBe('data:image/png;base64,active-badged');
-
-      mockFaviconImageLoadError();
-      await applyFaviconBadge(redColor.value);
-      expect(link.href).toBe('data:image/png;base64,active-badged');
-
-      releaseFaviconBadge();
-      expect(link.href).toBe('data:image/png;base64,active-badged');
-
-      releaseFaviconBadge();
-      expect(link.href).toBe('https://example.com/favicon.ico');
-    });
-
-    it('does not reset favicon when canvas is unavailable while another consumer remains active', async () => {
-      const link = document.createElement('link');
-      link.rel = 'icon';
-      link.href = 'https://example.com/favicon.ico';
-      document.head.appendChild(link);
-
-      const mockContext = {
-        drawImage: jest.fn(),
-        beginPath: jest.fn(),
-        arc: jest.fn(),
-        fill: jest.fn(),
-        stroke: jest.fn(),
-      };
-      jest
-        .spyOn(HTMLCanvasElement.prototype, 'getContext')
-        .mockReturnValue(mockContext as unknown as CanvasRenderingContext2D);
-      jest
-        .spyOn(HTMLCanvasElement.prototype, 'toDataURL')
-        .mockReturnValue('data:image/png;base64,active-badged');
-
-      mockFaviconImageLoadSuccess();
-
-      acquireFaviconBadge();
-      acquireFaviconBadge();
-      await applyFaviconBadge(blueColor.value);
-      expect(link.href).toBe('data:image/png;base64,active-badged');
-
       jest.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
-      await applyFaviconBadge(redColor.value);
-      expect(link.href).toBe('data:image/png;base64,active-badged');
 
-      releaseFaviconBadge();
-      releaseFaviconBadge();
-      expect(link.href).toBe('https://example.com/favicon.ico');
+      await applyFaviconBadge(redColor.value, 'https://example.com/favicon.ico');
     });
   });
 });

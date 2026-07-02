@@ -1,8 +1,8 @@
 import * as React from 'react';
 import {
-  acquireFaviconBadge,
   applyFaviconBadge,
-  releaseFaviconBadge,
+  readFaviconHref,
+  restoreFaviconHref,
 } from '~/shared/utils/favicon-badge';
 
 /**
@@ -10,16 +10,18 @@ import {
  * Restores the original favicon on unmount.
  */
 export const useFaviconStatusBadge = (color: string): void => {
+  const baselineHrefRef = React.useRef<string>();
+
   React.useEffect(() => {
-    acquireFaviconBadge();
+    baselineHrefRef.current = readFaviconHref();
     return () => {
-      releaseFaviconBadge();
+      restoreFaviconHref(baselineHrefRef.current);
     };
   }, []);
 
   React.useEffect(() => {
     let cancelled = false;
-    void applyFaviconBadge(color, () => cancelled);
+    void applyFaviconBadge(color, baselineHrefRef.current, () => cancelled);
 
     return () => {
       cancelled = true;

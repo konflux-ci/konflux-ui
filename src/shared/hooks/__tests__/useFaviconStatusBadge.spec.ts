@@ -6,13 +6,13 @@ import { useFaviconStatusBadge } from '../useFaviconStatusBadge';
 
 jest.mock('~/shared/utils/favicon-badge', () => ({
   applyFaviconBadge: jest.fn().mockResolvedValue(undefined),
-  acquireFaviconBadge: jest.fn(),
-  releaseFaviconBadge: jest.fn(),
+  readFaviconHref: jest.fn().mockReturnValue('/favicon.ico'),
+  restoreFaviconHref: jest.fn(),
 }));
 
 const applyFaviconBadgeMock = faviconBadge.applyFaviconBadge as jest.Mock;
-const acquireFaviconBadgeMock = faviconBadge.acquireFaviconBadge as jest.Mock;
-const releaseFaviconBadgeMock = faviconBadge.releaseFaviconBadge as jest.Mock;
+const readFaviconHrefMock = faviconBadge.readFaviconHref as jest.Mock;
+const restoreFaviconHrefMock = faviconBadge.restoreFaviconHref as jest.Mock;
 
 describe('useFaviconStatusBadge', () => {
   beforeEach(() => {
@@ -22,8 +22,12 @@ describe('useFaviconStatusBadge', () => {
   it('applies favicon badge when color is provided', () => {
     renderHook(() => useFaviconStatusBadge(blueColor.value));
 
-    expect(acquireFaviconBadgeMock).toHaveBeenCalled();
-    expect(applyFaviconBadgeMock).toHaveBeenCalledWith(blueColor.value, expect.any(Function));
+    expect(readFaviconHrefMock).toHaveBeenCalled();
+    expect(applyFaviconBadgeMock).toHaveBeenCalledWith(
+      blueColor.value,
+      '/favicon.ico',
+      expect.any(Function),
+    );
   });
 
   it('applies favicon badge when color changes', () => {
@@ -36,10 +40,14 @@ describe('useFaviconStatusBadge', () => {
 
     rerender({ color: greenColor.value });
 
-    expect(acquireFaviconBadgeMock).toHaveBeenCalledTimes(1);
-    expect(releaseFaviconBadgeMock).not.toHaveBeenCalled();
+    expect(readFaviconHrefMock).toHaveBeenCalledTimes(1);
+    expect(restoreFaviconHrefMock).not.toHaveBeenCalled();
     expect(applyFaviconBadgeMock).toHaveBeenCalledTimes(2);
-    expect(applyFaviconBadgeMock).toHaveBeenLastCalledWith(greenColor.value, expect.any(Function));
+    expect(applyFaviconBadgeMock).toHaveBeenLastCalledWith(
+      greenColor.value,
+      '/favicon.ico',
+      expect.any(Function),
+    );
   });
 
   it('restores favicon on unmount', () => {
@@ -47,12 +55,12 @@ describe('useFaviconStatusBadge', () => {
 
     unmount();
 
-    expect(releaseFaviconBadgeMock).toHaveBeenCalled();
+    expect(restoreFaviconHrefMock).toHaveBeenCalledWith('/favicon.ico');
   });
 
   it('passes a cancellation callback that applyFaviconBadge can use', () => {
     let isCancelled: (() => boolean) | undefined;
-    applyFaviconBadgeMock.mockImplementation((_color, cancelled) => {
+    applyFaviconBadgeMock.mockImplementation((_color, _baseHref, cancelled) => {
       isCancelled = cancelled;
       return Promise.resolve();
     });

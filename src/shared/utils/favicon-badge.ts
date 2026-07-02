@@ -1,9 +1,6 @@
 const DEFAULT_FAVICON_HREF = '/favicon.ico';
 
-let activeConsumers = 0;
-let baselineFaviconHref: string | null = null;
-
-const readFaviconHref = (): string => {
+export const readFaviconHref = (): string => {
   const link = document.querySelector<HTMLLinkElement>('link[rel~="icon"]');
   return link?.href || DEFAULT_FAVICON_HREF;
 };
@@ -18,43 +15,12 @@ export const getFaviconLink = (): HTMLLinkElement => {
   return link;
 };
 
-/** Resets only when no other consumer holds ownership (avoids clobbering active badges). */
-const resetToBaselineFavicon = (): void => {
-  if (activeConsumers > 1) {
-    return;
-  }
-  getFaviconLink().href = baselineFaviconHref ?? DEFAULT_FAVICON_HREF;
-};
-
-/** Acquire shared favicon ownership for a consumer (e.g. a React effect). */
-export const acquireFaviconBadge = (): void => {
-  if (activeConsumers === 0) {
-    baselineFaviconHref = readFaviconHref();
-  }
-  activeConsumers += 1;
-};
-
-/** Release shared favicon ownership; restores baseline only when the last consumer exits. */
-export const releaseFaviconBadge = (): void => {
-  if (activeConsumers === 0) {
-    return;
-  }
-
-  activeConsumers -= 1;
-  if (activeConsumers === 0) {
-    resetToBaselineFavicon();
-    baselineFaviconHref = null;
-  }
-};
-
-/** Resets ownership state between unit tests. */
-export const resetFaviconBadgeStateForTests = (): void => {
-  activeConsumers = 0;
-  baselineFaviconHref = null;
-};
-
 export const setFaviconHref = (href: string): void => {
   getFaviconLink().href = href;
+};
+
+export const restoreFaviconHref = (href?: string): void => {
+  setFaviconHref(href ?? DEFAULT_FAVICON_HREF);
 };
 
 export const compositeFaviconWithBadge = (
@@ -110,10 +76,9 @@ const loadFaviconImage = (href: string): Promise<HTMLImageElement> =>
 
 export const applyFaviconBadge = async (
   color: string,
+  baseHref: string,
   isCancelled?: () => boolean,
 ): Promise<void> => {
-  const baseHref = baselineFaviconHref ?? readFaviconHref();
-
   try {
     const img = await loadFaviconImage(baseHref);
     if (isCancelled?.()) {
@@ -123,12 +88,8 @@ export const applyFaviconBadge = async (
     const dataUrl = compositeFaviconWithBadge(img, color);
     if (dataUrl && !isCancelled?.()) {
       setFaviconHref(dataUrl);
-    } else if (!dataUrl && !isCancelled?.()) {
-      resetToBaselineFavicon();
-    }
+    } 
   } catch {
-    if (!isCancelled?.()) {
-      resetToBaselineFavicon();
-    }
+    restoreFaviconHref(baseHref);
   }
 };
