@@ -114,7 +114,7 @@ describe('usePACStatesForComponents', () => {
     expect(results['my-error-component']).toBe(PACState.error);
   });
 
-  it('should identify ready and loading states for enabled components', () => {
+  it('should identify ready and pending states for enabled components', () => {
     useK8sWatchResourceMock.mockReturnValue([
       [
         {
@@ -129,13 +129,13 @@ describe('usePACStatesForComponents', () => {
     ]);
     useTRPipelineRunsMock.mockReturnValue([[], true, undefined, undefined]);
     const components = [
-      createComponent('my-loading-component', ComponentBuildState.enabled),
+      createComponent('my-pending-component', ComponentBuildState.enabled),
       createComponent('my-ready-component', ComponentBuildState.enabled),
     ];
     const results = renderHook(() => usePACStatesForComponents(components)).result.current;
 
     expect(results['my-ready-component']).toBe(PACState.ready);
-    expect(results['my-loading-component']).toBe(PACState.loading);
+    expect(results['my-pending-component']).toBe(PACState.pending);
   });
 
   it('should identify ready for migrated component', () => {
@@ -171,15 +171,13 @@ describe('usePACStatesForComponents', () => {
     expect(configTime).toBe('Wed, 21 Jan 2023 19:36:25 UTC');
   });
 
-  it('should look for additional Tekton results via getNextPage', () => {
-    const getNextPageMock = jest.fn();
-    useTRPipelineRunsMock.mockReturnValueOnce([[], true, undefined, getNextPageMock]);
+  it('should set pending state when no pipeline runs exist and no next page', () => {
     useK8sWatchResourceMock.mockReturnValue([[], true]);
+    useTRPipelineRunsMock.mockReturnValue([[], true, undefined, undefined]);
 
     const components = [createComponent('my-pending-component', ComponentBuildState.enabled)];
     const results = renderHook(() => usePACStatesForComponents(components)).result.current;
-    expect(results['my-pending-component']).toBe(PACState.loading);
-    expect(getNextPageMock).toHaveBeenCalled();
+    expect(results['my-pending-component']).toBe(PACState.pending);
   });
 
   it('should query push build event types using PUSH_BUILD_EVENT_TYPES', () => {
@@ -255,19 +253,19 @@ describe('usePACStatesForComponents', () => {
     expect(results['my-ready-component']).toBe(PACState.ready);
   });
 
-  it('should keep loading state when PUSH pipeline run has PR label but commit user is bot', () => {
+  it('should set pending state when PUSH pipeline run has PR label but commit user is bot', () => {
     const mockPipelineRun = createMockPipelineRunWithPrLabelAndUser(
-      'my-loading-component',
+      'my-pending-component',
       'test-app[bot]',
     );
 
     useK8sWatchResourceMock.mockReturnValue([[mockPipelineRun], true]);
     useTRPipelineRunsMock.mockReturnValue([[], true, undefined, undefined]);
 
-    const components = [createComponent('my-loading-component', ComponentBuildState.enabled)];
+    const components = [createComponent('my-pending-component', ComponentBuildState.enabled)];
     const results = renderHook(() => usePACStatesForComponents(components)).result.current;
 
-    expect(results['my-loading-component']).toBe(PACState.loading);
+    expect(results['my-pending-component']).toBe(PACState.pending);
   });
 
   it('should include INCOMING event type in pipeline run selector', () => {
@@ -350,17 +348,17 @@ describe('usePACStatesForComponents', () => {
     expect(results['my-component']).toBe(PACState.disabled);
   });
 
-  it('should keep loading state when getNextPage is undefined and build status is enabled', () => {
+  it('should set pending state when getNextPage is undefined and build status is enabled', () => {
     useK8sWatchResourceMock.mockReturnValue([[], true]);
     useTRPipelineRunsMock.mockReturnValue([[], true, undefined, undefined]);
 
     const components = [createComponent('my-loading-component', ComponentBuildState.enabled)];
     const results = renderHook(() => usePACStatesForComponents(components)).result.current;
 
-    expect(results['my-loading-component']).toBe(PACState.loading);
+    expect(results['my-loading-component']).toBe(PACState.pending);
   });
 
-  it('should not set pending state when build status state is not enabled', () => {
+  it('should keep error state when build status state is not enabled', () => {
     useK8sWatchResourceMock.mockReturnValue([[], true]);
     useTRPipelineRunsMock.mockReturnValue([[], true, undefined, undefined]);
 
@@ -386,7 +384,7 @@ describe('usePACStatesForComponents', () => {
     const components = [componentWithOtherState];
     const results = renderHook(() => usePACStatesForComponents(components)).result.current;
 
-    expect(results['my-component']).not.toBe(PACState.pending);
+    expect(results['my-component']).toBe(PACState.error);
   });
 
   it('should not set pending state when build status message is done', () => {
@@ -419,13 +417,13 @@ describe('usePACStatesForComponents', () => {
     expect(results['my-component']).toBe(PACState.loading);
   });
 
-  it('should not set pending state for components with enabled state when no pipeline runs exist', () => {
+  it('should set pending state for components with enabled state when no pipeline runs exist', () => {
     useK8sWatchResourceMock.mockReturnValue([[], true]);
     useTRPipelineRunsMock.mockReturnValue([[], true, undefined, undefined]);
 
     const components = [createComponent('my-enabled-component', ComponentBuildState.enabled)];
     const results = renderHook(() => usePACStatesForComponents(components)).result.current;
 
-    expect(results['my-enabled-component']).toBe(PACState.loading);
+    expect(results['my-enabled-component']).toBe(PACState.pending);
   });
 });
