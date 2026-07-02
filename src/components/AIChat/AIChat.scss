@@ -1,5 +1,5 @@
-// PF6 chatbot island — scoped above Konflux PF5 page chrome.
-.pf-v6.konflux-ai-chat {
+// Konflux AI chatbot styling scoped to the portal root.
+.konflux-ai-chat {
   --konflux-chat-primary: #fc783d;
   --konflux-chat-primary-hover: #d36634;
 
@@ -63,7 +63,7 @@
   }
 }
 
-html.pf-v6-theme-dark .pf-v6.konflux-ai-chat {
+html.pf-v6-theme-dark .konflux-ai-chat {
   --konflux-chat-primary: #e05c3b;
   --konflux-chat-primary-hover: #b94c2a;
 }

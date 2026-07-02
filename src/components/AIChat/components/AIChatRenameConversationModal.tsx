@@ -10,7 +10,7 @@ import {
   ModalHeader,
   ModalVariant,
   TextInput,
-} from '@patternfly/chatbot-pf6-core';
+} from '@patternfly/react-core';
 
 const MAX_TOPIC_SUMMARY_LENGTH = 1000; // Lightspeed API limit for topic summary
 const RENAME_CONVERSATION_TITLE_ID = 'ai-chat-rename-conversation-title';

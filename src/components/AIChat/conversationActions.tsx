@@ -1,5 +1,5 @@
 import type { Conversation } from '@patternfly/chatbot/dist/dynamic/ChatbotConversationHistoryNav';
-import { DropdownItem, DropdownList } from '@patternfly/chatbot-pf6-core';
+import { DropdownItem, DropdownList } from '@patternfly/react-core';
 import { PencilAltIcon } from '@patternfly/react-icons/dist/esm/icons/pencil-alt-icon';
 import { TrashIcon } from '@patternfly/react-icons/dist/esm/icons/trash-icon';
 
