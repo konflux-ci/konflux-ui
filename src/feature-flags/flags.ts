@@ -81,6 +81,16 @@ const InternalFLAGS = {
       visibleInFeatureFlagPanel: true,
     },
   },
+  'conforma-policy': {
+    key: 'conforma-policy',
+    description: 'Show the Conforma Results tab on application details',
+    defaultEnabled: false,
+    status: 'wip',
+    guard: {
+      failureReason: 'Conforma policy view is work in progress',
+      visibleInFeatureFlagPanel: true,
+    },
+  },
   'taskruns-kubearchive': {
     key: 'taskruns-kubearchive',
     description: 'Use KubeArchive as data source for TaskRuns instead of Tekton Results',
@@ -130,6 +140,18 @@ const InternalFLAGS = {
     description: 'Editing existing secrets',
     defaultEnabled: true,
     status: 'wip',
+  },
+  'pipeline-runs-page': {
+    key: 'pipeline-runs-page',
+    description:
+      'Cross-application Pipeline Runs page with saved views, advanced filters, and column management',
+    defaultEnabled: false,
+    status: 'wip',
+    guard: {
+      allOf: ['isStagingCluster'],
+      failureReason: 'Not a staging cluster',
+      visibleInFeatureFlagPanel: false,
+    },
   },
 } satisfies Record<string, FeatureMeta>;
 

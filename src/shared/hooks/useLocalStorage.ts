@@ -46,7 +46,7 @@ function subscribe(key: string, listener: Listener): () => void {
 export const useLocalStorage = <T>(
   key: string,
   initialValue?: T,
-): [T | undefined, (value: T) => void, () => void] => {
+): [T | undefined, (value: T | ((prev: T) => T)) => void, () => void] => {
   const storage = useMemo(() => createKeyedJSONStorage<T>(key), [key]);
 
   const initialValueRef = useRef(initialValue);

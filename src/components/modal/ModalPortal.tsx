@@ -1,10 +1,1 @@
-import * as React from 'react';
-import * as ReactDOM from 'react-dom';
-
-export const ModalPortal: React.FC<React.PropsWithChildren<unknown>> = () => {
-  const element = React.useMemo(() => {
-    return <div id="hacDev-modal-container" className="hacDev" />;
-  }, []);
-
-  return ReactDOM.createPortal(element, document.body);
-};
+export { ModalPortal } from '~/shared/components/modal/ModalPortal';
