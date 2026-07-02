@@ -1150,5 +1150,65 @@ describe('ReleaseMonitorListView', () => {
         ).toBeInTheDocument();
       });
     });
+
+    it('shows zero filter counts when namespace filter is cleared with more than NAMESPACE_THRESHOLD namespaces', async () => {
+      const twentyNamespaces = Array.from({ length: 20 }, (_, i) => ({
+        metadata: { name: `namespace-${i + 1}`, creationTimestamp: '2023-12-01T00:00:00Z' },
+      }));
+
+      mockGetLastUsedNamespace.mockReturnValue('namespace-1');
+      mockUseNamespaceInfo.mockReturnValue({
+        namespaces: twentyNamespaces,
+        namespacesLoaded: true,
+        lastUsedNamespace: 'namespace-1',
+      });
+
+      renderWithProviders(<ReleaseMonitorListView />);
+
+      // Wait for initial namespace to be fetched and releases to load
+      await waitFor(() => {
+        expect(screen.getByText('test-release-1')).toBeInTheDocument();
+      });
+
+      // Verify the release count label shows releases before clearing filter
+      expect(screen.queryByText('0 releases')).not.toBeInTheDocument();
+
+      // Open namespace filter menu and uncheck namespace-1 to clear the filter
+      const namespaceButton = screen.getByRole('button', { name: /namespace filter menu/i });
+      fireEvent.click(namespaceButton);
+
+      const option = screen.getByLabelText('namespace-1', { selector: 'input', exact: true });
+      fireEvent.click(option);
+
+      // Should show empty state
+      await waitFor(() => {
+        expect(screen.getByText('Select a namespace to view releases')).toBeInTheDocument();
+      });
+
+      // Verify the release count label shows 0 releases
+      expect(screen.getByText('0 releases')).toBeInTheDocument();
+
+      // Verify that application filter dropdown has no options
+      // (application options are derived from releases without static keys,
+      // so they should be empty when releasesFromSelectedNamespaces is empty)
+      const applicationButton = screen.getByRole('button', { name: /application filter menu/i });
+      fireEvent.click(applicationButton);
+
+      await waitFor(() => {
+        // Application options like "test" and "foo" should not appear
+        expect(screen.queryByLabelText(/^test$/i, { selector: 'input' })).not.toBeInTheDocument();
+        expect(screen.queryByLabelText(/^foo$/i, { selector: 'input' })).not.toBeInTheDocument();
+      });
+
+      // Verify that release plan filter dropdown has no options
+      const releasePlanButton = screen.getByRole('button', { name: /Release Plan filter menu/i });
+      fireEvent.click(releasePlanButton);
+
+      await waitFor(() => {
+        expect(
+          screen.queryByLabelText(/test-plan-1/i, { selector: 'input' }),
+        ).not.toBeInTheDocument();
+      });
+    });
   });
 });
