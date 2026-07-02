@@ -147,7 +147,7 @@ const InternalFLAGS = {
     defaultEnabled: false,
     status: 'wip',
     guard: {
-      allOf: ['isLightspeedAvailable'],
+      allOf: ['isLightspeedAvailable', 'isStagingCluster'],
       failureReason: 'Konflux AI is not available on this cluster',
       visibleInFeatureFlagPanel: true,
     },
