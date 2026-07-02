@@ -3,10 +3,9 @@ import { useParams, useLocation } from 'react-router-dom';
 import { Bullseye, Spinner } from '@patternfly/react-core';
 import { createDetailsPageAction } from '~/components/DetailsPage/utils';
 import { CONFORMA_TASK } from '~/consts/security';
-import { usePipelineRunStatusOnFavicon } from '~/hooks/usePipelineRunStatusOnFavicon';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { downloadYamlAction } from '~/utils/common-utils';
-import { PipelineRunLabel, runStatus } from '../../../consts/pipelinerun';
+import { PipelineRunLabel } from '../../../consts/pipelinerun';
 import { usePipelineRunV2 } from '../../../hooks/usePipelineRunsV2';
 import { PipelineRunModel } from '../../../models';
 import {
@@ -48,12 +47,6 @@ export const PipelineRunDetailsView: React.FC = () => {
     () => isTaskRunInPipelineRun(pipelineRun, CONFORMA_TASK),
     [pipelineRun],
   );
-
-  const faviconStatus = React.useMemo(
-    () => (pipelineRun ? pipelineRunStatus(pipelineRun) : runStatus.Unknown),
-    [pipelineRun],
-  );
-  usePipelineRunStatusOnFavicon(faviconStatus);
 
   if (!loaded) {
     return (
