@@ -1,10 +1,23 @@
-// Konflux AI chatbot styling scoped to the portal root.
 .konflux-ai-chat {
   --konflux-chat-primary: #fc783d;
   --konflux-chat-primary-hover: #d36634;
 
   .pf-v6-c-button.pf-chatbot__button {
-    z-index: var(--pf-t--global--z-index--xl);
+    z-index: var(--pf-t--global--z-index--2xl);
+    background-color: var(--konflux-chat-primary);
+    --pf-v6-c-button__icon--Color: var(--pf-t--global--icon--color--inverse);
+
+    &:hover,
+    &:focus {
+      background-color: var(--konflux-chat-primary-hover);
+    }
+  }
+
+  .pf-v6-c-button.pf-chatbot__button--active {
+    display: none;
+  }
+
+  .pf-v6-c-button.pf-chatbot__button--send {
     background-color: var(--konflux-chat-primary);
     --pf-v6-c-button__icon--Color: var(--pf-t--global--icon--color--inverse);
 
@@ -16,14 +29,19 @@
 
   .pf-chatbot {
     z-index: var(--pf-t--global--z-index--xl);
-    border-color: var(--pf-t--global--border--color--default);
-    border-width: var(--pf-t--global--border--width--regular);
+  }
+
+  .pf-chatbot__header .pf-chatbot__title {
+    overflow: visible;
+  }
+
+  .pf-chatbot__alert {
+    margin-inline: var(--pf-t--global--spacer--lg);
   }
 
   .konflux-ai-chat__brand {
-    display: block;
-    max-height: 2.25rem;
-    width: auto;
+    flex-shrink: 0;
+    color: var(--pf-t--global--text--color--regular);
   }
 
   .pf-chatbot__jump {
@@ -34,36 +52,4 @@
   .pf-chatbot__jump--top {
     display: none !important;
   }
-
-  .pf-v6-c-button.pf-chatbot__button--send {
-    background-color: var(--konflux-chat-primary);
-
-    .pf-v6-c-button__icon {
-      --pf-v6-c-button__icon--Color: var(--pf-t--global--icon--color--inverse);
-    }
-
-    &:hover,
-    &:focus {
-      background-color: var(--konflux-chat-primary-hover);
-    }
-  }
-
-  .pf-chatbot--layout--welcome .pf-chatbot__hello {
-    color: var(--konflux-chat-primary);
-  }
-
-  .pf-chatbot--layout--welcome .pf-chatbot__question,
-  .pf-chatbot__footnote {
-    color: var(--pf-t--global--text--color--regular);
-  }
-
-  .konflux-ai-chat__rename-modal,
-  .pf-v6-c-backdrop {
-    z-index: 600;
-  }
-}
-
-html.pf-v6-theme-dark .konflux-ai-chat {
-  --konflux-chat-primary: #e05c3b;
-  --konflux-chat-primary-hover: #b94c2a;
 }

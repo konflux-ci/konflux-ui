@@ -2,7 +2,7 @@ import type { Conversation } from '@patternfly/chatbot/dist/dynamic/ChatbotConve
 import type { MessageProps } from '@patternfly/chatbot/dist/dynamic/Message';
 import dayjs from 'dayjs';
 import { v4 as uuidv4 } from 'uuid';
-import { KONFLUX_ASSISTANT_NAME } from '~/components/AIChat/consts';
+import { KONFLUX_ASSISTANT_NAME, NO_RESULTS_CONVERSATION_ID } from '~/components/AIChat/consts';
 import type {
   LightspeedConversationDetails,
   LightspeedConversationTurn,
@@ -32,29 +32,74 @@ export const buildQueryRequest = (
         generateTopicSummary: true,
       };
 
-export const parseLightspeedError = async (response: Response): Promise<string> => {
-  try {
-    const errorBody = (await response.json()) as LightspeedErrorResponse & {
-      detail?: string | LightspeedErrorResponse['detail'];
-    };
+const DEFAULT_LIGHTSPEED_USER_ERROR_MESSAGE =
+  'Konflux AI is temporarily unavailable. Please try again later.';
 
-    if (typeof errorBody.detail === 'string') {
-      return errorBody.detail;
-    }
-
-    return (
-      errorBody.detail?.response ??
-      errorBody.detail?.cause ??
-      response.statusText ??
-      'Request failed'
-    );
-  } catch {
-    return response.statusText || 'Request failed';
+export const getUserFacingLightspeedErrorMessage = (status: number): string => {
+  switch (status) {
+    case 401:
+    case 403:
+      return 'You do not have permission to use Konflux AI.';
+    case 404:
+      return 'The requested conversation was not found.';
+    case 413:
+      return 'Your message is too long. Please shorten it and try again.';
+    case 429:
+      return 'Konflux AI is temporarily unavailable due to quota limits. Please try again later.';
+    case 503:
+      return DEFAULT_LIGHTSPEED_USER_ERROR_MESSAGE;
+    default:
+      return DEFAULT_LIGHTSPEED_USER_ERROR_MESSAGE;
   }
 };
 
+const extractLightspeedErrorDetail = (
+  errorBody: LightspeedErrorResponse & {
+    detail?: string | LightspeedErrorResponse['detail'];
+  },
+  response: Response,
+): string | undefined => {
+  if (typeof errorBody.detail === 'string') {
+    return errorBody.detail;
+  }
+
+  return (
+    errorBody.detail?.response ??
+    errorBody.detail?.cause ??
+    response.statusText ??
+    undefined
+  );
+};
+
+export const parseLightspeedError = async (response: Response): Promise<string> => {
+  let errorBody: unknown;
+  let backendDetail: string | undefined;
+
+  try {
+    errorBody = await response.json();
+    backendDetail = extractLightspeedErrorDetail(
+      errorBody as LightspeedErrorResponse & {
+        detail?: string | LightspeedErrorResponse['detail'];
+      },
+      response,
+    );
+  } catch {
+    errorBody = undefined;
+    backendDetail = response.statusText || undefined;
+  }
+
+  logger.warn('Lightspeed API request failed', {
+    status: response.status,
+    statusText: response.statusText,
+    errorBody,
+    detail: backendDetail,
+  });
+
+  return getUserFacingLightspeedErrorMessage(response.status);
+};
+
 const formatTurnTimestamp = (turn: LightspeedConversationTurn): string | undefined => {
-  const timestamp = turn.completed_at ?? turn.started_at;
+  const timestamp = turn.completedAt ?? turn.startedAt;
   return timestamp ? new Date(timestamp).toLocaleString() : undefined;
 };
 
@@ -100,15 +145,15 @@ export const groupConversations = (
   const grouped: Record<string, Conversation[]> = {};
 
   [...conversations]
-    .sort((a, b) => dayjs(b.last_message_at).valueOf() - dayjs(a.last_message_at).valueOf())
+    .sort((a, b) => dayjs(b.lastMessageAt).valueOf() - dayjs(a.lastMessageAt).valueOf())
     .forEach((conversation) => {
-      const label = getConversationGroupLabel(conversation.last_message_at);
+      const label = getConversationGroupLabel(conversation.lastMessageAt);
       if (!grouped[label]) {
         grouped[label] = [];
       }
       grouped[label].push({
-        id: conversation.conversation_id,
-        text: conversation.topic_summary?.trim() || 'Untitled conversation',
+        id: conversation.conversationId,
+        text: conversation.topicSummary?.trim() || 'Untitled conversation',
       });
     });
 
@@ -138,7 +183,7 @@ export const filterGroupedConversations = (
   );
 
   if (Object.keys(filtered).length === 0) {
-    return [{ id: 'no-results', noIcon: true, text: 'No results found' }];
+    return [{ id: NO_RESULTS_CONVERSATION_ID, noIcon: true, text: 'No results found' }];
   }
 
   return filtered;

@@ -72,17 +72,12 @@ export const AIChatDock: React.FC = () => {
   return createPortal(
     <div ref={chatRootRef} className="konflux-ai-chat">
       <ChatbotToggle
-        className="konflux-ai-chat__toggle"
         tooltipLabel={KONFLUX_AI_TOGGLE_TOOLTIP}
         toggleButtonLabel={KONFLUX_AI_TOGGLE_BUTTON_LABEL}
         isChatbotVisible={isChatbotVisible}
         onToggleChatbot={() => setIsChatbotVisible((visible) => !visible)}
       />
-      <Chatbot
-        className="konflux-ai-chat__panel"
-        displayMode={displayMode}
-        isVisible={isChatbotVisible}
-      >
+      <Chatbot displayMode={displayMode} isVisible={isChatbotVisible}>
         <ChatbotConversationHistoryNav
           displayMode={displayMode}
           onDrawerToggle={handleToggleDrawer}

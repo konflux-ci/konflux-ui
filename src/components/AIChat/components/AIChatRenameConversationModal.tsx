@@ -53,7 +53,6 @@ export const AIChatRenameConversationModal: React.FC<AIChatRenameConversationMod
     <Modal
       appendTo={appendTo}
       aria-labelledby={RENAME_CONVERSATION_TITLE_ID}
-      className="konflux-ai-chat__rename-modal"
       data-test="ai-chat-rename-conversation-modal"
       isOpen={isOpen}
       onClose={onClose}

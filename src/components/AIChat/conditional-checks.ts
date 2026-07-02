@@ -1,10 +1,9 @@
 import { LIGHTSPEED_API_BASE } from '~/components/AIChat/consts';
-import { createConditionsHook } from '~/feature-flags/hooks';
 import { logger } from '~/monitoring/logger';
 
 export const checkIfLightspeedIsAvailable = async (): Promise<boolean> => {
   try {
-    const response = await fetch(`${LIGHTSPEED_API_BASE}/v1/liveness`, {
+    const response = await fetch(`${LIGHTSPEED_API_BASE}/liveness`, {
       method: 'GET',
       headers: {
         Accept: 'application/json',
@@ -19,5 +18,3 @@ export const checkIfLightspeedIsAvailable = async (): Promise<boolean> => {
     return false;
   }
 };
-
-export const useIsLightspeedAvailable = createConditionsHook(['isLightspeedAvailable']);

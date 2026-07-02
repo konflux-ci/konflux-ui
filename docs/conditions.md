@@ -392,6 +392,5 @@ const conditions = useMyConditions(); // { myCondition: boolean }
 
 - `'isKubearchiveEnabled'` - KubeArchive service available
 - `'isStagingCluster'` - Running in staging environment
-- `'isLightspeedAvailable'` - Konflux AI Lightspeed liveness check passed
 
 That's it! You now know everything you need to use conditions

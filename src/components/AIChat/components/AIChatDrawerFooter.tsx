@@ -14,9 +14,7 @@ export const AIChatDrawerFooter: React.FC<AIChatDrawerFooterProps> = ({
 }) => (
   <ChatbotFooter>
     <MessageBar
-      onSendMessage={(message) => {
-        void onSendMessage(message);
-      }}
+      onSendMessage={onSendMessage}
       isSendButtonDisabled={isSendButtonDisabled}
       hasAttachButton={false}
       placeholder={KONFLUX_AI_MESSAGE_PLACEHOLDER}

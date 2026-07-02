@@ -1,27 +1,27 @@
 export type LightspeedChatMessage = {
   content: string;
   type: 'user' | 'assistant';
-  referenced_documents?: unknown;
+  referencedDocuments?: unknown;
 };
 
 export type LightspeedConversationTurn = {
   messages: LightspeedChatMessage[];
-  tool_calls?: unknown[];
-  tool_results?: unknown[];
+  toolCalls?: unknown[];
+  toolResults?: unknown[];
   provider?: string;
   model?: string;
-  started_at?: string;
-  completed_at?: string;
+  startedAt?: string;
+  completedAt?: string;
 };
 
 export type LightspeedConversationDetails = {
-  conversation_id: string;
-  created_at: string;
-  last_message_at: string;
-  message_count: number;
-  last_used_model?: string;
-  last_used_provider?: string;
-  topic_summary?: string;
+  conversationId: string;
+  createdAt: string;
+  lastMessageAt: string;
+  messageCount: number;
+  lastUsedModel?: string;
+  lastUsedProvider?: string;
+  topicSummary?: string;
 };
 
 export type LightspeedConversationsListResponse = {
@@ -29,23 +29,23 @@ export type LightspeedConversationsListResponse = {
 };
 
 export type LightspeedConversationResponse = {
-  conversation_id: string;
-  chat_history: LightspeedConversationTurn[];
+  conversationId: string;
+  chatHistory: LightspeedConversationTurn[];
 };
 
 export type LightspeedQueryRequest = {
   query: string;
   conversationId?: string;
-  generateTopicSummary?: boolean;
+  generateTopicSummary: boolean;
 };
 
 export type LightspeedQueryResponse = {
-  conversation_id: string;
+  conversationId: string;
   response: string;
-  referenced_documents?: unknown[];
+  referencedDocuments?: unknown[];
   truncated?: boolean;
-  input_tokens?: number;
-  output_tokens?: number;
+  inputTokens?: number;
+  outputTokens?: number;
 };
 
 export type LightspeedConversationUpdateRequest = {
@@ -53,7 +53,7 @@ export type LightspeedConversationUpdateRequest = {
 };
 
 export type LightspeedConversationUpdateResponse = {
-  conversation_id: string;
+  conversationId: string;
   success: boolean;
   message: string;
 };

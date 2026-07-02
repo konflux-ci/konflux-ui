@@ -2,8 +2,7 @@ import type { Conversation } from '@patternfly/chatbot/dist/dynamic/ChatbotConve
 import { DropdownItem, DropdownList } from '@patternfly/react-core';
 import { PencilAltIcon } from '@patternfly/react-icons/dist/esm/icons/pencil-alt-icon';
 import { TrashIcon } from '@patternfly/react-icons/dist/esm/icons/trash-icon';
-
-const NO_RESULTS_CONVERSATION_ID = 'no-results';
+import { NO_RESULTS_CONVERSATION_ID } from './consts';
 
 type ConversationActionHandlers = {
   onDeleteConversation: (conversationId: string) => void;
