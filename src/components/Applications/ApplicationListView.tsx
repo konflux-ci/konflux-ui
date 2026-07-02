@@ -84,7 +84,7 @@ const ApplicationListView: React.FC<React.PropsWithChildren<unknown>> = () => {
         title="Applications"
         description="An application is 1 or more components running together for building and releasing."
       >
-        <PageSection hasBodyWrapper={false} padding={{ default: 'noPadding' }} isFilled>
+        <PageSection hasBodyWrapper={false} isFilled>
           {!applications || applications.length === 0 ? (
             <AppEmptyState
               className="pf-v6-u-mx-lg"

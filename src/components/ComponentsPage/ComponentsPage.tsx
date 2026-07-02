@@ -24,7 +24,7 @@ const ComponentsPage: React.FC = () => {
           </>
         }
       >
-        <PageSection hasBodyWrapper={false} padding={{ default: 'noPadding' }} isFilled>
+        <PageSection hasBodyWrapper={false} isFilled>
           <AppEmptyState
             className="pf-v6-u-mx-lg"
             isXl
