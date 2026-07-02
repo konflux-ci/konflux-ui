@@ -1,9 +1,8 @@
 import * as React from 'react';
 import { FormGroup } from '@patternfly/react-core';
-import { useFormikContext, FormikValues } from 'formik';
+import { useField, useFormikContext, FormikValues } from 'formik';
 import compact from 'lodash/compact';
 import isEmpty from 'lodash/isEmpty';
-import lodashValues from 'lodash/values';
 import { BasicNameValueEditor } from '../../name-value-editor';
 import { KeyValueFieldProps } from '../field-types';
 import { getFieldId } from '../field-utils';
@@ -16,19 +15,32 @@ const KeyValueField: React.FC<React.PropsWithChildren<KeyValueFieldProps>> = ({
   labelIcon,
   required,
   entries,
+  readOnly = false,
   ...props
 }) => {
   const { setFieldValue, values } = useFormikContext<FormikValues>();
+  const [field] = useField<{ key: string; value: string }[]>(props.name);
   const fieldId = getFieldId(props.name, 'key-value-input');
-  const keyValues = React.useMemo(() => {
-    return !isEmpty(entries) ? entries.map((env) => lodashValues(env)) : [];
-  }, [entries]);
-  const [keyValue, setKeyValue] = React.useState(keyValues);
+
+  const nameValuePairs = React.useMemo(() => {
+    const source = field.value?.length ? field.value : (entries ?? []);
+    if (isEmpty(source)) {
+      return [['', '']];
+    }
+    return source.map(({ key, value }) => [key, value]);
+  }, [field.value, entries]);
+
+  const [keyValue, setKeyValue] = React.useState(nameValuePairs);
+
+  React.useEffect(() => {
+    setKeyValue(nameValuePairs);
+  }, [nameValuePairs]);
+
   const onChangeKeyValuePair = React.useCallback(
     ({ nameValuePairs: keyValuePairs }: { nameValuePairs: string[][] }) => {
       if (keyValuePairs) {
         const updatedNameValuePairs = compact(
-          keyValuePairs.map(([key, value]) => (value.length ? { key, value } : null)),
+          keyValuePairs.map(([key, value]) => (key.length || value.length ? { key, value } : null)),
         );
         setKeyValue(keyValuePairs);
         void setFieldValue(props.name, updatedNameValuePairs);
@@ -39,7 +51,7 @@ const KeyValueField: React.FC<React.PropsWithChildren<KeyValueFieldProps>> = ({
 
   React.useEffect(() => {
     if (values.formReloadCount) {
-      setKeyValue(keyValues);
+      setKeyValue(nameValuePairs);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [values.formReloadCount]);
@@ -52,7 +64,7 @@ const KeyValueField: React.FC<React.PropsWithChildren<KeyValueFieldProps>> = ({
         valueString="Value"
         nameString="Key"
         addString="Add label"
-        readOnly={false}
+        readOnly={readOnly}
         updateParentData={onChangeKeyValuePair}
       />
       <FieldHelperText helpText={helpText} />

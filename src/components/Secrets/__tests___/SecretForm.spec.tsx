@@ -3,6 +3,7 @@ import { userEvent } from '@testing-library/user-event';
 import KeyValueFileInputField, {
   InternalKeyValueFileInputField,
 } from '../../../shared/components/formik-fields/key-value-file-input-field/KeyValueFileInputField';
+import { SecretType } from '../../../types';
 import { formikRenderer } from '../../../utils/test-utils';
 import {
   addSecretFormValues,
@@ -264,5 +265,154 @@ describe('SecretForm KeyValueFileInputField', () => {
       }),
       {},
     );
+  });
+});
+
+describe('SecretForm secret name field', () => {
+  beforeEach(() => {
+    mockKeyValueFileInputField.mockImplementation((props) => (
+      <InternalKeyValueFileInputField {...props} />
+    ));
+  });
+
+  it('should show typeahead for opaque secrets', async () => {
+    formikRenderer(<SecretForm existingSecrets={existingSecrets} />, secretFormValues);
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'secret-name-dropdown' })).toBeInTheDocument();
+    });
+  });
+
+  it('should show plain secret name input for image pull secrets', async () => {
+    const user = userEvent.setup();
+    formikRenderer(<SecretForm existingSecrets={existingSecrets} />, secretFormValues);
+
+    await user.click(screen.getByText('Key/value secret'));
+    await user.click(screen.getByText('Image pull secret'));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('secret-name')).toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: 'secret-name-dropdown' }),
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  it('should show plain secret name input for source secrets', async () => {
+    const user = userEvent.setup();
+    formikRenderer(<SecretForm existingSecrets={existingSecrets} />, secretFormValues);
+
+    await user.click(screen.getByText('Key/value secret'));
+    await user.click(screen.getByText('Source secret'));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('secret-name')).toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: 'secret-name-dropdown' }),
+      ).not.toBeInTheDocument();
+    });
+  });
+});
+
+describe('SecretForm existing opaque secret', () => {
+  const clusterSecret = {
+    type: SecretType.opaque,
+    name: 'cluster-secret',
+    providerUrl: '',
+    tokenKeyName: 'cluster-secret',
+    opaque: {
+      keyValuePairs: [
+        { key: 'token', value: 'secret-value', readOnlyKey: true, readOnlyValue: true },
+      ],
+    },
+    labels: [{ key: 'app', value: 'konflux' }],
+  };
+
+  beforeEach(() => {
+    mockKeyValueFileInputField.mockImplementation((props) => (
+      <InternalKeyValueFileInputField {...props} />
+    ));
+  });
+
+  it('should display labels when selecting an existing cluster secret', async () => {
+    const user = userEvent.setup();
+    formikRenderer(<SecretForm existingSecrets={[clusterSecret]} />, secretFormValues);
+
+    await user.click(screen.getByRole('button', { name: 'secret-name-dropdown' }));
+    await user.click(screen.getByText('cluster-secret'));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('pairs-list-name')).toHaveValue('app');
+      expect(screen.getByTestId('pairs-list-value')).toHaveValue('konflux');
+    });
+  });
+
+  it('should disable label fields when using an existing cluster secret', async () => {
+    const user = userEvent.setup();
+    formikRenderer(<SecretForm existingSecrets={[clusterSecret]} />, secretFormValues);
+
+    await user.click(screen.getByRole('button', { name: 'secret-name-dropdown' }));
+    await user.click(screen.getByText('cluster-secret'));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('pairs-list-name')).toBeDisabled();
+      expect(screen.getByTestId('pairs-list-value')).toBeDisabled();
+    });
+  });
+
+  it('should keep key values editable when renaming an existing cluster secret', async () => {
+    const user = userEvent.setup();
+    formikRenderer(<SecretForm existingSecrets={[clusterSecret]} />, secretFormValues);
+
+    await user.click(screen.getByRole('button', { name: 'secret-name-dropdown' }));
+    await user.click(screen.getByText('cluster-secret'));
+
+    const combobox = screen.getByRole('combobox');
+    await user.clear(combobox);
+    await user.type(combobox, 'new-secret-name');
+
+    await waitFor(() => {
+      expect(screen.getByTestId('key-0')).toHaveValue('token');
+      expect(screen.getByTestId('key-0')).not.toBeDisabled();
+    });
+  });
+
+  it('should repopulate read-only fields when switching between existing cluster secrets', async () => {
+    const user = userEvent.setup();
+    const otherClusterSecret = {
+      type: SecretType.opaque,
+      name: 'other-secret',
+      providerUrl: '',
+      tokenKeyName: 'other-secret',
+      opaque: {
+        keyValuePairs: [
+          { key: 'other-key', value: 'other-value', readOnlyKey: true, readOnlyValue: true },
+        ],
+      },
+      labels: [{ key: 'env', value: 'prod' }],
+    };
+
+    formikRenderer(
+      <SecretForm existingSecrets={[clusterSecret, otherClusterSecret]} />,
+      secretFormValues,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'secret-name-dropdown' }));
+    await user.click(screen.getByText('cluster-secret'));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('key-0')).toHaveValue('token');
+      expect(screen.getByTestId('key-0')).toBeDisabled();
+    });
+
+    await user.click(screen.getByRole('button', { name: 'secret-name-dropdown' }));
+    await user.click(screen.getByText('other-secret'));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('key-0')).toHaveValue('other-key');
+      expect(screen.getByTestId('key-0')).toBeDisabled();
+      expect(screen.getByTestId('pairs-list-name')).toHaveValue('env');
+      expect(screen.getByTestId('pairs-list-value')).toHaveValue('prod');
+      expect(screen.getByTestId('pairs-list-name')).toBeDisabled();
+    });
   });
 });

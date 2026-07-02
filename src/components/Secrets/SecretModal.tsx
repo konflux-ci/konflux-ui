@@ -7,7 +7,7 @@ import {
   ModalHeader,
   ModalVariant,
 } from '@patternfly/react-core';
-import { Formik } from 'formik';
+import { Formik, yupToFormErrors } from 'formik';
 import { isEmpty, merge } from 'lodash-es';
 import {
   ImportSecret,
@@ -18,6 +18,7 @@ import {
   ImagePullSecretType,
   SecretForComponentOption,
 } from '../../types';
+import { isUsingExistingClusterSecret } from '../../utils/secrets/secret-utils';
 import { SecretFromSchema } from '../../utils/validation-utils';
 import { RawComponentProps } from '../modal/createModalLauncher';
 import SecretForm from './SecretForm';
@@ -98,15 +99,43 @@ const SecretModal: React.FC<React.PropsWithChildren<SecretModalProps>> = ({
     return merged;
   }, [existingSecrets, currentComponent, initialSecret]);
 
+  const validate = React.useCallback(
+    (values: SecretModalValues) => {
+      const isUsingExisting = isUsingExistingClusterSecret(
+        values.secretName,
+        values.type,
+        existingSecrets,
+      );
+      try {
+        SecretFromSchema.validateSync(values, {
+          abortEarly: false,
+          context: { isUsingExisting },
+        });
+        return {};
+      } catch (err) {
+        return yupToFormErrors(err);
+      }
+    },
+    [existingSecrets],
+  );
+
   const { isOpen, onClose: handleClose, appendTo, ...rest } = modalProps || {};
 
   return (
-    <Formik
+    <Formik<SecretModalValues>
       onSubmit={(v) => createPartnerTaskSecret(v, onSubmit, handleClose)}
       initialValues={initialValues}
-      validationSchema={SecretFromSchema}
+      validate={validate}
     >
       {(props) => {
+        const isUsingExisting = isUsingExistingClusterSecret(
+          props.values.secretName,
+          props.values.type,
+          existingSecrets,
+        );
+        const canSubmit =
+          (props.dirty || isUsingExisting) && isEmpty(props.errors) && !props.isSubmitting;
+
         return (
           <Modal
             {...rest}
@@ -118,11 +147,15 @@ const SecretModal: React.FC<React.PropsWithChildren<SecretModalProps>> = ({
             className="build-secret-modal"
           >
             <ModalHeader
-              title={isEdit ? 'Edit build secret' : 'Create new build secret'}
+              title={isEdit ? 'Edit build secret' : 'Create or use new build secret'}
               description="Keep your data secure with a build-time secret."
             />
             <ModalBody>
-              <SecretForm existingSecrets={existingSecrets} currentComponent={currentComponent} />
+              <SecretForm
+                existingSecrets={existingSecrets}
+                currentComponent={currentComponent}
+                isEdit={isEdit}
+              />
             </ModalBody>
             <ModalFooter>
               <Button
@@ -132,9 +165,9 @@ const SecretModal: React.FC<React.PropsWithChildren<SecretModalProps>> = ({
                 onClick={() => {
                   props.handleSubmit();
                 }}
-                isDisabled={!props.dirty || !isEmpty(props.errors) || props.isSubmitting}
+                isDisabled={!canSubmit}
               >
-                {isEdit ? 'Save' : 'Create'}
+                {isEdit ? 'Save' : isUsingExisting ? 'Use' : 'Create'}
               </Button>
               <Button key="cancel" variant="link" onClick={handleClose}>
                 Cancel

@@ -224,4 +224,30 @@ describe('SecretModal', () => {
       expect(onSubmit).toHaveBeenCalled();
     });
   });
+
+  it('should show create-or-use title in create mode', async () => {
+    await renderSecretModal(initialValues);
+    expect(screen.getByText('Create or use new build secret')).toBeInTheDocument();
+  });
+
+  it('should show Use button when an existing opaque cluster secret is selected', async () => {
+    const clusterSecret: SecretModalValues['existingSecrets'][number] = {
+      type: SecretType.opaque,
+      name: 'cluster-secret',
+      providerUrl: '',
+      tokenKeyName: 'cluster-secret',
+      opaque: {
+        keyValuePairs: [{ key: 'token', value: 'value', readOnlyKey: true, readOnlyValue: true }],
+      },
+    };
+
+    await renderSecretModal(initialValues, [clusterSecret]);
+
+    fireEvent.click(screen.getByRole('button', { name: 'secret-name-dropdown' }));
+    fireEvent.click(screen.getByText('cluster-secret'));
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Use' })).toBeEnabled();
+    });
+  });
 });

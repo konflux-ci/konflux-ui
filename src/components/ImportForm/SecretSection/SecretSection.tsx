@@ -73,6 +73,9 @@ const SecretSection: React.FC<SecretSectionProps> = ({ currentComponent }) => {
           ? { keyValuePairs }
           : null,
         image: secret.type === SecretTypeDropdownLabel.image ? { authType: '' } : null,
+        labels: secret.metadata.labels
+          ? Object.entries(secret.metadata.labels).map(([key, value]) => ({ key, value }))
+          : undefined,
       };
     });
   }, [secrets, secretsLoaded]);
