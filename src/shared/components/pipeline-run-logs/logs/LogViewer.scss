@@ -1,3 +1,8 @@
+// override backdrop overflow so portaled popovers are visible
+#hacDev-modal-container:has(> .pf-v6-c-popover) {
+  overflow: visible;
+}
+
 .log-viewer__container > .pf-v6-c-log-viewer__header {
   overflow: visible;
 
