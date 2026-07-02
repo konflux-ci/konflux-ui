@@ -179,7 +179,7 @@ describe('SwitchableSearchFilter', () => {
 
       // Remove the first chip — find the close button inside the chip element
       const frontendChipText = screen.getByText('frontend');
-      const chipElement = frontendChipText.closest('.pf-v5-c-chip');
+      const chipElement = frontendChipText.closest('.pf-v6-c-chip');
       const closeButton = chipElement.querySelector('button');
       await user.click(closeButton);
 

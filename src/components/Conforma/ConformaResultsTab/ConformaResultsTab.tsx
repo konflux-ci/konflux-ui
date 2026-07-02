@@ -4,9 +4,9 @@ import {
   Bullseye,
   PageSection,
   PageSectionVariants,
+  Content,
+  ContentVariants,
   Spinner,
-  Text,
-  TextContent,
   Title,
 } from '@patternfly/react-core';
 import { FilterContext, FilterContextProvider } from '~/components/Filter/generic/FilterContext';
@@ -111,15 +111,15 @@ const ConformaResultsTabContent: React.FC = () => {
   return (
     <>
       <PageSection variant={PageSectionVariants.light} padding={{ default: 'noPadding' }}>
-        <TextContent>
-          <Title headingLevel="h3" className="pf-v5-c-title pf-v5-u-mt-lg pf-v5-u-mb-sm" size="lg">
+        <Content>
+          <Title headingLevel="h3" className="pf-v6-c-title pf-v6-u-mt-lg pf-v6-u-mb-sm" size="lg">
             Conforma results summary
           </Title>
-          <Text component="p">
+          <Content component={ContentVariants.p}>
             Conforma is a set of tools for verifying the provenance of application snapshots and
             validating them against a clearly defined policy.
-          </Text>
-        </TextContent>
+          </Content>
+        </Content>
         <div className="conforma-results-tab__summary-wrapper">
           <ConformaSummaryBar
             totalComponents={totalComponents}
@@ -142,11 +142,13 @@ const ConformaResultsTabContent: React.FC = () => {
 
         {isEmpty ? (
           <Bullseye>
-            <Text>No Conforma results available for this application.</Text>
+            <Content component={ContentVariants.p}>
+              No Conforma results available for this application.
+            </Content>
           </Bullseye>
         ) : groups.length === 0 ? (
           <Bullseye>
-            <Text>No results match the current filters.</Text>
+            <Content component={ContentVariants.p}>No results match the current filters.</Content>
           </Bullseye>
         ) : (
           <ConformaGroupedTable

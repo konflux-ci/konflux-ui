@@ -37,7 +37,7 @@ export const RBListDataTds: React.FC<{ obj: UserAccessTableRow }> = ({ obj }) =>
       <Td className={rbTableColumnClasses.rolebinding} dataLabel="Role Binding">
         {bindingName}
       </Td>
-      <Td className={`${rbTableColumnClasses.kebab} pf-v5-u-pr-0`} dataLabel="Actions">
+      <Td className={`${rbTableColumnClasses.kebab} pf-v6-u-pr-0`} dataLabel="Actions">
         {actionMenu}
       </Td>
     </>
