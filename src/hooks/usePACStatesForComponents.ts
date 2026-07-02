@@ -1,6 +1,4 @@
 import * as React from 'react';
-import { PUSH_BUILD_EVENT_TYPES, PipelineRunLabel, PipelineRunType } from '../consts/pipelinerun';
-import { ComponentKind } from '../types';
 import {
   BUILD_REQUEST_ANNOTATION,
   BuildRequest,
@@ -9,14 +7,15 @@ import {
   getConfigurationTime,
   getPACProvision,
   SAMPLE_ANNOTATION,
-} from '../utils/component-utils';
+} from '~/utils/component-utils';
+import { PUSH_BUILD_EVENT_TYPES, PipelineRunLabel, PipelineRunType } from '../consts/pipelinerun';
+import { ComponentKind } from '../types';
 import { useApplicationPipelineGitHubApp } from './useApplicationPipelineGitHubApp';
 import { useApplication } from './useApplications';
 import { PACState } from './usePACState';
 import { usePipelineRunsV2 } from './usePipelineRunsV2';
 
 export const PAC_STATE_DONE_MESSAGE = 'done';
-export const PAC_STATE_ENABLED_MESSAGE = 'enabled';
 
 export type PacStatesForComponents = {
   [componentName: string]: PACState;
@@ -128,11 +127,7 @@ const usePACStatesForComponents = (components: ComponentKind[]): PacStatesForCom
         if (prMerged) {
           updates[componentName] = PACState.ready;
           update = true;
-        } else if (
-          !getNextPage &&
-          buildStatus?.pac?.state !== PAC_STATE_ENABLED_MESSAGE &&
-          buildStatus?.message !== PAC_STATE_DONE_MESSAGE
-        ) {
+        } else if (!getNextPage && buildStatus?.message !== PAC_STATE_DONE_MESSAGE) {
           updates[componentName] = PACState.pending;
           update = true;
         } else {
