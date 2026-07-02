@@ -29,7 +29,7 @@ A process checklist for reviewing pull requests. For coding standards and detail
 - [ ] **Import boundaries respected.** Run `yarn lint:restricted-imports` to verify.
 - [ ] **Dead code removed.** No commented-out code, unused imports, or unreachable branches.
 - [ ] **File length under 500 lines.**
-- [ ] **KubeArchive dual-source**: Any new code that fetches Kubernetes resources (PipelineRuns, TaskRuns, etc.) uses the dual-source hooks from `src/kubearchive/` (e.g., `K8sQueryListResourceItems`, `useK8sQueryListResourceItems`) to query both the live cluster and KubeArchive. See `docs/kubearchive.md` for the architecture and available hooks.
+- [ ] **KubeArchive dual-source**: New code that fetches PipelineRuns, TaskRuns, Releases, or Snapshots uses dual-source hooks (`useK8sAndKarchResources`, `useK8sAndKarchResource`) to query both etcd and KubeArchive. PipelineRuns and TaskRuns also integrate with Tekton Results. Not all Kubernetes resources require dual-source fetching. See `docs/kubearchive.md` for the architecture and available hooks.
 
 ## 3. Testing
 
