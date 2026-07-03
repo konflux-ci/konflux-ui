@@ -1,23 +1,16 @@
-import { RunStatus } from '@patternfly/react-topology';
 import { runStatus } from '~/consts/pipelinerun';
 import { runStatusToRunStatus } from '~/utils/pipeline-utils';
-import { getStatusColor, STATUS_COLOR } from '~/utils/status-color-utils';
-
-const topologyStatusColor: Record<RunStatus, string> = {
-  [RunStatus.Failed]: STATUS_COLOR.danger,
-  [RunStatus.FailedToStart]: STATUS_COLOR.danger,
-  [RunStatus.Succeeded]: STATUS_COLOR.success,
-  [RunStatus.Cancelled]: STATUS_COLOR.warning,
-  [RunStatus.Skipped]: STATUS_COLOR.skipped,
-  [RunStatus.Running]: STATUS_COLOR.neutral,
-  [RunStatus.InProgress]: STATUS_COLOR.inProgress,
-  [RunStatus.Pending]: STATUS_COLOR.neutral,
-  [RunStatus.Idle]: STATUS_COLOR.neutral,
-};
+import {
+  getLabelColorFromStatus,
+  getStatusColor,
+  RUN_STATUS_VISUAL_CONFIG,
+  STATUS_COLOR,
+} from '~/utils/status-color-utils';
 
 describe('getStatusColor', () => {
   it.each(Object.values(runStatus))('matches list view topology colors for %s', (status) => {
-    expect(getStatusColor(status)).toBe(topologyStatusColor[runStatusToRunStatus(status)]);
+    const { canvas } = RUN_STATUS_VISUAL_CONFIG[runStatusToRunStatus(status)];
+    expect(getStatusColor(status)).toBe(STATUS_COLOR[canvas]);
   });
 
   it.each([
@@ -38,5 +31,32 @@ describe('getStatusColor', () => {
     [runStatus.NeedsMerge, STATUS_COLOR.neutral],
   ])('maps %s to %s', (status, expected) => {
     expect(getStatusColor(status)).toBe(expected);
+  });
+});
+
+describe('getLabelColorFromStatus', () => {
+  it('returns null for statuses without label tint', () => {
+    expect(getLabelColorFromStatus(runStatus.Idle)).toBeNull();
+    expect(getLabelColorFromStatus(runStatus.Pending)).toBeNull();
+    expect(getLabelColorFromStatus(runStatus.Skipped)).toBeNull();
+    expect(getLabelColorFromStatus(runStatus.PipelineNotStarted)).toBeNull();
+  });
+
+  it('returns green for success', () => {
+    expect(getLabelColorFromStatus(runStatus.Succeeded)).toBe('green');
+  });
+
+  it('returns red for failed', () => {
+    expect(getLabelColorFromStatus(runStatus.Failed)).toBe('red');
+  });
+
+  it('returns gold for cancelled/cancelling status', () => {
+    expect(getLabelColorFromStatus(runStatus.Cancelled)).toBe('gold');
+    expect(getLabelColorFromStatus(runStatus.Cancelling)).toBe('gold');
+  });
+
+  it('returns blue for running and in-progress statuses', () => {
+    expect(getLabelColorFromStatus(runStatus.Running)).toBe('blue');
+    expect(getLabelColorFromStatus(runStatus['In Progress'])).toBe('blue');
   });
 });

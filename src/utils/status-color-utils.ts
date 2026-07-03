@@ -8,7 +8,6 @@ import { RunStatus } from '@patternfly/react-topology';
 import { runStatus } from '~/consts/pipelinerun';
 import { runStatusToRunStatus } from '~/utils/pipeline-utils';
 
-/** Hex colors matching PatternFly topology pipeline status icons used in list views. */
 export const STATUS_COLOR = {
   danger: dangerColor.value,
   success: successColor.value,
@@ -18,18 +17,34 @@ export const STATUS_COLOR = {
   neutral: neutralColor.value,
 } as const;
 
-const topologyStatusColor: Record<RunStatus, string> = {
-  [RunStatus.Failed]: STATUS_COLOR.danger,
-  [RunStatus.FailedToStart]: STATUS_COLOR.danger,
-  [RunStatus.Succeeded]: STATUS_COLOR.success,
-  [RunStatus.Cancelled]: STATUS_COLOR.warning,
-  [RunStatus.Skipped]: STATUS_COLOR.skipped,
-  [RunStatus.Running]: STATUS_COLOR.neutral,
-  [RunStatus.InProgress]: STATUS_COLOR.inProgress,
-  [RunStatus.Pending]: STATUS_COLOR.neutral,
-  [RunStatus.Idle]: STATUS_COLOR.neutral,
+export type StatusColorCategory = keyof typeof STATUS_COLOR;
+
+export type LabelColor = 'blue' | 'cyan' | 'green' | 'orange' | 'purple' | 'red' | 'grey' | 'gold';
+
+type StatusVisualConfig = {
+  /** Hex color bucket for canvas rendering (e.g. favicon badge). */
+  canvas: StatusColorCategory;
+  /** PatternFly Label color prop; null means no label tint. */
+  label: LabelColor | null;
 };
 
-/** Returns the canvas hex color for a run status. */
+export const RUN_STATUS_VISUAL_CONFIG: Record<RunStatus, StatusVisualConfig> = {
+  [RunStatus.Failed]: { canvas: 'danger', label: 'red' },
+  [RunStatus.FailedToStart]: { canvas: 'danger', label: null },
+  [RunStatus.Succeeded]: { canvas: 'success', label: 'green' },
+  [RunStatus.Cancelled]: { canvas: 'warning', label: 'gold' },
+  [RunStatus.Skipped]: { canvas: 'skipped', label: null },
+  [RunStatus.Running]: { canvas: 'neutral', label: 'blue' },
+  [RunStatus.InProgress]: { canvas: 'inProgress', label: 'blue' },
+  [RunStatus.Pending]: { canvas: 'neutral', label: null },
+  [RunStatus.Idle]: { canvas: 'neutral', label: null },
+};
+
+const getVisualConfig = (status: runStatus): StatusVisualConfig =>
+  RUN_STATUS_VISUAL_CONFIG[runStatusToRunStatus(status)];
+
 export const getStatusColor = (status: runStatus): string =>
-  topologyStatusColor[runStatusToRunStatus(status)];
+  STATUS_COLOR[getVisualConfig(status).canvas];
+
+export const getLabelColorFromStatus = (status: runStatus): LabelColor | null =>
+  getVisualConfig(status).label;
