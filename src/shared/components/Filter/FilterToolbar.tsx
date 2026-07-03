@@ -11,7 +11,7 @@ import { SwitchableSearchFilter } from './controls/SwitchableSearchFilter';
 /** Configuration for a named toolbar group. */
 export type ToolbarGroupConfig = {
   /** PF ToolbarGroup variant. Defaults to 'filter-group'. */
-  variant?: 'filter-group' | 'icon-button-group' | 'button-group';
+  variant?: 'filter-group' | 'action-group-plain' | 'action-group';
 };
 
 /**

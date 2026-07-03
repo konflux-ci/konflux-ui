@@ -9,12 +9,13 @@ import {
   ListItem,
   MenuToggle,
   Modal,
+  ModalFooter,
   ModalVariant,
   Select,
   SelectList,
   SelectOption,
   Spinner,
-  Text,
+  Content,
 } from '@patternfly/react-core';
 import textStyles from '@patternfly/react-styles/css/utilities/Text/text.mjs';
 import { useRoleMap } from '~/hooks/useRole';
@@ -196,42 +197,17 @@ export const UserAccessChangeRoleModal: React.FC<UserAccessChangeRoleModalProps>
     <Modal
       isOpen={isOpen}
       title="Change role"
+      aria-label="Change role"
       variant={ModalVariant.medium}
       onClose={handleClose}
       appendTo={() => document.querySelector('#hacDev-modal-container') ?? document.body}
-      actions={[
-        isSaving ? (
-          <Button key="save" variant="primary" isDisabled isLoading>
-            Save
-          </Button>
-        ) : (
-          <ButtonWithAccessTooltip
-            key="save"
-            variant="primary"
-            onClick={() => void handleSave()}
-            isDisabled={isModalSaveDisabled}
-            tooltip={
-              hasUnrankedRoles
-                ? 'Cannot change roles: one or more affected role bindings use a role that is not configured in this cluster.'
-                : !modalSelectedRoleRef
-                  ? 'No role selected. Select a role to save the changes.'
-                  : 'You cannot save the changes. The selected role is not allowed to downgrade the users.'
-            }
-          >
-            Save
-          </ButtonWithAccessTooltip>
-        ),
-        <Button key="cancel" variant="link" onClick={handleClose} isDisabled={isSaving}>
-          Cancel
-        </Button>,
-      ]}
     >
       <Flex direction={{ default: 'column' }} gap={{ default: 'gapMd' }}>
         <FlexItem>
-          <Text>
+          <Content>
             Change role for {selectedCount} user{selectedCount !== 1 ? 's' : ''} (highest role
             displayed)
-          </Text>
+          </Content>
         </FlexItem>
         {hasUnrankedRoles ? (
           <FlexItem>
@@ -271,7 +247,7 @@ export const UserAccessChangeRoleModal: React.FC<UserAccessChangeRoleModalProps>
         <FlexItem>
           <Flex direction={{ default: 'column' }}>
             <FlexItem className="user-access-change-role-modal__role-label">
-              <Text data-test="user-access-change-role-label">New role*</Text>
+              <Content data-test="user-access-change-role-label">New role*</Content>
             </FlexItem>
             <FlexItem>
               {roleMapLoaded && roleMap ? (
@@ -329,6 +305,32 @@ export const UserAccessChangeRoleModal: React.FC<UserAccessChangeRoleModalProps>
           </Flex>
         </FlexItem>
       </Flex>
+      <ModalFooter>
+        {isSaving ? (
+          <Button key="save" variant="primary" isDisabled isLoading>
+            Save
+          </Button>
+        ) : (
+          <ButtonWithAccessTooltip
+            key="save"
+            variant="primary"
+            onClick={() => void handleSave()}
+            isDisabled={isModalSaveDisabled}
+            tooltip={
+              hasUnrankedRoles
+                ? 'Cannot change roles: one or more affected role bindings use a role that is not configured in this cluster.'
+                : !modalSelectedRoleRef
+                  ? 'No role selected. Select a role to save the changes.'
+                  : 'You cannot save the changes. The selected role is not allowed to downgrade the users.'
+            }
+          >
+            Save
+          </ButtonWithAccessTooltip>
+        )}
+        <Button key="cancel" variant="link" onClick={handleClose} isDisabled={isSaving}>
+          Cancel
+        </Button>
+      </ModalFooter>
     </Modal>
   );
 };

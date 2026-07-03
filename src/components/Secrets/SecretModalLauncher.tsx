@@ -24,6 +24,5 @@ export const SecretModalLauncher = ({
   createRawModalLauncher(SecretModal, {
     'data-test': 'create-secret-modal',
     variant: ModalVariant.large,
-    hasNoBodyWrapper: true,
     onClose,
   })({ onSubmit, existingSecrets, currentComponent, initialSecret, isEdit });

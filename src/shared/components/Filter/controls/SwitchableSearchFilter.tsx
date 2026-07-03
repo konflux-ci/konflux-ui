@@ -1,8 +1,8 @@
 import * as React from 'react';
 import {
   Button,
-  Chip,
-  ChipGroup,
+  Label,
+  LabelGroup,
   HelperText,
   InputGroup,
   InputGroupItem,
@@ -49,7 +49,7 @@ const buildFieldParsersMap = <T,>(config: SwitchableSearchFilterConfig<T>): Reco
   return map;
 };
 
-/** Chip-based input for multi-value switchable-search fields. @internal */
+/** Label-based input for multi-value switchable-search fields. @internal */
 const ChipInput: React.FC<{
   values: string[];
   onAdd: (value: string) => void;
@@ -82,13 +82,13 @@ const ChipInput: React.FC<{
         placeholder={values.length === 0 ? `Filter by ${label}...` : ''}
       >
         {values.length > 0 && (
-          <ChipGroup>
+          <LabelGroup>
             {values.map((v) => (
-              <Chip key={v} onClick={() => onRemove(v)}>
+              <Label key={v} onClose={() => onRemove(v)}>
                 {v}
-              </Chip>
+              </Label>
             ))}
-          </ChipGroup>
+          </LabelGroup>
         )}
       </TextInputGroupMain>
       {values.length > 0 && (

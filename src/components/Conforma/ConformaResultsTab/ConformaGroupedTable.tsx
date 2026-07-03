@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Text, TextContent, Truncate } from '@patternfly/react-core';
+import { Content, Truncate } from '@patternfly/react-core';
 import { ExpandableRowContent, Table, Tbody, Td, Th, Thead, Tr } from '@patternfly/react-table';
 import { getRuleStatus } from '~/components/Conforma/utils';
 import type { ComponentProps } from '~/shared/components/table/Table';
@@ -31,21 +31,21 @@ const DetailSubTable: React.FC<{ rows: ConformaResultRow[] }> = ({ rows }) => (
       {rows.map((row, idx) => (
         <Tr key={`${row.component}-${row.title}-${idx}`}>
           <Td dataLabel="Rule">
-            <TextContent>
-              <Text component="p">
+            <Content>
+              <Content component="p">
                 <strong>{row.title ?? '-'}</strong>
-              </Text>
-              {row.description && <Text component="small">{row.description}</Text>}
-            </TextContent>
+              </Content>
+              {row.description && <Content component="small">{row.description}</Content>}
+            </Content>
           </Td>
           <Td dataLabel="Component">{row.component}</Td>
           <Td dataLabel="Image">{row.image ? <Truncate content={row.image} /> : '-'}</Td>
           <Td dataLabel="Status">{getRuleStatus(row.status)}</Td>
           <Td dataLabel="Message">
-            <TextContent>
-              <Text component="p">{row.msg ?? '-'}</Text>
-              {row.solution && <Text component="small">Solution: {row.solution}</Text>}
-            </TextContent>
+            <Content>
+              <Content component="p">{row.msg ?? '-'}</Content>
+              {row.solution && <Content component="small">Solution: {row.solution}</Content>}
+            </Content>
           </Td>
         </Tr>
       ))}

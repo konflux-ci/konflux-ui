@@ -79,5 +79,4 @@ export const createUnlinkSecretModalLauncher = () =>
     'data-test': `unlink-secret-modal`,
     variant: ModalVariant.small,
     title: `Unlink Secret from a Component?`,
-    titleIconVariant: 'warning',
   });

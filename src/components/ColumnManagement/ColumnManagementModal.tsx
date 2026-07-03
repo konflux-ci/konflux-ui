@@ -10,12 +10,14 @@ import {
   DataListItem,
   DataListItemCells,
   DataListItemRow,
+  ModalVariant,
+} from '@patternfly/react-core';
+import {
   DragDrop,
   Draggable,
   Droppable,
-  ModalVariant,
   type DraggableItemPosition,
-} from '@patternfly/react-core';
+} from '@patternfly/react-core/deprecated';
 import { type ColumnState } from '~/shared/components/TableV2';
 import { type ComponentProps, createModalLauncher } from '../modal/createModalLauncher';
 
@@ -71,8 +73,8 @@ export const ColumnManagementModal: React.FC<ColumnManagementModalProps> = ({
         const unpinnedIds = prev.filter((id) => !columnsById.get(id)?.pinned);
         const pinnedEndIds = prev.filter((id) => columnsById.get(id)?.pinned === 'end');
 
-        const [moved] = unpinnedIds.splice(source.index as number, 1);
-        unpinnedIds.splice(dest.index as number, 0, moved);
+        const [moved] = unpinnedIds.splice(source.index, 1);
+        unpinnedIds.splice(dest.index, 0, moved);
 
         return [...pinnedStartIds, ...unpinnedIds, ...pinnedEndIds];
       });

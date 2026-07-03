@@ -11,7 +11,7 @@ import { CONFORMA_RESULT_STATUS, ConformaResult } from '~/types/conforma';
 export type RuleStatusConfig = {
   Icon: React.ComponentType<{ color?: string }>;
   iconColor: string;
-  labelColor: 'red' | 'gold' | 'green' | 'grey';
+  labelColor: 'red' | 'yellow' | 'green' | 'grey';
   statusText: string;
 };
 
@@ -25,7 +25,7 @@ export const RULE_STATUS_CONFIG: Record<CONFORMA_RESULT_STATUS, RuleStatusConfig
   [CONFORMA_RESULT_STATUS.warnings]: {
     Icon: ExclamationTriangleIcon,
     iconColor: yellowColor.value,
-    labelColor: 'gold',
+    labelColor: 'yellow',
     statusText: CONFORMA_RESULT_STATUS.warnings,
   },
   [CONFORMA_RESULT_STATUS.successes]: {

@@ -8,6 +8,4 @@ export const createManageVisibilityModalLauncher = (namespace: NamespaceKind) =>
     'data-test': 'manage-visibility-modal',
     variant: ModalVariant.small,
     title: 'Manage visibility',
-    description:
-      'Manage visibility for a namespace. Private namespaces are only accessible to members, while public namespaces allow read-only access to all authenticated users.',
   })({ namespace });

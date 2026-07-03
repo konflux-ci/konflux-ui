@@ -3,7 +3,6 @@ import { useParams } from 'react-router-dom';
 import {
   Bullseye,
   PageSection,
-  PageSectionVariants,
   Content,
   ContentVariants,
   Spinner,
@@ -110,7 +109,7 @@ const ConformaResultsTabContent: React.FC = () => {
 
   return (
     <>
-      <PageSection variant={PageSectionVariants.light} padding={{ default: 'noPadding' }}>
+      <PageSection padding={{ default: 'noPadding' }}>
         <Content>
           <Title headingLevel="h3" className="pf-v6-c-title pf-v6-u-mt-lg pf-v6-u-mb-sm" size="lg">
             Conforma results summary
