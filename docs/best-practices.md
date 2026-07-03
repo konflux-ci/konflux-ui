@@ -394,7 +394,7 @@ This project uses Formik with Yup validation. Follow these patterns:
 - Wrap forms with `<Formik<FormValues>>` and define a typed `initialValues`.
 - Use `useFormikContext<FormValues>()` in child components to access form state.
 - Define validation schemas with Yup in a separate file or co-located constant.
-- Use `formik-pf` components where applicable for PatternFly integration.
+- Use formik components from `~/shared/components/formik/` for PatternFly integration.
 
 ---
 
