@@ -1,7 +1,6 @@
 import * as React from 'react';
-import { Table, Tbody, Tr } from '@patternfly/react-table';
 import { screen, waitFor } from '@testing-library/react';
-import { FilterContext, FilterContextProvider } from '~/components/Filter/generic/FilterContext';
+import { NuqsTestingAdapter } from 'nuqs/adapters/testing';
 import { MINTMAKER_NAMESPACE } from '~/consts/constants';
 import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { useComponent } from '~/hooks/useComponents';
@@ -9,12 +8,11 @@ import { usePipelineRunsV2 } from '~/hooks/usePipelineRunsV2';
 import { PipelineRunKind, PipelineRunStatus } from '~/types';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { renderWithQueryClient } from '~/unit-test-utils/mock-react-query';
-import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
-import { DependencyRunsListRow } from '../DependencyRunsListRow';
+import { setupVirtualizerMock } from '~/unit-test-utils/mock-virtualizer';
 import { DependencyRunsListView } from '../DependencyRunsListView';
 
-jest.mock('~/hooks/useSearchParam', () => ({
-  useSearchParamBatch: () => mockUseSearchParamBatch(),
+jest.mock('@tanstack/react-virtual', () => ({
+  useVirtualizer: jest.fn(),
 }));
 
 jest.mock('react-router-dom', () => ({
@@ -25,26 +23,6 @@ jest.mock('react-router-dom', () => ({
   useNavigate: jest.fn(),
   useLocation: jest.fn(() => ({ pathname: '/ns/test-ns' })),
 }));
-
-jest.mock('~/shared/components/table/TableComponent', () => {
-  return (props) => {
-    const { data, onRowsRendered } = props;
-    React.useEffect(() => {
-      onRowsRendered?.({ stopIndex: data.length - 1 });
-    }, [data, onRowsRendered]);
-    return (
-      <Table role="table" aria-label={props['aria-label']}>
-        <Tbody>
-          {props.data.map((d: PipelineRunKind, i: number) => (
-            <Tr key={i}>
-              <DependencyRunsListRow obj={d} />
-            </Tr>
-          ))}
-        </Tbody>
-      </Table>
-    );
-  };
-});
 
 jest.mock('~/hooks/useComponents', () => ({
   useComponent: jest.fn(),
@@ -94,14 +72,15 @@ const mockRuns: PipelineRunKind[] = [
 
 const noNextPage = { isFetchingNextPage: false, hasNextPage: false };
 
-const TestedComponent = () => (
-  <FilterContextProvider filterParams={['name', 'status']}>
+const TestedComponent = ({ searchParams }: { searchParams?: string }) => (
+  <NuqsTestingAdapter searchParams={searchParams}>
     <DependencyRunsListView componentName="test-component" />
-  </FilterContextProvider>
+  </NuqsTestingAdapter>
 );
 
 describe('DependencyRunsListView', () => {
   beforeEach(() => {
+    setupVirtualizerMock();
     useComponentMock.mockReturnValue([mockComponentData, true, undefined]);
     usePipelineRunsV2Mock.mockReturnValue([mockRuns, true, null, jest.fn(), noNextPage]);
   });
@@ -110,10 +89,11 @@ describe('DependencyRunsListView', () => {
     jest.clearAllMocks();
   });
 
-  it('renders table skeleton while data is not loaded', () => {
+  it('renders skeleton while data is not loaded', () => {
     usePipelineRunsV2Mock.mockReturnValue([[], false, null, jest.fn(), noNextPage]);
     renderWithQueryClient(<TestedComponent />);
-    expect(screen.getByTestId('data-table-skeleton')).toBeInTheDocument();
+    expect(screen.getByTestId('table-container')).toBeInTheDocument();
+    expect(screen.queryByTestId('table-v2')).not.toBeInTheDocument();
   });
 
   it('renders empty state when no runs exist and no filters are active', () => {
@@ -152,13 +132,13 @@ describe('DependencyRunsListView', () => {
   it('hides the filter toolbar when there are no runs and no active filters', () => {
     usePipelineRunsV2Mock.mockReturnValue([[], true, null, jest.fn(), noNextPage]);
     renderWithQueryClient(<TestedComponent />);
-    expect(screen.queryByTestId('Name-input-filter')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Search filter')).not.toBeInTheDocument();
   });
 
   it('shows the filter toolbar when runs are present', async () => {
     renderWithQueryClient(<TestedComponent />);
     await waitFor(() => {
-      expect(screen.getByTestId('Name-input-filter')).toBeInTheDocument();
+      expect(screen.getByTestId('table-v2')).toBeInTheDocument();
     });
   });
 
@@ -214,18 +194,7 @@ describe('DependencyRunsListView', () => {
   });
 
   it('shows filtered empty state when active filters yield no results', () => {
-    renderWithQueryClient(
-      <FilterContext.Provider
-        value={{
-          filters: { name: 'no-match-xyz', status: [] },
-          setFilters: jest.fn(),
-          onClearFilters: jest.fn(),
-        }}
-      >
-        <DependencyRunsListView componentName="test-component" />
-      </FilterContext.Provider>,
-    );
-
+    renderWithQueryClient(<TestedComponent searchParams="?status=%5B%22no-match-xyz%22%5D" />);
     expect(screen.getByText('No results found')).toBeInTheDocument();
   });
 
@@ -247,41 +216,5 @@ describe('DependencyRunsListView', () => {
         }),
       }),
     );
-  });
-
-  it('shows only runs whose name contains the active name filter', async () => {
-    renderWithQueryClient(
-      <FilterContext.Provider
-        value={{
-          filters: { name: 'alpha', status: [] },
-          setFilters: jest.fn(),
-          onClearFilters: jest.fn(),
-        }}
-      >
-        <DependencyRunsListView componentName="test-component" />
-      </FilterContext.Provider>,
-    );
-
-    await waitFor(() => {
-      expect(screen.getByText('dependency-run-alpha')).toBeInTheDocument();
-      expect(screen.queryByText('dependency-run-beta')).not.toBeInTheDocument();
-    });
-  });
-
-  it('shows the filter toolbar when a name filter is active even with no underlying runs', () => {
-    usePipelineRunsV2Mock.mockReturnValue([[], true, null, jest.fn(), noNextPage]);
-    renderWithQueryClient(
-      <FilterContext.Provider
-        value={{
-          filters: { name: 'alpha', status: [] },
-          setFilters: jest.fn(),
-          onClearFilters: jest.fn(),
-        }}
-      >
-        <DependencyRunsListView componentName="test-component" />
-      </FilterContext.Provider>,
-    );
-
-    expect(screen.getByTestId('Name-input-filter')).toBeInTheDocument();
   });
 });

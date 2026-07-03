@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { screen, fireEvent, act } from '@testing-library/react';
-import { useIsOnFeatureFlag } from '../../../../feature-flags/hooks';
+import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useComponent } from '../../../../hooks/useComponents';
 import { PACState } from '../../../../hooks/usePACState';
 import { mockUseNamespaceHook } from '../../../../unit-test-utils/mock-namespace';
@@ -37,8 +37,8 @@ jest.mock('react-router-dom', () => {
   };
 });
 
-jest.mock('../../../../feature-flags/hooks', () => ({
-  ...jest.requireActual('../../../../feature-flags/hooks'),
+jest.mock('~/feature-flags/hooks', () => ({
+  ...jest.requireActual('~/feature-flags/hooks'),
   useIsOnFeatureFlag: jest.fn(() => false),
 }));
 

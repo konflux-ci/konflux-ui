@@ -2,7 +2,6 @@ import { useParams } from 'react-router-dom';
 import { RouterParams } from '@routes/utils';
 import { DependencyRunsListView } from '~/components/Components/ComponentDependencyManager/DependencyRunsListView';
 import { DetailsSection } from '~/components/DetailsPage';
-import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 
 export const ComponentDependencyTab = () => {
@@ -17,9 +16,7 @@ export const ComponentDependencyTab = () => {
         </>
       }
     >
-      <FilterContextProvider filterParams={['name', 'status']}>
-        <DependencyRunsListView componentName={componentName} />
-      </FilterContextProvider>
+      <DependencyRunsListView componentName={componentName} />
     </DetailsSection>
   );
 };
