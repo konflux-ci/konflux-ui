@@ -243,7 +243,7 @@ export const PipelineRunsPage: React.FC = () => {
         </FilterToolbar>
       }
     >
-      <PageSection hasBodyWrapper={false} isFilled={false}>
+      <PageSection isFilled={false}>
         <FilterToolbar
           configs={filterConfigs}
           options={optionsMap}
