@@ -10,10 +10,12 @@ import {
  * Restores the original favicon on unmount.
  */
 export const useFaviconStatusBadge = (color: string): void => {
-  const baselineHrefRef = React.useRef<string>();
+  const baselineHrefRef = React.useRef<string | undefined>(undefined);
+  if (baselineHrefRef.current === undefined) {
+    baselineHrefRef.current = readFaviconHref();
+  }
 
   React.useEffect(() => {
-    baselineHrefRef.current = readFaviconHref();
     return () => {
       restoreFaviconHref(baselineHrefRef.current);
     };
