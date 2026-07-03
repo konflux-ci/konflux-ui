@@ -183,6 +183,22 @@ describe('commit-utils', () => {
       expect(result.isPullRequest).toBe(true);
       expect(result.pullRequestNumber).toBe('');
     });
+
+    it('should return undefined shaURL when repoURL is missing', () => {
+      const snapshotNoRepoURL = {
+        ...mockSnapshot,
+        metadata: {
+          ...mockSnapshot.metadata,
+          annotations: {
+            ...mockSnapshot.metadata.annotations,
+            'pac.test.appstudio.openshift.io/sha-url': undefined,
+            'pac.test.appstudio.openshift.io/repo-url': undefined,
+          },
+        },
+      };
+      const result = createCommitObjectFromSnapshot(snapshotNoRepoURL);
+      expect(result.shaURL).toBeUndefined();
+    });
   });
 
   describe('commit short name', () => {

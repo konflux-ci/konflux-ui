@@ -249,7 +249,7 @@ export const createCommitObjectFromSnapshot = (snapshot: Snapshot): Commit => {
     snapshot.metadata.annotations?.[SnapshotLabels.PAC_URL_ORG_LABEL];
   const shaURL =
     snapshot.metadata.annotations?.[SnapshotLabels.PAC_SHA_URL_ANNOTATION] ||
-    `${repoURL}/commit/${commitSHA}`;
+    (repoURL ? `${repoURL}/commit/${commitSHA}` : undefined);
   const shaTitle =
     snapshot.metadata.annotations?.[SnapshotLabels.PAC_SHA_TITLE_ANNOTATION] || 'manual build';
   const gitProvider =
