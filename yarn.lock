@@ -10934,18 +10934,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"formik-pf@npm:0.0.1-alpha11":
-  version: 0.0.1-alpha11
-  resolution: "formik-pf@npm:0.0.1-alpha11"
-  peerDependencies:
-    "@patternfly/react-core": ^5.3.3
-    "@types/react": ^18.3.1
-    formik: ^2.2.9
-    react: ^18.3.1
-  checksum: 10/d37c3aade32f622053433ddf2691c056ffba61916a6b3f332d51e691ac399aa2cd84fc2db5d97b18cdbea7bf6a33e073e91782d3ee47a37ffba2cbe71085767e
-  languageName: node
-  linkType: hard
-
 "formik@npm:^2.4.6":
   version: 2.4.9
   resolution: "formik@npm:2.4.9"
@@ -14016,7 +14004,6 @@ __metadata:
     file-saver: "npm:^2.0.5"
     fork-ts-checker-webpack-plugin: "npm:^9.0.2"
     formik: "npm:^2.4.6"
-    formik-pf: "npm:0.0.1-alpha11"
     git-url-parse: "npm:^15.0.0"
     html-webpack-plugin: "npm:^5.6.0"
     husky: "npm:^9.0.11"
