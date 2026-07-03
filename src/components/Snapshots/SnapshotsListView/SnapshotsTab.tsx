@@ -1,8 +1,7 @@
 import { useParams } from 'react-router-dom';
-import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
-import { SnapshotModel } from '../../../models';
-import { RouterParams } from '../../../routes/utils';
-import { createLoaderWithAccessCheck } from '../../../utils/rbac';
+import { SnapshotModel } from '~/models';
+import { RouterParams } from '~/routes/utils';
+import { createLoaderWithAccessCheck } from '~/utils/rbac';
 import { default as SnapshotsListView } from './SnapshotsListView';
 
 export const snapshotsTabLoader = createLoaderWithAccessCheck(
@@ -15,11 +14,7 @@ export const snapshotsTabLoader = createLoaderWithAccessCheck(
 
 export const SnapshotsListViewTab: React.FC = () => {
   const { applicationName } = useParams<RouterParams>();
-  return (
-    <FilterContextProvider filterParams={['name', 'commitMessage', 'showMergedOnly', 'releasable']}>
-      <SnapshotsListView applicationName={applicationName} />
-    </FilterContextProvider>
-  );
+  return <SnapshotsListView applicationName={applicationName} />;
 };
 
 export default SnapshotsListView;

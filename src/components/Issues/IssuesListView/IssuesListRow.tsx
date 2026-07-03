@@ -73,7 +73,7 @@ const IssuesListRow: React.FC<RowFunctionArgs<Issue>> = ({ obj: issue }) => {
                   showModal(
                     createModalLauncher(LinksModal, {
                       'data-test': 'modal-links',
-                      bodyAriaLabel: 'Scrollable modal content',
+                      'aria-label': 'Scrollable modal content',
                       variant: ModalVariant.small,
                       title: 'All links',
                     })(),

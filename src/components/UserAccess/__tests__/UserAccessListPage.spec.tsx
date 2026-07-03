@@ -1,5 +1,4 @@
 import '@testing-library/jest-dom';
-import { Table as PfTable, Thead, Tr, Th, Tbody } from '@patternfly/react-table';
 import { act, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MockInfo } from '~/__data__/role-data';
@@ -11,7 +10,6 @@ import { mockAccessReviewUtil } from '~/unit-test-utils/mock-access-review';
 import { createK8sWatchResourceMock } from '~/unit-test-utils/mock-k8s';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { renderWithQueryClientAndRouter } from '~/utils/test-utils';
-import { RBListRow } from '../RBListRow';
 import UserAccessPage from '../UserAccessListPage';
 
 jest.useFakeTimers();
@@ -24,38 +22,7 @@ jest.mock('~/hooks/useKonfluxPublicInfo', () => ({
   useKonfluxPublicInfo: jest.fn(() => [MockInfo, true, null]),
 }));
 
-// Mock Table component to render with actual RBListRow (not mocking business logic)
 // Note: react-router-dom is NOT mocked - renderWithQueryClientAndRouter provides proper routing context
-
-jest.mock('../../../shared/components/table', () => {
-  const actual = jest.requireActual('../../../shared/components/table');
-  return {
-    ...actual,
-    Table: (props) => {
-      const { data, filters, selected, match, kindObj } = props;
-      const cProps = { data, filters, selected, match, kindObj };
-      const columns = props.Header(cProps);
-      return (
-        <PfTable role="table" aria-label="table" variant="compact">
-          <Thead>
-            <Tr>
-              {columns.map((col, idx) => (
-                <Th key={idx}>{col.title}</Th>
-              ))}
-            </Tr>
-          </Thead>
-          <Tbody>
-            {props.data.map((d, i) => (
-              <Tr key={i}>
-                <RBListRow columns={columns} obj={d} />
-              </Tr>
-            ))}
-          </Tbody>
-        </PfTable>
-      );
-    },
-  };
-});
 
 describe('UserAccessListPage', () => {
   const mockNamespace = 'test-namespace';
@@ -117,11 +84,9 @@ describe('UserAccessListPage', () => {
 
       renderWithQueryClientAndRouter(<UserAccessPage />);
 
-      // Shows filtered empty state when no role bindings exist because
-      // the component filters all role bindings (including empty array)
-      // This is the current expected behavior - when there's truly no data,
-      // the filter result is empty, so FilteredEmptyState is shown
-      expect(screen.getByText('No results found')).toBeInTheDocument();
+      // Namespace has no bindings → full empty state (not FilteredEmptyState / "No results found")
+      expect(screen.getByTestId('user-access__empty')).toBeInTheDocument();
+      expect(screen.getByText('Grant user access')).toBeInTheDocument();
     });
 
     it('should show Grant access button when empty', () => {

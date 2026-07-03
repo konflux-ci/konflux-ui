@@ -18,6 +18,7 @@ type PageLayoutProps = {
   description?: React.ReactNode;
   breadcrumbs?: ({ name: string; path: string } | React.ReactElement)[];
   actions?: Action[];
+  customActions?: React.ReactNode;
 };
 
 const PageLayout: React.FC<React.PropsWithChildren<PageLayoutProps>> = ({
@@ -27,6 +28,7 @@ const PageLayout: React.FC<React.PropsWithChildren<PageLayoutProps>> = ({
   description,
   breadcrumbs,
   actions,
+  customActions,
 }) => {
   return (
     <>
@@ -48,6 +50,9 @@ const PageLayout: React.FC<React.PropsWithChildren<PageLayoutProps>> = ({
               <FlexItem align={{ default: 'alignRight' }}>
                 <ActionMenu variant={ActionMenuVariant.PRIMARY} actions={actions} />
               </FlexItem>
+            )}
+            {customActions && (
+              <FlexItem align={{ default: 'alignRight' }}>{customActions}</FlexItem>
             )}
           </Flex>
         </PageSection>

@@ -2,7 +2,6 @@ import React from 'react';
 import {
   Alert,
   Banner,
-  Bullseye,
   Button,
   Checkbox,
   Flex,
@@ -283,21 +282,39 @@ const LogViewer: React.FC<Props> = ({
 
           {/* Header */}
           <Banner data-test="logs-taskName">
-            <Flex gap={{ default: 'gapSm' }}>
-              {taskName && (
-                <FlexItem flex={{ default: 'flex_1' }} className="log-viewer__task-name">
-                  <Truncate content={taskName} />
+            <Flex
+              alignItems={{ default: 'alignItemsCenter' }}
+              flexWrap={{ default: 'nowrap' }}
+              justifyContent={{ default: 'justifyContentSpaceBetween' }}
+            >
+              {(taskName || isLoading) && (
+                <FlexItem className="log-viewer__task-name-group">
+                  <Flex
+                    gap={{ default: 'gapSm' }}
+                    alignItems={{ default: 'alignItemsCenter' }}
+                    flexWrap={{ default: 'nowrap' }}
+                  >
+                    {taskName && (
+                      <FlexItem flex={{ default: 'flex_1' }} className="log-viewer__task-name">
+                        <Truncate content={taskName} />
+                      </FlexItem>
+                    )}
+                    {isLoading && (
+                      <FlexItem flex={{ default: 'flexNone' }}>
+                        <Spinner
+                          isInline
+                          aria-label="Loading logs"
+                          className="log-viewer__task-name-spinner"
+                        />
+                      </FlexItem>
+                    )}
+                  </Flex>
                 </FlexItem>
               )}
               <FlexItem flex={{ default: 'flexNone' }}>
                 <LogsTaskDuration taskRun={taskRun} />
               </FlexItem>
             </Flex>
-            {isLoading && (
-              <Bullseye className="log-viewer__bullseye">
-                <Spinner size="lg" />
-              </Bullseye>
-            )}
             {errorMessage && <Alert variant="danger" isInline title={errorMessage} />}
           </Banner>
 

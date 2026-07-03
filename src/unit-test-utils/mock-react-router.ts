@@ -1,6 +1,7 @@
 import * as React from 'react';
 import * as ReactRouterDom from 'react-router-dom';
 import { RenderOptions, render } from '@testing-library/react';
+import { NuqsTestingAdapter } from 'nuqs/adapters/testing';
 import { createJestMockFunction } from './common';
 import type { JestMockedFunction } from './type';
 
@@ -37,6 +38,11 @@ export const routerRenderer = (
   options?: Omit<RenderOptions, 'wrapper'>,
 ) =>
   render(element, {
-    wrapper: ({ children }) => React.createElement(ReactRouterDom.BrowserRouter, null, children),
+    wrapper: ({ children }) =>
+      React.createElement(
+        ReactRouterDom.BrowserRouter,
+        null,
+        React.createElement(NuqsTestingAdapter, null, children),
+      ),
     ...options,
   });

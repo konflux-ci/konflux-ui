@@ -119,6 +119,12 @@ describe('useConformaResult', () => {
   beforeEach(() => {
     queryClient = createTestQueryClient();
     jest.clearAllMocks();
+    // jest.clearAllMocks() does not reset mockResolvedValue/mockReturnValue implementations.
+    // Reset getTaskRunLog explicitly so tests that don't set it up see a clean state.
+    mockGetTaskRunLogs.mockReset();
+    mockGetTaskRunLogs.mockResolvedValue(
+      `step-report-json :-\n${JSON.stringify(mockConformaJSON)}\nstep-end :-`,
+    );
     mockCommmonFetchJSON.mockResolvedValue(mockConformaJSON);
     mockUseNamespaceHook('test-ns');
     mockUsePipelineRunV2.mockReturnValue([mockEnterpriseContractPipelineRun, true, null]);
@@ -136,7 +142,7 @@ describe('useConformaResult', () => {
   it('should parse valid rules to json', async () => {
     const { result, waitForNextUpdate } = renderHookWithQueryClient('dummy-abcd');
     await waitForNextUpdate();
-    expect(mockCommmonFetchJSON).toHaveBeenCalled();
+    expect(mockGetTaskRunLogs).toHaveBeenCalled();
     expect(result.current[0][0].successes.length).toEqual(1);
     expect(result.current[0][0].violations.length).toEqual(1);
     expect(result.current[0][0].warnings).toEqual(undefined);
@@ -248,18 +254,18 @@ describe('useConformaResult', () => {
     const { result, waitForNextUpdate } = renderHookWithQueryClient('dummy-abcd');
     await waitForNextUpdate();
     const [ecResult, loaded] = result.current;
-    expect(mockCommmonFetchJSON).toHaveBeenCalled();
+    expect(mockGetTaskRunLogs).toHaveBeenCalled();
     expect(loaded).toBe(true);
     expect(ecResult.findIndex((ec) => ec.name === 'devfile-sample-1jik')).toEqual(-1);
   });
 
   it('should return handle api errors', async () => {
-    mockCommmonFetchJSON.mockRejectedValue(new Error('Api error'));
+    mockGetTaskRunLogs.mockRejectedValue(new Error('Api error'));
 
     const { result, waitForNextUpdate } = renderHookWithQueryClient('dummy-abcd');
     await waitForNextUpdate();
     const [ecResult, loaded] = result.current;
-    expect(mockCommmonFetchJSON).toHaveBeenCalled();
+    expect(mockGetTaskRunLogs).toHaveBeenCalled();
     expect(loaded).toBe(true);
     expect(ecResult).toBeUndefined();
   });
@@ -272,6 +278,12 @@ describe('useConformaResult', () => {
           return [
             [
               {
+                metadata: {
+                  namespace: 'test-ns',
+                  name: 'test-conforma-taskrun',
+                  uid: 'test-conforma-uid',
+                  ownerReferences: mockPipelineRunOwnerRef,
+                },
                 status: {
                   podName: 'pod-conforma',
                 },
@@ -289,51 +301,37 @@ describe('useConformaResult', () => {
     );
     const { result, waitForNextUpdate } = renderHookWithQueryClient('dummy-abcd');
     await waitForNextUpdate();
-    expect(mockCommmonFetchJSON).toHaveBeenCalled();
-    expect(mockCommmonFetchJSON).toHaveBeenLastCalledWith(
-      '/api/v1/namespaces/test-ns/pods/pod-conforma/log?container=step-report-json&follow=true',
-    );
+    expect(mockGetTaskRunLogs).toHaveBeenCalled();
     const [ecResult, loaded] = result.current;
     expect(loaded).toBe(true);
     expect(ecResult).toBeDefined();
   });
 
-  it('should return handle 404 error and fall back to Tekton Results when kubearchive is disabled', async () => {
+  it('should fetch from tekton-results when kubearchive is disabled', async () => {
     mockUseIsOnFeatureFlag.mockReturnValue(false);
-    mockCommmonFetchJSON.mockRejectedValue({ code: 404 });
-    mockGetTaskRunLogs.mockResolvedValue(`
-      step-vulnerabilities :-
-      Lorem Ipsum some logs
-      
-      step-report-json :-
-      {"success":true,"components":[]}
-      
-      step-something-else :-
-      Some other logs
-    `);
+    mockGetTaskRunLogs.mockResolvedValue(
+      `step-report-json :-\n{"success":true,"components":[]}\nstep-end :-`,
+    );
 
     const { result, waitForNextUpdate } = renderHookWithQueryClient('dummy-abcd');
-    const [, loaded] = result.current;
-    expect(mockCommmonFetchJSON).toHaveBeenCalled();
-    expect(loaded).toBe(false);
     await waitForNextUpdate();
-    const [ec, ecLoaded] = result.current;
+
     expect(mockGetTaskRunLogs).toHaveBeenCalled();
+    expect(mockCommmonFetchJSON).not.toHaveBeenCalled();
+    const [ec, ecLoaded] = result.current;
     expect(ecLoaded).toBe(true);
     expect(ec).toEqual([]);
   });
 
-  it('should retry with KubeArchive path prefix on 404 when kubearchive is enabled', async () => {
+  it('should fetch from kubearchive with pathPrefix when kubearchive is enabled', async () => {
     mockUseIsOnFeatureFlag.mockReturnValue(true);
-    mockCommmonFetchJSON
-      .mockRejectedValueOnce({ code: 404 })
-      .mockResolvedValueOnce(mockConformaJSON);
+    mockCommmonFetchJSON.mockResolvedValue(mockConformaJSON);
 
     const { result, waitForNextUpdate } = renderHookWithQueryClient('dummy-abcd');
     await waitForNextUpdate();
 
-    expect(mockCommmonFetchJSON).toHaveBeenCalledTimes(2);
-    expect(mockCommmonFetchJSON).toHaveBeenLastCalledWith(expect.any(String), {
+    expect(mockCommmonFetchJSON).toHaveBeenCalledTimes(1);
+    expect(mockCommmonFetchJSON).toHaveBeenCalledWith(expect.any(String), {
       pathPrefix: KUBEARCHIVE_PATH_PREFIX,
     });
     expect(mockGetTaskRunLogs).not.toHaveBeenCalled();
@@ -344,16 +342,14 @@ describe('useConformaResult', () => {
     expect(ecResult[0].violations.length).toEqual(1);
   });
 
-  it('should show empty state when both K8s and KubeArchive fail with kubearchive enabled', async () => {
+  it('should show empty state when kubearchive fetch fails', async () => {
     mockUseIsOnFeatureFlag.mockReturnValue(true);
-    mockCommmonFetchJSON
-      .mockRejectedValueOnce({ code: 404 })
-      .mockRejectedValueOnce(new Error('KubeArchive error'));
+    mockCommmonFetchJSON.mockRejectedValue(new Error('KubeArchive error'));
 
     const { result, waitForNextUpdate } = renderHookWithQueryClient('dummy-abcd');
     await waitForNextUpdate();
 
-    expect(mockCommmonFetchJSON).toHaveBeenCalledTimes(2);
+    expect(mockCommmonFetchJSON).toHaveBeenCalledTimes(1);
     expect(mockGetTaskRunLogs).not.toHaveBeenCalled();
 
     const [ecResult, loaded] = result.current;
@@ -404,6 +400,10 @@ describe('useConformaResult', () => {
   beforeEach(() => {
     queryClient = createTestQueryClient();
     jest.clearAllMocks();
+    mockGetTaskRunLogs.mockReset();
+    mockGetTaskRunLogs.mockResolvedValue(
+      `step-report-json :-\n${JSON.stringify(mockConformaJSON)}\nstep-end :-`,
+    );
     mockCommmonFetchJSON.mockResolvedValue(mockConformaJSON);
     mockUseNamespaceHook('test-ns');
     mockUsePipelineRunV2.mockReturnValue([mockEnterpriseContractPipelineRun, true, null]);

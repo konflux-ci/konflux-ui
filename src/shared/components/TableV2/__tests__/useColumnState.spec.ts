@@ -1,0 +1,329 @@
+import { renderHook, act } from '@testing-library/react';
+import { type ColumnDefinition } from '~/shared/components/TableV2';
+import { useColumnState } from '~/shared/components/TableV2/hooks/useColumnState';
+import { useLocalStorage } from '~/shared/hooks/useLocalStorage';
+
+jest.mock('~/shared/hooks/useLocalStorage');
+
+const mockUseLocalStorage = jest.mocked(useLocalStorage);
+
+// --- Test data ---
+
+interface TestRow {
+  id: string;
+  name: string;
+  status: string;
+}
+
+const columns: ColumnDefinition<TestRow>[] = [
+  { id: 'name', header: 'Name', accessorFn: (row) => row.name },
+  { id: 'status', header: 'Status', accessorFn: (row) => row.status },
+  { id: 'id', header: 'ID', accessorFn: (row) => row.id },
+];
+
+describe('useColumnState', () => {
+  let mockSetValue: jest.Mock;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockSetValue = jest.fn();
+    // Default: no persisted state
+    mockUseLocalStorage.mockReturnValue([undefined, mockSetValue, jest.fn()]);
+  });
+
+  describe('default state derivation', () => {
+    it('derives visibleColumns from column definitions when no persisted state exists', () => {
+      const { result } = renderHook(() => useColumnState('test-key', columns));
+
+      expect(result.current.columnState.visibleColumns).toEqual(['name', 'status', 'id']);
+    });
+
+    it('derives columnOrder from column definitions when no persisted state exists', () => {
+      const { result } = renderHook(() => useColumnState('test-key', columns));
+
+      expect(result.current.columnState.columnOrder).toEqual(['name', 'status', 'id']);
+    });
+
+    it('derives default state with no sort', () => {
+      const { result } = renderHook(() => useColumnState('test-key', columns));
+
+      expect(result.current.columnState.sortColumn).toBeUndefined();
+      expect(result.current.columnState.sortDirection).toBeUndefined();
+    });
+  });
+
+  describe('persistence round-trip', () => {
+    it('calls useLocalStorage with the provided key', () => {
+      renderHook(() => useColumnState('my-table-key', columns));
+
+      expect(mockUseLocalStorage).toHaveBeenCalledWith('my-table-key', expect.any(Object));
+    });
+
+    it('persists state via setColumnState', () => {
+      const { result } = renderHook(() => useColumnState('test-key', columns));
+
+      act(() => {
+        result.current.setColumnState({
+          visibleColumns: ['name', 'status'],
+          columnOrder: ['name', 'status', 'id'],
+          sortColumn: 'name',
+          sortDirection: 'asc',
+        });
+      });
+
+      expect(mockSetValue).toHaveBeenCalledWith({
+        visibleColumns: ['name', 'status'],
+        columnOrder: ['name', 'status', 'id'],
+        sortColumn: 'name',
+        sortDirection: 'asc',
+      });
+    });
+
+    it('returns persisted state when available', () => {
+      const persisted = {
+        visibleColumns: ['status', 'name', 'id'],
+        columnOrder: ['status', 'name', 'id'],
+        sortColumn: 'status',
+        sortDirection: 'desc' as const,
+      };
+      mockUseLocalStorage.mockReturnValue([persisted, mockSetValue, jest.fn()]);
+
+      const { result } = renderHook(() => useColumnState('test-key', columns));
+
+      expect(result.current.columnState.visibleColumns).toEqual(['status', 'name', 'id']);
+      expect(result.current.columnState.sortColumn).toBe('status');
+      expect(result.current.columnState.sortDirection).toBe('desc');
+    });
+  });
+
+  describe('schema migration: removed columns', () => {
+    it('removes column IDs from persisted state that no longer exist in definitions', () => {
+      const persisted = {
+        visibleColumns: ['name', 'deleted-col', 'status', 'id'],
+        columnOrder: ['name', 'deleted-col', 'status', 'id'],
+      };
+      mockUseLocalStorage.mockReturnValue([persisted, mockSetValue, jest.fn()]);
+
+      const { result } = renderHook(() => useColumnState('test-key', columns));
+
+      expect(result.current.columnState.visibleColumns).toEqual(['name', 'status', 'id']);
+      expect(result.current.columnState.visibleColumns).not.toContain('deleted-col');
+      expect(result.current.columnState.columnOrder).not.toContain('deleted-col');
+    });
+
+    it('clears sortColumn if the sorted column was removed', () => {
+      const persisted = {
+        visibleColumns: ['name', 'status', 'id'],
+        columnOrder: ['name', 'status', 'id'],
+        sortColumn: 'deleted-col',
+        sortDirection: 'asc' as const,
+      };
+      mockUseLocalStorage.mockReturnValue([persisted, mockSetValue, jest.fn()]);
+
+      const { result } = renderHook(() => useColumnState('test-key', columns));
+
+      expect(result.current.columnState.sortColumn).toBeUndefined();
+      expect(result.current.columnState.sortDirection).toBeUndefined();
+    });
+  });
+
+  describe('schema migration: added columns', () => {
+    it('inserts new columns at definition-relative position', () => {
+      // Only 'name' was known; 'status' and 'id' are new
+      const persisted = {
+        visibleColumns: ['name'],
+        columnOrder: ['name'],
+      };
+      mockUseLocalStorage.mockReturnValue([persisted, mockSetValue, jest.fn()]);
+
+      const { result } = renderHook(() => useColumnState('test-key', columns));
+
+      // 'status' comes after 'name' in definitions, 'id' comes after 'status'
+      expect(result.current.columnState.visibleColumns).toContain('status');
+      expect(result.current.columnState.visibleColumns).toContain('id');
+      expect(result.current.columnState.columnOrder).toEqual(['name', 'status', 'id']);
+    });
+
+    it('should not re-add intentionally hidden columns during migration', () => {
+      // 'status' was known but intentionally hidden by the user
+      const persisted = {
+        visibleColumns: ['name', 'id'],
+        columnOrder: ['name', 'status', 'id'],
+      };
+      mockUseLocalStorage.mockReturnValue([persisted, mockSetValue, jest.fn()]);
+
+      const { result } = renderHook(() => useColumnState('test-key', columns));
+
+      expect(result.current.columnState.visibleColumns).toEqual(['name', 'id']);
+      expect(result.current.columnState.visibleColumns).not.toContain('status');
+      // columnOrder still contains all columns including hidden ones
+      expect(result.current.columnState.columnOrder).toContain('status');
+    });
+
+    it('should add genuinely new columns during migration', () => {
+      // 'status' was not known at all — it's a genuinely new column
+      const persisted = {
+        visibleColumns: ['name', 'id'],
+        columnOrder: ['name', 'id'],
+      };
+      mockUseLocalStorage.mockReturnValue([persisted, mockSetValue, jest.fn()]);
+
+      const { result } = renderHook(() => useColumnState('test-key', columns));
+
+      // 'status' is new and should be visible
+      expect(result.current.columnState.visibleColumns).toContain('status');
+      // 'status' should be inserted between 'name' and 'id' (its definition position)
+      expect(result.current.columnState.columnOrder).toEqual(['name', 'status', 'id']);
+    });
+
+    it('inserts new column at the beginning when no predecessor exists', () => {
+      // Only 'id' was known; 'name' and 'status' are new and come before 'id' in definitions
+      const persisted = {
+        visibleColumns: ['id'],
+        columnOrder: ['id'],
+      };
+      mockUseLocalStorage.mockReturnValue([persisted, mockSetValue, jest.fn()]);
+
+      const { result } = renderHook(() => useColumnState('test-key', columns));
+
+      // 'name' has no predecessor in existing order → inserted at start
+      // 'status' has 'name' as predecessor → inserted after 'name'
+      expect(result.current.columnState.columnOrder).toEqual(['name', 'status', 'id']);
+    });
+  });
+
+  describe('ephemeral mode', () => {
+    it('does not persist to localStorage when key is undefined', () => {
+      const { result } = renderHook(() => useColumnState(undefined, columns));
+
+      act(() => {
+        result.current.setColumnState({
+          visibleColumns: ['name'],
+          columnOrder: ['name', 'status', 'id'],
+          sortColumn: 'name',
+          sortDirection: 'desc',
+        });
+      });
+
+      // useLocalStorage is called (Rules of Hooks) but setValue should not be used
+      expect(mockSetValue).not.toHaveBeenCalled();
+    });
+
+    it('does not persist to localStorage when key is empty string', () => {
+      const { result } = renderHook(() => useColumnState('', columns));
+
+      act(() => {
+        result.current.setColumnState({
+          visibleColumns: ['name'],
+          columnOrder: ['name', 'status', 'id'],
+          sortColumn: 'name',
+          sortDirection: 'asc',
+        });
+      });
+
+      expect(mockSetValue).not.toHaveBeenCalled();
+    });
+
+    it('uses React state in ephemeral mode and supports setColumnState', () => {
+      const { result } = renderHook(() => useColumnState(undefined, columns));
+
+      expect(result.current.columnState.visibleColumns).toEqual(['name', 'status', 'id']);
+
+      act(() => {
+        result.current.setColumnState({
+          visibleColumns: ['name'],
+          columnOrder: ['name', 'status', 'id'],
+          sortColumn: 'name',
+          sortDirection: 'desc',
+        });
+      });
+
+      expect(result.current.columnState.visibleColumns).toEqual(['name']);
+      expect(result.current.columnState.sortColumn).toBe('name');
+      expect(result.current.columnState.sortDirection).toBe('desc');
+    });
+  });
+
+  describe('sort state persistence', () => {
+    it('saves sort column and direction', () => {
+      const { result } = renderHook(() => useColumnState('test-key', columns));
+
+      act(() => {
+        result.current.setColumnState({
+          visibleColumns: ['name', 'status', 'id'],
+          columnOrder: ['name', 'status', 'id'],
+          sortColumn: 'name',
+          sortDirection: 'asc',
+        });
+      });
+
+      expect(mockSetValue).toHaveBeenCalledWith(
+        expect.objectContaining({
+          columnOrder: ['name', 'status', 'id'],
+          sortColumn: 'name',
+          sortDirection: 'asc',
+        }),
+      );
+    });
+
+    it('restores persisted sort state', () => {
+      const persisted = {
+        visibleColumns: ['name', 'status', 'id'],
+        columnOrder: ['name', 'status', 'id'],
+        sortColumn: 'status',
+        sortDirection: 'asc' as const,
+      };
+      mockUseLocalStorage.mockReturnValue([persisted, mockSetValue, jest.fn()]);
+
+      const { result } = renderHook(() => useColumnState('test-key', columns));
+
+      expect(result.current.columnState.sortColumn).toBe('status');
+      expect(result.current.columnState.sortDirection).toBe('asc');
+    });
+  });
+
+  describe('column ordering', () => {
+    it('preserves persisted columnOrder', () => {
+      const persisted = {
+        visibleColumns: ['id', 'status', 'name'],
+        columnOrder: ['id', 'status', 'name'],
+      };
+      mockUseLocalStorage.mockReturnValue([persisted, mockSetValue, jest.fn()]);
+
+      const { result } = renderHook(() => useColumnState('test-key', columns));
+
+      expect(result.current.columnState.columnOrder).toEqual(['id', 'status', 'name']);
+      expect(result.current.columnState.visibleColumns).toEqual(['id', 'status', 'name']);
+    });
+
+    it('inserts new columns at definition-relative position in columnOrder', () => {
+      const persisted = {
+        visibleColumns: ['status'],
+        columnOrder: ['status'],
+      };
+      mockUseLocalStorage.mockReturnValue([persisted, mockSetValue, jest.fn()]);
+
+      const { result } = renderHook(() => useColumnState('test-key', columns));
+
+      // 'name' has no predecessor in existing order → inserted at start
+      // 'id' has 'status' as predecessor → inserted after 'status'
+      expect(result.current.columnState.columnOrder).toEqual(['name', 'status', 'id']);
+      // All new columns are visible
+      expect(result.current.columnState.visibleColumns).toEqual(['status', 'name', 'id']);
+    });
+
+    it('re-shown column appears at its original position, not at end', () => {
+      // User had hidden 'status' but it was in columnOrder between name and id
+      const persisted = {
+        visibleColumns: ['name', 'id'],
+        columnOrder: ['name', 'status', 'id'],
+      };
+      mockUseLocalStorage.mockReturnValue([persisted, mockSetValue, jest.fn()]);
+
+      const { result } = renderHook(() => useColumnState('test-key', columns));
+
+      // columnOrder preserves the position of 'status' even though it's hidden
+      expect(result.current.columnState.columnOrder).toEqual(['name', 'status', 'id']);
+    });
+  });
+});

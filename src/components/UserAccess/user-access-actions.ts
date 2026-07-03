@@ -12,7 +12,6 @@ const revokeAccessModalLauncher = (username: string, rb: RoleBinding) =>
   createRawModalLauncher(RevokeAccessModal, {
     'data-test': 'revoke-access-modal',
     title: 'Revoke access?',
-    titleIconVariant: 'warning',
   })({ username, rb });
 
 export const useRBActions = (binding: RoleBinding): Action[] => {

@@ -152,5 +152,4 @@ export const createDeleteModalLauncher = (kind: string) =>
     'data-test': `delete-${kind}-modal`,
     variant: ModalVariant.small,
     title: `Delete ${kind}?`,
-    titleIconVariant: 'warning',
   });
