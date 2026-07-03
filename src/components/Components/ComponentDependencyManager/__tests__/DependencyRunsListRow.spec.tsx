@@ -1,8 +1,13 @@
 import * as React from 'react';
-import { Table, Tbody, Tr } from '@patternfly/react-table';
 import { render, screen } from '@testing-library/react';
+import { Table, TableContainer } from '~/shared/components/TableV2';
 import { PipelineRunKind, PipelineRunStatus } from '~/types';
-import { DependencyRunsListRow } from '../DependencyRunsListRow';
+import { setupVirtualizerMock } from '~/unit-test-utils/mock-virtualizer';
+import { dependencyRunsColumns } from '../dependency-runs-table-config';
+
+jest.mock('@tanstack/react-virtual', () => ({
+  useVirtualizer: jest.fn(),
+}));
 
 jest.mock('react-router-dom', () => ({
   ...jest.requireActual('react-router-dom'),
@@ -18,6 +23,7 @@ const makePipelineRun = (overrides: Partial<PipelineRunKind> = {}): PipelineRunK
     name: 'test-dependency-run',
     namespace: 'test-ns',
     creationTimestamp: '2023-01-01T00:00:00Z',
+    uid: 'test-uid',
   },
   spec: {},
   status: {
@@ -28,32 +34,37 @@ const makePipelineRun = (overrides: Partial<PipelineRunKind> = {}): PipelineRunK
   ...overrides,
 });
 
-const renderRow = (obj: PipelineRunKind) =>
+const renderTable = (data: PipelineRunKind[]) =>
   render(
-    <Table>
-      <Tbody>
-        <Tr>
-          <DependencyRunsListRow obj={obj} />
-        </Tr>
-      </Tbody>
-    </Table>,
+    <TableContainer data={data} unfilteredData={data} loaded={true}>
+      <Table
+        data={data}
+        columns={dependencyRunsColumns}
+        getRowId={(row) => row.metadata?.uid ?? row.metadata?.name ?? ''}
+        aria-label="Dependency run list"
+      />
+    </TableContainer>,
   );
 
-describe('DependencyRunsListRow', () => {
+describe('Dependency runs column renderers', () => {
+  beforeEach(() => {
+    setupVirtualizerMock();
+  });
+
   it('renders the pipeline run name', () => {
-    renderRow(makePipelineRun());
+    renderTable([makePipelineRun()]);
     expect(screen.getByTestId('dependency-run-name')).toBeInTheDocument();
     expect(screen.getByTestId('dependency-run-name').textContent).toContain('test-dependency-run');
   });
 
   it('renders the status cell', () => {
-    renderRow(makePipelineRun());
+    renderTable([makePipelineRun()]);
     expect(screen.getByTestId('dependency-run-status')).toBeInTheDocument();
     expect(screen.getByTestId('dependency-run-status')).toHaveTextContent('Succeeded');
   });
 
   it('renders started timestamp when startTime is present', () => {
-    renderRow(makePipelineRun());
+    renderTable([makePipelineRun()]);
     expect(screen.getByTestId('dependency-run-started')).toBeInTheDocument();
   });
 
@@ -65,7 +76,7 @@ describe('DependencyRunsListRow', () => {
         completionTime: '2023-01-01T00:05:00Z',
       } as PipelineRunStatus,
     });
-    renderRow(run);
+    renderTable([run]);
     const durationCell = screen.getByTestId('dependency-run-duration');
     expect(durationCell).toBeInTheDocument();
     expect(durationCell.textContent).not.toBe('-');
@@ -77,7 +88,7 @@ describe('DependencyRunsListRow', () => {
         conditions: [{ status: 'Unknown', type: 'Succeeded', reason: 'PipelineRunPending' }],
       } as PipelineRunStatus,
     });
-    renderRow(run);
+    renderTable([run]);
     expect(screen.getByTestId('dependency-run-duration')).toHaveTextContent('-');
   });
 
@@ -88,7 +99,7 @@ describe('DependencyRunsListRow', () => {
         startTime: '2023-01-01T00:00:00Z',
       } as PipelineRunStatus,
     });
-    renderRow(run);
+    renderTable([run]);
     const durationCell = screen.getByTestId('dependency-run-duration');
     expect(durationCell).toBeInTheDocument();
     expect(durationCell.textContent).not.toBe('-');
@@ -101,7 +112,7 @@ describe('DependencyRunsListRow', () => {
         completionTime: '2023-01-01T00:05:00Z',
       } as PipelineRunStatus,
     });
-    renderRow(run);
+    renderTable([run]);
     expect(screen.getByTestId('dependency-run-started')).toBeInTheDocument();
   });
 
@@ -111,7 +122,7 @@ describe('DependencyRunsListRow', () => {
         conditions: [{ status: 'True', type: 'Succeeded' }],
       } as PipelineRunStatus,
     });
-    renderRow(run);
+    renderTable([run]);
     expect(screen.getByTestId('dependency-run-duration')).toHaveTextContent('-');
   });
 });
