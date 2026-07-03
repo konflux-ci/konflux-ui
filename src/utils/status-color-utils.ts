@@ -34,7 +34,7 @@ export const RUN_STATUS_VISUAL_CONFIG: Record<RunStatus, StatusVisualConfig> = {
   [RunStatus.Succeeded]: { canvas: 'success', label: 'green' },
   [RunStatus.Cancelled]: { canvas: 'warning', label: 'gold' },
   [RunStatus.Skipped]: { canvas: 'skipped', label: null },
-  [RunStatus.Running]: { canvas: 'neutral', label: 'blue' },
+  [RunStatus.Running]: { canvas: 'inProgress', label: 'blue' },
   [RunStatus.InProgress]: { canvas: 'inProgress', label: 'blue' },
   [RunStatus.Pending]: { canvas: 'neutral', label: null },
   [RunStatus.Idle]: { canvas: 'neutral', label: null },

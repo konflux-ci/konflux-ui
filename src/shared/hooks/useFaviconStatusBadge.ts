@@ -3,7 +3,7 @@ import {
   applyFaviconBadge,
   readFaviconHref,
   restoreFaviconHref,
-} from '~/shared/utils/favicon-badge';
+} from '~/shared/utils';
 
 /**
  * Updates the browser tab favicon with a colored status badge overlay.

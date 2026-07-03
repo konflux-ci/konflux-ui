@@ -18,7 +18,7 @@ describe('getStatusColor', () => {
     [runStatus.Failed, STATUS_COLOR.danger],
     [runStatus.FailedToStart, STATUS_COLOR.danger],
     [runStatus.TestFailed, STATUS_COLOR.warning],
-    [runStatus.Running, STATUS_COLOR.neutral],
+    [runStatus.Running, STATUS_COLOR.inProgress],
     [runStatus.Pending, STATUS_COLOR.neutral],
     [runStatus['In Progress'], STATUS_COLOR.inProgress],
     [runStatus.Cancelled, STATUS_COLOR.warning],
