@@ -40,6 +40,8 @@ describe('getLabelColorFromStatus', () => {
     expect(getLabelColorFromStatus(runStatus.Pending)).toBeNull();
     expect(getLabelColorFromStatus(runStatus.Skipped)).toBeNull();
     expect(getLabelColorFromStatus(runStatus.PipelineNotStarted)).toBeNull();
+    expect(getLabelColorFromStatus(runStatus.TestFailed)).toBeNull();
+    expect(getLabelColorFromStatus(runStatus.TestWarning)).toBeNull();
   });
 
   it('returns green for success', () => {

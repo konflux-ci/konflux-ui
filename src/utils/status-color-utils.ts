@@ -46,5 +46,9 @@ const getVisualConfig = (status: runStatus): StatusVisualConfig =>
 export const getStatusColor = (status: runStatus): string =>
   STATUS_COLOR[getVisualConfig(status).canvas];
 
-export const getLabelColorFromStatus = (status: runStatus): LabelColor | null =>
-  getVisualConfig(status).label;
+export const getLabelColorFromStatus = (status: runStatus): LabelColor | null => {
+  if (status === runStatus.TestFailed || status === runStatus.TestWarning) {
+    return null;
+  }
+  return getVisualConfig(status).label;
+};
