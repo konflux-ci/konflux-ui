@@ -364,6 +364,41 @@ describe('useTaskRunsV2', () => {
       expect(nextPageProps.hasNextPage).toBe(true);
       expect(nextPageProps.isFetchingNextPage).toBe(false);
     });
+
+    it('should only refetch cluster data when kubearchive is disabled', async () => {
+      const mockClusterRefetch = jest.fn().mockResolvedValue({ data: [] });
+      const mockArchiveRefetch = jest.fn().mockResolvedValue({ data: { pages: [] } });
+
+      useK8sWatchResourceMock.mockReturnValue({
+        data: [mockTaskRun1],
+        isLoading: false,
+        error: null,
+        refetch: mockClusterRefetch,
+      });
+
+      // @ts-expect-error - Mocking partial infinite query result for testing
+      mockUseKubearchiveListResourceQuery.mockReturnValue({
+        data: { pages: [], pageParams: [] },
+        isLoading: false,
+        error: null,
+        hasNextPage: false,
+        isFetchingNextPage: false,
+        fetchNextPage: jest.fn(),
+        refetch: mockArchiveRefetch,
+      });
+
+      const { result } = renderHookWithQueryClient('default');
+
+      await waitFor(() => {
+        expect(result.current[1]).toBe(true);
+      });
+
+      const [, , , , , watchMeta] = result.current;
+      await watchMeta.refetch();
+
+      expect(mockClusterRefetch).toHaveBeenCalledTimes(1);
+      expect(mockArchiveRefetch).not.toHaveBeenCalled();
+    });
   });
 
   describe('when using KubeArchive (feature flag enabled)', () => {
@@ -640,6 +675,44 @@ describe('useTaskRunsV2', () => {
 
       // Should be loading when either source is loading
       expect(result.current[1]).toBe(false); // not loaded
+    });
+
+    it('should refetch both cluster and archive data when refetch is called', async () => {
+      const mockClusterRefetch = jest.fn().mockResolvedValue({ data: [] });
+      const mockArchiveRefetch = jest.fn().mockResolvedValue({ data: { pages: [] } });
+
+      useK8sWatchResourceMock.mockReturnValue({
+        data: [mockTaskRun1],
+        isLoading: false,
+        error: null,
+        refetch: mockClusterRefetch,
+      });
+
+      // @ts-expect-error - Mocking partial infinite query result for testing
+      mockUseKubearchiveListResourceQuery.mockReturnValue({
+        data: {
+          pages: [[mockTaskRun2]],
+          pageParams: [],
+        },
+        isLoading: false,
+        error: null,
+        hasNextPage: false,
+        isFetchingNextPage: false,
+        fetchNextPage: jest.fn(),
+        refetch: mockArchiveRefetch,
+      });
+
+      const { result } = renderHookWithQueryClient('default');
+
+      await waitFor(() => {
+        expect(result.current[1]).toBe(true);
+      });
+
+      const [, , , , , watchMeta] = result.current;
+      await watchMeta.refetch();
+
+      expect(mockClusterRefetch).toHaveBeenCalledTimes(1);
+      expect(mockArchiveRefetch).toHaveBeenCalledTimes(1);
     });
   });
 

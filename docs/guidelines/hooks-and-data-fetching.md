@@ -14,8 +14,10 @@ useK8sWatchResource<R extends K8sResourceCommon | K8sResourceCommon[]>(
   model: K8sModelCommon,
   queryOptions?: TQueryOptions<R>,
   options?: object,
-): UseQueryResult<R>
+): K8sWatchResult<R>
 ```
+
+`K8sWatchResult<R>` is defined in `src/k8s/hooks/useK8sWatchResource.ts` as `UseQueryResult<R>` plus watch-specific fields.
 
 ### Data Flow
 
@@ -29,10 +31,14 @@ Component
 
 ### Return Value
 
-Returns a React Query `UseQueryResult<R>`:
+Returns a `K8sWatchResult<R>` (see `src/k8s/hooks/useK8sWatchResource.ts`), which extends React Query's `UseQueryResult<R>` with:
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `isWatchDegraded` | `boolean` | `true` when the WebSocket connection degraded to polling after max retries |
 
 ```ts
-const { data, isLoading, error } = useK8sWatchResource<MyKind[]>(
+const { data, isLoading, error, isWatchDegraded } = useK8sWatchResource<MyKind[]>(
   { groupVersionKind, namespace, isList: true },
   MyModel,
 );

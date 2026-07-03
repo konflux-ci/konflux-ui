@@ -59,7 +59,7 @@ export type ConformaResult = {
   components: ComponentConformaResult[];
 };
 
-export type UIConformaData = {
+export type ConformaResultRow = {
   title: string;
   description: string;
   status: CONFORMA_RESULT_STATUS;
@@ -78,8 +78,6 @@ export type UIConformaData = {
   code?: string;
 };
 
-export type ConformaResultRow = UIConformaData;
-
 export type ComponentConformaStatus = {
   componentName: string;
   status: 'pass' | 'warning' | 'fail' | 'unknown';
@@ -89,12 +87,26 @@ export type ComponentConformaStatus = {
   pipelineRunName?: string;
 };
 
+export type ConformaRefreshState = {
+  /** React Query dataUpdatedAt timestamp in ms epoch; 0 when not yet fetched. */
+  lastFetchedAt: number;
+  /** True while the TaskRun list query is actively re-fetching. */
+  isRefreshing: boolean;
+  /** True when the WebSocket connection has degraded to polling after retries. */
+  hasLiveUpdatesPaused: boolean;
+  /** Invalidates the TaskRun list query; log queries are unaffected. */
+  onRefresh: () => void;
+};
+
 export type ApplicationConformaResults = {
   componentStatuses: ComponentConformaStatus[];
   allResults: ConformaResultRow[];
   totalComponents: number;
   totalFailed: number;
   loaded: boolean;
-  settling: boolean;
+  /** Fatal errors that prevent the tab from loading (components or TaskRun list). */
   error: unknown;
+  /** Non-fatal log fetch failures for one or more components; results may still be partial. */
+  partialLogError?: unknown;
+  refresh: ConformaRefreshState;
 };
