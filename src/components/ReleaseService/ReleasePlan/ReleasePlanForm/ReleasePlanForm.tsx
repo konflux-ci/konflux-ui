@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Form, PageSection } from '@patternfly/react-core';
 import { FormikProps, useField } from 'formik';
 import isEmpty from 'lodash-es/isEmpty';
-import { InputField, SwitchField } from '~/shared/components/formik';
+import { InputField, SwitchField } from '~/shared/components/formik-base';
 import HelpPopover from '../../../../components/HelpPopover';
 import PageLayout from '../../../../components/PageLayout/PageLayout';
 import { ApplicationDropdown } from '../../../../components/Secrets/SecretsForm/ApplicationDropdown';

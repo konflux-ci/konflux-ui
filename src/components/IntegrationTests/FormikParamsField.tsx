@@ -23,7 +23,7 @@ import {
 import { MinusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/minus-circle-icon';
 import { PlusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/plus-circle-icon';
 import { FieldArray, useField } from 'formik';
-import { InputField } from '~/shared/components/formik';
+import { InputField } from '~/shared/components/formik-base';
 import { Param } from '../../types/coreBuildService';
 
 interface IntegrationTestParamsProps {

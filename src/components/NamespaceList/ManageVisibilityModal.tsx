@@ -11,7 +11,7 @@ import {
 import { Formik } from 'formik';
 import { useK8sWatchResource } from '~/k8s';
 import { RoleBindingGroupVersionKind, RoleBindingModel } from '~/models';
-import { RadioGroupField } from '~/shared/components/formik';
+import { RadioGroupField } from '~/shared/components/formik-base';
 import { invalidateNamespaceQuery } from '~/shared/providers/Namespace/utils';
 import { NamespaceKind, RoleBinding } from '~/types';
 import {

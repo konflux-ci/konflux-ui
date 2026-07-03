@@ -34,8 +34,12 @@ import { Flex, FlexItem, Title, Button } from '@patternfly/react-core';
 
 const Header = () => (
   <Flex justifyContent={{ default: 'justifyContentSpaceBetween' }}>
-    <FlexItem><Title headingLevel="h1">Applications</Title></FlexItem>
-    <FlexItem><Button variant="primary">Create</Button></FlexItem>
+    <FlexItem>
+      <Title headingLevel="h1">Applications</Title>
+    </FlexItem>
+    <FlexItem>
+      <Button variant="primary">Create</Button>
+    </FlexItem>
   </Flex>
 );
 
@@ -50,15 +54,15 @@ const Header = () => (
 
 Use PatternFly layout components for their intended purpose:
 
-| Component | Use Case |
-|---|---|
-| `Flex` / `FlexItem` | Most layouts (row or column) |
-| `Stack` / `StackItem` | Vertical stacking |
-| `Split` / `SplitItem` | Two-column side-by-side |
-| `Grid` / `GridItem` | Responsive grid layouts |
-| `Gallery` / `GalleryItem` | Card grids |
-| `Bullseye` | Centering content |
-| `Level` / `LevelItem` | Horizontal alignment |
+| Component                 | Use Case                     |
+| ------------------------- | ---------------------------- |
+| `Flex` / `FlexItem`       | Most layouts (row or column) |
+| `Stack` / `StackItem`     | Vertical stacking            |
+| `Split` / `SplitItem`     | Two-column side-by-side      |
+| `Grid` / `GridItem`       | Responsive grid layouts      |
+| `Gallery` / `GalleryItem` | Card grids                   |
+| `Bullseye`                | Centering content            |
+| `Level` / `LevelItem`     | Horizontal alignment         |
 
 Use PatternFly design tokens (CSS custom properties) for spacing, color, and borders -- never hardcode values:
 
@@ -155,6 +159,7 @@ Exception: when the child genuinely needs most of the object's fields, passing t
 ### Decomposition Signals
 
 Split a component when:
+
 - It exceeds ~200 lines.
 - It has multiple `useEffect` calls serving different purposes.
 - It renders conditionally based on more than two states.
@@ -185,11 +190,13 @@ const filteredApps = useMemo(
 ### useMemo
 
 Use `useMemo` when:
+
 - Computing a value from a large array (filtering, sorting, transforming).
 - The result is passed as a prop to a memoized child or used in a dependency array.
 - Creating a new object/array reference that would trigger unnecessary re-renders.
 
 Do not use `useMemo` for:
+
 - Simple property access or trivial expressions.
 - String concatenation or basic arithmetic.
 
@@ -214,9 +221,12 @@ Use `useCallback` only when reference stability matters:
 
 ```tsx
 // GOOD -- passed to memoized child
-const handleDelete = useCallback((id: string) => {
-  deleteApplication(id);
-}, [deleteApplication]);
+const handleDelete = useCallback(
+  (id: string) => {
+    deleteApplication(id);
+  },
+  [deleteApplication],
+);
 
 return <MemoizedDeleteButton onDelete={handleDelete} />;
 
@@ -249,11 +259,11 @@ When a variable (object, array, function) is created inline and passed as a prop
 
 ```tsx
 // BAD -- new object every render
-<Table columns={[{ title: 'Name' }, { title: 'Status' }]} />
+<Table columns={[{ title: 'Name' }, { title: 'Status' }]} />;
 
 // GOOD -- stable reference
 const columns = useMemo(() => [{ title: 'Name' }, { title: 'Status' }], []);
-<Table columns={columns} />
+<Table columns={columns} />;
 ```
 
 ---
@@ -263,6 +273,7 @@ const columns = useMemo(() => [{ title: 'Name' }, { title: 'Status' }], []);
 ### When to Create a Custom Hook
 
 Create a custom hook when:
+
 - Logic involves multiple hooks that are tightly coupled (e.g., a `useK8sWatchResource` + filtering + error handling).
 - The same hook combination is repeated in 2+ components.
 - A component's hook section exceeds ~15 lines.
@@ -375,13 +386,13 @@ interface Props {
 
 This project uses four state management approaches. Choose the right one:
 
-| Approach | Use When |
-|---|---|
-| `useK8sWatchResource` (via `@tanstack/react-query` + WebSocket) | Fetching and watching Kubernetes resources |
-| `@tanstack/react-query` (direct) | Non-K8s async data (tekton results, external APIs) |
-| Zustand | Client-side global state (feature flags) |
-| React Context | Scoped provider state (namespace, auth, filter context) |
-| `useLocalStorage` hook (`~/shared/hooks/useLocalStorage`) | Persisting user preferences across sessions |
+| Approach                                                        | Use When                                                |
+| --------------------------------------------------------------- | ------------------------------------------------------- |
+| `useK8sWatchResource` (via `@tanstack/react-query` + WebSocket) | Fetching and watching Kubernetes resources              |
+| `@tanstack/react-query` (direct)                                | Non-K8s async data (tekton results, external APIs)      |
+| Zustand                                                         | Client-side global state (feature flags)                |
+| React Context                                                   | Scoped provider state (namespace, auth, filter context) |
+| `useLocalStorage` hook (`~/shared/hooks/useLocalStorage`)       | Persisting user preferences across sessions             |
 
 Do not use `useState` for server data. Do not use `localStorage` directly -- use the `useLocalStorage` hook from `~/shared/hooks/useLocalStorage`.
 
@@ -394,7 +405,7 @@ This project uses Formik with Yup validation. Follow these patterns:
 - Wrap forms with `<Formik<FormValues>>` and define a typed `initialValues`.
 - Use `useFormikContext<FormValues>()` in child components to access form state.
 - Define validation schemas with Yup in a separate file or co-located constant.
-- Use formik components from `~/shared/components/formik/` for PatternFly integration.
+- Use formik components from `~/shared/components/formik-base/` for PatternFly integration.
 
 ---
 

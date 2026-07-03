@@ -4,7 +4,7 @@ import { useField, useFormikContext } from 'formik';
 import GitUrlParse from 'git-url-parse';
 import { kebabCase } from 'lodash-es';
 import { v4 as uuidv4 } from 'uuid';
-import { InputField, SwitchField } from '~/shared/components/formik';
+import { InputField, SwitchField } from '~/shared/components/formik-base';
 import { detectGitType, GitProvider } from '../../../shared/utils/git-utils';
 import { GIT_PROVIDER_ANNOTATION_VALUE } from '../../../utils/component-utils';
 import { ImportFormValues } from '../type';

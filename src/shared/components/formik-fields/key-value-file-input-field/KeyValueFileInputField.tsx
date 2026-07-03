@@ -4,7 +4,7 @@ import { MinusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/minus-ci
 import { PlusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/plus-circle-icon';
 import { FieldArray, FormikValues, useField, useFormikContext } from 'formik';
 import { get, uniqueId } from 'lodash-es';
-import { FileUploadField, InputField } from '~/shared/components/formik';
+import { FileUploadField, InputField } from '~/shared/components/formik-base';
 import { FieldProps } from '../field-types';
 import { getFieldId } from '../field-utils';
 import FieldHelperText from '../FieldHelperText';

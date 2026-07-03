@@ -1,7 +1,7 @@
 import React from 'react';
 import { TextInputTypes } from '@patternfly/react-core';
 import { useField } from 'formik';
-import { InputField } from '~/shared/components/formik';
+import { InputField } from '~/shared/components/formik-base';
 import DropdownField from '~/shared/components/formik-fields/DropdownField';
 import { SourceSecretType } from '~/types/secret';
 import EncodedFileUploadField from './EncodedFileUploadField';

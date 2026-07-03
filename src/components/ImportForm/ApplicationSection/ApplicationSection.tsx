@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Flex, FlexItem, FormSection } from '@patternfly/react-core';
 import { useFormikContext } from 'formik';
-import { InputField } from '~/shared/components/formik';
+import { InputField } from '~/shared/components/formik-base';
 import { ImportFormValues } from '../type';
 
 const ApplicationSection: React.FunctionComponent<React.PropsWithChildren<unknown>> = () => {

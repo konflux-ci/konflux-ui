@@ -4,7 +4,7 @@ import { useField } from 'formik';
 import { Base64 } from 'js-base64';
 import attempt from 'lodash-es/attempt';
 import isError from 'lodash-es/isError';
-import { FileUploadField } from '~/shared/components/formik';
+import { FileUploadField } from '~/shared/components/formik-base';
 
 type EncodedFileUploadFieldProps = {
   id: string;

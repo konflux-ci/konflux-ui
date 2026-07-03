@@ -1,4 +1,4 @@
-import React, { FormEvent } from 'react';
+import React from 'react';
 import { FormGroup } from '@patternfly/react-core';
 import { useField } from 'formik';
 import FieldHelperText from '../FieldHelperText';
@@ -30,9 +30,9 @@ const BaseToggleField: React.FC<
         isChecked: field.checked,
         isValid,
         'aria-describedby': helperText ? `${fieldId}-helper` : undefined,
-        onChange: (event, val) => {
+        onChange: (event: React.FormEvent<HTMLInputElement>, val: boolean) => {
           field.onChange(event);
-          onChange && onChange(val as FormEvent<HTMLDivElement>);
+          onChange?.(val);
         },
       })}
       <FieldHelperText isValid={isValid} errorMessage={errorMessage} helpText={helperText} />

@@ -11,7 +11,7 @@ import {
 } from '@patternfly/react-core';
 import { useFormikContext } from 'formik';
 import { isEmpty } from 'lodash-es';
-import { InputField } from '~/shared/components/formik';
+import { InputField } from '~/shared/components/formik-base';
 import StatusDropdown from './StatusDropdown';
 import UploadDate from './UploadDate';
 

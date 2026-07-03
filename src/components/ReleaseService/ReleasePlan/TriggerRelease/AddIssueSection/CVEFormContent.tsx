@@ -14,7 +14,7 @@ import { MinusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/minus-ci
 import { PlusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/plus-circle-icon';
 import { FieldArray, useField, useFormikContext } from 'formik';
 import { isEmpty } from 'lodash-es';
-import { InputField } from '~/shared/components/formik';
+import { InputField } from '~/shared/components/formik-base';
 import { CVE } from '../../../../../types/coreBuildService';
 import { CVEComponentDropDown } from './CVEComponentDropDown';
 
