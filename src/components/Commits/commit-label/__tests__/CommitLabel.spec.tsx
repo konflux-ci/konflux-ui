@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { render } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import { renderWithQueryClientAndRouter } from '~/unit-test-utils/rendering-utils';
 import { GitProvider } from '../../../../shared/utils/git-utils';
 import CommitLabel from '../CommitLabel';
 
@@ -63,5 +64,13 @@ describe('CommitLabel', () => {
     expect(label.queryByTestId(`git-hub-icon`)).not.toBeInTheDocument();
     expect(label.queryByTestId(`git-lab-icon`)).not.toBeInTheDocument();
     expect(label.queryByTestId(`bit-bucket-icon`)).not.toBeInTheDocument();
+  });
+
+  it('should render non-clickable label when shaURL is missing', () => {
+    const label = renderWithQueryClientAndRouter(
+      <CommitLabel gitProvider={GitProvider.GITLAB} sha={sha} shaURL={undefined} />,
+    );
+    expect(label.queryByRole('link')).not.toBeInTheDocument();
+    expect(label.getByTestId('commit-label-9135b3a')).toBeInTheDocument();
   });
 });
