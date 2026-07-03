@@ -25,6 +25,8 @@ One-command setup: `yarn setup` or `./setup.sh` (checks Node.js >= 24, enables C
 - `lodash` -> use `lodash-es/<funcName>` (jest maps `lodash-es` to `lodash` automatically)
 - No `console.*` -> use `logger` from `~/monitoring/logger`
 - No snapshot tests; test ID attribute is `data-test` (not `data-testid`)
+- New list/table views **must** use `TableV2` from `~/shared/components/TableV2` (see `docs/guidelines/table-v2.md`). Do not inline PatternFly table primitives (`Table`, `Thead`, `Tbody`, `Tr`, `Td`) directly. If TableV2 lacks a needed capability (e.g., row selection), extend it rather than building a bespoke table.
+- Prefer shared utilities over inline reimplementations -- e.g., use `textMatch` / `filterByText` from `~/utils/text-filter-utils` for case-insensitive string filtering instead of hand-rolling `.toLowerCase().includes()`.
 - `noUnusedLocals` and `noUnusedParameters` enforced -- prefix unused params with `_`
 - Never add `Co-Authored-By` to commit messages; use `Assisted-by: Claude` trailer instead
 

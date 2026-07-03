@@ -625,3 +625,11 @@ const MyListView = () => {
 3. **PF Table `role`:** PatternFly's composable `Table` component renders `role="grid"`, not `role="table"`. This is intentional for accessibility with interactive cells.
 
 4. **Bounded-height scroll container:** Virtualization requires the table's parent to have a bounded height (e.g., `height: 100%`, `minHeight: 0` in a flex context). Without it, the virtualizer cannot calculate visible rows and all rows will render.
+
+## Known Gaps / Planned Features
+
+The following capabilities are **not yet supported** by TableV2. If your view requires one of these, extend `TableV2` with the capability rather than building a bespoke table with inline PatternFly primitives.
+
+| Capability | Status | Tracking |
+|---|---|---|
+| Row selection (single & multi-select with `Set<string>` state) | Not yet implemented | KFLUXUI-1346 |
