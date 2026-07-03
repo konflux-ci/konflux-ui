@@ -480,7 +480,7 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
       title="Release Monitor"
       description="The dashboard to monitor the releases you care about"
     >
-      <PageSection hasBodyWrapper={false} isFilled={false}>
+      <PageSection isFilled={false}>
         {/* Fetch Releases and ReleasePlans from origin namespaces */}
         {loaded &&
           namespacesToFetch.map((nsName) => (
