@@ -9,7 +9,7 @@ import {
   Tooltip,
 } from '@patternfly/react-core';
 import { MinusCircleIcon, GripVerticalIcon } from '@patternfly/react-icons/dist/esm/icons';
-import { InputField } from 'formik-pf';
+import { InputField } from '~/shared/components/formik';
 import {
   TextColumnItemProps,
   TextColumnFieldChildParameterProps,

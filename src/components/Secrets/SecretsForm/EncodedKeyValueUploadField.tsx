@@ -8,8 +8,8 @@ import {
 import { MinusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/minus-circle-icon';
 import { PlusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/plus-circle-icon';
 import { FieldArray, useField } from 'formik';
-import { InputField } from 'formik-pf';
 import { uniqueId } from 'lodash-es';
+import { InputField } from '~/shared/components/formik';
 import { FieldProps } from '../../../shared/components/formik-fields/field-types';
 import { KeyValueEntry } from '../../../types';
 import EncodedFileUploadField from './EncodedFileUploadField';

@@ -9,9 +9,9 @@ import {
   ButtonVariant,
 } from '@patternfly/react-core';
 import { Formik } from 'formik';
-import { RadioGroupField } from 'formik-pf';
 import { useK8sWatchResource } from '~/k8s';
 import { RoleBindingGroupVersionKind, RoleBindingModel } from '~/models';
+import { RadioGroupField } from '~/shared/components/formik';
 import { invalidateNamespaceQuery } from '~/shared/providers/Namespace/utils';
 import { NamespaceKind, RoleBinding } from '~/types';
 import {

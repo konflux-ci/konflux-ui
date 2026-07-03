@@ -13,8 +13,8 @@ import {
 import { MinusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/minus-circle-icon';
 import { PlusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/plus-circle-icon';
 import { FieldArray, useField, useFormikContext } from 'formik';
-import { InputField } from 'formik-pf';
 import { isEmpty } from 'lodash-es';
+import { InputField } from '~/shared/components/formik';
 import { CVE } from '../../../../../types/coreBuildService';
 import { CVEComponentDropDown } from './CVEComponentDropDown';
 
@@ -93,7 +93,7 @@ const CVEFormContent: React.FC<CVEFormContentProps> = ({ modalToggle }) => {
             isLoading={isSubmitting}
             data-test="add-cve-btn"
             onClick={(e) => {
-              e.preventDefault(), handleSubmit();
+              (e.preventDefault(), handleSubmit());
               modalToggle();
             }}
           >
@@ -104,7 +104,7 @@ const CVEFormContent: React.FC<CVEFormContentProps> = ({ modalToggle }) => {
             variant={ButtonVariant.link}
             className="pf-v6-u-ml-sm"
             onClick={(e) => {
-              e.preventDefault(), modalToggle();
+              (e.preventDefault(), modalToggle());
             }}
           >
             Close

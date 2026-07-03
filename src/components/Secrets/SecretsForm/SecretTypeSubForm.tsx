@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useField, useFormikContext } from 'formik';
-import { InputField } from 'formik-pf';
 import { SecretLinkOptionLabels } from '~/consts/secrets';
+import { InputField } from '~/shared/components/formik';
 import {
   getSupportedPartnerTaskKeyValuePairs,
   getSupportedPartnerTaskSecrets,

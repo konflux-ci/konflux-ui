@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { ExpandableSection, FormSection, List, ListItem } from '@patternfly/react-core';
 import { useField } from 'formik';
-import { InputField, RadioGroupField, TextAreaField } from 'formik-pf';
+import { InputField, RadioGroupField, TextAreaField } from '~/shared/components/formik';
 import HelpPopover from '../../../../components/HelpPopover';
 import { useNamespace } from '../../../../shared/providers/Namespace';
 import FormikParamsField from '../../../IntegrationTests/FormikParamsField';

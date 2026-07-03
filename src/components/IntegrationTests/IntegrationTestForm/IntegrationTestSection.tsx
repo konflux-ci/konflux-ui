@@ -1,10 +1,10 @@
 import * as React from 'react';
 import { FormSection, Content, ContentVariants, ValidatedOptions } from '@patternfly/react-core';
 import { useField } from 'formik';
-import { CheckboxField, InputField, RadioGroupField } from 'formik-pf';
 import HelpPopover from '~/components/HelpPopover';
 import { LEARN_MORE_ABOUT_INTEGRATION_TESTS } from '~/consts/documentation';
 import { ExternalLink } from '~/shared';
+import { InputField, RadioGroupField, CheckboxField } from '~/shared/components/formik';
 import { ResourceKind } from '~/types/coreBuildService';
 import { RESOURCE_NAME_REGEX_MSG } from '../../../utils/validation-utils';
 import ContextsField from '../ContextsField';
