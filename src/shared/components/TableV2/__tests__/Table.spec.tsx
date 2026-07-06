@@ -185,4 +185,30 @@ describe('Table', () => {
 
     expect(computeColumnWidths).toHaveBeenCalledWith(columns, ['name', 'id']);
   });
+
+  describe('row selection', () => {
+    it('passes enableRowSelection and onRowSelectionChange to useTable', () => {
+      const onRowSelectionChange = jest.fn();
+      render(
+        <Table {...defaultProps} enableRowSelection onRowSelectionChange={onRowSelectionChange} />,
+      );
+
+      expect(useTable).toHaveBeenCalledWith(
+        expect.objectContaining({
+          enableRowSelection: true,
+          onRowSelectionChange,
+        }),
+      );
+    });
+
+    it('does not pass enableRowSelection to useTable when omitted', () => {
+      render(<Table {...defaultProps} />);
+
+      expect(useTable).toHaveBeenCalledWith(
+        expect.not.objectContaining({
+          enableRowSelection: true,
+        }),
+      );
+    });
+  });
 });

@@ -20,6 +20,7 @@ const mockUseReactTable = jest.mocked(useReactTable);
 
 const createMockTable = () => ({
   getRowModel: jest.fn().mockReturnValue({ rows: [{ id: '1' }, { id: '2' }] }),
+  getSelectedRowModel: jest.fn().mockReturnValue({ rows: [] }),
   getHeaderGroups: jest.fn().mockReturnValue([]),
   getVisibleLeafColumns: jest.fn().mockReturnValue([]),
   getState: jest.fn().mockReturnValue({}),

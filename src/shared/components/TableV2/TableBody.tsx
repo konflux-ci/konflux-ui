@@ -19,6 +19,8 @@ interface TableBodyProps<TData> {
   getRowId: (row: TData) => string;
   /** Whether rows are expandable. */
   enableExpansion?: boolean;
+  /** Whether rows are selectable. */
+  enableRowSelection?: boolean;
   /** Render function for expanded row content. */
   expandedContent?: (row: TData) => ReactNode;
   /** Number of visible columns, used for `colSpan` on expanded content and loading rows. */
@@ -45,6 +47,7 @@ export const TableBody = <TData,>({
   measureElement,
   getRowId,
   enableExpansion,
+  enableRowSelection,
   expandedContent,
   visibleColumnCount,
   isFetchingNextPage,
@@ -71,6 +74,7 @@ export const TableBody = <TData,>({
               virtualIndex={virtualRow.index}
               measureElement={measureElement}
               enableExpansion={enableExpansion}
+              enableRowSelection={enableRowSelection}
             />
             {enableExpansion && row.getIsExpanded() && expandedContent && (
               <Tr>
