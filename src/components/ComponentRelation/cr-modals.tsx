@@ -55,7 +55,7 @@ export const DefineComponentRelationModal: React.FC<DefineComponentRelationModal
       isOpen={isOpen}
       onClose={onCancel}
       appendTo={appendTo}
-      variant={ModalVariant.medium}
+      variant={ModalVariant.large}
     >
       <ModalHeader
         title="Component relationships"
@@ -75,9 +75,8 @@ export const DefineComponentRelationModal: React.FC<DefineComponentRelationModal
                 <Flex direction={{ default: 'column' }}>
                   {values.relations.map((_, index) => {
                     return (
-                      <>
+                      <React.Fragment key={index}>
                         <ComponentRelation
-                          key={index}
                           componentNames={componentNames}
                           sortedGroupedComponents={sortedGroupedComponents}
                           index={index}
@@ -97,7 +96,7 @@ export const DefineComponentRelationModal: React.FC<DefineComponentRelationModal
                           }}
                         />
                         {index !== values.relations.length - 1 ? <Divider /> : null}
-                      </>
+                      </React.Fragment>
                     );
                   })}
                   <FlexItem>
