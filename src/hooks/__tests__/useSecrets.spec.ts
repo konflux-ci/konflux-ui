@@ -1,4 +1,6 @@
 import { renderHook } from '@testing-library/react';
+import { mockedSecrets } from '~/hooks/__data__/mock-data';
+import { useSecrets } from '~/hooks/useSecrets';
 import { K8S_QUERY_KEY_SECRET_TABLE } from '~/k8s/consts/k8s-accept';
 import { SecretGroupVersionKind, SecretModel } from '~/models';
 import { createK8sWatchResourceMock } from '~/unit-test-utils';
@@ -8,8 +10,6 @@ import {
   selectSecretList,
   type K8sTable,
 } from '~/utils/secrets/secret-table-utils';
-import { mockedSecret, mockedSecrets } from '../__data__/mock-data';
-import { useSecret, useSecrets } from '../useSecrets';
 
 const useK8sWatchResourceMock = createK8sWatchResourceMock();
 
@@ -158,60 +158,5 @@ describe('useSecrets', () => {
         'a036c-image-pull',
       );
     });
-  });
-});
-
-describe('useSecret', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-    useK8sWatchResourceMock.mockReturnValue([mockedSecret, true, undefined]);
-  });
-
-  it('should return secret when loaded', () => {
-    const { result } = renderHook(() => useSecret('test-ns', 'a036c-image-pull'));
-
-    const [secret, loaded, error] = result.current;
-
-    expect(loaded).toBe(true);
-    expect(error).toBeUndefined();
-    expect(secret?.metadata.name).toBe('a036c-image-pull');
-  });
-
-  it('should return undefined while loading', () => {
-    useK8sWatchResourceMock.mockReturnValue({
-      data: undefined,
-      isLoading: true,
-      error: null,
-    });
-
-    const { result } = renderHook(() => useSecret('test-ns', 'a036c-image-pull'));
-
-    expect(result.current).toEqual([undefined, false, null]);
-  });
-
-  it('should return error when API fails', () => {
-    const mockError = new Error('An API error happened');
-    useK8sWatchResourceMock.mockReturnValue({
-      data: undefined,
-      isLoading: false,
-      error: mockError,
-    });
-
-    const { result } = renderHook(() => useSecret('test-ns', 'a036c-image-pull'));
-
-    expect(result.current).toEqual([undefined, true, mockError]);
-  });
-
-  it('should call useK8sWatchResource with namespace and name', () => {
-    renderHook(() => useSecret('test-ns', 'my-secret'));
-
-    expect(useK8sWatchResourceMock).toHaveBeenCalledWith(
-      {
-        groupVersionKind: SecretGroupVersionKind,
-        namespace: 'test-ns',
-        name: 'my-secret',
-      },
-      SecretModel,
-    );
   });
 });

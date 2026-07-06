@@ -45,29 +45,28 @@ export const SensitiveValuesRevealBanner: React.FC<SensitiveValuesRevealBannerPr
   };
 
   return (
-    <div className="pf-v5-u-mb-md">
-      <Alert
-        variant="info"
-        isInline
-        title={title}
-        actionLinks={
-          <AlertActionLink onClick={handleToggle} isDisabled={isLoadingReveal}>
-            {actionLabel}
-          </AlertActionLink>
-        }
-      >
-        {isLoadingReveal ? (
-          <>
-            <Spinner size="sm" className="pf-v5-u-mr-sm" aria-label="Loading secret values" />
-            Loading secret values from the cluster.
-          </>
-        ) : (
-          <>
-            For security, secret values are hidden by default. Click &quot;{actionLabel}&quot; to
-            toggle visibility.
-          </>
-        )}
-      </Alert>
-    </div>
+    <Alert
+      variant="info"
+      isInline
+      title={title}
+      className="pf-v5-u-mb-md"
+      actionLinks={
+        <AlertActionLink onClick={handleToggle} isDisabled={isLoadingReveal}>
+          {actionLabel}
+        </AlertActionLink>
+      }
+    >
+      {isLoadingReveal ? (
+        <>
+          <Spinner size="sm" className="pf-v5-u-mr-sm" aria-label="Loading secret values" />
+          Loading secret values from the cluster.
+        </>
+      ) : (
+        <>
+          For security, secret values are hidden by default. Click &quot;{actionLabel}&quot; to
+          toggle visibility.
+        </>
+      )}
+    </Alert>
   );
 };
