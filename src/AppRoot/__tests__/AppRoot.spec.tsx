@@ -29,6 +29,22 @@ jest.mock('../../shared/providers/Namespace/NamespaceSwitcher', () => ({
   NamespaceSwitcher: jest.fn(() => <div data-test="namespace-switcher" />),
 }));
 
+jest.mock('~/kite/kite-hooks', () => ({
+  useIssues: jest.fn(() => ({
+    data: { data: [], total: 0, limit: 20, offset: 0 },
+    isLoading: false,
+    error: null,
+  })),
+  useInfiniteIssues: jest.fn(() => ({
+    data: undefined,
+    isLoading: false,
+    error: null,
+    fetchNextPage: jest.fn(),
+    hasNextPage: false,
+    isFetchingNextPage: false,
+  })),
+}));
+
 // Mock shared hooks since KonfluxBanner now uses them
 jest.mock('../../shared/hooks', () => ({
   useResizeObserver: jest.fn((callback, element) => {
