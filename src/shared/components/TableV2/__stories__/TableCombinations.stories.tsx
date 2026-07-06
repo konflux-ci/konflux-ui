@@ -1,8 +1,10 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, userEvent, within } from 'storybook/test';
-import { Table } from '~/shared/components/TableV2';
+import { SortDropdown, Table } from '~/shared/components/TableV2';
 import { type PipelineRun, generateMockData, columns, getRowId } from './storyData';
+
+const COLUMN_STATE_KEY = 'storybook-combinations';
 
 const expandedContent = (row: PipelineRun) => (
   <div data-test="expanded-detail">
@@ -10,9 +12,8 @@ const expandedContent = (row: PipelineRun) => (
   </div>
 );
 
-const meta: Meta<typeof Table<PipelineRun>> = {
+const meta: Meta = {
   title: 'TableV2/Combinations',
-  component: Table,
   decorators: [
     (Story) => (
       <div style={{ height: '600px', overflow: 'auto' }}>
@@ -24,18 +25,26 @@ const meta: Meta<typeof Table<PipelineRun>> = {
 
 export default meta;
 
-type Story = StoryObj<typeof Table<PipelineRun>>;
+type Story = StoryObj;
 
 export const SortingAndExpansion: Story = {
-  args: {
-    data: generateMockData(20),
-    columns,
-    getRowId,
-    'aria-label': 'Sort + Expand',
-    enableSorting: true,
-    enableExpansion: true,
-    expandedContent,
-  },
+  render: () => (
+    <div>
+      <div style={{ padding: '8px 0' }}>
+        <SortDropdown columns={columns} columnStateKey={COLUMN_STATE_KEY} />
+      </div>
+      <Table
+        data={generateMockData(20)}
+        columns={columns}
+        getRowId={getRowId}
+        aria-label="Sort + Expand"
+        enableSorting
+        enableExpansion
+        expandedContent={expandedContent}
+        columnStateKey={COLUMN_STATE_KEY}
+      />
+    </div>
+  ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
@@ -47,37 +56,50 @@ export const SortingAndExpansion: Story = {
     const expandButtons = canvasElement.querySelectorAll(
       'button[aria-expanded="false"]',
     ) as NodeListOf<HTMLButtonElement>;
-    await expect(expandButtons.length).toBeGreaterThan(0);
-    await userEvent.click(expandButtons[0]);
+    // Filter to only expand/collapse toggle buttons (exclude dropdown toggle)
+    const rowExpandButtons = Array.from(expandButtons).filter(
+      (btn) => btn.closest('[data-test="table-row"]') !== null,
+    );
+    await expect(rowExpandButtons.length).toBeGreaterThan(0);
+    await userEvent.click(rowExpandButtons[0]);
 
     // Expanded content visible
     const expanded = canvasElement.querySelector('[data-test="expanded-detail"]');
     await expect(expanded).not.toBeNull();
 
-    // Sort by name
-    const nameHeader = canvas.getByText('Name');
-    const nameTh = nameHeader.closest('th')!;
-    const sortButton = within(nameTh as HTMLElement).getByRole('button');
-    await userEvent.click(sortButton);
+    // Sort via dropdown
+    const toggle = canvas.getByRole('button', { expanded: false });
+    await userEvent.click(toggle);
+    await userEvent.click(canvas.getByRole('option', { name: 'Name' }));
+    // Close dropdown
+    await userEvent.click(canvas.getByRole('button', { expanded: true }));
 
-    // Table still renders after sort (expansion state may reset, that's OK)
+    // Table still renders after sort
     const rowsAfterSort = canvasElement.querySelectorAll('[data-test="table-row"]');
     await expect(rowsAfterSort.length).toBeGreaterThan(0);
   },
 };
 
 export const FullFeatured: Story = {
-  args: {
-    data: generateMockData(50),
-    columns,
-    getRowId,
-    'aria-label': 'Full featured table',
-    enableSorting: true,
-    enableExpansion: true,
-    expandedContent,
-    hasNextPage: false,
-    isFetchingNextPage: false,
-  },
+  render: () => (
+    <div>
+      <div style={{ padding: '8px 0' }}>
+        <SortDropdown columns={columns} columnStateKey={COLUMN_STATE_KEY} />
+      </div>
+      <Table
+        data={generateMockData(50)}
+        columns={columns}
+        getRowId={getRowId}
+        aria-label="Full featured table"
+        enableSorting
+        enableExpansion
+        expandedContent={expandedContent}
+        hasNextPage={false}
+        isFetchingNextPage={false}
+        columnStateKey={COLUMN_STATE_KEY}
+      />
+    </div>
+  ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
@@ -89,11 +111,13 @@ export const FullFeatured: Story = {
     // Virtualization: fewer than 50 rows in DOM
     await expect(rows.length).toBeLessThan(50);
 
-    // Sort buttons present
-    const nameHeader = canvas.getByText('Name');
-    const nameTh = nameHeader.closest('th')!;
-    const sortButton = within(nameTh as HTMLElement).queryByRole('button');
-    await expect(sortButton).not.toBeNull();
+    // Sort dropdown present (no sort buttons in headers)
+    const header = canvasElement.querySelector('[data-test="table-header"]')!;
+    const thElements = header.querySelectorAll('th');
+    for (const th of thElements) {
+      const buttons = within(th as HTMLElement).queryAllByRole('button');
+      await expect(buttons.length).toBe(0);
+    }
 
     // Expand buttons present
     const expandButtons = canvasElement.querySelectorAll('button[aria-expanded]');
