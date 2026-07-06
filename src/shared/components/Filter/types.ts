@@ -1,3 +1,5 @@
+import type React from 'react';
+
 /**
  * Controls where filtering is applied.
  *
@@ -7,13 +9,33 @@
 export type FilterMode = 'client' | 'api';
 
 /** A selectable option shown in a dropdown filter control. */
-export type FilterOption = { label: string; value: string };
+export type FilterOption = {
+  label: string;
+  value: string;
+  /** Optional description text displayed below the label. */
+  description?: string;
+  /** Optional icon rendered alongside the label. */
+  icon?: React.ReactNode;
+};
 
 /** A visual divider inserted between groups of options in a dropdown. */
 export type DividerOption = { type: 'divider' };
 
 /** Discriminated union of items that can appear in a filter dropdown. */
 export type OptionItem = FilterOption | DividerOption;
+
+/** A group of options rendered under a shared heading in a dropdown. */
+export type GroupedOptions = { group: string; options: FilterOption[] };
+
+/** Items that can be passed to a dropdown: either flat option items or grouped options. */
+export type OptionItems = OptionItem[] | GroupedOptions[];
+
+/** Type guard that checks whether options are grouped. */
+export const isGroupedOptions = (options: OptionItems): options is GroupedOptions[] =>
+  options.length > 0 && 'group' in options[0];
+
+/** Type guard that distinguishes a selectable option from a divider. */
+export const isFilterOption = (item: OptionItem): item is FilterOption => 'value' in item;
 
 /**
  * Shared fields present on every filter configuration.
