@@ -160,6 +160,38 @@ import { createUseApplicationMock } from '~/unit-test-utils';
 const useApplicationMock = createUseApplicationMock([mockApp, true, null]);
 ```
 
+### TableComponent Mocks
+
+Use `~/unit-test-utils/mock-table-component` to replace virtualized `TableComponent` with a simple PatternFly table in list-view tests. Call helpers via `jest.requireActual` inside `jest.mock` factory callbacks to avoid Jest hoisting issues.
+
+```tsx
+// Fixed row component (use ~/ paths — resolved from the utility module, not the test file)
+jest.mock('~/shared/components/table/TableComponent', () =>
+  jest
+    .requireActual('~/unit-test-utils/mock-table-component')
+    .requireTableComponentMockWithRowModule(
+      '~/components/Releases/ReleaseArtifactsTab/ReleaseArtifactsListRow',
+      undefined,
+      'ReleaseArtifactsListRow',
+    ),
+);
+
+// Use props.Row from the list view (e.g. PipelineRun / Commits V2)
+jest.mock('~/shared/components/table/TableComponent', () =>
+  jest
+    .requireActual('~/unit-test-utils/mock-table-component')
+    .requirePropsRowInfiniteLoaderTableComponentMock(),
+);
+```
+
+| Helper | Use When |
+|---|---|
+| `requireTableComponentMock(RowComponent, options?)` | Row component is already in scope |
+| `requireTableComponentMockWithRowModule(path, options?, exportName?)` | Load row from another module |
+| `requirePropsRowInfiniteLoaderTableComponentMock()` | List view passes `Row` + infinite loader callbacks |
+| `requirePropsRowOnRowsRenderedTableComponentMock()` | List view passes `Row` + `onRowsRendered` only |
+| `createTableComponentMock(RowComponent, options?)` | Build a custom mock outside `jest.mock` |
+
 ## Global Mocks (Pre-configured in jest.setup.js)
 
 These modules are auto-mocked with `jest.requireActual` passthrough. You can spy on them without additional `jest.mock()` calls:

@@ -12,6 +12,7 @@ export * from './mock-browser';
 export * from './mock-konflux-public-info';
 export * from './mock-console';
 export * from './mock-analytics';
+export * from './mock-table-component';
 export * from './test-helpers';
 
 export * from './rendering-utils';

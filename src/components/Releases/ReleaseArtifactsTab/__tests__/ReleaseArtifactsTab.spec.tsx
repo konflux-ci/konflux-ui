@@ -1,5 +1,4 @@
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import { Table, Thead, Tr, Th, Tbody } from '@patternfly/react-table';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { useRelease } from '../../../../hooks/useReleases';
 import { useSearchParam } from '../../../../hooks/useSearchParam';
@@ -7,7 +6,6 @@ import { useSortedResources } from '../../../../hooks/useSortedResources';
 import { ReleaseArtifactsImages } from '../../../../types';
 import { mockUseNamespaceHook } from '../../../../unit-test-utils/mock-namespace';
 import ReleaseArtifactsTab from '../index';
-import { ReleaseArtifactsListRow } from '../ReleaseArtifactsListRow';
 
 jest.mock('../../../../hooks/useReleases');
 jest.mock('../../../../hooks/useSearchParam');
@@ -22,34 +20,15 @@ jest.mock('react-router-dom', () => {
   };
 });
 
-jest.mock('../../../../shared/components/table/TableComponent', () => {
-  return (props) => {
-    const { data, filters, selected, match, kindObj } = props;
-    const cProps = { data, filters, selected, match, kindObj };
-    const columns = props.Header(cProps);
-
-    return (
-      <Table role="table" aria-label="table" variant="compact" borders={true}>
-        <Thead>
-          <Tr>
-            {columns.map((col, idx) => (
-              <Th key={idx} {...(col.props ?? {})}>
-                {col.title}
-              </Th>
-            ))}
-          </Tr>
-        </Thead>
-        <Tbody>
-          {props.data.map((d, i) => (
-            <Tr key={i}>
-              <ReleaseArtifactsListRow columns={columns} obj={d} />
-            </Tr>
-          ))}
-        </Tbody>
-      </Table>
-    );
-  };
-});
+jest.mock('~/shared/components/table/TableComponent', () =>
+  jest
+    .requireActual('~/unit-test-utils/mock-table-component')
+    .requireTableComponentMockWithRowModule(
+      '~/components/Releases/ReleaseArtifactsTab/ReleaseArtifactsListRow',
+      undefined,
+      'ReleaseArtifactsListRow',
+    ),
+);
 
 const mockImages: ReleaseArtifactsImages[] = [
   {

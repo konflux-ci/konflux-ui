@@ -1,5 +1,3 @@
-import * as React from 'react';
-import { Table, Thead, Tr, Th, Tbody } from '@patternfly/react-table';
 import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { pipelineWithCommits } from '~/components/Commits/__data__/pipeline-with-commits';
 import { FilterContext, FilterContextProvider } from '~/components/Filter/generic/FilterContext';
@@ -41,40 +39,11 @@ jest.mock('~/hooks/useSearchParam', () => ({
   useSearchParamBatch: () => mockUseSearchParamBatch(),
 }));
 
-jest.mock('~/shared/components/table/TableComponent', () => {
-  return (props) => {
-    const { data, filters, selected, match, kindObj } = props;
-    const cProps = { data, filters, selected, match, kindObj };
-    const columns = props.Header(cProps);
-    const Row = props.Row;
-
-    React.useEffect(() => {
-      props?.onRowsRendered?.({ stopIndex: Math.max(data.length - 1, 0) });
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [data]);
-
-    return (
-      <Table role="table" aria-label="table" variant="compact" borders={true}>
-        <Thead>
-          <Tr>
-            {columns.map((col, idx) => (
-              <Th key={idx} {...(col.props ?? {})}>
-                {col.title}
-              </Th>
-            ))}
-          </Tr>
-        </Thead>
-        <Tbody>
-          {props.data.map((d, i) => (
-            <Tr key={props.getRowProps?.(d)?.id ?? i}>
-              <Row obj={d} index={i} columns={columns} />
-            </Tr>
-          ))}
-        </Tbody>
-      </Table>
-    );
-  };
-});
+jest.mock('~/shared/components/table/TableComponent', () =>
+  jest
+    .requireActual('~/unit-test-utils/mock-table-component')
+    .requirePropsRowOnRowsRenderedTableComponentMock(),
+);
 
 jest.mock('~/utils/rbac', () => ({
   useAccessReviewForModel: jest.fn(() => [true, true]),

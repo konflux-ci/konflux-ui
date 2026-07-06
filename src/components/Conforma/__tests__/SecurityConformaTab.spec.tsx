@@ -1,10 +1,8 @@
-import { Table, Thead, Tr, Th, Tbody } from '@patternfly/react-table';
 import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
 import { routerRenderer } from '../../../utils/test-utils';
 import { mockConformaUIData } from '../__data__/mockConformaLogsJson';
-import { WrappedConformaRow } from '../ConformaTable/ConformaRow';
 import { SecurityConformaTab } from '../SecurityConformaTab';
 import { useConformaResult } from '../useConformaResult';
 import '@testing-library/jest-dom';
@@ -29,39 +27,15 @@ jest.mock('react-router-dom', () => ({
   }),
 }));
 
-jest.mock('../../../shared/components/table/TableComponent', () => {
-  return (props) => {
-    const { data, filters, selected, match, kindObj } = props;
-    const cProps = { data, filters, selected, match, kindObj };
-    const columns = props.Header(cProps);
-
-    return (
-      <Table role="table" aria-label="table" variant="compact" borders={true}>
-        <Thead>
-          <Tr>
-            {columns.map((col, idx) => (
-              <Th key={idx} {...(col.props ?? {})}>
-                {col.title}
-              </Th>
-            ))}
-          </Tr>
-        </Thead>
-        <Tbody>
-          {props.data.map((d, i) => (
-            <Tr key={i}>
-              <WrappedConformaRow
-                obj={d}
-                customData={{
-                  sortedConformaResult: data,
-                }}
-              />
-            </Tr>
-          ))}
-        </Tbody>
-      </Table>
-    );
-  };
-});
+jest.mock('~/shared/components/table/TableComponent', () =>
+  jest
+    .requireActual('~/unit-test-utils/mock-table-component')
+    .requireTableComponentMockWithRowModule('~/components/Conforma/ConformaTable/ConformaRow', {
+      rowProps: (_row, _index, tableProps) => ({
+        customData: { sortedConformaResult: tableProps.data },
+      }),
+    }, 'WrappedConformaRow'),
+);
 
 const mockUseConformaResult = useConformaResult as jest.Mock;
 

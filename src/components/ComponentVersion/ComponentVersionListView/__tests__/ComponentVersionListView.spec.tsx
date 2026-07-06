@@ -1,4 +1,3 @@
-import { Table as PfTable, Tbody, Tr } from '@patternfly/react-table';
 import { act, fireEvent, screen } from '@testing-library/react';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { useComponent } from '~/hooks/useComponents';
@@ -6,7 +5,6 @@ import { ComponentKind, ComponentSpecs } from '~/types/component';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
 import { renderWithQueryClientAndRouter } from '~/unit-test-utils/rendering-utils';
-import { ComponentVersionListRow } from '../ComponentVersionListRow';
 import ComponentVersionListView from '../ComponentVersionListView';
 
 jest.useFakeTimers();
@@ -19,28 +17,24 @@ jest.mock('~/hooks/useComponents', () => ({
   useComponent: jest.fn(),
 }));
 
-jest.mock('~/shared/components/table/TableComponent', () => {
-  return (props) => {
-    return (
-      <PfTable role="table" aria-label="table" variant="compact" borders={true}>
-        <Tbody>
-          {props.data.map((d, i) => (
-            <Tr key={i}>
-              <ComponentVersionListRow
-                columns={[]}
-                obj={d}
-                customData={{
-                  repoUrl: 'https://github.com/org/repo',
-                  componentName: 'my-component',
-                }}
-              />
-            </Tr>
-          ))}
-        </Tbody>
-      </PfTable>
-    );
-  };
-});
+jest.mock('~/shared/components/table/TableComponent', () =>
+  jest
+    .requireActual('~/unit-test-utils/mock-table-component')
+    .requireTableComponentMockWithRowModule(
+      '~/components/ComponentVersion/ComponentVersionListView/ComponentVersionListRow',
+      {
+        includeHeader: false,
+        rowProps: {
+          columns: [],
+          customData: {
+            repoUrl: 'https://github.com/org/repo',
+            componentName: 'my-component',
+          },
+        },
+      },
+      'ComponentVersionListRow',
+    ),
+);
 
 jest.mock('~/utils/rbac', () => ({
   createLoaderWithAccessCheck: jest.fn(),

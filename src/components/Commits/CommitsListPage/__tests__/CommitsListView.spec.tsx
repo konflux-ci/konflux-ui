@@ -1,4 +1,3 @@
-import { Table, Thead, Tr, Th, Tbody } from '@patternfly/react-table';
 import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { PipelineRunLabel, PipelineRunType, runStatus } from '~/consts/pipelinerun';
@@ -43,34 +42,15 @@ jest.mock('../../../../hooks/useSearchParam', () => ({
 
 createUseApplicationMock([{ metadata: { name: 'test' } }, true]);
 
-jest.mock('../../../../shared/components/table/TableComponent', () => {
-  return (props) => {
-    const { data, filters, selected, match, kindObj } = props;
-    const cProps = { data, filters, selected, match, kindObj };
-    const columns = props.Header(cProps);
-
-    return (
-      <Table role="table" aria-label="table" variant="compact" borders={true}>
-        <Thead>
-          <Tr>
-            {columns.map((col, idx) => (
-              <Th key={idx} {...(col.props ?? {})}>
-                {col.title}
-              </Th>
-            ))}
-          </Tr>
-        </Thead>
-        <Tbody>
-          {props.data.map((d, i) => (
-            <Tr key={i}>
-              <CommitsListRow obj={d} status={runStatus.Pending} />
-            </Tr>
-          ))}
-        </Tbody>
-      </Table>
-    );
-  };
-});
+jest.mock('~/shared/components/table/TableComponent', () =>
+  jest
+    .requireActual('~/unit-test-utils/mock-table-component')
+    .requireTableComponentMockWithRowModule('~/components/Commits/CommitsListPage/CommitsListRow', {
+      rowProps: {
+        status: jest.requireActual('~/consts/pipelinerun').runStatus.Pending,
+      },
+    }),
+);
 
 jest.mock('../../../../utils/rbac', () => ({
   useAccessReviewForModel: jest.fn(() => [true, true]),
