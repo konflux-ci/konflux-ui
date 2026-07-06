@@ -35,15 +35,29 @@ export function loadMonitoringConfig(): MonitoringConfig {
     };
   }
 
+  // Validate DSN before init — empty DSN causes Sentry to silently fail
+  if (!runtime.MONITORING_DSN) {
+    // eslint-disable-next-line no-console
+    console.warn(
+      '[monitoring] MONITORING_ENABLED is true but MONITORING_DSN is empty — falling back to noop',
+    );
+    return {
+      ...DEFAULT_MONITORING_CONFIG,
+      environment: runtime.MONITORING_ENVIRONMENT || DEFAULT_MONITORING_CONFIG.environment,
+      cluster: runtime.MONITORING_CLUSTER || DEFAULT_MONITORING_CONFIG.cluster,
+    };
+  }
+
   // Monitoring is enabled, return Sentry config
   return {
     enabled: true,
     provider: 'sentry',
-    dsn: runtime.MONITORING_DSN || '',
+    dsn: runtime.MONITORING_DSN,
     environment: runtime.MONITORING_ENVIRONMENT || 'production',
     cluster: runtime.MONITORING_CLUSTER || 'unknown',
     sampleRates: {
       errors: parseNumber(runtime.MONITORING_SAMPLE_RATE_ERRORS, 1.0),
+      traces: parseNumber(runtime.MONITORING_SAMPLE_RATE_TRACES, 0.2),
     },
   };
 }

@@ -13,6 +13,7 @@ export interface MonitoringConfig {
   cluster?: string;
   sampleRates?: {
     errors?: number; // error capture sample rate (0..1)
+    traces?: number; // trace sample rate (0..1)
   };
 }
 

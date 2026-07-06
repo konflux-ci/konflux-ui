@@ -30,6 +30,7 @@ interface Window {
     MONITORING_ENVIRONMENT?: string;
     MONITORING_CLUSTER?: string;
     MONITORING_SAMPLE_RATE_ERRORS?: string;
+    MONITORING_SAMPLE_RATE_TRACES?: string;
     // Analytics configuration
     ANALYTICS_ENABLED?: string;
     ANALYTICS_WRITE_KEY?: string;

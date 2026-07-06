@@ -71,11 +71,37 @@ describe('loadMonitoringConfig', () => {
       cluster: 'prod-cluster',
       sampleRates: {
         errors: 0.5,
+        traces: 0.2,
       },
     });
   });
 
-  it('should use default values when optional fields are missing', () => {
+  it('should return noop config when enabled but DSN is empty', () => {
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
+
+    window.KONFLUX_RUNTIME = {
+      MONITORING_ENABLED: 'true',
+      MONITORING_DSN: '',
+      MONITORING_ENVIRONMENT: 'production',
+      MONITORING_CLUSTER: 'prod-cluster',
+    };
+
+    const config = loadMonitoringConfig();
+
+    expect(config).toEqual({
+      enabled: false,
+      provider: 'noop',
+      environment: 'production',
+      cluster: 'prod-cluster',
+    });
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('MONITORING_DSN is empty'));
+
+    warnSpy.mockRestore();
+  });
+
+  it('should return noop config when enabled but DSN is missing', () => {
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
+
     window.KONFLUX_RUNTIME = {
       MONITORING_ENABLED: 'true',
     };
@@ -83,14 +109,44 @@ describe('loadMonitoringConfig', () => {
     const config = loadMonitoringConfig();
 
     expect(config).toEqual({
-      enabled: true,
-      provider: 'sentry',
-      dsn: '',
-      environment: 'production',
-      cluster: 'unknown',
-      sampleRates: {
-        errors: 1.0,
-      },
+      enabled: false,
+      provider: 'noop',
+      environment: 'development',
+      cluster: 'local',
     });
+    expect(warnSpy).toHaveBeenCalled();
+
+    warnSpy.mockRestore();
+  });
+
+  it('should parse MONITORING_SAMPLE_RATE_TRACES from runtime config', () => {
+    window.KONFLUX_RUNTIME = {
+      MONITORING_ENABLED: 'true',
+      MONITORING_DSN: 'https://test@sentry.io/123',
+      MONITORING_SAMPLE_RATE_TRACES: '0.5',
+    };
+
+    const config = loadMonitoringConfig();
+
+    expect(config.sampleRates).toEqual(
+      expect.objectContaining({
+        traces: 0.5,
+      }),
+    );
+  });
+
+  it('should default traces sample rate to 0.2 when not provided', () => {
+    window.KONFLUX_RUNTIME = {
+      MONITORING_ENABLED: 'true',
+      MONITORING_DSN: 'https://test@sentry.io/123',
+    };
+
+    const config = loadMonitoringConfig();
+
+    expect(config.sampleRates).toEqual(
+      expect.objectContaining({
+        traces: 0.2,
+      }),
+    );
   });
 });
