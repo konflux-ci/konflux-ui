@@ -1,23 +1,15 @@
 import * as React from 'react';
-import {
-  MenuToggle,
-  Select,
-  SelectList,
-  SelectOption,
-  ToolbarFilter,
-} from '@patternfly/react-core';
+import { ToolbarFilter } from '@patternfly/react-core';
 import { parseAsString, useQueryState } from 'nuqs';
-import { FilterOption, OptionItem, SingleSelectFilterConfig } from '../types';
-
-/** Type guard that distinguishes a selectable option from a divider. */
-const isFilterOption = (item: OptionItem): item is FilterOption => 'value' in item;
+import { isFilterOption, type OptionItems, type SingleSelectFilterConfig } from '../types';
+import { SelectDropdown } from './SelectDropdown';
 
 /** Props for {@link SingleSelectFilter}. */
 type SingleSelectFilterProps<T> = {
   /** Single-select filter configuration. */
   config: SingleSelectFilterConfig<T>;
-  /** Dropdown options (divider entries are filtered out). */
-  options: OptionItem[];
+  /** Dropdown options (divider entries are filtered out for chips, but rendered in dropdown). */
+  options: OptionItems;
 };
 
 /**
@@ -31,24 +23,25 @@ type SingleSelectFilterProps<T> = {
  */
 export const SingleSelectFilter = <T,>({ config, options }: SingleSelectFilterProps<T>) => {
   const { param, label } = config;
-  const [isOpen, setIsOpen] = React.useState(false);
 
   const [selected, setSelected] = useQueryState(param, parseAsString.withDefault(''));
 
-  const filterOptions = options.filter(isFilterOption);
+  // Collect all FilterOptions for chip label lookup (works for both flat and grouped)
+  const allFilterOptions = React.useMemo(() => {
+    if (Array.isArray(options) && options.length > 0 && 'group' in options[0]) {
+      return (options as { group: string; options: { label: string; value: string }[] }[]).flatMap(
+        (g) => g.options,
+      );
+    }
+    return (options as { label?: string; value?: string; type?: string }[]).filter(isFilterOption);
+  }, [options]);
 
   const labelForValue = (value: string): string =>
-    filterOptions.find((o) => o.value === value)?.label ?? value;
+    allFilterOptions.find((o) => o.value === value)?.label ?? value;
 
-  const handleSelect = (
-    _event: React.MouseEvent | undefined,
-    value: string | number | undefined,
-  ) => {
-    if (typeof value !== 'string') return;
-
+  const handleSelect = (value: string) => {
     // Toggle-off: deselect if clicking same value
     void setSelected(value === selected ? null : value);
-    setIsOpen(false);
   };
 
   const handleDeleteChip = () => {
@@ -57,38 +50,19 @@ export const SingleSelectFilter = <T,>({ config, options }: SingleSelectFilterPr
 
   const toggleLabel = selected ? labelForValue(selected) : label;
 
-  const toggle = (toggleRef: React.Ref<HTMLButtonElement>) => (
-    <MenuToggle
-      ref={toggleRef}
-      onClick={() => setIsOpen((prev) => !prev)}
-      isExpanded={isOpen}
-      data-test={`single-select-filter-${param}`}
-    >
-      {toggleLabel}
-    </MenuToggle>
-  );
-
   return (
     <ToolbarFilter
       chips={selected ? [labelForValue(selected)] : []}
       deleteChip={handleDeleteChip}
       categoryName={label}
     >
-      <Select
-        role="menu"
-        isOpen={isOpen}
+      <SelectDropdown
+        toggleText={toggleLabel}
+        options={options}
+        selected={selected}
         onSelect={handleSelect}
-        onOpenChange={setIsOpen}
-        toggle={toggle}
-      >
-        <SelectList>
-          {filterOptions.map((item) => (
-            <SelectOption key={item.value} value={item.value} isSelected={item.value === selected}>
-              {item.label}
-            </SelectOption>
-          ))}
-        </SelectList>
-      </Select>
+        data-test={`single-select-filter-${param}`}
+      />
     </ToolbarFilter>
   );
 };
