@@ -15,6 +15,9 @@ const __dirname = path.dirname(__filename);
 export default merge(commonConfig, {
   mode: 'development',
   devtool: 'inline-source-map',
+  resolve: {
+    symlinks: false,
+  },
   devServer: {
     historyApiFallback: { disableDotRule: true },
     port: DEV_SERVER_PORT,

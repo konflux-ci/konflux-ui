@@ -1,12 +1,42 @@
 import '@testing-library/jest-dom';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { screen } from '@testing-library/react';
-import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { useK8sAndKarchResources } from '~/hooks/useK8sAndKarchResources';
+import { NuqsAdapter } from '~/shared/components/Filter';
 import { mockUseNamespaceHook } from '../../../../unit-test-utils/mock-namespace';
 import { createUseParamsMock, renderWithQueryClientAndRouter } from '../../../../utils/test-utils';
 import SnapshotsListView from '../SnapshotsListView';
 
 jest.useFakeTimers();
+
+jest.mock('@tanstack/react-virtual', () => ({
+  useVirtualizer: jest.fn(),
+}));
+
+const mockUseVirtualizer = jest.mocked(useVirtualizer);
+
+beforeEach(() => {
+  mockUseVirtualizer.mockImplementation((opts) => {
+    const items = Array.from({ length: opts.count }, (_, i) => ({
+      index: i,
+      key: i,
+      start: i * 44,
+      end: (i + 1) * 44,
+      size: 44,
+      lane: 0,
+    }));
+    return {
+      getVirtualItems: () => items,
+      getTotalSize: () => opts.count * 44,
+      measureElement: () => undefined,
+      scrollToIndex: () => undefined,
+      scrollToOffset: () => undefined,
+      measure: () => undefined,
+      getOffsetForIndex: () => [0, 0] as [number, number],
+      options: { count: opts.count },
+    } as unknown as ReturnType<typeof useVirtualizer>;
+  });
+});
 
 jest.mock('react-i18next', () => ({
   useTranslation: jest.fn(() => ({ t: (x) => x })),
@@ -28,9 +58,9 @@ const useMockSnapshots = useK8sAndKarchResources as jest.Mock;
 
 // Helper function to create wrapped component
 const createWrappedComponent = () => (
-  <FilterContextProvider filterParams={[]}>
+  <NuqsAdapter>
     <SnapshotsListView applicationName="test-app" />
-  </FilterContextProvider>
+  </NuqsAdapter>
 );
 
 const checkEmptyState = () => {
@@ -111,7 +141,8 @@ describe('SnapshotsListView - Empty State', () => {
 
     renderWithQueryClientAndRouter(createWrappedComponent());
 
-    expect(screen.getByTestId('spinner')).toBeInTheDocument();
+    // TableContainer shows skeleton when not loaded
+    expect(screen.queryByText('No snapshots found')).not.toBeInTheDocument();
   });
 
   describe('Error Handling', () => {

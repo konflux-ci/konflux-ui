@@ -7,6 +7,8 @@ import { useTRPipelineRuns } from '../../../../hooks/useTektonResults';
 import { ComponentGroupVersionKind, PipelineRunGroupVersionKind } from '../../../../models';
 import { mockUseNamespaceHook } from '../../../../unit-test-utils/mock-namespace';
 import { createK8sWatchResourceMock, createUseApplicationMock } from '../../../../utils/test-utils';
+import { createCustomizeAllPipelinesModalLauncher } from '../../../CustomizedPipeline/CustomizePipelinesModal';
+import { useModalLauncher } from '../../../modal/ModalProvider';
 import { componentCRMocks } from '../../__data__/mock-data';
 import { mockPipelineRuns } from '../../__data__/mock-pipeline-run';
 import ComponentListView from '../ComponentListView';
@@ -48,13 +50,17 @@ jest.mock('../../../../hooks/usePipelineRuns', () => ({
   useLatestBuildPipelineRunForComponent: () => [mockPipelineRuns[0], true],
 }));
 
-jest.mock('../../../../utils/component-utils', () => {
-  const actual = jest.requireActual('../../../../utils/component-utils');
-  return {
-    ...actual,
-    useURLForComponentPRs: jest.fn(),
-  };
-});
+jest.mock('../../../CustomizedPipeline/CustomizePipelinesModal', () => ({
+  createCustomizeAllPipelinesModalLauncher: jest.fn((applicationName, namespace) => ({
+    applicationName,
+    namespace,
+  })),
+}));
+
+jest.mock('../../../modal/ModalProvider', () => ({
+  ...jest.requireActual('../../../modal/ModalProvider'),
+  useModalLauncher: jest.fn(),
+}));
 
 jest.mock('../../../../hooks/usePACStatesForComponents', () => {
   const actual = jest.requireActual('../../../../hooks/usePACState');
@@ -69,6 +75,9 @@ jest.mock('../../../../hooks/usePACStatesForComponents', () => {
 
 const useK8sWatchResourceMock = createK8sWatchResourceMock();
 const useTRPipelineRunsMock = useTRPipelineRuns as jest.Mock;
+const useModalLauncherMock = useModalLauncher as jest.Mock;
+const createCustomizeAllPipelinesModalLauncherMock =
+  createCustomizeAllPipelinesModalLauncher as jest.Mock;
 
 const getMockedResources = (kind) => {
   if (!kind) {
@@ -90,8 +99,22 @@ const ComponentList = () => (
 );
 
 describe('ComponentListViewPage', () => {
+  const showModalMock = jest.fn();
+
   beforeEach(() => {
     useK8sWatchResourceMock.mockImplementation(getMockedResources);
+    useTRPipelineRunsMock.mockReturnValue([mockPipelineRuns, true, undefined]);
+    useModalLauncherMock.mockReturnValue(showModalMock);
+    createCustomizeAllPipelinesModalLauncherMock.mockImplementation(
+      (applicationName, namespace) => ({
+        applicationName,
+        namespace,
+      }),
+    );
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   mockUseNamespaceHook('test-ns');
@@ -131,6 +154,49 @@ describe('ComponentListViewPage', () => {
   it('should show a warning when showMergeStatus is set', () => {
     renderWithQueryClient(<ComponentList />);
     screen.getByTestId('components-unmerged-build-pr');
+    screen.getByRole('button', { name: 'Manage build pipelines' });
+  });
+
+  it('should close the merge alert when dismissed', () => {
+    renderWithQueryClient(<ComponentList />);
+    screen.getByTestId('components-unmerged-build-pr');
+    fireEvent.click(screen.getByRole('button', { name: /close warning alert/i }));
+    expect(screen.queryByTestId('components-unmerged-build-pr')).not.toBeInTheDocument();
+  });
+
+  it('should open customize pipelines modal from merge alert action', () => {
+    const modalLauncher = { applicationName: 'test-app', namespace: 'test-ns' };
+    createCustomizeAllPipelinesModalLauncherMock.mockReturnValue(modalLauncher);
+    renderWithQueryClient(<ComponentList />);
+    fireEvent.click(screen.getByRole('button', { name: 'Manage build pipelines' }));
+    expect(createCustomizeAllPipelinesModalLauncherMock).toHaveBeenCalledWith(
+      'test-app',
+      'test-ns',
+    );
+    expect(showModalMock).toHaveBeenCalledWith(modalLauncher);
+  });
+
+  it('should open customize pipelines modal from getting started card', () => {
+    const modalLauncher = { applicationName: 'test-app', namespace: 'test-ns' };
+    createCustomizeAllPipelinesModalLauncherMock.mockReturnValue(modalLauncher);
+    renderWithQueryClient(<ComponentList />);
+    fireEvent.click(screen.getByRole('button', { name: 'Edit build pipeline plans' }));
+    expect(createCustomizeAllPipelinesModalLauncherMock).toHaveBeenCalledWith(
+      'test-app',
+      'test-ns',
+    );
+    expect(showModalMock).toHaveBeenCalledWith(modalLauncher);
+  });
+
+  it('should show pipeline runs error alert', () => {
+    useTRPipelineRunsMock.mockReturnValue([
+      mockPipelineRuns,
+      true,
+      { message: 'Failed to load pipeline runs' },
+    ]);
+    renderWithQueryClient(<ComponentList />);
+    screen.getByText('Error while fetching pipeline runs');
+    screen.getByText('Failed to load pipeline runs');
   });
   it('should filter components by status', () => {
     const view = renderWithQueryClient(<ComponentList />);
