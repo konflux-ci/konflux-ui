@@ -283,6 +283,7 @@ const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({
           name={'opaque.keyValues'}
           entries={defaultKeyValues}
           disableRemoveAction={(values.opaque.keyValues.length ?? 1) === 1 || isUsingExisting}
+          disableAddAction={isUsingExisting}
         />
       )}
 

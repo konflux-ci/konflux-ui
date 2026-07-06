@@ -21,6 +21,7 @@ type KeyValueEntryFormProps = {
   label?: string;
   helpText?: string;
   disableRemoveAction?: boolean;
+  disableAddAction?: boolean;
   entries: KeyValueEntry[];
   onChange?: (value: string, keyIndex: string) => void;
 };
@@ -32,6 +33,7 @@ const KeyValueFileInputField: React.FC<
   label = '',
   helpText = '',
   disableRemoveAction = false,
+  disableAddAction = false,
   entries = [{ key: '', value: '' }],
   onChange,
 }) => {
@@ -118,6 +120,7 @@ const KeyValueFileInputField: React.FC<
             data-test="add-key-value-button"
             variant="link"
             icon={<PlusCircleIcon />}
+            isDisabled={disableAddAction}
           >
             Add key/value
           </Button>

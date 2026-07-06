@@ -359,6 +359,18 @@ describe('SecretForm existing opaque secret', () => {
     });
   });
 
+  it('should disable Add key/value when using an existing cluster secret', async () => {
+    const user = userEvent.setup();
+    formikRenderer(<SecretForm existingSecrets={[clusterSecret]} />, secretFormValues);
+
+    await user.click(screen.getByRole('button', { name: 'secret-name-dropdown' }));
+    await user.click(screen.getByText('cluster-secret'));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('add-key-value-button')).toBeDisabled();
+    });
+  });
+
   it('should keep key values editable when renaming an existing cluster secret', async () => {
     const user = userEvent.setup();
     formikRenderer(<SecretForm existingSecrets={[clusterSecret]} />, secretFormValues);
