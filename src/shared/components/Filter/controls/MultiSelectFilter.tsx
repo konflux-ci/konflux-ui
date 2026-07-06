@@ -1,25 +1,15 @@
 import * as React from 'react';
-import {
-  Badge,
-  Divider,
-  MenuToggle,
-  Select,
-  SelectList,
-  SelectOption,
-  ToolbarFilter,
-} from '@patternfly/react-core';
+import { ToolbarFilter } from '@patternfly/react-core';
 import { parseAsJson, useQueryState } from 'nuqs';
-import { FilterOption, MultiSelectFilterConfig, OptionItem } from '../types';
-
-/** Type guard that distinguishes a selectable option from a divider. */
-const isFilterOption = (item: OptionItem): item is FilterOption => 'value' in item;
+import { isFilterOption, type MultiSelectFilterConfig, type OptionItems } from '../types';
+import { SelectDropdown } from './SelectDropdown';
 
 /** Props for {@link MultiSelectFilter}. */
 type MultiSelectFilterProps<T> = {
   /** Multi-select filter configuration. */
   config: MultiSelectFilterConfig<T>;
-  /** Dropdown options (may include {@link DividerOption} entries). */
-  options: OptionItem[];
+  /** Dropdown options (may include {@link DividerOption} entries or grouped options). */
+  options: OptionItems;
   /** When true, the toggle is disabled. Auto-disabled when options are empty. */
   isDisabled?: boolean;
 };
@@ -39,24 +29,26 @@ export const MultiSelectFilter = <T,>({
   isDisabled,
 }: MultiSelectFilterProps<T>) => {
   const { param, label } = config;
-  const [isOpen, setIsOpen] = React.useState(false);
 
   const [selected, setSelected] = useQueryState(
     param,
     parseAsJson<string[]>((v) => (Array.isArray(v) ? v : [])).withDefault([]),
   );
 
-  const filterOptions = options.filter(isFilterOption);
+  // Collect all FilterOptions for chip label lookup (works for both flat and grouped)
+  const allFilterOptions = React.useMemo(() => {
+    if (Array.isArray(options) && options.length > 0 && 'group' in options[0]) {
+      return (options as { group: string; options: { label: string; value: string }[] }[]).flatMap(
+        (g) => g.options,
+      );
+    }
+    return (options as { label?: string; value?: string; type?: string }[]).filter(isFilterOption);
+  }, [options]);
 
   const labelForValue = (value: string): string =>
-    filterOptions.find((o) => o.value === value)?.label ?? value;
+    allFilterOptions.find((o) => o.value === value)?.label ?? value;
 
-  const handleSelect = (
-    _event: React.MouseEvent | undefined,
-    value: string | number | undefined,
-  ) => {
-    if (typeof value !== 'string') return;
-
+  const handleSelect = (value: string) => {
     const next = selected.includes(value)
       ? selected.filter((v) => v !== value)
       : [...selected, value];
@@ -66,7 +58,7 @@ export const MultiSelectFilter = <T,>({
 
   const handleDeleteChip = (_category: string | undefined, chip: string | undefined) => {
     if (!chip) return;
-    const value = filterOptions.find((o) => o.label === chip)?.value ?? chip;
+    const value = allFilterOptions.find((o) => o.label === chip)?.value ?? chip;
     const next = selected.filter((v) => v !== value);
     void setSelected(next.length > 0 ? next : null);
   };
@@ -77,18 +69,6 @@ export const MultiSelectFilter = <T,>({
 
   const disabled = isDisabled || options.length === 0;
 
-  const toggle = (toggleRef: React.Ref<HTMLButtonElement>) => (
-    <MenuToggle
-      ref={toggleRef}
-      onClick={() => setIsOpen((prev) => !prev)}
-      isExpanded={isOpen}
-      isDisabled={disabled}
-      data-test={`multi-select-filter-${param}`}
-    >
-      {label} {!disabled && selected.length > 0 && <Badge isRead>{selected.length}</Badge>}
-    </MenuToggle>
-  );
-
   return (
     <ToolbarFilter
       chips={selected.map(labelForValue)}
@@ -96,31 +76,17 @@ export const MultiSelectFilter = <T,>({
       deleteChipGroup={handleDeleteChipGroup}
       categoryName={label}
     >
-      <Select
-        role="menu"
-        isOpen={isOpen}
+      <SelectDropdown
+        toggleText={label}
+        options={options}
+        selected={selected}
         onSelect={handleSelect}
-        onOpenChange={setIsOpen}
-        toggle={toggle}
-      >
-        <SelectList>
-          {options.map((item, index) => {
-            if (!isFilterOption(item)) {
-              return <Divider key={`divider-${index}`} />;
-            }
-            return (
-              <SelectOption
-                key={item.value}
-                value={item.value}
-                hasCheckbox
-                isSelected={selected.includes(item.value)}
-              >
-                {item.label}
-              </SelectOption>
-            );
-          })}
-        </SelectList>
-      </Select>
+        multiple
+        hasCheckbox
+        badge
+        isDisabled={disabled}
+        data-test={`multi-select-filter-${param}`}
+      />
     </ToolbarFilter>
   );
 };
