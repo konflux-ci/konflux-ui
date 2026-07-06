@@ -20,3 +20,4 @@ export { TableSkeleton } from './TableSkeleton';
 export { TableHeader } from './TableHeader';
 export { computeColumnWidths, type ColumnWidth } from './column-widths';
 export { Table } from './Table';
+export { SortDropdown } from './SortDropdown';
