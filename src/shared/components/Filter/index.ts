@@ -41,4 +41,9 @@ export { SwitchableSearchFilter } from './controls/SwitchableSearchFilter';
 export { FilterToolbar } from './FilterToolbar';
 export type { ToolbarGroupConfig } from './FilterToolbar';
 
-export { buildOptions, buildOptionsWithFallback, NONE_VALUE } from './utils/buildOptions';
+export {
+  buildOptions,
+  buildOptionsWithFallback,
+  buildGroupedOptions,
+  NONE_VALUE,
+} from './utils/buildOptions';
