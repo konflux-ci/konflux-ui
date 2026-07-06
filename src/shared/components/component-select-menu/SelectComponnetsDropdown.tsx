@@ -7,6 +7,8 @@ type SelectComponentsDropdownProps = {
   onSelect: (item: string | number) => void;
   closeOnSelect?: boolean;
   badgeValue?: number;
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
 };
 
 const SelectComponentsDropdown: React.FC<SelectComponentsDropdownProps> = ({
@@ -15,8 +17,21 @@ const SelectComponentsDropdown: React.FC<SelectComponentsDropdownProps> = ({
   onSelect,
   closeOnSelect,
   badgeValue,
+  isOpen: isOpenProp,
+  onOpenChange,
 }) => {
-  const [isOpen, setIsOpen] = React.useState(false);
+  const [internalIsOpen, setInternalIsOpen] = React.useState(false);
+  const isControlled = isOpenProp !== undefined;
+  const isOpen = isControlled ? isOpenProp : internalIsOpen;
+  const setIsOpen = React.useCallback(
+    (open: boolean) => {
+      if (!isControlled) {
+        setInternalIsOpen(open);
+      }
+      onOpenChange?.(open);
+    },
+    [isControlled, onOpenChange],
+  );
   const toggleRef = React.useRef<HTMLButtonElement>(null);
   const menuRef = React.useRef<HTMLDivElement>(null);
 
@@ -24,7 +39,7 @@ const SelectComponentsDropdown: React.FC<SelectComponentsDropdownProps> = ({
     <>
       <MenuContainer
         isOpen={isOpen}
-        onOpenChange={(open) => setIsOpen(open)}
+        onOpenChange={setIsOpen}
         toggle={
           <MenuToggle
             ref={toggleRef}

@@ -126,7 +126,7 @@ describe('ComponentRelationModal', () => {
     expect(screen.queryByText('Component relationships')).toBeInTheDocument();
     fireEvent.click(screen.getByTestId('nudged-by-0'));
     const saveButton = screen.getByText('Save relationships');
-    expect(saveButton.getAttribute('class')).not.toContain('pf-m-disabled');
+    await waitFor(() => expect(saveButton).not.toBeDisabled());
     fireEvent.click(saveButton);
     expect(saveButton.getAttribute('class')).toContain('pf-m-in-progress');
     await waitFor(() => {
@@ -153,8 +153,8 @@ describe('ComponentRelationModal', () => {
     expect(screen.queryByText('Component relationships')).toBeInTheDocument();
     fireEvent.click(screen.getByTestId('nudged-by-0'));
     const saveButton = screen.getByText('Save relationships');
-    expect(saveButton.getAttribute('class')).not.toContain('pf-m-disabled');
+    await waitFor(() => expect(saveButton).not.toBeDisabled());
     fireEvent.click(saveButton);
-    await waitFor(() => expect(screen.queryByText('Danger alert:')).toBeInTheDocument());
+    expect(await screen.findByText('error')).toBeInTheDocument();
   });
 });
