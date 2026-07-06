@@ -13,6 +13,8 @@ interface TableRowProps<TData> {
   measureElement: (el: HTMLElement | null) => void;
   /** Whether to render an expand/collapse toggle cell. */
   enableExpansion?: boolean;
+  /** Whether to render a row selection checkbox cell. */
+  enableRowSelection?: boolean;
 }
 
 /**
@@ -30,6 +32,7 @@ export const TableRow = <TData,>({
   virtualIndex,
   measureElement,
   enableExpansion,
+  enableRowSelection,
 }: TableRowProps<TData>) => {
   return (
     <Tr
@@ -39,6 +42,17 @@ export const TableRow = <TData,>({
       data-index={virtualIndex}
       ref={measureElement}
     >
+      {enableRowSelection && (
+        <Td
+          select={{
+            rowIndex: virtualIndex,
+            onSelect: (_event, isSelected) => {
+              row.toggleSelected(isSelected);
+            },
+            isSelected: row.getIsSelected(),
+          }}
+        />
+      )}
       {enableExpansion && (
         <Td
           expand={{

@@ -20,11 +20,13 @@ export function createMockRow<TData = Record<string, unknown>>(
   options?: {
     cells?: MockCell[];
     expanded?: boolean;
+    selected?: boolean;
     original?: TData;
   },
 ): Row<TData> {
   const cells = options?.cells;
   const expanded = options?.expanded ?? false;
+  const selected = options?.selected ?? false;
 
   return {
     id,
@@ -42,6 +44,8 @@ export function createMockRow<TData = Record<string, unknown>>(
         : [],
     getIsExpanded: () => expanded,
     getToggleExpandedHandler: () => jest.fn(),
+    getIsSelected: () => selected,
+    toggleSelected: jest.fn(),
   } as unknown as Row<TData>;
 }
 
