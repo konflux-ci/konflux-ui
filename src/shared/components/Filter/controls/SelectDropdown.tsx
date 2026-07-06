@@ -31,6 +31,8 @@ export interface SelectDropdownProps {
   isDisabled?: boolean;
   /** When true, shows a Badge with the count of selected items on the toggle. */
   badge?: boolean;
+  /** Test ID attribute applied to the toggle button. */
+  'data-test'?: string;
 }
 
 /**
@@ -50,6 +52,7 @@ export const SelectDropdown: React.FC<SelectDropdownProps> = ({
 
   isDisabled,
   badge,
+  'data-test': dataTest,
 }) => {
   const [isOpen, setIsOpen] = React.useState(false);
 
@@ -73,6 +76,7 @@ export const SelectDropdown: React.FC<SelectDropdownProps> = ({
       isExpanded={isOpen}
       isDisabled={isDisabled}
       icon={toggleIcon}
+      data-test={dataTest}
     >
       {toggleText}{' '}
       {badge && selectedArray.length > 0 && <Badge isRead>{selectedArray.length}</Badge>}
