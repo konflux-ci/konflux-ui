@@ -70,24 +70,48 @@ describe('TableHeader', () => {
     expect(screen.getByTestId('table-header')).toBeInTheDocument();
   });
 
-  it('sets sort prop on sortable columns', () => {
+  it('renders ascending sort icon for sorted asc column', () => {
     const table = createMockTable(defaultHeaders);
     renderTableHeader(<TableHeader table={table as never} columnWidths={defaultWidths} />);
 
     const thead = screen.getByTestId('table-header');
     const columnHeaders = within(thead).getAllByRole('columnheader');
-    // Sortable column (Name) should have aria-sort attribute
-    expect(columnHeaders[0]).toHaveAttribute('aria-sort', 'ascending');
+    // Sorted column (Name, asc) should have sort indicator
+    const sortIndicator = within(columnHeaders[0]).getByTestId('sort-indicator');
+    expect(sortIndicator).toBeInTheDocument();
   });
 
-  it('does not set sort on non-sortable columns', () => {
+  it('renders descending sort icon for sorted desc column', () => {
+    const headers = [
+      { id: 'name', header: 'Name', canSort: true, isSorted: 'desc' as const },
+      { id: 'status', header: 'Status', canSort: false, isSorted: false as const },
+    ];
+    const table = createMockTable(headers);
+    renderTableHeader(<TableHeader table={table as never} columnWidths={defaultWidths} />);
+
+    const thead = screen.getByTestId('table-header');
+    const columnHeaders = within(thead).getAllByRole('columnheader');
+    const sortIndicator = within(columnHeaders[0]).getByTestId('sort-indicator');
+    expect(sortIndicator).toBeInTheDocument();
+  });
+
+  it('does not render sort icon on non-sorted columns', () => {
     const table = createMockTable(defaultHeaders);
     renderTableHeader(<TableHeader table={table as never} columnWidths={defaultWidths} />);
 
     const thead = screen.getByTestId('table-header');
     const columnHeaders = within(thead).getAllByRole('columnheader');
-    // Non-sortable column (Status) should NOT have aria-sort
-    expect(columnHeaders[1]).not.toHaveAttribute('aria-sort');
+    // Non-sortable column (Status) should NOT have sort indicator
+    expect(within(columnHeaders[1]).queryByTestId('sort-indicator')).not.toBeInTheDocument();
+  });
+
+  it('does not render sort button (read-only indicators)', () => {
+    const table = createMockTable(defaultHeaders);
+    renderTableHeader(<TableHeader table={table as never} columnWidths={defaultWidths} />);
+
+    const thead = screen.getByTestId('table-header');
+    // No interactive sort buttons — indicators are read-only
+    expect(within(thead).queryByRole('button')).not.toBeInTheDocument();
   });
 
   it('applies width class for flex columns', () => {
