@@ -10,6 +10,7 @@ import {
   TextContent,
   TextVariants,
 } from '@patternfly/react-core';
+import ServiceUnavailablePage from '~/components/ServiceUnavailable/ServiceUnavailablePage';
 import NoAccessState from '../components/PageAccess/NoAccessState';
 import PageLayout from '../components/PageLayout/PageLayout';
 import { HttpError } from '../k8s/error';
@@ -77,6 +78,9 @@ export const RouteErrorBoundry: React.FC<React.PropsWithChildren> = () => {
   const error = useRouteError() as ErrorResponse;
   if (error.status === 403) {
     return <NoAccessState />;
+  }
+  if (error.status === 503) {
+    return <ServiceUnavailablePage errorMessage={error.data} />;
   }
   if (error instanceof HttpError) {
     const httpError = error as HttpError;

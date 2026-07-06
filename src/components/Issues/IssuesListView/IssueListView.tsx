@@ -6,7 +6,6 @@ import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { MultiSelect } from '~/components/Filter/generic/MultiSelect';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 import { createFilterObj } from '~/components/Filter/utils/filter-utils';
-import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { useSortedResources } from '~/hooks/useSortedResources';
 import { Issue, IssueSeverity, IssueState } from '~/kite/issue-type';
 import { useIssues } from '~/kite/kite-hooks';
@@ -142,7 +141,7 @@ const IssueListView = () => {
   return (
     <>
       <Title headingLevel="h3" className="pf-v5-u-mt-lg pf-v5-u-mb-sm">
-        Issues list <FeatureFlagIndicator flags={['issues-dashboard']} />
+        Issues list
       </Title>
       <TextContent>
         <Text component={TextVariants.p}>This list shows current Konflux issues.</Text>

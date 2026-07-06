@@ -118,3 +118,11 @@ export const namespacesPagePO = {
   filterNamespaceInput: '[aria-label="name filter"]',
   title: 'h1:contains("Namespaces")',
 };
+
+export const issuesPagePO = {
+  page: '[data-test="issues-data-test"]',
+  overviewTab: '[data-test="details__tabItem overview"]',
+  issuesTab: '[data-test="details__tabItem issues"]',
+  serviceUnavailableState: '[data-test="service-unavailable-state"]',
+  serviceUnavailableTitle: 'Service unavailable',
+};
