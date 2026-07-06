@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { SortAlphaDownIcon } from '@patternfly/react-icons/dist/esm/icons/sort-alpha-down-icon';
 import { SelectDropdown } from '~/shared/components/Filter/controls/SelectDropdown';
 import type { GroupedOptions } from '~/shared/components/Filter/types';
 import { useColumnState } from './hooks/useColumnState';
@@ -63,15 +64,10 @@ export const SortDropdown = <TData,>({ columns, columnStateKey }: SortDropdownPr
     }
   };
 
-  const columnLabel = sortableColumns.find((col) => col.id === columnState.sortColumn);
-  const toggleText =
-    columnState.sortColumn && columnLabel
-      ? `Sort by: ${typeof columnLabel.header === 'string' ? columnLabel.header : columnLabel.id} (${columnState.sortDirection ?? 'asc'})`
-      : 'Sort';
-
   return (
     <SelectDropdown
-      toggleText={toggleText}
+      toggleText={<SortAlphaDownIcon />}
+      toggleVariant="plain"
       options={groups}
       selected={selected}
       onSelect={handleSelect}

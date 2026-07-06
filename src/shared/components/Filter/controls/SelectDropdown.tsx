@@ -3,6 +3,7 @@ import {
   Badge,
   Divider,
   MenuToggle,
+  MenuToggleProps,
   Select,
   SelectGroup,
   SelectList,
@@ -13,9 +14,11 @@ import { isFilterOption, isGroupedOptions, type OptionItems } from '../types';
 /** Props for {@link SelectDropdown}. */
 export interface SelectDropdownProps {
   /** Text displayed on the toggle button. */
-  toggleText: string;
+  toggleText: string | React.ReactNode;
   /** Optional icon rendered before the toggle text. */
   toggleIcon?: React.ReactNode;
+  /** Variant of the toggle button. */
+  toggleVariant?: MenuToggleProps['variant'];
   /** Flat or grouped options to display in the dropdown. */
   options: OptionItems;
   /** Currently selected value(s). */
@@ -44,12 +47,12 @@ export interface SelectDropdownProps {
 export const SelectDropdown: React.FC<SelectDropdownProps> = ({
   toggleText,
   toggleIcon,
+  toggleVariant = 'default',
   options,
   selected,
   onSelect,
   multiple,
   hasCheckbox,
-
   isDisabled,
   badge,
   'data-test': dataTest,
@@ -77,6 +80,7 @@ export const SelectDropdown: React.FC<SelectDropdownProps> = ({
       isDisabled={isDisabled}
       icon={toggleIcon}
       data-test={dataTest}
+      variant={toggleVariant}
     >
       {toggleText}{' '}
       {badge && selectedArray.length > 0 && <Badge isRead>{selectedArray.length}</Badge>}
