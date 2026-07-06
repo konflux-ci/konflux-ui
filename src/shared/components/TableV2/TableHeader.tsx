@@ -1,3 +1,5 @@
+import { LongArrowAltDownIcon } from '@patternfly/react-icons/dist/esm/icons/long-arrow-alt-down-icon';
+import { LongArrowAltUpIcon } from '@patternfly/react-icons/dist/esm/icons/long-arrow-alt-up-icon';
 import { Thead, Tr, Th, type ThProps } from '@patternfly/react-table';
 import { flexRender, type Table } from '@tanstack/react-table';
 import { type ColumnWidth } from './column-widths';
@@ -13,11 +15,12 @@ interface TableHeaderProps<TData> {
 }
 
 /**
- * Renders the table header row with column labels, widths, and sort indicators.
+ * Renders the table header row with column labels, widths, and read-only
+ * sort indicators.
  *
- * Applies flex or fixed widths from `columnWidths` and wires up PatternFly's
- * sort props for sortable columns. When expansion is enabled, adds an empty
- * leading `<Th>` for the expand toggle column.
+ * Sort indicators are non-interactive icons displayed inline after the
+ * header text. Sorting is controlled by the {@link SortDropdown} component
+ * rather than by clicking column headers.
  *
  * @typeParam TData - The row data type
  */
@@ -33,7 +36,7 @@ export const TableHeader = <TData,>({
       {table.getHeaderGroups().map((headerGroup) => (
         <Tr role="row" key={headerGroup.id}>
           {enableExpansion && <Th />}
-          {headerGroup.headers.map((header, headerIndex) => {
+          {headerGroup.headers.map((header) => {
             const colWidth = widthMap.get(header.column.id);
             const widthProps: Partial<ThProps> = {};
 
@@ -43,22 +46,16 @@ export const TableHeader = <TData,>({
               widthProps.style = { width: colWidth.fixedWidth };
             }
 
-            const sortProps: Pick<ThProps, 'sort'> = header.column.getCanSort()
-              ? {
-                  sort: {
-                    sortBy: {
-                      index: headerIndex,
-                      direction: header.column.getIsSorted() || undefined,
-                    },
-                    onSort: header.column.getToggleSortingHandler(),
-                    columnIndex: headerIndex,
-                  },
-                }
-              : {};
+            const sortDirection = header.column.getIsSorted();
 
             return (
-              <Th key={header.id} {...widthProps} {...sortProps}>
+              <Th key={header.id} {...widthProps}>
                 {flexRender(header.column.columnDef.header, header.getContext())}
+                {sortDirection && (
+                  <span className="pf-v6-c-table__sort-indicator" data-test="sort-indicator">
+                    {sortDirection === 'asc' ? <LongArrowAltUpIcon /> : <LongArrowAltDownIcon />}
+                  </span>
+                )}
               </Th>
             );
           })}
