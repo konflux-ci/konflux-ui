@@ -91,13 +91,38 @@ describe('EditSecretForm', () => {
     (fetchFullSecret as jest.Mock).mockReset();
   });
 
-  const renderWithSecret = (secretData: SecretKind) => {
+  const renderWithSecret = (
+    secretData: SecretKind,
+    options?: { metadataSecret?: SecretKind; fetchFullSecretImpl?: jest.Mock },
+  ) => {
     useLocationMock.mockReturnValue({
       search: `?secretName=${secretData.metadata.name}`,
     });
-    useSecretMetadataMock.mockReturnValue([stripSecretToMetadataOnly(secretData), true, null]);
-    (fetchFullSecret as jest.Mock).mockResolvedValue(secretData);
+    useSecretMetadataMock.mockReturnValue([
+      options?.metadataSecret ?? stripSecretToMetadataOnly(secretData),
+      true,
+      null,
+    ]);
+    const fetchMock = options?.fetchFullSecretImpl ?? jest.fn().mockResolvedValue(secretData);
+    (fetchFullSecret as jest.Mock).mockImplementation(fetchMock);
     return render(<EditSecretForm />);
+  };
+
+  const makeFormDirtyWithLabel = async (user: UserEvent) => {
+    await user.click(screen.getByTestId('add-button'));
+    const labelKeyInputs = screen.getAllByTestId('pairs-list-name');
+    await user.type(labelKeyInputs[labelKeyInputs.length - 1], 'dirty-label');
+    const labelValueInputs = screen.getAllByTestId('pairs-list-value');
+    await user.type(labelValueInputs[labelValueInputs.length - 1], 'dirty-value');
+  };
+
+  const expectRevealRequiredSubmitError = async () => {
+    await waitFor(() => {
+      expect(
+        screen.getByText('Reveal secret values to load data from the cluster before saving.'),
+      ).toBeInTheDocument();
+    });
+    expect(editSecretResource).not.toHaveBeenCalled();
   };
 
   const expectSensitiveValuesBannerHidden = () => {
@@ -139,6 +164,17 @@ describe('EditSecretForm', () => {
       render(<EditSecretForm />);
 
       expect(screen.queryByRole('heading', { name: 'Edit secret' })).not.toBeInTheDocument();
+    });
+
+    it('initializes opaque key values from metadata when data is present on metadata response', async () => {
+      renderWithSecret(mockOpaqueSecretForEdit, {
+        metadataSecret: mockOpaqueSecretForEdit,
+      });
+
+      await waitFor(() => {
+        expect(screen.getByRole('heading', { name: 'Edit secret' })).toBeInTheDocument();
+      });
+      expectSensitiveValuesBannerHidden();
     });
   });
 
@@ -424,6 +460,24 @@ describe('EditSecretForm', () => {
         expectSensitiveValuesBannerHidden();
       });
     });
+
+    it('handles fetchFullSecret failure when revealing values', async () => {
+      const user = userEvent.setup();
+      renderWithSecret(mockOpaqueSecretForEdit, {
+        fetchFullSecretImpl: jest.fn().mockRejectedValue('network failure'),
+      });
+
+      await waitFor(() => {
+        expect(screen.getByRole('heading', { name: 'Edit secret' })).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByRole('button', { name: 'Show values' }));
+
+      await waitFor(() => {
+        expectSensitiveValuesBannerHidden();
+        expect(screen.queryByDisplayValue('key1')).not.toBeInTheDocument();
+      });
+    });
   });
 
   describe('edit mode behavior', () => {
@@ -459,6 +513,63 @@ describe('EditSecretForm', () => {
   });
 
   describe('cancel and submit', () => {
+    describe('submit without revealing sensitive values', () => {
+      it('shows error when saving opaque secret without revealing values', async () => {
+        const user = userEvent.setup();
+        renderWithSecret(mockOpaqueSecretForEdit);
+
+        await waitFor(() => {
+          expect(screen.getByRole('heading', { name: 'Edit secret' })).toBeInTheDocument();
+        });
+        await makeFormDirtyWithLabel(user);
+
+        await waitFor(() => {
+          expect(screen.getByTestId('submit-button')).not.toBeDisabled();
+        });
+        await user.click(screen.getByTestId('submit-button'));
+
+        await expectRevealRequiredSubmitError();
+      });
+
+      it('shows error when saving source basic auth without revealing values', async () => {
+        const user = userEvent.setup();
+        renderWithSecret(mockSourceSecretBasicAuthForEdit);
+
+        await waitFor(() => {
+          expect(screen.getByLabelText(/^Host/)).toBeInTheDocument();
+        });
+        const hostInput = screen.getByLabelText(/^Host/);
+        await user.clear(hostInput);
+        await user.type(hostInput, 'gitlab.com');
+
+        await waitFor(() => {
+          expect(screen.getByTestId('submit-button')).not.toBeDisabled();
+        });
+        await user.click(screen.getByTestId('submit-button'));
+
+        await expectRevealRequiredSubmitError();
+      });
+
+      it('shows error when saving source SSH secret without revealing values', async () => {
+        const user = userEvent.setup();
+        renderWithSecret(mockSourceSecretSSHForEdit);
+
+        await waitFor(() => {
+          expect(screen.getByLabelText(/^Host/)).toBeInTheDocument();
+        });
+        const hostInput = screen.getByLabelText(/^Host/);
+        await user.clear(hostInput);
+        await user.type(hostInput, 'github.com');
+
+        await waitFor(() => {
+          expect(screen.getByTestId('submit-button')).not.toBeDisabled();
+        });
+        await user.click(screen.getByTestId('submit-button'));
+
+        await expectRevealRequiredSubmitError();
+      });
+    });
+
     it('navigates back when Cancel is clicked', async () => {
       const user = userEvent.setup();
       renderWithSecret(mockOpaqueSecretForEdit);
@@ -832,6 +943,93 @@ describe('EditSecretForm', () => {
       });
 
       expect(editSecretResource).not.toHaveBeenCalled();
+    });
+
+    it('calls editSecretResource with preserved source password when password cleared after reveal', async () => {
+      const user = userEvent.setup();
+      (editSecretResource as jest.Mock).mockResolvedValue(undefined);
+
+      renderWithSecret(mockSourceSecretBasicAuthForEdit);
+
+      await showSecretValues(user);
+      await waitFor(() => {
+        expect(screen.getByDisplayValue('gituser')).toBeInTheDocument();
+      });
+
+      const passwordInput = screen.getByLabelText('Password');
+      await user.clear(passwordInput);
+      const hostInput = screen.getByLabelText(/^Host/);
+      await user.clear(hostInput);
+      await user.type(hostInput, 'github.org');
+      await user.click(screen.getByRole('heading', { name: 'Edit secret' }));
+
+      await waitFor(() => {
+        expect(screen.getByTestId('submit-button')).not.toBeDisabled();
+      });
+
+      await user.click(screen.getByTestId('submit-button'));
+
+      await waitFor(() => {
+        expect(editSecretResource).toHaveBeenCalledWith(
+          expect.objectContaining({
+            type: SecretTypeDropdownLabel.source,
+            name: 'source-secret-basic',
+            source: expect.objectContaining({
+              authType: SourceSecretType.basic,
+              username: 'gituser',
+              password: 'gitpass',
+              host: 'github.org',
+              repo: 'org/repo',
+            }),
+          }),
+          'test-ns',
+          mockSourceSecretBasicAuthForEdit,
+        );
+      });
+    });
+
+    it('calls editSecretResource with preserved SSH private key when key cleared after reveal', async () => {
+      const user = userEvent.setup();
+      (editSecretResource as jest.Mock).mockResolvedValue(undefined);
+
+      renderWithSecret(mockSourceSecretSSHForEdit);
+
+      await showSecretValues(user);
+      await waitFor(() => {
+        expectSensitiveValuesBannerVisible();
+      });
+
+      const sshKeyField = document.getElementById('text-file-ssh');
+      const sshKeyInput = sshKeyField?.querySelector('input, textarea') ?? sshKeyField;
+      expect(sshKeyInput).toBeInTheDocument();
+      await user.clear(sshKeyInput as HTMLInputElement | HTMLTextAreaElement);
+
+      const hostInput = screen.getByLabelText(/^Host/);
+      await user.clear(hostInput);
+      await user.type(hostInput, 'github.com');
+      await user.click(screen.getByRole('heading', { name: 'Edit secret' }));
+
+      await waitFor(() => {
+        expect(screen.getByTestId('submit-button')).not.toBeDisabled();
+      });
+
+      await user.click(screen.getByTestId('submit-button'));
+
+      await waitFor(() => {
+        expect(editSecretResource).toHaveBeenCalledWith(
+          expect.objectContaining({
+            type: SecretTypeDropdownLabel.source,
+            name: 'source-secret-ssh',
+            source: expect.objectContaining({
+              host: 'github.com',
+              repo: 'group/project',
+              'ssh-privatekey': mockSourceSecretSSHForEdit.data?.['ssh-privatekey'],
+            }),
+          }),
+          'test-ns',
+          mockSourceSecretSSHForEdit,
+        );
+      });
     });
 
     it('sets submit error and does not navigate when editSecretResource rejects', async () => {
