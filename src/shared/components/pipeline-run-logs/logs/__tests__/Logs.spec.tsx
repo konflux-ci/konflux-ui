@@ -870,8 +870,15 @@ describe('Logs', () => {
     );
   });
 
-  describe('loading indicator while processing logs', () => {
-    it('should not add processingLogs to isLoading', () => {
+  describe('loading indicator while fetching logs', () => {
+    it('should show loading while terminated container logs are being fetched', async () => {
+      let resolveFetch: ((value: string) => void) | undefined;
+      const fetchPromise = new Promise<string>((resolve) => {
+        resolveFetch = resolve;
+      });
+      (commonFetchText as jest.Mock).mockReturnValue(fetchPromise);
+      (containerToLogSourceStatus as jest.Mock).mockReturnValue('terminated');
+
       const terminatedContainer: ContainerStatus = {
         name: 'container1',
         state: { terminated: { exitCode: 0 } },
@@ -889,9 +896,6 @@ describe('Logs', () => {
         },
       };
 
-      (containerToLogSourceStatus as jest.Mock).mockReturnValue('terminated');
-      (commonFetchText as jest.Mock).mockResolvedValue('some log output');
-
       render(
         <Logs
           {...defaultProps}
@@ -900,15 +904,27 @@ describe('Logs', () => {
         />,
       );
 
-      // isLoading should only reflect the prop, not internal processing
       expect(mockLogViewer).toHaveBeenCalledWith(
         expect.objectContaining({
-          isLoading: false,
+          isLoading: true,
         }),
       );
+
+      await act(async () => {
+        resolveFetch?.('some log output');
+        await fetchPromise;
+      });
+
+      await waitFor(() => {
+        expect(mockLogViewer).toHaveBeenLastCalledWith(
+          expect.objectContaining({
+            isLoading: false,
+          }),
+        );
+      });
     });
 
-    it('should not show loading when there are no log sources', () => {
+    it('should not show loading when there are no containers to fetch', () => {
       render(<Logs {...defaultProps} containers={[]} />);
 
       expect(mockLogViewer).toHaveBeenCalledWith(

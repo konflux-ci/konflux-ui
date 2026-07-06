@@ -75,6 +75,8 @@ const Logs: React.FC<LogsProps> = ({
   // state to hold the logs for each container individually
   const [logSources, setLogSources] = React.useState<LogSources>({});
   const [error, setError] = React.useState<boolean>(false);
+  const pendingFetchesRef = React.useRef(0);
+  const [isFetchingLogs, setIsFetchingLogs] = React.useState(false);
   // to track which containers already started fetching
   const connectionManagerRef = React.useRef(new Map<string, () => void>());
 
@@ -88,6 +90,20 @@ const Logs: React.FC<LogsProps> = ({
   // loops through the containers and initiates fetching for each one
   React.useEffect(() => {
     const activeConnections = connectionManagerRef.current;
+
+    const markFetchStarted = () => {
+      pendingFetchesRef.current += 1;
+      if (pendingFetchesRef.current === 1) {
+        setIsFetchingLogs(true);
+      }
+    };
+
+    const markFetchFinished = () => {
+      pendingFetchesRef.current = Math.max(0, pendingFetchesRef.current - 1);
+      if (pendingFetchesRef.current === 0) {
+        setIsFetchingLogs(false);
+      }
+    };
 
     containers.forEach((container) => {
       if (activeConnections.has(container.name)) {
@@ -114,6 +130,7 @@ const Logs: React.FC<LogsProps> = ({
         const controller = new AbortController();
         const { signal } = controller;
 
+        markFetchStarted();
         commonFetchText(watchURL, {
           signal,
           ...(isKubearchiveEnabled && source === ResourceSource.Archive
@@ -136,7 +153,8 @@ const Logs: React.FC<LogsProps> = ({
                 `\x1b[1;31mLOG FETCH ERROR${err instanceof Error ? `:\n${err.message}` : ''}\x1b[0m\n`,
               );
             }
-          });
+          })
+          .finally(markFetchFinished);
 
         activeConnections.set(name, () => controller.abort());
       } else {
@@ -214,7 +232,7 @@ const Logs: React.FC<LogsProps> = ({
       downloadAllLabel={downloadAllLabel}
       onDownloadAll={onDownloadAll}
       taskRun={taskRun}
-      isLoading={isLoading}
+      isLoading={isLoading || isFetchingLogs}
       errorMessage={error ? t('An error occurred while retrieving the requested logs.') : null}
     />
   );
