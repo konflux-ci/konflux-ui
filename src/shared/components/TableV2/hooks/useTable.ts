@@ -1,10 +1,11 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
   getSortedRowModel,
   getExpandedRowModel,
   type ColumnDef,
+  type RowSelectionState,
   type SortingState,
   type Table,
   type Row,
@@ -33,6 +34,10 @@ export interface UseTableOptions<TData> {
   enableSorting?: boolean;
   /** Enables expandable rows. */
   enableExpansion?: boolean;
+  /** Enables row selection checkboxes. */
+  enableRowSelection?: boolean;
+  /** Callback fired when row selection changes with the selected row data. */
+  onRowSelectionChange?: (selectedRows: TData[]) => void;
   /** Enables row grouping. Reserved for future use. */
   enableGrouping?: boolean;
   /** Arbitrary metadata passed to TanStack Table's `meta` option. */
@@ -49,6 +54,8 @@ export interface UseTableResult<TData> {
   table: Table<TData>;
   /** The current row model (post-sort, post-filter). */
   rows: Row<TData>[];
+  /** Current row selection state. Only present when enableRowSelection is true. */
+  rowSelection?: RowSelectionState;
 }
 
 /** Maps `ColumnDefinition` to TanStack `ColumnDef`, translating our API to theirs. */
@@ -127,6 +134,7 @@ export function useTable<TData>(options: UseTableOptions<TData>): UseTableResult
     responsiveColumnVisibility,
     enableSorting,
     enableExpansion,
+    enableRowSelection,
     meta,
   } = options;
 
@@ -143,6 +151,8 @@ export function useTable<TData>(options: UseTableOptions<TData>): UseTableResult
   );
 
   const columnOrder = columnState.columnOrder;
+
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
   const sorting: SortingState | undefined = useMemo(() => {
     if (!enableSorting || !columnState.sortColumn) return undefined;
@@ -161,15 +171,31 @@ export function useTable<TData>(options: UseTableOptions<TData>): UseTableResult
           getRowCanExpand: () => true,
         }
       : {}),
+    ...(enableRowSelection
+      ? {
+          enableRowSelection: true,
+          enableMultiRowSelection: true,
+          onRowSelectionChange: setRowSelection,
+        }
+      : {}),
     state: {
       columnVisibility,
       columnOrder,
       ...(sorting ? { sorting } : {}),
+      ...(enableRowSelection ? { rowSelection } : {}),
     },
     meta,
   });
 
+  useEffect(() => {
+    if (options.onRowSelectionChange) {
+      const selected = table.getSelectedRowModel().rows.map((r) => r.original);
+      options.onRowSelectionChange(selected);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rowSelection]);
+
   const rows = table.getRowModel().rows;
 
-  return { table, rows };
+  return { table, rows, ...(enableRowSelection ? { rowSelection } : {}) };
 }

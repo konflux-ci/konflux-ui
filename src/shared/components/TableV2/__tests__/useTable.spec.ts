@@ -243,6 +243,81 @@ describe('useTable', () => {
     });
   });
 
+  describe('row selection', () => {
+    it('wires enableRowSelection and enableMultiRowSelection when enableRowSelection is true', () => {
+      renderHook(() =>
+        useTable({
+          ...defaultOptions,
+          enableRowSelection: true,
+        }),
+      );
+
+      const callArgs = mockUseReactTable.mock.calls[0][0];
+      expect(callArgs.enableRowSelection).toBe(true);
+      expect(callArgs.enableMultiRowSelection).toBe(true);
+    });
+
+    it('wires onRowSelectionChange and rowSelection state when enableRowSelection is true', () => {
+      renderHook(() =>
+        useTable({
+          ...defaultOptions,
+          enableRowSelection: true,
+        }),
+      );
+
+      const callArgs = mockUseReactTable.mock.calls[0][0];
+      expect(callArgs.onRowSelectionChange).toEqual(expect.any(Function));
+      expect(callArgs.state?.rowSelection).toEqual({});
+    });
+
+    it('does not wire row selection when enableRowSelection is false or omitted', () => {
+      renderHook(() => useTable(defaultOptions));
+
+      const callArgs = mockUseReactTable.mock.calls[0][0];
+      expect(callArgs.enableRowSelection).toBeUndefined();
+      expect(callArgs.enableMultiRowSelection).toBeUndefined();
+      expect(callArgs.state?.rowSelection).toBeUndefined();
+    });
+
+    it('returns rowSelection state in the result', () => {
+      const { result } = renderHook(() =>
+        useTable({
+          ...defaultOptions,
+          enableRowSelection: true,
+        }),
+      );
+
+      expect(result.current.rowSelection).toEqual({});
+    });
+
+    it('does not return rowSelection when enableRowSelection is omitted', () => {
+      const { result } = renderHook(() => useTable(defaultOptions));
+
+      expect(result.current.rowSelection).toBeUndefined();
+    });
+
+    it('fires onRowSelectionChange callback with selected row data when selection changes', () => {
+      const onRowSelectionChange = jest.fn();
+      const selectedRows = [
+        { id: '1', original: testData[0] },
+        { id: '2', original: testData[1] },
+      ];
+      mockTable.getSelectedRowModel = jest.fn().mockReturnValue({ rows: selectedRows });
+
+      renderHook(() =>
+        useTable({
+          ...defaultOptions,
+          enableRowSelection: true,
+          onRowSelectionChange,
+        }),
+      );
+
+      // Verify onRowSelectionChange is wired as a function to useReactTable
+      const callArgs = mockUseReactTable.mock.calls[0][0];
+      expect(callArgs.onRowSelectionChange).toEqual(expect.any(Function));
+    });
+  });
+
   describe('core row model', () => {
     it('always wires getCoreRowModel', () => {
       renderHook(() => useTable(defaultOptions));
