@@ -1,6 +1,7 @@
 import { fileURLToPath } from 'url';
 import path from 'path';
 import { merge } from 'webpack-merge';
+import { sentryWebpackPlugin } from '@sentry/webpack-plugin';
 import commonConfig from './webpack.config.js';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import CssMinimizerPlugin from 'css-minimizer-webpack-plugin';
@@ -48,5 +49,23 @@ export default merge(commonConfig, {
       new CssMinimizerPlugin(),
     ],
   },
-  plugins: [new MiniCssExtractPlugin({ filename: '[name].css' })],
+  plugins: [
+    new MiniCssExtractPlugin({ filename: '[name].css' }),
+    ...(process.env.SENTRY_AUTH_TOKEN
+      ? [
+          sentryWebpackPlugin({
+            org: process.env.SENTRY_ORG,
+            project: process.env.SENTRY_PROJECT,
+            authToken: process.env.SENTRY_AUTH_TOKEN,
+            release: {
+              name: process.env.SENTRY_RELEASE || process.env.GIT_COMMIT_SHA,
+            },
+            sourcemaps: {
+              deleteFilesAfterUpload: ['dist/**/*.map'],
+            },
+            telemetry: false,
+          }),
+        ]
+      : []),
+  ],
 });
