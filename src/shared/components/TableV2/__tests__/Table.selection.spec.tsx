@@ -175,7 +175,7 @@ describe('Table selection lifecycle', () => {
     }
   });
 
-  it('selection resets when data reference changes', async () => {
+  it('selection persists when data reference changes but row IDs are stable', async () => {
     const user = userEvent.setup();
     const onRowSelectionChange = jest.fn();
     const { rerender } = render(
@@ -192,8 +192,7 @@ describe('Table selection lifecycle', () => {
       <Table {...defaultProps} data={newData} onRowSelectionChange={onRowSelectionChange} />,
     );
 
-    // Selection should persist because row IDs are stable via getRowId
-    // TanStack tracks by row ID, not array reference
+    // Selection persists because TanStack tracks by row ID (getRowId), not array reference
     const newCheckboxes = screen.getAllByRole('checkbox');
     expect(newCheckboxes[0]).toBeChecked();
   });

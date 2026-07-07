@@ -123,7 +123,9 @@ export const Table = <TData,>({
   });
 
   const columnWidths = computeColumnWidths(columns, columnState.visibleColumns);
-  const visibleColumnCount = table.getVisibleLeafColumns().length;
+  let visibleColumnCount = table.getVisibleLeafColumns().length;
+  if (enableExpansion) visibleColumnCount += 1;
+  if (enableRowSelection) visibleColumnCount += 1;
 
   return (
     <div data-test="table-v2" ref={tableRef}>

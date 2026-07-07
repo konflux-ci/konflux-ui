@@ -4,7 +4,7 @@ import {
   getSortedRowModel,
   getExpandedRowModel,
 } from '@tanstack/react-table';
-import { renderHook } from '@testing-library/react';
+import { act, renderHook } from '@testing-library/react';
 import { type ColumnDefinition, type ColumnState } from '~/shared/components/TableV2';
 import { useTable, type UseTableOptions } from '~/shared/components/TableV2/hooks/useTable';
 
@@ -271,39 +271,17 @@ describe('useTable', () => {
       expect(callArgs.state?.rowSelection).toEqual({});
     });
 
-    it('does not wire row selection when enableRowSelection is false or omitted', () => {
+    it('explicitly disables row selection when enableRowSelection is false or omitted', () => {
       renderHook(() => useTable(defaultOptions));
 
       const callArgs = mockUseReactTable.mock.calls[0][0];
-      expect(callArgs.enableRowSelection).toBeUndefined();
+      expect(callArgs.enableRowSelection).toBe(false);
       expect(callArgs.enableMultiRowSelection).toBeUndefined();
       expect(callArgs.state?.rowSelection).toBeUndefined();
     });
 
-    it('returns rowSelection state in the result', () => {
-      const { result } = renderHook(() =>
-        useTable({
-          ...defaultOptions,
-          enableRowSelection: true,
-        }),
-      );
-
-      expect(result.current.rowSelection).toEqual({});
-    });
-
-    it('does not return rowSelection when enableRowSelection is omitted', () => {
-      const { result } = renderHook(() => useTable(defaultOptions));
-
-      expect(result.current.rowSelection).toBeUndefined();
-    });
-
     it('fires onRowSelectionChange callback with selected row data when selection changes', () => {
       const onRowSelectionChange = jest.fn();
-      const selectedRows = [
-        { id: '1', original: testData[0] },
-        { id: '2', original: testData[1] },
-      ];
-      mockTable.getSelectedRowModel = jest.fn().mockReturnValue({ rows: selectedRows });
 
       renderHook(() =>
         useTable({
@@ -313,9 +291,55 @@ describe('useTable', () => {
         }),
       );
 
-      // Verify onRowSelectionChange is wired as a function to useReactTable
+      // Get the handler wired to useReactTable and simulate a selection change
       const callArgs = mockUseReactTable.mock.calls[0][0];
-      expect(callArgs.onRowSelectionChange).toEqual(expect.any(Function));
+      const handler = callArgs.onRowSelectionChange;
+      expect(handler).toEqual(expect.any(Function));
+
+      // Simulate TanStack calling onRowSelectionChange with an updater
+      act(() => {
+        handler({ '1': true });
+      });
+
+      expect(onRowSelectionChange).toHaveBeenCalledWith([testData[0]]);
+    });
+
+    it('fires onRowSelectionChange with multiple selected rows', () => {
+      const onRowSelectionChange = jest.fn();
+
+      renderHook(() =>
+        useTable({
+          ...defaultOptions,
+          enableRowSelection: true,
+          onRowSelectionChange,
+        }),
+      );
+
+      const callArgs = mockUseReactTable.mock.calls[0][0];
+      act(() => {
+        callArgs.onRowSelectionChange({ '1': true, '2': true });
+      });
+
+      expect(onRowSelectionChange).toHaveBeenCalledWith([testData[0], testData[1]]);
+    });
+
+    it('fires onRowSelectionChange with updater function', () => {
+      const onRowSelectionChange = jest.fn();
+
+      renderHook(() =>
+        useTable({
+          ...defaultOptions,
+          enableRowSelection: true,
+          onRowSelectionChange,
+        }),
+      );
+
+      const callArgs = mockUseReactTable.mock.calls[0][0];
+      // Simulate TanStack calling with an updater function
+      const updater = () => ({ '2': true });
+      act(() => callArgs.onRowSelectionChange(updater));
+
+      expect(onRowSelectionChange).toHaveBeenCalledWith([testData[1]]);
     });
   });
 

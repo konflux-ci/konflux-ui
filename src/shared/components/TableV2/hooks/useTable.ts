@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
   getSortedRowModel,
   getExpandedRowModel,
   type ColumnDef,
+  type OnChangeFn,
   type RowSelectionState,
   type SortingState,
   type Table,
@@ -54,8 +55,6 @@ export interface UseTableResult<TData> {
   table: Table<TData>;
   /** The current row model (post-sort, post-filter). */
   rows: Row<TData>[];
-  /** Current row selection state. Only present when enableRowSelection is true. */
-  rowSelection?: RowSelectionState;
 }
 
 /** Maps `ColumnDefinition` to TanStack `ColumnDef`, translating our API to theirs. */
@@ -154,6 +153,17 @@ export function useTable<TData>(options: UseTableOptions<TData>): UseTableResult
 
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
+  const handleRowSelectionChange: OnChangeFn<RowSelectionState> = (updaterOrValue) => {
+    const next =
+      typeof updaterOrValue === 'function' ? updaterOrValue(rowSelection) : updaterOrValue;
+    setRowSelection(next);
+    if (options.onRowSelectionChange) {
+      const selectedIds = Object.keys(next).filter((k) => next[k]);
+      const selectedRows = data.filter((row) => selectedIds.includes(getRowId(row)));
+      options.onRowSelectionChange(selectedRows);
+    }
+  };
+
   const sorting: SortingState | undefined = useMemo(() => {
     if (!enableSorting || !columnState.sortColumn) return undefined;
     return [{ id: columnState.sortColumn, desc: columnState.sortDirection === 'desc' }];
@@ -171,11 +181,11 @@ export function useTable<TData>(options: UseTableOptions<TData>): UseTableResult
           getRowCanExpand: () => true,
         }
       : {}),
+    enableRowSelection: !!enableRowSelection,
     ...(enableRowSelection
       ? {
-          enableRowSelection: true,
           enableMultiRowSelection: true,
-          onRowSelectionChange: setRowSelection,
+          onRowSelectionChange: handleRowSelectionChange,
         }
       : {}),
     state: {
@@ -187,15 +197,7 @@ export function useTable<TData>(options: UseTableOptions<TData>): UseTableResult
     meta,
   });
 
-  useEffect(() => {
-    if (options.onRowSelectionChange) {
-      const selected = table.getSelectedRowModel().rows.map((r) => r.original);
-      options.onRowSelectionChange(selected);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rowSelection]);
-
   const rows = table.getRowModel().rows;
 
-  return { table, rows, ...(enableRowSelection ? { rowSelection } : {}) };
+  return { table, rows };
 }
