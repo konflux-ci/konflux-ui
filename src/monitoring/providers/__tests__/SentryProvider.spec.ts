@@ -1,4 +1,3 @@
-import { mockConsole, MockConsole } from '~/unit-test-utils';
 import type { MonitoringConfig } from '../../types';
 import { SentryProvider } from '../SentryProvider';
 
@@ -12,28 +11,22 @@ jest.mock('@sentry/react', () => ({
 
 describe('SentryProvider', () => {
   let provider: SentryProvider;
-  let consoleMock: MockConsole;
   let Sentry: typeof import('@sentry/react');
 
   beforeEach(() => {
     provider = new SentryProvider();
-    consoleMock = mockConsole();
     Sentry = jest.requireMock('@sentry/react');
     jest.clearAllMocks();
   });
 
-  afterEach(() => {
-    consoleMock.restore();
-  });
-
-  it('should initialize Sentry with merged config and log success', async () => {
+  it('should initialize Sentry with merged config', async () => {
     const config: MonitoringConfig & { dsn: string } = {
       enabled: true,
       provider: 'sentry',
       dsn: 'https://test@sentry.io/123',
       environment: 'production',
       cluster: 'prod-cluster',
-      sampleRates: { errors: 0.5 },
+      sampleRates: { errors: 0.5, traces: 0.3 },
     };
 
     await provider.init(config);
@@ -44,11 +37,11 @@ describe('SentryProvider', () => {
         environment: 'production',
         sampleRate: 0.5,
         sendDefaultPii: true,
-        tracesSampleRate: 0.2,
+        tracesSampleRate: 0.3,
+        tracePropagationTargets: ['localhost', /^\//],
         initialScope: { tags: { cluster: 'prod-cluster' } },
       }),
     );
-    expect(consoleMock.info).toHaveBeenCalledWith('Sentry initialized', expect.any(Object));
   });
 
   it('should use default values when config fields are missing', async () => {
@@ -64,6 +57,7 @@ describe('SentryProvider', () => {
     expect(Sentry.init).toHaveBeenCalledWith(
       expect.objectContaining({
         sampleRate: 1.0,
+        tracesSampleRate: 0.2,
         initialScope: { tags: { cluster: 'unknown' } },
       }),
     );

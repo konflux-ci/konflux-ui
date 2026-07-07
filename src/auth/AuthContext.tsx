@@ -37,6 +37,14 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = React.memo(({ chi
             preferredUsername: data.preferredUsername,
           });
           setIsAuthenticated(true);
+
+          // Dynamic import to avoid loading monitoring eagerly
+          const { monitoringService } = await import('~/monitoring');
+          monitoringService?.setUser({
+            id: data.preferredUsername ?? undefined,
+            username: data.preferredUsername ?? undefined,
+            email: data.email ?? undefined,
+          });
         }
       } catch (err) {
         // eslint-disable-next-line no-console
