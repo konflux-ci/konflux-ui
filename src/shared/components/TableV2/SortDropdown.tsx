@@ -72,6 +72,7 @@ export const SortDropdown = <TData,>({ columns, columnStateKey }: SortDropdownPr
       selected={selected}
       onSelect={handleSelect}
       multiple
+      data-test="sort-dropdown"
     />
   );
 };

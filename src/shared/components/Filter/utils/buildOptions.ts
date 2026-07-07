@@ -129,11 +129,11 @@ export const buildGroupedOptions = <T>(
   }
 
   return [...groupMap.entries()]
-    .sort(([a], [b]) => a.localeCompare(b))
     .map(([group, keys]) => ({
       group: groupFormatter(group),
       options: [...keys]
         .map((value) => ({ label: formatter(value), value }))
         .sort((a, b) => a.label.localeCompare(b.label)),
-    }));
+    }))
+    .sort((a, b) => a.group.localeCompare(b.group));
 };

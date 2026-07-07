@@ -1,7 +1,12 @@
 import * as React from 'react';
 import { ToolbarFilter } from '@patternfly/react-core';
 import { parseAsString, useQueryState } from 'nuqs';
-import { isFilterOption, type OptionItems, type SingleSelectFilterConfig } from '../types';
+import {
+  isFilterOption,
+  isGroupedOptions,
+  type OptionItems,
+  type SingleSelectFilterConfig,
+} from '../types';
 import { SelectDropdown } from './SelectDropdown';
 
 /** Props for {@link SingleSelectFilter}. */
@@ -28,12 +33,10 @@ export const SingleSelectFilter = <T,>({ config, options }: SingleSelectFilterPr
 
   // Collect all FilterOptions for chip label lookup (works for both flat and grouped)
   const allFilterOptions = React.useMemo(() => {
-    if (Array.isArray(options) && options.length > 0 && 'group' in options[0]) {
-      return (options as { group: string; options: { label: string; value: string }[] }[]).flatMap(
-        (g) => g.options,
-      );
+    if (isGroupedOptions(options)) {
+      return options.flatMap((g) => g.options);
     }
-    return (options as { label?: string; value?: string; type?: string }[]).filter(isFilterOption);
+    return options.filter(isFilterOption);
   }, [options]);
 
   const labelForValue = (value: string): string =>
