@@ -4,8 +4,8 @@
   "minimumReleaseAge": "7 days",
   "packageRules": [
     {
-      "description": "Automerge minor and patch updates for package versions",
-      "matchUpdateTypes": ["minor", "patch"],
+      "description": "Automerge minor, patch, and digest updates for package versions",
+      "matchUpdateTypes": ["minor", "patch", "digest"],
       "automerge": true
     }
   ]
