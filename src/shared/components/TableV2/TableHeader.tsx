@@ -47,9 +47,15 @@ export const TableHeader = <TData,>({
             }
 
             const sortDirection = header.column.getIsSorted();
+            const ariaSort =
+              sortDirection === 'asc'
+                ? 'ascending'
+                : sortDirection === 'desc'
+                  ? 'descending'
+                  : undefined;
 
             return (
-              <Th key={header.id} {...widthProps}>
+              <Th key={header.id} {...widthProps} aria-sort={ariaSort}>
                 {flexRender(header.column.columnDef.header, header.getContext())}
                 {sortDirection && (
                   <span className="pf-v6-c-table__sort-indicator" data-test="sort-indicator">

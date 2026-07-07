@@ -105,6 +105,27 @@ describe('TableHeader', () => {
     expect(within(columnHeaders[1]).queryByTestId('sort-indicator')).not.toBeInTheDocument();
   });
 
+  it('sets aria-sort on sorted columns', () => {
+    const headers = [
+      { id: 'name', header: 'Name', canSort: true, isSorted: 'asc' as const },
+      { id: 'status', header: 'Status', canSort: true, isSorted: 'desc' as const },
+      { id: 'id', header: 'ID', canSort: false, isSorted: false as const },
+    ];
+    const widths: ColumnWidth[] = [
+      { id: 'name', type: 'flex', widthPercent: 40 },
+      { id: 'status', type: 'flex', widthPercent: 40 },
+      { id: 'id', type: 'flex', widthPercent: 20 },
+    ];
+    const table = createMockTable(headers);
+    renderTableHeader(<TableHeader table={table as never} columnWidths={widths} />);
+
+    const thead = screen.getByTestId('table-header');
+    const columnHeaders = within(thead).getAllByRole('columnheader');
+    expect(columnHeaders[0]).toHaveAttribute('aria-sort', 'ascending');
+    expect(columnHeaders[1]).toHaveAttribute('aria-sort', 'descending');
+    expect(columnHeaders[2]).not.toHaveAttribute('aria-sort');
+  });
+
   it('does not render sort button (read-only indicators)', () => {
     const table = createMockTable(defaultHeaders);
     renderTableHeader(<TableHeader table={table as never} columnWidths={defaultWidths} />);

@@ -9,7 +9,7 @@ import {
   SelectList,
   SelectOption,
 } from '@patternfly/react-core';
-import { isFilterOption, isGroupedOptions, type OptionItems } from '../types';
+import { isFilterOption, isGroupedOptions, type FilterOption, type OptionItems } from '../types';
 
 /** Props for {@link SelectDropdown}. */
 export interface SelectDropdownProps {
@@ -89,12 +89,7 @@ export const SelectDropdown: React.FC<SelectDropdownProps> = ({
 
   const role = hasCheckbox ? 'menu' : undefined;
 
-  const renderOption = (option: {
-    label: string;
-    value: string;
-    description?: string;
-    icon?: React.ReactNode;
-  }) => (
+  const renderOption = (option: FilterOption) => (
     <SelectOption
       key={option.value}
       value={option.value}
