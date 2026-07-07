@@ -52,15 +52,20 @@ export const SortDropdown = <TData,>({ columns, columnStateKey }: SortDropdownPr
     [columnState.sortColumn, columnState.sortDirection],
   );
 
+  const sortableColumnIds = React.useMemo(
+    () => new Set(sortableColumns.map((col) => col.id)),
+    [sortableColumns],
+  );
+
   const handleSelect = (value: string) => {
-    if (value === 'asc' || value === 'desc') {
-      setColumnState({ ...columnState, sortDirection: value });
-    } else {
+    if (sortableColumnIds.has(value)) {
       setColumnState({
         ...columnState,
         sortColumn: value,
         sortDirection: columnState.sortDirection ?? 'asc',
       });
+    } else {
+      setColumnState({ ...columnState, sortDirection: value as 'asc' | 'desc' });
     }
   };
 

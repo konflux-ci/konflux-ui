@@ -83,7 +83,9 @@ export const SelectDropdown: React.FC<SelectDropdownProps> = ({
       variant={toggleVariant}
     >
       {toggleText}{' '}
-      {badge && selectedArray.length > 0 && <Badge isRead>{selectedArray.length}</Badge>}
+      {badge && !isDisabled && selectedArray.length > 0 && (
+        <Badge isRead>{selectedArray.length}</Badge>
+      )}
     </MenuToggle>
   );
 
