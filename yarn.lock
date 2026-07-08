@@ -15193,8 +15193,8 @@ __metadata:
   linkType: hard
 
 "nuqs@npm:^2.8.9":
-  version: 2.8.9
-  resolution: "nuqs@npm:2.8.9"
+  version: 2.9.0
+  resolution: "nuqs@npm:2.9.0"
   dependencies:
     "@standard-schema/spec": "npm:1.0.0"
   peerDependencies:
@@ -15202,7 +15202,7 @@ __metadata:
     "@tanstack/react-router": ^1
     next: ">=14.2.0"
     react: ">=18.2.0 || ^19.0.0-0"
-    react-router: ^5 || ^6 || ^7
+    react-router: ^5 || ^6 || ^7 || ^8
     react-router-dom: ^5 || ^6 || ^7
   peerDependenciesMeta:
     "@remix-run/react":
@@ -15215,7 +15215,7 @@ __metadata:
       optional: true
     react-router-dom:
       optional: true
-  checksum: 10/bce5c1d0920b56d2f4ff3a0074a3bd3fc7f847694529f72d808f5cd9882bd88ff443e8f93ad0c3aef41b5d3a411c656f9bfb430bb77dbd5f1f37d0f6b18addd6
+  checksum: 10/4a48aa2814da53227f450a04cc25175b8827b0ac00910119e96718276a8340b0c5df6819a1c23d8207b29e1729ac30c7e02849c1c53aff3f07748218235b7b36
   languageName: node
   linkType: hard
 
