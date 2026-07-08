@@ -2,16 +2,19 @@ import * as React from 'react';
 import {
   Button,
   ButtonVariant,
+  Flex,
+  FlexItem,
   MenuToggle,
   Select,
   SelectList,
   SelectOption,
+  Switch,
 } from '@patternfly/react-core';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { MultiSelect } from '~/components/Filter/generic/MultiSelect';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 import { createFilterObj } from '~/components/Filter/utils/filter-utils';
-import { useDeepCompareMemoize } from '~/shared';
+import { HelpTooltipIcon, useDeepCompareMemoize } from '~/shared';
 import { CONFORMA_RESULT_STATUS, type ConformaResultRow } from '~/types/conforma';
 import type { GroupByMode } from './conforma-grouping-utils';
 
@@ -21,6 +24,8 @@ type ConformaResultsToolbarProps = {
   onGroupByChange: (value: GroupByMode) => void;
   allExpanded: boolean;
   onToggleExpandAll: () => void;
+  showDuplicates: boolean;
+  onShowDuplicatesChange: (checked: boolean) => void;
 };
 
 const statuses = [
@@ -34,12 +39,17 @@ const groupByLabels: Record<GroupByMode, string> = {
   component: 'Component',
 };
 
+const SHOW_DUPLICATES_HELP_TEXT =
+  'When enabled, policy violations that share the same rule, message, and component but differ only by image digest (e.g. multi-arch builds) are shown as separate rows instead of being merged.';
+
 export const ConformaResultsToolbar: React.FC<ConformaResultsToolbarProps> = ({
   allResults,
   groupBy,
   onGroupByChange,
   allExpanded,
   onToggleExpandAll,
+  showDuplicates,
+  onShowDuplicatesChange,
 }) => {
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
   const filters = useDeepCompareMemoize({
@@ -101,6 +111,20 @@ export const ConformaResultsToolbar: React.FC<ConformaResultsToolbarProps> = ({
       >
         {allExpanded ? 'Collapse all' : 'Expand all'}
       </Button>
+      <Flex alignItems={{ default: 'alignItemsCenter' }} gap={{ default: 'gapSm' }}>
+        <FlexItem>
+          <Switch
+            id="conforma-show-duplicates"
+            label="Show multi-arch duplicates"
+            isChecked={showDuplicates}
+            onChange={(_event, checked) => onShowDuplicatesChange(checked)}
+            data-test="conforma-show-duplicates"
+          />
+        </FlexItem>
+        <FlexItem>
+          <HelpTooltipIcon content={SHOW_DUPLICATES_HELP_TEXT} />
+        </FlexItem>
+      </Flex>
     </BaseTextFilterToolbar>
   );
 };

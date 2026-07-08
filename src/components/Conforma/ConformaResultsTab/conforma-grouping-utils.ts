@@ -12,6 +12,17 @@ export type GroupedConformaRow = {
   rows: ConformaResultRow[];
 };
 
+export const countResultsByStatus = (results: ConformaResultRow[]) =>
+  results.reduce(
+    (acc, r) => {
+      if (r.status === CONFORMA_RESULT_STATUS.violations) acc.totalViolations++;
+      else if (r.status === CONFORMA_RESULT_STATUS.warnings) acc.totalWarnings++;
+      else if (r.status === CONFORMA_RESULT_STATUS.successes) acc.totalSuccesses++;
+      return acc;
+    },
+    { totalViolations: 0, totalWarnings: 0, totalSuccesses: 0 },
+  );
+
 export const groupByRule = (results: ConformaResultRow[]): GroupedConformaRow[] => {
   const map = new Map<string, ConformaResultRow[]>();
 
@@ -93,3 +104,80 @@ export const filterResults = (
 
     return true;
   });
+
+/**
+ * Extracts the shared image name (everything before `@`) from an array of
+ * image references.  Returns `undefined` when the images do not share a
+ * common repository prefix or the array is empty.
+ */
+export const getCommonImageName = (images: string[]): string | undefined => {
+  if (images.length === 0) return undefined;
+  const names = images.map((img) => {
+    const atIdx = img.lastIndexOf('@');
+    return atIdx > 0 ? img.substring(0, atIdx) : img;
+  });
+  const first = names[0];
+  return names.every((n) => n === first) ? first : undefined;
+};
+
+/** Merges arch-variant titles by trimming divergent suffixes to a shared prefix. */
+const mergeTitles = (a: string, b: string): string => {
+  if (a === b) return a;
+
+  let i = 0;
+  const max = Math.min(a.length, b.length);
+  while (i < max && a[i] === b[i]) i++;
+
+  let prefix = a.substring(0, i);
+  const lastOpenParen = prefix.lastIndexOf('(');
+  const lastSpace = prefix.lastIndexOf(' ');
+
+  if (lastOpenParen !== -1 && i > lastOpenParen) {
+    prefix = prefix.substring(0, lastOpenParen);
+  } else if (lastSpace !== -1 && prefix.indexOf('(', lastSpace + 1) !== -1) {
+    prefix = prefix.substring(0, prefix.indexOf('(', lastSpace + 1));
+  } else if (lastSpace !== -1) {
+    prefix = prefix.substring(0, lastSpace);
+  }
+
+  prefix = prefix.trimEnd();
+  return prefix || a;
+};
+
+/**
+ * Merges rows that share the same title, msg, component, and status (i.e. the
+ * same policy violation but across different architecture images) into a single
+ * row.  The merged row carries an `images` array with every unique image digest
+ * from the group.  Rows without an image are handled gracefully — they collapse
+ * with other rows whose only difference is the image field.
+ */
+export const collapseArchDuplicates = (rows: ConformaResultRow[]): ConformaResultRow[] => {
+  const map = new Map<string, ConformaResultRow>();
+  for (const row of rows) {
+    const key = `${row.code ?? row.title}\0${row.msg ?? ''}\0${row.component}\0${row.status}`;
+    const existing = map.get(key);
+    if (existing) {
+      if (row.title !== existing.title) {
+        existing.title = mergeTitles(existing.title, row.title);
+      }
+      if (row.description && row.description !== existing.description) {
+        existing.description = existing.description
+          ? `${existing.description}\n${row.description}`
+          : row.description;
+      }
+      if (row.solution && row.solution !== existing.solution) {
+        existing.solution = existing.solution
+          ? `${existing.solution}\n${row.solution}`
+          : row.solution;
+      }
+      for (const image of row.images) {
+        if (!existing.images.includes(image)) {
+          existing.images = [...existing.images, image];
+        }
+      }
+    } else {
+      map.set(key, { ...row, images: [...row.images] });
+    }
+  }
+  return Array.from(map.values());
+};

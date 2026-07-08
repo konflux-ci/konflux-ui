@@ -11,6 +11,7 @@ const rowContent = {
   msg: 'Fail',
   timestamp: '2022-01-01T00:00:00Z',
   collection: ['abcd', 'efg'],
+  images: [],
 };
 
 const invalidContent = {
@@ -21,6 +22,7 @@ const invalidContent = {
   msg: null,
   timestamp: null,
   collection: null,
+  images: [],
 };
 
 describe('ConformaExpandedRowContent', () => {
