@@ -57,4 +57,39 @@ describe('ConformaSummaryBar', () => {
     expect(screen.getByText('4')).toBeInTheDocument();
     expect(screen.getByText('20')).toBeInTheDocument();
   });
+
+  it('does not show a raw-count qualifier when raw counts are not provided', () => {
+    routerRenderer(<ConformaSummaryBar {...defaultProps} />);
+
+    expect(screen.queryByText(/incl\. multi-arch/i)).not.toBeInTheDocument();
+  });
+
+  it('does not show a raw-count qualifier when raw counts match the collapsed counts', () => {
+    routerRenderer(
+      <ConformaSummaryBar
+        {...defaultProps}
+        totalViolationsRaw={defaultProps.totalViolations}
+        totalWarningsRaw={defaultProps.totalWarnings}
+        totalSuccessesRaw={defaultProps.totalSuccesses}
+      />,
+    );
+
+    expect(screen.queryByText(/incl\. multi-arch/i)).not.toBeInTheDocument();
+  });
+
+  it('shows a raw-count qualifier when collapsing hides real violations/warnings/successes', () => {
+    routerRenderer(
+      <ConformaSummaryBar
+        {...defaultProps}
+        totalViolationsRaw={12}
+        totalWarningsRaw={9}
+        totalSuccessesRaw={20}
+      />,
+    );
+
+    expect(screen.getByText('(12 incl. multi-arch)')).toBeInTheDocument();
+    expect(screen.getByText('(9 incl. multi-arch)')).toBeInTheDocument();
+    // totalSuccessesRaw equals totalSuccesses (20), so no qualifier for successes.
+    expect(screen.queryByText('(20 incl. multi-arch)')).not.toBeInTheDocument();
+  });
 });

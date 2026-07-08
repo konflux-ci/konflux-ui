@@ -1,0 +1,11 @@
+.truncate-text {
+  &__inline-content {
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  &__modal-content {
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+}
