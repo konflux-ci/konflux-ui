@@ -1,8 +1,4 @@
-import type { LogSection, NormalizedLogSection } from '~/shared/components/virtualized-log-viewer/types';
-
-export function formatSectionsForSearch(sections: readonly LogSection[]): string {
-  return sections.map((s) => `${s.containerName}\n${s.data}`).join('\n\n');
-}
+import type { NormalizedLogSection } from '~/shared/components/virtualized-log-viewer/types';
 
 /**
  * Builds the flat search-lines array from already-normalized sections.

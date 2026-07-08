@@ -638,6 +638,33 @@ Another short line`;
       expect(highlightedLines.length).toBeGreaterThan(0);
     });
 
+    it('should not highlight the hash line while readyToNavigate is false, and should once it becomes true', () => {
+      window.location.hash = '#L2';
+      const dataWithLines = Array.from({ length: 10 }, (_, i) => `line ${i + 1}`).join('\n');
+
+      const { rerender } = renderWithQueryClientAndRouter(
+        <VirtualizedLogContent
+          {...defaultProps}
+          sections={[singleLogSection(dataWithLines)]}
+          readyToNavigate={false}
+        />,
+      );
+
+      expect(document.querySelectorAll('.log-content__line--highlighted').length).toBe(0);
+
+      rerender(
+        <VirtualizedLogContent
+          {...defaultProps}
+          sections={[singleLogSection(dataWithLines)]}
+          readyToNavigate
+        />,
+      );
+
+      expect(document.querySelectorAll('.log-content__line--highlighted').length).toBeGreaterThan(
+        0,
+      );
+    });
+
     it('should handle hash navigation with very long logs', () => {
       window.location.hash = '#L500';
       const longData = Array.from({ length: 1000 }, (_, i) => `line ${i + 1}`).join('\n');

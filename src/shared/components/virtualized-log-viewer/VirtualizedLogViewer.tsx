@@ -18,6 +18,11 @@ export interface VirtualizedLogViewerProps {
     scrollOffset: number;
     scrollUpdateWasRequested: boolean;
   }) => void;
+  /**
+   * When false, URL hash line navigation (`#L123`) is deferred until logs are fully fetched.
+   * Defaults to true.
+   */
+  readyToNavigate?: boolean;
 }
 
 export const VirtualizedLogViewer: React.FC<VirtualizedLogViewerProps> = ({
@@ -27,6 +32,7 @@ export const VirtualizedLogViewer: React.FC<VirtualizedLogViewerProps> = ({
   width = '100%',
   scrollToRow,
   onScroll,
+  readyToNavigate = true,
 }) => {
   const toolbarContext = React.useContext(LogViewerToolbarContext);
   const searchedInput =
@@ -49,8 +55,12 @@ export const VirtualizedLogViewer: React.FC<VirtualizedLogViewerProps> = ({
     prevSearchedInputRef.current = searchedInput;
 
     if (isNewSearch) {
+      if (rowInFocus && rowInFocus.rowIndex >= 0) {
+        setExpandSearchTargetRow(rowInFocus.rowIndex + 1);
+      } else {
+        setExpandSearchTargetRow(undefined);
+      }
       prevMatchIndexRef.current = currentMatchIndex;
-      setExpandSearchTargetRow(undefined);
       return;
     }
 
@@ -76,6 +86,7 @@ export const VirtualizedLogViewer: React.FC<VirtualizedLogViewerProps> = ({
         onScroll={onScroll}
         searchText={searchedInput}
         currentSearchMatch={rowInFocus}
+        readyToNavigate={readyToNavigate}
       />
     </div>
   );

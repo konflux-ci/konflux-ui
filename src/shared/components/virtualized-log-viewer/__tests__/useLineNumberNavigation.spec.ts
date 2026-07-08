@@ -195,4 +195,58 @@ describe('useLineNumberNavigation', () => {
       end: 999999,
     });
   });
+
+  describe('readyToNavigate', () => {
+    it('should defer applying the hash highlight until readyToNavigate is true', () => {
+      setTestLocation('/logs', '?task=123', '#L123');
+
+      const { result, rerender } = renderHook(
+        ({ readyToNavigate }) => useLineNumberNavigation({ readyToNavigate }),
+        { initialProps: { readyToNavigate: false } },
+      );
+
+      expect(result.current.highlightedLines).toBeNull();
+
+      rerender({ readyToNavigate: true });
+
+      expect(result.current.highlightedLines).toEqual({
+        start: 123,
+        end: 123,
+      });
+    });
+
+    it('should apply the latest hash once ready, even if the hash changed while deferred', () => {
+      const { result, rerender } = renderHook(
+        ({ readyToNavigate }) => useLineNumberNavigation({ readyToNavigate }),
+        { initialProps: { readyToNavigate: false } },
+      );
+
+      expect(result.current.highlightedLines).toBeNull();
+
+      changeHash('#L50');
+
+      // Still deferred — highlight should not be applied yet
+      expect(result.current.highlightedLines).toBeNull();
+
+      rerender({ readyToNavigate: true });
+
+      expect(result.current.highlightedLines).toEqual({
+        start: 50,
+        end: 50,
+      });
+    });
+
+    it('should allow manual line clicks even when not ready to navigate', () => {
+      const { result } = renderHook(() => useLineNumberNavigation({ readyToNavigate: false }));
+
+      act(() => {
+        result.current.handleLineClick(7, createMouseEvent(false));
+      });
+
+      expect(result.current.highlightedLines).toEqual({
+        start: 7,
+        end: 7,
+      });
+    });
+  });
 });

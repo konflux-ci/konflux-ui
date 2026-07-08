@@ -11,7 +11,8 @@
 }
 
 // Restore pointer events for clickable children inside the pointer-events:none sticky bar
-.log-content__gutter--sticky {
+.log-content__gutter--sticky,
+.log-content__section-header-btn {
   pointer-events: auto;
 }
 

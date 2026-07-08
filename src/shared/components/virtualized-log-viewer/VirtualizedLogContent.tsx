@@ -41,6 +41,12 @@ export interface VirtualizedLogContentProps {
   }) => void;
   searchText?: string;
   currentSearchMatch?: SearchedWord;
+  /**
+   * When false, URL hash line navigation (`#L123`) is deferred until logs are fully fetched,
+   * so we don't highlight/scroll to a line before the log content has stabilized. Defaults to
+   * true.
+   */
+  readyToNavigate?: boolean;
 }
 
 export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
@@ -53,6 +59,7 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
   onScroll,
   searchText = '',
   currentSearchMatch,
+  readyToNavigate = true,
 }) => {
   const scrollRef = React.useRef<HTMLDivElement | null>(null);
   const [itemSize, setItemSize] = React.useState(VIRTUALIZATION_CONFIG.FALLBACK_LINE_HEIGHT);
@@ -160,7 +167,9 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
     onScroll,
   });
 
-  const { highlightedLines, handleLineClick, isLineHighlighted } = useLineNumberNavigation();
+  const { highlightedLines, handleLineClick, isLineHighlighted } = useLineNumberNavigation({
+    readyToNavigate,
+  });
 
   React.useEffect(() => {
     if (!isMultiSection || !highlightedLines) return;

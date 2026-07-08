@@ -12,8 +12,7 @@ export const SectionHeaderButton: React.FC<{ row: SectionHeaderRow; onToggle: ()
 }) => (
   <Button
     variant="plain"
-    className="pf-v5-u-p-0"
-    style={{ pointerEvents: 'auto' }}
+    className="pf-v5-u-p-0 log-content__section-header-btn"
     onClick={onToggle}
     aria-expanded={row.isExpanded}
     data-test={`fold-header-${row.sectionName}`}

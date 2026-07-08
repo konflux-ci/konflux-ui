@@ -43,6 +43,7 @@ import {
   VirtualizedLogViewer,
   type LogSection,
   normalizeSection,
+  useLineNumberNavigation,
 } from '~/shared/components/virtualized-log-viewer';
 import { useFullscreen } from '~/shared/hooks/fullscreen';
 import { TaskRunKind } from '~/types';
@@ -99,9 +100,16 @@ const LogViewer: React.FC<Props> = ({
     [normalizedSections],
   );
 
+  // Tracks the line currently targeted via URL hash navigation (e.g. `#L20000`). Computed here
+  // (rather than read from VirtualizedLogContent) so it's available in the very same render —
+  // no round-trip delay through child effects/callbacks — and used to pause auto-scroll-to-bottom
+  // so it doesn't keep fighting the scroll-to-that-line navigation as new log lines stream in.
+  const { highlightedLines: activeLineTarget } = useLineNumberNavigation();
+
   const { autoScroll, showResumeStreamButton, handleScroll, handleResumeClick } =
     useAutoScrollWithResume({
       allowAutoScroll,
+      activeLineTarget,
       onScroll: onScrollProp,
     });
 
@@ -338,6 +346,7 @@ const LogViewer: React.FC<Props> = ({
                 height={viewerHeight}
                 scrollToRow={scrolledRow}
                 onScroll={handleScroll}
+                readyToNavigate={!isLoading}
               />
             )}
           </div>

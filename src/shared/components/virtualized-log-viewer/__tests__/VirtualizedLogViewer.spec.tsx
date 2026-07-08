@@ -1,4 +1,5 @@
 import { LogViewerToolbarContext } from '@patternfly/react-log-viewer';
+import { screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { renderWithQueryClientAndRouter } from '~/unit-test-utils/rendering-utils';
 import { singleLogSection } from '../log-viewer-utils';
@@ -227,6 +228,53 @@ describe('VirtualizedLogViewer Integration Tests', () => {
       // Should mark current match with pf-m-current class
       const currentMark = container.querySelector('mark.pf-m-current');
       expect(currentMark).toBeInTheDocument();
+    });
+
+    it('should expand the folded section containing the first match on a new search', () => {
+      const multiSections = [
+        { containerName: 'BUILD', data: 'compile\nlink', isCompleted: true },
+        { containerName: 'TEST', data: 'running tests', isCompleted: false },
+      ];
+
+      const mockToolbarContext = {
+        searchedInput: '',
+        currentSearchedItemCount: 0,
+        searchedWordIndexes: [],
+        scrollToRow: jest.fn(),
+        setSearchedInput: jest.fn(),
+        setCurrentSearchedItemCount: jest.fn(),
+        setRowInFocus: jest.fn(),
+        setSearchedWordIndexes: jest.fn(),
+        itemCount: 4,
+        rowInFocus: { rowIndex: -1, matchIndex: -1 },
+      };
+
+      const { rerender } = renderWithQueryClientAndRouter(
+        <LogViewerToolbarContext.Provider value={mockToolbarContext}>
+          <VirtualizedLogViewer {...defaultProps} sections={multiSections} />
+        </LogViewerToolbarContext.Provider>,
+      );
+
+      // BUILD is completed, so it starts folded
+      expect(screen.queryByText('compile')).not.toBeInTheDocument();
+
+      // Simulate a new search whose first (and only) match is inside BUILD's folded content
+      // ("compile" is the second search line: 0 = BUILD header, 1 = "compile")
+      rerender(
+        <LogViewerToolbarContext.Provider
+          value={{
+            ...mockToolbarContext,
+            searchedInput: 'compile',
+            currentSearchedItemCount: 1,
+            searchedWordIndexes: [{ rowIndex: 1, matchIndex: 1 }],
+            rowInFocus: { rowIndex: 1, matchIndex: 1 },
+          }}
+        >
+          <VirtualizedLogViewer {...defaultProps} sections={multiSections} />
+        </LogViewerToolbarContext.Provider>,
+      );
+
+      expect(screen.getByText('compile')).toBeInTheDocument();
     });
   });
 

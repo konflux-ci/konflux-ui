@@ -1,17 +1,7 @@
 import { normalizeSection, singleLogSection } from '~/shared/components/virtualized-log-viewer/log-viewer-utils';
-import { formatSectionsForSearch, prepareLogViewerContent } from '../log-viewer-content';
+import { prepareLogViewerContent } from '../log-viewer-content';
 
 describe('log-viewer-content', () => {
-  describe('formatSectionsForSearch', () => {
-    it('should join sections with headers and data', () => {
-      const result = formatSectionsForSearch([
-        { containerName: 'STEP-A', data: 'line 1' },
-        { containerName: 'STEP-B', data: 'line 2' },
-      ]);
-      expect(result).toBe('STEP-A\nline 1\n\nSTEP-B\nline 2');
-    });
-  });
-
   describe('prepareLogViewerContent', () => {
     it('should return empty lines for no sections', () => {
       expect(prepareLogViewerContent([])).toEqual([]);
