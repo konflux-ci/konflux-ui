@@ -5,19 +5,13 @@ import {
   Checkbox,
   DataList,
   DataListCell,
-  DataListControl,
-  DataListDragButton,
   DataListItem,
   DataListItemCells,
   DataListItemRow,
+  ModalBody,
   ModalVariant,
 } from '@patternfly/react-core';
-import {
-  DragDrop,
-  Draggable,
-  Droppable,
-  type DraggableItemPosition,
-} from '@patternfly/react-core/deprecated';
+import { DragDropSort, type DraggableObject } from '@patternfly/react-drag-drop';
 import { type ColumnState } from '~/shared/components/TableV2';
 import { type ComponentProps, createModalLauncher } from '../modal/createModalLauncher';
 
@@ -66,19 +60,13 @@ export const ColumnManagementModal: React.FC<ColumnManagementModalProps> = ({
   }, []);
 
   const handleDrop = useCallback(
-    (source: DraggableItemPosition, dest?: DraggableItemPosition): boolean => {
-      if (!dest) return false;
+    (_event: unknown, items: DraggableObject[]) => {
       setAllColumnsOrder((prev) => {
         const pinnedStartIds = prev.filter((id) => columnsById.get(id)?.pinned === 'start');
-        const unpinnedIds = prev.filter((id) => !columnsById.get(id)?.pinned);
         const pinnedEndIds = prev.filter((id) => columnsById.get(id)?.pinned === 'end');
-
-        const [moved] = unpinnedIds.splice(source.index, 1);
-        unpinnedIds.splice(dest.index, 0, moved);
-
-        return [...pinnedStartIds, ...unpinnedIds, ...pinnedEndIds];
+        const reorderedUnpinned = items.map((item) => String(item.id));
+        return [...pinnedStartIds, ...reorderedUnpinned, ...pinnedEndIds];
       });
-      return true;
     },
     [columnsById],
   );
@@ -107,7 +95,7 @@ export const ColumnManagementModal: React.FC<ColumnManagementModalProps> = ({
   const unpinned = allColumnsOrder.filter((id) => !columnsById.get(id)?.pinned);
   const pinnedEnd = allColumnsOrder.filter((id) => columnsById.get(id)?.pinned === 'end');
 
-  const renderColumnRow = (id: string, options: { isDraggable: boolean }) => {
+  const renderColumnRowContent = (id: string) => {
     const col = columnsById.get(id);
     if (!col) return null;
 
@@ -117,46 +105,45 @@ export const ColumnManagementModal: React.FC<ColumnManagementModalProps> = ({
     const isCheckboxDisabled = isNonHidable || isPinned;
 
     return (
-      <DataListItem key={id} data-test={`column-row-${id}`}>
-        <DataListItemRow>
-          <DataListControl>
-            <DataListDragButton
-              aria-label={`Reorder ${col.header}`}
-              isDisabled={!options.isDraggable}
-            />
-          </DataListControl>
-          <DataListItemCells
-            dataListCells={[
-              <DataListCell key="checkbox">
-                <Checkbox
-                  id={`col-checkbox-${id}`}
-                  label={col.header}
-                  isChecked={isChecked}
-                  isDisabled={isCheckboxDisabled}
-                  onChange={() => handleToggle(id)}
-                />
-              </DataListCell>,
-            ]}
-          />
-        </DataListItemRow>
-      </DataListItem>
+      <DataListItemRow>
+        <DataListItemCells
+          dataListCells={[
+            <DataListCell key="checkbox">
+              <Checkbox
+                id={`col-checkbox-${id}`}
+                label={col.header}
+                isChecked={isChecked}
+                isDisabled={isCheckboxDisabled}
+                onChange={() => handleToggle(id)}
+              />
+            </DataListCell>,
+          ]}
+        />
+      </DataListItemRow>
     );
   };
 
+  const pinnedRow = (id: string) => (
+    <DataListItem key={id} data-test={`column-row-${id}`}>
+      {renderColumnRowContent(id)}
+    </DataListItem>
+  );
+
+  const draggableItems: DraggableObject[] = unpinned.map((id) => ({
+    id,
+    content: renderColumnRowContent(id),
+  }));
+
   return (
-    <>
+    <ModalBody>
       <DataList aria-label="Column management" isCompact>
-        {pinnedStart.map((id) => renderColumnRow(id, { isDraggable: false }))}
-        <DragDrop onDrop={handleDrop}>
-          <Droppable>
-            {unpinned.map((id) => (
-              <Draggable key={id} hasNoWrapper>
-                {renderColumnRow(id, { isDraggable: true })}
-              </Draggable>
-            ))}
-          </Droppable>
-        </DragDrop>
-        {pinnedEnd.map((id) => renderColumnRow(id, { isDraggable: false }))}
+        {pinnedStart.map(pinnedRow)}
+      </DataList>
+      <DragDropSort items={draggableItems} onDrop={handleDrop} variant="DataList">
+        <DataList aria-label="Reorderable columns" isCompact />
+      </DragDropSort>
+      <DataList aria-label="Pinned end columns" isCompact>
+        {pinnedEnd.map(pinnedRow)}
       </DataList>
       <ActionGroup>
         <Button variant="link" onClick={handleReset}>
@@ -171,7 +158,7 @@ export const ColumnManagementModal: React.FC<ColumnManagementModalProps> = ({
           Cancel
         </Button>
       </ActionGroup>
-    </>
+    </ModalBody>
   );
 };
 
