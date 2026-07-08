@@ -1,6 +1,5 @@
 import {
   hashKey,
-  QueryOptions as ReactQueryOptions,
   useQuery,
   UseQueryOptions,
   UseQueryResult,
@@ -14,10 +13,13 @@ import { useK8sQueryWatch } from './useK8sQueryWatch';
 
 const POLLING_INTERVAL = 10000;
 
-export const useK8sWatchResource = <R extends K8sResourceCommon | K8sResourceCommon[]>(
+export const useK8sWatchResource = <
+  R extends K8sResourceCommon | K8sResourceCommon[],
+  TQueryFnData = R,
+>(
   resourceInit: WatchK8sResource,
   model: K8sModelCommon,
-  queryOptions?: TQueryOptions<R>,
+  queryOptions?: TQueryOptions<R, TQueryFnData>,
   options: Partial<
     WebSocketOptions & RequestInit & { wsPrefix?: string; pathPrefix?: string }
   > = {},
@@ -29,15 +31,11 @@ export const useK8sWatchResource = <R extends K8sResourceCommon | K8sResourceCom
     hashKey(createQueryKeys({ model, queryOptions: k8sQueryOptions })),
     options,
   );
-  // [TODO]: add better typing for the query options
   const getQueryOptions = (): UseQueryOptions<R> => {
-    const queryOptionsTyped = resourceInit?.isList
-      ? queryOptions
-      : (queryOptions as Omit<ReactQueryOptions<R>, 'queryKey' | 'queryFn'>);
     const baseQueryOptions = {
       enabled: !!resourceInit,
       refetchInterval: wsError ? POLLING_INTERVAL : undefined,
-      ...queryOptionsTyped,
+      ...queryOptions,
     };
     return (
       resourceInit?.isList
@@ -47,7 +45,7 @@ export const useK8sWatchResource = <R extends K8sResourceCommon | K8sResourceCom
           )
         : createGetQueryOptions(
             { model, queryOptions: k8sQueryOptions, fetchOptions: options },
-            baseQueryOptions as Omit<ReactQueryOptions<K8sResourceCommon>, 'queryKey' | 'queryFn'>,
+            baseQueryOptions as Omit<TQueryOptions<K8sResourceCommon>, 'filterData'>,
           )
     ) as UseQueryOptions<R>;
   };
