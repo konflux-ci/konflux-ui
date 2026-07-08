@@ -1,26 +1,16 @@
 import React from 'react';
-import { PIPELINE_SERVICE_ACCOUNT_PREFIX } from '../consts/pipeline';
-import { useK8sWatchResource } from '../k8s';
-import { SecretGroupVersionKind, SecretModel } from '../models';
-import { SecretKind } from '../types';
-import { useServiceAccount } from './useServiceAccount';
+import { PIPELINE_SERVICE_ACCOUNT_PREFIX } from '~/consts/pipeline';
+import { useSecrets } from '~/hooks/useSecrets';
+import { useServiceAccount } from '~/hooks/useServiceAccount';
+import { SecretKind } from '~/types';
 
 export const useLinkedSecrets = (
   namespace: string,
   componentName: string,
 ): [SecretKind[], boolean, unknown] => {
-  const {
-    data: secrets,
-    isLoading,
-    error,
-  } = useK8sWatchResource<SecretKind[]>(
-    {
-      groupVersionKind: SecretGroupVersionKind,
-      namespace,
-      isList: true,
-    },
-    SecretModel,
-  );
+  const [secrets, secretsLoaded, secretsError] = useSecrets(namespace, true, {
+    metadataOnly: true,
+  });
 
   const serviceAccountName = `${PIPELINE_SERVICE_ACCOUNT_PREFIX}${componentName}`;
 
@@ -40,7 +30,7 @@ export const useLinkedSecrets = (
 
   return React.useMemo(
     () => [
-      !isLoading && !error && serviceAccountLoaded && !serviceAccountError
+      secretsLoaded && !secretsError && serviceAccountLoaded && !serviceAccountError
         ? secrets?.filter((rs) => {
             const hasLinkedSecret =
               serviceAccountSecrets.includes(rs.metadata.name) ||
@@ -48,12 +38,12 @@ export const useLinkedSecrets = (
             return !rs.metadata.deletionTimestamp && hasLinkedSecret;
           })
         : [],
-      !isLoading && serviceAccountLoaded,
-      error || serviceAccountError,
+      secretsLoaded && serviceAccountLoaded,
+      secretsError || serviceAccountError,
     ],
     [
-      isLoading,
-      error,
+      secretsLoaded,
+      secretsError,
       serviceAccountLoaded,
       serviceAccountError,
       secrets,

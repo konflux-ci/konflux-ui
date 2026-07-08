@@ -11,6 +11,7 @@ const mockRow = (overrides: Partial<ConformaResultRow> = {}): ConformaResultRow 
   description: 'A test rule description',
   status: CONFORMA_RESULT_STATUS.violations,
   component: 'test-component',
+  images: [],
   ...overrides,
 });
 
@@ -25,12 +26,16 @@ describe('ConformaResultsToolbar', () => {
   const onGroupByChange = jest.fn();
   const onToggleExpandAll = jest.fn();
 
+  const onShowDuplicatesChange = jest.fn();
+
   const defaultProps = {
     allResults,
     groupBy: 'rule' as GroupByMode,
     onGroupByChange,
     allExpanded: false,
     onToggleExpandAll,
+    showDuplicates: false,
+    onShowDuplicatesChange,
   };
 
   const renderToolbar = (props: Partial<typeof defaultProps> = {}) => {
@@ -43,6 +48,36 @@ describe('ConformaResultsToolbar', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+  });
+
+  it('renders show duplicates switch as unchecked by default (duplicates are collapsed)', () => {
+    renderToolbar({ showDuplicates: false });
+
+    const switchEl = screen.getByRole('checkbox', { name: /show multi-arch duplicates/i });
+    expect(switchEl).not.toBeChecked();
+  });
+
+  it('renders show duplicates switch as checked when showDuplicates is true', () => {
+    renderToolbar({ showDuplicates: true });
+
+    const switchEl = screen.getByRole('checkbox', { name: /show multi-arch duplicates/i });
+    expect(switchEl).toBeChecked();
+  });
+
+  it('calls onShowDuplicatesChange with true when an unchecked switch is clicked', () => {
+    renderToolbar({ showDuplicates: false, onShowDuplicatesChange });
+
+    fireEvent.click(screen.getByRole('checkbox', { name: /show multi-arch duplicates/i }));
+
+    expect(onShowDuplicatesChange).toHaveBeenCalledWith(true);
+  });
+
+  it('calls onShowDuplicatesChange with false when a checked switch is clicked', () => {
+    renderToolbar({ showDuplicates: true, onShowDuplicatesChange });
+
+    fireEvent.click(screen.getByRole('checkbox', { name: /show multi-arch duplicates/i }));
+
+    expect(onShowDuplicatesChange).toHaveBeenCalledWith(false);
   });
 
   it('renders the toolbar with the correct data-test attribute', () => {
