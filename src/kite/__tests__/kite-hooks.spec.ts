@@ -7,7 +7,7 @@ import { fetchIssues } from '../kite-fetch';
 import {
   useIssueCountsBySeverity,
   useIssueCountsByType,
-  useIssuesWithSeverity,
+  useCriticalAndMajorIssues,
 } from '../kite-hooks';
 
 jest.mock('../kite-fetch');
@@ -215,7 +215,7 @@ describe('kite-hooks', () => {
     });
   });
 
-  describe('useIssuesWithSeverity', () => {
+  describe('useCriticalAndMajorIssues', () => {
     const createMockIssue = (severity: IssueSeverity, id: string): Issue => ({
       id,
       title: `Test Issue ${id}`,
@@ -241,14 +241,14 @@ describe('kite-hooks', () => {
       mockFetchIssues.mockImplementation(() => new Promise(() => {})); // Never resolves
 
       const { result } = renderHookWithQueryClient(() =>
-        useIssuesWithSeverity('test-namespace', [IssueSeverity.CRITICAL, IssueSeverity.MAJOR]),
+        useCriticalAndMajorIssues('test-namespace'),
       );
 
       expect(result.current.isLoaded).toBe(false);
       expect(result.current.hasError).toBe(false);
     });
 
-    it('should return issues grouped by severity', async () => {
+    it('should return critical and major issues grouped by severity', async () => {
       const criticalIssues = [createMockIssue(IssueSeverity.CRITICAL, 'crit-1')];
       const majorIssues = [
         createMockIssue(IssueSeverity.MAJOR, 'major-1'),
@@ -270,7 +270,7 @@ describe('kite-hooks', () => {
         });
 
       const { result } = renderHookWithQueryClient(() =>
-        useIssuesWithSeverity('test-namespace', [IssueSeverity.CRITICAL, IssueSeverity.MAJOR]),
+        useCriticalAndMajorIssues('test-namespace'),
       );
 
       await waitFor(() => {
@@ -294,33 +294,42 @@ describe('kite-hooks', () => {
       });
     });
 
-    it('should only fetch requested severities', async () => {
-      const criticalIssues = [createMockIssue(IssueSeverity.CRITICAL, 'crit-1')];
-
+    it('should fetch only critical and major issues', async () => {
       mockFetchIssues.mockResolvedValue({
-        data: criticalIssues,
-        total: 1,
+        data: [],
+        total: 0,
         limit: 20,
         offset: 0,
       });
 
       const { result } = renderHookWithQueryClient(() =>
-        useIssuesWithSeverity('test-namespace', [IssueSeverity.CRITICAL]),
+        useCriticalAndMajorIssues('test-namespace'),
       );
 
       await waitFor(() => {
         expect(result.current.isLoaded).toBe(true);
       });
 
-      expect(result.current.data).toHaveLength(1);
+      expect(result.current.data).toHaveLength(2);
       expect(result.current.data[0].severity).toBe(IssueSeverity.CRITICAL);
+      expect(result.current.data[1].severity).toBe(IssueSeverity.MAJOR);
 
-      // Should only fetch critical issues
-      expect(mockFetchIssues).toHaveBeenCalledTimes(1);
+      // Should fetch both critical and major issues with ACTIVE state and limit 1
+      expect(mockFetchIssues).toHaveBeenCalledTimes(2);
       expect(mockFetchIssues).toHaveBeenCalledWith(
         expect.objectContaining({
           severity: IssueSeverity.CRITICAL,
           namespace: 'test-namespace',
+          state: IssueState.ACTIVE,
+          limit: 1,
+        }),
+      );
+      expect(mockFetchIssues).toHaveBeenCalledWith(
+        expect.objectContaining({
+          severity: IssueSeverity.MAJOR,
+          namespace: 'test-namespace',
+          state: IssueState.ACTIVE,
+          limit: 1,
         }),
       );
     });
@@ -334,7 +343,7 @@ describe('kite-hooks', () => {
       });
 
       const { result } = renderHookWithQueryClient(() =>
-        useIssuesWithSeverity('test-namespace', [IssueSeverity.CRITICAL, IssueSeverity.MAJOR]),
+        useCriticalAndMajorIssues('test-namespace'),
       );
 
       await waitFor(() => {
@@ -353,7 +362,7 @@ describe('kite-hooks', () => {
       mockFetchIssues.mockRejectedValue(mockError);
 
       const { result } = renderHookWithQueryClient(() =>
-        useIssuesWithSeverity('test-namespace', [IssueSeverity.CRITICAL]),
+        useCriticalAndMajorIssues('test-namespace'),
       );
 
       await waitFor(() => {
@@ -372,9 +381,7 @@ describe('kite-hooks', () => {
         offset: 0,
       });
 
-      renderHookWithQueryClient(() =>
-        useIssuesWithSeverity('test-namespace', [IssueSeverity.CRITICAL], true),
-      );
+      renderHookWithQueryClient(() => useCriticalAndMajorIssues('test-namespace', true));
 
       await waitFor(() => {
         expect(mockFetchIssues).toHaveBeenCalled();
@@ -386,22 +393,32 @@ describe('kite-hooks', () => {
         expect.objectContaining({
           severity: IssueSeverity.CRITICAL,
           namespace: 'test-namespace',
+          state: IssueState.ACTIVE,
+          limit: 1,
         }),
       );
     });
 
     it('should not refetch on remount when noRefetch is true', async () => {
       const criticalIssues = [createMockIssue(IssueSeverity.CRITICAL, 'crit-1')];
-      mockFetchIssues.mockResolvedValue({
-        data: criticalIssues,
-        total: 1,
-        limit: 20,
-        offset: 0,
-      });
+      const majorIssues = [createMockIssue(IssueSeverity.MAJOR, 'major-1')];
+      mockFetchIssues
+        .mockResolvedValueOnce({
+          data: criticalIssues,
+          total: 1,
+          limit: 20,
+          offset: 0,
+        })
+        .mockResolvedValueOnce({
+          data: majorIssues,
+          total: 1,
+          limit: 20,
+          offset: 0,
+        });
 
       // First render
       const { result, unmount } = renderHookWithQueryClient(() =>
-        useIssuesWithSeverity('test-namespace', [IssueSeverity.CRITICAL], true),
+        useCriticalAndMajorIssues('test-namespace', true),
       );
 
       await waitFor(() => {
@@ -409,13 +426,13 @@ describe('kite-hooks', () => {
       });
 
       const initialCallCount = mockFetchIssues.mock.calls.length;
-      expect(initialCallCount).toBe(1);
+      expect(initialCallCount).toBe(2); // Critical and Major
 
       // Unmount and remount
       unmount();
 
       const { result: result2 } = renderHookWithQueryClient(() =>
-        useIssuesWithSeverity('test-namespace', [IssueSeverity.CRITICAL], true),
+        useCriticalAndMajorIssues('test-namespace', true),
       );
 
       await waitFor(() => {
@@ -426,20 +443,29 @@ describe('kite-hooks', () => {
       // The query should be served from cache
       expect(mockFetchIssues.mock.calls.length).toBe(initialCallCount);
       expect(result2.current.data[0].issues).toEqual(criticalIssues);
+      expect(result2.current.data[1].issues).toEqual(majorIssues);
     });
 
     it('should allow refetch on remount when noRefetch is false', async () => {
       const criticalIssues = [createMockIssue(IssueSeverity.CRITICAL, 'crit-1')];
-      mockFetchIssues.mockResolvedValue({
-        data: criticalIssues,
-        total: 1,
-        limit: 20,
-        offset: 0,
-      });
+      const majorIssues = [createMockIssue(IssueSeverity.MAJOR, 'major-1')];
+      mockFetchIssues
+        .mockResolvedValueOnce({
+          data: criticalIssues,
+          total: 1,
+          limit: 20,
+          offset: 0,
+        })
+        .mockResolvedValueOnce({
+          data: majorIssues,
+          total: 1,
+          limit: 20,
+          offset: 0,
+        });
 
       // First render without noRefetch - refetchOnMount is not set to false
       const { result } = renderHookWithQueryClient(() =>
-        useIssuesWithSeverity('test-namespace', [IssueSeverity.CRITICAL], false),
+        useCriticalAndMajorIssues('test-namespace', false),
       );
 
       await waitFor(() => {
@@ -448,23 +474,30 @@ describe('kite-hooks', () => {
 
       // Verify data is loaded correctly
       expect(result.current.data[0].issues).toEqual(criticalIssues);
+      expect(result.current.data[1].issues).toEqual(majorIssues);
       // With noRefetch=false, refetchOnMount is not disabled
       // (actual refetch behavior depends on query staleness in the test environment)
     });
 
     it('should allow refetch on remount when noRefetch is undefined (default)', async () => {
       const criticalIssues = [createMockIssue(IssueSeverity.CRITICAL, 'crit-1')];
-      mockFetchIssues.mockResolvedValue({
-        data: criticalIssues,
-        total: 1,
-        limit: 20,
-        offset: 0,
-      });
+      const majorIssues = [createMockIssue(IssueSeverity.MAJOR, 'major-1')];
+      mockFetchIssues
+        .mockResolvedValueOnce({
+          data: criticalIssues,
+          total: 1,
+          limit: 20,
+          offset: 0,
+        })
+        .mockResolvedValueOnce({
+          data: majorIssues,
+          total: 1,
+          limit: 20,
+          offset: 0,
+        });
 
       // First render without noRefetch parameter (undefined) - default behavior
-      const { result } = renderHookWithQueryClient(() =>
-        useIssuesWithSeverity('test-namespace', [IssueSeverity.CRITICAL]),
-      );
+      const { result } = renderHookWithQueryClient(() => useCriticalAndMajorIssues('test-namespace'));
 
       await waitFor(() => {
         expect(result.current.isLoaded).toBe(true);
@@ -472,10 +505,11 @@ describe('kite-hooks', () => {
 
       // Verify data is loaded correctly
       expect(result.current.data[0].issues).toEqual(criticalIssues);
+      expect(result.current.data[1].issues).toEqual(majorIssues);
       // With noRefetch=undefined (default), refetchOnMount is not disabled
     });
 
-    it('should apply noRefetch to all severities when true', async () => {
+    it('should apply noRefetch to both critical and major severities when true', async () => {
       const criticalIssues = [createMockIssue(IssueSeverity.CRITICAL, 'crit-1')];
       const majorIssues = [createMockIssue(IssueSeverity.MAJOR, 'major-1')];
 
@@ -485,11 +519,7 @@ describe('kite-hooks', () => {
 
       // First render
       const { result, unmount } = renderHookWithQueryClient(() =>
-        useIssuesWithSeverity(
-          'test-namespace',
-          [IssueSeverity.CRITICAL, IssueSeverity.MAJOR],
-          true,
-        ),
+        useCriticalAndMajorIssues('test-namespace', true),
       );
 
       await waitFor(() => {
@@ -503,11 +533,7 @@ describe('kite-hooks', () => {
       unmount();
 
       const { result: result2 } = renderHookWithQueryClient(() =>
-        useIssuesWithSeverity(
-          'test-namespace',
-          [IssueSeverity.CRITICAL, IssueSeverity.MAJOR],
-          true,
-        ),
+        useCriticalAndMajorIssues('test-namespace', true),
       );
 
       await waitFor(() => {
@@ -520,36 +546,25 @@ describe('kite-hooks', () => {
       expect(result2.current.data[1].issues).toEqual(majorIssues);
     });
 
-    it('should handle multiple severities in correct order', async () => {
+    it('should return critical and major severities in correct order', async () => {
       const criticalIssues = [createMockIssue(IssueSeverity.CRITICAL, 'crit-1')];
       const majorIssues = [createMockIssue(IssueSeverity.MAJOR, 'major-1')];
-      const minorIssues = [createMockIssue(IssueSeverity.MINOR, 'minor-1')];
-      const infoIssues = [createMockIssue(IssueSeverity.INFO, 'info-1')];
 
       mockFetchIssues
         .mockResolvedValueOnce({ data: criticalIssues, total: 1, limit: 20, offset: 0 })
-        .mockResolvedValueOnce({ data: majorIssues, total: 1, limit: 20, offset: 0 })
-        .mockResolvedValueOnce({ data: minorIssues, total: 1, limit: 20, offset: 0 })
-        .mockResolvedValueOnce({ data: infoIssues, total: 1, limit: 20, offset: 0 });
+        .mockResolvedValueOnce({ data: majorIssues, total: 1, limit: 20, offset: 0 });
 
       const { result } = renderHookWithQueryClient(() =>
-        useIssuesWithSeverity('test-namespace', [
-          IssueSeverity.CRITICAL,
-          IssueSeverity.MAJOR,
-          IssueSeverity.MINOR,
-          IssueSeverity.INFO,
-        ]),
+        useCriticalAndMajorIssues('test-namespace'),
       );
 
       await waitFor(() => {
         expect(result.current.isLoaded).toBe(true);
       });
 
-      expect(result.current.data).toHaveLength(4);
+      expect(result.current.data).toHaveLength(2);
       expect(result.current.data[0].severity).toBe(IssueSeverity.CRITICAL);
       expect(result.current.data[1].severity).toBe(IssueSeverity.MAJOR);
-      expect(result.current.data[2].severity).toBe(IssueSeverity.MINOR);
-      expect(result.current.data[3].severity).toBe(IssueSeverity.INFO);
     });
   });
 });

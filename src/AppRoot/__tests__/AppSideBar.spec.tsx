@@ -1,7 +1,7 @@
 import React from 'react';
 import { screen } from '@testing-library/react';
 import { Issue, IssueSeverity, IssueState, IssueType } from '~/kite/issue-type';
-import { useIssuesWithSeverity } from '~/kite/kite-hooks';
+import { useCriticalAndMajorIssues } from '~/kite/kite-hooks';
 import { useActiveRouteChecker } from '../../../src/hooks/useActiveRouteChecker';
 import { useNamespace } from '../../shared/providers/Namespace';
 import { routerRenderer } from '../../utils/test-utils';
@@ -43,10 +43,10 @@ jest.mock('~/kite/kite-hooks', () => ({
     hasNextPage: false,
     isFetchingNextPage: false,
   })),
-  useIssuesWithSeverity: jest.fn(),
+  useCriticalAndMajorIssues: jest.fn(),
 }));
 
-const mockUseIssuesWithSeverity = useIssuesWithSeverity as jest.Mock;
+const mockUseCriticalAndMajorIssues = useCriticalAndMajorIssues as jest.Mock;
 
 const createMockIssue = (severity: IssueSeverity, state: IssueState, id: string): Issue => ({
   id,
@@ -73,7 +73,7 @@ describe('AppSideBar', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     // Default mock - no issues
-    mockUseIssuesWithSeverity.mockReturnValue({
+    mockUseCriticalAndMajorIssues.mockReturnValue({
       data: [
         {
           severity: IssueSeverity.CRITICAL,
@@ -203,7 +203,7 @@ describe('AppSideBar', () => {
     (useActiveRouteChecker as jest.Mock).mockReturnValue(() => false);
     (useNamespace as jest.Mock).mockReturnValue('test-namespace');
 
-    mockUseIssuesWithSeverity.mockReturnValue({
+    mockUseCriticalAndMajorIssues.mockReturnValue({
       data: [
         {
           severity: IssueSeverity.CRITICAL,

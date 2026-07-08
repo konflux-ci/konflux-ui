@@ -2,15 +2,12 @@ import React from 'react';
 import { Icon } from '@patternfly/react-core';
 import { ExclamationCircleIcon } from '@patternfly/react-icons/dist/esm/icons/exclamation-circle-icon';
 import { ExclamationTriangleIcon } from '@patternfly/react-icons/dist/esm/icons/exclamation-triangle-icon';
-import { IssueSeverity, IssueState } from '~/kite/issue-type';
-import { useIssuesWithSeverity } from '~/kite/kite-hooks';
-
-const SEVERITIES = [IssueSeverity.CRITICAL, IssueSeverity.MAJOR];
+import { IssueSeverity } from '~/kite/issue-type';
+import { useCriticalAndMajorIssues } from '~/kite/kite-hooks';
 
 export const IssuesNavItemContent: React.FC<{ namespace: string }> = ({ namespace }) => {
-  const { data, isLoaded, hasError } = useIssuesWithSeverity(
+  const { data, isLoaded, hasError } = useCriticalAndMajorIssues(
     namespace,
-    SEVERITIES,
     true, // noRefetch
   );
 
@@ -23,10 +20,8 @@ export const IssuesNavItemContent: React.FC<{ namespace: string }> = ({ namespac
     const criticalGroup = data.find((group) => group.severity === IssueSeverity.CRITICAL);
     const majorGroup = data.find((group) => group.severity === IssueSeverity.MAJOR);
 
-    // Check if there are active critical issues
-    const hasCriticalIssues = criticalGroup?.issues.some(
-      (issue) => issue.state === IssueState.ACTIVE,
-    );
+    // Check if there are critical issues (already filtered to ACTIVE by the API)
+    const hasCriticalIssues = (criticalGroup?.total ?? 0) > 0;
 
     if (hasCriticalIssues) {
       return (
@@ -41,8 +36,8 @@ export const IssuesNavItemContent: React.FC<{ namespace: string }> = ({ namespac
       );
     }
 
-    // Check if there are active major issues
-    const hasMajorIssues = majorGroup?.issues.some((issue) => issue.state === IssueState.ACTIVE);
+    // Check if there are major issues (already filtered to ACTIVE by the API)
+    const hasMajorIssues = (majorGroup?.total ?? 0) > 0;
 
     if (hasMajorIssues) {
       return (

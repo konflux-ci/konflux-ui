@@ -1,18 +1,18 @@
 import { screen } from '@testing-library/react';
 import { Issue, IssueSeverity, IssueState, IssueType } from '~/kite/issue-type';
-import { useIssuesWithSeverity } from '~/kite/kite-hooks';
+import { useCriticalAndMajorIssues } from '~/kite/kite-hooks';
 import { renderWithQueryClientAndRouter } from '~/unit-test-utils/rendering-utils';
 import { IssuesNavItemContent } from '../IssuesNavItemContent';
 
 jest.mock('~/kite/kite-hooks', () => ({
-  useIssuesWithSeverity: jest.fn(),
+  useCriticalAndMajorIssues: jest.fn(),
 }));
 
 jest.mock('~/feature-flags/FeatureFlagIndicator', () => ({
   FeatureFlagIndicator: () => null,
 }));
 
-const mockUseIssuesWithSeverity = useIssuesWithSeverity as jest.Mock;
+const mockUseCriticalAndMajorIssues = useCriticalAndMajorIssues as jest.Mock;
 
 const createMockIssue = (severity: IssueSeverity, state: IssueState, id: string): Issue => ({
   id,
@@ -42,7 +42,7 @@ describe('IssueNavItemContent', () => {
 
   describe('Loading state', () => {
     it('should render only text without icon when loading', () => {
-      mockUseIssuesWithSeverity.mockReturnValue({
+      mockUseCriticalAndMajorIssues.mockReturnValue({
         data: [],
         isLoaded: false,
         hasError: false,
@@ -57,7 +57,7 @@ describe('IssueNavItemContent', () => {
 
   describe('Error state', () => {
     it('should render only text without icon when there is an error', () => {
-      mockUseIssuesWithSeverity.mockReturnValue({
+      mockUseCriticalAndMajorIssues.mockReturnValue({
         data: [],
         isLoaded: true,
         hasError: true,
@@ -72,7 +72,7 @@ describe('IssueNavItemContent', () => {
 
   describe('Empty state', () => {
     it('should render only text without icon when no issues exist', () => {
-      mockUseIssuesWithSeverity.mockReturnValue({
+      mockUseCriticalAndMajorIssues.mockReturnValue({
         data: [
           {
             severity: IssueSeverity.CRITICAL,
@@ -101,7 +101,7 @@ describe('IssueNavItemContent', () => {
     });
 
     it('should render only text without icon when data is empty array', () => {
-      mockUseIssuesWithSeverity.mockReturnValue({
+      mockUseCriticalAndMajorIssues.mockReturnValue({
         data: [],
         isLoaded: true,
         hasError: false,
@@ -114,20 +114,21 @@ describe('IssueNavItemContent', () => {
       expect(screen.queryByTestId('major-issues-icon')).not.toBeInTheDocument();
     });
 
-    it('should render only text without icon when only resolved issues exist', () => {
-      mockUseIssuesWithSeverity.mockReturnValue({
+    it('should render only text without icon when API returns no active issues', () => {
+      // API filters by ACTIVE state, so resolved issues won't be returned
+      mockUseCriticalAndMajorIssues.mockReturnValue({
         data: [
           {
             severity: IssueSeverity.CRITICAL,
-            issues: [createMockIssue(IssueSeverity.CRITICAL, IssueState.RESOLVED, 'crit-1')],
-            total: 1,
+            issues: [],
+            total: 0,
             isLoading: false,
             error: null,
           },
           {
             severity: IssueSeverity.MAJOR,
-            issues: [createMockIssue(IssueSeverity.MAJOR, IssueState.RESOLVED, 'major-1')],
-            total: 1,
+            issues: [],
+            total: 0,
             isLoading: false,
             error: null,
           },
@@ -146,7 +147,7 @@ describe('IssueNavItemContent', () => {
 
   describe('Critical issues', () => {
     it('should render danger icon when active critical issues exist', () => {
-      mockUseIssuesWithSeverity.mockReturnValue({
+      mockUseCriticalAndMajorIssues.mockReturnValue({
         data: [
           {
             severity: IssueSeverity.CRITICAL,
@@ -173,13 +174,14 @@ describe('IssueNavItemContent', () => {
       expect(screen.getByTestId('critical-issues-icon')).toBeInTheDocument();
     });
 
-    it('should not render icon when critical issue is resolved', () => {
-      mockUseIssuesWithSeverity.mockReturnValue({
+    it('should not render icon when no active critical issues', () => {
+      // API filters by ACTIVE state, so this returns empty
+      mockUseCriticalAndMajorIssues.mockReturnValue({
         data: [
           {
             severity: IssueSeverity.CRITICAL,
-            issues: [createMockIssue(IssueSeverity.CRITICAL, IssueState.RESOLVED, 'crit-1')],
-            total: 1,
+            issues: [],
+            total: 0,
             isLoading: false,
             error: null,
           },
@@ -203,7 +205,7 @@ describe('IssueNavItemContent', () => {
     });
 
     it('should prioritize critical over major issues', () => {
-      mockUseIssuesWithSeverity.mockReturnValue({
+      mockUseCriticalAndMajorIssues.mockReturnValue({
         data: [
           {
             severity: IssueSeverity.CRITICAL,
@@ -233,7 +235,7 @@ describe('IssueNavItemContent', () => {
 
   describe('Major issues', () => {
     it('should render warning icon when active major issues exist', () => {
-      mockUseIssuesWithSeverity.mockReturnValue({
+      mockUseCriticalAndMajorIssues.mockReturnValue({
         data: [
           {
             severity: IssueSeverity.CRITICAL,
@@ -260,8 +262,9 @@ describe('IssueNavItemContent', () => {
       expect(screen.getByTestId('major-issues-icon')).toBeInTheDocument();
     });
 
-    it('should not render icon when major issue is resolved', () => {
-      mockUseIssuesWithSeverity.mockReturnValue({
+    it('should not render icon when no active major issues', () => {
+      // API filters by ACTIVE state, so this returns empty
+      mockUseCriticalAndMajorIssues.mockReturnValue({
         data: [
           {
             severity: IssueSeverity.CRITICAL,
@@ -272,8 +275,8 @@ describe('IssueNavItemContent', () => {
           },
           {
             severity: IssueSeverity.MAJOR,
-            issues: [createMockIssue(IssueSeverity.MAJOR, IssueState.RESOLVED, 'major-1')],
-            total: 1,
+            issues: [],
+            total: 0,
             isLoading: false,
             error: null,
           },
@@ -293,7 +296,7 @@ describe('IssueNavItemContent', () => {
   describe('Minor and Info issues', () => {
     it('should not render icon when only minor issues exist (not fetched)', () => {
       // Minor severity is not in the fetched severities array
-      mockUseIssuesWithSeverity.mockReturnValue({
+      mockUseCriticalAndMajorIssues.mockReturnValue({
         data: [
           {
             severity: IssueSeverity.CRITICAL,
@@ -323,23 +326,21 @@ describe('IssueNavItemContent', () => {
   });
 
   describe('Multiple issues', () => {
-    it('should handle multiple issues with different states correctly', () => {
-      mockUseIssuesWithSeverity.mockReturnValue({
+    it('should handle multiple active critical issues correctly', () => {
+      // API only returns ACTIVE issues
+      mockUseCriticalAndMajorIssues.mockReturnValue({
         data: [
           {
             severity: IssueSeverity.CRITICAL,
-            issues: [
-              createMockIssue(IssueSeverity.CRITICAL, IssueState.RESOLVED, 'crit-1'),
-              createMockIssue(IssueSeverity.CRITICAL, IssueState.ACTIVE, 'crit-2'),
-            ],
-            total: 2,
+            issues: [createMockIssue(IssueSeverity.CRITICAL, IssueState.ACTIVE, 'crit-2')],
+            total: 2, // total count from API
             isLoading: false,
             error: null,
           },
           {
             severity: IssueSeverity.MAJOR,
-            issues: [createMockIssue(IssueSeverity.MAJOR, IssueState.RESOLVED, 'major-1')],
-            total: 1,
+            issues: [],
+            total: 0,
             isLoading: false,
             error: null,
           },
@@ -351,28 +352,26 @@ describe('IssueNavItemContent', () => {
       renderWithQueryClientAndRouter(<IssuesNavItemContent namespace="test-namespace" />);
 
       expect(screen.getByText(/Issues/)).toBeInTheDocument();
-      // Should show critical icon because there's at least one active critical issue
+      // Should show critical icon because total > 0
       expect(screen.getByTestId('critical-issues-icon')).toBeInTheDocument();
       expect(screen.queryByTestId('major-issues-icon')).not.toBeInTheDocument();
     });
 
-    it('should handle mix of active and resolved issues', () => {
-      mockUseIssuesWithSeverity.mockReturnValue({
+    it('should handle when only major issues are active', () => {
+      // API only returns ACTIVE issues
+      mockUseCriticalAndMajorIssues.mockReturnValue({
         data: [
           {
             severity: IssueSeverity.CRITICAL,
-            issues: [createMockIssue(IssueSeverity.CRITICAL, IssueState.RESOLVED, 'crit-1')],
-            total: 1,
+            issues: [],
+            total: 0,
             isLoading: false,
             error: null,
           },
           {
             severity: IssueSeverity.MAJOR,
-            issues: [
-              createMockIssue(IssueSeverity.MAJOR, IssueState.RESOLVED, 'major-1'),
-              createMockIssue(IssueSeverity.MAJOR, IssueState.ACTIVE, 'major-2'),
-            ],
-            total: 2,
+            issues: [createMockIssue(IssueSeverity.MAJOR, IssueState.ACTIVE, 'major-2')],
+            total: 2, // total count from API
             isLoading: false,
             error: null,
           },
@@ -384,13 +383,13 @@ describe('IssueNavItemContent', () => {
       renderWithQueryClientAndRouter(<IssuesNavItemContent namespace="test-namespace" />);
 
       expect(screen.getByText(/Issues/)).toBeInTheDocument();
-      // Should show major icon because critical has no active issues but major has one
+      // Should show major icon because critical has no active issues but major has some
       expect(screen.queryByTestId('critical-issues-icon')).not.toBeInTheDocument();
       expect(screen.getByTestId('major-issues-icon')).toBeInTheDocument();
     });
 
     it('should handle when severity group is not found', () => {
-      mockUseIssuesWithSeverity.mockReturnValue({
+      mockUseCriticalAndMajorIssues.mockReturnValue({
         data: [
           {
             severity: IssueSeverity.CRITICAL,

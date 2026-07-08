@@ -5,6 +5,7 @@ import {
   IssueQuery,
   IssueResponse,
   IssueSeverity,
+  IssueState,
   IssueType,
   IssuesWithSeverityResult,
 } from '~/kite/issue-type';
@@ -91,67 +92,49 @@ export const useIssueCountsByType = (namespace: string): IssueCounts => {
   }, [buildResult, testResult, releaseResult, dependencyResult, pipelineResult]);
 };
 
-// Example: const { data, isLoaded, hasError } = useIssuesWithSeverity('my-namespace', [IssueSeverity.CRITICAL, IssueSeverity.MAJOR]);
-export const useIssuesWithSeverity = (
+// Hook to fetch only active critical and major issues
+export const useCriticalAndMajorIssues = (
   namespace: string,
-  severities: IssueSeverity[],
   noRefetch?: boolean,
 ): IssuesWithSeverityResult => {
   const baseQuery: IssueQuery = {
     namespace,
+    state: IssueState.ACTIVE,
+    limit: 1,
   };
 
-  // Helper function to get query options based on whether severity is requested
-  const getQueryOptions = (
-    severity: IssueSeverity,
-  ): Partial<Omit<UseQueryOptions<IssueResponse>, 'queryKey' | 'queryFn'>> =>
-    severities.includes(severity)
-      ? noRefetch
-        ? {
-            refetchOnMount: false,
-          }
-        : {}
-      : { enabled: false };
+  const queryOptions: Partial<Omit<UseQueryOptions<IssueResponse>, 'queryKey' | 'queryFn'>> =
+    noRefetch
+      ? {
+          refetchOnMount: false,
+        }
+      : {};
 
-  // Create queries for each severity level using useIssues
+  // Create queries for critical and major severity levels
   const criticalResult = useIssues(
     { severity: IssueSeverity.CRITICAL, ...baseQuery },
-    getQueryOptions(IssueSeverity.CRITICAL),
+    queryOptions,
   );
 
-  const majorResult = useIssues(
-    { severity: IssueSeverity.MAJOR, ...baseQuery },
-    getQueryOptions(IssueSeverity.MAJOR),
-  );
-
-  const minorResult = useIssues(
-    { severity: IssueSeverity.MINOR, ...baseQuery },
-    getQueryOptions(IssueSeverity.MINOR),
-  );
-
-  const infoResult = useIssues(
-    { severity: IssueSeverity.INFO, ...baseQuery },
-    getQueryOptions(IssueSeverity.INFO),
-  );
+  const majorResult = useIssues({ severity: IssueSeverity.MAJOR, ...baseQuery }, queryOptions);
 
   return React.useMemo(() => {
-    const severityResultMap = {
-      [IssueSeverity.CRITICAL]: criticalResult,
-      [IssueSeverity.MAJOR]: majorResult,
-      [IssueSeverity.MINOR]: minorResult,
-      [IssueSeverity.INFO]: infoResult,
-    };
-
-    const data = severities.map((severity) => {
-      const result = severityResultMap[severity];
-      return {
-        severity,
-        issues: result.data?.data ?? [],
-        total: result.data?.total ?? 0,
-        isLoading: result.isLoading,
-        error: result.error,
-      };
-    });
+    const data = [
+      {
+        severity: IssueSeverity.CRITICAL,
+        issues: criticalResult.data?.data ?? [],
+        total: criticalResult.data?.total ?? 0,
+        isLoading: criticalResult.isLoading,
+        error: criticalResult.error,
+      },
+      {
+        severity: IssueSeverity.MAJOR,
+        issues: majorResult.data?.data ?? [],
+        total: majorResult.data?.total ?? 0,
+        isLoading: majorResult.isLoading,
+        error: majorResult.error,
+      },
+    ];
 
     const isLoaded = data.every((item) => !item.isLoading);
     const hasError = data.some((item) => item.error);
@@ -161,5 +144,5 @@ export const useIssuesWithSeverity = (
       isLoaded,
       hasError,
     };
-  }, [severities, criticalResult, majorResult, minorResult, infoResult]);
+  }, [criticalResult, majorResult]);
 };
