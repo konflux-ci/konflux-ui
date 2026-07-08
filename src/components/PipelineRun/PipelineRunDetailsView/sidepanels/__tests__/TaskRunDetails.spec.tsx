@@ -16,6 +16,29 @@ describe('TaskRunDetails', () => {
   it('should handle skipped tasks', () => {
     const { container } = render(<TaskRunDetails status={runStatus.Skipped} />);
     expect(container).toHaveTextContent('This task was skipped.');
+    expect(container).not.toHaveTextContent('Description');
+  });
+
+  it('should not display description for whitespace-only skipped task descriptions', () => {
+    const { container } = render(
+      <TaskRunDetails status={runStatus.Skipped} description="   " />,
+    );
+    expect(container).toHaveTextContent('This task was skipped.');
+    expect(container).not.toHaveTextContent('Description');
+  });
+
+  it('should display pipeline task description for skipped tasks', () => {
+    const result = render(
+      <TaskRunDetails
+        status={runStatus.Skipped}
+        description="Reserve a Konflux EaaS namespace and kubeconfig secret."
+      />,
+    );
+    expect(result.getByText('This task was skipped.')).toBeInTheDocument();
+    expect(result.getByText('Description')).toBeInTheDocument();
+    expect(
+      result.getByText('Reserve a Konflux EaaS namespace and kubeconfig secret.'),
+    ).toBeInTheDocument();
   });
 
   it('should display task description', () => {
