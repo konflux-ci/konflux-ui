@@ -1,26 +1,13 @@
 import * as React from 'react';
 import { differenceBy, uniqBy } from 'lodash-es';
 import { useK8sWatchResource } from '~/k8s';
-import {
-  PipelineRunEventType,
-  PipelineRunLabel,
-  PipelineRunType,
-  runStatus,
-} from '../consts/pipelinerun';
-import {
-  PipelineRunGroupVersionKind,
-  PipelineRunModel,
-  TaskRunGroupVersionKind,
-  TaskRunModel,
-} from '../models';
+import { PipelineRunLabel, PipelineRunType } from '../consts/pipelinerun';
+import { PipelineRunGroupVersionKind, PipelineRunModel } from '../models';
 import { useDeepCompareMemoize } from '../shared';
-import { PipelineRunKind, TaskRunKind } from '../types';
+import { PipelineRunKind } from '../types';
 import { K8sGroupVersionKind, K8sModelCommon, K8sResourceCommon, Selector } from '../types/k8s';
 import { getCommitSha } from '../utils/commits-utils';
-import { pipelineRunStatus } from '../utils/pipeline-utils';
 import { EQ } from '../utils/tekton-results';
-import { useApplication } from './useApplications';
-import { useComponents } from './useComponents';
 import { GetNextPage, NextPageProps, useTRPipelineRuns, useTRTaskRuns } from './useTektonResults';
 
 const useRuns = <Kind extends K8sResourceCommon>(
@@ -179,15 +166,6 @@ export const usePipelineRuns = (
 ): [PipelineRunKind[], boolean, unknown, GetNextPage, NextPageProps] =>
   useRuns<PipelineRunKind>(PipelineRunGroupVersionKind, PipelineRunModel, namespace, options);
 
-export const useTaskRuns = (
-  namespace: string,
-  options?: {
-    selector?: Selector;
-    limit?: number;
-  },
-): [TaskRunKind[], boolean, unknown, GetNextPage, NextPageProps] =>
-  useRuns<TaskRunKind>(TaskRunGroupVersionKind, TaskRunModel, namespace, options);
-
 export const useLatestBuildPipelineRunForComponent = (
   namespace: string,
   componentName: string,
@@ -209,183 +187,4 @@ export const useLatestBuildPipelineRunForComponent = (
   ) as unknown as [PipelineRunKind[], boolean, unknown];
 
   return React.useMemo(() => [result[0]?.[0], result[1], result[2]], [result]);
-};
-
-export const useLatestSuccessfulBuildPipelineRunForComponent = (
-  namespace: string,
-  componentName: string,
-): [PipelineRunKind, boolean, unknown] => {
-  const [pipelines, loaded, error, getNextPage] = usePipelineRuns(
-    namespace,
-    React.useMemo(
-      () => ({
-        selector: {
-          matchLabels: {
-            [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.BUILD,
-            [PipelineRunLabel.COMPONENT]: componentName,
-          },
-        },
-      }),
-      [componentName],
-    ),
-  );
-
-  const latestSuccess = React.useMemo(
-    () =>
-      loaded &&
-      !error &&
-      pipelines?.find((pipeline) => pipelineRunStatus(pipeline) === runStatus.Succeeded),
-    [error, loaded, pipelines],
-  );
-
-  React.useEffect(() => {
-    if (loaded && !error && !latestSuccess && getNextPage) {
-      getNextPage();
-    }
-  }, [loaded, error, getNextPage, latestSuccess]);
-
-  return [latestSuccess, loaded, error];
-};
-
-/**
- * @deprecated
- * Replaced by usePipelineRunsForCommitV2 function in
- * ~/src/hooks/usePipelineRunsForCommitV2.ts
- * usePipelineRunsForCommitV2 uses KubeArchive and
- * assures backward compatibility.
- */
-export const usePipelineRunsForCommit = (
-  namespace: string,
-  applicationName: string,
-  commit: string,
-  limit?: number,
-  filterByComponents = true,
-  plrType?: PipelineRunType,
-): [PipelineRunKind[], boolean, unknown, GetNextPage, NextPageProps] => {
-  const [components, componentsLoaded] = useComponents(namespace, applicationName);
-  const [application, applicationLoaded] = useApplication(namespace, applicationName);
-
-  const componentNames = React.useMemo(
-    () => (componentsLoaded ? components.map((c) => c.metadata?.name) : []),
-    [components, componentsLoaded],
-  );
-
-  const [pipelineRuns, plrsLoaded, plrError, getNextPage, nextPageProps] = usePipelineRuns(
-    namespace && applicationName && commit && componentsLoaded && applicationLoaded
-      ? namespace
-      : null,
-    React.useMemo(
-      () => ({
-        selector: {
-          filterByCreationTimestampAfter: application?.metadata?.creationTimestamp,
-          matchLabels: {
-            [PipelineRunLabel.APPLICATION]: applicationName,
-            ...(plrType && { [PipelineRunLabel.PIPELINE_TYPE]: plrType }),
-          },
-          filterByCommit: commit,
-        },
-        // TODO: Add limit when filtering by component name AND only PLRs are returned
-        // limit,
-      }),
-      [applicationName, commit, application, plrType],
-    ),
-  );
-
-  const loaded = plrsLoaded && componentsLoaded;
-
-  // TODO: Remove this if/when tekton results are really filtered by component names above
-  return React.useMemo(() => {
-    if (!loaded || plrError) {
-      return [[], loaded, plrError, getNextPage, nextPageProps];
-    }
-    return [
-      pipelineRuns
-        .filter((plr) =>
-          filterByComponents
-            ? componentNames.includes(plr.metadata?.labels?.[PipelineRunLabel.COMPONENT])
-            : true,
-        )
-        .filter((plr) => plr.kind === PipelineRunGroupVersionKind.kind)
-        .slice(0, limit ? limit : undefined),
-      true,
-      undefined,
-      getNextPage,
-      nextPageProps,
-    ];
-  }, [
-    componentNames,
-    filterByComponents,
-    getNextPage,
-    limit,
-    loaded,
-    nextPageProps,
-    pipelineRuns,
-    plrError,
-  ]);
-};
-
-export const usePipelineRun = (
-  namespace: string,
-  pipelineRunName: string,
-): [PipelineRunKind, boolean, unknown] => {
-  const result = usePipelineRuns(
-    namespace,
-    React.useMemo(
-      () => ({
-        name: pipelineRunName,
-        limit: 1,
-      }),
-      [pipelineRunName],
-    ),
-  ) as unknown as [PipelineRunKind[], boolean, unknown];
-
-  return React.useMemo(
-    () => [result[0]?.[0], result[1], result[0]?.[0] ? undefined : result[2]],
-    [result],
-  );
-};
-
-export const useTaskRun = (
-  namespace: string,
-  taskRunName: string,
-): [TaskRunKind, boolean, unknown] => {
-  const result = useTaskRuns(
-    namespace,
-    React.useMemo(
-      () => ({
-        name: taskRunName,
-        limit: 1,
-      }),
-      [taskRunName],
-    ),
-  ) as unknown as [TaskRunKind[], boolean, unknown];
-
-  return React.useMemo(
-    () => [result[0]?.[0], result[1], result[0]?.[0] ? undefined : result[2]],
-    [result],
-  );
-};
-
-export const useLatestPushBuildPipelineRunForComponent = (
-  namespace: string,
-  componentName: string,
-): [PipelineRunKind, boolean, unknown] => {
-  const result = usePipelineRuns(
-    namespace,
-    React.useMemo(
-      () => ({
-        selector: {
-          matchLabels: {
-            [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.BUILD,
-            [PipelineRunLabel.COMPONENT]: componentName,
-            [PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL]: PipelineRunEventType.PUSH,
-          },
-        },
-        limit: 1,
-      }),
-      [componentName],
-    ),
-  );
-
-  return [result[0]?.[0], result[1], result[2]];
 };
