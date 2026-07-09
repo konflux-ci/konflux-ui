@@ -5,12 +5,12 @@ import { Action } from '../../shared/components/action-menu/types';
 import { useNamespace } from '../../shared/providers/Namespace';
 import { RoleBinding } from '../../types';
 import { useAccessReviewForModel } from '../../utils/rbac';
-import { createModalLauncher } from '../modal/createModalLauncher';
+import { createRawModalLauncher } from '../modal/createModalLauncher';
 import { useModalLauncher } from '../modal/ModalProvider';
 import { RevokeAccessModal } from './RevokeAccessModal';
 
 const revokeAccessModalLauncher = (username: string, rb: RoleBinding) =>
-  createModalLauncher(RevokeAccessModal, {
+  createRawModalLauncher(RevokeAccessModal, {
     'data-test': 'revoke-access-modal',
     variant: ModalVariant.small,
     title: 'Revoke access?',
