@@ -50,10 +50,16 @@ export const RevokeAccessModal: React.FC<React.PropsWithChildren<Props>> = ({
     [onClose, rb],
   );
 
-  const { isOpen, variant, title } = modalProps || {};
+  const { isOpen, variant, title, ...rest } = modalProps || {};
 
   return (
-    <Modal variant={variant} isOpen={isOpen} onClose={onClose} data-test="revoke-access-modal">
+    <Modal
+      {...rest}
+      variant={variant}
+      isOpen={isOpen}
+      onClose={onClose}
+      data-test="revoke-access-modal"
+    >
       <ModalHeader title={title} />
       <ModalBody>
         <Content>
