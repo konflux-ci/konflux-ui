@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Divider, Flex, FlexItem, Text, TextVariants, Tooltip } from '@patternfly/react-core';
+import { Divider, Flex, FlexItem, Content, ContentVariants, Tooltip } from '@patternfly/react-core';
 import { CheckCircleIcon } from '@patternfly/react-icons/dist/esm/icons/check-circle-icon';
 import { ExclamationCircleIcon } from '@patternfly/react-icons/dist/esm/icons/exclamation-circle-icon';
 import { ExclamationTriangleIcon } from '@patternfly/react-icons/dist/esm/icons/exclamation-triangle-icon';
@@ -40,9 +40,9 @@ const SummaryItem: React.FC<SummaryItemDef> = ({ icon, count, rawCount, label, t
       <FlexItem>
         <strong>{count}</strong> {label}
         {rawCount !== undefined && rawCount !== count && (
-          <Text component={TextVariants.small} className="pf-v5-u-ml-xs pf-v5-u-color-400">
+          <Content component={ContentVariants.small} className="pf-v6-u-ml-xs pf-v6-u-color-400">
             ({rawCount} incl. multi-arch)
-          </Text>
+          </Content>
         )}
       </FlexItem>
     </Flex>

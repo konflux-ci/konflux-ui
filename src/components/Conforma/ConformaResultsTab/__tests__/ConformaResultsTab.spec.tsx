@@ -235,7 +235,7 @@ describe('ConformaResultsTab', () => {
 
     routerRenderer(<ConformaResultsTab />);
 
-    expect(screen.getByRole('checkbox', { name: /show multi-arch duplicates/i })).not.toBeChecked();
+    expect(screen.getByRole('switch', { name: /show multi-arch duplicates/i })).not.toBeChecked();
   });
 
   it('collapses arch-duplicate rows by default and shows image name with variant count', () => {
@@ -266,7 +266,7 @@ describe('ConformaResultsTab', () => {
 
     routerRenderer(<ConformaResultsTab />);
 
-    fireEvent.click(screen.getByRole('checkbox', { name: /show multi-arch duplicates/i }));
+    fireEvent.click(screen.getByRole('switch', { name: /show multi-arch duplicates/i }));
 
     // Once duplicates are shown individually, the displayed count already
     // matches the raw count, so the qualifier is no longer needed.
@@ -279,7 +279,7 @@ describe('ConformaResultsTab', () => {
     routerRenderer(<ConformaResultsTab />);
 
     // Turn on the show duplicates switch
-    fireEvent.click(screen.getByRole('checkbox', { name: /show multi-arch duplicates/i }));
+    fireEvent.click(screen.getByRole('switch', { name: /show multi-arch duplicates/i }));
 
     // Expand the group — now all 3 raw rows are visible
     const toggleButtons = screen.getAllByRole('button', { name: /details/i });

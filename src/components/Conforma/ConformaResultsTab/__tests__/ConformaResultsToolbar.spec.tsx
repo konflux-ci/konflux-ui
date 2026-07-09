@@ -53,21 +53,21 @@ describe('ConformaResultsToolbar', () => {
   it('renders show duplicates switch as unchecked by default (duplicates are collapsed)', () => {
     renderToolbar({ showDuplicates: false });
 
-    const switchEl = screen.getByRole('checkbox', { name: /show multi-arch duplicates/i });
+    const switchEl = screen.getByRole('switch', { name: /show multi-arch duplicates/i });
     expect(switchEl).not.toBeChecked();
   });
 
   it('renders show duplicates switch as checked when showDuplicates is true', () => {
     renderToolbar({ showDuplicates: true });
 
-    const switchEl = screen.getByRole('checkbox', { name: /show multi-arch duplicates/i });
+    const switchEl = screen.getByRole('switch', { name: /show multi-arch duplicates/i });
     expect(switchEl).toBeChecked();
   });
 
   it('calls onShowDuplicatesChange with true when an unchecked switch is clicked', () => {
     renderToolbar({ showDuplicates: false, onShowDuplicatesChange });
 
-    fireEvent.click(screen.getByRole('checkbox', { name: /show multi-arch duplicates/i }));
+    fireEvent.click(screen.getByRole('switch', { name: /show multi-arch duplicates/i }));
 
     expect(onShowDuplicatesChange).toHaveBeenCalledWith(true);
   });
@@ -75,7 +75,7 @@ describe('ConformaResultsToolbar', () => {
   it('calls onShowDuplicatesChange with false when a checked switch is clicked', () => {
     renderToolbar({ showDuplicates: true, onShowDuplicatesChange });
 
-    fireEvent.click(screen.getByRole('checkbox', { name: /show multi-arch duplicates/i }));
+    fireEvent.click(screen.getByRole('switch', { name: /show multi-arch duplicates/i }));
 
     expect(onShowDuplicatesChange).toHaveBeenCalledWith(false);
   });
