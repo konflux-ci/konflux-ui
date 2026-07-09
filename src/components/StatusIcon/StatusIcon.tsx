@@ -10,7 +10,7 @@ import {
 import pipelineStyles from '@patternfly/react-topology/dist/esm/css/topology-pipelines';
 import { runStatus } from '~/consts/pipelinerun';
 import { runStatusToRunStatus } from '~/utils/pipeline-utils';
-import { getLabelColorFromStatus } from '~/utils/status-color-utils';
+import { getStatusColorName } from '~/utils/status-color-utils';
 
 import './StatusIcon.scss';
 
@@ -83,7 +83,7 @@ export const StatusIconWithTextLabel: React.FC<
   React.PropsWithChildren<StatusIconProps & { text?: string; dataTestAttribute?: string }>
 > = ({ status, ...others }) => {
   return (
-    <Label color={getLabelColorFromStatus(status)}>
+    <Label color={getStatusColorName(status)}>
       <StatusIconWithText status={status} {...others} />
     </Label>
   );

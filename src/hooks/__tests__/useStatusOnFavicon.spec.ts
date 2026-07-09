@@ -32,9 +32,7 @@ describe('useStatusOnFavicon', () => {
   });
 
   it('updates when status changes', () => {
-    getStatusColorMock
-      .mockReturnValueOnce(blueColor.value)
-      .mockReturnValueOnce(greenColor.value);
+    getStatusColorMock.mockReturnValueOnce(blueColor.value).mockReturnValueOnce(greenColor.value);
 
     const { rerender } = renderHook(({ status }) => useStatusOnFavicon(status), {
       initialProps: { status: runStatus.Running },
