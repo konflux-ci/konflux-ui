@@ -29,6 +29,16 @@ const TaskDescriptionGroup: React.FC<{ content: string }> = ({ content }) => (
   </DescriptionListGroup>
 );
 
+const getTaskDescription = (
+  taskRun: TaskRunKind | undefined,
+  pipelineTaskDescription: string | undefined,
+): string => {
+  const taskSpecDescription = taskRun?.status?.taskSpec?.description?.trim();
+  const trimmedPipelineDescription = pipelineTaskDescription?.trim();
+
+  return taskSpecDescription || trimmedPipelineDescription || '-';
+};
+
 const TaskRunDetails: React.FC<React.PropsWithChildren<Props>> = ({
   taskRun,
   status,
@@ -36,6 +46,7 @@ const TaskRunDetails: React.FC<React.PropsWithChildren<Props>> = ({
 }) => {
   const results = isTaskV1Beta1(taskRun) ? taskRun?.status?.taskResults : taskRun?.status?.results;
   const specParams = taskRun?.spec?.params;
+  const taskDescription = getTaskDescription(taskRun, description);
   return (
     <>
       {status !== runStatus.Skipped ? (
@@ -57,16 +68,16 @@ const TaskRunDetails: React.FC<React.PropsWithChildren<Props>> = ({
             </DescriptionListGroup>
           </DescriptionList>
           <DescriptionList className="pf-v5-u-mt-lg">
-            <TaskDescriptionGroup content={taskRun?.status?.taskSpec?.description || '-'} />
+            <TaskDescriptionGroup content={taskDescription} />
             <ScanDescriptionListGroup taskRuns={[taskRun]} hideIfNotFound />
           </DescriptionList>
         </>
       ) : (
         <>
           <p>This task was skipped.</p>
-          {description?.trim() ? (
+          {taskDescription !== '-' ? (
             <DescriptionList className="pf-v5-u-mt-lg">
-              <TaskDescriptionGroup content={description} />
+              <TaskDescriptionGroup content={taskDescription} />
             </DescriptionList>
           ) : null}
         </>
