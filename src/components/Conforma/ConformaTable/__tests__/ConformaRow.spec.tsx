@@ -22,9 +22,10 @@ const dummySuccessRowData = {
   status: CONFORMA_RESULT_STATUS.successes,
   component: 'component-1',
   description: 'dummy description',
+  images: [],
 } as UIConformaData;
 
-const dumpFailRowData = {
+const dumpFailRowData: UIConformaData = {
   title: 'dummyTitle',
   status: CONFORMA_RESULT_STATUS.violations,
   component: 'component-1',
@@ -32,6 +33,7 @@ const dumpFailRowData = {
   msg: 'Fail',
   timestamp: '2022-01-01T00:00:00Z',
   collection: ['abcd', 'efg'],
+  images: [],
 };
 
 const customDummyData = {

@@ -12,7 +12,13 @@ import { FilterContext, FilterContextProvider } from '~/components/Filter/generi
 import { useDeepCompareMemoize } from '~/shared';
 import { getErrorState } from '~/shared/utils/error-utils';
 import type { GroupByMode } from './conforma-grouping-utils';
-import { filterResults, groupByComponent, groupByRule } from './conforma-grouping-utils';
+import {
+  collapseArchDuplicates,
+  countResultsByStatus,
+  filterResults,
+  groupByComponent,
+  groupByRule,
+} from './conforma-grouping-utils';
 import { ConformaGroupedTable } from './ConformaGroupedTable';
 import { ConformaResultsToolbar } from './ConformaResultsToolbar';
 import { ConformaSummaryBar } from './ConformaSummaryBar';
@@ -26,17 +32,8 @@ import './ConformaResultsTab.scss';
  */
 const ConformaResultsTabContent: React.FC = () => {
   const { applicationName } = useParams();
-  const {
-    allResults,
-    componentStatuses,
-    totalComponents,
-    totalFailed,
-    totalViolations,
-    totalWarnings,
-    totalSuccesses,
-    loaded,
-    error,
-  } = useApplicationConformaResults(applicationName);
+  const { allResults, componentStatuses, totalComponents, totalFailed, loaded, error } =
+    useApplicationConformaResults(applicationName);
 
   const { filters: unparsedFilters } = React.useContext(FilterContext);
   const filters = useDeepCompareMemoize({
@@ -47,15 +44,28 @@ const ConformaResultsTabContent: React.FC = () => {
 
   const [groupBy, setGroupBy] = React.useState<GroupByMode>('rule');
   const [expandedGroups, setExpandedGroups] = React.useState<Set<string>>(new Set());
+  const [showDuplicates, setShowDuplicates] = React.useState(false);
 
   const handleGroupByChange = React.useCallback((mode: GroupByMode) => {
     setGroupBy(mode);
     setExpandedGroups(new Set());
   }, []);
 
+  const displayResults = React.useMemo(
+    () => (showDuplicates ? allResults : collapseArchDuplicates(allResults)),
+    [allResults, showDuplicates],
+  );
+
+  // Display counts drive the primary numbers shown (they match what the
+  // table renders). Raw counts (always uncollapsed) are surfaced alongside
+  // them so the summary bar never silently hides real violations/warnings/
+  // successes that were merged away for display purposes.
+  const displayCounts = React.useMemo(() => countResultsByStatus(displayResults), [displayResults]);
+  const rawCounts = React.useMemo(() => countResultsByStatus(allResults), [allResults]);
+
   const filteredResults = React.useMemo(
-    () => filterResults(allResults, nameFilter, statusFilter),
-    [allResults, nameFilter, statusFilter],
+    () => filterResults(displayResults, nameFilter, statusFilter),
+    [displayResults, nameFilter, statusFilter],
   );
 
   const allComponentNames = React.useMemo(
@@ -123,9 +133,12 @@ const ConformaResultsTabContent: React.FC = () => {
           <ConformaSummaryBar
             totalComponents={totalComponents}
             totalFailed={totalFailed}
-            totalViolations={totalViolations}
-            totalWarnings={totalWarnings}
-            totalSuccesses={totalSuccesses}
+            totalViolations={displayCounts.totalViolations}
+            totalWarnings={displayCounts.totalWarnings}
+            totalSuccesses={displayCounts.totalSuccesses}
+            totalViolationsRaw={rawCounts.totalViolations}
+            totalWarningsRaw={rawCounts.totalWarnings}
+            totalSuccessesRaw={rawCounts.totalSuccesses}
           />
         </div>
       </PageSection>
@@ -137,6 +150,8 @@ const ConformaResultsTabContent: React.FC = () => {
           onGroupByChange={handleGroupByChange}
           allExpanded={allExpanded}
           onToggleExpandAll={handleToggleExpandAll}
+          showDuplicates={showDuplicates}
+          onShowDuplicatesChange={setShowDuplicates}
         />
 
         {isEmpty ? (

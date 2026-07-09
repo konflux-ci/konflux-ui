@@ -43,6 +43,7 @@ export type PipelineResult = {
 
 export type PipelineTask = {
   name: string;
+  description?: string;
   params?: PipelineTaskParam[];
   runAfter?: string[];
   taskRef?: PipelineTaskRef;

@@ -1,10 +1,12 @@
 import * as React from 'react';
-import { Content, Truncate } from '@patternfly/react-core';
+import { Content, Tooltip, Truncate as PfTruncate } from '@patternfly/react-core';
 import { ExpandableRowContent, Table, Tbody, Td, Th, Thead, Tr } from '@patternfly/react-table';
 import { getRuleStatus } from '~/components/Conforma/utils';
 import type { ComponentProps } from '~/shared/components/table/Table';
+import { Truncate } from '~/shared/components/truncate-text/Truncate';
 import type { ConformaResultRow } from '~/types/conforma';
 import type { GroupByMode, GroupedConformaRow } from './conforma-grouping-utils';
+import { getCommonImageName } from './conforma-grouping-utils';
 import { getConformaGroupedHeader } from './ConformaResultsListHeader';
 import ConformaResultsListRow from './ConformaResultsListRow';
 import './ConformaResultsTab.scss';
@@ -17,7 +19,12 @@ type ConformaGroupedTableProps = {
 };
 
 const DetailSubTable: React.FC<{ rows: ConformaResultRow[] }> = ({ rows }) => (
-  <Table aria-label="Conforma detail rows" variant="compact" borders={false}>
+  <Table
+    aria-label="Conforma detail rows"
+    variant="compact"
+    borders={false}
+    className="conforma-results-tab__detail-table"
+  >
     <Thead>
       <Tr>
         <Th width={20}>Rule</Th>
@@ -28,27 +35,65 @@ const DetailSubTable: React.FC<{ rows: ConformaResultRow[] }> = ({ rows }) => (
       </Tr>
     </Thead>
     <Tbody>
-      {rows.map((row, idx) => (
-        <Tr key={`${row.component}-${row.title}-${idx}`}>
-          <Td dataLabel="Rule">
-            <Content>
-              <Content component="p">
-                <strong>{row.title ?? '-'}</strong>
+      {rows.map((row, idx) => {
+        const commonName = row.images.length > 1 ? getCommonImageName(row.images) : undefined;
+        return (
+          <Tr key={`${row.component}-${row.title}-${idx}`}>
+            <Td dataLabel="Rule">
+              <Content>
+                <Content component="p">
+                  <strong>{row.title ?? '-'}</strong>
+                </Content>
+                {row.description && <Content component="small">{row.description}</Content>}
               </Content>
-              {row.description && <Content component="small">{row.description}</Content>}
-            </Content>
-          </Td>
-          <Td dataLabel="Component">{row.component}</Td>
-          <Td dataLabel="Image">{row.image ? <Truncate content={row.image} /> : '-'}</Td>
-          <Td dataLabel="Status">{getRuleStatus(row.status)}</Td>
-          <Td dataLabel="Message">
-            <Content>
-              <Content component="p">{row.msg ?? '-'}</Content>
-              {row.solution && <Content component="small">Solution: {row.solution}</Content>}
-            </Content>
-          </Td>
-        </Tr>
-      ))}
+            </Td>
+            <Td dataLabel="Component">{row.component}</Td>
+            <Td dataLabel="Image">
+              {row.images.length > 1 ? (
+                <Tooltip
+                  content={
+                    <ul>
+                      {row.images.map((img) => (
+                        <li key={img}>{img}</li>
+                      ))}
+                    </ul>
+                  }
+                >
+                  <Content>
+                    {commonName ? (
+                      <>
+                        <Content component="p">
+                          <PfTruncate content={commonName} />
+                        </Content>
+                        <Content component="small">{row.images.length} arch variants</Content>
+                      </>
+                    ) : (
+                      <Content component="p">Affects {row.images.length} images</Content>
+                    )}
+                  </Content>
+                </Tooltip>
+              ) : row.images.length === 1 ? (
+                <PfTruncate content={row.images[0]} />
+              ) : (
+                '-'
+              )}
+            </Td>
+            <Td dataLabel="Status">{getRuleStatus(row.status)}</Td>
+            <Td dataLabel="Message">
+              <Content>
+                <Content component="p">
+                  {row.msg != null ? (
+                    <Truncate content={row.msg} expandInline data-test="conforma-violation-msg" />
+                  ) : (
+                    '-'
+                  )}
+                </Content>
+                {row.solution && <Content component="small">Solution: {row.solution}</Content>}
+              </Content>
+            </Td>
+          </Tr>
+        );
+      })}
     </Tbody>
   </Table>
 );

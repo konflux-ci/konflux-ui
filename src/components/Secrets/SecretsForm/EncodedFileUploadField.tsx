@@ -5,7 +5,6 @@ import { FileUploadField } from 'formik-pf';
 import { Base64 } from 'js-base64';
 import attempt from 'lodash-es/attempt';
 import isError from 'lodash-es/isError';
-
 type EncodedFileUploadFieldProps = {
   id: string;
   name: string;
@@ -64,7 +63,9 @@ const EncodedFileUploadField: React.FC<React.PropsWithChildren<EncodedFileUpload
         setFilename(file.name);
         filenameRef.current = file.name;
       }}
-      onBlur={() => setTouched(true)}
+      onBlur={() => {
+        void setTouched(true);
+      }}
       onTextChange={(_ev, updated) => onChange(updated)}
       onDataChange={(_ev, updated) => onChange(updated, true)}
       onClearClick={() => {

@@ -50,8 +50,9 @@ import {
   getPipelineRunStatusResults,
   pipelineRunStatus,
 } from '~/utils/pipeline-utils';
+import { getSourceUrl } from '~/utils/pipelinerun-utils';
 import RelatedPipelineRuns from '../RelatedPipelineRuns';
-import { getSourceUrl, getSBOMsFromTaskRuns } from '../utils/pipelinerun-utils';
+import { getSBOMsFromTaskRuns } from '../utils/pipelinerun-utils';
 import PipelineRunVisualization from '../visualization/PipelineRunVisualization';
 import { createPipelineRunSBOMsModal } from './PipelineRunSBOMsModal';
 import RunParamsList from './RunParamsList';

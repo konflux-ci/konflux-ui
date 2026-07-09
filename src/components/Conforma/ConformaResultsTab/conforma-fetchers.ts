@@ -26,7 +26,7 @@ const mapToUIConformaData = (
   msg: v.msg,
   collection: v.metadata?.collections,
   solution: v.metadata?.solution,
-  image: compResult.containerImage,
+  images: compResult.containerImage ? [compResult.containerImage] : [],
   code: v.metadata?.code,
 });
 
