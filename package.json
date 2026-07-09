@@ -155,7 +155,8 @@
   },
   "sideEffects": [
     "*.css",
-    "*.scss"
+    "*.scss",
+    "./src/registers.ts"
   ],
   "lint-staged": {
     "*.{ts,tsx,js,mjs,jsx}": [
