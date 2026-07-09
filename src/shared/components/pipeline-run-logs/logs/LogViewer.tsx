@@ -106,7 +106,6 @@ const LogViewer: React.FC<Props> = ({
   const [isFullscreen, fullscreenRef, fullscreenToggle, isFullscreenSupported] =
     useFullscreen<HTMLDivElement>();
   const [downloadAllStatus, setDownloadAllStatus] = React.useState(false);
-  const [showShortcutHint, setShowShortcutHint] = React.useState(false);
 
   const downloadData = React.useMemo(() => {
     return sections
@@ -256,8 +255,9 @@ const LogViewer: React.FC<Props> = ({
                   <ToolbarItem>
                     <Popover
                       aria-label="Keyboard shortcuts"
-                      isVisible={showShortcutHint}
-                      shouldClose={() => setShowShortcutHint(false)}
+                      appendTo={() =>
+                        document.getElementById('hacDev-modal-container') || document.body
+                      }
                       bodyContent={
                         <KeyboardShortcutHint
                           shortcuts={LOG_VIEWER_SHORTCUTS}
@@ -271,7 +271,6 @@ const LogViewer: React.FC<Props> = ({
                         icon={<OutlinedKeyboardIcon />}
                         variant="plain"
                         aria-label="Show keyboard shortcuts"
-                        onClick={() => setShowShortcutHint((prev) => !prev)}
                       />
                     </Popover>
                   </ToolbarItem>
