@@ -1,5 +1,12 @@
 import * as React from 'react';
-import { Button, Modal, ModalVariant, Content } from '@patternfly/react-core';
+import {
+  Button,
+  Modal,
+  ModalBody,
+  ModalHeader,
+  ModalVariant,
+  Content,
+} from '@patternfly/react-core';
 import './Truncate.scss';
 
 const DEFAULT_MAX_LENGTH = 80;
@@ -64,14 +71,14 @@ export const Truncate: React.FC<TruncateProps> = ({
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title={modalTitle}
-        aria-label={modalTitle ? undefined : 'Full text'}
+        aria-label={modalTitle || 'Full text'}
         variant={ModalVariant.medium}
         data-test={dataTest ? `${dataTest}-modal` : 'truncate-modal'}
       >
-        <Content>
+        {modalTitle && <ModalHeader title={modalTitle} />}
+        <ModalBody>
           <Content className="truncate-text__modal-content">{content}</Content>
-        </Content>
+        </ModalBody>
       </Modal>
     </span>
   );
