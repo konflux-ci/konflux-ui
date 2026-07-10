@@ -1,0 +1,134 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: send-slack-notification
+  annotations:
+    tekton.dev/displayName: 'Send Slack Notification'
+    tekton.dev/categories: 'Notification'
+    tekton.dev/tags: 'slack,notification'
+spec:
+  description: >-
+    Send a Slack notification with test results to a specified channel.
+    Sends success or failure message based on pipeline status.
+  params:
+    - name: pipeline-aggregate-status
+      type: string
+      description: 'The aggregate status of the pipeline (Succeeded, Failed, Completed, None)'
+    - name: test-name
+      type: string
+      description: 'Name of the test/pipeline run'
+    - name: job-type
+      type: string
+      default: 'pr-check'
+      description: 'Type of job (pr-check, periodic-local, periodic-stage, etc.)'
+    - name: suite
+      type: string
+      default: 'basic'
+      description: 'Test suite name (basic, features, etc.)'
+    - name: slack-credentials-secret
+      type: string
+      default: 'slack-credentials'
+      description: 'Secret containing Slack token and channel ID'
+    - name: console-url
+      type: string
+      default: 'https://console.redhat.com/preview/application-pipeline'
+      description: 'Console base URL (e.g., https://console.redhat.com/preview/application-pipeline)'
+  steps:
+    - name: send-notification
+      image: registry.access.redhat.com/ubi9/ubi:latest
+      env:
+        - name: PIPELINE_STATUS
+          value: $(params.pipeline-aggregate-status)
+        - name: TEST_NAME
+          value: $(params.test-name)
+        - name: JOB_TYPE
+          value: $(params.job-type)
+        - name: SUITE
+          value: $(params.suite)
+        - name: CONSOLE_URL
+          value: $(params.console-url)
+        - name: TEKTON_NAMESPACE
+          value: $(context.taskRun.namespace)
+        - name: TEKTON_PIPELINE_RUN
+          value: $(context.pipelineRun.name)
+        - name: SLACK_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: $(params.slack-credentials-secret)
+              key: token
+        - name: SLACK_CHANNEL_ID
+          valueFrom:
+            secretKeyRef:
+              name: $(params.slack-credentials-secret)
+              key: channel-id
+      script: |
+        #!/usr/bin/env bash
+        set -euo pipefail
+
+        echo "=== Preparing Slack notification ==="
+
+        # Determine exit status from pipeline aggregate status
+        if [[ "${PIPELINE_STATUS}" == "Succeeded" ]]; then
+          EXIT_STATUS="success"
+          EMOJI=":white_check_mark:"
+        else
+          EXIT_STATUS="failure"
+          EMOJI=":x:"
+        fi
+
+        # Format date as "MMM D", e.g., "Jun 3"
+        REPORT_DATE=$(date '+%b %-d')
+
+        # Generate message based on job type
+        case "${JOB_TYPE}" in
+          "pr-check")
+            MESSAGE="${EMOJI} Report ${REPORT_DATE}: PR Check - ${TEST_NAME}"
+            ;;
+          "periodic-local")
+            MESSAGE="${EMOJI} Report ${REPORT_DATE}: LOCAL Periodic job"
+            ;;
+          "periodic-stage")
+            if [[ "${SUITE}" == "features" ]]; then
+              MESSAGE="${EMOJI} Report ${REPORT_DATE}: STAGE FEATURES Periodic job"
+            else
+              MESSAGE="${EMOJI} Report ${REPORT_DATE}: STAGE Periodic job"
+            fi
+            ;;
+          "periodic-cleanup")
+            MESSAGE="${EMOJI} Report ${REPORT_DATE}: CLEANUP Periodic job"
+            ;;
+          *)
+            MESSAGE="${EMOJI} Report ${REPORT_DATE}: ${JOB_TYPE} - ${TEST_NAME}"
+            ;;
+        esac
+
+        # Construct job URL dynamically
+        JOB_URL="${CONSOLE_URL}/workspaces/${TEKTON_NAMESPACE}/pipelineruns/${TEKTON_PIPELINE_RUN}"
+        MESSAGE="${MESSAGE} ${JOB_URL}"
+
+        echo "Status: ${EXIT_STATUS}"
+        echo "Message: ${MESSAGE}"
+        echo "Channel: ${SLACK_CHANNEL_ID}"
+
+        # Send Slack notification
+        echo "=== Sending Slack notification ==="
+
+        # Escape special characters for JSON
+        MESSAGE_ESCAPED=$(echo "${MESSAGE}" | sed 's/"/\\"/g')
+
+        # update to use correct webhook and channel-id
+        RESPONSE=$(curl -s -X POST https://slack.com/api/chat.postMessage \
+          -H "Authorization: Bearer ${SLACK_TOKEN}" \
+          -H "Content-Type: application/json; charset=utf-8" \
+          -d "{\"channel\": \"${SLACK_CHANNEL_ID}\", \"text\": \"${MESSAGE_ESCAPED}\"}")
+
+        echo "Slack API Response: ${RESPONSE}"
+
+        # Check if message was sent successfully
+        if echo "${RESPONSE}" | grep -q '"ok":true'; then
+          echo "✅ Slack notification sent successfully"
+        else
+          echo "⚠️ Failed to send Slack notification"
+          echo "${RESPONSE}"
+          exit 1
+        fi
