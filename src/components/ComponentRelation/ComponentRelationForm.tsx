@@ -5,11 +5,11 @@ import {
   FlexItem,
   Label,
   LabelGroup,
-  Tooltip,
   Truncate,
 } from '@patternfly/react-core';
 import { MinusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/minus-circle-icon';
 import { useField } from 'formik';
+import { SegmentedToggle } from '~/shared/components/segmented-toggle';
 import {
   MultiSelectComponentsDropdown,
   SingleSelectComponentDropdown,
@@ -28,52 +28,20 @@ type ComponentRelationProps = {
 
 const TARGET_LABELS_VISIBLE = 3;
 
-type ComponentRelationNudgeToggleProps = {
-  index?: number;
-  nudgeName: string;
-  nudgeValue: ComponentRelationNudgeType;
-  onNudgeChange: (value: ComponentRelationNudgeType) => void;
-};
-
-const ComponentRelationNudgeToggle: React.FC<ComponentRelationNudgeToggleProps> = ({
-  index,
-  nudgeName,
-  nudgeValue,
-  onNudgeChange,
-}) => {
-  return (
-    <Flex gap={{ default: 'gapNone' }} role="group" aria-label="Nudge relationship type">
-      <FlexItem>
-        <Tooltip content="The component's builds propagate changes to the nudged component.">
-          <Button
-            id={`nudges-${index}`}
-            type="button"
-            name={nudgeName}
-            variant={ComponentRelationNudgeType.NUDGES === nudgeValue ? 'primary' : 'control'}
-            aria-pressed={ComponentRelationNudgeType.NUDGES === nudgeValue}
-            onClick={() => onNudgeChange(ComponentRelationNudgeType.NUDGES)}
-          >
-            Nudges
-          </Button>
-        </Tooltip>
-      </FlexItem>
-      <FlexItem>
-        <Tooltip content="The component will be changed by nudging component's build.">
-          <Button
-            id={`nudged-by-${index}`}
-            type="button"
-            name={nudgeName}
-            variant={ComponentRelationNudgeType.NUDGED_BY === nudgeValue ? 'primary' : 'control'}
-            aria-pressed={ComponentRelationNudgeType.NUDGED_BY === nudgeValue}
-            onClick={() => onNudgeChange(ComponentRelationNudgeType.NUDGED_BY)}
-          >
-            Nudged by
-          </Button>
-        </Tooltip>
-      </FlexItem>
-    </Flex>
-  );
-};
+const getNudgeToggleOptions = (index?: number) => [
+  {
+    value: ComponentRelationNudgeType.NUDGES,
+    label: 'Nudges',
+    tooltip: "The component's builds propagate changes to the nudged component.",
+    id: `nudges-${index}`,
+  },
+  {
+    value: ComponentRelationNudgeType.NUDGED_BY,
+    label: 'Nudged by',
+    tooltip: "The component will be changed by nudging component's build.",
+    id: `nudged-by-${index}`,
+  },
+];
 
 export const ComponentRelation: React.FC<ComponentRelationProps> = ({
   index,
@@ -94,13 +62,6 @@ export const ComponentRelation: React.FC<ComponentRelationProps> = ({
     [targetValue],
   );
   const hiddenTargetCount = targetValue.length - visibleTargetValues.length;
-
-  const handleNudgeChange = React.useCallback(
-    (value: ComponentRelationNudgeType) => {
-      void setNudgeValue(value);
-    },
-    [setNudgeValue],
-  );
 
   const handleRemoveTarget = (component: string) => {
     void setTargetValue(targetValue.filter((item) => item !== component));
@@ -124,11 +85,12 @@ export const ComponentRelation: React.FC<ComponentRelationProps> = ({
             />
           </FlexItem>
           <FlexItem>
-            <ComponentRelationNudgeToggle
-              index={index}
-              nudgeName={nudgeName}
-              nudgeValue={nudgeValue}
-              onNudgeChange={handleNudgeChange}
+            <SegmentedToggle
+              aria-label="Nudge relationship type"
+              name={nudgeName}
+              value={nudgeValue}
+              onChange={(value) => void setNudgeValue(value)}
+              options={getNudgeToggleOptions(index)}
             />
           </FlexItem>
           <FlexItem>
