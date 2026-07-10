@@ -224,7 +224,8 @@ export const useTaskRunsV2 = (
  * @param pipelineRunName - Name of the pipeline run to fetch TaskRuns for
  * @param taskName - Optional specific task name to filter by
  * @param watch - Whether to watch for real-time updates (default: true). Set to false for completed pipeline runs.
- * @returns Tuple of [taskRuns, loaded, error] sorted by completion time
+ * @returns Tuple of [taskRuns, allPagesLoaded, error, getNextPage, nextPageProps] sorted by completion time.
+ * `allPagesLoaded` is false while additional Tekton Results / KubeArchive pages are still loading.
  */
 export const useTaskRunsForPipelineRuns = (
   namespace: string | null,
@@ -254,9 +255,24 @@ export const useTaskRunsForPipelineRuns = (
     },
   );
 
+  React.useEffect(() => {
+    if (nextPageProps.hasNextPage && !nextPageProps.isFetchingNextPage && loaded && !error) {
+      getNextPage?.();
+    }
+  }, [
+    nextPageProps.hasNextPage,
+    nextPageProps.isFetchingNextPage,
+    loaded,
+    getNextPage,
+    error,
+  ]);
+
+  const allPagesLoaded =
+    loaded && !error && !nextPageProps.isFetchingNextPage && !nextPageProps.hasNextPage;
+
   const sortedTaskRuns = React.useMemo(() => sortTaskRunsByTime(taskRuns), [taskRuns]);
 
-  return [sortedTaskRuns, loaded, error, getNextPage, nextPageProps];
+  return [sortedTaskRuns, allPagesLoaded, error, getNextPage, nextPageProps];
 };
 
 export const useTaskRunV2 = (

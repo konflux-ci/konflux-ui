@@ -882,6 +882,66 @@ describe('useTaskRunsV2', () => {
       const callArgs = useK8sWatchResourceMock.mock.calls[0][0];
       expect(callArgs.selector.matchLabels).not.toHaveProperty('tekton.dev/pipelineTask');
     });
+
+    it('should fetch all TaskRun pages before reporting loaded', async () => {
+      const mockGetNextPage = jest.fn();
+      const oldestTaskRun: TaskRunKind = {
+        ...mockTaskRun2,
+        metadata: {
+          ...mockTaskRun2.metadata,
+          name: 'parse-pipeline-tests-tr',
+          labels: { 'tekton.dev/pipelineTask': 'parse-pipeline-tests' },
+        },
+        status: {
+          conditions: [{ type: 'Succeeded', status: 'True', reason: 'Succeeded' }],
+        },
+      };
+
+      useK8sWatchResourceMock.mockReturnValue({
+        data: [],
+        isLoading: false,
+        error: null,
+      });
+
+      mockUseTRTaskRuns.mockReturnValue([
+        [mockTaskRun1, mockTaskRun3],
+        true,
+        null,
+        mockGetNextPage,
+        { hasNextPage: true, isFetchingNextPage: false },
+      ]);
+
+      const { result, rerender } = renderHook(
+        () => useTaskRunsForPipelineRuns('test-ns', 'test-pipelinerun', undefined, false),
+        {
+          wrapper: ({ children }) =>
+            React.createElement(QueryClientProvider, { client: queryClient }, children),
+        },
+      );
+
+      await waitFor(() => {
+        expect(mockGetNextPage).toHaveBeenCalled();
+      });
+
+      expect(result.current[1]).toBe(false);
+
+      mockUseTRTaskRuns.mockReturnValue([
+        [mockTaskRun1, mockTaskRun3, oldestTaskRun],
+        true,
+        null,
+        mockGetNextPage,
+        { hasNextPage: false, isFetchingNextPage: false },
+      ]);
+
+      rerender();
+
+      await waitFor(() => {
+        expect(result.current[1]).toBe(true);
+      });
+
+      expect(result.current[0]).toHaveLength(3);
+      expect(result.current[0].map((tr) => tr.metadata.name)).toContain('parse-pipeline-tests-tr');
+    });
   });
 });
 
