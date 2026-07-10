@@ -249,17 +249,16 @@ describe('Basic Happy Path', () => {
   describe('Check Issues page', () => {
     it('Navigate to Issues page from the sidebar', () => {
       Common.navigateTo(NavItem.issues);
+      Common.waitForLoad();
 
-      cy.get('body').then(($body) => {
-        if ($body.find(issuesPagePO.page).length) {
-          cy.get(issuesPagePO.page).should('exist');
-          cy.get(issuesPagePO.overviewTab).should('exist');
-          cy.get(issuesPagePO.issuesTab).should('exist');
-        } else {
-          cy.get(issuesPagePO.serviceUnavailableState).should('exist');
-          cy.contains(issuesPagePO.serviceUnavailableTitle).should('exist');
-        }
-      });
+      if (!Cypress.env('LOCAL_CLUSTER')) {
+        cy.get(issuesPagePO.page).contains(issuesPagePO.pageDescription).should('exist');
+        cy.get(issuesPagePO.overviewTab).should('exist');
+        cy.get(issuesPagePO.issuesTab).should('exist');
+      } else {
+        cy.get(issuesPagePO.serviceUnavailableState).should('exist');
+        cy.contains(issuesPagePO.serviceUnavailableTitle).should('exist');
+      }
     });
   });
 
