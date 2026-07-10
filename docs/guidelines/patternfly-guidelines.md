@@ -18,7 +18,7 @@ import { Flex, FlexItem } from '@patternfly/react-core';
 // Row with right-aligned element
 <Flex>
   <FlexItem>
-    <TextContent>{title}</TextContent>
+    <Content>{title}</Content>
   </FlexItem>
   <Flex align={{ default: 'alignRight' }}>
     <FlexItem>
@@ -56,9 +56,13 @@ import { Stack, StackItem } from '@patternfly/react-core';
   <StackItem>Section 1</StackItem>
   <StackItem>Section 2</StackItem>
   <StackItem>
-    {error && <Alert isInline variant="danger" title="Error">{error}</Alert>}
+    {error && (
+      <Alert isInline variant="danger" title="Error">
+        {error}
+      </Alert>
+    )}
   </StackItem>
-</Stack>
+</Stack>;
 ```
 
 ### Bullseye -- Centering
@@ -95,14 +99,14 @@ import { PageSection, PageSectionVariants } from '@patternfly/react-core';
 
 ### Layout Decision Guide
 
-| Need | Component |
-|---|---|
-| Horizontal row of items | `Flex` |
-| Right-aligned element in a row | `Flex` > `Flex align={{ default: 'alignRight' }}` |
-| Vertical list with spacing | `Stack hasGutter` |
-| Center a spinner/empty state | `Bullseye` |
-| Page content section | `PageSection variant={PageSectionVariants.light}` |
-| Two-column detail view | `Flex` with `flex={{ default: 'flex_3' }}` children |
+| Need                           | Component                                           |
+| ------------------------------ | --------------------------------------------------- |
+| Horizontal row of items        | `Flex`                                              |
+| Right-aligned element in a row | `Flex` > `Flex align={{ default: 'alignRight' }}`   |
+| Vertical list with spacing     | `Stack hasGutter`                                   |
+| Center a spinner/empty state   | `Bullseye`                                          |
+| Page content section           | `PageSection variant={PageSectionVariants.light}`   |
+| Two-column detail view         | `Flex` with `flex={{ default: 'flex_3' }}` children |
 
 **Not used in this codebase:** `Split`/`SplitItem`, `Gallery`. Prefer `Flex` for all horizontal layouts.
 
@@ -121,7 +125,7 @@ import AnalyticsButton from '~/components/AnalyticsButton/AnalyticsButton';
   onClick={handleCreate}
 >
   Create component
-</AnalyticsButton>
+</AnalyticsButton>;
 ```
 
 Raw `Button` is acceptable only in shared/utility components.
@@ -147,7 +151,7 @@ import { Tooltip } from '@patternfly/react-core';
   <AnalyticsButton variant="primary" isAriaDisabled>
     Create
   </AnalyticsButton>
-</Tooltip>
+</Tooltip>;
 ```
 
 `isAriaDisabled` keeps the button focusable for accessibility (tooltips don't work on elements with `disabled`).
@@ -164,7 +168,7 @@ import ButtonWithAccessTooltip from '~/components/ButtonWithAccessTooltip';
   analytics={{ link_name: 'create-resource' }}
 >
   Create
-</ButtonWithAccessTooltip>
+</ButtonWithAccessTooltip>;
 ```
 
 ## Alert
@@ -175,16 +179,18 @@ Always use `isInline` inside forms and modals:
 import { Alert, AlertVariant } from '@patternfly/react-core';
 
 // Error alert in a form/modal
-{error && (
-  <Alert isInline variant={AlertVariant.danger} title="An error occurred">
-    {error}
-  </Alert>
-)}
+{
+  error && (
+    <Alert isInline variant={AlertVariant.danger} title="An error occurred">
+      {error}
+    </Alert>
+  );
+}
 
 // Info alert for unsaved changes
 <Alert isInline variant="info" title="You made changes to this page.">
   Click Save to save changes or Reload to cancel changes.
-</Alert>
+</Alert>;
 ```
 
 ## Modal
@@ -209,20 +215,57 @@ const showModal = useModalLauncher();
 showModal(myModalLauncher({ prop1: value1 }));
 ```
 
+### When to Use Which
+
+| Scenario                                                                  | Use                                                                                       |
+| ------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| Simple modal where title, variant, and data-test are enough               | `createModalLauncher` — modal chrome (title, variant, close) is handled for you           |
+| Modal with custom header, description, footer, or composable API features | `createRawModalLauncher` — you control `ModalHeader`, `ModalBody`, `ModalFooter` directly |
+
+### Composable Modal with `createRawModalLauncher`
+
+For modals that need full control over layout (custom headers, descriptions, footers), use `createRawModalLauncher` with PF v6's composable `Modal`:
+
+```tsx
+import { Modal, ModalBody, ModalFooter, ModalHeader, ModalVariant } from '@patternfly/react-core';
+import { createRawModalLauncher, RawComponentProps } from '~/components/modal/createModalLauncher';
+
+const MyModal: React.FC<RawComponentProps> = ({ onClose, modalProps }) => {
+  const { isOpen, appendTo, ...rest } = modalProps || {};
+  return (
+    <Modal
+      {...rest}
+      isOpen={isOpen}
+      onClose={onClose}
+      appendTo={appendTo}
+      variant={ModalVariant.small}
+    >
+      <ModalHeader title="My Modal Title" description="Optional description text" />
+      <ModalBody>{/* modal content */}</ModalBody>
+      <ModalFooter>{/* action buttons */}</ModalFooter>
+    </Modal>
+  );
+};
+
+export const myModalLauncher = createRawModalLauncher(MyModal, { 'data-test': 'my-modal' });
+```
+
+> **Note:** Do not import `Modal` from `@patternfly/react-core/deprecated`. Use the composable `Modal` from `@patternfly/react-core`.
+
 ### Modal Variants
 
-| Variant | Width | Use For |
-|---|---|---|
-| `ModalVariant.small` | 560px | Confirmations, simple forms |
-| `ModalVariant.medium` | 768px | Standard forms |
-| `ModalVariant.large` | 992px | Complex content, tables |
+| Variant               | Width | Use For                     |
+| --------------------- | ----- | --------------------------- |
+| `ModalVariant.small`  | 560px | Confirmations, simple forms |
+| `ModalVariant.medium` | 768px | Standard forms              |
+| `ModalVariant.large`  | 992px | Complex content, tables     |
 
 ## Toolbar
 
 ```tsx
 import { Toolbar, ToolbarContent, ToolbarItem } from '@patternfly/react-core';
 
-<Toolbar usePageInsets clearAllFilters={onClearFilters}>
+<Toolbar className="pf-v6-u-py-md" clearAllFilters={onClearFilters}>
   <ToolbarContent>
     <ToolbarItem className="pf-v6-u-ml-0">
       <SearchInput
@@ -231,33 +274,35 @@ import { Toolbar, ToolbarContent, ToolbarItem } from '@patternfly/react-core';
         value={text}
       />
     </ToolbarItem>
-    <ToolbarItem alignSelf="center">
-      {children}
-    </ToolbarItem>
+    <ToolbarItem alignSelf="center">{children}</ToolbarItem>
   </ToolbarContent>
-</Toolbar>
+</Toolbar>;
 ```
 
-Always include `usePageInsets` prop. Use `clearAllFilters` callback for filter reset.
+Use `className="pf-v6-u-py-md"` for vertical spacing. Use `clearAllFilters` callback for filter reset.
 
 ## Empty States
 
 Use the three shared empty state wrappers. Never use raw PF `EmptyState` in feature components.
 
-| Component | Use For |
-|---|---|
-| `AppEmptyState` | Zero data (no resources exist) |
-| `FilteredEmptyState` | Filters yielded no results |
-| `ErrorEmptyState` | Error loading data |
+| Component            | Use For                        |
+| -------------------- | ------------------------------ |
+| `AppEmptyState`      | Zero data (no resources exist) |
+| `FilteredEmptyState` | Filters yielded no results     |
+| `ErrorEmptyState`    | Error loading data             |
 
 ```tsx
-import { AppEmptyState, FilteredEmptyState, ErrorEmptyState } from '~/shared/components/empty-state';
+import {
+  AppEmptyState,
+  FilteredEmptyState,
+  ErrorEmptyState,
+} from '~/shared/components/empty-state';
 
 // In table: EmptyMsg / NoDataEmptyMsg
 <Table
   EmptyMsg={FilteredEmptyState}
   NoDataEmptyMsg={() => <AppEmptyState emptyStateImg={MyImage} title="No resources yet" />}
-/>
+/>;
 
 // Direct usage
 if (error) return <ErrorEmptyState httpError={error} />;
@@ -270,13 +315,13 @@ All tabs are router-driven via `TabsLayout`. Never manage tab state with `useSta
 ```tsx
 // Define tabs as data
 const tabs: DetailsPageTabProps[] = [
-  { key: '', label: 'Overview', isFilled: true },         // index route
+  { key: '', label: 'Overview', isFilled: true }, // index route
   { key: 'pipelineruns', label: 'Pipeline runs' },
-  { key: 'activity', label: 'Activity', partial: true },  // matches /activity/*
+  { key: 'activity', label: 'Activity', partial: true }, // matches /activity/*
 ];
 
 // TabsLayout renders PF Tabs + <Outlet />
-<TabsLayout id="my-details" tabs={tabs} headTitle="My Resource" baseURL={baseURL} />
+<TabsLayout id="my-details" tabs={tabs} headTitle="My Resource" baseURL={baseURL} />;
 ```
 
 Always use `mountOnEnter` and `unmountOnExit` (set by default in `TabsLayout`).
@@ -292,7 +337,7 @@ import { Label, LabelGroup, Truncate } from '@patternfly/react-core';
       <Truncate content={item} />
     </Label>
   ))}
-</LabelGroup>
+</LabelGroup>;
 ```
 
 ## Tooltip / Popover
@@ -325,8 +370,10 @@ Used on detail page overview tabs for key-value display:
 
 ```tsx
 import {
-  DescriptionList, DescriptionListGroup,
-  DescriptionListTerm, DescriptionListDescription,
+  DescriptionList,
+  DescriptionListGroup,
+  DescriptionListTerm,
+  DescriptionListDescription,
 } from '@patternfly/react-core';
 
 <DescriptionList columnModifier={{ default: '1Col' }}>
@@ -340,7 +387,7 @@ import {
       <Timestamp timestamp={resource.metadata.creationTimestamp} />
     </DescriptionListDescription>
   </DescriptionListGroup>
-</DescriptionList>
+</DescriptionList>;
 ```
 
 ## Design Tokens
@@ -351,31 +398,32 @@ Use PatternFly design tokens. Never hardcode pixel values.
 
 ```scss
 // Spacing scale
-gap: var(--pf-t--global--spacer--xs);    // 4px
-gap: var(--pf-t--global--spacer--sm);    // 8px
-gap: var(--pf-t--global--spacer--md);    // 16px
-gap: var(--pf-t--global--spacer--lg);    // 24px
-gap: var(--pf-t--global--spacer--xl);    // 32px
-gap: var(--pf-t--global--spacer--2xl);   // 48px
-gap: var(--pf-t--global--spacer--3xl);   // 64px
+gap: var(--pf-t--global--spacer--xs); // 4px
+gap: var(--pf-t--global--spacer--sm); // 8px
+gap: var(--pf-t--global--spacer--md); // 16px
+gap: var(--pf-t--global--spacer--lg); // 24px
+gap: var(--pf-t--global--spacer--xl); // 32px
+gap: var(--pf-t--global--spacer--2xl); // 48px
+gap: var(--pf-t--global--spacer--3xl); // 64px
 ```
 
 ### Color Tokens
 
 ```scss
 // Semantic colors
-color: var(--pf-t--global--color--status--danger--default);     // errors
-color: var(--pf-t--global--color--status--warning--default);    // warnings
-color: var(--pf-t--global--color--status--success--default);    // success
-color: var(--pf-t--global--color--status--info--default);       // info
-color: var(--pf-t--global--text--color--disabled);              // muted
-color: var(--pf-t--global--text--color--link--default);         // links
+color: var(--pf-t--global--color--status--danger--default); // errors
+color: var(--pf-t--global--color--status--warning--default); // warnings
+color: var(--pf-t--global--color--status--success--default); // success
+color: var(--pf-t--global--color--status--info--default); // info
+color: var(--pf-t--global--text--color--disabled); // muted
+color: var(--pf-t--global--text--color--link--default); // links
 
 // Background
 background-color: var(--pf-t--global--background--color--secondary--default);
 
 // Border
-border: var(--pf-t--global--border--width--regular) solid var(--pf-t--global--border--color--default);
+border: var(--pf-t--global--border--width--regular) solid
+  var(--pf-t--global--border--color--default);
 ```
 
 ### Typography Tokens
@@ -451,15 +499,35 @@ import { css } from '@patternfly/react-styles';
 }
 ```
 
+## PF v6 Migration Gotchas
+
+Behavioral changes in PatternFly v6 that can cause subtle bugs:
+
+| Change                                          | Impact                                                                                     | Fix                                                                                                          |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| Drawer padding uses direct-child CSS selectors  | Wrapper divs between `DrawerPanelContent` and `DrawerHead`/`DrawerPanelBody` break padding | Keep Drawer subcomponents as direct children                                                                 |
+| `MenuContent` applies `overflow:hidden`         | Components like `Tabs` that render outside their bounds get clipped                        | Place such components outside `MenuContent`                                                                  |
+| Modal accessible name includes all text content | Test assertions with exact `{ name: '...' }` may break                                     | Use regex: `{ name: /My Modal Title/ }`                                                                      |
+| `EmptyStateHeader`, `EmptyStateIcon` removed    | Import errors                                                                              | Use `EmptyState` props (`headingLevel`, `titleText`, `icon`) directly                                        |
+| `Text`/`TextContent` removed                    | Import errors                                                                              | Use `Content` with `ContentVariants`                                                                         |
+| `Chip`/`ChipGroup` deprecated                   | Moved to `@patternfly/react-core/deprecated`                                               | Use `Label`/`LabelGroup`                                                                                     |
+| `icon-button-group` toolbar variant removed     | Type error on `ToolbarGroup`                                                               | Use `action-group-plain` or remove the variant                                                               |
+| JS token imports renamed                        | `global_palette_*`, `global_danger_color_*` etc. no longer exist                           | Use `t_global_*` equivalents (e.g., `global_danger_color_100` → `t_global_icon_color_status_danger_default`) |
+| CSS class prefix `pf-v5-c-*` → `pf-v6-c-*`      | SCSS overrides and utility classes targeting `pf-v5-` break                                | Update to `pf-v6-c-*` and `pf-v6-u-*`                                                                        |
+| OUIA component type prefix `PF5/` → `PF6/`      | E2E selectors using `data-ouia-component-type="PF5/..."` break                             | Update to `PF6/` prefix                                                                                      |
+| `formik-pf` package removed                     | Import errors                                                                              | Use `~/shared/components/formik-base/`                                                                       |
+
 ## Deprecated PF APIs to Avoid
 
 These deprecated APIs exist in the codebase but should not be used in new code:
 
-| Deprecated | Use Instead |
-|---|---|
-| `Dropdown` from `@patternfly/react-core/deprecated` | `ActionMenu` from `~/shared/components/action-menu/` |
-| `Select` from `@patternfly/react-core/deprecated` | `BasicDropdown` from `~/shared/components/dropdown/` or PF5 `Select` |
-| `DropdownToggle` from `@patternfly/react-core/deprecated` | PF5 `MenuToggle` |
+| Deprecated                                                  | Use Instead                                                                                   |
+| ----------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `Dropdown` from `@patternfly/react-core/deprecated`         | `ActionMenu` from `~/shared/components/action-menu/`                                          |
+| `Select` from `@patternfly/react-core/deprecated`           | `BasicDropdown` from `~/shared/components/dropdown/` or PF5 `Select`                          |
+| `DropdownToggle` from `@patternfly/react-core/deprecated`   | PF5 `MenuToggle`                                                                              |
+| `Modal` from `@patternfly/react-core/deprecated`            | Composable `Modal` from `@patternfly/react-core` with `ModalHeader`/`ModalBody`/`ModalFooter` |
+| `Chip`/`ChipGroup` from `@patternfly/react-core/deprecated` | `Label`/`LabelGroup` from `@patternfly/react-core`                                            |
 
 ## Common Pitfalls — Composable Component DOM Semantics
 
@@ -509,15 +577,16 @@ In the composable `Select`, `SelectOption` requires an explicit `value` prop. If
 
 ## Component Wrapping Decision Guide
 
-| Need | Use |
-|---|---|
-| Button in feature component | `AnalyticsButton` |
-| Button with RBAC tooltip | `ButtonWithAccessTooltip` |
-| External link | `ExternalLink` from `~/shared/components/links/` |
-| Action menu / kebab | `ActionMenu` from `~/shared/components/action-menu/` |
-| Loading/error wrapper | `StatusBox` from `~/shared/components/status-box/` |
-| Modal | `createModalLauncher` + `useModalLauncher` |
-| Timestamp display | `Timestamp` from `~/shared/components/timestamp/` |
-| Text truncation | `Truncate` from `~/shared/components/truncate-text/` |
-| Overflow list with popover | `TruncatedLinkListWithPopover` |
-| Skeleton placeholder | `LoadingSkeleton` from `~/shared/components/skeleton/` |
+| Need                            | Use                                                    |
+| ------------------------------- | ------------------------------------------------------ |
+| Button in feature component     | `AnalyticsButton`                                      |
+| Button with RBAC tooltip        | `ButtonWithAccessTooltip`                              |
+| External link                   | `ExternalLink` from `~/shared/components/links/`       |
+| Action menu / kebab             | `ActionMenu` from `~/shared/components/action-menu/`   |
+| Loading/error wrapper           | `StatusBox` from `~/shared/components/status-box/`     |
+| Simple modal                    | `createModalLauncher` + `useModalLauncher`             |
+| Modal with custom header/footer | `createRawModalLauncher` + `useModalLauncher`          |
+| Timestamp display               | `Timestamp` from `~/shared/components/timestamp/`      |
+| Text truncation                 | `Truncate` from `~/shared/components/truncate-text/`   |
+| Overflow list with popover      | `TruncatedLinkListWithPopover`                         |
+| Skeleton placeholder            | `LoadingSkeleton` from `~/shared/components/skeleton/` |
