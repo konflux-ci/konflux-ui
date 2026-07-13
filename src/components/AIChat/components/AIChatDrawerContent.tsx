@@ -58,7 +58,7 @@ export const AIChatDrawerContent: React.FC<AIChatDrawerContentProps> = ({
     };
   }, [messages, streamingMessage, streamingContent]);
 
-  const hasMessages = messages.length > 0 || streamingMessage !== null;
+  const hasMessages = messages.length > 0 || !!streamingMessage;
 
   return (
     <ChatbotContent>

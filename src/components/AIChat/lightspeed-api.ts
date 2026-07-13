@@ -24,6 +24,18 @@ const UPDATE_PAYLOAD_KEYS = {
   topicSummary: 'topic_summary',
 } as const;
 
+const STREAMING_START_WIRE_KEYS = {
+  conversationId: 'conversation_id',
+  requestId: 'request_id',
+} as const;
+
+const STREAMING_END_WIRE_KEYS = {
+  referencedDocuments: 'referenced_documents',
+  truncated: 'truncated',
+  inputTokens: 'input_tokens',
+  outputTokens: 'output_tokens',
+} as const;
+
 type LightspeedChatMessageWire = {
   content: string;
   type: 'user' | 'assistant';
@@ -290,14 +302,146 @@ type LightspeedStreamingEndDataWire = {
   output_tokens?: number;
 };
 
-type LightspeedStreamingEventPayloadWire = {
+type ParsedStreamingEvent = {
   event: LightspeedStreamingEventName;
-  data:
-    | LightspeedStreamingStartDataWire
-    | LightspeedStreamingTokenDataWire
-    | LightspeedStreamingTurnCompleteDataWire
-    | LightspeedStreamingEndDataWire
-    | { message?: string };
+  data: unknown;
+};
+
+const STREAMING_EVENT_NAMES: readonly LightspeedStreamingEventName[] = [
+  'start',
+  'token',
+  'turn_complete',
+  'end',
+  'error',
+];
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const isString = (value: unknown): value is string => typeof value === 'string';
+
+const isNumber = (value: unknown): value is number =>
+  typeof value === 'number' && Number.isFinite(value);
+
+const isBooleanOrNull = (value: unknown): value is boolean | null =>
+  value === null || typeof value === 'boolean';
+
+const isUnknownArray = (value: unknown): value is unknown[] => Array.isArray(value);
+
+const isStreamingEventName = (value: unknown): value is LightspeedStreamingEventName =>
+  typeof value === 'string' &&
+  (STREAMING_EVENT_NAMES as readonly string[]).includes(value);
+
+const assertStreamingStartData = (data: unknown): LightspeedStreamingStartDataWire => {
+  const conversationIdKey = STREAMING_START_WIRE_KEYS.conversationId;
+  const requestIdKey = STREAMING_START_WIRE_KEYS.requestId;
+
+  if (!isRecord(data) || !isString(data[conversationIdKey]) || !isString(data[requestIdKey])) {
+    throw new Error('Invalid streaming start event payload');
+  }
+
+  return {
+    [conversationIdKey]: data[conversationIdKey],
+    [requestIdKey]: data[requestIdKey],
+  };
+};
+
+const assertStreamingTokenData = (data: unknown): LightspeedStreamingTokenDataWire => {
+  if (!isRecord(data) || !isNumber(data.id) || !isString(data.token)) {
+    throw new Error('Invalid streaming token event payload');
+  }
+
+  return {
+    id: data.id,
+    token: data.token,
+  };
+};
+
+const assertStreamingTurnCompleteData = (data: unknown): LightspeedStreamingTurnCompleteDataWire => {
+  if (!isRecord(data) || !isString(data.token)) {
+    throw new Error('Invalid streaming turn_complete event payload');
+  }
+
+  return {
+    token: data.token,
+    ...(isNumber(data.id) ? { id: data.id } : {}),
+  };
+};
+
+const assertStreamingEndDataWire = (data: unknown): LightspeedStreamingEndDataWire => {
+  if (!isRecord(data)) {
+    throw new Error('Invalid streaming end event payload');
+  }
+
+  const referencedDocumentsKey = STREAMING_END_WIRE_KEYS.referencedDocuments;
+  const inputTokensKey = STREAMING_END_WIRE_KEYS.inputTokens;
+  const outputTokensKey = STREAMING_END_WIRE_KEYS.outputTokens;
+  const truncatedKey = STREAMING_END_WIRE_KEYS.truncated;
+
+  let referencedDocuments: unknown[] | undefined;
+  if (referencedDocumentsKey in data) {
+    if (data[referencedDocumentsKey] === undefined) {
+      referencedDocuments = undefined;
+    } else if (!isUnknownArray(data[referencedDocumentsKey])) {
+      throw new Error('Invalid referenced_documents in streaming end event payload');
+    } else {
+      referencedDocuments = data[referencedDocumentsKey];
+    }
+  }
+
+  let truncated: boolean | null | undefined;
+  if (truncatedKey in data) {
+    if (data[truncatedKey] === undefined) {
+      truncated = undefined;
+    } else if (!isBooleanOrNull(data[truncatedKey])) {
+      throw new Error('Invalid truncated value in streaming end event payload');
+    } else {
+      truncated = data[truncatedKey];
+    }
+  }
+
+  let inputTokens: number | undefined;
+  if (inputTokensKey in data) {
+    if (data[inputTokensKey] === undefined) {
+      inputTokens = undefined;
+    } else if (!isNumber(data[inputTokensKey])) {
+      throw new Error('Invalid input_tokens in streaming end event payload');
+    } else {
+      inputTokens = data[inputTokensKey];
+    }
+  }
+
+  let outputTokens: number | undefined;
+  if (outputTokensKey in data) {
+    if (data[outputTokensKey] === undefined) {
+      outputTokens = undefined;
+    } else if (!isNumber(data[outputTokensKey])) {
+      throw new Error('Invalid output_tokens in streaming end event payload');
+    } else {
+      outputTokens = data[outputTokensKey];
+    }
+  }
+
+  return {
+    ...(referencedDocuments !== undefined ? { [referencedDocumentsKey]: referencedDocuments } : {}),
+    ...(truncated !== undefined ? { [truncatedKey]: truncated } : {}),
+    ...(inputTokens !== undefined ? { [inputTokensKey]: inputTokens } : {}),
+    ...(outputTokens !== undefined ? { [outputTokensKey]: outputTokens } : {}),
+  };
+};
+
+const assertStreamingErrorData = (data: unknown): { message?: string } => {
+  if (!isRecord(data)) {
+    throw new Error('Invalid streaming error event payload');
+  }
+
+  if (data.message !== undefined && !isString(data.message)) {
+    throw new Error('Invalid message in streaming error event payload');
+  }
+
+  return {
+    ...(isString(data.message) ? { message: data.message } : {}),
+  };
 };
 
 const parseStreamingEndData = (wire: LightspeedStreamingEndDataWire): LightspeedStreamingEndData => ({
@@ -311,14 +455,23 @@ const parseStreamingEndData = (wire: LightspeedStreamingEndDataWire): Lightspeed
 
 const SSE_DATA_PREFIX = 'data: ';
 
-const parseStreamingEvent = (line: string): LightspeedStreamingEventPayloadWire | null => {
+const parseStreamingEvent = (line: string): ParsedStreamingEvent | null => {
   const trimmedLine = line.trim();
   if (!trimmedLine.startsWith(SSE_DATA_PREFIX)) {
     return null;
   }
 
   try {
-    return JSON.parse(trimmedLine.slice(SSE_DATA_PREFIX.length)) as LightspeedStreamingEventPayloadWire;
+    const parsed: unknown = JSON.parse(trimmedLine.slice(SSE_DATA_PREFIX.length));
+
+    if (!isRecord(parsed) || !isStreamingEventName(parsed.event)) {
+      return null;
+    }
+
+    return {
+      event: parsed.event,
+      data: parsed.data,
+    };
   } catch {
     return null;
   }
@@ -332,7 +485,7 @@ const yieldToBrowser = (): Promise<void> =>
   });
 
 const handleStreamingEvent = async (
-  event: LightspeedStreamingEventPayloadWire,
+  event: ParsedStreamingEvent,
   callbacks: LightspeedStreamingQueryCallbacks,
   state: {
     conversationId: string | null;
@@ -341,7 +494,7 @@ const handleStreamingEvent = async (
 ): Promise<void> => {
   switch (event.event) {
     case 'start': {
-      const data = event.data as LightspeedStreamingStartDataWire;
+      const data = assertStreamingStartData(event.data);
       state.conversationId = data.conversation_id;
       callbacks.onStart?.({
         conversationId: data.conversation_id,
@@ -350,7 +503,7 @@ const handleStreamingEvent = async (
       break;
     }
     case 'token': {
-      const data = event.data as LightspeedStreamingTokenDataWire;
+      const data = assertStreamingTokenData(event.data);
       state.response += data.token;
       callbacks.onToken?.(data.token);
       if (data.token) {
@@ -359,18 +512,18 @@ const handleStreamingEvent = async (
       break;
     }
     case 'turn_complete': {
-      const data = event.data as LightspeedStreamingTurnCompleteDataWire;
+      const data = assertStreamingTurnCompleteData(event.data);
       state.response = data.token;
       callbacks.onTurnComplete?.(data.token);
       await yieldToBrowser();
       break;
     }
     case 'end': {
-      callbacks.onEnd?.(parseStreamingEndData(event.data as LightspeedStreamingEndDataWire));
+      callbacks.onEnd?.(parseStreamingEndData(assertStreamingEndDataWire(event.data)));
       break;
     }
     case 'error': {
-      const data = event.data as { message?: string };
+      const data = assertStreamingErrorData(event.data);
       throw new Error(data.message ?? 'Streaming query failed');
     }
     default:
@@ -403,7 +556,7 @@ const consumeStreamingResponse = async (
     }
 
     if (event.event === 'end') {
-      endData = parseStreamingEndData(event.data as LightspeedStreamingEndDataWire);
+      endData = parseStreamingEndData(assertStreamingEndDataWire(event.data));
     }
 
     await handleStreamingEvent(event, callbacks, state);
@@ -432,6 +585,8 @@ const consumeStreamingResponse = async (
         newlineIndex = buffer.indexOf('\n');
       }
     }
+
+    buffer += decoder.decode();
 
     if (buffer.trim()) {
       await processBufferLine(buffer);
