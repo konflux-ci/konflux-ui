@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Form } from '@patternfly/react-core';
 import { useField, useFormikContext } from 'formik';
 import { FIELD_SECRET_FOR_COMPONENT_OPTION, SecretLinkOptionLabels } from '~/consts/secrets';
@@ -6,8 +6,6 @@ import { InputField } from '~/shared/components/formik-base';
 import KeyValueInputField from '~/shared/components/formik-fields/key-value-input-field/KeyValueInputField';
 import {
   supportedPartnerTasksSecrets,
-  findExistingOpaqueSecretByName,
-  getSupportedPartnerTaskKeyValuePairs,
   isPartnerTask,
   isUsingExistingClusterSecret,
   SecretForComponentOption,
@@ -24,6 +22,7 @@ import {
   CurrentComponentRef,
 } from '../../types';
 import { RawComponentProps } from '../modal/createModalLauncher';
+import { useOpaqueSecretSync } from './hooks/useOpaqueSecretSync';
 import { ImagePullSecretForm } from './SecretsForm/ImagePullSecretForm';
 import { SecretLinkOptions } from './SecretsForm/SecretLinkOption';
 import { SourceSecretForm } from './SecretsForm/SourceSecretForm';
@@ -37,7 +36,6 @@ type SecretFormProps = RawComponentProps & {
 
 const defaultKeyValues = [{ key: '', value: '', readOnlyKey: false }];
 const defaultLabels = [{ key: '', value: '' }];
-const defaultImageKeyValues = [{ key: '.dockerconfigjson', value: '', readOnlyKey: true }];
 
 const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({
   existingSecrets,
@@ -46,11 +44,16 @@ const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({
 }) => {
   const { values, setFieldValue } = useFormikContext<SecretFormValues>();
   const [currentType, setCurrentType] = useState(values.type);
-  const previousSecretNameRef = useRef(values.secretName);
 
   const [{ value: secretForComponentOption }, , { setValue }] = useField<SecretForComponentOption>(
     FIELD_SECRET_FOR_COMPONENT_OPTION,
   );
+
+  const { clearReadOnlyKeys, resetOpaqueFields, resetKeyValues, populateFromExistingOpaqueSecret } =
+    useOpaqueSecretSync({
+      currentType,
+      existingSecrets,
+    });
 
   const options = useMemo(() => {
     return existingSecrets
@@ -86,104 +89,6 @@ const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({
 
   const isOpaqueNameSelection =
     isPartnerTask(values.secretName, supportedPartnerTasksSecrets) || isUsingExisting;
-
-  const clearKeyValues = () => {
-    const newKeyValues = (values.opaque?.keyValues ?? []).filter((kv) => !kv.readOnlyKey);
-    void setFieldValue('opaque.keyValues', [
-      ...(newKeyValues.length ? newKeyValues : defaultKeyValues),
-    ]);
-  };
-
-  const resetOpaqueFields = useCallback(() => {
-    void setFieldValue('opaque.keyValues', defaultKeyValues);
-    void setFieldValue('labels', defaultLabels);
-  }, [setFieldValue]);
-
-  const makeOpaqueFieldsEditable = useCallback(() => {
-    void setFieldValue(
-      'opaque.keyValues',
-      (values.opaque?.keyValues ?? defaultKeyValues).map((kv) => ({
-        ...kv,
-        readOnlyKey: false,
-        readOnlyValue: false,
-      })),
-    );
-  }, [setFieldValue, values.opaque?.keyValues]);
-
-  const resetKeyValues = () => {
-    const newKeyValues = (values.opaque?.keyValues ?? []).filter(
-      (kv) => !kv.readOnlyKey && (!!kv.key || !!kv.value),
-    );
-    void setFieldValue('opaque.keyValues', [...newKeyValues, ...defaultImageKeyValues]);
-  };
-
-  const populateFromExistingOpaqueSecret = useCallback(
-    (secretName: string) => {
-      if (isPartnerTask(secretName, supportedPartnerTasksSecrets)) {
-        void setFieldValue('opaque.keyValues', [
-          ...getSupportedPartnerTaskKeyValuePairs(secretName),
-        ]);
-        void setFieldValue('labels', defaultLabels);
-        return;
-      }
-
-      const matched = findExistingOpaqueSecretByName(secretName, existingSecrets);
-      if (matched?.opaque?.keyValuePairs) {
-        void setFieldValue('opaque.keyValues', matched.opaque.keyValuePairs);
-      }
-      if (matched?.labels?.length) {
-        void setFieldValue('labels', matched.labels);
-      } else {
-        void setFieldValue('labels', defaultLabels);
-      }
-    },
-    [existingSecrets, setFieldValue],
-  );
-
-  useEffect(() => {
-    if (currentType !== SecretTypeDropdownLabel.opaque) {
-      previousSecretNameRef.current = values.secretName;
-      return;
-    }
-
-    const previousName = previousSecretNameRef.current;
-    const currentName = values.secretName;
-
-    if (previousName === currentName) {
-      return;
-    }
-
-    const wasUsingExistingCluster = isUsingExistingClusterSecret(
-      previousName,
-      currentType,
-      existingSecrets,
-    );
-    const isUsingExistingClusterNow = isUsingExistingClusterSecret(
-      currentName,
-      currentType,
-      existingSecrets,
-    );
-
-    if (isUsingExistingClusterNow) {
-      populateFromExistingOpaqueSecret(currentName);
-    } else if (wasUsingExistingCluster) {
-      makeOpaqueFieldsEditable();
-    } else if (
-      isPartnerTask(previousName, supportedPartnerTasksSecrets) &&
-      !isPartnerTask(currentName, supportedPartnerTasksSecrets)
-    ) {
-      resetOpaqueFields();
-    }
-
-    previousSecretNameRef.current = currentName;
-  }, [
-    values.secretName,
-    currentType,
-    existingSecrets,
-    resetOpaqueFields,
-    makeOpaqueFieldsEditable,
-    populateFromExistingOpaqueSecret,
-  ]);
 
   const dropdownItems: DropdownItemObject[] = Object.entries(SecretTypeDropdownLabel).reduce(
     (acc, [key, value]) => {
@@ -224,7 +129,7 @@ const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({
               isPartnerTask(values.secretName) &&
               void setFieldValue('secretName', '');
           } else {
-            clearKeyValues();
+            clearReadOnlyKeys();
           }
         }}
       />
