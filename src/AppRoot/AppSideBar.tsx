@@ -14,7 +14,7 @@ import {
   SECRET_LIST_PATH,
   USER_ACCESS_LIST_PAGE,
 } from '@routes/paths';
-import { IssuesNavItemContent } from '~/components/Issues/IssuesNavItemContent';
+import IssuesNavItemContent from '~/components/Issues/IssuesNavItemContent';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { IfFeature } from '~/feature-flags/hooks';
 import { SavedViewNavItems, SavedViewsConfig } from '~/shared/components/SavedViews';
@@ -84,7 +84,7 @@ export const AppSideBar: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
               <Link
                 to={namespace ? ISSUES_PATH.createPath({ workspaceName: namespace }) : undefined}
               >
-                {namespace ? <IssuesNavItemContent namespace={namespace} /> : <>Issues</>}
+                Issues {namespace ? <IssuesNavItemContent namespace={namespace} /> : null}
               </Link>
             </NavItem>
 

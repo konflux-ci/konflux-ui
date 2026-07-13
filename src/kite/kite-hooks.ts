@@ -1,15 +1,29 @@
 import React from 'react';
 import { useInfiniteQuery, UseQueryOptions, useQuery } from '@tanstack/react-query';
 import {
+  Issue,
   IssueCounts,
   IssueQuery,
   IssueResponse,
   IssueSeverity,
   IssueState,
   IssueType,
-  IssuesWithSeverityResult,
 } from '~/kite/issue-type';
 import { createGetIssueQueryOptions, createInfiniteIssueQueryOptions } from './kite-query';
+
+export type IssuesBySeverity = {
+  severity: IssueSeverity;
+  issues: Issue[];
+  total: number;
+  isLoading: boolean;
+  error: unknown;
+};
+
+export type IssuesWithSeverityResult = {
+  data: IssuesBySeverity[];
+  isLoaded: boolean;
+  hasError: boolean;
+};
 
 export const useIssues = (
   issueQuery: IssueQuery,

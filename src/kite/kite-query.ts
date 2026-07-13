@@ -1,7 +1,7 @@
 import { UseInfiniteQueryOptions, QueryOptions as ReactQueryOptions } from '@tanstack/react-query';
-import { fetchIssues } from '~/kite//kite-fetch';
 import { PLUGIN_KITE, STALE_TIME } from './const';
 import { IssueQuery, IssueResponse } from './issue-type';
+import { fetchIssues } from './kite-fetch';
 
 export const createGetIssueQueryOptions = (
   issueQuery: IssueQuery,

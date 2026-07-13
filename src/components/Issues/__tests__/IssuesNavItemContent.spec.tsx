@@ -2,7 +2,7 @@ import { screen } from '@testing-library/react';
 import { Issue, IssueSeverity, IssueState, IssueType } from '~/kite/issue-type';
 import { useCriticalAndMajorIssues } from '~/kite/kite-hooks';
 import { renderWithQueryClientAndRouter } from '~/unit-test-utils/rendering-utils';
-import { IssuesNavItemContent } from '../IssuesNavItemContent';
+import IssuesNavItemContent from '../IssuesNavItemContent';
 
 jest.mock('~/kite/kite-hooks', () => ({
   useCriticalAndMajorIssues: jest.fn(),
@@ -41,7 +41,7 @@ describe('IssueNavItemContent', () => {
   });
 
   describe('Loading state', () => {
-    it('should render only text without icon when loading', () => {
+    it('should render no icon when loading', () => {
       mockUseCriticalAndMajorIssues.mockReturnValue({
         data: [],
         isLoaded: false,
@@ -50,13 +50,12 @@ describe('IssueNavItemContent', () => {
 
       renderWithQueryClientAndRouter(<IssuesNavItemContent namespace="test-namespace" />);
 
-      expect(screen.getByText(/Issues/)).toBeInTheDocument();
       expect(screen.queryByRole('img')).not.toBeInTheDocument();
     });
   });
 
   describe('Error state', () => {
-    it('should render only text without icon when there is an error', () => {
+    it('should render no icon when there is an error', () => {
       mockUseCriticalAndMajorIssues.mockReturnValue({
         data: [],
         isLoaded: true,
@@ -65,13 +64,12 @@ describe('IssueNavItemContent', () => {
 
       renderWithQueryClientAndRouter(<IssuesNavItemContent namespace="test-namespace" />);
 
-      expect(screen.getByText(/Issues/)).toBeInTheDocument();
       expect(screen.queryByRole('img')).not.toBeInTheDocument();
     });
   });
 
   describe('Empty state', () => {
-    it('should render only text without icon when no issues exist', () => {
+    it('should render no icon when no issues exist', () => {
       mockUseCriticalAndMajorIssues.mockReturnValue({
         data: [
           {
@@ -95,12 +93,11 @@ describe('IssueNavItemContent', () => {
 
       renderWithQueryClientAndRouter(<IssuesNavItemContent namespace="test-namespace" />);
 
-      expect(screen.getByText(/Issues/)).toBeInTheDocument();
       expect(screen.queryByTestId('critical-issues-icon')).not.toBeInTheDocument();
       expect(screen.queryByTestId('major-issues-icon')).not.toBeInTheDocument();
     });
 
-    it('should render only text without icon when data is empty array', () => {
+    it('should render no icon when data is empty array', () => {
       mockUseCriticalAndMajorIssues.mockReturnValue({
         data: [],
         isLoaded: true,
@@ -109,12 +106,11 @@ describe('IssueNavItemContent', () => {
 
       renderWithQueryClientAndRouter(<IssuesNavItemContent namespace="test-namespace" />);
 
-      expect(screen.getByText(/Issues/)).toBeInTheDocument();
       expect(screen.queryByTestId('critical-issues-icon')).not.toBeInTheDocument();
       expect(screen.queryByTestId('major-issues-icon')).not.toBeInTheDocument();
     });
 
-    it('should render only text without icon when API returns no active issues', () => {
+    it('should render no icon when API returns no active issues', () => {
       // API filters by ACTIVE state, so resolved issues won't be returned
       mockUseCriticalAndMajorIssues.mockReturnValue({
         data: [
@@ -139,7 +135,6 @@ describe('IssueNavItemContent', () => {
 
       renderWithQueryClientAndRouter(<IssuesNavItemContent namespace="test-namespace" />);
 
-      expect(screen.getByText(/Issues/)).toBeInTheDocument();
       expect(screen.queryByTestId('critical-issues-icon')).not.toBeInTheDocument();
       expect(screen.queryByTestId('major-issues-icon')).not.toBeInTheDocument();
     });
@@ -170,7 +165,6 @@ describe('IssueNavItemContent', () => {
 
       renderWithQueryClientAndRouter(<IssuesNavItemContent namespace="test-namespace" />);
 
-      expect(screen.getByText(/Issues/)).toBeInTheDocument();
       expect(screen.getByTestId('critical-issues-icon')).toBeInTheDocument();
     });
 
@@ -199,7 +193,6 @@ describe('IssueNavItemContent', () => {
 
       renderWithQueryClientAndRouter(<IssuesNavItemContent namespace="test-namespace" />);
 
-      expect(screen.getByText(/Issues/)).toBeInTheDocument();
       expect(screen.queryByTestId('critical-issues-icon')).not.toBeInTheDocument();
       expect(screen.queryByTestId('major-issues-icon')).not.toBeInTheDocument();
     });
@@ -258,7 +251,6 @@ describe('IssueNavItemContent', () => {
 
       renderWithQueryClientAndRouter(<IssuesNavItemContent namespace="test-namespace" />);
 
-      expect(screen.getByText(/Issues/)).toBeInTheDocument();
       expect(screen.getByTestId('major-issues-icon')).toBeInTheDocument();
     });
 
@@ -287,7 +279,6 @@ describe('IssueNavItemContent', () => {
 
       renderWithQueryClientAndRouter(<IssuesNavItemContent namespace="test-namespace" />);
 
-      expect(screen.getByText(/Issues/)).toBeInTheDocument();
       expect(screen.queryByTestId('critical-issues-icon')).not.toBeInTheDocument();
       expect(screen.queryByTestId('major-issues-icon')).not.toBeInTheDocument();
     });
@@ -319,7 +310,6 @@ describe('IssueNavItemContent', () => {
 
       renderWithQueryClientAndRouter(<IssuesNavItemContent namespace="test-namespace" />);
 
-      expect(screen.getByText(/Issues/)).toBeInTheDocument();
       expect(screen.queryByTestId('critical-issues-icon')).not.toBeInTheDocument();
       expect(screen.queryByTestId('major-issues-icon')).not.toBeInTheDocument();
     });
@@ -351,7 +341,6 @@ describe('IssueNavItemContent', () => {
 
       renderWithQueryClientAndRouter(<IssuesNavItemContent namespace="test-namespace" />);
 
-      expect(screen.getByText(/Issues/)).toBeInTheDocument();
       // Should show critical icon because total > 0
       expect(screen.getByTestId('critical-issues-icon')).toBeInTheDocument();
       expect(screen.queryByTestId('major-issues-icon')).not.toBeInTheDocument();
@@ -382,7 +371,6 @@ describe('IssueNavItemContent', () => {
 
       renderWithQueryClientAndRouter(<IssuesNavItemContent namespace="test-namespace" />);
 
-      expect(screen.getByText(/Issues/)).toBeInTheDocument();
       // Should show major icon because critical has no active issues but major has some
       expect(screen.queryByTestId('critical-issues-icon')).not.toBeInTheDocument();
       expect(screen.getByTestId('major-issues-icon')).toBeInTheDocument();
@@ -405,7 +393,6 @@ describe('IssueNavItemContent', () => {
 
       renderWithQueryClientAndRouter(<IssuesNavItemContent namespace="test-namespace" />);
 
-      expect(screen.getByText(/Issues/)).toBeInTheDocument();
       expect(screen.queryByTestId('critical-issues-icon')).not.toBeInTheDocument();
       expect(screen.queryByTestId('major-issues-icon')).not.toBeInTheDocument();
     });

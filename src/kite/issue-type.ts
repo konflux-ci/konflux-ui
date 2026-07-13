@@ -113,17 +113,3 @@ export type IssueCounts = {
   isLoaded: boolean;
   error: unknown;
 };
-
-export type IssuesBySeverity = {
-  severity: IssueSeverity;
-  issues: Issue[];
-  total: number;
-  isLoading: boolean;
-  error: unknown;
-};
-
-export type IssuesWithSeverityResult = {
-  data: IssuesBySeverity[];
-  isLoaded: boolean;
-  hasError: boolean;
-};
