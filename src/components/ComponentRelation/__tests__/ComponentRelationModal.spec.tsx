@@ -14,6 +14,15 @@ import { updateNudgeDependencies } from '../utils';
 
 configure({ testIdAttribute: 'id' });
 
+jest.mock('~/monitoring/logger', () => ({
+  logger: {
+    error: jest.fn(),
+    warn: jest.fn(),
+    info: jest.fn(),
+    debug: jest.fn(),
+  },
+}));
+
 jest.mock('../../../hooks/useComponents', () => ({
   useComponents: jest.fn(() => [[componentCRMocks[0]], true, null]),
   useSortedGroupComponents: jest.fn(() => [sortedGroupedComponentsMocks, true, null]),
@@ -68,6 +77,8 @@ const useSortedGroupComponentsMock = useSortedGroupComponents as jest.Mock;
 
 describe('ComponentRelationModal', () => {
   beforeEach(() => {
+    const { logger } = jest.requireMock<{ logger: { error: jest.Mock } }>('~/monitoring/logger');
+    logger.error.mockClear();
     useNudgeDataMock.mockReturnValue([[], true, null]);
     useComponentsMock.mockReturnValue([[componentCRMocks[0]], true, null]);
     useSortedGroupComponentsMock.mockReturnValue([sortedGroupedComponentsMocks, true, null]);
@@ -179,6 +190,11 @@ describe('ComponentRelationModal', () => {
     await waitFor(() => expect(saveButton).not.toBeDisabled());
     fireEvent.click(saveButton);
     expect(await screen.findByText('error')).toBeInTheDocument();
+    const { logger } = jest.requireMock<{ logger: { error: jest.Mock } }>('~/monitoring/logger');
+    expect(logger.error).toHaveBeenCalledWith(
+      'Error while updating dependency data for component',
+      expect.any(Error),
+    );
   });
 
   it('should display an error when validation passes but save fails', async () => {
@@ -192,6 +208,11 @@ describe('ComponentRelationModal', () => {
     await waitFor(() => expect(saveButton).not.toBeDisabled());
     fireEvent.click(saveButton);
     expect(await screen.findByText('save failed')).toBeInTheDocument();
+    const { logger } = jest.requireMock<{ logger: { error: jest.Mock } }>('~/monitoring/logger');
+    expect(logger.error).toHaveBeenCalledWith(
+      'Error while updating dependency data for component',
+      expect.any(Error),
+    );
   });
 
   it('should display a string error when rejection is not an Error instance', async () => {
@@ -203,6 +224,11 @@ describe('ComponentRelationModal', () => {
     await waitFor(() => expect(saveButton).not.toBeDisabled());
     fireEvent.click(saveButton);
     expect(await screen.findByText('plain error')).toBeInTheDocument();
+    const { logger } = jest.requireMock<{ logger: { error: jest.Mock } }>('~/monitoring/logger');
+    expect(logger.error).toHaveBeenCalledWith(
+      'Error while updating dependency data for component',
+      undefined,
+    );
   });
 
   it('should render with empty component data when hooks return errors', () => {
