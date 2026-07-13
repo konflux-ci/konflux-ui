@@ -6,7 +6,7 @@ import {
   ContentVariants,
 } from '@patternfly/react-core';
 import { useFormikContext } from 'formik';
-import { InputField } from 'formik-pf';
+import { InputField } from '~/shared/components/formik-base';
 import { useNamespace } from '../../../shared/providers/Namespace';
 import GitRepoLink from '../../GitLink/GitRepoLink';
 import { ImportFormValues } from '../type';

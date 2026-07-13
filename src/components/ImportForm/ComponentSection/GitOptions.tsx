@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { ExpandableSection, FormSection, PageSection } from '@patternfly/react-core';
-import { InputField } from 'formik-pf';
+import { InputField } from '~/shared/components/formik-base';
 import HelpPopover from '../../HelpPopover';
 import { GitProviderDropdown } from './GitProviderDropdown';
 

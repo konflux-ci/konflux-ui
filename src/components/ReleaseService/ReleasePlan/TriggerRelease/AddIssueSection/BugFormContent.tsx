@@ -10,8 +10,8 @@ import {
   ContentVariants,
 } from '@patternfly/react-core';
 import { useFormikContext } from 'formik';
-import { InputField } from 'formik-pf';
 import { isEmpty } from 'lodash-es';
+import { InputField } from '~/shared/components/formik-base';
 import StatusDropdown from './StatusDropdown';
 import UploadDate from './UploadDate';
 
@@ -69,7 +69,7 @@ const BugFormContent: React.FC<BugFormContentProps> = ({ modalToggle }) => {
             variant={ButtonVariant.link}
             className="pf-v6-u-ml-sm"
             onClick={(e) => {
-              e.preventDefault(), modalToggle();
+              (e.preventDefault(), modalToggle());
             }}
           >
             Close

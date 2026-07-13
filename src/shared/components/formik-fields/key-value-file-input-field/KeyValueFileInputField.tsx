@@ -3,8 +3,8 @@ import { Flex, FlexItem, Button, FormGroup, TextInputTypes } from '@patternfly/r
 import { MinusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/minus-circle-icon';
 import { PlusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/plus-circle-icon';
 import { FieldArray, FormikValues, useField, useFormikContext } from 'formik';
-import { FileUploadField, InputField } from 'formik-pf';
 import { get, uniqueId } from 'lodash-es';
+import { FileUploadField, InputField } from '~/shared/components/formik-base';
 import { FieldProps } from '../field-types';
 import { getFieldId } from '../field-utils';
 import FieldHelperText from '../FieldHelperText';

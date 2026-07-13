@@ -126,14 +126,4 @@ export default {
     modules: ['src', 'node_modules'],
     alias: getWebpackAliases(),
   },
-  // TODO: Remove once formik-pf is updated to support PatternFly v6.
-  // formik-pf@0.0.1-alpha11 imports Select/SelectVariant/SelectOption from
-  // @patternfly/react-core/deprecated, which no longer exports them in PF v6.
-  // Only the unused SelectField and FormikWizard components are affected.
-  ignoreWarnings: [
-    {
-      module: /node_modules\/formik-pf/,
-      message: /export .* was not found in '@patternfly\/react-core\/deprecated'/,
-    },
-  ],
 };
