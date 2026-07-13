@@ -499,24 +499,6 @@ import { css } from '@patternfly/react-styles';
 }
 ```
 
-## PF v6 Migration Gotchas
-
-Behavioral changes in PatternFly v6 that can cause subtle bugs:
-
-| Change                                          | Impact                                                                                     | Fix                                                                                                          |
-| ----------------------------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
-| Drawer padding uses direct-child CSS selectors  | Wrapper divs between `DrawerPanelContent` and `DrawerHead`/`DrawerPanelBody` break padding | Keep Drawer subcomponents as direct children                                                                 |
-| `MenuContent` applies `overflow:hidden`         | Components like `Tabs` that render outside their bounds get clipped                        | Place such components outside `MenuContent`                                                                  |
-| Modal accessible name includes all text content | Test assertions with exact `{ name: '...' }` may break                                     | Use regex: `{ name: /My Modal Title/ }`                                                                      |
-| `EmptyStateHeader`, `EmptyStateIcon` removed    | Import errors                                                                              | Use `EmptyState` props (`headingLevel`, `titleText`, `icon`) directly                                        |
-| `Text`/`TextContent` removed                    | Import errors                                                                              | Use `Content` with `ContentVariants`                                                                         |
-| `Chip`/`ChipGroup` deprecated                   | Moved to `@patternfly/react-core/deprecated`                                               | Use `Label`/`LabelGroup`                                                                                     |
-| `icon-button-group` toolbar variant removed     | Type error on `ToolbarGroup`                                                               | Use `action-group-plain` or remove the variant                                                               |
-| JS token imports renamed                        | `global_palette_*`, `global_danger_color_*` etc. no longer exist                           | Use `t_global_*` equivalents (e.g., `global_danger_color_100` → `t_global_icon_color_status_danger_default`) |
-| CSS class prefix `pf-v5-c-*` → `pf-v6-c-*`      | SCSS overrides and utility classes targeting `pf-v5-` break                                | Update to `pf-v6-c-*` and `pf-v6-u-*`                                                                        |
-| OUIA component type prefix `PF5/` → `PF6/`      | E2E selectors using `data-ouia-component-type="PF5/..."` break                             | Update to `PF6/` prefix                                                                                      |
-| `formik-pf` package removed                     | Import errors                                                                              | Use `~/shared/components/formik-base/`                                                                       |
-
 ## Deprecated PF APIs to Avoid
 
 PF v6 removed `@patternfly/react-core/deprecated` entirely. All components that previously lived there (Dropdown, Select, Modal, Chip/ChipGroup) have already been migrated to their composable equivalents. Do not re-introduce imports from `@patternfly/react-core/deprecated`.
