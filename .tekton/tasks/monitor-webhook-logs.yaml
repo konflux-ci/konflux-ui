@@ -1,4 +1,4 @@
-apiVersion: tekton.dev/v1beta1
+apiVersion: tekton.dev/v1
 kind: Task
 metadata:
   name: monitor-webhook-logs
@@ -17,7 +17,7 @@ spec:
       description: 'How long to monitor (e.g., 5m, 10m, 30m)'
   steps:
     - name: setup-monitoring
-      image: bitnami/kubectl:latest
+      image: registry.k8s.io/kubectl:v1.36.1@sha256:d08f476d04d0e30f426f06bc6ff6c38913aaa4591943046b77e2f74a72d3611c #1.36.1
       script: |
         #!/usr/bin/env bash
         set -euo pipefail

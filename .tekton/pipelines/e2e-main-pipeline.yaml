@@ -1,5 +1,5 @@
 ---
-apiVersion: tekton.dev/v1beta1
+apiVersion: tekton.dev/v1
 kind: Pipeline
 metadata:
   name: e2e-main-pipeline
@@ -13,6 +13,7 @@ spec:
     - name: SNAPSHOT
       description: 'The JSON string representing the snapshot of the application under test.'
       # Should there be test image or UI builded image? Or are there both? Where to find out?
+      # Should be verified during https://redhat.atlassian.net/browse/KFLUXUI-1497
       default: '{"components": [{"name":"konflux-ui", "containerImage": "quay.io/konflux_ui_qe/konflux-ui-tests:latest"}]}'
       type: string
     - name: konflux-test-infra-secret
@@ -50,7 +51,6 @@ spec:
     - name: build-credentials-secret
       type: string
       default: build-credentials
-      # do we need both skip-provision and skip-deploy?
     - name: skip-provision
       description: 'Skip provisioning Kind cluster (use existing cluster instead)'
       default: 'false'
@@ -207,13 +207,9 @@ spec:
           - name: pathInRepo
             value: .tekton/tasks/run-e2e-konflux-ui.yaml
       params:
+          # says if it is PR check or periodic job
         - name: job-type
           value: '$(params.job-type)'
-        - name: test-name
-          value: '$(context.pipelineRun.name)'
-          # says if it is PR check or periodic job
-        - name: job-spec
-          value: '$(tasks.test-metadata.results.job-spec)'
           # oci for storing artefacts
         - name: oci-ref
           value: $(params.oci-container-repo):$(context.pipelineRun.name)

@@ -1,4 +1,4 @@
-apiVersion: tekton.dev/v1beta1
+apiVersion: tekton.dev/v1
 kind: Task
 metadata:
   name: send-slack-notification
@@ -35,7 +35,7 @@ spec:
       description: 'Console base URL (e.g., https://console.redhat.com/preview/application-pipeline)'
   steps:
     - name: send-notification
-      image: registry.access.redhat.com/ubi9/ubi:latest
+      image: registry.access.redhat.com/ubi9/ubi:9.8@sha256:5a423246792ac501ea279229b42ee57da9927da441c04b5c9ff86817b0856b08
       env:
         - name: PIPELINE_STATUS
           value: $(params.pipeline-aggregate-status)
@@ -68,7 +68,7 @@ spec:
         echo "=== Preparing Slack notification ==="
 
         # Determine exit status from pipeline aggregate status
-        if [[ "${PIPELINE_STATUS}" == "Succeeded" ]]; then
+        if [[ "${PIPELINE_STATUS}" == "Succeeded" || "${PIPELINE_STATUS}" == "Completed" ]]; then
           EXIT_STATUS="success"
           EMOJI=":white_check_mark:"
         else
@@ -114,13 +114,12 @@ spec:
         echo "=== Sending Slack notification ==="
 
         # Escape special characters for JSON
-        MESSAGE_ESCAPED=$(echo "${MESSAGE}" | sed 's/"/\\"/g')
+        MESSAGE_ESCAPED=$(printf '%s' "${MESSAGE}" | sed 's/\\/\\\\/g; s/"/\\"/g')
 
-        # update to use correct webhook and channel-id
-        RESPONSE=$(curl -s -X POST https://slack.com/api/chat.postMessage \
+        RESPONSE=$(curl -s --max-time 10 -X POST https://slack.com/api/chat.postMessage \
           -H "Authorization: Bearer ${SLACK_TOKEN}" \
           -H "Content-Type: application/json; charset=utf-8" \
-          -d "{\"channel\": \"${SLACK_CHANNEL_ID}\", \"text\": \"${MESSAGE_ESCAPED}\"}")
+          -d "{\"channel\": \"${SLACK_CHANNEL_ID}\", \"text\": \"${MESSAGE_ESCAPED}\"}") || RESPONSE='{"ok":false,"error":"curl_failed"}'
 
         echo "Slack API Response: ${RESPONSE}"
 

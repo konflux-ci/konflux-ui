@@ -1,4 +1,4 @@
-apiVersion: tekton.dev/v1beta1
+apiVersion: tekton.dev/v1
 kind: Task
 metadata:
   name: run-e2e-konflux-ui
@@ -8,8 +8,7 @@ metadata:
     tekton.dev/tags: 'e2e,cypress,konflux-ui'
 spec:
   description: >-
-    A clean, native Tekton Task to run Konflux UI tests. 
-    No Podman, no sidecars, kaniko build being run
+    Runs E2E tests for Konflux UI and pushes test artifacts to OCI repository.
   params:
     - name: job-type
       type: string
@@ -42,6 +41,7 @@ spec:
     - name: dshm
       emptyDir:
         medium: Memory
+        sizeLimit: 3Gi
     - name: kubeconfig-data
       emptyDir: {}
     - name: test-artifacts
@@ -59,7 +59,7 @@ spec:
         mountPath: /artifacts
   steps:
     - name: fix-smee-client
-      image: bitnami/kubectl:latest
+      image: registry.k8s.io/kubectl:v1.36.1@sha256:d08f476d04d0e30f426f06bc6ff6c38913aaa4591943046b77e2f74a72d3611c #1.36.1
       workingDir: /workspace
       volumeMounts:
         - name: kubeconfig-data
@@ -149,7 +149,7 @@ spec:
       workingDir: /tmp/e2e
       # We should set the appropriate requests/limits based on our future observing
       # Setting default values for memory and cpu by a guess
-      resources:
+      computeResources:
         limits:
           memory: 8Gi
           cpu: '2'
@@ -163,9 +163,6 @@ spec:
           mountPath: /dev/shm
         - name: kubeconfig-data
           mountPath: /shared
-          readOnly: true
-        - name: oci-credentials
-          mountPath: /secrets/oci-credentials
           readOnly: true
       env:
         - name: CYPRESS_USERNAME
