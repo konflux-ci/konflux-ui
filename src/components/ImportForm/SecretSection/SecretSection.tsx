@@ -14,13 +14,13 @@ import {
 import { PencilAltIcon } from '@patternfly/react-icons/dist/esm/icons/pencil-alt-icon';
 import { PlusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/plus-circle-icon';
 import { useFormikContext } from 'formik';
-import { InputField } from 'formik-pf';
 import { Base64 } from 'js-base64';
 import { IMPORT_SECRET_HELP_TEXT } from '~/consts/secrets';
 import { IfFeature } from '~/feature-flags/hooks';
+import { InputField } from '~/shared/components/formik-base';
+import TextColumnField from '~/shared/components/formik-fields/text-column-field/TextColumnField';
 import { useSecrets } from '../../../hooks/useSecrets';
 import { SecretModel } from '../../../models';
-import TextColumnField from '../../../shared/components/formik-fields/text-column-field/TextColumnField';
 import { useNamespace } from '../../../shared/providers/Namespace';
 import {
   BuildTimeSecret,

@@ -1,4 +1,4 @@
-import { ModalVariant } from '@patternfly/react-core/deprecated';
+import { ModalVariant } from '@patternfly/react-core';
 import { createModalLauncher } from '~/components/modal/createModalLauncher';
 import ManageVisibilityModal from '~/components/NamespaceList/ManageVisibilityModal';
 import { NamespaceKind } from '~/types';

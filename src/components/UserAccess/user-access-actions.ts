@@ -1,3 +1,4 @@
+import { ModalVariant } from '@patternfly/react-core';
 import { USER_ACCESS_EDIT_PAGE } from '@routes/paths';
 import { RoleBindingModel } from '../../models';
 import { Action } from '../../shared/components/action-menu/types';
@@ -11,6 +12,7 @@ import { RevokeAccessModal } from './RevokeAccessModal';
 const revokeAccessModalLauncher = (username: string, rb: RoleBinding) =>
   createRawModalLauncher(RevokeAccessModal, {
     'data-test': 'revoke-access-modal',
+    variant: ModalVariant.small,
     title: 'Revoke access?',
   })({ username, rb });
 

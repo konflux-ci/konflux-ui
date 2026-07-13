@@ -10,9 +10,9 @@ import {
 } from '@patternfly/react-core';
 import { PlusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/plus-circle-icon';
 import { FormikProps, useField } from 'formik';
-import { InputField, TextAreaField } from 'formik-pf';
 import isEmpty from 'lodash-es/isEmpty';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
+import { InputField, TextAreaField } from '~/shared/components/formik-base';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { useReleasePlans } from '../../../../../src/hooks/useReleasePlans';
 import PageLayout from '../../../../components/PageLayout/PageLayout';
