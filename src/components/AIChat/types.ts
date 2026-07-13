@@ -48,6 +48,31 @@ export type LightspeedQueryResponse = {
   outputTokens?: number;
 };
 
+export type LightspeedStreamingEventName = 'start' | 'token' | 'turn_complete' | 'end' | 'error';
+
+export type LightspeedStreamingQueryResult = {
+  conversationId: string;
+  response: string;
+  referencedDocuments?: unknown[];
+  truncated?: boolean | null;
+  inputTokens?: number;
+  outputTokens?: number;
+};
+
+export type LightspeedStreamingEndData = {
+  referencedDocuments?: unknown[];
+  truncated?: boolean | null;
+  inputTokens?: number;
+  outputTokens?: number;
+};
+
+export type LightspeedStreamingQueryCallbacks = {
+  onStart?: (data: { conversationId: string; requestId: string }) => void;
+  onToken?: (token: string) => void;
+  onTurnComplete?: (response: string) => void;
+  onEnd?: (data: LightspeedStreamingEndData) => void;
+};
+
 export type LightspeedConversationUpdateRequest = {
   topicSummary: string;
 };

@@ -3,7 +3,7 @@ import ChatbotAlert from '@patternfly/chatbot/dist/dynamic/ChatbotAlert';
 import ChatbotContent from '@patternfly/chatbot/dist/dynamic/ChatbotContent';
 import ChatbotWelcomePrompt from '@patternfly/chatbot/dist/dynamic/ChatbotWelcomePrompt';
 import Message, { type MessageProps } from '@patternfly/chatbot/dist/dynamic/Message';
-import MessageBox from '@patternfly/chatbot/dist/dynamic/MessageBox';
+import MessageBox, { type MessageBoxHandle } from '@patternfly/chatbot/dist/dynamic/MessageBox';
 import { CHAT_MESSAGE_REHYPE_PLUGINS } from '~/components/AIChat/chatMessagePlugins';
 import {
   KONFLUX_AI_WELCOME_DESCRIPTION,
@@ -15,6 +15,7 @@ type AIChatDrawerContentProps = {
   backendError?: string;
   isLoadingConversation: boolean;
   messages: MessageProps[];
+  streamingMessage?: MessageProps | null;
 };
 
 export const AIChatDrawerContent: React.FC<AIChatDrawerContentProps> = ({
@@ -22,16 +23,42 @@ export const AIChatDrawerContent: React.FC<AIChatDrawerContentProps> = ({
   backendError,
   isLoadingConversation,
   messages,
+  streamingMessage,
 }) => {
-  const scrollToBottomRef = React.useRef<HTMLDivElement>(null);
+  const messageBoxRef = React.useRef<MessageBoxHandle>(null);
+  const scrollQueuedRef = React.useRef(false);
+  const streamingContent = streamingMessage?.content ?? '';
 
   React.useLayoutEffect(() => {
-    if (messages.length === 0) {
-      return;
+    if (messages.length === 0 && !streamingMessage) {
+      return undefined;
     }
 
-    scrollToBottomRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'end' });
-  }, [messages]);
+    const messageBox = messageBoxRef.current;
+    if (!messageBox || scrollQueuedRef.current) {
+      return undefined;
+    }
+
+    if (!messageBox.isSmartScrollActive()) {
+      return undefined;
+    }
+
+    scrollQueuedRef.current = true;
+    const rafId = requestAnimationFrame(() => {
+      messageBox.scrollToBottom({
+        behavior: streamingMessage ? 'auto' : 'smooth',
+        resumeSmartScroll: Boolean(streamingMessage),
+      });
+      scrollQueuedRef.current = false;
+    });
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      scrollQueuedRef.current = false;
+    };
+  }, [messages, streamingMessage, streamingContent]);
+
+  const hasMessages = messages.length > 0 || streamingMessage !== null;
 
   return (
     <ChatbotContent>
@@ -40,19 +67,27 @@ export const AIChatDrawerContent: React.FC<AIChatDrawerContentProps> = ({
           {backendError}
         </ChatbotAlert>
       ) : null}
-      <MessageBox announcement={announcement}>
-        {messages.length === 0 && !isLoadingConversation ? (
+      <MessageBox announcement={announcement} enableSmartScroll ref={messageBoxRef}>
+        {!hasMessages && !isLoadingConversation ? (
           <ChatbotWelcomePrompt
             title={KONFLUX_AI_WELCOME_TITLE}
             description={KONFLUX_AI_WELCOME_DESCRIPTION}
           />
         ) : null}
-        {messages.map((message, index) => (
-          <React.Fragment key={message.id}>
-            <Message {...message} additionalRehypePlugins={CHAT_MESSAGE_REHYPE_PLUGINS} />
-            {index === messages.length - 1 ? <div ref={scrollToBottomRef} /> : null}
-          </React.Fragment>
+        {messages.map((message) => (
+          <Message
+            key={message.id}
+            {...message}
+            additionalRehypePlugins={CHAT_MESSAGE_REHYPE_PLUGINS}
+          />
         ))}
+        {streamingMessage ? (
+          <Message
+            key={streamingMessage.id}
+            {...streamingMessage}
+            additionalRehypePlugins={CHAT_MESSAGE_REHYPE_PLUGINS}
+          />
+        ) : null}
       </MessageBox>
     </ChatbotContent>
   );

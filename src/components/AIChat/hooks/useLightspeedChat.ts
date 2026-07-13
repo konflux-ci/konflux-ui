@@ -10,6 +10,7 @@ import {
 type UseLightspeedChatResult = {
   activeConversationId: string | null;
   messages: MessageProps[];
+  streamingMessage: MessageProps | null;
   conversations: Record<string, Conversation[]> | Conversation[];
   announcement?: string;
   isSendButtonDisabled: boolean;
@@ -65,6 +66,7 @@ export const useLightspeedChat = (): UseLightspeedChatResult => {
   return {
     activeConversationId: chatSession.activeConversationId,
     messages: chatSession.messages,
+    streamingMessage: chatSession.streamingMessage,
     conversations: conversationHistory.conversations,
     announcement: chatSession.announcement,
     isSendButtonDisabled: chatSession.isSendButtonDisabled,

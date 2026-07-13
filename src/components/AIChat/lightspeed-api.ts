@@ -9,6 +9,9 @@ import type {
   LightspeedConversationsListResponse,
   LightspeedQueryRequest,
   LightspeedQueryResponse,
+  LightspeedStreamingEndData,
+  LightspeedStreamingQueryCallbacks,
+  LightspeedStreamingQueryResult,
 } from './types';
 import { parseLightspeedError } from './utils';
 
@@ -262,3 +265,215 @@ export const query = (
       signal,
     },
   );
+
+type LightspeedStreamingEventName = 'start' | 'token' | 'turn_complete' | 'end' | 'error';
+
+type LightspeedStreamingStartDataWire = {
+  conversation_id: string;
+  request_id: string;
+};
+
+type LightspeedStreamingTokenDataWire = {
+  id: number;
+  token: string;
+};
+
+type LightspeedStreamingTurnCompleteDataWire = {
+  id?: number;
+  token: string;
+};
+
+type LightspeedStreamingEndDataWire = {
+  referenced_documents?: unknown[];
+  truncated?: boolean | null;
+  input_tokens?: number;
+  output_tokens?: number;
+};
+
+type LightspeedStreamingEventPayloadWire = {
+  event: LightspeedStreamingEventName;
+  data:
+    | LightspeedStreamingStartDataWire
+    | LightspeedStreamingTokenDataWire
+    | LightspeedStreamingTurnCompleteDataWire
+    | LightspeedStreamingEndDataWire
+    | { message?: string };
+};
+
+const parseStreamingEndData = (wire: LightspeedStreamingEndDataWire): LightspeedStreamingEndData => ({
+  ...(wire.referenced_documents !== undefined
+    ? { referencedDocuments: wire.referenced_documents }
+    : {}),
+  ...(wire.truncated !== undefined ? { truncated: wire.truncated } : {}),
+  ...(wire.input_tokens !== undefined ? { inputTokens: wire.input_tokens } : {}),
+  ...(wire.output_tokens !== undefined ? { outputTokens: wire.output_tokens } : {}),
+});
+
+const SSE_DATA_PREFIX = 'data: ';
+
+const parseStreamingEvent = (line: string): LightspeedStreamingEventPayloadWire | null => {
+  const trimmedLine = line.trim();
+  if (!trimmedLine.startsWith(SSE_DATA_PREFIX)) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(trimmedLine.slice(SSE_DATA_PREFIX.length)) as LightspeedStreamingEventPayloadWire;
+  } catch {
+    return null;
+  }
+};
+
+const yieldToBrowser = (): Promise<void> =>
+  new Promise((resolve) => {
+    requestAnimationFrame(() => {
+      resolve();
+    });
+  });
+
+const handleStreamingEvent = async (
+  event: LightspeedStreamingEventPayloadWire,
+  callbacks: LightspeedStreamingQueryCallbacks,
+  state: {
+    conversationId: string | null;
+    response: string;
+  },
+): Promise<void> => {
+  switch (event.event) {
+    case 'start': {
+      const data = event.data as LightspeedStreamingStartDataWire;
+      state.conversationId = data.conversation_id;
+      callbacks.onStart?.({
+        conversationId: data.conversation_id,
+        requestId: data.request_id,
+      });
+      break;
+    }
+    case 'token': {
+      const data = event.data as LightspeedStreamingTokenDataWire;
+      state.response += data.token;
+      callbacks.onToken?.(data.token);
+      if (data.token) {
+        await yieldToBrowser();
+      }
+      break;
+    }
+    case 'turn_complete': {
+      const data = event.data as LightspeedStreamingTurnCompleteDataWire;
+      state.response = data.token;
+      callbacks.onTurnComplete?.(data.token);
+      await yieldToBrowser();
+      break;
+    }
+    case 'end': {
+      callbacks.onEnd?.(parseStreamingEndData(event.data as LightspeedStreamingEndDataWire));
+      break;
+    }
+    case 'error': {
+      const data = event.data as { message?: string };
+      throw new Error(data.message ?? 'Streaming query failed');
+    }
+    default:
+      break;
+  }
+};
+
+const consumeStreamingResponse = async (
+  response: Response,
+  callbacks: LightspeedStreamingQueryCallbacks,
+  signal?: AbortSignal,
+): Promise<LightspeedStreamingQueryResult> => {
+  const reader = response.body?.getReader();
+  if (!reader) {
+    throw new Error('Streaming response body is unavailable');
+  }
+
+  const decoder = new TextDecoder();
+  let buffer = '';
+  const state = {
+    conversationId: null as string | null,
+    response: '',
+  };
+  let endData: LightspeedStreamingEndData | undefined;
+
+  const processBufferLine = async (line: string): Promise<void> => {
+    const event = parseStreamingEvent(line);
+    if (!event) {
+      return;
+    }
+
+    if (event.event === 'end') {
+      endData = parseStreamingEndData(event.data as LightspeedStreamingEndDataWire);
+    }
+
+    await handleStreamingEvent(event, callbacks, state);
+  };
+
+  try {
+    let streamDone = false;
+    while (!streamDone) {
+      if (signal?.aborted) {
+        throw new DOMException('Aborted', 'AbortError');
+      }
+
+      const { done, value } = await reader.read();
+      streamDone = done;
+      if (done) {
+        break;
+      }
+
+      buffer += decoder.decode(value, { stream: true });
+
+      let newlineIndex = buffer.indexOf('\n');
+      while (newlineIndex !== -1) {
+        const line = buffer.slice(0, newlineIndex);
+        buffer = buffer.slice(newlineIndex + 1);
+        await processBufferLine(line);
+        newlineIndex = buffer.indexOf('\n');
+      }
+    }
+
+    if (buffer.trim()) {
+      await processBufferLine(buffer);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+
+  if (!state.conversationId) {
+    throw new Error('Streaming query completed without a conversation id');
+  }
+
+  return {
+    conversationId: state.conversationId,
+    response: state.response,
+    ...(endData?.referencedDocuments !== undefined
+      ? { referencedDocuments: endData.referencedDocuments }
+      : {}),
+    ...(endData?.truncated !== undefined ? { truncated: endData.truncated } : {}),
+    ...(endData?.inputTokens !== undefined ? { inputTokens: endData.inputTokens } : {}),
+    ...(endData?.outputTokens !== undefined ? { outputTokens: endData.outputTokens } : {}),
+  };
+};
+
+export const streamingQuery = async (
+  request: LightspeedQueryRequest,
+  callbacks: LightspeedStreamingQueryCallbacks = {},
+  signal?: AbortSignal,
+): Promise<LightspeedStreamingQueryResult> => {
+  const response = await fetch(`${LIGHTSPEED_API_BASE}${lightspeedVersionedPath('/streaming_query')}`, {
+    method: 'POST',
+    headers: {
+      Accept: 'text/event-stream',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(serializeQueryRequest(request)),
+    signal,
+  });
+
+  if (!response.ok) {
+    throw new Error(await parseLightspeedError(response));
+  }
+
+  return consumeStreamingResponse(response, callbacks, signal);
+};

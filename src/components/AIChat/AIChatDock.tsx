@@ -24,6 +24,7 @@ export const AIChatDock: React.FC = () => {
   const {
     activeConversationId,
     messages,
+    streamingMessage,
     conversations,
     announcement,
     isSendButtonDisabled,
@@ -100,6 +101,7 @@ export const AIChatDock: React.FC = () => {
                 backendError={backendError}
                 announcement={announcement}
                 messages={messages}
+                streamingMessage={streamingMessage}
                 isLoadingConversation={isLoadingConversation}
               />
               <AIChatDrawerFooter
