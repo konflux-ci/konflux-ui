@@ -1,6 +1,13 @@
 import * as React from 'react';
-import { Stack, StackItem, Content, ContentVariants, List, ListItem } from '@patternfly/react-core';
-import { ModalVariant } from '@patternfly/react-core/deprecated';
+import {
+  Stack,
+  StackItem,
+  Content,
+  ContentVariants,
+  List,
+  ListItem,
+  ModalVariant,
+} from '@patternfly/react-core';
 import { createModalLauncher } from '~/components/modal/createModalLauncher';
 import {
   EXTERNAL_DOCUMENTATION_BASE_URL,
