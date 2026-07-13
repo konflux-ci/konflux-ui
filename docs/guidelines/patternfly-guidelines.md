@@ -519,15 +519,7 @@ Behavioral changes in PatternFly v6 that can cause subtle bugs:
 
 ## Deprecated PF APIs to Avoid
 
-These deprecated APIs exist in the codebase but should not be used in new code:
-
-| Deprecated                                                  | Use Instead                                                                                   |
-| ----------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| `Dropdown` from `@patternfly/react-core/deprecated`         | `ActionMenu` from `~/shared/components/action-menu/`                                          |
-| `Select` from `@patternfly/react-core/deprecated`           | `BasicDropdown` from `~/shared/components/dropdown/` or PF5 `Select`                          |
-| `DropdownToggle` from `@patternfly/react-core/deprecated`   | PF5 `MenuToggle`                                                                              |
-| `Modal` from `@patternfly/react-core/deprecated`            | Composable `Modal` from `@patternfly/react-core` with `ModalHeader`/`ModalBody`/`ModalFooter` |
-| `Chip`/`ChipGroup` from `@patternfly/react-core/deprecated` | `Label`/`LabelGroup` from `@patternfly/react-core`                                            |
+PF v6 removed `@patternfly/react-core/deprecated` entirely. All components that previously lived there (Dropdown, Select, Modal, Chip/ChipGroup) have already been migrated to their composable equivalents. Do not re-introduce imports from `@patternfly/react-core/deprecated`.
 
 ## Common Pitfalls — Composable Component DOM Semantics
 
