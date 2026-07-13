@@ -65,11 +65,11 @@ const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({
       .map((secret) => ({ value: secret.name }));
   }, [currentType, existingSecrets]);
 
-  const optionsValues = useMemo(() => {
+  const optionsValues = useMemo((): Record<string, BuildTimeSecret> => {
     return existingSecrets
       .filter((secret) => secret.type === K8sSecretType[currentType])
       .filter((secret) => secret.type !== K8sSecretType[SecretTypeDropdownLabel.image])
-      .reduce(
+      .reduce<Record<string, BuildTimeSecret>>(
         (dictOfSecrets, secret) => {
           dictOfSecrets[secret.name] = secret;
           return dictOfSecrets;
@@ -208,6 +208,7 @@ const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({
       <SecretTypeSelector
         dropdownItems={dropdownItems}
         isDisabled={isEdit}
+        isEditMode={isEdit}
         onChange={(type) => {
           setCurrentType(type);
           void setValue(SecretForComponentOption.none);
@@ -282,7 +283,7 @@ const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({
           required={!isUsingExisting}
           name={'opaque.keyValues'}
           entries={defaultKeyValues}
-          disableRemoveAction={(values.opaque.keyValues.length ?? 1) === 1 || isUsingExisting}
+          disableRemoveAction={(values.opaque?.keyValues?.length ?? 1) === 1 || isUsingExisting}
           disableAddAction={isUsingExisting}
         />
       )}

@@ -181,7 +181,7 @@ describe('SecretFromSchema use-existing context', () => {
           secretName: 'cluster-secret',
           type: SecretTypeDropdownLabel.opaque,
           opaque: {
-            keyValues: [{ key: 'token', value: 'value', readOnlyKey: true, readOnlyValue: true }],
+            keyValues: [{ key: '', value: '', readOnlyKey: true, readOnlyValue: true }],
           },
         },
         { context: { isUsingExisting: true } },

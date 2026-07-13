@@ -1,25 +1,25 @@
 import { screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
-import KeyValueFileInputField, {
-  InternalKeyValueFileInputField,
-} from '../../../shared/components/formik-fields/key-value-file-input-field/KeyValueFileInputField';
-import { SecretType } from '../../../types';
-import { formikRenderer } from '../../../utils/test-utils';
 import {
   addSecretFormValues,
   existingSecrets,
   secretFormValues,
   secretFormValuesForSourceSecret,
-} from '../__data__/mock-secrets';
-import SecretForm from '../SecretForm';
+} from '~/components/Secrets/__data__/mock-secrets';
+import SecretForm from '~/components/Secrets/SecretForm';
+import KeyValueFileInputField, {
+  InternalKeyValueFileInputField,
+} from '~/shared/components/formik-fields/key-value-file-input-field/KeyValueFileInputField';
+import { SecretType } from '~/types';
+import { formikRenderer } from '~/utils/test-utils';
 
 jest.mock(
-  '../../../shared/components/formik-fields/key-value-file-input-field/KeyValueFileInputField',
+  '~/shared/components/formik-fields/key-value-file-input-field/KeyValueFileInputField',
   () => {
     return {
       __esModule: true,
       ...jest.requireActual(
-        '../../../shared/components/formik-fields/key-value-file-input-field/KeyValueFileInputField',
+        '~/shared/components/formik-fields/key-value-file-input-field/KeyValueFileInputField',
       ),
       default: jest.fn(),
     };
