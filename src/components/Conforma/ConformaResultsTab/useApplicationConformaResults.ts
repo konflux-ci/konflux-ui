@@ -25,7 +25,6 @@ import { buildConformaSecurityTaskRunWatchOptions } from './conforma-taskrun-que
 const NO_OP_REFRESH: ConformaRefreshState = {
   lastFetchedAt: 0,
   isRefreshing: false,
-  hasLiveUpdatesPaused: false,
   onRefresh: () => undefined,
 };
 
@@ -86,9 +85,11 @@ export const useApplicationConformaResults = (
     [namespace, applicationName],
   );
 
+  // Infinity staleTime: WS keeps data live; refresh button covers explicit refetch (vs global 30s).
   const [securityTaskRuns, taskRunsLoaded, taskRunsError, , , taskRunWatchMeta] = useTaskRunsV2(
     namespace,
     watchOptions ? { selector: watchOptions.selector } : undefined,
+    { staleTime: Infinity },
   );
 
   const { refetch: refetchTaskRuns } = taskRunWatchMeta;
@@ -100,15 +101,9 @@ export const useApplicationConformaResults = (
     (): ConformaRefreshState => ({
       lastFetchedAt: taskRunWatchMeta.dataUpdatedAt,
       isRefreshing: taskRunWatchMeta.isFetching,
-      hasLiveUpdatesPaused: taskRunWatchMeta.isWatchDegraded,
       onRefresh,
     }),
-    [
-      taskRunWatchMeta.dataUpdatedAt,
-      taskRunWatchMeta.isFetching,
-      taskRunWatchMeta.isWatchDegraded,
-      onRefresh,
-    ],
+    [taskRunWatchMeta.dataUpdatedAt, taskRunWatchMeta.isFetching, onRefresh],
   );
 
   const latestPerComponent = React.useMemo((): Map<string, TaskRunKind> => {

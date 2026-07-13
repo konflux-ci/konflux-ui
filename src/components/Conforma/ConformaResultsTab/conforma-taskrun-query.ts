@@ -25,7 +25,7 @@ export const buildConformaSecurityTaskRunWatchOptions = (
     matchExpressions: [
       {
         key: TektonResourceLabel.pipelineTask,
-        operator: 'In' as const,
+        operator: 'In',
         values: [EC_TASK, CONFORMA_TASK],
       },
     ],

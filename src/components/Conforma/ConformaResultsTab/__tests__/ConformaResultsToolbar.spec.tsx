@@ -29,7 +29,6 @@ const allResults: ConformaResultRow[] = [
 const makeRefresh = (overrides: Partial<ConformaRefreshState> = {}): ConformaRefreshState => ({
   lastFetchedAt: 0,
   isRefreshing: false,
-  hasLiveUpdatesPaused: false,
   onRefresh: jest.fn(),
   ...overrides,
 });
@@ -219,20 +218,5 @@ describe('ConformaResultsToolbar', () => {
     renderToolbar({ refresh: makeRefresh({ lastFetchedAt: 0 }) });
 
     expect(screen.queryByTestId('conforma-last-checked')).not.toBeInTheDocument();
-  });
-
-  it('shows the "Live updates paused" label when hasLiveUpdatesPaused is true', () => {
-    renderToolbar({ refresh: makeRefresh({ hasLiveUpdatesPaused: true }) });
-
-    expect(screen.getByTestId('conforma-live-updates-paused')).toBeInTheDocument();
-    expect(screen.getByTestId('conforma-live-updates-paused')).toHaveTextContent(
-      'Live updates paused',
-    );
-  });
-
-  it('does not show "Live updates paused" label when hasLiveUpdatesPaused is false', () => {
-    renderToolbar({ refresh: makeRefresh({ hasLiveUpdatesPaused: false }) });
-
-    expect(screen.queryByTestId('conforma-live-updates-paused')).not.toBeInTheDocument();
   });
 });

@@ -92,8 +92,6 @@ export type ConformaRefreshState = {
   lastFetchedAt: number;
   /** True while the TaskRun list query is actively re-fetching. */
   isRefreshing: boolean;
-  /** True when the WebSocket connection has degraded to polling after retries. */
-  hasLiveUpdatesPaused: boolean;
   /** Invalidates the TaskRun list query; log queries are unaffected. */
   onRefresh: () => void;
 };

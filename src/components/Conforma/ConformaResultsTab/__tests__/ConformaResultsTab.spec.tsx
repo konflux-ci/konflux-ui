@@ -32,7 +32,6 @@ const createMockRow = (overrides: Partial<ConformaResultRow> = {}): ConformaResu
 const noOpRefresh = {
   lastFetchedAt: 0,
   isRefreshing: false,
-  hasLiveUpdatesPaused: false,
   onRefresh: jest.fn(),
 };
 

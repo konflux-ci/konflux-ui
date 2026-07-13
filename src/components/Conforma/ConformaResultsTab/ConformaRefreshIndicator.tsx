@@ -1,7 +1,7 @@
 import * as React from 'react';
-import { Button, ButtonVariant, Flex, FlexItem, Label, Spinner, Text } from '@patternfly/react-core';
+import { Button, ButtonVariant, Content, Flex, FlexItem, Tooltip } from '@patternfly/react-core';
 import { SyncIcon } from '@patternfly/react-icons/dist/esm/icons/sync-icon';
-import { fromNow } from '~/shared/components/timestamp/datetime';
+import * as dateTime from '~/shared/components/timestamp/datetime';
 import type { ConformaRefreshState } from '~/types/conforma';
 
 const RELATIVE_TIME_INTERVAL_MS = 30_000;
@@ -16,7 +16,7 @@ const useRelativeTime = (epochMs: number): string => {
   }, [epochMs]);
 
   if (!epochMs) return '';
-  return fromNow(new Date(epochMs));
+  return dateTime.fromNow(new Date(epochMs));
 };
 
 type ConformaRefreshIndicatorProps = {
@@ -33,41 +33,34 @@ export const ConformaRefreshIndicator: React.FC<ConformaRefreshIndicatorProps> =
         spaceItems={{ default: 'spaceItemsSm' }}
         className="conforma-results-toolbar__refresh"
       >
-        {refresh.hasLiveUpdatesPaused && (
-          <FlexItem>
-            <Label color="orange" data-test="conforma-live-updates-paused">
-              Live updates paused
-            </Label>
-          </FlexItem>
-        )}
         {relativeTime && (
-          <FlexItem>
-            <Text
-              component="small"
-              className="conforma-results-toolbar__last-checked"
-              data-test="conforma-last-checked"
+          <FlexItem aria-live="polite">
+            <Tooltip
+              content={[
+                <span className="nowrap" key={refresh.lastFetchedAt}>
+                  {dateTime.utcDateTimeFormatter.format(new Date(refresh.lastFetchedAt))}
+                </span>,
+              ]}
             >
-              Last checked: {relativeTime}
-            </Text>
-          </FlexItem>
-        )}
-        {refresh.isRefreshing && (
-          <FlexItem>
-            <Spinner size="sm" aria-label="Refreshing Conforma results" />
+              <Content
+                component="small"
+                className="conforma-results-toolbar__last-checked"
+                data-test="conforma-last-checked"
+              >
+                Last checked: {relativeTime}
+              </Content>
+            </Tooltip>
           </FlexItem>
         )}
         <FlexItem>
           <Button
-            variant={ButtonVariant.link}
+            variant={ButtonVariant.plain}
             onClick={refresh.onRefresh}
             isDisabled={refresh.isRefreshing}
+            isLoading={refresh.isRefreshing}
+            spinnerAriaLabel="Refreshing Conforma results"
             aria-label="Refresh Conforma results"
             data-test="conforma-refresh-button"
-            className={
-              refresh.hasLiveUpdatesPaused
-                ? 'conforma-results-toolbar__refresh-button--highlighted'
-                : undefined
-            }
             icon={<SyncIcon />}
           >
             Refresh

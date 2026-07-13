@@ -146,6 +146,7 @@ describe('useTaskRunsV2', () => {
       null,
       null,
       { hasNextPage: false, isFetchingNextPage: false },
+      jest.fn(),
     ]);
   });
 
@@ -365,9 +366,10 @@ describe('useTaskRunsV2', () => {
       expect(nextPageProps.isFetchingNextPage).toBe(false);
     });
 
-    it('should only refetch cluster data when kubearchive is disabled', async () => {
+    it('should refetch cluster and tekton results data when kubearchive is disabled', async () => {
       const mockClusterRefetch = jest.fn().mockResolvedValue({ data: [] });
       const mockArchiveRefetch = jest.fn().mockResolvedValue({ data: { pages: [] } });
+      const mockTektonRefetch = jest.fn().mockResolvedValue({ data: { pages: [] } });
 
       useK8sWatchResourceMock.mockReturnValue({
         data: [mockTaskRun1],
@@ -387,6 +389,15 @@ describe('useTaskRunsV2', () => {
         refetch: mockArchiveRefetch,
       });
 
+      mockUseTRTaskRuns.mockReturnValue([
+        [],
+        true,
+        null,
+        null,
+        { hasNextPage: false, isFetchingNextPage: false },
+        mockTektonRefetch,
+      ]);
+
       const { result } = renderHookWithQueryClient('default');
 
       await waitFor(() => {
@@ -397,7 +408,27 @@ describe('useTaskRunsV2', () => {
       await watchMeta.refetch();
 
       expect(mockClusterRefetch).toHaveBeenCalledTimes(1);
+      expect(mockTektonRefetch).toHaveBeenCalledTimes(1);
       expect(mockArchiveRefetch).not.toHaveBeenCalled();
+    });
+
+    it('should forward numeric staleTime to the cluster watch', () => {
+      useK8sWatchResourceMock.mockReturnValue({
+        data: [mockTaskRun1],
+        isLoading: false,
+        error: null,
+      });
+
+      renderHook(() => useTaskRunsV2('default', undefined, { staleTime: Infinity }), {
+        wrapper: ({ children }) =>
+          React.createElement(QueryClientProvider, { client: queryClient }, children),
+      });
+
+      expect(useK8sWatchResourceMock).toHaveBeenCalledWith(
+        expect.any(Object),
+        expect.any(Object),
+        expect.objectContaining({ retry: false, staleTime: Infinity }),
+      );
     });
   });
 

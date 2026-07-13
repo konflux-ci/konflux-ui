@@ -1,4 +1,5 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
+import * as dateTime from '~/shared/components/timestamp/datetime';
 import type { ConformaRefreshState } from '~/types/conforma';
 import { ConformaRefreshIndicator } from '../ConformaRefreshIndicator';
 import '@testing-library/jest-dom';
@@ -6,7 +7,6 @@ import '@testing-library/jest-dom';
 const makeRefresh = (overrides: Partial<ConformaRefreshState> = {}): ConformaRefreshState => ({
   lastFetchedAt: 0,
   isRefreshing: false,
-  hasLiveUpdatesPaused: false,
   onRefresh: jest.fn(),
   ...overrides,
 });
@@ -24,21 +24,6 @@ describe('ConformaRefreshIndicator', () => {
     render(<ConformaRefreshIndicator refresh={makeRefresh({ lastFetchedAt: 0 })} />);
 
     expect(screen.queryByTestId('conforma-last-checked')).not.toBeInTheDocument();
-  });
-
-  it('renders the "Live updates paused" label when hasLiveUpdatesPaused is true', () => {
-    render(<ConformaRefreshIndicator refresh={makeRefresh({ hasLiveUpdatesPaused: true })} />);
-
-    expect(screen.getByTestId('conforma-live-updates-paused')).toBeInTheDocument();
-    expect(screen.getByTestId('conforma-live-updates-paused')).toHaveTextContent(
-      'Live updates paused',
-    );
-  });
-
-  it('does not render the "Live updates paused" label when hasLiveUpdatesPaused is false', () => {
-    render(<ConformaRefreshIndicator refresh={makeRefresh({ hasLiveUpdatesPaused: false })} />);
-
-    expect(screen.queryByTestId('conforma-live-updates-paused')).not.toBeInTheDocument();
   });
 
   it('renders a spinner when isRefreshing is true', () => {
@@ -60,6 +45,40 @@ describe('ConformaRefreshIndicator', () => {
     fireEvent.click(screen.getByTestId('conforma-refresh-button'));
 
     expect(onRefresh).toHaveBeenCalledTimes(1);
+  });
+
+  it('disables the refresh button when isRefreshing is true', () => {
+    render(<ConformaRefreshIndicator refresh={makeRefresh({ isRefreshing: true })} />);
+
+    expect(screen.getByTestId('conforma-refresh-button')).toBeDisabled();
+  });
+
+  it('does not disable the refresh button when isRefreshing is false', () => {
+    render(<ConformaRefreshIndicator refresh={makeRefresh({ isRefreshing: false })} />);
+
+    expect(screen.getByTestId('conforma-refresh-button')).not.toBeDisabled();
+  });
+
+  it('shows the absolute UTC timestamp in a tooltip on hover over the "last checked" text', async () => {
+    jest.useFakeTimers();
+    try {
+      const twoMinutesAgo = Date.now() - 2 * 60 * 1000;
+      render(
+        <ConformaRefreshIndicator refresh={makeRefresh({ lastFetchedAt: twoMinutesAgo })} />,
+      );
+
+      const trigger = screen.getByTestId('conforma-last-checked');
+      const expectedAbsoluteTime = dateTime.utcDateTimeFormatter.format(new Date(twoMinutesAgo));
+
+      fireEvent.mouseEnter(trigger);
+      act(() => {
+        jest.advanceTimersByTime(300);
+      });
+
+      expect(await screen.findByText(expectedAbsoluteTime)).toBeInTheDocument();
+    } finally {
+      jest.useRealTimers();
+    }
   });
 
   it('is wrapped in React.memo so it is a memoized component type', () => {

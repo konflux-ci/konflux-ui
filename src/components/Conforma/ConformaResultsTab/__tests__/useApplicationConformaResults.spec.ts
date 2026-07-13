@@ -47,7 +47,6 @@ const mockResolveConforma = resolveConformaResultFromTaskRun as jest.Mock;
 const DEFAULT_WATCH_META = {
   dataUpdatedAt: 1000,
   isFetching: false,
-  isWatchDegraded: false,
   refetch: jest.fn(),
 };
 
@@ -213,7 +212,6 @@ describe('useApplicationConformaResults', () => {
       refresh: expect.objectContaining({
         lastFetchedAt: 0,
         isRefreshing: false,
-        hasLiveUpdatesPaused: false,
         onRefresh: expect.any(Function),
       }),
     });
@@ -605,25 +603,6 @@ describe('useApplicationConformaResults', () => {
     expect(result.current.refresh.isRefreshing).toBe(true);
   });
 
-  it('exposes refresh.hasLiveUpdatesPaused from useTaskRunsV2 watch metadata', async () => {
-    const { taskRuns } = setupTaskRunPipeline();
-    mockUseTaskRunsV2.mockReturnValue(
-      createTaskRunsV2Return(taskRuns, true, undefined, {
-        ...DEFAULT_WATCH_META,
-        isWatchDegraded: true,
-      }),
-    );
-    mockResolveConforma.mockResolvedValue(mockConformaResult);
-
-    const { result } = renderHook(() => useApplicationConformaResults('test-app'), {
-      wrapper: createWrapper(),
-    });
-
-    await flushEffects();
-
-    expect(result.current.refresh.hasLiveUpdatesPaused).toBe(true);
-  });
-
   it('refresh.onRefresh calls useTaskRunsV2 watch metadata refetch', async () => {
     const refetch = jest.fn();
     setupTaskRunPipeline();
@@ -745,6 +724,7 @@ describe('useApplicationConformaResults', () => {
           ],
         }),
       }),
+      { staleTime: Infinity },
     );
   });
 

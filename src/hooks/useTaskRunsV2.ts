@@ -20,7 +20,6 @@ import { GetNextPage, NextPageProps, useTRTaskRuns } from './useTektonResults';
 export type TaskRunWatchMeta = {
   dataUpdatedAt: number;
   isFetching: boolean;
-  isWatchDegraded: boolean;
   refetch: () => Promise<unknown>;
 };
 
@@ -65,9 +64,12 @@ export const useTaskRunsV2 = (
     error: clusterError,
     dataUpdatedAt,
     isFetching,
-    isWatchDegraded,
     refetch,
-  } = useK8sWatchResource<TaskRunKind[]>(watchOptions, TaskRunModel, { retry: false });
+  } = useK8sWatchResource<TaskRunKind[]>(watchOptions, TaskRunModel, {
+    retry: false,
+    // Some callers pass a function staleTime for infinite queries; only numbers apply here.
+    ...(typeof queryOptions?.staleTime === 'number' ? { staleTime: queryOptions.staleTime } : {}),
+  });
 
   const etcdRuns = React.useMemo((): TaskRunKind[] => {
     if (clusterLoading || clusterError || !clusterResources) {
@@ -119,8 +121,14 @@ export const useTaskRunsV2 = (
     enableKubearchive && !!namespace && needsMoreData && (queryOptions?.enabled ?? true);
 
   // tekton historical data - only when we need more data
-  const [tektonTaskRuns, tektonLoaded, tektonError, tektonGetNextPage, tektonNextPageProps] =
-    useTRTaskRuns(
+  const [
+    tektonTaskRuns,
+    tektonLoaded,
+    tektonError,
+    tektonGetNextPage,
+    tektonNextPageProps,
+    tektonRefetch,
+  ] = useTRTaskRuns(
       shouldQueryTekton ? namespace : null,
       {
         selector: options?.selector,
@@ -148,10 +156,10 @@ export const useTaskRunsV2 = (
   const composedRefetch = React.useCallback(async () => {
     const results = await Promise.all([
       refetch(),
-      enableKubearchive ? kubearchiveRefetch() : Promise.resolve(),
+      enableKubearchive ? kubearchiveRefetch() : tektonRefetch(),
     ]);
     return results[0];
-  }, [refetch, enableKubearchive, kubearchiveRefetch]);
+  }, [refetch, enableKubearchive, kubearchiveRefetch, tektonRefetch]);
 
   // Combine and return data based on feature flag
   return React.useMemo(() => {
@@ -210,7 +218,6 @@ export const useTaskRunsV2 = (
     const watchMeta: TaskRunWatchMeta = {
       dataUpdatedAt,
       isFetching,
-      isWatchDegraded,
       refetch: composedRefetch,
     };
 
@@ -230,7 +237,6 @@ export const useTaskRunsV2 = (
     clusterError,
     dataUpdatedAt,
     isFetching,
-    isWatchDegraded,
     composedRefetch,
     tektonTaskRuns,
     shouldQueryTekton,
