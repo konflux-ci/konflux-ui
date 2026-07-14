@@ -1,8 +1,14 @@
+import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { fetchResourceWithK8sAndKubeArchive } from '~/kubearchive/resource-utils';
 import { PipelineRunModel, TaskRunModel } from '~/models';
 import { PipelineRunKind, TaskRunKind } from '~/types';
 import { ResourceSource } from '~/types/k8s';
-import { QueryPipelineRunWithKubearchive, QueryTaskRunWithKubearchive } from '../pipelinerun-utils';
+import {
+  getSourceUrl,
+  QueryPipelineRunWithKubearchive,
+  QueryTaskRunWithKubearchive,
+  stripQueryStringParams,
+} from '../pipelinerun-utils';
 
 jest.mock('~/kubearchive/resource-utils', () => ({
   fetchResourceWithK8sAndKubeArchive: jest.fn(),
@@ -13,6 +19,68 @@ const fetchResourceWithK8sAndKubeArchiveMock = fetchResourceWithK8sAndKubeArchiv
 describe('pipelinerun-utils', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+  });
+
+  describe('stripQueryStringParams', () => {
+    it('should strip query params from a valid URL', () => {
+      expect(stripQueryStringParams('https://github.com/org/repo?token=abc')).toBe(
+        'https://github.com/org/repo',
+      );
+    });
+
+    it('should return the URL unchanged when there are no query params', () => {
+      expect(stripQueryStringParams('https://github.com/org/repo')).toBe(
+        'https://github.com/org/repo',
+      );
+    });
+
+    it('should return undefined for an empty string', () => {
+      expect(stripQueryStringParams('')).toBeUndefined();
+    });
+
+    it('should return undefined for an invalid URL', () => {
+      expect(stripQueryStringParams('not-a-url')).toBeUndefined();
+    });
+  });
+
+  describe('getSourceUrl', () => {
+    it('should return undefined when pipelineRun is undefined', () => {
+      expect(getSourceUrl(undefined)).toBeUndefined();
+    });
+
+    it('should prefer PAC annotation over build service annotation', () => {
+      const plr = {
+        metadata: {
+          annotations: {
+            [PipelineRunLabel.COMMIT_FULL_REPO_URL_ANNOTATION]: 'https://github.com/pac/repo?a=1',
+            [PipelineRunLabel.BUILD_SERVICE_REPO_ANNOTATION]: 'https://github.com/build/repo?b=2',
+          },
+        },
+      } as unknown as PipelineRunKind;
+      expect(getSourceUrl(plr)).toBe('https://github.com/pac/repo');
+    });
+
+    it('should fall back to build service annotation', () => {
+      const plr = {
+        metadata: {
+          annotations: {
+            [PipelineRunLabel.BUILD_SERVICE_REPO_ANNOTATION]: 'https://github.com/build/repo?b=2',
+          },
+        },
+      } as unknown as PipelineRunKind;
+      expect(getSourceUrl(plr)).toBe('https://github.com/build/repo');
+    });
+
+    it('should return undefined when annotation is an invalid URL', () => {
+      const plr = {
+        metadata: {
+          annotations: {
+            [PipelineRunLabel.COMMIT_FULL_REPO_URL_ANNOTATION]: 'not-a-url',
+          },
+        },
+      } as unknown as PipelineRunKind;
+      expect(getSourceUrl(plr)).toBeUndefined();
+    });
   });
 
   describe('QueryPipelineRunWithKubearchive', () => {

@@ -17,9 +17,23 @@ import ScanDescriptionListGroup from '../tabs/ScanDescriptionListGroup';
 type Props = {
   taskRun?: TaskRunKind;
   status: runStatus;
+  description?: string;
 };
 
-const TaskRunDetails: React.FC<React.PropsWithChildren<Props>> = ({ taskRun, status }) => {
+const TaskDescriptionGroup: React.FC<{ content: string }> = ({ content }) => (
+  <DescriptionListGroup>
+    <DescriptionListTerm>Description</DescriptionListTerm>
+    <DescriptionListDescription>
+      <SyncMarkdownView content={content} inline />
+    </DescriptionListDescription>
+  </DescriptionListGroup>
+);
+
+const TaskRunDetails: React.FC<React.PropsWithChildren<Props>> = ({
+  taskRun,
+  status,
+  description,
+}) => {
   const results = isTaskV1Beta1(taskRun) ? taskRun?.status?.taskResults : taskRun?.status?.results;
   const specParams = taskRun?.spec?.params;
   return (
@@ -43,17 +57,19 @@ const TaskRunDetails: React.FC<React.PropsWithChildren<Props>> = ({ taskRun, sta
             </DescriptionListGroup>
           </DescriptionList>
           <DescriptionList className="pf-v6-u-mt-lg">
-            <DescriptionListGroup>
-              <DescriptionListTerm>Description</DescriptionListTerm>
-              <DescriptionListDescription>
-                <SyncMarkdownView content={taskRun?.status?.taskSpec?.description || '-'} inline />
-              </DescriptionListDescription>
-            </DescriptionListGroup>
+            <TaskDescriptionGroup content={taskRun?.status?.taskSpec?.description || '-'} />
             <ScanDescriptionListGroup taskRuns={[taskRun]} hideIfNotFound />
           </DescriptionList>
         </>
       ) : (
-        'This task was skipped.'
+        <>
+          <p>This task was skipped.</p>
+          {description?.trim() ? (
+            <DescriptionList className="pf-v6-u-mt-lg">
+              <TaskDescriptionGroup content={description} />
+            </DescriptionList>
+          ) : null}
+        </>
       )}
       {results?.length ? (
         <>

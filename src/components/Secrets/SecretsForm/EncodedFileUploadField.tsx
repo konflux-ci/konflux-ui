@@ -64,7 +64,9 @@ const EncodedFileUploadField: React.FC<React.PropsWithChildren<EncodedFileUpload
         setFilename(file.name);
         filenameRef.current = file.name;
       }}
-      onBlur={() => setTouched(true)}
+      onBlur={() => {
+        void setTouched(true);
+      }}
       onTextChange={(_ev, updated) => onChange(updated)}
       onDataChange={(_ev, updated) => onChange(updated, true)}
       onClearClick={() => {

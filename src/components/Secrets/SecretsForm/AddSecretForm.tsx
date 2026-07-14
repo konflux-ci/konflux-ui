@@ -1,11 +1,11 @@
 import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Form, PageSection } from '@patternfly/react-core';
-import { logger } from '@sentry/react';
 import { Formik } from 'formik';
 import { isEmpty } from 'lodash-es';
 import PageLayout from '~/components/PageLayout/PageLayout';
 import { LEARN_MORE_ABOUT_SECRETS_CREATION } from '~/consts/documentation';
+import { logger } from '~/monitoring/logger';
 import { SECRET_LIST_PATH } from '~/routes/paths';
 import FormFooter from '~/shared/components/form-components/FormFooter';
 import ExternalLink from '~/shared/components/links/ExternalLink';

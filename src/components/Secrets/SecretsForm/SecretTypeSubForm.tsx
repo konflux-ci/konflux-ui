@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
 import { useField, useFormikContext } from 'formik';
 import { SecretLinkOptionLabels } from '~/consts/secrets';
+import { DropdownItemObject } from '~/shared/components/dropdown';
 import { InputField } from '~/shared/components/formik-base';
+import KeyValueFileInputField from '~/shared/components/formik-fields/key-value-input-field/KeyValueInputField';
+import SelectInputField from '~/shared/components/formik-fields/SelectInputField';
+import { AddSecretFormValues, SecretFor, SecretTypeDropdownLabel, SourceSecretType } from '~/types';
 import {
   getSupportedPartnerTaskKeyValuePairs,
   getSupportedPartnerTaskSecrets,
@@ -9,15 +13,6 @@ import {
   isPartnerTaskAvailable,
   SecretForComponentOption,
 } from '~/utils/secrets/secret-utils';
-import { DropdownItemObject } from '../../../shared/components/dropdown';
-import KeyValueFileInputField from '../../../shared/components/formik-fields/key-value-input-field/KeyValueInputField';
-import SelectInputField from '../../../shared/components/formik-fields/SelectInputField';
-import {
-  AddSecretFormValues,
-  SecretFor,
-  SecretTypeDropdownLabel,
-  SourceSecretType,
-} from '../../../types';
 import SecretTypeSelector from '../SecretTypeSelector';
 import { ImagePullSecretForm } from './ImagePullSecretForm';
 import { KeyValueSecretForm } from './KeyValueSecretForm';
@@ -81,6 +76,9 @@ export const SecretTypeSubForm: React.FC<React.PropsWithChildren<{ isEditMode?: 
 
   const selectedForm = React.useMemo(() => {
     const form = secretTypes.find((t) => t.label === currentType);
+    if (form?.key === 'key-value') {
+      form.component = <KeyValueSecretForm />;
+    }
     if (form?.key === 'source') {
       form.component = (
         <SourceSecretForm isEditMode={isEditMode} onAuthTypeChange={setCurrentAuthType} />

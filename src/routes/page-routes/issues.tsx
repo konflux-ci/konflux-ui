@@ -1,5 +1,5 @@
 import { issuesPageLoader } from '~/components/Issues';
-import { ensureFeatureFlagOnLoader } from '~/feature-flags/utils';
+import { ensureConditionOnLoader } from '~/feature-flags/utils';
 import { ISSUES_PATH } from '../paths';
 import { RouteErrorBoundry } from '../RouteErrorBoundary';
 
@@ -8,7 +8,9 @@ const issuesRoutes = [
   {
     path: ISSUES_PATH.path,
     lazy: async () => {
-      ensureFeatureFlagOnLoader('issues-dashboard');
+      await ensureConditionOnLoader(['isKiteServiceEnabled'], {
+        errorMessage: 'Issues dashboard is unavailable on the cluster.',
+      });
       const { default: Component } = await import(
         '~/components/Issues/Issues' /* webpackChunkName: "issues" */
       );

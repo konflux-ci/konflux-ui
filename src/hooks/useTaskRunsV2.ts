@@ -5,6 +5,7 @@ import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { TQueryInfiniteOptions } from '~/k8s/query/type';
 import { WatchK8sResource } from '~/types/k8s';
 import { has404Error } from '~/utils/common-utils';
+import { sortTaskRunsByTime } from '~/utils/pipeline-utils';
 import { EQ, TektonResultsOptions } from '~/utils/tekton-results';
 import { useK8sWatchResource } from '../k8s';
 import {
@@ -14,7 +15,6 @@ import {
 import { TaskRunGroupVersionKind, TaskRunModel } from '../models';
 import { TaskRunKind, TektonResourceLabel } from '../types';
 import { createKubearchiveWatchResource } from '../utils/kubearchive-filter-transform';
-import { sortTaskRunsByTime } from './useTaskRuns';
 import { GetNextPage, NextPageProps, useTRTaskRuns } from './useTektonResults';
 
 /**

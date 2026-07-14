@@ -20,21 +20,26 @@ const showKubearchive = useIsOnFeatureFlag('kubearchive-integration');
 // ❌ Flag switch is disabled if KubeArchive isn't installed (user can't enable it)
 ```
 
-### Two main use cases:
+### Three main use cases:
 
 1. **Guarded feature flags**: Prevent users from enabling flags when conditions aren't met
 2. **Independent conditions**: Show/hide UI based on runtime conditions without involving feature flags
+3. **Route guards**: Block navigation to stable pages when a required service is unavailable (503 → `ServiceUnavailablePage`)
 
-| Use Case                   | When to Use                                            | Example                                                        |
-| -------------------------- | ------------------------------------------------------ | -------------------------------------------------------------- |
-| **Guarded Flags**          | Feature depends on external service/environment        | KubeArchive integration only works if KubeArchive is installed |
-| **Independent Conditions** | UI needs to adapt to environment without feature flags | Show "staging environment" banner, hide unavailable features   |
+| Use Case                   | When to Use                                            | Example                                                         |
+| -------------------------- | ------------------------------------------------------ | --------------------------------------------------------------- |
+| **Guarded Flags**          | Feature depends on external service/environment        | KubeArchive integration only works if KubeArchive is installed  |
+| **Independent Conditions** | UI needs to adapt to environment without feature flags | Show "staging environment" banner, hide unavailable features    |
+| **Route Guards**           | Stable page requires a cluster service                 | Issues page requires Kite (`ensureConditionOnLoader` → **503**) |
+
+See [When to use 503](#when-to-use-503-service-unavailable) for how this differs from **404** and other condition patterns.
 
 ### Already available conditions
 
 ```ts
 // These are already set up for you:
 'isKubearchiveEnabled'; // → true if KubeArchive service is available
+'isKiteServiceEnabled'; // → true if Kite plugin health check passes
 'isStagingCluster'; // → true if running in staging environment
 ```
 
@@ -285,6 +290,147 @@ const MyComponent = () => {
 
 ---
 
+## Imperative Condition Checks with `ensureConditionIsOn`
+
+React hooks (`createConditionsHook`) are the right tool inside components. For **non-React imperative code** — data hooks, fetch helpers, utility modules — use `ensureConditionIsOn` from `src/feature-flags/utils.ts`.
+
+It returns a **predicate function** that checks whether every listed condition is currently `true` in `FeatureFlagsStore.conditions`. It does **not** throw; the caller decides how to handle a `false` result.
+
+```ts
+import { ensureConditionIsOn } from '~/feature-flags/utils';
+
+// Factory: call the returned function when you need the current snapshot
+export const isKiteServiceEnabled = ensureConditionIsOn(['isKiteServiceEnabled']);
+
+// Usage in imperative code
+if (isKiteServiceEnabled()) {
+  await fetchIssues();
+}
+```
+
+This pattern is used in domain `conditional-checks.ts` modules alongside their React hook counterparts:
+
+```ts
+// src/kite/conditional-checks.ts
+
+export const checkIfKiteServiceIsEnabled = async () => {
+  const response = await commonFetch('/api/v1/health/', { pathPrefix: 'plugins/kite' });
+  return response.ok;
+};
+
+// React component — reactive, re-renders when conditions change
+export const useIsKiteServiceEnabled = createConditionsHook(['isKiteServiceEnabled']);
+
+// Non-React code — reads the cached snapshot on demand
+export const isKiteServiceEnabled = ensureConditionIsOn(['isKiteServiceEnabled']);
+```
+
+Conditions referenced by feature-flag guards are evaluated at app startup via `FeatureFlagsStore.ensureConditions(getAllConditionsKeysFromFlags())` in `src/main.tsx`. Independent conditions such as `isKiteServiceEnabled` are evaluated when `useIsKiteServiceEnabled()` mounts or when `FeatureFlagsStore.ensureConditions(['isKiteServiceEnabled'])` is called.
+
+**Multiple conditions (AND logic):**
+
+```ts
+const isKiteReady = ensureConditionIsOn(['isKiteServiceEnabled', 'isStagingCluster']);
+
+if (isKiteReady()) {
+  // both conditions are true
+}
+```
+
+---
+
+## When to use 503 (Service Unavailable)
+
+HTTP **503** means: _this page exists in Konflux, but something required to run it is missing or down on this cluster right now._
+
+Use `ensureConditionOnLoader` (which throws a **503** `Response`) when **all** of the following apply:
+
+| Criterion                                                     | Why                                                                                                          |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| The route is **stable**                                       | The page is a normal, shipped part of the product — not experimental or behind a feature flag.               |
+| The page **depends on an optional cluster service or plugin** | A condition such as `isKiteServiceEnabled` or `isKubearchiveEnabled` checks that the backend is reachable.   |
+| You want to **block navigation at the route**                 | The loader/`lazy()` should stop before the page bundle loads when the service is unavailable.                |
+| You want a **dedicated unavailable page**                     | `RouteErrorBoundry` renders `ServiceUnavailablePage` with a clear, page-specific message via `errorMessage`. |
+
+**Good fit:** The Issues dashboard is stable, but only works when the Kite plugin is installed and healthy.
+
+**Do not use 503 when:**
+
+| Instead use…                                    | When…                                                                                                                                                                                      |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `ensureFeatureFlagOnLoader` (**404**)           | The route is **experimental or WIP** and gated by a feature flag. A missing flag means "this page doesn't exist yet", not "a service is down". See [feature-flags.md](./feature-flags.md). |
+| `createConditionsHook` or `ensureConditionIsOn` | You only need to **adapt UI inside a page** (hide a section, show inline fallback) without blocking the whole route.                                                                       |
+| Guarded feature flags                           | The feature is still **flag-controlled** and should be disabled in the dev panel when a condition fails — no route guard needed.                                                           |
+| RBAC / access checks                            | The user lacks permission — that is **403**, handled separately by `RouteErrorBoundry`.                                                                                                    |
+
+**503 vs 404 at a glance:**
+
+|                | **503** (`ensureConditionOnLoader`)          | **404** (`ensureFeatureFlagOnLoader`) |
+| -------------- | -------------------------------------------- | ------------------------------------- |
+| **Meaning**    | Page exists; required service unavailable    | Page not enabled / not released       |
+| **Route type** | Stable                                       | Experimental (feature flag)           |
+| **User sees**  | `ServiceUnavailablePage` with custom message | Not-found style empty state           |
+| **Example**    | Issues page when Kite is down                | Pipeline runs page when flag is off   |
+
+---
+
+## Route Guards with `ensureConditionOnLoader`
+
+For **React Router loaders and `lazy()` functions**, use `ensureConditionOnLoader` from `src/feature-flags/utils.ts`. It is a non-hook utility safe to call in loaders.
+
+`ensureConditionOnLoader` is **async** and runs two steps:
+
+1. `await FeatureFlagsStore.ensureConditions(keys)` — evaluate and cache the listed conditions.
+2. Check the snapshot via `ensureConditionIsOn(keys)` — if any key is `false` or missing, throw a **503** `Response` whose **body** is the error message (defaults to `'Service Unavailable'`).
+
+React Router exposes that body as `error.data` in the route's `errorElement`. `RouteErrorBoundry` passes it to `ServiceUnavailablePage` as the `errorMessage` prop.
+
+See [When to use 503](#when-to-use-503-service-unavailable) for when this is the right choice vs **404** or in-component condition checks.
+
+```ts
+import { ensureConditionOnLoader } from '~/feature-flags/utils';
+import { ISSUES_PATH } from '../paths';
+import { RouteErrorBoundry } from '../RouteErrorBoundary';
+
+const issuesRoutes = [
+  {
+    path: ISSUES_PATH.path,
+    lazy: async () => {
+      await ensureConditionOnLoader(['isKiteServiceEnabled'], {
+        errorMessage: 'Issues dashboard is unavailable on the cluster.',
+      });
+      const { default: Component } = await import('~/components/Issues/Issues');
+      return { Component };
+    },
+    errorElement: <RouteErrorBoundry />,
+    children: [/* ... */],
+  },
+];
+```
+
+**Signature:**
+
+```ts
+ensureConditionOnLoader(
+  keys: ConditionKey[],
+  options?: { errorMessage?: string },
+): Promise<void>
+```
+
+- Accepts one or more `ConditionKey` values — **all** must be `true` (AND logic, same as `ensureConditionIsOn`).
+- Optional `errorMessage` sets the **503 response body** shown on `ServiceUnavailablePage`. Omit it to use the default `'Service Unavailable'`.
+- Unlike `ensureConditionIsOn`, this utility **evaluates conditions first**, so it is appropriate for route entry where a stale or missing snapshot should block navigation.
+- Pair with `<RouteErrorBoundry />` without props — **503** errors render `ServiceUnavailablePage` with the message from the thrown response.
+
+**Compared to `ensureConditionIsOn`:**
+
+| Utility                   | Context                                | On failure                                |
+| ------------------------- | -------------------------------------- | ----------------------------------------- |
+| `ensureConditionIsOn`     | Imperative code (hooks, fetch helpers) | Returns `false` — caller decides          |
+| `ensureConditionOnLoader` | Route `loader` / `lazy()`              | Throws **503** → `ServiceUnavailablePage` |
+
+---
+
 ## Debugging & Troubleshooting
 
 ### My condition isn't working
@@ -388,9 +534,36 @@ const conditions = useMyConditions(); // { myCondition: boolean }
 {conditions.myCondition ? <AvailableFeature /> : <UnavailableMessage />}
 ```
 
+### Imperative condition checks (non-React):
+
+```ts
+import { ensureConditionIsOn } from '~/feature-flags/utils';
+
+const isKubeArchiveEnabled = ensureConditionIsOn(['isKubearchiveEnabled']);
+
+if (isKubeArchiveEnabled()) {
+  // condition snapshot is true
+}
+```
+
+### Route guards (loaders/lazy):
+
+```ts
+// Stable route + optional cluster service → 503 + ServiceUnavailablePage
+import { ensureConditionOnLoader } from '~/feature-flags/utils';
+
+await ensureConditionOnLoader(['isKiteServiceEnabled'], {
+  errorMessage: 'Issues dashboard is unavailable on the cluster.',
+});
+// errorElement: <RouteErrorBoundry /> → ServiceUnavailablePage on 503 (message from response body)
+```
+
+For experimental routes behind a feature flag, use `ensureFeatureFlagOnLoader` instead (**404** — see [feature-flags.md](./feature-flags.md)).
+
 ### Available conditions:
 
-- `'isKubearchiveEnabled'` - KubeArchive service available
-- `'isStagingCluster'` - Running in staging environment
+- `'isKubearchiveEnabled'` — KubeArchive service available
+- `'isKiteServiceEnabled'` — Kite plugin health check passes (used by the Issues route)
+- `'isStagingCluster'` — Running in staging environment
 
 That's it! You now know everything you need to use conditions
