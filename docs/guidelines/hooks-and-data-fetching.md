@@ -104,6 +104,77 @@ const { data, isLoading, error } = useK8sWatchResource<PipelineRunKind[]>(
 );
 ```
 
+#### Pattern 7: Metadata-only fetch via Table API (security-sensitive resources)
+
+For security-sensitive resources like Secrets, where transferring `data` or `stringData` fields over the network is undesirable by default, use the Kubernetes Table API. This pattern fetches resource metadata and printed columns (e.g., secret `type`) without sensitive payload fields.
+
+**When to use:** Any resource where the default representation includes sensitive fields that should not be transferred unless explicitly requested. Currently used for Secrets; the pattern applies to any resource supporting the Table content negotiation.
+
+**How it works:**
+
+1. **Custom Accept header** -- `SECRET_TABLE_K8S_FETCH_OPTIONS` sets `Accept: application/json;as=Table;v=v1;g=meta.k8s.io`, which tells the API server to return a `meta.k8s.io/v1 Table` instead of the full resource JSON. The Table response includes `metadata` and printed columns (Name, Type, etc.) but omits `data`/`stringData`.
+
+2. **Separate React Query cache key** -- A `K8S_QUERY_KEY_SECRET_TABLE` suffix (`'secret-table-format'`) is appended to the standard query key so Table-format queries never share cache entries with full-JSON queries. This prevents a full secret fetch from polluting the metadata-only cache or vice versa.
+
+3. **`select` function to parse the Table response** -- `selectSecretList` / `selectSecretMetadata` transform the `K8sTable` response into `SecretKind[]` or `SecretKind | undefined`, mapping column cells and embedded partial objects back into the standard resource shape (with `data: undefined`).
+
+**Canonical examples:**
+
+```ts
+// List secrets without sensitive data (metadata + type only)
+const [secrets, loaded, error] = useSecrets(namespace, false, {
+  metadataOnly: true,
+});
+
+// Single secret metadata by name
+const [secret, loaded, error] = useSecretMetadata(namespace, secretName);
+```
+
+Both hooks call `useK8sWatchResource` with overridden `queryKey`, `queryFn`, and `select` options, plus `SECRET_TABLE_K8S_FETCH_OPTIONS` as the fetch options argument. Watch is disabled for Table queries (the API server does not support watch with Table content negotiation).
+
+**Prefetch query builder:**
+
+For route-level prefetching or imperative cache priming, use `K8sQuerySecretListTableItems` from `~/utils/secrets/secret-table-query`:
+
+```ts
+import { K8sQuerySecretListTableItems } from '~/utils/secrets/secret-table-query';
+
+// Prefetch secret metadata into the React Query cache
+await K8sQuerySecretListTableItems(namespace);
+```
+
+**Key files:**
+
+| File | Purpose |
+|---|---|
+| `src/k8s/consts/k8s-accept.ts` | `K8S_ACCEPT_TABLE` header value, `K8S_QUERY_KEY_SECRET_TABLE` cache key suffix |
+| `src/utils/secrets/secret-table-utils.ts` | `SECRET_TABLE_K8S_FETCH_OPTIONS`, `parseSecretTableToSecretKinds`, `selectSecretList`, `selectSecretMetadata`, `fetchK8sSecretTableList` |
+| `src/utils/secrets/secret-table-query.ts` | `createSecretListTableQueryOptions`, `K8sQuerySecretListTableItems` (prefetch) |
+| `src/hooks/useSecrets.ts` | `useSecrets` with `metadataOnly` option |
+| `src/hooks/useSecretMetadata.ts` | `useSecretMetadata` single-resource hook |
+
+**Reveal/hide pattern for on-demand sensitive data:**
+
+When editing a secret, the user may need to see or modify sensitive fields. The `EditSecretSensitiveContextProvider` manages this lifecycle:
+
+1. The edit form initially loads only metadata via `useSecretMetadata` (no `data`/`stringData`).
+2. When the user clicks "Reveal", `requestFullSecret()` performs a one-shot `fetchFullSecret` call (standard JSON, not Table API) and stores the result in local React state -- not in React Query cache.
+3. Full secret data is held in component state (`fullSecret`) and never written to the query cache, minimizing the window where sensitive data is in memory.
+4. On tab switch (`visibilitychange` event), `clearFullSecretAndSensitiveFields()` automatically drops the full secret from state and clears all sensitive Formik fields (passwords, SSH keys, docker configs).
+5. On navigation away or form reset, `clearSensitiveMemory()` is called to null out the stored secret.
+
+```ts
+// Context value provided by EditSecretSensitiveContextProvider
+type SecretEditSensitiveContextValue = {
+  requestFullSecret: () => Promise<SecretKind | undefined>;
+  clearFullSecretAndSensitiveFields: () => void;
+  fullSecret: SecretKind | null;
+  isLoadingFullSecret: boolean;
+};
+```
+
+Consumers use `useOptionalSecretEditSensitive()` to access the context, and `useAreSecretSensitiveFieldsHidden()` to conditionally render reveal/hide UI.
+
 ### Building Custom Hooks
 
 Every domain hook wrapping `useK8sWatchResource` follows a consistent pattern:
@@ -391,6 +462,7 @@ const [visibleColumns, setVisibleColumns] = useVisibleColumns(
 | Data Type | Tool | Location |
 |---|---|---|
 | K8s resources (live) | `useK8sWatchResource` | `src/k8s/hooks/` |
+| K8s metadata-only (Table API) | `useSecrets({ metadataOnly })` / `useSecretMetadata` | `src/hooks/` |
 | K8s resources (archived) | `useK8sAndKarchResources` | `src/hooks/` |
 | REST API data | `useQuery` / `useInfiniteQuery` | `@tanstack/react-query` |
 | Mutations | `K8sQueryCreateResource` etc. | `src/k8s/query/fetch.ts` |

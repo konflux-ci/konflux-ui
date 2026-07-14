@@ -49,5 +49,7 @@ if [ "${SKIP_PROTECTED_PATH_CHECK:-}" != "1" ]; then
         check_path "$path2"
         ;;
     esac
-  done < <(git diff --cached --name-status --diff-filter=DR)
+  done <<EOF
+$(git diff --cached --name-status --diff-filter=DR)
+EOF
 fi

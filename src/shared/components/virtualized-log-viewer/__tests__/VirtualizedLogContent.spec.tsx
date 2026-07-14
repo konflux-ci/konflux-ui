@@ -1,8 +1,10 @@
-import { screen } from '@testing-library/react';
+import { fireEvent, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import Prism from 'prismjs';
 import { renderWithQueryClientAndRouter } from '~/unit-test-utils/rendering-utils';
+import { singleLogSection } from '../log-viewer-utils';
 import registerLogSyntax from '../refractor-log';
+import type { LogSection } from '../types';
 import { VirtualizedLogContent } from '../VirtualizedLogContent';
 
 // Register the log language
@@ -37,7 +39,7 @@ jest.mock('lodash-es', () => ({
 describe('VirtualizedLogContent Integration Tests', () => {
   const mockData = 'line 1\nline 2\nline 3';
   const defaultProps = {
-    sections: [{ containerName: '', data: mockData }],
+    sections: [singleLogSection(mockData)],
     height: 600,
     width: '100%',
   };
@@ -116,12 +118,7 @@ describe('VirtualizedLogContent Integration Tests', () => {
 
     it('should efficiently handle large datasets with virtualization', () => {
       const longData = Array.from({ length: 1000 }, (_, i) => `line ${i + 1}`).join('\n');
-      renderWithQueryClientAndRouter(
-        <VirtualizedLogContent
-          {...defaultProps}
-          sections={[{ containerName: '', data: longData }]}
-        />,
-      );
+      renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} sections={[singleLogSection(longData)]} />);
 
       const items = document.querySelectorAll('.pf-v5-c-log-viewer__list-item');
       // Should only render visible items, not all 1000
@@ -137,7 +134,7 @@ describe('VirtualizedLogContent Integration Tests', () => {
       );
 
       // Text may be split across multiple elements due to tokenization
-      const logContent = container.querySelector('.log-content__content-column');
+      const logContent = container.querySelector('.log-content__list');
       expect(logContent).toBeInTheDocument();
       expect(logContent?.textContent).toContain('line 1');
       expect(logContent?.textContent).toContain('line 2');
@@ -150,7 +147,7 @@ describe('VirtualizedLogContent Integration Tests', () => {
       );
 
       // Use container queries since tokenization splits text across elements
-      const logContent = container.querySelector('.log-content__content-column');
+      const logContent = container.querySelector('.log-content__list');
       expect(logContent?.textContent).toContain('line 1');
       expect(logContent?.textContent).toContain('line 2');
       expect(logContent?.textContent).toContain('line 3');
@@ -164,10 +161,7 @@ describe('VirtualizedLogContent Integration Tests', () => {
 
       const testData = 'This line should still be visible even when tokenization fails';
       const { container } = renderWithQueryClientAndRouter(
-        <VirtualizedLogContent
-          {...defaultProps}
-          sections={[{ containerName: '', data: testData }]}
-        />,
+        <VirtualizedLogContent {...defaultProps} sections={[singleLogSection(testData)]} />,
       );
 
       // Verify the raw text is displayed
@@ -181,10 +175,7 @@ describe('VirtualizedLogContent Integration Tests', () => {
     it('should display non-breaking space for truly empty lines', () => {
       const dataWithEmptyLine = 'line 1\n\nline 3';
       const { container } = renderWithQueryClientAndRouter(
-        <VirtualizedLogContent
-          {...defaultProps}
-          sections={[{ containerName: '', data: dataWithEmptyLine }]}
-        />,
+        <VirtualizedLogContent {...defaultProps} sections={[singleLogSection(dataWithEmptyLine)]} />,
       );
 
       const textElements = container.querySelectorAll('.pf-v5-c-log-viewer__text');
@@ -204,11 +195,7 @@ describe('VirtualizedLogContent Integration Tests', () => {
 
     it('should highlight search matches in log content', () => {
       renderWithQueryClientAndRouter(
-        <VirtualizedLogContent
-          {...defaultProps}
-          sections={[{ containerName: '', data: 'error on line 1' }]}
-          searchText="error"
-        />,
+        <VirtualizedLogContent {...defaultProps} sections={[singleLogSection('error on line 1')]} searchText="error" />,
       );
 
       const marks = document.querySelectorAll('mark.pf-v5-c-log-viewer__string.pf-m-match');
@@ -219,9 +206,9 @@ describe('VirtualizedLogContent Integration Tests', () => {
       renderWithQueryClientAndRouter(
         <VirtualizedLogContent
           {...defaultProps}
-          sections={[{ containerName: '', data: 'error on line 1' }]}
+          sections={[singleLogSection('error on line 1')]}
           searchText="error"
-          currentSearchMatch={{ rowIndex: 0, matchIndex: 1 }}
+          currentSearchMatch={{ rowIndex: 1, matchIndex: 1 }}
         />,
       );
 
@@ -231,11 +218,7 @@ describe('VirtualizedLogContent Integration Tests', () => {
 
     it('should handle multiple matches in single line', () => {
       renderWithQueryClientAndRouter(
-        <VirtualizedLogContent
-          {...defaultProps}
-          sections={[{ containerName: '', data: 'error error error' }]}
-          searchText="error"
-        />,
+        <VirtualizedLogContent {...defaultProps} sections={[singleLogSection('error error error')]} searchText="error" />,
       );
 
       const marks = document.querySelectorAll('mark.pf-v5-c-log-viewer__string.pf-m-match');
@@ -246,7 +229,7 @@ describe('VirtualizedLogContent Integration Tests', () => {
       const { container } = renderWithQueryClientAndRouter(
         <VirtualizedLogContent
           {...defaultProps}
-          sections={[{ containerName: '', data: '[error] normal error' }]}
+          sections={[singleLogSection('[error] normal error')]}
           searchText="[error]"
         />,
       );
@@ -272,11 +255,7 @@ describe('VirtualizedLogContent Integration Tests', () => {
 
     it('should be case insensitive in search', () => {
       renderWithQueryClientAndRouter(
-        <VirtualizedLogContent
-          {...defaultProps}
-          sections={[{ containerName: '', data: 'ERROR Warning error' }]}
-          searchText="error"
-        />,
+        <VirtualizedLogContent {...defaultProps} sections={[singleLogSection('ERROR Warning error')]} searchText="error" />,
       );
 
       const marks = document.querySelectorAll('mark.pf-v5-c-log-viewer__string.pf-m-match');
@@ -314,9 +293,7 @@ describe('VirtualizedLogContent Integration Tests', () => {
 
   describe('Edge Cases and Data Handling', () => {
     it('should handle empty data gracefully', () => {
-      renderWithQueryClientAndRouter(
-        <VirtualizedLogContent {...defaultProps} sections={[{ containerName: '', data: '' }]} />,
-      );
+      renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} sections={[]} />);
 
       const listElement = document.querySelector('.log-content__list');
       expect(listElement).toBeInTheDocument();
@@ -324,10 +301,7 @@ describe('VirtualizedLogContent Integration Tests', () => {
 
     it('should handle single line data', () => {
       renderWithQueryClientAndRouter(
-        <VirtualizedLogContent
-          {...defaultProps}
-          sections={[{ containerName: '', data: 'single line' }]}
-        />,
+        <VirtualizedLogContent {...defaultProps} sections={[singleLogSection('single line')]} />,
       );
 
       expect(screen.getByText('single line')).toBeInTheDocument();
@@ -335,12 +309,7 @@ describe('VirtualizedLogContent Integration Tests', () => {
 
     it('should handle very long lines without breaking', () => {
       const longLine = 'a'.repeat(5000);
-      renderWithQueryClientAndRouter(
-        <VirtualizedLogContent
-          {...defaultProps}
-          sections={[{ containerName: '', data: longLine }]}
-        />,
-      );
+      renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} sections={[singleLogSection(longLine)]} />);
 
       const textElement = document.querySelector('.pf-v5-c-log-viewer__text');
       expect(textElement).toBeInTheDocument();
@@ -350,17 +319,14 @@ describe('VirtualizedLogContent Integration Tests', () => {
       const dataWithNewlines = 'line 1\nline 2\n\n';
 
       const { container } = renderWithQueryClientAndRouter(
-        <VirtualizedLogContent
-          {...defaultProps}
-          sections={[{ containerName: '', data: dataWithNewlines }]}
-        />,
+        <VirtualizedLogContent {...defaultProps} sections={[singleLogSection(dataWithNewlines)]} />,
       );
 
       const listElement = document.querySelector('.log-content__list');
       expect(listElement).toBeInTheDocument();
 
       // Should render the lines - use container queries since tokenization splits text
-      const logContent = container.querySelector('.log-content__content-column');
+      const logContent = container.querySelector('.log-content__list');
       expect(logContent?.textContent).toContain('line 1');
       expect(logContent?.textContent).toContain('line 2');
     });
@@ -368,10 +334,7 @@ describe('VirtualizedLogContent Integration Tests', () => {
     it('should handle special characters in log content', () => {
       const specialData = 'line with <html> tags\nline with & ampersand\nline with "quotes"';
       renderWithQueryClientAndRouter(
-        <VirtualizedLogContent
-          {...defaultProps}
-          sections={[{ containerName: '', data: specialData }]}
-        />,
+        <VirtualizedLogContent {...defaultProps} sections={[singleLogSection(specialData)]} />,
       );
 
       const listElement = document.querySelector('.log-content__list');
@@ -383,10 +346,7 @@ describe('VirtualizedLogContent Integration Tests', () => {
     it('should preserve empty lines with non-breaking space', () => {
       const dataWithEmptyLines = 'line 1\n\nline 3\n\n\nline 6';
       const { container } = renderWithQueryClientAndRouter(
-        <VirtualizedLogContent
-          {...defaultProps}
-          sections={[{ containerName: '', data: dataWithEmptyLines }]}
-        />,
+        <VirtualizedLogContent {...defaultProps} sections={[singleLogSection(dataWithEmptyLines)]} />,
       );
 
       const textElements = container.querySelectorAll('.pf-v5-c-log-viewer__text');
@@ -406,11 +366,7 @@ describe('VirtualizedLogContent Integration Tests', () => {
     it('should preserve empty lines when searching', () => {
       const dataWithEmptyLines = 'error\n\nerror';
       const { container } = renderWithQueryClientAndRouter(
-        <VirtualizedLogContent
-          {...defaultProps}
-          sections={[{ containerName: '', data: dataWithEmptyLines }]}
-          searchText="error"
-        />,
+        <VirtualizedLogContent {...defaultProps} sections={[singleLogSection(dataWithEmptyLines)]} searchText="error" />,
       );
 
       const textElements = container.querySelectorAll('.pf-v5-c-log-viewer__text');
@@ -430,10 +386,7 @@ describe('VirtualizedLogContent Integration Tests', () => {
       // Create a very long line that would normally overflow
       const longLine = `ERROR: ${'A'.repeat(500)} - this is a very long error message`;
       const { container } = renderWithQueryClientAndRouter(
-        <VirtualizedLogContent
-          {...defaultProps}
-          sections={[{ containerName: '', data: longLine }]}
-        />,
+        <VirtualizedLogContent {...defaultProps} sections={[singleLogSection(longLine)]} />,
       );
 
       const logText = container.querySelector('.pf-v5-c-log-viewer__text');
@@ -447,10 +400,7 @@ describe('VirtualizedLogContent Integration Tests', () => {
       // Create a line with a very long unbreakable URL
       const longUrl = `https://example.com/very-long-path/${'segment/'.repeat(50)}endpoint`;
       const { container } = renderWithQueryClientAndRouter(
-        <VirtualizedLogContent
-          {...defaultProps}
-          sections={[{ containerName: '', data: longUrl }]}
-        />,
+        <VirtualizedLogContent {...defaultProps} sections={[singleLogSection(longUrl)]} />,
       );
 
       // Query the log list content (not the hidden measurement element)
@@ -462,10 +412,7 @@ describe('VirtualizedLogContent Integration Tests', () => {
     it('should preserve whitespace and line breaks with pre-wrap', () => {
       const dataWithSpaces = 'Line 1    with    spaces\n  Line 2 indented\nLine 3';
       const { container } = renderWithQueryClientAndRouter(
-        <VirtualizedLogContent
-          {...defaultProps}
-          sections={[{ containerName: '', data: dataWithSpaces }]}
-        />,
+        <VirtualizedLogContent {...defaultProps} sections={[singleLogSection(dataWithSpaces)]} />,
       );
 
       const logText = container.querySelector('.log-content__list');
@@ -482,10 +429,7 @@ ${'Very long line that will wrap: '.repeat(10)}
 Another short line`;
 
       const { container } = renderWithQueryClientAndRouter(
-        <VirtualizedLogContent
-          {...defaultProps}
-          sections={[{ containerName: '', data: mixedData }]}
-        />,
+        <VirtualizedLogContent {...defaultProps} sections={[singleLogSection(mixedData)]} />,
       );
 
       // Query the actual virtualized list items (excluding the hidden measurement element)
@@ -553,7 +497,7 @@ Another short line`;
     it('should render line number gutter', () => {
       renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
 
-      const gutter = document.querySelector('.line-number__gutter');
+      const gutter = document.querySelector('.log-content__gutter');
       expect(gutter).toBeInTheDocument();
     });
 
@@ -571,10 +515,10 @@ Another short line`;
       expect(container).toBeInTheDocument();
     });
 
-    it('should render content in separate column from gutter', () => {
+    it('should render content alongside gutter in each row', () => {
       renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
 
-      const contentColumn = document.querySelector('.log-content__content-column');
+      const contentColumn = document.querySelector('.log-content__row-content');
       expect(contentColumn).toBeInTheDocument();
     });
 
@@ -598,15 +542,13 @@ Another short line`;
       });
     });
 
-    it('should align gutter cells with content lines', () => {
+    it('should align gutter cells with content rows', () => {
       renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
 
-      const gutterCells = document.querySelectorAll('.line-number__gutter-cell');
-      const contentItems = document.querySelectorAll(
-        '.log-content__content-column .pf-v5-c-log-viewer__list-item',
-      );
+      const gutterCells = document.querySelectorAll('.log-content__gutter');
+      const contentItems = document.querySelectorAll('.log-content__row-content');
 
-      // Should have matching number of visible items
+      // Each virtual row has exactly one gutter cell and one content area
       expect(gutterCells.length).toBe(contentItems.length);
     });
   });
@@ -626,7 +568,7 @@ Another short line`;
       renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
 
       // Should highlight gutter cell
-      const highlightedCells = document.querySelectorAll('.line-number__gutter-cell--highlighted');
+      const highlightedCells = document.querySelectorAll('.log-content__gutter--highlighted');
       expect(highlightedCells.length).toBeGreaterThan(0);
 
       // Should highlight line content
@@ -640,7 +582,7 @@ Another short line`;
       renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
 
       // Range should be highlighted
-      const highlightedCells = document.querySelectorAll('.line-number__gutter-cell--highlighted');
+      const highlightedCells = document.querySelectorAll('.log-content__gutter--highlighted');
       expect(highlightedCells.length).toBeGreaterThan(0);
 
       const highlightedLines = document.querySelectorAll('.log-content__line--highlighted');
@@ -651,12 +593,7 @@ Another short line`;
       window.location.hash = '#L100';
       const shortData = Array.from({ length: 10 }, (_, i) => `line ${i + 1}`).join('\n');
 
-      renderWithQueryClientAndRouter(
-        <VirtualizedLogContent
-          {...defaultProps}
-          sections={[{ containerName: '', data: shortData }]}
-        />,
-      );
+      renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} sections={[singleLogSection(shortData)]} />);
 
       // Component should render without errors
       const listElement = document.querySelector('.log-content__list');
@@ -670,12 +607,7 @@ Another short line`;
       window.location.hash = '#L50-L100';
       const shortData = Array.from({ length: 10 }, (_, i) => `line ${i + 1}`).join('\n');
 
-      renderWithQueryClientAndRouter(
-        <VirtualizedLogContent
-          {...defaultProps}
-          sections={[{ containerName: '', data: shortData }]}
-        />,
-      );
+      renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} sections={[singleLogSection(shortData)]} />);
 
       // Component should render without errors even with out-of-range hash
       const listElement = document.querySelector('.log-content__list');
@@ -687,7 +619,7 @@ Another short line`;
 
       // Start with empty data
       const { rerender } = renderWithQueryClientAndRouter(
-        <VirtualizedLogContent {...defaultProps} sections={[{ containerName: '', data: '' }]} />,
+        <VirtualizedLogContent {...defaultProps} sections={[]} />,
       );
 
       let listElement = document.querySelector('.log-content__list');
@@ -695,12 +627,7 @@ Another short line`;
 
       // Update with actual data
       const dataWithLines = Array.from({ length: 10 }, (_, i) => `line ${i + 1}`).join('\n');
-      rerender(
-        <VirtualizedLogContent
-          {...defaultProps}
-          sections={[{ containerName: '', data: dataWithLines }]}
-        />,
-      );
+      rerender(<VirtualizedLogContent {...defaultProps} sections={[singleLogSection(dataWithLines)]} />);
 
       // Should now have content and handle the hash
       listElement = document.querySelector('.log-content__list');
@@ -711,16 +638,38 @@ Another short line`;
       expect(highlightedLines.length).toBeGreaterThan(0);
     });
 
+    it('should not highlight the hash line while readyToNavigate is false, and should once it becomes true', () => {
+      window.location.hash = '#L2';
+      const dataWithLines = Array.from({ length: 10 }, (_, i) => `line ${i + 1}`).join('\n');
+
+      const { rerender } = renderWithQueryClientAndRouter(
+        <VirtualizedLogContent
+          {...defaultProps}
+          sections={[singleLogSection(dataWithLines)]}
+          readyToNavigate={false}
+        />,
+      );
+
+      expect(document.querySelectorAll('.log-content__line--highlighted').length).toBe(0);
+
+      rerender(
+        <VirtualizedLogContent
+          {...defaultProps}
+          sections={[singleLogSection(dataWithLines)]}
+          readyToNavigate
+        />,
+      );
+
+      expect(document.querySelectorAll('.log-content__line--highlighted').length).toBeGreaterThan(
+        0,
+      );
+    });
+
     it('should handle hash navigation with very long logs', () => {
       window.location.hash = '#L500';
       const longData = Array.from({ length: 1000 }, (_, i) => `line ${i + 1}`).join('\n');
 
-      renderWithQueryClientAndRouter(
-        <VirtualizedLogContent
-          {...defaultProps}
-          sections={[{ containerName: '', data: longData }]}
-        />,
-      );
+      renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} sections={[singleLogSection(longData)]} />);
 
       // Should render without performance issues
       const listElement = document.querySelector('.log-content__list');
@@ -751,6 +700,63 @@ Another short line`;
       expect(listElement).toBeInTheDocument();
     });
 
+    it('should highlight gutter cell and row when a line number link is clicked', () => {
+      renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
+
+      // No highlights initially
+      expect(document.querySelectorAll('.log-content__gutter--highlighted').length).toBe(0);
+      expect(document.querySelectorAll('.log-content__line--highlighted').length).toBe(0);
+
+      // Click the link for content line 2 (first content row; section header occupies line 1)
+      const link = document.querySelector('[href="#L2"]');
+      expect(link).not.toBeNull();
+      fireEvent.click(link);
+
+      // Gutter cell for that line should be highlighted
+      const highlightedGutters = document.querySelectorAll('.log-content__gutter--highlighted');
+      expect(highlightedGutters.length).toBeGreaterThan(0);
+
+      // Row content for that line should be highlighted
+      const highlightedLines = document.querySelectorAll('.log-content__line--highlighted');
+      expect(highlightedLines.length).toBeGreaterThan(0);
+    });
+
+    it('should create a range highlight when shift-clicking a second line number', () => {
+      renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
+
+      // Click first line (content row 1 = globalLineNumber 2)
+      const firstLink = document.querySelector('[href="#L2"]');
+      fireEvent.click(firstLink);
+
+      // Shift-click line 4 (content row 3 = globalLineNumber 4)
+      const secondLink = document.querySelector('[href="#L4"]');
+      fireEvent.click(secondLink, { shiftKey: true });
+
+      // All lines in the range [2..4] should be highlighted
+      const highlightedLines = document.querySelectorAll('.log-content__line--highlighted');
+      expect(highlightedLines.length).toBeGreaterThanOrEqual(3);
+    });
+
+    it('should call scrollToIndex when a line number is clicked', () => {
+      const originalRAF = window.requestAnimationFrame;
+      window.requestAnimationFrame = (cb: FrameRequestCallback) => {
+        cb(0);
+        return 0;
+      };
+      scrollToIndexSpy = jest.fn();
+
+      renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
+      scrollToIndexSpy.mockClear();
+
+      const link = document.querySelector('[href="#L2"]');
+      fireEvent.click(link);
+
+      expect(scrollToIndexSpy).toHaveBeenCalled();
+
+      scrollToIndexSpy = null;
+      window.requestAnimationFrame = originalRAF;
+    });
+
     it('should use instant scroll (behavior: auto) for hash navigation', () => {
       window.location.hash = '#L2';
 
@@ -776,70 +782,106 @@ Another short line`;
     });
   });
 
-  describe('Sections support', () => {
-    const sectionProps = {
-      sections: [
-        { containerName: 'step-build', data: 'building...\ndone' },
-        { containerName: 'step-test', data: 'testing...\npassed' },
-      ],
-      height: 600,
-      width: '100%' as string | number,
-    };
+  describe('Foldable sections', () => {
+    const multiSections: LogSection[] = [
+      { containerName: 'BUILD', data: 'compile\nlink', isCompleted: true },
+      { containerName: 'TEST', data: 'running tests', isCompleted: false },
+    ];
 
-    it('should render container names as log lines', () => {
-      const { container } = renderWithQueryClientAndRouter(
-        <VirtualizedLogContent {...sectionProps} />,
+    afterEach(() => {
+      window.location.hash = '';
+    });
+
+    it('should render section headers for each pipeline step', () => {
+      renderWithQueryClientAndRouter(
+        <VirtualizedLogContent {...defaultProps} sections={multiSections} />,
       );
 
-      const logContent = container.querySelector('.log-content__content-column');
-      expect(logContent?.textContent).toContain('step-build');
-      expect(logContent?.textContent).toContain('step-test');
+      expect(screen.getByTestId('fold-header-BUILD')).toBeInTheDocument();
+      expect(screen.getByTestId('fold-header-TEST')).toBeInTheDocument();
+      expect(screen.getByText('BUILD')).toBeInTheDocument();
+      expect(screen.getByText('TEST')).toBeInTheDocument();
     });
 
-    it('should render log lines from all sections', () => {
-      const { container } = renderWithQueryClientAndRouter(
-        <VirtualizedLogContent {...sectionProps} />,
+    it('should hide completed section content and show a fold indicator', () => {
+      renderWithQueryClientAndRouter(
+        <VirtualizedLogContent {...defaultProps} sections={multiSections} />,
       );
 
-      const logContent = container.querySelector('.log-content__content-column');
-      expect(logContent?.textContent).toContain('building...');
-      expect(logContent?.textContent).toContain('done');
-      expect(logContent?.textContent).toContain('testing...');
-      expect(logContent?.textContent).toContain('passed');
+      expect(screen.queryByText('compile')).not.toBeInTheDocument();
+      expect(screen.getByText('··· 2 lines hidden')).toBeInTheDocument();
+      expect(screen.getByText('running tests')).toBeInTheDocument();
     });
 
-    it('should use continuous line numbering across sections including headers', () => {
-      renderWithQueryClientAndRouter(<VirtualizedLogContent {...sectionProps} />);
-
-      const lineNumbers = document.querySelectorAll('.line-number__line-number');
-      const numbers = Array.from(lineNumbers).map((el) => Number(el.textContent));
-      // 2 headers + 4 log lines = 6 sequential line numbers
-      expect(numbers).toEqual([1, 2, 3, 4, 5, 6]);
-    });
-
-    it('should highlight search matches across sections', () => {
-      const searchSectionProps = {
-        ...sectionProps,
-        searchText: 'done',
-      };
-
-      renderWithQueryClientAndRouter(<VirtualizedLogContent {...searchSectionProps} />);
-
-      const marks = document.querySelectorAll('mark.pf-v5-c-log-viewer__string.pf-m-match');
-      expect(marks.length).toBe(1);
-    });
-
-    it('should render single section without container name', () => {
-      const { container } = renderWithQueryClientAndRouter(
-        <VirtualizedLogContent
-          sections={[{ containerName: '', data: 'fallback line' }]}
-          height={600}
-          width="100%"
-        />,
+    it('should toggle section visibility when the header is clicked', () => {
+      renderWithQueryClientAndRouter(
+        <VirtualizedLogContent {...defaultProps} sections={multiSections} />,
       );
 
-      const logContent = container.querySelector('.log-content__content-column');
-      expect(logContent?.textContent).toContain('fallback line');
+      expect(screen.getByText('running tests')).toBeInTheDocument();
+
+      fireEvent.click(screen.getByTestId('fold-header-TEST'));
+
+      expect(screen.queryByText('running tests')).not.toBeInTheDocument();
+      expect(screen.getByText('··· 1 line hidden')).toBeInTheDocument();
+
+      fireEvent.click(screen.getByTestId('fold-header-TEST'));
+
+      expect(screen.getByText('running tests')).toBeInTheDocument();
+    });
+
+    it('should expand a completed section when its header is clicked', () => {
+      renderWithQueryClientAndRouter(
+        <VirtualizedLogContent {...defaultProps} sections={multiSections} />,
+      );
+
+      expect(screen.queryByText('compile')).not.toBeInTheDocument();
+
+      fireEvent.click(screen.getByTestId('fold-header-BUILD'));
+
+      expect(screen.getByText('compile')).toBeInTheDocument();
+      expect(screen.getByText('link')).toBeInTheDocument();
+    });
+
+    it('should expand a folded section when URL hash targets a line inside it', () => {
+      window.location.hash = '#L2';
+
+      renderWithQueryClientAndRouter(
+        <VirtualizedLogContent {...defaultProps} sections={multiSections} />,
+      );
+
+      expect(screen.getByText('compile')).toBeInTheDocument();
+      expect(screen.getByText('link')).toBeInTheDocument();
+    });
+
+    it('should allow folding a section after URL hash navigation expanded it', () => {
+      window.location.hash = '#L2';
+
+      renderWithQueryClientAndRouter(
+        <VirtualizedLogContent {...defaultProps} sections={multiSections} />,
+      );
+
+      expect(screen.getByText('compile')).toBeInTheDocument();
+
+      fireEvent.click(screen.getByTestId('fold-header-BUILD'));
+
+      expect(screen.queryByText('compile')).not.toBeInTheDocument();
+      expect(screen.getByText('··· 2 lines hidden')).toBeInTheDocument();
+    });
+
+    it('should show a sticky header after scrolling in multi-section mode', () => {
+      renderWithQueryClientAndRouter(
+        <VirtualizedLogContent {...defaultProps} sections={multiSections} height={120} />,
+      );
+
+      expect(screen.queryByTestId('sticky-header-BUILD')).not.toBeInTheDocument();
+
+      const listElement = document.querySelector('.log-content__list');
+      if (!listElement) throw new Error('Expected scroll container');
+      Object.defineProperty(listElement, 'scrollTop', { value: 80, configurable: true });
+      fireEvent.scroll(listElement);
+
+      expect(screen.getByTestId('sticky-header-BUILD')).toBeInTheDocument();
     });
   });
 });
