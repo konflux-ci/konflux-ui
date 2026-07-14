@@ -134,6 +134,26 @@ describe('isUsingExistingClusterSecret', () => {
     );
   });
 
+  it('returns true for partner task secrets already in cluster with read-only values', () => {
+    const clusterSnykSecret: BuildTimeSecret = {
+      type: SecretType.opaque,
+      name: 'snyk-secret',
+      providerUrl: 'https://snyk.io/',
+      tokenKeyName: 'snyk_token',
+      opaque: {
+        keyValuePairs: [
+          { key: 'snyk_token', value: 'configured', readOnlyKey: true, readOnlyValue: true },
+        ],
+      },
+    };
+
+    expect(
+      isUsingExistingClusterSecret('snyk-secret', SecretTypeDropdownLabel.opaque, [
+        clusterSnykSecret,
+      ]),
+    ).toBe(true);
+  });
+
   it('returns false for image and source secret types', () => {
     expect(
       isUsingExistingClusterSecret('cluster-secret', SecretTypeDropdownLabel.image, [

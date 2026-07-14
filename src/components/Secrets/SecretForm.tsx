@@ -106,7 +106,9 @@ const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({
 
   const secretNameHelperText = isEdit
     ? 'You cannot edit the existing secret name'
-    : 'Unique name of the new secret.';
+    : isUsingExisting
+      ? 'Reusing an existing cluster secret.'
+      : 'Unique name of the new secret.';
 
   return (
     <Form data-test="secret-form">
