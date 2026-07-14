@@ -130,7 +130,7 @@ const [secrets, loaded, error] = useSecrets(namespace, false, {
 const [secret, loaded, error] = useSecretMetadata(namespace, secretName);
 ```
 
-Both hooks call `useK8sWatchResource` with overridden `queryKey`, `queryFn`, and `select` options, plus `SECRET_TABLE_K8S_FETCH_OPTIONS` as the fetch options argument. Watch is disabled for Table queries (the API server does not support watch with Table content negotiation).
+`useSecrets` (with `metadataOnly: true`) calls `useK8sWatchResource` with overridden `queryKey`, `queryFn`, and `select` options. `useSecretMetadata` overrides `queryKey` and `select` but relies on the default query function — the Table content negotiation is handled by passing `SECRET_TABLE_K8S_FETCH_OPTIONS` as the fetch options (4th) argument. Both hooks disable watch.
 
 **Prefetch query builder:**
 
