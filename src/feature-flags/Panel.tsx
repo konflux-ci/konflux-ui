@@ -1,13 +1,5 @@
 import React from 'react';
-import {
-  Switch,
-  Stack,
-  StackItem,
-  Button,
-  Label,
-  ModalFooter,
-  Tooltip,
-} from '@patternfly/react-core';
+import { Switch, Stack, StackItem, Button, Label, Tooltip } from '@patternfly/react-core';
 import { createModalLauncher } from '~/components/modal/createModalLauncher';
 import { guardSatisfied } from './conditions';
 import { FlagKey, FLAGS, FLAGS_STATUS } from './flags';
@@ -64,7 +56,7 @@ export const FeatureFlagPanel: React.FC = () => {
           );
         })}
       </Stack>
-      <ModalFooter>
+      <div className="pf-v6-u-mt-lg">
         <Button
           variant="tertiary"
           onClick={() => {
@@ -74,7 +66,7 @@ export const FeatureFlagPanel: React.FC = () => {
         >
           Reset to Defaults
         </Button>
-      </ModalFooter>
+      </div>
     </>
   );
 };
