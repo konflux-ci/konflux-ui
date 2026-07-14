@@ -14,13 +14,16 @@ const useFormikContextMock = useFormikContext as jest.Mock;
 
 describe('FormikParamsField', () => {
   const setFieldValueMock = jest.fn();
-  const handleBlurMock = jest.fn();
+  const fieldOnBlurMock = jest.fn();
 
   beforeEach(() => {
     useFormikContextMock.mockReturnValue({
       setFieldValue: setFieldValueMock,
-      handleBlur: handleBlurMock,
     });
+    useFieldMock.mockImplementation(() => [
+      { onBlur: jest.fn(), onChange: jest.fn(), value: '' },
+      { value: '', touched: false },
+    ]);
     FieldArrayMock.mockImplementation((props) => {
       const renderFunction = props.render;
       return <div>{renderFunction()}</div>;
@@ -369,7 +372,7 @@ describe('FormikParamsField', () => {
 
   it('should trim whitespace from param fields on blur', async () => {
     useFieldMock.mockReturnValue([
-      {},
+      { onBlur: fieldOnBlurMock, onChange: jest.fn(), value: 'param1' },
       {
         value: [{ name: 'param1', values: ['value1'] }],
         touched: false,
@@ -390,7 +393,7 @@ describe('FormikParamsField', () => {
       fireEvent.blur(nameInput, { target: { value: "  'true'  ", name: 'it.param[0].name' } });
     });
 
-    expect(handleBlurMock).toHaveBeenCalled();
+    expect(fieldOnBlurMock).toHaveBeenCalled();
     expect(setFieldValueMock).toHaveBeenCalledWith('it.param[0].name', "'true'");
 
     act(() => {
