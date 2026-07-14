@@ -22,7 +22,7 @@ import {
 } from '@patternfly/react-core';
 import { MinusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/minus-circle-icon';
 import { PlusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/plus-circle-icon';
-import { FieldArray, useField } from 'formik';
+import { FieldArray, useField, useFormikContext } from 'formik';
 import { InputField } from 'formik-pf';
 import { Param } from '../../types/coreBuildService';
 
@@ -37,7 +37,17 @@ const FormikParamsField: React.FC<React.PropsWithChildren<IntegrationTestParamsP
   fieldName,
   initExpanded = false,
 }) => {
+  const { setFieldValue, handleBlur } = useFormikContext();
   const [, { value: parameters, error }] = useField<Param[]>(fieldName);
+
+  const trimFieldOnBlur =
+    (fieldPath: string) => (event: React.FocusEvent<HTMLInputElement>) => {
+      handleBlur(event);
+      const trimmed = event.target.value.trim();
+      if (trimmed !== event.target.value) {
+        void setFieldValue(fieldPath, trimmed);
+      }
+    };
 
   const initExpandedState = React.useMemo(() => {
     const state = [];
@@ -158,6 +168,7 @@ const FormikParamsField: React.FC<React.PropsWithChildren<IntegrationTestParamsP
                                         <InputField
                                           name={`${fieldName}[${i}].name`}
                                           data-test={`param-${i}-name`}
+                                          onBlur={trimFieldOnBlur(`${fieldName}[${i}].name`)}
                                         />
                                       </FormGroup>
                                     </DataListCell>,
@@ -182,6 +193,9 @@ const FormikParamsField: React.FC<React.PropsWithChildren<IntegrationTestParamsP
                                                       key={`value${i}${j}`}
                                                       name={`${fieldName}[${i}].values[${j}]`}
                                                       data-test={`param-${i}-value-${j}`}
+                                                      onBlur={trimFieldOnBlur(
+                                                        `${fieldName}[${i}].values[${j}]`,
+                                                      )}
                                                     />
                                                     <Button
                                                       className="pf-v5-u-ml-md"

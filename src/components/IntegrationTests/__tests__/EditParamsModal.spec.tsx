@@ -230,4 +230,46 @@ describe('EditParamsModal', () => {
       }),
     );
   });
+
+  it('should trim whitespace from params when saving', async () => {
+    patchResourceMock.mockResolvedValue({});
+    const onClose = jest.fn();
+    formikRenderer(
+      <EditParamsModal intTest={MockIntegrationTestsWithParams[1]} onClose={onClose} />,
+      initialValues,
+    );
+
+    const expandParam = screen.getByTestId('expand-param-2').childNodes[0].childNodes[0];
+
+    act(() => {
+      fireEvent.click(expandParam);
+    });
+
+    const nameInput = await screen.findByTestId('param-1-name');
+
+    act(() => {
+      fireEvent.change(nameInput, { target: { value: "  'true'  " } });
+    });
+
+    await waitFor(() => {
+      const saveBtn = screen.getByRole('button', { name: /Save/ });
+      expect(saveBtn).not.toBeDisabled();
+      fireEvent.click(saveBtn);
+    });
+
+    expect(patchResourceMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        patches: [
+          {
+            op: 'replace',
+            path: '/spec/params',
+            value: [
+              { name: 'colors', values: ['red', 'green', 'orange'] },
+              { name: "'true'", value: 'tiger' },
+            ],
+          },
+        ],
+      }),
+    );
+  });
 });

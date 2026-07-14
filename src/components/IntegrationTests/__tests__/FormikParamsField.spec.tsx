@@ -1,17 +1,26 @@
 import { screen, render, act, fireEvent, waitFor } from '@testing-library/react';
-import { useField, FieldArray } from 'formik';
+import { useField, FieldArray, useFormikContext } from 'formik';
 import FormikParamsField from '../FormikParamsField';
 
 jest.mock('formik', () => ({
   useField: jest.fn(),
   FieldArray: jest.fn(),
+  useFormikContext: jest.fn(),
 }));
 
 const useFieldMock = useField as jest.Mock;
 const FieldArrayMock = FieldArray as jest.Mock;
+const useFormikContextMock = useFormikContext as jest.Mock;
 
 describe('FormikParamsField', () => {
+  const setFieldValueMock = jest.fn();
+  const handleBlurMock = jest.fn();
+
   beforeEach(() => {
+    useFormikContextMock.mockReturnValue({
+      setFieldValue: setFieldValueMock,
+      handleBlur: handleBlurMock,
+    });
     FieldArrayMock.mockImplementation((props) => {
       const renderFunction = props.render;
       return <div>{renderFunction()}</div>;
@@ -356,5 +365,40 @@ describe('FormikParamsField', () => {
 
     const removeValue = screen.getByTestId('remove-value-1-1');
     expect(removeValue.getAttribute('aria-disabled')).toEqual('true');
+  });
+
+  it('should trim whitespace from param fields on blur', async () => {
+    useFieldMock.mockReturnValue([
+      {},
+      {
+        value: [{ name: 'param1', values: ['value1'] }],
+        touched: false,
+      },
+    ]);
+    render(<FormikParamsField fieldName="it.param" initExpanded={true} />);
+
+    const expandParam = screen.getByTestId('expand-param-1').childNodes[0].childNodes[0];
+
+    act(() => {
+      fireEvent.click(expandParam);
+    });
+
+    const nameInput = await screen.findByTestId('param-0-name');
+    const valueInput = screen.getByTestId('param-0-value-0');
+
+    act(() => {
+      fireEvent.blur(nameInput, { target: { value: "  'true'  ", name: 'it.param[0].name' } });
+    });
+
+    expect(handleBlurMock).toHaveBeenCalled();
+    expect(setFieldValueMock).toHaveBeenCalledWith('it.param[0].name', "'true'");
+
+    act(() => {
+      fireEvent.blur(valueInput, {
+        target: { value: '  value1  ', name: 'it.param[0].values[0]' },
+      });
+    });
+
+    expect(setFieldValueMock).toHaveBeenCalledWith('it.param[0].values[0]', 'value1');
   });
 });
