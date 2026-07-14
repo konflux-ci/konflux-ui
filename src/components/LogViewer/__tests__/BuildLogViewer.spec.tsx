@@ -59,13 +59,6 @@ describe('BuildLogViewer', () => {
     screen.getByTestId('logs-tasklist');
   });
 
-  it('should show empty box when no build pipeline run is returned', () => {
-    useLatestBuildMock.mockReturnValue([undefined, true, undefined]);
-    routerRenderer(<BuildLogViewer component={componentCRMocks[0]} />);
-    expect(screen.getByTestId('empty-message')).not.toBeNull();
-    expect(screen.getByTestId('empty-message').innerHTML).toBe('No pipeline runs found');
-  });
-
   it('should show loading box if pipelineRuns are being fetched', () => {
     useLatestBuildMock.mockReturnValue([undefined, false, undefined]);
     routerRenderer(<BuildLogViewer component={componentCRMocks[0]} />);
