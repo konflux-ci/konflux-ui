@@ -89,7 +89,7 @@ describe('TaskRunDetails', () => {
     const result = render(<TaskRunDetails status={runStatus.Idle} />);
     const descriptionGroup = result
       .getByText('Description')
-      .closest('.pf-v5-c-description-list__group');
+      .closest('.pf-v6-c-description-list__group');
     expect(descriptionGroup).not.toBeNull();
     expect(within(descriptionGroup as HTMLElement).getByText('-')).toBeInTheDocument();
   });

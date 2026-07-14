@@ -1,5 +1,5 @@
 import React from 'react';
-import { Text } from '@patternfly/react-core';
+import { Content } from '@patternfly/react-core';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { normalizeSection } from './log-viewer-utils';
 import { SectionedVirtualRow } from './SectionedVirtualRow';
@@ -291,9 +291,9 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
         className="pf-v6-c-log-viewer__list-item"
         style={{ position: 'absolute', visibility: 'hidden', pointerEvents: 'none' }}
       >
-        <Text component="small" className="pf-v6-c-log-viewer__text">
+        <Content component="small" className="pf-v6-c-log-viewer__text">
           M
-        </Text>
+        </Content>
       </div>
 
       <div

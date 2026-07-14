@@ -7,10 +7,10 @@
   z-index: 2;
   pointer-events: none;
   background: var(
-    --pf-v5-c-log-viewer__main--BackgroundColor,
-    var(--pf-v5-global--BackgroundColor--200)
+    --pf-v6-c-log-viewer__main--BackgroundColor,
+    var(--pf-t--global--background--color--secondary--default)
   );
-  box-shadow: var(--pf-v5-global--BoxShadow--sm);
+  box-shadow: var(--pf-t--global--box-shadow--sm);
 }
 
 // Restore pointer events for clickable children inside the pointer-events:none sticky bar
@@ -26,5 +26,5 @@
 
 .log-content__fold-indicator {
   font-style: italic;
-  color: var(--pf-v5-global--disabled-color--100);
+  color: var(--pf-t--global--text--color--disabled);
 }

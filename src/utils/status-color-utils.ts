@@ -9,7 +9,7 @@ import { runStatus } from '~/consts/pipelinerun';
 const STATUS_COLORS = {
   danger: { hex: dangerColor.value, name: 'red' },
   success: { hex: successColor.value, name: 'green' },
-  warning: { hex: warningColor.value, name: 'gold' },
+  warning: { hex: warningColor.value, name: 'yellow' },
   skipped: { hex: neutralColor.value, name: 'grey' },
   inProgress: { hex: inProgressColor.value, name: 'blue' },
   neutral: { hex: neutralColor.value, name: 'grey' },
