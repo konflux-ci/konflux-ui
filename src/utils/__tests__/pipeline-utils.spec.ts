@@ -8,7 +8,6 @@ import {
   getDuration,
   getPipelineRunData,
   getRandomChars,
-  getLabelColorFromStatus,
   pipelineRunStatus,
   pipelineRunStatusToGitOpsStatus,
   taskName,
@@ -186,28 +185,6 @@ describe('pipelineRunStatusToGitOpsStatus', () => {
     expect(pipelineRunStatusToGitOpsStatus(runStatus.Cancelled)).toBe('Suspended');
     expect(pipelineRunStatusToGitOpsStatus(runStatus.Cancelling)).toBe('Suspended');
     expect(pipelineRunStatusToGitOpsStatus(runStatus.Skipped)).toBe('Missing');
-  });
-});
-
-describe('getLabelColorFromStatus', () => {
-  it('should return the null', () => {
-    expect(getLabelColorFromStatus(runStatus.Idle)).toBeNull();
-    expect(getLabelColorFromStatus(runStatus.Pending)).toBeNull();
-    expect(getLabelColorFromStatus(runStatus.Skipped)).toBeNull();
-    expect(getLabelColorFromStatus(runStatus.PipelineNotStarted)).toBeNull();
-  });
-
-  it('should return green for success', () => {
-    expect(getLabelColorFromStatus(runStatus.Succeeded)).toBe('green');
-  });
-
-  it('should return red for failed', () => {
-    expect(getLabelColorFromStatus(runStatus.Failed)).toBe('red');
-  });
-
-  it('should return gold for cancelled/cancelling status', () => {
-    expect(getLabelColorFromStatus(runStatus.Cancelled)).toBe('yellow');
-    expect(getLabelColorFromStatus(runStatus.Cancelling)).toBe('yellow');
   });
 });
 

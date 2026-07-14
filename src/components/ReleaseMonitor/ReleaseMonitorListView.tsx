@@ -285,9 +285,18 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
     }
     const nsKeys = namespaces.map((ns) => ns.metadata.name);
 
+    // When namespace count exceeds threshold and no namespaces are selected,
+    // the table shows an empty state — filter options should also be empty
+    // to avoid displaying stale counts alongside an empty table.
+    const shouldShowEmptyOptions =
+      namespaces.length > NAMESPACE_THRESHOLD &&
+      selectedNamespaces.length === 0 &&
+      releases.length > 0;
+
     // Filter releases to only include those from selected namespaces
-    const releasesFromSelectedNamespaces =
-      selectedNamespaces.length > 0
+    const releasesFromSelectedNamespaces = shouldShowEmptyOptions
+      ? []
+      : selectedNamespaces.length > 0
         ? releases.filter((mr) => selectedNamespaces.includes(mr.metadata.namespace))
         : releases;
 

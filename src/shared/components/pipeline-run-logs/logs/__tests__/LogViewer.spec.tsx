@@ -7,6 +7,7 @@ import { useTheme } from '~/shared/theme';
 import { mockConsole, MockConsole } from '~/unit-test-utils';
 import { renderWithQueryClientAndRouter as render } from '~/unit-test-utils/rendering-utils';
 import LogViewer from '../LogViewer';
+import { useAutoScrollWithResume } from '../useAutoScrollWithResume';
 import { useLogViewerTheme } from '../useLogViewerTheme';
 
 // Mock only external dependencies and browser APIs
@@ -31,6 +32,18 @@ jest.mock('../useLogViewerTheme', () => ({
   useLogViewerTheme: jest.fn(() => ['dark', jest.fn()]),
 }));
 
+// Spy on the real implementation so we can assert on the args LogViewer passes it,
+// while keeping its actual behavior intact for other tests in this file.
+jest.mock('../useAutoScrollWithResume', () => {
+  const actual: typeof import('../useAutoScrollWithResume') = jest.requireActual(
+    '../useAutoScrollWithResume',
+  );
+  return {
+    ...actual,
+    useAutoScrollWithResume: jest.fn(actual.useAutoScrollWithResume),
+  };
+});
+
 // Mock lodash-es debounce to make tests synchronous
 jest.mock('lodash-es', () => ({
   ...jest.requireActual('lodash-es'),
@@ -45,6 +58,7 @@ const mockSaveAs = jest.requireMock('file-saver').saveAs as jest.Mock;
 const mockUseFullscreen = useFullscreen as jest.Mock;
 const mockUseTheme = useTheme as jest.Mock;
 const mockUseLogViewerTheme = useLogViewerTheme as jest.Mock;
+const mockUseAutoScrollWithResume = useAutoScrollWithResume as jest.Mock;
 
 describe('LogViewer Integration Tests', () => {
   let consoleMock: MockConsole;
@@ -519,6 +533,28 @@ describe('LogViewer Integration Tests', () => {
       // Verify component structure is correct (button will appear based on scroll state)
       const logViewer = container.querySelector('.pf-v6-c-log-viewer');
       expect(logViewer).toBeInTheDocument();
+    });
+
+    it('should pass the URL hash line target to useAutoScrollWithResume so it can pause auto-scroll', () => {
+      window.location.hash = '#L3';
+
+      try {
+        render(<LogViewer {...defaultProps} allowAutoScroll={true} />);
+
+        expect(mockUseAutoScrollWithResume).toHaveBeenCalledWith(
+          expect.objectContaining({ activeLineTarget: { start: 3, end: 3 } }),
+        );
+      } finally {
+        window.location.hash = '';
+      }
+    });
+
+    it('should pass a null line target to useAutoScrollWithResume when there is no line hash', () => {
+      render(<LogViewer {...defaultProps} allowAutoScroll={true} />);
+
+      expect(mockUseAutoScrollWithResume).toHaveBeenCalledWith(
+        expect.objectContaining({ activeLineTarget: null }),
+      );
     });
   });
 

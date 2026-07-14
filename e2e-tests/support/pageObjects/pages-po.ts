@@ -120,9 +120,10 @@ export const namespacesPagePO = {
 };
 
 export const issuesPagePO = {
-  page: '[data-test="issues-data-test"]',
-  overviewTab: '[data-test="details__tabItem overview"]',
-  issuesTab: '[data-test="details__tabItem issues"]',
+  page: '[data-test="details"]',
+  pageDescription: 'Summary of issues in your Konflux content at any given point in time',
+  overviewTab: '[data-test="app-details__tabItem overview"]',
+  issuesTab: '[data-test="app-details__tabItem issues"]',
   serviceUnavailableState: '[data-test="service-unavailable-state"]',
   serviceUnavailableTitle: 'Service unavailable',
 };

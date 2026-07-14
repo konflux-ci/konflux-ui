@@ -5,7 +5,8 @@
   width: var(--pf-t--global--spacer--3xl);
   flex-shrink: 0;
   background-color: var(--pf-t--global--background--color--secondary--default);
-  border-right: var(--pf-t--global--border--width--regular) solid var(--pf-t--global--border--color--default);
+  border-right: var(--pf-t--global--border--width--regular) solid
+    var(--pf-t--global--border--color--default);
   user-select: none;
   overflow: hidden;
 
@@ -20,7 +21,6 @@
   justify-content: flex-end;
   padding-right: var(--pf-t--global--spacer--sm);
   width: 100%;
-  box-sizing: border-box;
 }
 
 .line-number__gutter-cell--highlighted {

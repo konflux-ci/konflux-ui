@@ -8,10 +8,8 @@
   display: flex;
   flex-direction: column;
   overflow: hidden; // Prevent scroll chaining and double scrollbars
-  box-sizing: border-box; // Include padding/border in width calculation
 }
 
 .pf-v6-c-log-viewer__text {
   white-space: pre-wrap; // Allow long lines to wrap while preserving spaces and line breaks
 }
-

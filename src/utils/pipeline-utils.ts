@@ -308,28 +308,6 @@ export const pipelineRunStatusToGitOpsStatus = (status: string): GitOpsDeploymen
   }
 };
 
-export const getLabelColorFromStatus = (
-  status: runStatus,
-): 'blue' | 'teal' | 'green' | 'orange' | 'purple' | 'red' | 'grey' | 'yellow' => {
-  switch (status) {
-    case runStatus.Succeeded:
-      return 'green';
-    case runStatus.Failed:
-      return 'red';
-    case runStatus['In Progress']:
-    case runStatus.Running:
-      return 'blue';
-    case runStatus.Cancelled:
-    case runStatus.Cancelling:
-      return 'yellow';
-    case runStatus.Idle:
-    case runStatus.Pending:
-    case runStatus.Skipped:
-    default:
-      return null;
-  }
-};
-
 const SBOM_TASK = 'show-sbom';
 
 export const getSbomTaskRun = (taskruns: TaskRunKind[]) =>
