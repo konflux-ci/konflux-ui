@@ -76,15 +76,25 @@ export class Login {
     cy.get(stageLoginPO.username).type(username);
     cy.get(stageLoginPO.password).type(password, { log: false });
     cy.get(stageLoginPO.loginButton).click();
+    // Click through OAuth consent page if it appears
+    cy.get(`${stageLoginPO.approveButton}, ${stageLoginPO.grantAccessClass}`, { timeout: 30000 })
+      .first()
+      .then(($el) => {
+        if ($el.is(stageLoginPO.approveButton)) {
+          cy.wrap($el).click();
+        }
+      });
+    cy.contains(stageLoginPO.grantAccessClass, stageLoginPO.grantAccessText).click();
 
     // ----- Workaround -----
     // Sometimes page doesn't go to homepage but shows
     // "Something went wrong - Invalid token" message.
-    cy.contains('You have successfully logged into Red Hat Internal SSO', {
-      timeout: 10000,
-    }).should('be.visible');
-    cy.wait(2000);
-    cy.visit(Cypress.env('KONFLUX_BASE_URL'));
+    cy.get('body', { timeout: 10000 }).then(($body) => {
+      if ($body.text().includes('You have successfully logged into Red Hat Internal SSO')) {
+        cy.wait(2000);
+        cy.visit(Cypress.env('KONFLUX_BASE_URL'));
+      }
+    });
     // ----- end of workaround -----
 
     this.waitForApps();
