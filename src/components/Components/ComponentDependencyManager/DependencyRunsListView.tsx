@@ -19,9 +19,9 @@ import { PipelineRunKind } from '~/types';
 import { statuses } from '~/utils/commits-utils';
 import { pipelineRunStatus } from '~/utils/pipeline-utils';
 import {
+  DEPENDENCY_RUNS_COLUMN_STATE_KEY,
   dependencyRunsColumns,
   filterConfigs,
-  filterDependencyRuns,
 } from './dependency-runs-table-config';
 
 type DependencyRunsListViewProps = {
@@ -68,12 +68,7 @@ export const DependencyRunsListView = ({ componentName }: DependencyRunsListView
     );
   }, [dependencyRuns]);
 
-  const nameFilteredRuns = React.useMemo(
-    () => filterDependencyRuns(sortedDependencyRuns, nameFilter),
-    [sortedDependencyRuns, nameFilter],
-  );
-
-  const { filteredData } = useFilteredData(filterConfigs, nameFilteredRuns, clientFilterValues);
+  const { filteredData } = useFilteredData(filterConfigs, sortedDependencyRuns, clientFilterValues);
 
   const statusOptions = React.useMemo(
     () =>
@@ -114,7 +109,7 @@ export const DependencyRunsListView = ({ componentName }: DependencyRunsListView
               getNextPage?.();
             }
           }}
-          columnStateKey="dependency-runs-list"
+          columnStateKey={DEPENDENCY_RUNS_COLUMN_STATE_KEY}
         />
       </TableContainer>
       {isFetchingNextPage ? (

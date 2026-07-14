@@ -7,7 +7,6 @@ import { defineFilters } from '~/shared/components/Filter';
 import { type ColumnDefinition } from '~/shared/components/TableV2';
 import { PipelineRunKind } from '~/types';
 import { pipelineRunStatus } from '~/utils/pipeline-utils';
-import { textMatch } from '~/utils/text-filter-utils';
 
 export const DEPENDENCY_RUNS_COLUMN_STATE_KEY = 'dependency-runs-list';
 
@@ -54,15 +53,15 @@ export const dependencyRunsColumns: ColumnDefinition<PipelineRunKind>[] = [
   {
     id: 'duration',
     header: 'Duration',
-    accessorFn: (row) => row,
+    accessorFn: (row) => row.status?.startTime ?? '',
     size: 1,
     cell: (info) => {
-      const obj = info.row.original;
-      const status = pipelineRunStatus(obj);
+      const plr = info.row.original;
+      const status = pipelineRunStatus(plr);
       return (
         <span data-test="dependency-run-duration">
           {status !== runStatus.Pending ? (
-            <Duration startTime={obj.status?.startTime} endTime={obj.status?.completionTime} />
+            <Duration startTime={plr.status?.startTime} endTime={plr.status?.completionTime} />
           ) : (
             '-'
           )}
@@ -82,14 +81,3 @@ export const dependencyRunsColumns: ColumnDefinition<PipelineRunKind>[] = [
     ),
   },
 ];
-
-export const filterDependencyRuns = (
-  runs: PipelineRunKind[],
-  nameFilter: string,
-): PipelineRunKind[] => {
-  if (!nameFilter) {
-    return runs;
-  }
-
-  return runs.filter((plr) => textMatch(plr.metadata?.name, nameFilter));
-};
