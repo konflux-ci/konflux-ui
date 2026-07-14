@@ -1,18 +1,15 @@
 import React from 'react';
 import { Title } from '@patternfly/react-core';
-import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
-import { IfFeature } from '~/feature-flags/hooks';
 import { DetailsPage } from '../DetailsPage';
 
 const Issues: React.FunctionComponent = () => {
   return (
-    <IfFeature flag="issues-dashboard">
       <DetailsPage
         data-test="issues-data-test"
         title={
           <>
             <Title headingLevel="h1" size="2xl">
-              Issues <FeatureFlagIndicator flags={['issues-dashboard']} fullLabel />
+              Issues
             </Title>
           </>
         }
@@ -30,7 +27,6 @@ const Issues: React.FunctionComponent = () => {
           },
         ]}
       />
-    </IfFeature>
   );
 };
 export default Issues;

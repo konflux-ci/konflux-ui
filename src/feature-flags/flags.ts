@@ -70,14 +70,13 @@ const InternalFLAGS = {
       visibleInFeatureFlagPanel: true,
     },
   },
-  'issues-dashboard': {
-    key: 'issues-dashboard',
-    description: 'Show Summary of Issues in your Konflux content',
+  'conforma-policy': {
+    key: 'conforma-policy',
+    description: 'Show the Conforma Results tab on application details',
     defaultEnabled: false,
     status: 'wip',
     guard: {
-      allOf: ['isKiteServiceEnabled'],
-      failureReason: 'Kite Service is not enabled',
+      failureReason: 'Conforma policy view is work in progress',
       visibleInFeatureFlagPanel: true,
     },
   },
@@ -130,6 +129,18 @@ const InternalFLAGS = {
     description: 'Editing existing secrets',
     defaultEnabled: true,
     status: 'wip',
+  },
+  'pipeline-runs-page': {
+    key: 'pipeline-runs-page',
+    description:
+      'Cross-application Pipeline Runs page with saved views, advanced filters, and column management',
+    defaultEnabled: false,
+    status: 'wip',
+    guard: {
+      allOf: ['isStagingCluster'],
+      failureReason: 'Not a staging cluster',
+      visibleInFeatureFlagPanel: false,
+    },
   },
 } satisfies Record<string, FeatureMeta>;
 

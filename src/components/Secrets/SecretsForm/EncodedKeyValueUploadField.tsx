@@ -10,10 +10,9 @@ import { PlusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/plus-circ
 import { FieldArray, useField } from 'formik';
 import { InputField } from 'formik-pf';
 import { uniqueId } from 'lodash-es';
-import { FieldProps } from '../../../shared/components/formik-fields/field-types';
-import { KeyValueEntry } from '../../../types';
+import { FieldProps } from '~/shared/components/formik-fields/field-types';
+import { KeyValueEntry } from '~/types';
 import EncodedFileUploadField from './EncodedFileUploadField';
-
 type EncodedKeyValueEntryFormProps = {
   label?: string;
   helpText?: string;

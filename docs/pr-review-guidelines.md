@@ -35,7 +35,7 @@ A process checklist for reviewing pull requests. For coding standards and detail
 - [ ] **Tests added for new logic.** New components, hooks, and utilities have `.spec.ts(x)` files.
 - [ ] **Tests cover success, error, and loading states.**
 - [ ] **Semantic queries used.** `getByRole`, `getByLabelText`, `getByText` -- not `getByTestId`.
-- [ ] **User interactions use `userEvent`** (with `userEvent.setup()`), not `fireEvent`.
+- [ ] **User interactions use `userEvent`** (with `userEvent.setup()`) for multi-step or complex interactions. `fireEvent` is acceptable for simple synchronous events (e.g., a single `fireEvent.change` on a debounced input with fake timers). New tests should default to `userEvent`. See [`unit-testing.md` Patterns 2 & 7](./guidelines/unit-testing.md#pattern-2-user-interactions-with-userevent) for examples.
 - [ ] **Correct rendering utilities from `~/unit-test-utils/`.**
 - [ ] **K8s mocks use `createK8sWatchResourceMock`.**
 - [ ] **No snapshot tests.**

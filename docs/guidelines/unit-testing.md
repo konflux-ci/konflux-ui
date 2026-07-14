@@ -434,7 +434,7 @@ Or use the describe-level mock utilities (e.g., `mockUseNamespaceHook`) which se
 
 ### 2. Using `fireEvent` for complex interactions
 
-`fireEvent` dispatches events synchronously and doesn't simulate browser behavior. Use `userEvent.setup()` for anything beyond simple change/click events.
+`fireEvent` dispatches events synchronously and doesn't simulate browser behavior. Use `userEvent.setup()` for anything beyond simple change/click events. `fireEvent` is acceptable for simple synchronous events such as `fireEvent.change` on a debounced input with fake timers (see [Pattern 7](#pattern-7-debounced-input-testing)). The [PR review checklist](../pr-review-guidelines.md#3-testing) follows the same standard.
 
 ### 3. Forgetting to flush async state
 

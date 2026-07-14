@@ -2,7 +2,6 @@ import React from 'react';
 import {
   Alert,
   Banner,
-  Bullseye,
   Button,
   Checkbox,
   Flex,
@@ -40,10 +39,15 @@ import {
 import { useAutoScrollWithResume } from '~/shared/components/pipeline-run-logs/logs/useAutoScrollWithResume';
 import { useLogViewerSearch } from '~/shared/components/pipeline-run-logs/logs/useLogViewerSearch';
 import { LoadingInline } from '~/shared/components/status-box/StatusBox';
-import { VirtualizedLogViewer, type LogSection } from '~/shared/components/virtualized-log-viewer';
-import { buildLines } from '~/shared/components/virtualized-log-viewer/log-viewer-utils';
+import {
+  VirtualizedLogViewer,
+  type LogSection,
+  normalizeSection,
+  useLineNumberNavigation,
+} from '~/shared/components/virtualized-log-viewer';
 import { useFullscreen } from '~/shared/hooks/fullscreen';
 import { TaskRunKind } from '~/types';
+import { prepareLogViewerContent } from './log-viewer-content';
 import LogsTaskDuration from './LogsTaskDuration';
 import { useLogViewerTheme } from './useLogViewerTheme';
 
@@ -89,16 +93,26 @@ const LogViewer: React.FC<Props> = ({
   const [logTheme, setLogTheme] = useLogViewerTheme();
   const themeCheckboxId = React.useId();
 
-  // Auto-scroll and resume button logic
+  const normalizedSections = React.useMemo(() => sections.map(normalizeSection), [sections]);
+
+  const lines = React.useMemo(
+    () => prepareLogViewerContent(normalizedSections),
+    [normalizedSections],
+  );
+
+  // Tracks the line currently targeted via URL hash navigation (e.g. `#L20000`). Computed here
+  // (rather than read from VirtualizedLogContent) so it's available in the very same render —
+  // no round-trip delay through child effects/callbacks — and used to pause auto-scroll-to-bottom
+  // so it doesn't keep fighting the scroll-to-that-line navigation as new log lines stream in.
+  const { highlightedLines: activeLineTarget } = useLineNumberNavigation();
+
   const { autoScroll, showResumeStreamButton, handleScroll, handleResumeClick } =
     useAutoScrollWithResume({
       allowAutoScroll,
+      activeLineTarget,
       onScroll: onScrollProp,
     });
 
-  const lines = React.useMemo(() => buildLines(sections), [sections]);
-
-  // Search state and context management
   const { logViewerContextValue, toolbarContextValue, scrolledRow } = useLogViewerSearch({
     lines,
     autoScroll,
@@ -106,14 +120,15 @@ const LogViewer: React.FC<Props> = ({
 
   const [isFullscreen, fullscreenRef, fullscreenToggle, isFullscreenSupported] =
     useFullscreen<HTMLDivElement>();
-  const [downloadAllStatus, setDownloadAllStatus] = React.useState(false);
-  const [showShortcutHint, setShowShortcutHint] = React.useState(false);
 
   const downloadData = React.useMemo(() => {
     return sections
       .map((s) => (s.containerName ? `${s.containerName}\n${s.data}` : s.data))
       .join('\n\n');
   }, [sections]);
+
+  const [downloadAllStatus, setDownloadAllStatus] = React.useState(false);
+  const [showShortcutHint, setShowShortcutHint] = React.useState(false);
 
   const downloadLogs = () => {
     if (!downloadData) return;
@@ -285,21 +300,39 @@ const LogViewer: React.FC<Props> = ({
 
           {/* Header */}
           <Banner data-test="logs-taskName">
-            <Flex gap={{ default: 'gapSm' }}>
-              {taskName && (
-                <FlexItem flex={{ default: 'flex_1' }} className="log-viewer__task-name">
-                  <Truncate content={taskName} />
+            <Flex
+              alignItems={{ default: 'alignItemsCenter' }}
+              flexWrap={{ default: 'nowrap' }}
+              justifyContent={{ default: 'justifyContentSpaceBetween' }}
+            >
+              {(taskName || isLoading) && (
+                <FlexItem className="log-viewer__task-name-group">
+                  <Flex
+                    gap={{ default: 'gapSm' }}
+                    alignItems={{ default: 'alignItemsCenter' }}
+                    flexWrap={{ default: 'nowrap' }}
+                  >
+                    {taskName && (
+                      <FlexItem flex={{ default: 'flex_1' }} className="log-viewer__task-name">
+                        <Truncate content={taskName} />
+                      </FlexItem>
+                    )}
+                    {isLoading && (
+                      <FlexItem flex={{ default: 'flexNone' }}>
+                        <Spinner
+                          isInline
+                          aria-label="Loading logs"
+                          className="log-viewer__task-name-spinner"
+                        />
+                      </FlexItem>
+                    )}
+                  </Flex>
                 </FlexItem>
               )}
               <FlexItem flex={{ default: 'flexNone' }}>
                 <LogsTaskDuration taskRun={taskRun} />
               </FlexItem>
             </Flex>
-            {isLoading && (
-              <Bullseye className="log-viewer__bullseye">
-                <Spinner size="lg" />
-              </Bullseye>
-            )}
             {errorMessage && <Alert variant="danger" isInline title={errorMessage} />}
           </Banner>
 
@@ -309,9 +342,11 @@ const LogViewer: React.FC<Props> = ({
               <VirtualizedLogViewer
                 key={taskRun?.metadata?.uid || 'default'}
                 sections={sections}
+                normalizedSections={normalizedSections}
                 height={viewerHeight}
                 scrollToRow={scrolledRow}
                 onScroll={handleScroll}
+                readyToNavigate={!isLoading}
               />
             )}
           </div>

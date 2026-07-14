@@ -15,3 +15,7 @@ export * from './mock-analytics';
 export * from './test-helpers';
 
 export * from './rendering-utils';
+
+export * from './mock-virtualizer';
+export * from './mock-table';
+export * from './nuqs-test-utils';

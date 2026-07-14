@@ -63,7 +63,7 @@ export const createFilterObj = <T>(
   if (validKeys) {
     return validKeys.map((key) => ({
       key,
-      count: count ? counts[key] ?? 0 : undefined,
+      count: count ? (counts[key] ?? 0) : undefined,
       label: labels?.[key] ?? undefined,
     }));
   }

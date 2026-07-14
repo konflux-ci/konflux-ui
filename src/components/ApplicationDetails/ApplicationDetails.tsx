@@ -1,6 +1,7 @@
 import React from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Bullseye, Spinner } from '@patternfly/react-core';
+import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useComponents } from '~/hooks/useComponents';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
@@ -23,7 +24,6 @@ import { useModalLauncher } from '../modal/ModalProvider';
 import { applicationDeleteModal } from '../modal/resource-modals';
 import { ApplicationHeader } from './ApplicationHeader';
 import './ApplicationDetails.scss';
-
 
 export const ApplicationDetails: React.FC<React.PropsWithChildren> = () => {
   const { applicationName } = useParams();
@@ -49,6 +49,7 @@ export const ApplicationDetails: React.FC<React.PropsWithChildren> = () => {
     applicationName,
   );
   const track = useTrackEvent();
+  const isConformaPolicyEnabled = useIsOnFeatureFlag('conforma-policy');
   const appDisplayName = application?.spec?.displayName || application?.metadata?.name || '';
   const applicationBreadcrumbs = useApplicationBreadcrumbs(appDisplayName, false);
 
@@ -203,6 +204,15 @@ export const ApplicationDetails: React.FC<React.PropsWithChildren> = () => {
             label: 'Releases',
             isFilled: true,
           },
+          ...(isConformaPolicyEnabled
+            ? [
+                {
+                  key: 'conforma-results',
+                  label: 'Conforma Results',
+                  isFilled: true,
+                },
+              ]
+            : []),
         ]}
       />
     </React.Fragment>

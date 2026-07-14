@@ -100,21 +100,6 @@ const CommitsListViewV2: React.FC<React.PropsWithChildren<CommitsListViewPropsV2
     );
   }, [pipelineRuns]);
 
-  const allVersions = React.useMemo(
-    () => component?.spec?.source?.versions ?? [],
-    [component?.spec?.source?.versions],
-  );
-  const allVersionBranches = React.useMemo(() => allVersions.map((v) => v.revision), [allVersions]);
-
-  // used in CommitListRow to calculate the correct latest PLR status
-  const allPipelineRunsFilteredByVersions = React.useMemo(
-    () =>
-      pipelineRuns?.filter((plr) =>
-        allVersionBranches.includes(plr.metadata?.labels?.[PipelineRunLabel.COMPONENT_VERSION]),
-      ) ?? [],
-    [allVersionBranches, pipelineRuns],
-  );
-
   const commits = React.useMemo(
     () => (plrLoaded && buildPipelineRuns && getCommitsFromPLRs(buildPipelineRuns)) || [],
     [plrLoaded, buildPipelineRuns],
@@ -122,7 +107,7 @@ const CommitsListViewV2: React.FC<React.PropsWithChildren<CommitsListViewPropsV2
 
   const commitPipelineRunMap = React.useMemo<Record<string, PipelineRunKind[]>>(
     () =>
-      allPipelineRunsFilteredByVersions.reduce(
+      (pipelineRuns ?? []).reduce(
         (acc, plr) => {
           const sha = getCommitSha(plr);
           if (sha) {
@@ -135,7 +120,7 @@ const CommitsListViewV2: React.FC<React.PropsWithChildren<CommitsListViewPropsV2
         },
         {} as Record<string, PipelineRunKind[]>,
       ),
-    [allPipelineRunsFilteredByVersions],
+    [pipelineRuns],
   );
 
   const commitStatusMap = React.useMemo<Record<string, runStatus>>(

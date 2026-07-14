@@ -1,0 +1,9 @@
+.conforma-results-tab {
+  &__summary-wrapper {
+    margin-top: var(--pf-v5-global--spacer--md);
+  }
+
+  &__detail-table tbody > tr > td {
+    vertical-align: top;
+  }
+}

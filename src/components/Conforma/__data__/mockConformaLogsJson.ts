@@ -175,6 +175,9 @@ export const mockConformaJSON = {
   Error: 'success criteria not met',
 };
 
+const MOCK_CONTAINER_IMAGE =
+  'quay.io/redhat-appstudio/user-workload@sha256:8a234fb8f5785c29fd816e385a09e556a81e0e83d725b74085217e53ce3a7694';
+
 export const mockConformaUIData = [
   {
     title: 'Missing CVE scan results',
@@ -186,13 +189,20 @@ export const mockConformaUIData = [
     msg: 'CVE scan results not found',
     solution: 'solution for failure',
     collection: ['minimal'],
+    images: [MOCK_CONTAINER_IMAGE],
+    code: 'cve.missing_cve_scan_results',
   },
   {
     title: 'No tasks run',
     description:
       'This policy enforces that at least one Task is present in the PipelineRun attestation.',
     status: CONFORMA_RESULT_STATUS.successes,
+    timestamp: undefined,
     component: 'devfile-sample-python-basic-aw05',
+    msg: 'Pass',
     collection: ['minimal'],
+    solution: undefined,
+    images: [MOCK_CONTAINER_IMAGE],
+    code: 'tasks.tasks_missing',
   },
 ];

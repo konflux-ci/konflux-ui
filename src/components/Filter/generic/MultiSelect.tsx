@@ -1,8 +1,11 @@
-import { useState } from 'react';
+import * as React from 'react';
 import {
   Badge,
   Divider,
+  MenuSearch,
+  MenuSearchInput,
   MenuToggle,
+  SearchInput,
   Select,
   SelectGroup,
   SelectList,
@@ -22,9 +25,12 @@ type MultiSelectProps = {
   values: string[];
   setValues: (filters: string[]) => void;
   options: { key: string; count?: number; label?: string }[];
+  hasInlineFilter?: boolean;
+  inlineFilterPlaceholderText?: string;
+  inlineFilterThreshold?: number;
 };
 
-export const MultiSelect = ({
+const MultiSelectComponent = ({
   label,
   filterKey,
   placeholderText,
@@ -33,8 +39,46 @@ export const MultiSelect = ({
   values,
   setValues,
   options,
+  hasInlineFilter = false,
+  inlineFilterPlaceholderText,
+  inlineFilterThreshold = 20,
 }: MultiSelectProps) => {
-  const [expanded, setExpanded] = useState(defaultExpanded ?? false);
+  const [expanded, setExpanded] = React.useState(defaultExpanded ?? false);
+  const [filterValue, setFilterValue] = React.useState('');
+
+  const showInlineFilter = React.useMemo(() => {
+    if (!hasInlineFilter) return false;
+    const itemCount = options.filter((o) => !o.key.startsWith(MENU_DIVIDER)).length;
+    return itemCount > inlineFilterThreshold;
+  }, [hasInlineFilter, options, inlineFilterThreshold]);
+
+  const selectOptions = React.useMemo(() => {
+    const lowerFilter = filterValue?.toLowerCase();
+
+    return options
+      .filter((option) => {
+        if (!showInlineFilter) return true;
+        if (!filterValue?.trim()) return true;
+        return (
+          !option.key.startsWith(MENU_DIVIDER) &&
+          (option.label ?? option.key).toLowerCase().includes(lowerFilter)
+        );
+      })
+      .map((option) =>
+        option.key.startsWith(MENU_DIVIDER) ? (
+          <Divider component="li" key={option.key} />
+        ) : (
+          <SelectOption
+            hasCheckbox
+            key={option.key}
+            value={option.key}
+            isSelected={values.includes(option.key)}
+          >
+            {option.label ?? option.key}
+          </SelectOption>
+        ),
+      );
+  }, [filterValue, options, showInlineFilter, values]);
 
   const chipLabels = values.map((v) => options.find((o) => o.key === v)?.label ?? v);
   const labelToKey = options.reduce(
@@ -71,7 +115,12 @@ export const MultiSelect = ({
         toggle={(toggleRef) => (
           <MenuToggle
             ref={toggleRef}
-            onClick={() => setExpanded(!expanded)}
+            onClick={() => {
+              setExpanded(!expanded);
+              if (showInlineFilter) {
+                setFilterValue('');
+              }
+            }}
             isExpanded={expanded}
             icon={<FilterIcon />}
             aria-label={toggleAriaLabel ?? `${label} filter menu`}
@@ -80,26 +129,26 @@ export const MultiSelect = ({
             {values.length > 0 && <Badge isRead>{values.length}</Badge>}
           </MenuToggle>
         )}
+        isScrollable
       >
+        {showInlineFilter && (
+          <MenuSearch>
+            <MenuSearchInput>
+              <SearchInput
+                value={filterValue}
+                onChange={(_event, value) => setFilterValue(value)}
+                placeholder={inlineFilterPlaceholderText ?? `Filter ${label.toLowerCase()}`}
+                aria-label={inlineFilterPlaceholderText ?? `Filter ${label.toLowerCase()}`}
+              />
+            </MenuSearchInput>
+          </MenuSearch>
+        )}
         <SelectGroup label={label} key={filterKey}>
-          <SelectList>
-            {options.map((filter) =>
-              filter.key.startsWith(MENU_DIVIDER) ? (
-                <Divider component="li" key={filter.key} />
-              ) : (
-                <SelectOption
-                  hasCheckbox
-                  key={filter.key}
-                  value={filter.key}
-                  isSelected={values.includes(filter.key)}
-                >
-                  {filter.label ?? filter.key}
-                </SelectOption>
-              ),
-            )}
-          </SelectList>
+          <SelectList>{selectOptions}</SelectList>
         </SelectGroup>
       </Select>
     </ToolbarFilter>
   );
 };
+
+export const MultiSelect = React.memo(MultiSelectComponent);

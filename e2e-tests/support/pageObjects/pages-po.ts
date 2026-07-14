@@ -118,3 +118,12 @@ export const namespacesPagePO = {
   filterNamespaceInput: '[aria-label="name filter"]',
   title: 'h1:contains("Namespaces")',
 };
+
+export const issuesPagePO = {
+  page: '[data-test="details"]',
+  pageDescription: 'Summary of issues in your Konflux content at any given point in time',
+  overviewTab: '[data-test="app-details__tabItem overview"]',
+  issuesTab: '[data-test="app-details__tabItem issues"]',
+  serviceUnavailableState: '[data-test="service-unavailable-state"]',
+  serviceUnavailableTitle: 'Service unavailable',
+};

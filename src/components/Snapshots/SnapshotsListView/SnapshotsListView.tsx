@@ -1,71 +1,46 @@
 import * as React from 'react';
 import {
-  Bullseye,
   EmptyStateBody,
   PageSectionVariants,
   PageSection,
-  Spinner,
   Title,
   TextContent,
   Text,
   TextVariants,
   Flex,
   FlexItem,
-  Switch,
-  Select,
-  MenuToggle,
-  SelectOption,
-  SelectList,
 } from '@patternfly/react-core';
-import { FilterIcon } from '@patternfly/react-icons/dist/esm/icons/filter-icon';
-import { FilterContext } from '~/components/Filter/generic/FilterContext';
-import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
-import { ExternalLink, useDeepCompareMemoize } from '~/shared';
+import emptySnapshotImgUrl from '~/assets/Snapshots.svg';
+import ColumnManagement from '~/components/ColumnManagement/ColumnManagement';
+import { LEARN_MORE_SNAPSHOTS } from '~/consts/documentation';
+import { PipelineRunEventType, PipelineRunLabel } from '~/consts/pipelinerun';
+import { useK8sAndKarchResources } from '~/hooks/useK8sAndKarchResources';
+import { SnapshotGroupVersionKind, SnapshotModel } from '~/models';
+import { ExternalLink } from '~/shared';
+import AppEmptyState from '~/shared/components/empty-state/AppEmptyState';
+import FilteredEmptyState from '~/shared/components/empty-state/FilteredEmptyState';
+import { useFilterState, useFilteredData, FilterToolbar } from '~/shared/components/Filter';
+import { Table, TableContainer } from '~/shared/components/TableV2';
+import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
-import { textMatch } from '~/utils/text-filter-utils';
-import emptySnapshotImgUrl from '../../../assets/Snapshots.svg';
-import { LEARN_MORE_SNAPSHOTS } from '../../../consts/documentation';
-import { PipelineRunEventType, PipelineRunLabel } from '../../../consts/pipelinerun';
-import { useK8sAndKarchResources } from '../../../hooks/useK8sAndKarchResources';
-import { SnapshotGroupVersionKind, SnapshotModel } from '../../../models';
-import AppEmptyState from '../../../shared/components/empty-state/AppEmptyState';
-import FilteredEmptyState from '../../../shared/components/empty-state/FilteredEmptyState';
-import { useNamespace } from '../../../shared/providers/Namespace';
-import { Snapshot } from '../../../types/coreBuildService';
-import SnapshotsList from './SnapshotsList';
-import { snapshotColumns } from './SnapshotsListHeader';
-import { SnapshotsListViewProps } from './types';
+import { Snapshot } from '~/types/coreBuildService';
+import {
+  FILTER_BY_VALUES,
+  filterConfigs,
+  filterOptions,
+  SNAPSHOTS_LIST_COLUMN_STATE_KEY,
+  SNAPSHOTS_LIST_COLUMNS,
+} from './snapshots-table-config';
 
-enum FilterTypes {
-  name = 'name',
-  commitMessage = 'commitMessage',
-}
-
-const FILTER_TYPE_LABELS: Record<FilterTypes, string> = {
-  [FilterTypes.name]: 'Name',
-  [FilterTypes.commitMessage]: 'Commit message',
+export type SnapshotsListViewProps = {
+  applicationName: string;
 };
 
 const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps>> = ({
   applicationName,
 }) => {
   const namespace = useNamespace();
-  const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
-  const [isOpen, setIsOpen] = React.useState(false);
-  const [activeFilter, setActiveFilter] = React.useState(FilterTypes.name);
-  const filters = useDeepCompareMemoize({
-    name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
-    commitMessage: unparsedFilters.commitMessage ? (unparsedFilters.commitMessage as string) : '',
-    showMergedOnly: unparsedFilters.showMergedOnly
-      ? (unparsedFilters.showMergedOnly as boolean)
-      : false,
-    releasable: unparsedFilters.releasable
-      ? unparsedFilters.releasable === true || unparsedFilters.releasable === 'true'
-      : false,
-  });
-
-  const { name: nameFilter, commitMessage: commitMessageFilter, showMergedOnly } = filters;
-  const releasableFilter = filters.releasable ?? false;
+  const { filterValues, clientFilterValues, clearAll, isFiltered } = useFilterState(filterConfigs);
 
   const {
     data: snapshots,
@@ -91,41 +66,33 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
     undefined,
     undefined,
     {
-      enableArchive: !releasableFilter,
+      enableArchive: !filterValues.filterBy.includes(FILTER_BY_VALUES.RELEASABLE),
     },
   );
 
-  const filteredSnapshots = React.useMemo(() => {
-    return (snapshots || []).filter((s) => {
+  const { filteredData: textFiltered } = useFilteredData(
+    filterConfigs,
+    snapshots ?? [],
+    clientFilterValues,
+  );
+
+  const finalFilteredSnapshots = React.useMemo(() => {
+    return textFiltered.filter((s) => {
       if (
-        showMergedOnly &&
+        filterValues.filterBy.includes(FILTER_BY_VALUES.SHOW_MERGED_ONLY) &&
         s.metadata.labels?.[PipelineRunLabel.TEST_COMMIT_EVENT_TYPE_LABEL] ===
           PipelineRunEventType.PULL
       ) {
         return false;
       }
-      if (!textMatch(s.metadata.name, nameFilter)) {
-        return false;
-      }
-      if (
-        !textMatch(
-          s.metadata.annotations?.[PipelineRunLabel.TEST_SERVICE_COMMIT_TITLE],
-          commitMessageFilter,
-        )
-      ) {
-        return false;
-      }
       return true;
     });
-  }, [snapshots, nameFilter, showMergedOnly, commitMessageFilter]);
+  }, [textFiltered, filterValues.filterBy]);
 
-  if (isLoading) {
-    return (
-      <Bullseye>
-        <Spinner data-test="spinner" />
-      </Bullseye>
-    );
-  }
+  const meta = React.useMemo(
+    () => ({ namespace, applicationName, getSource }),
+    [namespace, applicationName, getSource],
+  );
 
   if (clusterError && archiveError) {
     // Don't display cluster error if the code is 404 as this error is expected
@@ -140,8 +107,6 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
 
     return getErrorState(archiveError, !isLoading, 'snapshots');
   }
-
-  const isFiltered = nameFilter || releasableFilter || commitMessageFilter || showMergedOnly;
 
   return (
     <PageSection padding={{ default: 'noPadding' }} variant={PageSectionVariants.light} isFilled>
@@ -162,97 +127,50 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
           <ExternalLink href={LEARN_MORE_SNAPSHOTS}>Learn more</ExternalLink>
         </Text>
       </TextContent>
-      {(!snapshots || snapshots.length === 0) && !isFiltered ? (
-        <AppEmptyState
-          emptyStateImg={emptySnapshotImgUrl}
-          title="No snapshots found"
-          data-test="snapshots-empty-state"
-        >
-          <EmptyStateBody>
-            Snapshots are created automatically by push events or pull request events. Snapshots can
-            also be created manually if needed. Once created, Snapshots will be displayed on this
-            page.
-          </EmptyStateBody>
-        </AppEmptyState>
-      ) : (
-        <>
-          <Flex spaceItems={{ default: 'spaceItemsNone' }} className="pf-v5-u-mt-sm">
-            <Select
-              toggle={(toggleRef) => (
-                <MenuToggle
-                  ref={toggleRef}
-                  icon={<FilterIcon />}
-                  data-test="snapshots-list-filter-dropdown"
-                  isExpanded={isOpen}
-                  onClick={() => setIsOpen(!isOpen)}
-                >
-                  {FILTER_TYPE_LABELS[activeFilter]}
-                </MenuToggle>
-              )}
-              onSelect={(_, val) => {
-                const newFilter = val as string;
-                setActiveFilter(newFilter as FilterTypes);
-                setFilters({ ...unparsedFilters, [activeFilter]: '', [newFilter]: '' });
-                setIsOpen(false);
-              }}
-              selected={activeFilter}
-              isOpen={isOpen}
-              onOpenChange={setIsOpen}
-            >
-              <SelectList>
-                <SelectOption key={FilterTypes.name} value={FilterTypes.name}>
-                  Name
-                </SelectOption>
-                <SelectOption key={FilterTypes.commitMessage} value={FilterTypes.commitMessage}>
-                  Commit message
-                </SelectOption>
-              </SelectList>
-            </Select>
 
-            <BaseTextFilterToolbar
-              text={activeFilter === FilterTypes.name ? nameFilter : commitMessageFilter}
-              label={activeFilter === FilterTypes.name ? 'name' : 'commit message'}
-              setText={(value) => {
-                setFilters({ ...unparsedFilters, [activeFilter]: value });
-              }}
-              onClearFilters={onClearFilters}
-              totalColumns={snapshotColumns.length}
-              noLeftPadding={true}
-              className="pf-v5-u-py-xs"
-            >
-              <Switch
-                id="show-merged-snapshots-only-switch"
-                label="Hide Pull Request Snapshots"
-                className="pf-v5-u-py-xs"
-                isChecked={showMergedOnly}
-                onChange={(_event, checked) =>
-                  setFilters({ ...unparsedFilters, showMergedOnly: checked })
-                }
+      <TableContainer
+        data={finalFilteredSnapshots}
+        unfilteredData={snapshots ?? []}
+        loaded={!isLoading}
+        emptyState={<FilteredEmptyState onClearFilters={clearAll} />}
+        noDataState={
+          <AppEmptyState
+            emptyStateImg={emptySnapshotImgUrl}
+            title="No snapshots found"
+            data-test="snapshots-empty-state"
+          >
+            <EmptyStateBody>
+              Snapshots are created automatically by push events or pull request events. Snapshots
+              can also be created manually if needed. Once created, Snapshots will be displayed on
+              this page.
+            </EmptyStateBody>
+          </AppEmptyState>
+        }
+        toolbar={
+          isFiltered || (snapshots ?? []).length > 0 ? (
+            <FilterToolbar configs={filterConfigs} options={filterOptions}>
+              <ColumnManagement<Snapshot>
+                columns={SNAPSHOTS_LIST_COLUMNS}
+                columnStateKey={SNAPSHOTS_LIST_COLUMN_STATE_KEY}
+                showColumnManagement
               />
-              <Switch
-                id="releasable"
-                label="Show only releasable snapshots"
-                className="pf-v5-u-py-xs"
-                isChecked={releasableFilter}
-                onChange={(_event, checked) =>
-                  setFilters({ ...unparsedFilters, releasable: checked })
-                }
-              />
-            </BaseTextFilterToolbar>
-          </Flex>
-
-          {filteredSnapshots.length === 0 ? (
-            <FilteredEmptyState onClearFilters={onClearFilters} />
-          ) : (
-            <SnapshotsList
-              snapshots={filteredSnapshots}
-              applicationName={applicationName}
-              getSource={getSource}
-              infiniteLoadingProps={{ hasNextPage, isFetchingNextPage, fetchNextPage }}
-            />
-          )}
-        </>
-      )}
+            </FilterToolbar>
+          ) : undefined
+        }
+      >
+        <Table
+          data={finalFilteredSnapshots}
+          columns={SNAPSHOTS_LIST_COLUMNS}
+          getRowId={(obj) => obj.metadata.uid ?? obj.metadata.name}
+          aria-label="Snapshots List"
+          enableSorting
+          hasNextPage={hasNextPage}
+          isFetchingNextPage={isFetchingNextPage}
+          fetchNextPage={fetchNextPage}
+          columnStateKey={SNAPSHOTS_LIST_COLUMN_STATE_KEY}
+          meta={meta}
+        />
+      </TableContainer>
     </PageSection>
   );
 };
