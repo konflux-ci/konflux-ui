@@ -36,6 +36,14 @@ export const getOpaqueFieldsFromExistingSecret = (
   existingSecrets: BuildTimeSecret[],
 ): { keyValues?: KeyValueEntry[]; labels: KeyValueEntry[] } => {
   if (isPartnerTask(secretName, supportedPartnerTasksSecrets)) {
+    if (isUsingExistingClusterSecret(secretName, SecretTypeDropdownLabel.opaque, existingSecrets)) {
+      const matched = findExistingOpaqueSecretByName(secretName, existingSecrets);
+      return {
+        keyValues: matched?.opaque?.keyValuePairs,
+        labels: matched?.labels?.length ? matched.labels : DEFAULT_OPAQUE_LABELS,
+      };
+    }
+
     return {
       keyValues: [...getSupportedPartnerTaskKeyValuePairs(secretName)],
       labels: DEFAULT_OPAQUE_LABELS,

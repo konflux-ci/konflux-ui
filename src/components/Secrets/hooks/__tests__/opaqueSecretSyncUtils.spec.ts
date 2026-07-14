@@ -77,16 +77,41 @@ describe('opaqueSecretSyncUtils', () => {
     });
   });
 
+  const populatedSnykSecret: BuildTimeSecret = {
+    name: 'snyk-secret',
+    type: SecretType.opaque,
+    providerUrl: 'https://snyk.io/',
+    tokenKeyName: 'snyk_token',
+    opaque: {
+      keyValuePairs: [
+        { key: 'snyk_token', value: 'configured', readOnlyKey: true, readOnlyValue: true },
+      ],
+    },
+    labels: [{ key: 'partner', value: 'snyk' }],
+  };
+
   describe('getOpaqueFieldsFromExistingSecret', () => {
-    it('returns partner task key values and default labels', () => {
+    it('returns partner task template key values when cluster secret is not populated', () => {
       expect(getOpaqueFieldsFromExistingSecret('snyk-secret', existingSecrets)).toEqual({
         keyValues: expect.arrayContaining([
           expect.objectContaining({
             key: 'snyk_token',
             readOnlyKey: true,
+            readOnlyValue: false,
           }),
         ]),
         labels: DEFAULT_OPAQUE_LABELS,
+      });
+    });
+
+    it('returns populated cluster values for partner tasks already in cluster', () => {
+      expect(
+        getOpaqueFieldsFromExistingSecret('snyk-secret', [populatedSnykSecret]),
+      ).toEqual({
+        keyValues: [
+          { key: 'snyk_token', value: 'configured', readOnlyKey: true, readOnlyValue: true },
+        ],
+        labels: [{ key: 'partner', value: 'snyk' }],
       });
     });
 
