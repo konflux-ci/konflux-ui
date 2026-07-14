@@ -1,6 +1,9 @@
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { runStatus } from '~/consts/pipelinerun';
 import { useK8sAndKarchResource } from '~/hooks/useK8sAndKarchResources';
+import { useStatusOnFavicon } from '~/hooks/useStatusOnFavicon';
+import { ReleaseCondition } from '~/types';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { TrackEvents } from '~/utils/analytics';
 import { downloadYaml } from '~/utils/common-utils';
@@ -41,6 +44,10 @@ jest.mock('../../../utils/release-actions', () => ({
   releaseRerun: jest.fn(),
 }));
 
+jest.mock('~/hooks/useStatusOnFavicon', () => ({
+  useStatusOnFavicon: jest.fn(),
+}));
+
 jest.mock('~/utils/common-utils', () => {
   const actual = jest.requireActual('~/utils/common-utils');
   const mockDownloadYaml = jest.fn();
@@ -59,6 +66,7 @@ const useMockRelease = useK8sAndKarchResource as jest.Mock;
 const useAccessReviewForModelMock = useAccessReviewForModel as jest.Mock;
 const releaseRerunMock = releaseRerun as jest.Mock;
 const downloadYamlMock = downloadYaml as jest.Mock;
+const useStatusOnFaviconMock = useStatusOnFavicon as jest.Mock;
 
 describe('ReleaseDetailsView', () => {
   const useNamespaceMock = mockUseNamespaceHook('test-ws');
@@ -110,6 +118,22 @@ describe('ReleaseDetailsView', () => {
     useMockRelease.mockReturnValue({ data: mockRelease, isLoading: false, fetchError: undefined });
     renderWithQueryClientAndRouter(<ReleaseDetailsView />);
     expect(screen.getAllByRole('heading')[0]).toHaveTextContent('test-release');
+  });
+
+  it('passes release status to useStatusOnFavicon when loaded', () => {
+    useMockRelease.mockReturnValue({
+      data: {
+        ...mockRelease,
+        status: {
+          conditions: [{ reason: 'Succeeded', status: 'True', type: ReleaseCondition.Released }],
+        },
+      },
+      isLoading: false,
+      fetchError: undefined,
+    });
+    renderWithQueryClientAndRouter(<ReleaseDetailsView />);
+
+    expect(useStatusOnFaviconMock).toHaveBeenCalledWith(runStatus.Succeeded);
   });
 
   describe('Re-run release action', () => {

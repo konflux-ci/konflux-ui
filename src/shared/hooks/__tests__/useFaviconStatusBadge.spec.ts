@@ -19,6 +19,12 @@ describe('useFaviconStatusBadge', () => {
     jest.clearAllMocks();
   });
 
+  it('does not apply favicon badge when color is null', () => {
+    renderHook(() => useFaviconStatusBadge(null));
+
+    expect(applyFaviconBadgeMock).not.toHaveBeenCalled();
+  });
+
   it('applies favicon badge when color is provided', () => {
     renderHook(() => useFaviconStatusBadge(blueColor.value));
 

@@ -3,13 +3,19 @@ import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { CONFORMA_TASK, ENTERPRISE_CONTRACT_LABEL } from '~/consts/security';
 import { usePipelineRunV2 } from '~/hooks/usePipelineRunsV2';
+import { useStatusOnFavicon } from '~/hooks/useStatusOnFavicon';
 import { useTaskRunV2 } from '~/hooks/useTaskRunsV2';
 import { TektonResourceLabel } from '~/types';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { downloadYaml } from '~/utils/common-utils';
+import { taskRunStatus } from '~/utils/pipeline-utils';
 import { renderWithQueryClientAndRouter } from '~/utils/test-utils';
 import { testTaskRuns } from '../../TaskRunListView/__data__/mock-TaskRun-data';
 import { TaskRunDetailsView } from '../TaskRunDetailsView';
+
+jest.mock('~/hooks/useStatusOnFavicon', () => ({
+  useStatusOnFavicon: jest.fn(),
+}));
 
 jest.mock('react-i18next', () => ({
   useTranslation: jest.fn(() => ({ t: (x) => x })),
@@ -56,6 +62,7 @@ jest.mock('~/utils/common-utils', () => {
 const useTaskRunMock = useTaskRunV2 as jest.Mock;
 const usePipelineRunV2Mock = usePipelineRunV2 as jest.Mock;
 const downloadYamlMock = downloadYaml as jest.Mock;
+const useStatusOnFaviconMock = useStatusOnFavicon as jest.Mock;
 
 describe('TaskRunDetailsView', () => {
   mockUseNamespaceHook('test-ns');
@@ -75,6 +82,13 @@ describe('TaskRunDetailsView', () => {
     renderWithQueryClientAndRouter(<TaskRunDetailsView />);
     screen.getByText('404: Page not found');
     screen.getByText('Go to applications list');
+  });
+
+  it('passes task run status to useStatusOnFavicon when loaded', () => {
+    useTaskRunMock.mockReturnValue([mockTaskRun, true]);
+    renderWithQueryClientAndRouter(<TaskRunDetailsView />);
+
+    expect(useStatusOnFaviconMock).toHaveBeenCalledWith(taskRunStatus(mockTaskRun));
   });
 
   it('should render the actions button and download YAML when clicked', async () => {
