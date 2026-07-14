@@ -12,7 +12,6 @@ import {
   AlertVariant,
   InputGroup,
   FormGroup,
-  TextInput,
   DataListItemRow,
   DataListItemCells,
   DataListCell,
@@ -23,36 +22,9 @@ import {
 } from '@patternfly/react-core';
 import { MinusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/minus-circle-icon';
 import { PlusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/plus-circle-icon';
-import { FieldArray, useField, useFormikContext } from 'formik';
-import { getFieldId } from '~/shared/components/formik-fields/field-utils';
+import { FieldArray, useField } from 'formik';
+import { InputField } from 'formik-pf';
 import { Param } from '../../types/coreBuildService';
-
-type ParamTextFieldProps = {
-  name: string;
-  onBlur?: (event: React.FocusEvent<HTMLInputElement>) => void;
-  'data-test'?: string;
-};
-
-const ParamTextField: React.FC<ParamTextFieldProps> = ({ name, onBlur, 'data-test': dataTest }) => {
-  const [field] = useField<string>(name);
-  const fieldId = getFieldId(name, 'input');
-
-  return (
-    <TextInput
-      id={fieldId}
-      name={name}
-      value={field.value ?? ''}
-      onChange={(_event, value) => {
-        void field.onChange({ target: { name, value } });
-      }}
-      onBlur={(event) => {
-        field.onBlur(event);
-        onBlur?.(event);
-      }}
-      data-test={dataTest}
-    />
-  );
-};
 
 interface IntegrationTestParamsProps {
   heading?: React.ReactNode;
@@ -65,16 +37,7 @@ const FormikParamsField: React.FC<React.PropsWithChildren<IntegrationTestParamsP
   fieldName,
   initExpanded = false,
 }) => {
-  const { setFieldValue } = useFormikContext();
   const [, { value: parameters, error }] = useField<Param[]>(fieldName);
-
-  const trimFieldOnBlur =
-    (fieldPath: string) => (event: React.FocusEvent<HTMLInputElement>) => {
-      const trimmed = event.target.value.trim();
-      if (trimmed !== event.target.value) {
-        void setFieldValue(fieldPath, trimmed);
-      }
-    };
 
   const initExpandedState = React.useMemo(() => {
     const state = [];
@@ -87,7 +50,7 @@ const FormikParamsField: React.FC<React.PropsWithChildren<IntegrationTestParamsP
   const [expanded, setExpanded] = React.useState<boolean[]>(initExpandedState);
   const [paramExpanded, setParamExpanded] = React.useState<boolean>(initExpanded);
 
-  const toggleExpandedState = (i: number) => {
+  const toggleExpandedState = (i) => {
     const state = [...expanded];
     state[i] = !state[i];
     setExpanded(state);
@@ -192,10 +155,9 @@ const FormikParamsField: React.FC<React.PropsWithChildren<IntegrationTestParamsP
                                       className="pf-v5-u-pl-xl pf-v5-u-pt-0"
                                     >
                                       <FormGroup label="Name">
-                                        <ParamTextField
+                                        <InputField
                                           name={`${fieldName}[${i}].name`}
                                           data-test={`param-${i}-name`}
-                                          onBlur={trimFieldOnBlur(`${fieldName}[${i}].name`)}
                                         />
                                       </FormGroup>
                                     </DataListCell>,
@@ -216,13 +178,10 @@ const FormikParamsField: React.FC<React.PropsWithChildren<IntegrationTestParamsP
                                                     key={`value${i}${j}`}
                                                     className="pf-v5-u-mb-md"
                                                   >
-                                                    <ParamTextField
+                                                    <InputField
                                                       key={`value${i}${j}`}
                                                       name={`${fieldName}[${i}].values[${j}]`}
                                                       data-test={`param-${i}-value-${j}`}
-                                                      onBlur={trimFieldOnBlur(
-                                                        `${fieldName}[${i}].values[${j}]`,
-                                                      )}
                                                     />
                                                     <Button
                                                       className="pf-v5-u-ml-md"
