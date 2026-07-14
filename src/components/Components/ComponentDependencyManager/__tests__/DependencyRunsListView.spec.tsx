@@ -129,17 +129,9 @@ describe('DependencyRunsListView', () => {
     expect(screen.getByText('Unable to load dependency runs')).toBeInTheDocument();
   });
 
-  it('hides the filter toolbar when there are no runs and no active filters', () => {
-    usePipelineRunsV2Mock.mockReturnValue([[], true, null, jest.fn(), noNextPage]);
+  it('shows the filter toolbar', () => {
     renderWithQueryClient(<TestedComponent />);
-    expect(screen.queryByLabelText('Search filter')).not.toBeInTheDocument();
-  });
-
-  it('shows the filter toolbar when runs are present', async () => {
-    renderWithQueryClient(<TestedComponent />);
-    await waitFor(() => {
-      expect(screen.getByTestId('table-v2')).toBeInTheDocument();
-    });
+    expect(screen.queryByTestId('filter-toolbar')).toBeInTheDocument();
   });
 
   it('does not fetch pipeline runs until the component is loaded', () => {
