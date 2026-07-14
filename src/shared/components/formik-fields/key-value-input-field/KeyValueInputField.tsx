@@ -8,6 +8,13 @@ import { KeyValueFieldProps } from '../field-types';
 import { getFieldId } from '../field-utils';
 import FieldHelperText from '../FieldHelperText';
 
+const areNameValuePairsEqual = (
+  current: (string | number)[][],
+  next: (string | number)[][],
+): boolean =>
+  current.length === next.length &&
+  current.every((pair, index) => pair[0] === next[index][0] && pair[1] === next[index][1]);
+
 const KeyValueField: React.FC<React.PropsWithChildren<KeyValueFieldProps>> = ({
   label,
   helpText,
@@ -33,7 +40,9 @@ const KeyValueField: React.FC<React.PropsWithChildren<KeyValueFieldProps>> = ({
   const [keyValue, setKeyValue] = React.useState(nameValuePairs);
 
   React.useEffect(() => {
-    setKeyValue(nameValuePairs);
+    setKeyValue((current) =>
+      areNameValuePairsEqual(current, nameValuePairs) ? current : nameValuePairs,
+    );
   }, [nameValuePairs]);
 
   const onChangeKeyValuePair = React.useCallback(

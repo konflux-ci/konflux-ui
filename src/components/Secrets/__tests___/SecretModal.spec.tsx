@@ -1,13 +1,14 @@
 import { act } from 'react';
 import { fireEvent, screen, waitFor } from '@testing-library/react';
-import { supportedPartnerTasksSecrets } from '~/utils/secrets/secret-utils';
+import { userEvent } from '@testing-library/user-event';
 import {
   SecretTypeDropdownLabel,
   SecretType,
   SecretForComponentOption,
   SourceSecretType,
-} from '../../../types';
-import { formikRenderer } from '../../../utils/test-utils';
+} from '~/types';
+import { supportedPartnerTasksSecrets } from '~/utils/secrets/secret-utils';
+import { formikRenderer } from '~/utils/test-utils';
 import SecretModal, { SecretModalValues } from '../SecretModal';
 
 const initialValues: SecretModalValues = {
@@ -231,6 +232,7 @@ describe('SecretModal', () => {
   });
 
   it('should show Use button when an existing opaque cluster secret is selected', async () => {
+    const user = userEvent.setup();
     const clusterSecret: SecretModalValues['existingSecrets'][number] = {
       type: SecretType.opaque,
       name: 'cluster-secret',
@@ -243,8 +245,8 @@ describe('SecretModal', () => {
 
     await renderSecretModal(initialValues, [clusterSecret]);
 
-    fireEvent.click(screen.getByRole('button', { name: 'secret-name-dropdown' }));
-    fireEvent.click(screen.getByText('cluster-secret'));
+    await user.click(screen.getByRole('button', { name: 'secret-name-dropdown' }));
+    await user.click(screen.getByText('cluster-secret'));
 
     await waitFor(() => {
       expect(screen.getByRole('button', { name: 'Use' })).toBeEnabled();

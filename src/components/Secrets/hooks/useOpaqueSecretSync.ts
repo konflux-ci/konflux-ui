@@ -21,13 +21,15 @@ export const useOpaqueSecretSync = ({
 }: UseOpaqueSecretSyncOptions) => {
   const { values, setFieldValue } = useFormikContext<SecretFormValues>();
   const previousSecretNameRef = useRef(values.secretName);
+  const opaqueKeyValuesRef = useRef(values.opaque?.keyValues ?? []);
+  opaqueKeyValuesRef.current = values.opaque?.keyValues ?? [];
 
   const clearReadOnlyKeys = useCallback(() => {
     void setFieldValue(
       'opaque.keyValues',
-      getKeyValuesWithoutReadOnlyKeys(values.opaque?.keyValues ?? []),
+      getKeyValuesWithoutReadOnlyKeys(opaqueKeyValuesRef.current),
     );
-  }, [setFieldValue, values.opaque?.keyValues]);
+  }, [setFieldValue]);
 
   const resetOpaqueFields = useCallback(() => {
     void setFieldValue('opaque.keyValues', DEFAULT_OPAQUE_KEY_VALUES);
@@ -37,13 +39,13 @@ export const useOpaqueSecretSync = ({
   const resetKeyValues = useCallback(() => {
     void setFieldValue(
       'opaque.keyValues',
-      getResetKeyValuesForImage(values.opaque?.keyValues ?? []),
+      getResetKeyValuesForImage(opaqueKeyValuesRef.current),
     );
-  }, [setFieldValue, values.opaque?.keyValues]);
+  }, [setFieldValue]);
 
   const makeOpaqueFieldsEditable = useCallback(() => {
-    void setFieldValue('opaque.keyValues', getEditableKeyValues(values.opaque?.keyValues ?? []));
-  }, [setFieldValue, values.opaque?.keyValues]);
+    void setFieldValue('opaque.keyValues', getEditableKeyValues(opaqueKeyValuesRef.current));
+  }, [setFieldValue]);
 
   const populateFromExistingOpaqueSecret = useCallback(
     (secretName: string) => {
