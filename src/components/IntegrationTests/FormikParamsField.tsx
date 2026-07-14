@@ -12,7 +12,6 @@ import {
   AlertVariant,
   InputGroup,
   FormGroup,
-  TextInput,
   DataListItemRow,
   DataListItemCells,
   DataListCell,
@@ -23,49 +22,9 @@ import {
 } from '@patternfly/react-core';
 import { MinusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/minus-circle-icon';
 import { PlusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/plus-circle-icon';
-import { FieldArray, useField, useFormikContext } from 'formik';
-import { getFieldId } from '~/shared/components/formik-fields/field-utils';
+import { FieldArray, useField } from 'formik';
+import { InputField } from 'formik-pf';
 import { Param } from '../../types/coreBuildService';
-
-const trimParamString = (value: string): string => value.trim();
-
-type ParamTextFieldProps = {
-  name: string;
-  onBlur?: (event: React.FocusEvent<HTMLInputElement>) => void;
-  'data-test'?: string;
-};
-
-const ParamTextField: React.FC<ParamTextFieldProps> = ({ name, onBlur, 'data-test': dataTest }) => {
-  const [field] = useField<string>(name);
-  const fieldId = getFieldId(name, 'input');
-
-  return (
-    <TextInput
-      id={fieldId}
-      name={name}
-      value={field.value ?? ''}
-      onChange={(_event, value) => {
-        void field.onChange({ target: { name, value } });
-      }}
-      onBlur={(event) => {
-        field.onBlur(event);
-        onBlur?.(event);
-      }}
-      data-test={dataTest}
-    />
-  );
-};
-
-const sanitizeParams = (params?: Param[]): Param[] => {
-  if (!Array.isArray(params)) {
-    return [];
-  }
-  return params.map((param) => ({
-    ...param,
-    name: trimParamString(param.name ?? ''),
-    values: param.values?.map(trimParamString),
-  }));
-};
 
 interface IntegrationTestParamsProps {
   heading?: React.ReactNode;
@@ -78,17 +37,7 @@ const FormikParamsField: React.FC<React.PropsWithChildren<IntegrationTestParamsP
   fieldName,
   initExpanded = false,
 }) => {
-  const { setFieldValue } = useFormikContext();
-  const [, { value: rawParameters, error }] = useField<Param[]>(fieldName);
-  const parameters = sanitizeParams(rawParameters);
-
-  const trimFieldOnBlur =
-    (fieldPath: string) => (event: React.FocusEvent<HTMLInputElement>) => {
-      const trimmed = trimParamString(event.target.value);
-      if (trimmed !== event.target.value) {
-        void setFieldValue(fieldPath, trimmed);
-      }
-    };
+  const [, { value: parameters, error }] = useField<Param[]>(fieldName);
 
   const initExpandedState = React.useMemo(() => {
     const state = [];
@@ -206,10 +155,9 @@ const FormikParamsField: React.FC<React.PropsWithChildren<IntegrationTestParamsP
                                       className="pf-v5-u-pl-xl pf-v5-u-pt-0"
                                     >
                                       <FormGroup label="Name">
-                                        <ParamTextField
+                                        <InputField
                                           name={`${fieldName}[${i}].name`}
                                           data-test={`param-${i}-name`}
-                                          onBlur={trimFieldOnBlur(`${fieldName}[${i}].name`)}
                                         />
                                       </FormGroup>
                                     </DataListCell>,
@@ -230,13 +178,10 @@ const FormikParamsField: React.FC<React.PropsWithChildren<IntegrationTestParamsP
                                                     key={`value${i}${j}`}
                                                     className="pf-v5-u-mb-md"
                                                   >
-                                                    <ParamTextField
+                                                    <InputField
                                                       key={`value${i}${j}`}
                                                       name={`${fieldName}[${i}].values[${j}]`}
                                                       data-test={`param-${i}-value-${j}`}
-                                                      onBlur={trimFieldOnBlur(
-                                                        `${fieldName}[${i}].values[${j}]`,
-                                                      )}
                                                     />
                                                     <Button
                                                       className="pf-v5-u-ml-md"

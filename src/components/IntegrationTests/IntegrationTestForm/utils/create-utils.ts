@@ -35,7 +35,7 @@ export const formatParams = (params): Param[] => {
   if (!params || !Array.isArray(params) || params.length === 0) return null;
   const newParams = [];
   params.forEach((param) => {
-    const formattedValues = param.values?.map((v) => v.trim()).filter((v) => !!v);
+    const formattedValues = param.values?.map((v) => v?.trim()).filter((v) => !!v);
     const name = param.name?.trim();
     if (!name || !formattedValues?.length) {
       return;

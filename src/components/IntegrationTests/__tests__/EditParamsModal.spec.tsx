@@ -135,7 +135,6 @@ describe('EditParamsModal', () => {
             value: [
               { name: 'colors', values: ['red', 'green', 'orange'] },
               { name: 'animal', value: 'tiger' },
-              { name: 'param3', values: [] },
             ],
           },
         ],
