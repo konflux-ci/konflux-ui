@@ -1,8 +1,13 @@
 import React, { useMemo, useState } from 'react';
 import { Form } from '@patternfly/react-core';
 import { useField, useFormikContext } from 'formik';
+<<<<<<< HEAD
 import { FIELD_SECRET_FOR_COMPONENT_OPTION, SecretLinkOptionLabels } from '~/consts/secrets';
 import { InputField } from '~/shared/components/formik-base';
+=======
+import { InputField } from 'formik-pf';
+import { FIELD_SECRET_FOR_COMPONENT_OPTION, SecretLinkOptionLabels, DEFAULT_OPAQUE_KEY_VALUES, DEFAULT_OPAQUE_LABELS } from '~/consts/secrets';
+>>>>>>> 83da231a (refactor: extract opaque secret sync helpers and shared defaults)
 import KeyValueInputField from '~/shared/components/formik-fields/key-value-input-field/KeyValueInputField';
 import {
   supportedPartnerTasksSecrets,
@@ -33,9 +38,6 @@ type SecretFormProps = RawComponentProps & {
   currentComponent?: null | CurrentComponentRef;
   isEdit?: boolean;
 };
-
-const defaultKeyValues = [{ key: '', value: '', readOnlyKey: false }];
-const defaultLabels = [{ key: '', value: '' }];
 
 const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({
   existingSecrets,
@@ -189,7 +191,7 @@ const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({
         <KeyValueFileInputField
           required={!isUsingExisting}
           name={'opaque.keyValues'}
-          entries={defaultKeyValues}
+          entries={DEFAULT_OPAQUE_KEY_VALUES}
           disableRemoveAction={(values.opaque?.keyValues?.length ?? 1) === 1 || isUsingExisting}
           disableAddAction={isUsingExisting}
         />
@@ -198,7 +200,7 @@ const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({
       <KeyValueInputField
         name="labels"
         label="Labels"
-        entries={values.labels?.length ? values.labels : defaultLabels}
+        entries={values.labels?.length ? values.labels : DEFAULT_OPAQUE_LABELS}
         readOnly={isUsingExisting}
         description="You can add labels to provide more context or tag your secret."
       />

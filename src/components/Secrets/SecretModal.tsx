@@ -9,6 +9,7 @@ import {
 } from '@patternfly/react-core';
 import { Formik, yupToFormErrors } from 'formik';
 import { isEmpty, merge } from 'lodash-es';
+import { DEFAULT_OPAQUE_KEY_VALUES, DEFAULT_OPAQUE_LABELS } from '~/consts/secrets';
 import {
   ImportSecret,
   SecretTypeDropdownLabel,
@@ -42,12 +43,11 @@ function createEmptySecretModalValues(
   existingSecrets: BuildTimeSecret[],
   currentComponent?: null | CurrentComponentRef,
 ): SecretModalValues {
-  const defaultKeyValues = [{ key: '', value: '', readOnlyKey: false }];
   return {
     secretName: '',
     type: SecretTypeDropdownLabel.opaque,
     opaque: {
-      keyValues: defaultKeyValues,
+      keyValues: DEFAULT_OPAQUE_KEY_VALUES,
     },
     image: {
       authType: ImagePullSecretType.ImageRegistryCreds,
@@ -67,7 +67,7 @@ function createEmptySecretModalValues(
     existingSecrets,
     currentComponent,
     relatedComponents: [],
-    labels: [{ key: '', value: '' }],
+    labels: DEFAULT_OPAQUE_LABELS,
     secretForComponentOption: SecretForComponentOption.none,
   };
 }

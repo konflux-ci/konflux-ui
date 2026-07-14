@@ -1,17 +1,14 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { useFormikContext } from 'formik';
+import { DEFAULT_OPAQUE_KEY_VALUES, DEFAULT_OPAQUE_LABELS } from '~/consts/secrets';
 import { SecretFormValues, SecretTypeDropdownLabel, BuildTimeSecret } from '~/types';
 import {
-  supportedPartnerTasksSecrets,
-  findExistingOpaqueSecretByName,
-  getSupportedPartnerTaskKeyValuePairs,
-  isPartnerTask,
-  isUsingExistingClusterSecret,
-} from '~/utils/secrets/secret-utils';
-
-const defaultKeyValues = [{ key: '', value: '', readOnlyKey: false }];
-const defaultLabels = [{ key: '', value: '' }];
-const defaultImageKeyValues = [{ key: '.dockerconfigjson', value: '', readOnlyKey: true }];
+  getEditableKeyValues,
+  getKeyValuesWithoutReadOnlyKeys,
+  getOpaqueFieldsFromExistingSecret,
+  getOpaqueSecretSyncTransition,
+  getResetKeyValuesForImage,
+} from './opaqueSecretSyncUtils';
 
 interface UseOpaqueSecretSyncOptions {
   currentType: string;
@@ -26,54 +23,36 @@ export const useOpaqueSecretSync = ({
   const previousSecretNameRef = useRef(values.secretName);
 
   const clearReadOnlyKeys = useCallback(() => {
-    const newKeyValues = (values.opaque?.keyValues ?? []).filter((kv) => !kv.readOnlyKey);
-    void setFieldValue('opaque.keyValues', [
-      ...(newKeyValues.length ? newKeyValues : defaultKeyValues),
-    ]);
+    void setFieldValue(
+      'opaque.keyValues',
+      getKeyValuesWithoutReadOnlyKeys(values.opaque?.keyValues ?? []),
+    );
   }, [setFieldValue, values.opaque?.keyValues]);
 
   const resetOpaqueFields = useCallback(() => {
-    void setFieldValue('opaque.keyValues', defaultKeyValues);
-    void setFieldValue('labels', defaultLabels);
+    void setFieldValue('opaque.keyValues', DEFAULT_OPAQUE_KEY_VALUES);
+    void setFieldValue('labels', DEFAULT_OPAQUE_LABELS);
   }, [setFieldValue]);
 
   const resetKeyValues = useCallback(() => {
-    const newKeyValues = (values.opaque?.keyValues ?? []).filter(
-      (kv) => !kv.readOnlyKey && (!!kv.key || !!kv.value),
+    void setFieldValue(
+      'opaque.keyValues',
+      getResetKeyValuesForImage(values.opaque?.keyValues ?? []),
     );
-    void setFieldValue('opaque.keyValues', [...newKeyValues, ...defaultImageKeyValues]);
   }, [setFieldValue, values.opaque?.keyValues]);
 
   const makeOpaqueFieldsEditable = useCallback(() => {
-    void setFieldValue(
-      'opaque.keyValues',
-      (values.opaque?.keyValues ?? defaultKeyValues).map((kv) => ({
-        ...kv,
-        readOnlyKey: false,
-        readOnlyValue: false,
-      })),
-    );
+    void setFieldValue('opaque.keyValues', getEditableKeyValues(values.opaque?.keyValues ?? []));
   }, [setFieldValue, values.opaque?.keyValues]);
 
   const populateFromExistingOpaqueSecret = useCallback(
     (secretName: string) => {
-      if (isPartnerTask(secretName, supportedPartnerTasksSecrets)) {
-        void setFieldValue('opaque.keyValues', [
-          ...getSupportedPartnerTaskKeyValuePairs(secretName),
-        ]);
-        void setFieldValue('labels', defaultLabels);
-        return;
-      }
+      const { keyValues, labels } = getOpaqueFieldsFromExistingSecret(secretName, existingSecrets);
 
-      const matched = findExistingOpaqueSecretByName(secretName, existingSecrets);
-      if (matched?.opaque?.keyValuePairs) {
-        void setFieldValue('opaque.keyValues', matched.opaque.keyValuePairs);
+      if (keyValues) {
+        void setFieldValue('opaque.keyValues', keyValues);
       }
-      if (matched?.labels?.length) {
-        void setFieldValue('labels', matched.labels);
-      } else {
-        void setFieldValue('labels', defaultLabels);
-      }
+      void setFieldValue('labels', labels);
     },
     [existingSecrets, setFieldValue],
   );
@@ -91,26 +70,27 @@ export const useOpaqueSecretSync = ({
       return;
     }
 
-    const wasUsingExistingCluster = isUsingExistingClusterSecret(
+    const transition = getOpaqueSecretSyncTransition({
       previousName,
-      currentType,
-      existingSecrets,
-    );
-    const isUsingExistingClusterNow = isUsingExistingClusterSecret(
       currentName,
       currentType,
       existingSecrets,
-    );
+    });
 
-    if (isUsingExistingClusterNow) {
-      populateFromExistingOpaqueSecret(currentName);
-    } else if (wasUsingExistingCluster) {
-      makeOpaqueFieldsEditable();
-    } else if (
-      isPartnerTask(previousName, supportedPartnerTasksSecrets) &&
-      !isPartnerTask(currentName, supportedPartnerTasksSecrets)
-    ) {
-      resetOpaqueFields();
+    switch (transition.action) {
+      case 'populateFromExisting':
+        populateFromExistingOpaqueSecret(transition.secretName);
+        break;
+      case 'makeEditable':
+        makeOpaqueFieldsEditable();
+        break;
+      case 'resetOpaque':
+        resetOpaqueFields();
+        break;
+      case 'none':
+        break;
+      default:
+        break;
     }
 
     previousSecretNameRef.current = currentName;

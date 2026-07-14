@@ -1,11 +1,16 @@
 import React, { useState } from 'react';
 import { useField, useFormikContext } from 'formik';
+<<<<<<< HEAD
 import { SecretLinkOptionLabels } from '~/consts/secrets';
 import { DropdownItemObject } from '~/shared/components/dropdown';
 import { InputField } from '~/shared/components/formik-base';
 import KeyValueFileInputField from '~/shared/components/formik-fields/key-value-input-field/KeyValueInputField';
 import SelectInputField from '~/shared/components/formik-fields/SelectInputField';
 import { AddSecretFormValues, SecretFor, SecretTypeDropdownLabel, SourceSecretType } from '~/types';
+=======
+import { InputField } from 'formik-pf';
+import { SecretLinkOptionLabels, DEFAULT_OPAQUE_KEY_VALUES } from '~/consts/secrets';
+>>>>>>> 83da231a (refactor: extract opaque secret sync helpers and shared defaults)
 import {
   getSupportedPartnerTaskKeyValuePairs,
   getSupportedPartnerTaskSecrets,
@@ -42,7 +47,6 @@ const secretTypes = [
 ];
 
 const supportedPartnerTaskSecrets = getSupportedPartnerTaskSecrets();
-const defaultKeyValues = [{ key: '', value: '' }];
 
 export const SecretTypeSubForm: React.FC<React.PropsWithChildren<{ isEditMode?: boolean }>> = ({
   isEditMode = false,
@@ -93,7 +97,7 @@ export const SecretTypeSubForm: React.FC<React.PropsWithChildren<{ isEditMode?: 
   const clearKeyValues = React.useCallback(() => {
     const newKeyValues = keyValues.filter((kv) => !kv.readOnlyKey);
     void setFieldValue('opaque.keyValues', [
-      ...(newKeyValues.length ? newKeyValues : defaultKeyValues),
+      ...(newKeyValues.length ? newKeyValues : DEFAULT_OPAQUE_KEY_VALUES),
     ]);
   }, [keyValues, setFieldValue]);
 
