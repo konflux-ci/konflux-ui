@@ -1,9 +1,8 @@
 import { screen } from '@testing-library/react';
 import { testTaskRuns } from '~/components/TaskRunListView/__data__/mock-TaskRun-data';
+import { useLatestBuildPipelineRunForComponentV2 } from '~/hooks/useLatestPushBuildPipeline';
 import { useTaskRunsForPipelineRuns } from '~/hooks/useTaskRunsV2';
-import { PipelineRunLabel, PipelineRunType } from '../../../consts/pipelinerun';
-import { useTRPipelineRuns } from '../../../hooks/useTektonResults';
-import { createK8sWatchResourceMock, routerRenderer } from '../../../utils/test-utils';
+import { routerRenderer } from '~/utils/test-utils';
 import { componentCRMocks } from '../../ApplicationDetails/__data__/mock-data';
 import { pipelineRunMock } from '../__data__/pipelineRunMocks';
 import { BuildLogViewer } from '../BuildLogViewer';
@@ -15,13 +14,15 @@ jest.mock('react-router-dom', () => {
     useNavigate: jest.fn(),
   };
 });
-jest.mock('../../../hooks/useTektonResults');
+jest.mock('~/hooks/useLatestPushBuildPipeline', () => ({
+  useLatestBuildPipelineRunForComponentV2: jest.fn(),
+}));
+
 jest.mock('~/hooks/useTaskRunsV2', () => ({
   useTaskRunsForPipelineRuns: jest.fn(),
 }));
 
-const watchResourceMock = createK8sWatchResourceMock();
-const useTRPipelineRunsMock = useTRPipelineRuns as jest.Mock;
+const useLatestBuildMock = useLatestBuildPipelineRunForComponentV2 as jest.Mock;
 const useTaskRunsMock = useTaskRunsForPipelineRuns as jest.Mock;
 
 describe('BuildLogViewer', () => {
@@ -30,22 +31,20 @@ describe('BuildLogViewer', () => {
   });
 
   it('should show empty box if pipelineRuns not found', () => {
-    watchResourceMock.mockReturnValue([[], true]);
+    useLatestBuildMock.mockReturnValue([undefined, true, undefined]);
     routerRenderer(<BuildLogViewer component={componentCRMocks[0]} />);
     expect(screen.getByTestId('empty-message')).not.toBeNull();
     expect(screen.getByTestId('empty-message').innerHTML).toBe('No pipeline runs found');
   });
 
   it('should show component name', () => {
-    watchResourceMock.mockReturnValue([[pipelineRunMock], true]);
-    watchResourceMock.mockReturnValue([[pipelineRunMock], true]);
+    useLatestBuildMock.mockReturnValue([pipelineRunMock, true, undefined]);
     routerRenderer(<BuildLogViewer component={componentCRMocks[0]} />);
     screen.getByText('basic-node-js');
   });
 
   it('should show pipeline run link', () => {
-    watchResourceMock.mockReturnValue([[pipelineRunMock], true]);
-    watchResourceMock.mockReturnValue([[pipelineRunMock], true]);
+    useLatestBuildMock.mockReturnValue([pipelineRunMock, true, undefined]);
     routerRenderer(<BuildLogViewer component={componentCRMocks[0]} />);
     const plrLink = screen.getByText('basic-node-js-7c8nd');
     expect(plrLink.getAttribute('href')).toBe(
@@ -54,48 +53,38 @@ describe('BuildLogViewer', () => {
   });
 
   it('should render PipelineRunLogs', () => {
-    watchResourceMock.mockReturnValue([[pipelineRunMock], true]);
+    useLatestBuildMock.mockReturnValue([pipelineRunMock, true, undefined]);
     routerRenderer(<BuildLogViewer component={componentCRMocks[0]} />);
 
     screen.getByTestId('logs-tasklist');
   });
 
-  it('should show empty box if it is not a build pipelinerun', () => {
-    const pipelineruns = [
-      {
-        ...pipelineRunMock,
-        metadata: {
-          ...pipelineRunMock.metadata,
-          labels: {
-            ...pipelineRunMock.metadata.labels,
-            [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.TEST,
-          },
-        },
-      },
-    ];
-    watchResourceMock.mockReturnValue([
-      pipelineruns.filter(
-        (p) => p.metadata.labels[PipelineRunLabel.PIPELINE_TYPE] === PipelineRunType.BUILD,
-      ),
-      true,
-    ]);
-
+  it('should show empty box when no build pipeline run is returned', () => {
+    useLatestBuildMock.mockReturnValue([undefined, true, undefined]);
     routerRenderer(<BuildLogViewer component={componentCRMocks[0]} />);
     expect(screen.getByTestId('empty-message')).not.toBeNull();
     expect(screen.getByTestId('empty-message').innerHTML).toBe('No pipeline runs found');
   });
 
   it('should show loading box if pipelineRuns are being fetched', () => {
-    watchResourceMock.mockReturnValue([[], false]);
-    useTRPipelineRunsMock.mockReturnValue([[], false]);
+    useLatestBuildMock.mockReturnValue([undefined, false, undefined]);
     routerRenderer(<BuildLogViewer component={componentCRMocks[0]} />);
     expect(screen.getByTestId('loading-indicator')).not.toBeNull();
   });
 
   it('should handle error when fetching task runs', () => {
-    watchResourceMock.mockReturnValue([[pipelineRunMock], true]);
+    useLatestBuildMock.mockReturnValue([pipelineRunMock, true, undefined]);
     useTaskRunsMock.mockReturnValue([undefined, true, { code: 451 }]);
     routerRenderer(<BuildLogViewer component={componentCRMocks[0]} />);
     screen.getByText('Unable to load task runs');
+  });
+
+  it('should call useLatestBuildPipelineRunForComponentV2 with component namespace and name', () => {
+    useLatestBuildMock.mockReturnValue([undefined, true, undefined]);
+    routerRenderer(<BuildLogViewer component={componentCRMocks[0]} />);
+    expect(useLatestBuildMock).toHaveBeenCalledWith(
+      componentCRMocks[0].metadata.namespace,
+      componentCRMocks[0].metadata.name,
+    );
   });
 });
