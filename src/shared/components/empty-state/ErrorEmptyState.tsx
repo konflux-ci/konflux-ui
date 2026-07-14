@@ -37,6 +37,7 @@ const ErrorEmptyState: React.FC<React.PropsWithChildren<ErrorEmptyStateProps>> =
       icon={ExclamationCircleIcon}
       className={css('app-empty-state', className)}
       variant={EmptyStateVariant.full}
+      status="danger"
       {...props}
     >
       <EmptyStateFooter>

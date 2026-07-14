@@ -8,7 +8,6 @@ import {
   DataListItem,
   DataListItemCells,
   DataListItemRow,
-  ModalBody,
   ModalVariant,
 } from '@patternfly/react-core';
 import { DragDropSort, type DraggableObject } from '@patternfly/react-drag-drop';
@@ -135,7 +134,7 @@ export const ColumnManagementModal: React.FC<ColumnManagementModalProps> = ({
   }));
 
   return (
-    <ModalBody>
+    <>
       <DataList aria-label="Column management" isCompact>
         {pinnedStart.map(pinnedRow)}
       </DataList>
@@ -158,7 +157,7 @@ export const ColumnManagementModal: React.FC<ColumnManagementModalProps> = ({
           Cancel
         </Button>
       </ActionGroup>
-    </ModalBody>
+    </>
   );
 };
 
