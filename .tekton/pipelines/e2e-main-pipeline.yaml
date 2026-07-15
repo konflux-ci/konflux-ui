@@ -71,9 +71,11 @@ spec:
       description: 'Type of job (pr-check, periodic-local, periodic-stage)'
       default: 'pr-check'
       type: string
-    - name: test-image
-      description: 'Test image to use for E2E tests'
-      default: 'quay.io/konflux_ui_qe/konflux-ui-tests:latest'
+    - name: test-image-tag
+      description: >-
+        Tag for the E2E test image (quay.io/konflux_ui_qe/konflux-ui-tests:<tag>).
+        Repository is fixed so PipelineRuns cannot point the secret-bearing step at an arbitrary image.
+      default: 'latest'
       type: string
   tasks:
     - name: test-metadata
@@ -215,8 +217,8 @@ spec:
           value: $(params.oci-container-repo):$(context.pipelineRun.name)
         - name: oci-credentials
           value: $(params.oci-credentials-secret)
-        - name: test-image
-          value: $(params.test-image)
+        - name: test-image-tag
+          value: $(params.test-image-tag)
         - name: spec-file
           value: $(params.spec-file)
         - name: github-credentials-secret

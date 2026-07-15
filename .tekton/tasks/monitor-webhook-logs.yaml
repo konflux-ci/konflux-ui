@@ -18,6 +18,15 @@ spec:
   steps:
     - name: setup-monitoring
       image: registry.k8s.io/kubectl:v1.36.1@sha256:d08f476d04d0e30f426f06bc6ff6c38913aaa4591943046b77e2f74a72d3611c #1.36.1
+      env:
+        - name: TEKTON_PIPELINE_RUN
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.labels['tekton.dev/pipelineRun']
+        - name: TEKTON_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
       script: |
         #!/usr/bin/env bash
         set -euo pipefail
@@ -34,37 +43,39 @@ spec:
         SECRET_NAME="kfg-${PIPELINE_RUN_NAME}"
         echo "Looking for secret: ${SECRET_NAME}"
 
-        # Extract kubeconfig from the secret
-        kubectl get secret ${SECRET_NAME} -n ${NAMESPACE} -o jsonpath='{.data.kubeconfig}' | base64 -d > /tmp/kubeconfig
+        # Extract kubeconfig from the secret (0600 so it is not world-readable)
+        kubectl get secret "${SECRET_NAME}" -n "${NAMESPACE}" -o jsonpath='{.data.kubeconfig}' \
+          | base64 -d \
+          | install -m 0600 /dev/stdin /tmp/kubeconfig
 
         # Switch to Kind cluster context
         export KUBECONFIG=/tmp/kubeconfig
-
-        echo "=== Starting log monitoring ==="
-        echo "Monitoring duration: $(params.monitoring-duration)"
-        echo "Poll interval: 2 minutes"
-        echo "=========================================="
 
         # Parse monitoring duration
         DURATION=$(params.monitoring-duration)
         DURATION_NUM=${DURATION//[!0-9]/}
         DURATION_UNIT=${DURATION//[0-9]/}
 
-        case ${DURATION_UNIT} in
-          m|M)
-            TOTAL_SECONDS=$((DURATION_NUM * 60))
-            ;;
-          s|S)
-            TOTAL_SECONDS=${DURATION_NUM}
-            ;;
-          h|H)
-            TOTAL_SECONDS=$((DURATION_NUM * 3600))
-            ;;
-          *)
-            echo "Unknown time unit: ${DURATION_UNIT}, defaulting to minutes"
-            TOTAL_SECONDS=$((DURATION_NUM * 60))
-            ;;
-        esac
+        if [[ -z "${DURATION_NUM}" ]]; then 
+          echo "No duration provided, defaulting to 10 minutes"
+          TOTAL_SECONDS=600; 
+        else
+          case "${DURATION_UNIT}" in
+            m|M)
+              TOTAL_SECONDS=$((DURATION_NUM * 60))
+              ;;
+            s|S)
+              TOTAL_SECONDS=${DURATION_NUM}
+              ;;
+            h|H)
+              TOTAL_SECONDS=$((DURATION_NUM * 3600))
+              ;;
+            *)
+              echo "Unknown time unit: ${DURATION_UNIT}, defaulting to minutes"
+              TOTAL_SECONDS=$((DURATION_NUM * 60))
+              ;;
+          esac
+        fi
 
         echo "Total monitoring time: ${TOTAL_SECONDS} seconds"
         echo ""
@@ -73,6 +84,11 @@ spec:
         POLL_INTERVAL=120
         ELAPSED=0
         ITERATION=1
+
+        echo "=== Starting log monitoring ==="
+        echo "Monitoring duration: $(params.monitoring-duration)"
+        echo "Poll interval: 2 minutes"
+        echo "=========================================="
 
         while [ ${ELAPSED} -lt ${TOTAL_SECONDS} ]; do
           echo "=========================================="
@@ -85,7 +101,7 @@ spec:
           SMEE_POD=$(kubectl get pod -n smee-client -l app=gosmee-client -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
           if [[ -n "${SMEE_POD}" ]]; then
             echo "Pod: ${SMEE_POD}"
-            kubectl logs -n smee-client ${SMEE_POD} --tail=30 --timestamps 2>&1 | sed 's/^/[SMEE] /'
+            kubectl logs -n smee-client "${SMEE_POD}" --tail=30 --timestamps 2>&1 | sed 's/^/[SMEE] /'
           else
             echo "⚠️  No smee-client pod found"
           fi
@@ -96,7 +112,7 @@ spec:
           PAC_POD=$(kubectl get pod -n pipelines-as-code -l app.kubernetes.io/name=controller -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
           if [[ -n "${PAC_POD}" ]]; then
             echo "Pod: ${PAC_POD}"
-            kubectl logs -n pipelines-as-code ${PAC_POD} --tail=30 --timestamps 2>&1 | sed 's/^/[PAC] /'
+            kubectl logs -n pipelines-as-code "${PAC_POD}" --tail=30 --timestamps 2>&1 | sed 's/^/[PAC] /'
           else
             echo "⚠️  No pipelines-as-code controller pod found"
           fi
@@ -123,12 +139,3 @@ spec:
         echo "=========================================="
         echo "✓ Monitoring complete after ${ITERATION} polls"
         echo "=========================================="
-      env:
-        - name: TEKTON_PIPELINE_RUN
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.labels['tekton.dev/pipelineRun']
-        - name: TEKTON_NAMESPACE
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.namespace

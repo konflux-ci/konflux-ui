@@ -13,10 +13,12 @@ spec:
     - name: job-type
       type: string
       default: 'pr-check'
-    - name: test-image
+    - name: test-image-tag
       type: string
-      default: 'quay.io/konflux_ui_qe/konflux-ui-tests:latest'
-      description: 'Test image to use for E2E tests'
+      default: 'latest'
+      description: >-
+        Tag for the E2E test image (quay.io/konflux_ui_qe/konflux-ui-tests:<tag>).
+        Repository is fixed so PipelineRuns cannot point the secret-bearing step at an arbitrary image.
     - name: cypress-credentials-secret
       type: string
       default: 'cypress-credentials'
@@ -58,93 +60,8 @@ spec:
       - name: test-artifacts
         mountPath: /artifacts
   steps:
-    - name: fix-smee-client
-      image: registry.k8s.io/kubectl:v1.36.1@sha256:d08f476d04d0e30f426f06bc6ff6c38913aaa4591943046b77e2f74a72d3611c #1.36.1
-      workingDir: /workspace
-      volumeMounts:
-        - name: kubeconfig-data
-          mountPath: /shared
-      env:
-        - name: TEKTON_PIPELINE_RUN
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.labels['tekton.dev/pipelineRun']
-        - name: TEKTON_NAMESPACE
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.namespace
-      script: |
-        #!/usr/bin/env bash
-        set -euo pipefail
-
-        if [ "$(params.job-type)" = "periodic-stage" ]; then
-          echo "Skipping smee-client fix as tests are using stage cluster"
-          exit 0
-        fi
-
-        echo "=== Getting PipelineRun name and kubeconfig ==="
-
-        # Get PipelineRun name and namespace from environment variables set by Tekton
-        PIPELINE_RUN_NAME="${TEKTON_PIPELINE_RUN}"
-        NAMESPACE="${TEKTON_NAMESPACE}"
-        echo "PipelineRun name: ${PIPELINE_RUN_NAME}"
-        echo "Namespace: ${NAMESPACE}"
-
-        # Construct the secret name
-        SECRET_NAME="kfg-${PIPELINE_RUN_NAME}"
-        echo "Looking for secret: ${SECRET_NAME}"
-
-        # Extract kubeconfig from the secret (this runs in Konflux cluster context)
-        kubectl get secret ${SECRET_NAME} -n ${NAMESPACE} -o jsonpath='{.data.kubeconfig}' | base64 -d > /shared/kubeconfig
-
-        # Switch to Kind cluster context
-        export KUBECONFIG=/shared/kubeconfig
-
-        echo "=== Extracting Konflux base URL from kubeconfig ==="
-
-        # Extract the server URL from kubeconfig
-        KUBE_SERVER=$(kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}')
-        echo "Kubernetes API server: ${KUBE_SERVER}"
-
-        # Extract IP address (remove https:// prefix and :6443 port)
-        KUBE_IP=$(echo "${KUBE_SERVER}" | sed -E 's|https?://([^:]+):.*|\1|')
-        echo "Extracted IP: ${KUBE_IP}"
-
-        # Construct Konflux base URL with port 9443
-        CYPRESS_KONFLUX_BASE_URL="https://${KUBE_IP}:9443"
-        echo "Konflux base URL: ${CYPRESS_KONFLUX_BASE_URL}"
-
-        # Save to shared volume for next step
-        echo "${CYPRESS_KONFLUX_BASE_URL}" > /shared/base-url
-
-        echo "=== Fixing smee-client configuration ==="
-
-        # Get the current smee.io URL from the deployment
-        SMEE_URL=$(kubectl get deployment gosmee-client -n smee-client -o jsonpath='{.spec.template.spec.containers[0].args[1]}')
-        echo "Current smee.io URL: ${SMEE_URL}"
-
-        # Fix smee-client by patching args and liveness probe
-        echo "Updating smee-client deployment..."
-        kubectl patch deployment gosmee-client -n smee-client --type='json' -p='[
-          {"op": "replace", "path": "/spec/template/spec/containers/0/args", "value": ["client", "'"${SMEE_URL}"'", "http://pipelines-as-code-controller.pipelines-as-code.svc.cluster.local:8180"]},
-          {"op": "replace", "path": "/spec/template/spec/containers/0/livenessProbe/failureThreshold", "value": 5},
-          {"op": "replace", "path": "/spec/template/spec/containers/0/livenessProbe/initialDelaySeconds", "value": 60},
-          {"op": "replace", "path": "/spec/template/spec/containers/0/livenessProbe/timeoutSeconds", "value": 30}
-        ]'
-
-        # Wait for smee-client to be ready
-        echo "Waiting for smee-client deployment to be ready..."
-        kubectl rollout status deployment/gosmee-client -n smee-client --timeout=5m
-
-        # Verify smee-client is running
-        SMEE_POD=$(kubectl get pod -n smee-client -l app=gosmee-client -o jsonpath='{.items[0].metadata.name}')
-        echo "smee-client pod: ${SMEE_POD}"
-        kubectl get pod ${SMEE_POD} -n smee-client
-
-        echo "smee-client is ready!"
-        echo "Setup complete. Ready for E2E tests."
     - name: run-e2e-test
-      image: $(params.test-image)
+      image: quay.io/konflux_ui_qe/konflux-ui-tests:$(params.test-image-tag)
       onError: continue
       workingDir: /tmp/e2e
       # We should set the appropriate requests/limits based on our future observing
@@ -240,10 +157,12 @@ spec:
         fi
 
         # Copy test reports
-        if [ -f "cypress/results/junit.xml" ]; then
-          echo "Copying JUnit report..."
-          cp cypress/results/junit.xml /artifacts/e2e-report.xml || true
-        fi
+        for f in cypress/junit-*.xml; do
+          if [ -f "$f" ]; then
+            echo "Copying JUnit report: $f"
+            cp "$f" /artifacts/ || true
+          fi
+        done
 
         # Create a simple test log
         echo "Test execution completed with exit code: ${TEST_RESULT}" > /artifacts/e2e-tests.log
