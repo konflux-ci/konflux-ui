@@ -33,7 +33,7 @@ const ComponentDetailsView: React.FC = () => {
   const showModal = useModalLauncher();
   const [component, loaded, componentError] = useComponent(namespace, componentName);
   const [canPatchComponent] = useAccessReviewForModel(ComponentModel, 'patch');
-  const isMintmakerEnabled = useIsOnFeatureFlag('mintmaker');
+  const isMintMakerEnabled = useIsOnFeatureFlag('mintmaker');
 
   const componentActions = useComponentActions(loaded ? component : undefined, componentName);
   const actions: Action[] = React.useMemo(
@@ -145,7 +145,7 @@ const ComponentDetailsView: React.FC = () => {
             key: 'activity',
             label: 'Activity',
           },
-          ...(isMintmakerEnabled
+          ...(isMintMakerEnabled
             ? [{ key: 'dependency-updates', label: 'Dependency updates' }]
             : []),
         ]}
