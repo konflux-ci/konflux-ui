@@ -5,7 +5,13 @@
   "packageRules": [
     {
       "description": "Automerge minor, patch, and digest updates for package versions",
-      "matchUpdateTypes": ["minor", "patch", "digest"],
+      "matchUpdateTypes": ["patch", "digest"],
+      "matchPackageNames": [
+        "!/^react(-dom)?$/",
+        "!/^@patternfly\\/.*$/",
+        "!/^@tanstack\\/.*$/",
+        "!/^webpack$/"
+      ],
       "automerge": true
     }
   ]
