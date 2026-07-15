@@ -1,1 +1,55 @@
+#!/bin/bash
+set -euo pipefail
+
+# 1. Auto-format staged files (Prettier, ESLint restricted imports, Stylelint)
 npx lint-staged
+
+# 2. Block destructive operations — refuse commits that delete or rename protected paths
+# Policy: CONTRIBUTING.md § Git hooks → Protected repo files
+# Uses bash 3.2+ constructs only (macOS /bin/bash); no associative arrays.
+if [ "${SKIP_PROTECTED_PATH_CHECK:-}" != "1" ]; then
+  is_safe_repo_path() {
+    case "$1" in
+      '' | *[!/.A-Za-z0-9_-]*) return 1 ;;
+      *) return 0 ;;
+    esac
+  }
+
+  is_protected_path() {
+    case "$1" in
+      .husky/pre-commit | .husky/commit-msg | .husky/pre-push | package.json | yarn.lock | .gitignore | AGENTS.md | setup.sh)
+        return 0
+        ;;
+      *)
+        return 1
+        ;;
+    esac
+  }
+
+  refuse_protected() {
+    printf 'husky (pre-commit): refusing to delete or rename protected file '\''%s'\''\n' "$1"
+    echo "See CONTRIBUTING.md (Protected repo files) for rationale and override."
+    exit 1
+  }
+
+  check_path() {
+    local path=$1
+    [ -n "$path" ] || return 0
+    is_safe_repo_path "$path" || return 0
+    if is_protected_path "$path"; then
+      refuse_protected "$path"
+    fi
+  }
+
+  while IFS=$'\t' read -r status path1 path2; do
+    case "$status" in
+      D) check_path "$path1" ;;
+      R*)
+        check_path "$path1"
+        check_path "$path2"
+        ;;
+    esac
+  done <<EOF
+$(git diff --cached --name-status --diff-filter=DR)
+EOF
+fi

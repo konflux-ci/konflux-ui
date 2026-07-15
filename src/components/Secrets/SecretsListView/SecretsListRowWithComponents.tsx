@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Button, Popover, Spinner } from '@patternfly/react-core';
+import { Button, ModalVariant, Popover, Spinner } from '@patternfly/react-core';
 import ErrorModal from '~/components/modal/ErrorModal';
 import { BackgroundStatusIconWithText } from '~/components/StatusIcon/BackgroundTaskStatusIcon';
 import { LINKING_ERROR_ANNOTATION, LINKING_STATUS_ANNOTATION } from '~/consts/secrets';
@@ -12,6 +12,8 @@ import { isLinkableSecret } from '~/utils/service-account/service-account-utils'
 import { BackgroundJobStatus, useTaskStore } from '~/utils/task-store';
 import { RowFunctionArgs, TableData } from '../../../shared';
 import ActionMenu from '../../../shared/components/action-menu/ActionMenu';
+import { createModalLauncher } from '../../modal/createModalLauncher';
+import { useModalLauncher } from '../../modal/ModalProvider';
 import { useSecretActions } from '../secret-actions';
 import { SecretLabels } from './SecretLabels';
 import { secretsTableColumnClasses } from './SecretsListHeaderWithComponents';
@@ -28,6 +30,7 @@ const SecretsListRowWithComponents: React.FC<React.PropsWithChildren<SecretsList
   customData,
   index,
 }) => {
+  const showModal = useModalLauncher();
   const actions = useSecretActions(obj);
   const namespace = useNamespace();
   const { expandedIds, handleToggle } = customData;
@@ -47,12 +50,6 @@ const SecretsListRowWithComponents: React.FC<React.PropsWithChildren<SecretsList
     obj,
     true,
   );
-
-  const [isErrorModalOpen, setIsErrorModalOpen] = React.useState(false);
-
-  const handleErrorModalToggle = () => {
-    setIsErrorModalOpen(!isErrorModalOpen);
-  };
 
   return (
     <>
@@ -97,17 +94,21 @@ const SecretsListRowWithComponents: React.FC<React.PropsWithChildren<SecretsList
       >
         <BackgroundStatusIconWithText status={taskStatus as BackgroundJobStatus} />
         {taskStatus === BackgroundJobStatus.Failed && taskError && (
-          <>
-            <Button onClick={handleErrorModalToggle} variant="link" className="error-button">
-              View Error
-            </Button>
-            <ErrorModal
-              title="Secret link task failed:"
-              errorMessage={taskError}
-              isOpen={isErrorModalOpen}
-              onClose={handleErrorModalToggle}
-            />
-          </>
+          <Button
+            onClick={() =>
+              showModal(
+                createModalLauncher(ErrorModal, {
+                  'data-test': 'secrets-error-modal',
+                  variant: ModalVariant.small,
+                  title: 'Secret link task failed:',
+                })({ errorMessage: taskError }),
+              )
+            }
+            variant="link"
+            className="error-button"
+          >
+            View Error
+          </Button>
         )}
       </TableData>
       <TableData className={`${secretsTableColumnClasses.kebab} vertical-cell-align`}>

@@ -3,8 +3,8 @@ import {
   Button,
   Label,
   Popover,
-  Text,
-  TextVariants,
+  Content,
+  ContentVariants,
   Flex,
   FlexItem,
   List,
@@ -20,8 +20,8 @@ type FeatureFlagIndicatorProps = {
   'data-test'?: string;
 };
 
-const warningColor = 'var(--pf-v5-global--warning-color--100)';
-const readyColor = 'var(--pf-v5-global--success-color--100)';
+const warningColor = 'var(--pf-t--global--color--status--warning--default)';
+const readyColor = 'var(--pf-t--global--color--status--success--default)';
 
 export const FeatureFlagIndicator: React.FC<FeatureFlagIndicatorProps> = ({
   flags,
@@ -46,7 +46,7 @@ export const FeatureFlagIndicator: React.FC<FeatureFlagIndicatorProps> = ({
         <FlaskIcon style={iconStyle} />
       </FlexItem>
       <FlexItem>
-        <Text component={TextVariants.h6}>Experimental feature</Text>
+        <Content component={ContentVariants.h6}>Experimental feature</Content>
       </FlexItem>
     </Flex>
   );
@@ -55,7 +55,7 @@ export const FeatureFlagIndicator: React.FC<FeatureFlagIndicatorProps> = ({
     <List isPlain>
       {metas.map((m) => (
         <ListItem key={m.key}>
-          <Text component={TextVariants.small}>{m.description}</Text>
+          <Content component={ContentVariants.small}>{m.description}</Content>
         </ListItem>
       ))}
     </List>

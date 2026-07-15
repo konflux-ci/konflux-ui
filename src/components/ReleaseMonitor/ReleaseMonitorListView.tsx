@@ -1,8 +1,8 @@
 import * as React from 'react';
-import { Flex, FlexItem, Label, pluralize } from '@patternfly/react-core';
+import { Flex, FlexItem, Label, PageSection, pluralize } from '@patternfly/react-core';
 import { SortByDirection } from '@patternfly/react-table';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
-import { MENU_DIVIDER } from '~/components/Filter/generic/MultiSelect.tsx';
+import { MENU_DIVIDER } from '~/components/Filter/generic/MultiSelect';
 import MonitoredReleasesFilterToolbar from '~/components/Filter/toolbars/MonitoredReleasesFilterToolbar';
 import { createFilterObj, FilterType } from '~/components/Filter/utils/filter-utils';
 import {
@@ -20,18 +20,22 @@ import { getErrorState } from '~/shared/utils/error-utils';
 import { MonitoredReleaseKind } from '~/types';
 import { ReleasePlanKind, ReleasePlanLabel } from '~/types/coreBuildService';
 import { ReleasePlanAdmissionKind } from '~/types/release-plan-admission';
-import { statuses } from '~/utils/commits-utils';
+import { statuses as statusList } from '~/utils/commits-utils';
 import MonitoredReleaseEmptyState from './ReleaseEmptyState';
 import { getReleasesListHeader, SortableHeaders } from './ReleaseListHeader';
 import ReleaseListRow from './ReleaseListRow';
 import ReleasePlanAdmissionsInNamespace from './ReleasePlanAdmissionsInNamespace';
 import ReleasePlansInNamespace from './ReleasePlansInNamespace';
 import ReleasesInNamespace from './ReleasesInNamespace';
+import SelectNamespaceEmptyState from './SelectNamespaceEmptyState';
+import { useNamespacesToFetch } from './useNamespacesToFetch';
 
 const sortPaths: Record<SortableHeaders, string> = {
   [SortableHeaders.name]: 'metadata.name',
   [SortableHeaders.completionTime]: 'status.completionTime',
 };
+
+const NAMESPACE_THRESHOLD = 10;
 
 const ReleaseMonitorListView: React.FunctionComponent = () => {
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
@@ -39,18 +43,36 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
   const parseMonitoredFilters = (filters: FilterType): MonitoredReleasesFilterState => {
     return {
       name: filters?.name || '',
-      status: filters?.status || [],
-      application: filters?.application || [],
-      releasePlan: filters?.releasePlan || [],
-      namespace: filters?.namespace || [],
-      component: filters?.component || [],
-      product: filters?.product || [],
-      productVersion: filters?.productVersion || [],
+      statuses: filters?.status || [],
+      applications: filters?.application || [],
+      releasePlans: filters?.releasePlan || [],
+      namespaces: filters?.namespace || [],
+      components: filters?.component || [],
+      products: filters?.product || [],
+      productVersions: filters?.productVersion || [],
       showLatest: filters?.showLatest || false,
     } as MonitoredReleasesFilterState;
   };
 
+  const unparseMonitoredFilters = (filters: MonitoredReleasesFilterState): FilterType => {
+    return {
+      name: filters?.name || '',
+      status: filters?.statuses || [],
+      application: filters?.applications || [],
+      releasePlan: filters?.releasePlans || [],
+      namespace: filters?.namespaces || [],
+      component: filters?.components || [],
+      product: filters?.products || [],
+      productVersion: filters?.productVersions || [],
+      showLatest: filters?.showLatest || false,
+    } as FilterType;
+  };
+
   const filters: MonitoredReleasesFilterState = parseMonitoredFilters(unparsedFilters);
+
+  const handleSetFilters = (newFilters: MonitoredReleasesFilterState) => {
+    setFilters(unparseMonitoredFilters(newFilters));
+  };
 
   const [activeSortIndex, setActiveSortIndex] = React.useState<number>(
     SortableHeaders.completionTime,
@@ -59,10 +81,18 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
     SortByDirection.desc,
   );
 
-  const { name, status, application, releasePlan, namespace, component, product, productVersion } =
-    filters;
+  const {
+    name,
+    statuses,
+    applications,
+    releasePlans,
+    namespaces: selectedNamespaces,
+    components,
+    products,
+    productVersions,
+  } = filters;
 
-  const { namespaces, namespacesLoaded: loaded } = useNamespaceInfo();
+  const { namespaces, namespacesLoaded: loaded, lastUsedNamespace } = useNamespaceInfo();
 
   const [releases, setReleases] = React.useState<MonitoredReleaseKind[]>([]);
   const [loading, setLoading] = React.useState(true);
@@ -81,14 +111,38 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
   const [targetNamespaces, setTargetNamespaces] = React.useState<string[]>([]);
   const targetNamespacesCountRef = React.useRef<number>(0);
 
+  // Manage which namespaces to fetch based on threshold and filters
+  const { namespacesToFetch } = useNamespacesToFetch({
+    loaded,
+    namespaces,
+    unparsedFilters,
+    lastUsedNamespace,
+    setFilters,
+    selectedNamespaces,
+    threshold: NAMESPACE_THRESHOLD,
+  });
+
   // Function to enrich releases with product data
   const enrichAndSetReleases = React.useCallback(() => {
-    const allReleasesLoaded = loadedNamespacesRef.current.size === namespaces.length;
-    const allReleasePlansLoaded =
-      loadedReleasePlansNamespacesRef.current.size === namespaces.length;
+    const allReleasesLoaded = namespacesToFetch.every((ns) => loadedNamespacesRef.current.has(ns));
+    const allReleasePlansLoaded = namespacesToFetch.every((ns) =>
+      loadedReleasePlansNamespacesRef.current.has(ns),
+    );
+
+    // Calculate expected target namespaces from loaded ReleasePlans only
+    const expectedTargetNamespaces = new Set<string>();
+    namespacesToFetch.forEach((ns) => {
+      const plans = releasePlansRef.current[ns] || [];
+      plans.forEach((rp) => {
+        if (rp.spec?.target) {
+          expectedTargetNamespaces.add(rp.spec.target);
+        }
+      });
+    });
+
     const allRPAsLoaded =
-      targetNamespacesCountRef.current === 0 ||
-      loadedRPAsNamespacesRef.current.size === targetNamespacesCountRef.current;
+      expectedTargetNamespaces.size === 0 ||
+      Array.from(expectedTargetNamespaces).every((ns) => loadedRPAsNamespacesRef.current.has(ns));
 
     if (allReleasesLoaded && allReleasePlansLoaded && allRPAsLoaded) {
       const allReleases = Object.values(releasesRef.current).flat();
@@ -145,7 +199,7 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
       setLoading(false);
       setError(null);
     }
-  }, [namespaces.length]);
+  }, [namespacesToFetch]);
 
   const handleReleasesLoaded = React.useCallback(
     (ns: string, data: MonitoredReleaseKind[]) => {
@@ -167,31 +221,28 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
       releasePlansRef.current[ns] = data;
       loadedReleasePlansNamespacesRef.current.add(ns);
 
-      // Once all ReleasePlans are loaded, determine target namespaces for RPA fetching
-      if (loadedReleasePlansNamespacesRef.current.size === namespaces.length) {
-        const allReleasePlans = Object.values(releasePlansRef.current).flat();
+      // Determine target namespaces only from LOADED release plans
+      const loadedReleasePlans = namespacesToFetch.flatMap(
+        (nsName) => releasePlansRef.current[nsName] || [],
+      );
 
-        const rpaNamespaces = new Set<string>();
-
-        // Add target namespaces from ReleasePlans
-        allReleasePlans.forEach((rp) => {
-          const target = rp.spec?.target;
-          if (target) {
-            rpaNamespaces.add(target);
-          }
-        });
-
-        const targetArray = Array.from(rpaNamespaces);
-        setTargetNamespaces(targetArray);
-        targetNamespacesCountRef.current = targetArray.length;
-
-        // If there are no target namespaces (no RPAs needed), enrich immediately
-        if (targetArray.length === 0) {
-          enrichAndSetReleases();
+      const rpaNamespaces = new Set<string>();
+      loadedReleasePlans.forEach((rp) => {
+        const target = rp.spec?.target;
+        if (target) {
+          rpaNamespaces.add(target);
         }
+      });
+
+      const targetArray = Array.from(rpaNamespaces);
+      setTargetNamespaces(targetArray);
+      targetNamespacesCountRef.current = targetArray.length;
+
+      if (targetArray.length === 0) {
+        enrichAndSetReleases();
       }
     },
-    [namespaces, enrichAndSetReleases],
+    [namespacesToFetch, enrichAndSetReleases],
   );
 
   const handleReleasePlanAdmissionsLoaded = React.useCallback(
@@ -223,84 +274,119 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
   const filterOptions = React.useMemo(() => {
     if (releases.length === 0 && namespaces.length === 0) {
       return {
-        statusOptions: {},
-        applicationOptions: {},
-        releasePlanOptions: {},
-        namespaceOptions: {},
-        componentOptions: {},
-        productOptions: {},
-        productVersionOptions: {},
+        statusOptions: [],
+        applicationOptions: [],
+        releasePlanOptions: [],
+        namespaceOptions: [],
+        componentOptions: [],
+        productOptions: [],
+        productVersionOptions: [],
       };
     }
     const nsKeys = namespaces.map((ns) => ns.metadata.name);
-    const applicationOptions = createFilterObj(
-      releases,
-      (mr) => mr?.metadata.labels[PipelineRunLabel.APPLICATION],
-    );
-    const noApplication = applicationOptions.undefined;
-    delete applicationOptions.undefined;
 
-    const applicationFilterOptions =
-      noApplication > 0
-        ? {
-            'No application': noApplication,
-            [MENU_DIVIDER]: 1,
-            ...applicationOptions,
-          }
-        : applicationOptions;
+    // When namespace count exceeds threshold and no namespaces are selected,
+    // the table shows an empty state — filter options should also be empty
+    // to avoid displaying stale counts alongside an empty table.
+    const shouldShowEmptyOptions =
+      namespaces.length > NAMESPACE_THRESHOLD &&
+      selectedNamespaces.length === 0 &&
+      releases.length > 0;
+
+    // Filter releases to only include those from selected namespaces
+    const releasesFromSelectedNamespaces = shouldShowEmptyOptions
+      ? []
+      : selectedNamespaces.length > 0
+        ? releases.filter((mr) => selectedNamespaces.includes(mr.metadata.namespace))
+        : releases;
+
+    const buildOptionsWithNoValue = (
+      options: { key: string; count?: number; label?: string }[],
+      noValueLabel: string,
+      missingCount: number,
+    ) => {
+      const filteredOptions = options.filter((option) => option.key !== 'undefined');
+      if (missingCount > 0) {
+        return [
+          { key: noValueLabel, count: missingCount },
+          { key: MENU_DIVIDER },
+          ...filteredOptions,
+        ];
+      }
+      return filteredOptions;
+    };
+
+    const applicationOptions = createFilterObj(
+      releasesFromSelectedNamespaces,
+      (mr) => mr?.metadata.labels[PipelineRunLabel.APPLICATION] ?? 'undefined',
+      undefined,
+      undefined,
+      true,
+    );
+    const noApplication =
+      applicationOptions.find((option) => option.key === 'undefined')?.count ?? 0;
+    const applicationFilterOptions = buildOptionsWithNoValue(
+      applicationOptions,
+      'No application',
+      noApplication,
+    );
 
     const componentOptions = createFilterObj(
-      releases,
-      (mr) => mr?.metadata.labels[PipelineRunLabel.COMPONENT],
+      releasesFromSelectedNamespaces,
+      (mr) => mr?.metadata.labels[PipelineRunLabel.COMPONENT] ?? 'undefined',
+      undefined,
+      undefined,
+      true,
     );
-    const noComponent = componentOptions.undefined;
-    delete componentOptions.undefined;
+    const noComponent = componentOptions.find((option) => option.key === 'undefined')?.count ?? 0;
+    const componentFilterOptions = buildOptionsWithNoValue(
+      componentOptions,
+      'No component',
+      noComponent,
+    );
 
-    const componentFilterOptions =
-      noComponent > 0
-        ? {
-            'No component': noComponent,
-            [MENU_DIVIDER]: 1,
-            ...componentOptions,
-          }
-        : componentOptions;
+    const productOptions = createFilterObj(
+      releasesFromSelectedNamespaces,
+      (mr) => mr?.product ?? 'undefined',
+      undefined,
+      undefined,
+      true,
+    );
+    const noProduct = productOptions.find((option) => option.key === 'undefined')?.count ?? 0;
+    const productFilterOptions = buildOptionsWithNoValue(productOptions, 'No product', noProduct);
 
-    const productOptions = createFilterObj(releases, (mr) => mr?.product);
-    const noProduct = productOptions.undefined;
-    delete productOptions.undefined;
-
-    const productFilterOptions =
-      noProduct > 0
-        ? {
-            'No product': noProduct,
-            [MENU_DIVIDER]: 1,
-            ...productOptions,
-          }
-        : productOptions;
-
-    const productVersionOptions = createFilterObj(releases, (mr) => mr?.productVersion);
-    const noProductVersion = productVersionOptions.undefined;
-    delete productVersionOptions.undefined;
-
-    const productVersionFilterOptions =
-      noProductVersion > 0
-        ? {
-            'No product version': noProductVersion,
-            [MENU_DIVIDER]: 1,
-            ...productVersionOptions,
-          }
-        : productVersionOptions;
+    const productVersionOptions = createFilterObj(
+      releasesFromSelectedNamespaces,
+      (mr) => mr?.productVersion ?? 'undefined',
+      undefined,
+      undefined,
+      true,
+    );
+    const noProductVersion =
+      productVersionOptions.find((option) => option.key === 'undefined')?.count ?? 0;
+    const productVersionFilterOptions = buildOptionsWithNoValue(
+      productVersionOptions,
+      'No product version',
+      noProductVersion,
+    );
 
     return {
-      statusOptions: createFilterObj(releases, (mr) => getReleaseStatus(mr), statuses),
+      statusOptions: createFilterObj(
+        releasesFromSelectedNamespaces,
+        (mr) => getReleaseStatus(mr),
+        statusList,
+      ),
       applicationOptions: applicationFilterOptions,
-      releasePlanOptions: createFilterObj(releases, (mr) => mr?.spec.releasePlan),
+      releasePlanOptions: createFilterObj(
+        releasesFromSelectedNamespaces,
+        (mr) => mr?.spec.releasePlan,
+      ),
       namespaceOptions: createFilterObj(releases, (mr) => mr?.metadata.namespace, nsKeys),
       componentOptions: componentFilterOptions,
       productOptions: productFilterOptions,
       productVersionOptions: productVersionFilterOptions,
     };
-  }, [releases, namespaces]);
+  }, [releases, namespaces, selectedNamespaces]);
 
   const filteredData = React.useMemo(() => {
     let filtered = filterMonitoredReleases(releases, filters);
@@ -372,84 +458,108 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
 
   const isFiltered =
     name.length > 0 ||
-    status.length > 0 ||
-    application.length > 0 ||
-    releasePlan.length > 0 ||
-    namespace.length > 0 ||
-    component.length > 0 ||
-    product.length > 0 ||
-    productVersion.length > 0 ||
+    statuses.length > 0 ||
+    applications.length > 0 ||
+    releasePlans.length > 0 ||
+    selectedNamespaces.length > 0 ||
+    components.length > 0 ||
+    products.length > 0 ||
+    productVersions.length > 0 ||
     filters.showLatest;
+
+  // Show SelectNamespaceEmptyState when:
+  // 1. Initial state: no namespaces have been fetched yet
+  // 2. Namespace filter cleared: user cleared the namespace filter after having data
+  const shouldShowNamespaceSelector =
+    loaded &&
+    namespaces.length > NAMESPACE_THRESHOLD &&
+    (namespacesToFetch.length === 0 || selectedNamespaces.length === 0);
+
+  // When namespace filter is cleared, show empty data to trigger NoDataEmptyMsg (SelectNamespaceEmptyState)
+  const shouldShowEmptyForNamespaceFilter =
+    namespaces.length > NAMESPACE_THRESHOLD &&
+    selectedNamespaces.length === 0 &&
+    releases.length > 0;
+
+  const displayData = shouldShowEmptyForNamespaceFilter ? [] : sortedFilteredData;
+  const unfilteredDisplayData = shouldShowEmptyForNamespaceFilter ? [] : releases;
 
   return (
     <PageLayout
       title="Release Monitor"
       description="The dashboard to monitor the releases you care about"
     >
-      {/* Fetch Releases and ReleasePlans from origin namespaces */}
-      {loaded &&
-        namespaces.map((ns) => (
-          <React.Fragment key={`origin-${ns.metadata.name}`}>
-            <ReleasesInNamespace
-              namespace={ns.metadata.name}
-              onReleasesLoaded={handleReleasesLoaded}
-              onError={handleError}
-            />
-            <ReleasePlansInNamespace
-              namespace={ns.metadata.name}
-              onReleasePlansLoaded={handleReleasePlansLoaded}
-              onError={handleError}
-            />
-          </React.Fragment>
-        ))}
-      {/* Fetch ReleasePlanAdmissions from target namespaces only */}
-      {targetNamespaces.map((targetNs) => (
-        <ReleasePlanAdmissionsInNamespace
-          key={`rpa-${targetNs}`}
-          namespace={targetNs}
-          onReleasePlanAdmissionsLoaded={handleReleasePlanAdmissionsLoaded}
-          onError={handleError}
-        />
-      ))}
-      {(isFiltered || releases.length > 0) && (
-        <>
-          <MonitoredReleasesFilterToolbar
-            filters={filters}
-            setFilters={setFilters}
-            onClearFilters={onClearFilters}
-            statusOptions={filterOptions.statusOptions}
-            applicationOptions={filterOptions.applicationOptions}
-            releasePlanOptions={filterOptions.releasePlanOptions}
-            namespaceOptions={filterOptions.namespaceOptions}
-            componentOptions={filterOptions.componentOptions}
-            productOptions={filterOptions.productOptions}
-            productVersionOptions={filterOptions.productVersionOptions}
+      <PageSection isFilled={false}>
+        {/* Fetch Releases and ReleasePlans from origin namespaces */}
+        {loaded &&
+          namespacesToFetch.map((nsName) => (
+            <React.Fragment key={`origin-${nsName}`}>
+              <ReleasesInNamespace
+                namespace={nsName}
+                onReleasesLoaded={handleReleasesLoaded}
+                onError={handleError}
+              />
+              <ReleasePlansInNamespace
+                namespace={nsName}
+                onReleasePlansLoaded={handleReleasePlansLoaded}
+                onError={handleError}
+              />
+            </React.Fragment>
+          ))}
+        {/* Fetch ReleasePlanAdmissions from target namespaces only */}
+        {targetNamespaces.map((targetNs) => (
+          <ReleasePlanAdmissionsInNamespace
+            key={`rpa-${targetNs}`}
+            namespace={targetNs}
+            onReleasePlanAdmissionsLoaded={handleReleasePlanAdmissionsLoaded}
+            onError={handleError}
           />
-          <Flex justifyContent={{ default: 'justifyContentFlexEnd' }} className="pf-v5-u-mr-xl">
-            <FlexItem>
-              <Label
-                color="blue"
-                className="pf-v5-u-font-weight-bold"
-                data-test="release-count-label"
-              >
-                {pluralize(sortedFilteredData.length, 'release')}
-              </Label>
-            </FlexItem>
-          </Flex>
-        </>
-      )}
+        ))}
+        {(isFiltered ||
+          releases.length > 0 ||
+          namespacesToFetch.length > 0 ||
+          (loaded && namespaces.length > NAMESPACE_THRESHOLD)) && (
+          <>
+            <MonitoredReleasesFilterToolbar
+              filters={filters}
+              setFilters={handleSetFilters}
+              onClearFilters={onClearFilters}
+              statusOptions={filterOptions.statusOptions}
+              applicationOptions={filterOptions.applicationOptions}
+              releasePlanOptions={filterOptions.releasePlanOptions}
+              namespaceOptions={filterOptions.namespaceOptions}
+              componentOptions={filterOptions.componentOptions}
+              productOptions={filterOptions.productOptions}
+              productVersionOptions={filterOptions.productVersionOptions}
+            />
+            <Flex justifyContent={{ default: 'justifyContentFlexEnd' }} className="pf-v6-u-mr-xl">
+              <FlexItem>
+                <Label
+                  color="blue"
+                  className="pf-v6-u-font-weight-bold"
+                  data-test="release-count-label"
+                >
+                  {pluralize(displayData.length, 'release')}
+                </Label>
+              </FlexItem>
+            </Flex>
+          </>
+        )}
 
-      <Table
-        virtualize
-        data={sortedFilteredData}
-        unfilteredData={sortedFilteredData}
-        EmptyMsg={EmptyMsg}
-        NoDataEmptyMsg={MonitoredReleaseEmptyState}
-        aria-label="Release List"
-        Header={ReleasesListHeader}
-        Row={ReleaseListRow}
-        loaded={!loading || releases.length > 0}
-      />
+        <Table
+          virtualize
+          data={displayData}
+          unfilteredData={unfilteredDisplayData}
+          EmptyMsg={EmptyMsg}
+          NoDataEmptyMsg={
+            shouldShowNamespaceSelector ? SelectNamespaceEmptyState : MonitoredReleaseEmptyState
+          }
+          aria-label="Release List"
+          Header={ReleasesListHeader}
+          Row={ReleaseListRow}
+          loaded={!loading || releases.length > 0}
+        />
+      </PageSection>
     </PageLayout>
   );
 };

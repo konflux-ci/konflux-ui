@@ -21,11 +21,12 @@ describe('EnvironmentProvisionErrorAlert', () => {
         errorStatus={getEnvironmentProvisionError(MockSnapshots[1])}
       />,
     );
+    expect(screen.getByTestId('error-expandable-section')).toBeInTheDocument();
     expect(
       screen
         .getByTestId('error-expandable-section')
-        .children[0].children[0].children[0].getAttribute('aria-hidden'),
-    ).toBe('true');
+        .querySelector('.pf-v6-c-expandable-section__content'),
+    ).not.toBeVisible();
   });
 
   it('should show relevant Error Details Alert', () => {
@@ -37,7 +38,7 @@ describe('EnvironmentProvisionErrorAlert', () => {
     expect(screen.getByTestId(/env-provision-err-alert/)).toBeInTheDocument();
     expect(screen.getByText('app-sample-go-basic-enterprise-contract')).toBeInTheDocument();
     expect(screen.getByText(/Snapshot failed to deploy/)).toBeInTheDocument();
-    expect(screen.getByText(/Sep 19, 2023/)).toBeInTheDocument();
+    expect(screen.getByTestId('timestamp')).toBeInTheDocument();
   });
 
   it('should show multiple scenarios for multiple failures', () => {

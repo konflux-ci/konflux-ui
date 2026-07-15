@@ -70,6 +70,8 @@ const SnapshotPipelineRunsList: React.FC<React.PropsWithChildren<SnapshotPipelin
         snapshotPipelineRuns,
         (plr) => pipelineRunStatus(plr),
         statuses,
+        undefined,
+        false,
         customFilter,
       ),
     [snapshotPipelineRuns, customFilter],
@@ -81,6 +83,8 @@ const SnapshotPipelineRunsList: React.FC<React.PropsWithChildren<SnapshotPipelin
         snapshotPipelineRuns,
         (plr) => plr?.metadata.labels[PipelineRunLabel.COMMIT_TYPE_LABEL],
         pipelineRunTypes,
+        undefined,
+        false,
         customFilter,
       ),
     [snapshotPipelineRuns, customFilter],
@@ -117,7 +121,7 @@ const SnapshotPipelineRunsList: React.FC<React.PropsWithChildren<SnapshotPipelin
     <>
       <Title
         headingLevel="h4"
-        className="pf-v5-c-title pf-v5-u-mt-lg pf-v5-u-mb-lg"
+        className="pf-v6-c-title pf-v6-u-mt-lg pf-v6-u-mb-lg"
         data-test="snapshot-plr-title"
       >
         Pipeline runs <FeatureFlagIndicator flags={['pipelineruns-kubearchive']} />

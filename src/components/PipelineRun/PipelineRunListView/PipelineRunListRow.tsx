@@ -27,6 +27,7 @@ import { useNamespace } from '~/shared/providers/Namespace';
 import { PipelineRunKind, TaskRunKind } from '~/types';
 import { ReleaseKind, ReleasePlanKind } from '~/types/coreBuildService';
 import { createCommitObjectFromPLR } from '~/utils/commits-utils';
+import { PipelineRunEventTypeLabel } from '~/utils/pipeline-run-filter-utils';
 import { pipelineRunStatus } from '~/utils/pipeline-utils';
 import { ScanResults } from '~/utils/scan/scan-utils';
 import { usePipelinerunActionsLazy } from './pipelinerun-actions';
@@ -56,13 +57,6 @@ type BasePipelineRunListRowProps = PipelineRunListRowProps & {
   showReference?: boolean;
   showTrigger?: boolean;
 };
-
-export enum PipelineRunEventTypeLabel {
-  push = 'Push',
-  pull_request = 'Pull Request',
-  incoming = 'Incoming',
-  'retest-all-comment' = 'Retest All Comment',
-}
 
 const usePipelineRunScanResults = (
   pipelineRun: PipelineRunKind,
@@ -137,10 +131,10 @@ const PipelineRunAttestation = ({ pipelineRun }: { pipelineRun: PipelineRunKind 
         data-test={hasAttestation ? 'attestation-signed' : 'attestation-unsigned'}
         color={
           hasAttestation
-            ? 'var(--pf-v5-global--success-color--100)'
-            : 'var(--pf-v5-global--warning-color--100)'
+            ? 'var(--pf-t--global--color--status--success--default)'
+            : 'var(--pf-t--global--color--status--warning--default)'
         }
-        style={{ marginRight: 'var(--pf-v5-global--spacer--sm)' }}
+        style={{ marginRight: 'var(--pf-t--global--spacer--sm)' }}
       />
     </Tooltip>
   );

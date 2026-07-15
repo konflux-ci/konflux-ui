@@ -1,12 +1,11 @@
 import * as React from 'react';
-import { EmptyStateBody, Text, TextContent, TextVariants, Title } from '@patternfly/react-core';
+import { EmptyStateBody, Content, ContentVariants, Title } from '@patternfly/react-core';
 import { SortByDirection } from '@patternfly/react-table';
 import emptyStateImgUrl from '~/assets/success.svg';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { MultiSelect } from '~/components/Filter/generic/MultiSelect';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 import { createFilterObj } from '~/components/Filter/utils/filter-utils';
-import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { useSortedResources } from '~/hooks/useSortedResources';
 import { Issue, IssueSeverity, IssueState } from '~/kite/issue-type';
 import { useIssues } from '~/kite/kite-hooks';
@@ -141,12 +140,12 @@ const IssueListView = () => {
 
   return (
     <>
-      <Title headingLevel="h3" className="pf-v5-u-mt-lg pf-v5-u-mb-sm">
-        Issues list <FeatureFlagIndicator flags={['issues-dashboard']} />
+      <Title headingLevel="h3" className="pf-v6-u-mt-lg pf-v6-u-mb-sm">
+        Issues list
       </Title>
-      <TextContent>
-        <Text component={TextVariants.p}>This list shows current Konflux issues.</Text>
-      </TextContent>
+      <Content>
+        <Content component={ContentVariants.p}>This list shows current Konflux issues.</Content>
+      </Content>
       <div data-test="issues-list">
         <Table
           virtualize

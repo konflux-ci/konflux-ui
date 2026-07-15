@@ -41,7 +41,7 @@ const IssuesListRow: React.FC<RowFunctionArgs<Issue>> = ({ obj: issue }) => {
         <Flex direction={{ default: 'row' }}>
           <FlexItem
             data-test="issues-list-item-severity"
-            style={{ marginRight: 'var(--pf-v5-global--spacer--sm)' }}
+            style={{ marginRight: 'var(--pf-t--global--spacer--sm)' }}
           >
             {severityIcon(issue.severity)}
           </FlexItem>
@@ -72,7 +72,7 @@ const IssuesListRow: React.FC<RowFunctionArgs<Issue>> = ({ obj: issue }) => {
                   showModal(
                     createModalLauncher(LinksModal, {
                       'data-test': 'modal-links',
-                      bodyAriaLabel: 'Scrollable modal content',
+                      'aria-label': 'Scrollable modal content',
                       variant: ModalVariant.small,
                       title: 'All links',
                     })(),

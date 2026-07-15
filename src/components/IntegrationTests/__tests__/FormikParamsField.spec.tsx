@@ -320,7 +320,7 @@ describe('FormikParamsField', () => {
     });
 
     const removeValue = screen.getByTestId('remove-value-1-3');
-    expect(removeValue.getAttribute('aria-disabled')).toEqual('false');
+    expect(removeValue).toBeEnabled();
 
     act(() => {
       fireEvent.click(removeValue);
@@ -355,6 +355,6 @@ describe('FormikParamsField', () => {
     });
 
     const removeValue = screen.getByTestId('remove-value-1-1');
-    expect(removeValue.getAttribute('aria-disabled')).toEqual('true');
+    expect(removeValue).toBeDisabled();
   });
 });

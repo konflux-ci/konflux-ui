@@ -5,11 +5,10 @@ import {
   ClipboardCopyVariant,
   ExpandableSection,
   PageSection,
-  PageSectionVariants,
-  Text,
-  TextContent,
-  TextVariants,
+  Content,
+  ContentVariants,
 } from '@patternfly/react-core';
+import ServiceUnavailablePage from '~/components/ServiceUnavailable/ServiceUnavailablePage';
 import NoAccessState from '../components/PageAccess/NoAccessState';
 import PageLayout from '../components/PageLayout/PageLayout';
 import { HttpError } from '../k8s/error';
@@ -26,20 +25,20 @@ export const ErrorBoundaryFallback: React.FC<
   React.PropsWithChildren<ErrorBoundaryFallbackProps>
 > = (props) => {
   return (
-    <PageSection variant={PageSectionVariants.light}>
+    <PageSection hasBodyWrapper={false}>
       <PageLayout title="Oh no! Something went wrong.">
-        <PageSection>
+        <PageSection hasBodyWrapper={false}>
           <ExpandableSection toggleText="Show details">
-            <TextContent>
-              <Text component={TextVariants.h3}>{props.title}</Text>
+            <Content>
+              <Content component={ContentVariants.h3}>{props.title}</Content>
 
-              <Text component={TextVariants.h4}>Description:</Text>
-              <Text component={TextVariants.pre}>{props.errorMessage}</Text>
+              <Content component={ContentVariants.h4}>Description:</Content>
+              <Content component={ContentVariants.pre}>{props.errorMessage}</Content>
 
               {props.componentStack ? (
                 <>
                   {' '}
-                  <Text component={TextVariants.h4}>Component trace:</Text>
+                  <Content component={ContentVariants.h4}>Component trace:</Content>
                   <ClipboardCopy
                     tabIndex={0}
                     variant={ClipboardCopyVariant.expansion}
@@ -54,7 +53,7 @@ export const ErrorBoundaryFallback: React.FC<
                 </>
               ) : null}
 
-              <Text component={TextVariants.h4}>Stack trace:</Text>
+              <Content component={ContentVariants.h4}>Stack trace:</Content>
               <ClipboardCopy
                 variant={ClipboardCopyVariant.expansion}
                 hoverTip="Copy"
@@ -65,7 +64,7 @@ export const ErrorBoundaryFallback: React.FC<
               >
                 {props.stack.trim()}
               </ClipboardCopy>
-            </TextContent>
+            </Content>
           </ExpandableSection>
         </PageSection>
       </PageLayout>
@@ -77,6 +76,9 @@ export const RouteErrorBoundry: React.FC<React.PropsWithChildren> = () => {
   const error = useRouteError() as ErrorResponse;
   if (error.status === 403) {
     return <NoAccessState />;
+  }
+  if (error.status === 503) {
+    return <ServiceUnavailablePage errorMessage={error.data} />;
   }
   if (error instanceof HttpError) {
     const httpError = error as HttpError;

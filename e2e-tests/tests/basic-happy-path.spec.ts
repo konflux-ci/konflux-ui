@@ -1,5 +1,6 @@
 import { NavItem, pageTitles } from '../support/constants/PageTitle';
 import { actions } from '../support/pageObjects/global-po';
+import { issuesPagePO } from '../support/pageObjects/pages-po';
 import { ApplicationDetailPage } from '../support/pages/ApplicationDetailPage';
 import { ComponentDetailsPage } from '../support/pages/ComponentDetailsPage';
 import { ComponentPage } from '../support/pages/ComponentsPage';
@@ -242,6 +243,22 @@ describe('Basic Happy Path', () => {
 
     it('Verify deployed image exists', () => {
       ComponentDetailsPage.checkBuildImage();
+    });
+  });
+
+  describe('Check Issues page', () => {
+    it('Navigate to Issues page from the sidebar', () => {
+      Common.navigateTo(NavItem.issues);
+      Common.waitForLoad();
+
+      if (!Cypress.env('LOCAL_CLUSTER')) {
+        cy.get(issuesPagePO.page).contains(issuesPagePO.pageDescription).should('exist');
+        cy.get(issuesPagePO.overviewTab).should('exist');
+        cy.get(issuesPagePO.issuesTab).should('exist');
+      } else {
+        cy.get(issuesPagePO.serviceUnavailableState).should('exist');
+        cy.contains(issuesPagePO.serviceUnavailableTitle).should('exist');
+      }
     });
   });
 

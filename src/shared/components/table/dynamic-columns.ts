@@ -62,7 +62,7 @@ export const generateDynamicColumnClasses = <T extends string>(
     }
   });
 
-  classes.kebab = 'pf-v5-c-table__action';
+  classes.kebab = 'pf-v6-c-table__action';
   return classes;
 };
 

@@ -107,7 +107,14 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
 
   const statusFilterObj = React.useMemo(
     () =>
-      createFilterObj(sortedPipelineRuns, (plr) => pipelineRunStatus(plr), statuses, customFilter),
+      createFilterObj(
+        sortedPipelineRuns,
+        (plr) => pipelineRunStatus(plr),
+        statuses,
+        undefined,
+        false,
+        customFilter,
+      ),
     [sortedPipelineRuns, customFilter],
   );
 
@@ -117,6 +124,15 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
         sortedPipelineRuns,
         (plr) => plr?.metadata.labels[PipelineRunLabel.PIPELINE_TYPE],
         pipelineRunTypes,
+        pipelineRunTypes.reduce(
+          (acc, pipelineRunType) => {
+            acc[pipelineRunType] =
+              pipelineRunType.charAt(0).toUpperCase() + pipelineRunType.slice(1);
+            return acc;
+          },
+          {} as Record<string, string>,
+        ),
+        false,
         customFilter,
       ),
     [sortedPipelineRuns, customFilter],
@@ -183,7 +199,7 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
         }}
       />
       {isFetchingNextPage ? (
-        <Stack style={{ marginTop: 'var(--pf-v5-global--spacer--md)' }} hasGutter>
+        <Stack style={{ marginTop: 'var(--pf-t--global--spacer--md)' }} hasGutter>
           <Bullseye>
             <Spinner size="lg" aria-label="Loading more pipeline runs" />
           </Bullseye>

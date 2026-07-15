@@ -3,6 +3,7 @@ import { RouterProvider } from 'react-router-dom';
 import { Bullseye, Spinner } from '@patternfly/react-core';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { NuqsAdapter } from 'nuqs/adapters/react-router/v6';
 import ReactDOM from 'react-dom/client';
 import { initAnalytics } from '~/analytics';
 import { analyticsService, consumeLoginSignal } from '~/analytics/AnalyticsService';
@@ -66,14 +67,16 @@ const App = () => {
 
   return (
     <>
-      <RouterProvider
-        router={router}
-        fallbackElement={
-          <Bullseye>
-            <Spinner />
-          </Bullseye>
-        }
-      />
+      <NuqsAdapter>
+        <RouterProvider
+          router={router}
+          fallbackElement={
+            <Bullseye>
+              <Spinner />
+            </Bullseye>
+          }
+        />
+      </NuqsAdapter>
       <ReactQueryDevtools initialIsOpen={false} position="bottom" />
     </>
   );

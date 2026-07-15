@@ -100,12 +100,39 @@ export const deleteRB = async (roleBinding: RoleBinding, dryRun?: boolean): Prom
   await K8sQueryDeleteResource(queryOptions);
 };
 
+/** Recreate a RoleBinding from a snapshot (e.g. after a failed delete-then-create flow). Omits server-managed metadata. */
+export const restoreRB = async (snapshot: RoleBinding): Promise<RoleBinding> => {
+  const md = snapshot.metadata;
+  const resource: RoleBinding = {
+    apiVersion: snapshot.apiVersion,
+    kind: snapshot.kind,
+    metadata: {
+      name: md.name,
+      namespace: md.namespace,
+      ...(md.labels && { labels: { ...md.labels } }),
+      ...(md.annotations && { annotations: { ...md.annotations } }),
+    },
+    roleRef: { ...snapshot.roleRef },
+    ...(snapshot.subjects?.length && {
+      subjects: snapshot.subjects.map((s) => ({ ...s })),
+    }),
+  };
+
+  return K8sQueryCreateResource({
+    model: RoleBindingModel,
+    queryOptions: {
+      ns: md.namespace,
+    },
+    resource,
+  });
+};
+
 /**
  * The resource "rolebindings" in API group "rbac.authorization.k8s.io" does not
  * support patch roleRef. And if you try to patch the rolebinding by kubctl directly,
  * you would get the error 'cannot change roleRef'.
- * In this case, we need to create one with the new role then delete the
- * obsoleted one.
+ * In this case, we need to delete the old binding first, then create the new one
+ * (avoids duplicate RoleBinding names and matches bulk change-role behavior).
  *
  * Only updates one RB, but returning array to keep it consistent with `createRBs()`.
  */

@@ -106,10 +106,11 @@ describe('ComponentSelector', () => {
     );
 
     fireEvent.click(screen.getByText('Select components'));
-    fireEvent.click(screen.getByText('ComponentA'));
-    fireEvent.click(screen.getByText('ComponentC'));
+    fireEvent.click(screen.getByRole('checkbox', { name: /ComponentA/ }));
+    fireEvent.click(screen.getByRole('checkbox', { name: /ComponentC/ }));
     await waitFor(() => {
-      expect(screen.getByText('2')).toBeInTheDocument();
+      const badge = document.querySelector('.pf-v6-c-badge');
+      expect(badge).toHaveTextContent('2');
     });
   });
 });

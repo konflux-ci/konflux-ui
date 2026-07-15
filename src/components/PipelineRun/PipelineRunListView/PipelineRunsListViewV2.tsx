@@ -7,7 +7,7 @@ import {
   filterPipelineRuns,
   PipelineRunsFilterState,
 } from '~/components/Filter/utils/pipelineruns-filter-utils';
-import { SESSION_STORAGE_KEYS } from '~/consts/constants';
+import { SESSION_STORAGE_KEYS, TEXT_SEARCH_TYPES } from '~/consts/constants';
 import { useComponent } from '~/hooks/useComponents';
 import { useVisibleColumns } from '~/hooks/useVisibleColumns';
 import { getErrorState } from '~/shared/utils/error-utils';
@@ -47,7 +47,7 @@ const PipelineRunsListViewV2: React.FC<React.PropsWithChildren<PipelineRunsListV
     name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
     status: unparsedFilters.status ? (unparsedFilters.status as string[]) : [],
     type: unparsedFilters.type ? (unparsedFilters.type as string[]) : [],
-    version: unparsedFilters.version ? (unparsedFilters.version as string[]) : [],
+    version: unparsedFilters.version ? (unparsedFilters.version as string) : '',
   });
 
   const {
@@ -104,33 +104,20 @@ const PipelineRunsListViewV2: React.FC<React.PropsWithChildren<PipelineRunsListV
         sortedPipelineRuns,
         (plr) => plr?.metadata.labels[PipelineRunLabel.PIPELINE_TYPE],
         pipelineRunTypes,
+        pipelineRunTypes.reduce(
+          (acc, type) => {
+            acc[type] = type.charAt(0).toUpperCase() + type.slice(1);
+            return acc;
+          },
+          {} as Record<string, string>,
+        ),
       ),
     [sortedPipelineRuns],
   );
 
-  const allVersions = React.useMemo(
-    () => component?.spec?.source?.versions ?? [],
-    [component?.spec?.source?.versions],
-  );
-
-  const allVersionBranches = React.useMemo(() => allVersions.map((v) => v.revision), [allVersions]);
-
-  const versionLabelMap = React.useMemo(
-    () => Object.fromEntries(allVersions.map((v) => [v.revision, v.name])),
-    [allVersions],
-  );
-
-  // TODO: temporary until item count is not removed from MultiSelect
-  const versionFilterObj = Object.fromEntries(allVersionBranches.map((b) => [b, 0]));
-
-  const effectiveFilters = React.useMemo(
-    () => (versionName ? { ...filters, version: [] } : filters),
-    [filters, versionName],
-  );
-
   const filteredPLRs = React.useMemo(
-    () => filterPipelineRuns(sortedPipelineRuns, effectiveFilters, undefined, componentName),
-    [sortedPipelineRuns, effectiveFilters, componentName],
+    () => filterPipelineRuns(sortedPipelineRuns, filters, undefined, componentName),
+    [sortedPipelineRuns, filters, componentName],
   );
 
   const vulnerabilities = usePLRVulnerabilities(nameFilter ? filteredPLRs : sortedPipelineRuns);
@@ -147,7 +134,7 @@ const PipelineRunsListViewV2: React.FC<React.PropsWithChildren<PipelineRunsListV
     nameFilter.length > 0 ||
     typeFilter.length > 0 ||
     statusFilter.length > 0 ||
-    (!versionName && versionFilter.length > 0);
+    versionFilter.length > 0;
 
   return (
     <Flex direction={{ default: 'column' }}>
@@ -158,8 +145,7 @@ const PipelineRunsListViewV2: React.FC<React.PropsWithChildren<PipelineRunsListV
           onClearFilters={onClearFilters}
           typeOptions={typeFilterObj}
           statusOptions={statusFilterObj}
-          versionOptions={!versionName ? versionFilterObj : undefined}
-          versionLabels={!versionName ? versionLabelMap : undefined}
+          searchOptions={versionName ? Object.values(TEXT_SEARCH_TYPES) : []}
           openColumnManagement={() => setIsColumnManagementOpen(true)}
           totalColumns={PIPELINE_RUN_COLUMNS_DEFINITIONS.length}
         />
@@ -197,7 +183,7 @@ const PipelineRunsListViewV2: React.FC<React.PropsWithChildren<PipelineRunsListV
         }}
       />
       {isFetchingNextPage ? (
-        <Stack style={{ marginTop: 'var(--pf-v5-global--spacer--md)' }} hasGutter>
+        <Stack style={{ marginTop: 'var(--pf-t--global--spacer--md)' }} hasGutter>
           <Bullseye>
             <Spinner size="lg" aria-label="Loading more pipeline runs" />
           </Bullseye>

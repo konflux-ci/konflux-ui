@@ -15,6 +15,7 @@ import integrationTestRoutes from './page-routes/integration-test';
 import issuesRoutes from './page-routes/issues';
 import workspaceRoutes from './page-routes/namespace';
 import pipelineRoutes from './page-routes/pipeline';
+import { pipelineRunsPageRoutes } from './page-routes/pipeline-runs-page';
 import releaseRoutes from './page-routes/release';
 import releaseMonitorRoutes from './page-routes/release-monitor';
 import releaseServiceRoutes from './page-routes/release-service';
@@ -60,6 +61,7 @@ export const router = createBrowserRouter([
       ...pipelineRoutes,
       ...taskRunRoutes,
       ...userAccessRoutes,
+      ...pipelineRunsPageRoutes,
       // '/ns/:ns',
       //   '/ns/:ns/pipelinerun/:pipelineRun',
       //   '/ns/:ns/pipelinerun/:pipelineRun/logs',

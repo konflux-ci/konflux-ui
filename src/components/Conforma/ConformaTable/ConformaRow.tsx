@@ -6,7 +6,7 @@ import { TableData } from '~/shared';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { UIConformaData } from '~/types/conforma';
 import { getRuleStatus } from '../utils';
-import { ConformaTableColumnClasses } from './ConformaHeader';
+import { conformaTableColumnClasses } from './ConformaHeader';
 import './ConformaTable.scss';
 
 type ConformaRowType = {
@@ -18,19 +18,19 @@ const ConformaRow: React.FC<ConformaRowType> = ({ data }) => {
   const { applicationName } = useParams();
   return (
     <>
-      <TableData className={`${ConformaTableColumnClasses.rules} vertical-center-cell`}>
+      <TableData className={`${conformaTableColumnClasses.rules} vertical-center-cell`}>
         {data.title ?? '-'}
       </TableData>
       <TableData
         data-test="rule-status"
-        className={`${ConformaTableColumnClasses.status} vertical-center-cell`}
+        className={`${conformaTableColumnClasses.status} vertical-center-cell`}
       >
         {getRuleStatus(data.status)}
       </TableData>
-      <TableData className={`${ConformaTableColumnClasses.message} vertical-center-cell`}>
+      <TableData className={`${conformaTableColumnClasses.message} vertical-center-cell`}>
         {data.msg ? <Truncate content={data.msg} /> : '-'}
       </TableData>
-      <TableData className={`${ConformaTableColumnClasses.component} vertical-center-cell`}>
+      <TableData className={`${conformaTableColumnClasses.component} vertical-center-cell`}>
         <Link
           to={COMPONENT_DETAILS_PATH.createPath({
             workspaceName: namespace,

@@ -1,0 +1,83 @@
+import * as React from 'react';
+import {
+  Modal,
+  ModalBody,
+  ModalFooter,
+  ModalHeader,
+  ModalProps as PFModalProps,
+} from '@patternfly/react-core';
+
+export type ModalProps = Omit<PFModalProps, 'children' | 'ref'> & {
+  title?: React.ReactNode;
+  titleIconVariant?: 'success' | 'danger' | 'warning' | 'info' | 'custom' | React.ComponentType;
+  description?: React.ReactNode;
+  actions?: React.ReactNode[];
+};
+
+type ModalComponentProps = Omit<ModalProps, 'isOpen' | 'appendTo'> & {
+  'data-test': string;
+};
+
+type OnModalClose<D = unknown> = (obj?: D) => void;
+
+export type ComponentProps<D = unknown> = {
+  onClose?: (event?: KeyboardEvent | React.MouseEvent, obj?: D) => void;
+};
+
+export type RawComponentProps<D = unknown> = ComponentProps<D> & { modalProps?: ModalProps };
+
+export type ModalLauncher<Result = Record<string, unknown>> = (
+  onClose: OnModalClose<Result>,
+) => React.ReactElement;
+
+export const createRawModalLauncher =
+  <D extends Record<string, unknown>, P extends ComponentProps<D>>(
+    Component: React.ComponentType<React.PropsWithChildren<P & { modalProps?: ModalProps }>>,
+    modalProps: ModalComponentProps,
+  ) =>
+  (componentProps?: P): ModalLauncher<D> =>
+  (onModalClose) => {
+    const { onClose, ...restModalProps } = modalProps;
+    const handleClose = (event: KeyboardEvent | React.MouseEvent, obj?: unknown) => {
+      onClose?.(event);
+      onModalClose((obj ?? {}) as D);
+    };
+
+    return (
+      <Component
+        {...componentProps}
+        modalProps={{
+          'aria-label': 'modal',
+          ...restModalProps,
+          isOpen: true,
+          onClose: handleClose,
+          appendTo: () => document.querySelector('#hacDev-modal-container'),
+        }}
+        onClose={handleClose}
+      />
+    );
+  };
+
+export const createModalLauncher = <D extends Record<string, unknown>, P extends ComponentProps<D>>(
+  Component: React.ComponentType<React.PropsWithChildren<P>>,
+  inModalProps: ModalComponentProps,
+) =>
+  createRawModalLauncher(({ modalProps, ...props }: P & { modalProps?: ModalProps }) => {
+    const { title, titleIconVariant, description, actions, ...rest } = modalProps || {};
+    return (
+      <Modal {...rest}>
+        {title !== undefined && (
+          <ModalHeader
+            title={title}
+            titleIconVariant={titleIconVariant}
+            description={description}
+          />
+        )}
+        <ModalBody>
+          {/* eslint-disable-next-line */}
+          <Component {...(props as any)} />
+        </ModalBody>
+        {actions?.length > 0 && <ModalFooter>{actions}</ModalFooter>}
+      </Modal>
+    );
+  }, inModalProps);

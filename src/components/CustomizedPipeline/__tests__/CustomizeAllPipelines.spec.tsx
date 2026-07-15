@@ -1,5 +1,7 @@
 import '@testing-library/jest-dom';
-import { render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { IMPORT_PATH } from '../../../routes/paths';
 import { renderWithQueryClient } from '../../../unit-test-utils/mock-react-query';
 import { createK8sWatchResourceMock } from '../../../utils/test-utils';
 import CustomizeAllPipelines from '../CustomizeAllPipelines';
@@ -12,7 +14,11 @@ jest.mock('../../../hooks/useApplicationPipelineGitHubApp', () => ({
 }));
 
 jest.mock('react-router-dom', () => ({
-  Link: (props) => <a href={props.to}>{props.children}</a>,
+  Link: (props) => (
+    <a {...props} href={props.to}>
+      {props.children}
+    </a>
+  ),
   useNavigate: () => jest.fn(),
 }));
 
@@ -36,7 +42,11 @@ describe('CustomizeAllPipelines', () => {
   it('should render error state', () => {
     useK8sWatchResourceMock.mockReturnValue([[], true, { code: 400 }]);
     const result = render(
-      <CustomizeAllPipelines applicationName="" namespace="" modalProps={{ isOpen: true }} />,
+      <CustomizeAllPipelines
+        applicationName=""
+        namespace=""
+        modalProps={{ isOpen: true, onClose: jest.fn() }}
+      />,
     );
     expect(result.getByText('Unable to load components')).toBeInTheDocument();
   });
@@ -94,5 +104,43 @@ describe('CustomizeAllPipelines', () => {
     expect(filter).toHaveBeenCalledTimes(2);
     expect(filter).toHaveBeenNthCalledWith(1, component1, expect.anything(), expect.anything());
     expect(filter).toHaveBeenNthCalledWith(2, component2, expect.anything(), expect.anything());
+  });
+
+  describe('empty state add component action', () => {
+    beforeEach(() => {
+      useK8sWatchResourceMock.mockReturnValue([[], true]);
+    });
+
+    it('should render add component link with import path and application query param', () => {
+      render(
+        <CustomizeAllPipelines
+          applicationName="my-app"
+          namespace="test-ns"
+          modalProps={{ isOpen: true }}
+        />,
+      );
+
+      expect(screen.getByRole('link', { name: 'Add component' })).toHaveAttribute(
+        'href',
+        `${IMPORT_PATH.createPath({ workspaceName: 'test-ns' })}?application=my-app`,
+      );
+    });
+
+    it('should call onClose when add component is clicked', async () => {
+      const user = userEvent.setup();
+      const onClose = jest.fn();
+      render(
+        <CustomizeAllPipelines
+          applicationName="my-app"
+          namespace="test-ns"
+          onClose={onClose}
+          modalProps={{ isOpen: true }}
+        />,
+      );
+
+      await user.click(screen.getByRole('link', { name: 'Add component' }));
+
+      expect(onClose).toHaveBeenCalled();
+    });
   });
 });

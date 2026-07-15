@@ -1,3 +1,4 @@
+import React from 'react';
 import { screen } from '@testing-library/react';
 import { useActiveRouteChecker } from '../../../src/hooks/useActiveRouteChecker';
 import { useNamespace } from '../../shared/providers/Namespace';
@@ -10,6 +11,20 @@ jest.mock('../../../src/hooks/useActiveRouteChecker', () => ({
 
 jest.mock('../../shared/providers/Namespace', () => ({
   useNamespace: jest.fn(),
+}));
+
+jest.mock('~/shared/components/SavedViews', () => ({
+  SavedViewNavItems: () => null,
+}));
+
+jest.mock('~/feature-flags/hooks', () => ({
+  ...jest.requireActual('~/feature-flags/hooks'),
+  useIsOnFeatureFlag: () => true,
+  IfFeature: ({ children }: { children: React.ReactNode }) => children,
+}));
+
+jest.mock('~/feature-flags/FeatureFlagIndicator', () => ({
+  FeatureFlagIndicator: () => null,
 }));
 
 describe('AppSideBar', () => {
@@ -46,6 +61,12 @@ describe('AppSideBar', () => {
     expect(screen.getByText('Applications').closest('li')).toHaveClass(
       'app-side-bar__nav-item--disabled',
     );
+    expect(screen.getByText('Issues').closest('li')).toHaveClass(
+      'app-side-bar__nav-item--disabled',
+    );
+    expect(screen.getByText('Pipeline Runs').closest('li')).toHaveClass(
+      'app-side-bar__nav-item--disabled',
+    );
     expect(screen.getByText('Secrets').closest('li')).toHaveClass(
       'app-side-bar__nav-item--disabled',
     );
@@ -67,9 +88,37 @@ describe('AppSideBar', () => {
       'href',
       '/ns/test-namespace/applications',
     );
+    expect(screen.getByText('Issues')).toHaveAttribute('href', '/ns/test-namespace/issues');
+    expect(screen.getByText('Pipeline Runs')).toHaveAttribute('href', '/ns/test-namespace/prns');
     expect(screen.getByText('Secrets')).toHaveAttribute('href', '/ns/test-namespace/secrets');
     expect(screen.getByText('Releases')).toHaveAttribute('href', '/ns/test-namespace/release');
     expect(screen.getByText('User Access')).toHaveAttribute('href', '/ns/test-namespace/access');
+  });
+
+  it('should render the Pipeline Runs nav item', () => {
+    (useActiveRouteChecker as jest.Mock).mockReturnValue(() => false);
+    (useNamespace as jest.Mock).mockReturnValue('test-namespace');
+
+    routerRenderer(<AppSideBar isOpen={true} />);
+    expect(screen.getByText('Pipeline Runs')).toBeInTheDocument();
+  });
+
+  it('should have correct href for Pipeline Runs when namespace is selected', () => {
+    (useActiveRouteChecker as jest.Mock).mockReturnValue(() => false);
+    (useNamespace as jest.Mock).mockReturnValue('test-namespace');
+
+    routerRenderer(<AppSideBar isOpen={true} />);
+    expect(screen.getByText('Pipeline Runs')).toHaveAttribute('href', '/ns/test-namespace/prns');
+  });
+
+  it('should disable Pipeline Runs when no namespace is selected', () => {
+    (useActiveRouteChecker as jest.Mock).mockReturnValue(() => false);
+    (useNamespace as jest.Mock).mockReturnValue(null);
+
+    routerRenderer(<AppSideBar isOpen={true} />);
+    expect(screen.getByText('Pipeline Runs').closest('li')).toHaveClass(
+      'app-side-bar__nav-item--disabled',
+    );
   });
 
   it('should not render links for disabled namespace-dependent routes when no namespace is available', () => {
@@ -80,6 +129,8 @@ describe('AppSideBar', () => {
 
     expect(screen.getByText('Namespaces')).toHaveAttribute('href', '/ns');
     expect(screen.getByText('Applications')).toHaveAttribute('href', '/');
+    expect(screen.getByText('Issues')).toHaveAttribute('href', '/');
+    expect(screen.getByText('Pipeline Runs')).toHaveAttribute('href', '/');
     expect(screen.getByText('Secrets')).toHaveAttribute('href', '/');
     expect(screen.getByText('Releases')).toHaveAttribute('href', '/');
     expect(screen.getByText('User Access')).toHaveAttribute('href', '/');

@@ -5,14 +5,18 @@ import { FilterContextProvider } from '~/components/Filter/generic/FilterContext
 import { useSearchParamBatch } from '~/hooks/useSearchParam';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { renderWithQueryClient } from '~/unit-test-utils/mock-react-query';
-import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
+import {
+  mockUseSearchParamBatch,
+  resetMockSearchParams,
+} from '~/unit-test-utils/mock-useSearchParam';
 import { PipelineRunLabel, PipelineRunType } from '../../../../consts/pipelinerun';
+import { useApplication } from '../../../../hooks/useApplications';
 import { useComponents } from '../../../../hooks/useComponents';
 import { usePipelineRunsV2 } from '../../../../hooks/usePipelineRunsV2';
+import { useLocalStorage } from '../../../../shared/hooks/useLocalStorage';
 import { PipelineRunKind, PipelineRunStatus } from '../../../../types';
 import { createUseApplicationMock } from '../../../../utils/test-utils';
 import { mockComponentsData } from '../../../ApplicationDetails/__data__';
-import { PipelineRunListRow } from '../PipelineRunListRow';
 import PipelineRunsListView from '../PipelineRunsListView';
 
 jest.useFakeTimers();
@@ -30,7 +34,10 @@ jest.mock('../../../../hooks/usePipelineRunsV2', () => ({
   usePipelineRunsV2: jest.fn(),
 }));
 
-createUseApplicationMock([{ metadata: { name: 'test' } }, true]);
+createUseApplicationMock([
+  { metadata: { name: 'test', creationTimestamp: '2022-01-01T00:00:00Z' } },
+  true,
+]);
 
 jest.mock('../../../../hooks/useScanResults', () => ({
   useKarchScanResults: jest.fn(() => [
@@ -62,16 +69,25 @@ jest.mock('../../../../hooks/useSearchParam', () => ({
   useSearchParamBatch: jest.fn(),
 }));
 
+jest.mock('../../../../shared/hooks/useLocalStorage', () => ({
+  useLocalStorage: jest.fn(() => [undefined, jest.fn(), jest.fn()]),
+}));
+
 jest.mock('../../../../shared/components/table/TableComponent', () => {
   return (props) => {
     const { data, filters, selected, match, kindObj } = props;
     const cProps = { data, filters, selected, match, kindObj };
     const columns = props.Header(cProps);
+    const Row = props.Row;
 
     React.useEffect(() => {
       props?.onRowsRendered?.({ stopIndex: data.length - 1 });
+      props?.infiniteLoaderProps?.loadMoreRows?.();
+      props?.infiniteLoaderProps?.isRowLoaded?.({ index: 0 });
+      props?.infiniteLoaderProps?.isRowLoaded?.({ index: data.length });
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [data]);
+
     return (
       <Table role="table" aria-label="table" variant="compact" borders={true}>
         <Thead>
@@ -85,8 +101,8 @@ jest.mock('../../../../shared/components/table/TableComponent', () => {
         </Thead>
         <Tbody>
           {props.data.map((d, i) => (
-            <Tr key={i}>
-              <PipelineRunListRow columns={null} obj={d} />
+            <Tr key={props.getRowProps?.(d)?.id ?? i}>
+              <Row obj={d} index={i} columns={columns} />
             </Tr>
           ))}
         </Tbody>
@@ -99,8 +115,11 @@ jest.mock('../../../../utils/rbac', () => ({
   useAccessReviewForModel: jest.fn(() => [true, true]),
 }));
 
+const useApplicationMock = useApplication as jest.Mock;
 const useComponentsMock = useComponents as jest.Mock;
 const useSearchParamBatchMock = useSearchParamBatch as jest.Mock;
+const useLocalStorageMock = useLocalStorage as jest.Mock;
+const usePipelineRunsMock = usePipelineRunsV2 as jest.Mock;
 
 const appName = 'my-test-app';
 
@@ -136,6 +155,7 @@ const pipelineRuns: PipelineRunKind[] = [
       key: 'key1',
     },
     status: {
+      startTime: '2022-08-05T16:23:43Z',
       conditions: [
         {
           status: 'True',
@@ -174,6 +194,9 @@ const pipelineRuns: PipelineRunKind[] = [
     spec: {
       key: 'key2',
     },
+    status: {
+      startTime: '2022-08-04T16:23:43Z',
+    } as PipelineRunStatus,
   },
   {
     kind: 'PipelineRun',
@@ -208,15 +231,27 @@ const pipelineRuns: PipelineRunKind[] = [
   },
 ];
 
-const usePipelineRunsMock = usePipelineRunsV2 as jest.Mock;
+const pipelineRunsWithoutToSorted = (): PipelineRunKind[] => {
+  const runs = [...pipelineRuns];
+  Object.defineProperty(runs, 'toSorted', { value: undefined });
+  return runs;
+};
 
-jest.mock('../../../../hooks/usePipelineRunsV2', () => ({
-  usePipelineRunsV2: jest.fn(),
-}));
-
-const TestedComponent = ({ name }) => (
+const TestedComponent = ({
+  name,
+  componentName,
+  customFilter,
+}: {
+  name: string;
+  componentName?: string;
+  customFilter?: (plr: PipelineRunKind) => boolean;
+}) => (
   <FilterContextProvider filterParams={['name', 'status', 'type']}>
-    <PipelineRunsListView applicationName={name} />
+    <PipelineRunsListView
+      applicationName={name}
+      componentName={componentName}
+      customFilter={customFilter}
+    />
   </FilterContextProvider>
 );
 
@@ -224,9 +259,23 @@ describe('Pipeline run List', () => {
   mockUseNamespaceHook('test-ns');
 
   beforeEach(() => {
+    resetMockSearchParams();
+    jest.clearAllMocks();
+    useApplicationMock.mockReturnValue([
+      { metadata: { name: 'test', creationTimestamp: '2022-01-01T00:00:00Z' } },
+      true,
+    ]);
     useSearchParamBatchMock.mockImplementation(() => mockUseSearchParamBatch());
+    useLocalStorageMock.mockReturnValue([undefined, jest.fn(), jest.fn()]);
     useComponentsMock.mockReturnValue([mockComponentsData, true]);
     useNamespaceMock.mockReturnValue('test-ns');
+    usePipelineRunsMock.mockReturnValue([
+      pipelineRuns,
+      true,
+      null,
+      jest.fn(),
+      { isFetchingNextPage: false, hasNextPage: false },
+    ]);
   });
 
   it('should render spinner if application data is not loaded', () => {
@@ -234,7 +283,7 @@ describe('Pipeline run List', () => {
       [],
       false,
       null,
-      () => {},
+      jest.fn(),
       { isFetchingNextPage: false, hasNextPage: false },
     ]);
     renderWithQueryClient(<TestedComponent name={appName} />);
@@ -246,7 +295,7 @@ describe('Pipeline run List', () => {
       [],
       true,
       null,
-      () => {},
+      jest.fn(),
       { isFetchingNextPage: false, hasNextPage: false },
     ]);
     renderWithQueryClient(<TestedComponent name={appName} />);
@@ -264,7 +313,7 @@ describe('Pipeline run List', () => {
       [],
       true,
       new Error('500: Internal server error'),
-      () => {},
+      jest.fn(),
       { isFetchingNextPage: false, hasNextPage: false },
     ]);
     renderWithQueryClient(<TestedComponent name="purple-mermaid-app" />);
@@ -272,13 +321,6 @@ describe('Pipeline run List', () => {
   });
 
   it('should render correct columns when pipelineRuns are present', () => {
-    usePipelineRunsMock.mockReturnValue([
-      pipelineRuns,
-      true,
-      null,
-      () => {},
-      { isFetchingNextPage: false, hasNextPage: false },
-    ]);
     renderWithQueryClient(<TestedComponent name={appName} />);
     screen.queryByText('Name');
     screen.queryByText('Started');
@@ -319,7 +361,6 @@ describe('Pipeline run List', () => {
       expect(screen.queryByText('basic-node-js-third')).not.toBeInTheDocument();
     });
 
-    // clean up for other tests
     fireEvent.change(filter, {
       target: { value: '' },
     });
@@ -358,7 +399,6 @@ describe('Pipeline run List', () => {
       expect(screen.queryByText('basic-node-js-third')).not.toBeInTheDocument();
     });
 
-    // clean up for other tests
     expect(statusFilter).toHaveAttribute('aria-expanded', 'true');
     fireEvent.click(succeededOption);
     r.rerender(<TestedComponent name={appName} />);
@@ -393,7 +433,6 @@ describe('Pipeline run List', () => {
       expect(screen.queryByText('basic-node-js-third')).not.toBeInTheDocument();
     });
 
-    // clean up for other tests
     expect(typeFilter).toHaveAttribute('aria-expanded', 'true');
     fireEvent.click(testOption);
     r.rerender(<TestedComponent name={appName} />);
@@ -439,5 +478,146 @@ describe('Pipeline run List', () => {
       expect(screen.queryByText('basic-node-js-second')).toBeInTheDocument();
       expect(screen.queryByText('basic-node-js-third')).toBeInTheDocument();
     });
+  });
+
+  it('should wait for application to load before fetching pipeline runs', () => {
+    useApplicationMock.mockReturnValue([undefined, false]);
+
+    renderWithQueryClient(<TestedComponent name={appName} />);
+
+    expect(usePipelineRunsMock).toHaveBeenCalledWith(null, expect.any(Object));
+  });
+
+  it('should use persisted column preferences from localStorage', () => {
+    const persistedColumns = ['name', 'started', 'status'];
+    useLocalStorageMock.mockReturnValue([persistedColumns, jest.fn(), jest.fn()]);
+
+    renderWithQueryClient(<TestedComponent name={appName} />);
+
+    expect(useLocalStorageMock).toHaveBeenCalledWith(`pipeline-runs-columns-${appName}`);
+    expect(screen.getByText('basic-node-js-first')).toBeInTheDocument();
+  });
+
+  it('should use component-specific localStorage key when componentName is provided', () => {
+    renderWithQueryClient(<TestedComponent name={appName} componentName="sample-component" />);
+
+    expect(useLocalStorageMock).toHaveBeenCalledWith(
+      `pipeline-runs-columns-${appName}-sample-component`,
+    );
+  });
+
+  it('should include component label in selector when componentName is provided', () => {
+    renderWithQueryClient(<TestedComponent name={appName} componentName="sample-component" />);
+
+    expect(usePipelineRunsMock).toHaveBeenCalledWith(
+      'test-ns',
+      expect.objectContaining({
+        selector: expect.objectContaining({
+          matchLabels: expect.objectContaining({
+            [PipelineRunLabel.COMPONENT]: 'sample-component',
+          }),
+        }),
+      }),
+    );
+  });
+
+  it('should handle undefined pipeline runs from the hook', () => {
+    usePipelineRunsMock.mockReturnValue([
+      undefined,
+      true,
+      null,
+      jest.fn(),
+      { isFetchingNextPage: false, hasNextPage: false },
+    ]);
+
+    renderWithQueryClient(<TestedComponent name={appName} />);
+
+    expect(screen.getByText(/Keep tabs on components and activity/)).toBeVisible();
+  });
+
+  it('should sort pipeline runs when toSorted is unavailable', () => {
+    usePipelineRunsMock.mockReturnValue([
+      pipelineRunsWithoutToSorted(),
+      true,
+      null,
+      jest.fn(),
+      { isFetchingNextPage: false, hasNextPage: false },
+    ]);
+
+    renderWithQueryClient(<TestedComponent name={appName} />);
+
+    expect(screen.getByText('basic-node-js-first')).toBeInTheDocument();
+    expect(screen.getByText('basic-node-js-second')).toBeInTheDocument();
+    expect(screen.getByText('basic-node-js-third')).toBeInTheDocument();
+  });
+
+  it('should load next page when infinite loader requests more rows', () => {
+    const getNextPage = jest.fn();
+    usePipelineRunsMock.mockReturnValue([
+      pipelineRuns,
+      true,
+      null,
+      getNextPage,
+      { isFetchingNextPage: false, hasNextPage: true },
+    ]);
+
+    renderWithQueryClient(<TestedComponent name={appName} />);
+
+    expect(getNextPage).toHaveBeenCalled();
+  });
+
+  it('should not load next page when hasNextPage is false', () => {
+    const getNextPage = jest.fn();
+    usePipelineRunsMock.mockReturnValue([
+      pipelineRuns,
+      true,
+      null,
+      getNextPage,
+      { isFetchingNextPage: false, hasNextPage: false },
+    ]);
+
+    renderWithQueryClient(<TestedComponent name={appName} />);
+
+    expect(getNextPage).not.toHaveBeenCalled();
+  });
+
+  it('should show loading spinner when fetching next page', () => {
+    usePipelineRunsMock.mockReturnValue([
+      pipelineRuns,
+      true,
+      null,
+      jest.fn(),
+      { isFetchingNextPage: true, hasNextPage: true },
+    ]);
+
+    renderWithQueryClient(<TestedComponent name={appName} />);
+
+    expect(screen.getByLabelText('Loading more pipeline runs')).toBeInTheDocument();
+  });
+
+  it('should open and close column management modal', () => {
+    renderWithQueryClient(<TestedComponent name={appName} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Manage columns' }));
+    expect(screen.getByRole('dialog', { name: /Manage pipeline run columns/ })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+
+    expect(
+      screen.queryByRole('dialog', { name: /Manage pipeline run columns/ }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('should apply customFilter when provided', () => {
+    const customFilter = jest.fn(
+      (plr: PipelineRunKind) => plr.metadata.name !== 'basic-node-js-third',
+    );
+
+    renderWithQueryClient(<TestedComponent name={appName} customFilter={customFilter} />);
+
+    expect(screen.getByText('basic-node-js-first')).toBeInTheDocument();
+    expect(screen.getByText('basic-node-js-second')).toBeInTheDocument();
+    expect(screen.queryByText('basic-node-js-third')).not.toBeInTheDocument();
+    expect(customFilter).toHaveBeenCalled();
   });
 });

@@ -1,0 +1,16 @@
+.saved-view-nav-items {
+  &__button-wrapper {
+    display: flex;
+    gap: var(--pf-t--global--spacer--sm);
+  }
+  &__button {
+    padding: 0;
+
+    &--rename:hover {
+      color: var(--pf-t--global--color--brand--default);
+    }
+    &--delete:hover {
+      color: var(--pf-t--global--icon--color--status--danger--default);
+    }
+  }
+}

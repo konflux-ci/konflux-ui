@@ -44,18 +44,22 @@ export class Login {
   ) {
     cy.visit(Cypress.env('KONFLUX_BASE_URL'));
     // Wait for either the login form (not authenticated) or the app sidebar (already authenticated)
-    cy.get(`${openshiftLoginPO.username}, ${openshiftLoginPO.sidebar}`, { timeout: 30000 }).should('exist');
+    cy.get(`${openshiftLoginPO.username}, ${openshiftLoginPO.sidebar}`, { timeout: 30000 }).should(
+      'exist',
+    );
     cy.get('body').then(($body) => {
       if ($body.find(openshiftLoginPO.username).length > 0) {
         cy.get(openshiftLoginPO.username).type(username);
         cy.get(openshiftLoginPO.password).type(password, { log: false });
         cy.get(openshiftLoginPO.loginButton).should('be.enabled').click();
         // Click through OAuth consent page if it appears
-        cy.get(`${openshiftLoginPO.approveButton}, ${openshiftLoginPO.sidebar}`, { timeout: 60000 }).first().then(($el) => {
-          if ($el.is(openshiftLoginPO.approveButton)) {
-            cy.wrap($el).click();
-          }
-        });
+        cy.get(`${openshiftLoginPO.approveButton}, ${openshiftLoginPO.sidebar}`, { timeout: 60000 })
+          .first()
+          .then(($el) => {
+            if ($el.is(openshiftLoginPO.approveButton)) {
+              cy.wrap($el).click();
+            }
+          });
         cy.get(openshiftLoginPO.sidebar, { timeout: 60000 }).should('exist');
       }
     });

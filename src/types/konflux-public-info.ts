@@ -4,7 +4,7 @@ export type KonfluxPublicInfoConfigMap = ConfigMap & { data: { 'info.json': stri
 
 export type KonfluxRbacItem = {
   displayName: string;
-  description: object;
+  description: string;
   roleRef: {
     apiGroup: string;
     kind: string;

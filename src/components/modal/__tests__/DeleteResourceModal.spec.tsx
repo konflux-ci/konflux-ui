@@ -22,7 +22,7 @@ describe('DeleteResourceModal', () => {
     const onClose = jest.fn();
     render(<DeleteResourceModal obj={obj} model={ApplicationModel} onClose={onClose} />);
     expect(screen.getByRole('textbox')).toHaveFocus();
-    expect(screen.getByText('Delete')).toBeDisabled();
+    expect(screen.getByText('Delete').closest('button')).toBeDisabled();
   });
 
   it('should be disabled when incorrect resource name is entered', () => {
@@ -30,7 +30,7 @@ describe('DeleteResourceModal', () => {
     const onClose = jest.fn();
     render(<DeleteResourceModal obj={obj} model={ApplicationModel} onClose={onClose} />);
     fireEvent.change(screen.getByRole('textbox'), { target: { value: 'test123' } });
-    expect(screen.getByText('Delete')).toBeDisabled();
+    expect(screen.getByText('Delete').closest('button')).toBeDisabled();
   });
 
   it('should be enabled when resource name is entered', () => {
@@ -39,7 +39,7 @@ describe('DeleteResourceModal', () => {
     render(<DeleteResourceModal obj={obj} model={ApplicationModel} onClose={onClose} />);
     expect(screen.queryAllByRole('textbox')).toHaveLength(1);
     fireEvent.change(screen.getByRole('textbox'), { target: { value: 'test' } });
-    expect(screen.getByText('Delete')).toBeEnabled();
+    expect(screen.getByText('Delete').closest('button')).toBeEnabled();
   });
 
   it('should hide textbox when isEntryNotRequired is set to true', () => {
@@ -80,9 +80,9 @@ describe('DeleteResourceModal', () => {
       />,
     );
     fireEvent.change(screen.getByRole('textbox'), { target: { value: 'test' } });
-    expect(screen.getByText('Delete')).toBeDisabled();
+    expect(screen.getByText('Delete').closest('button')).toBeDisabled();
     fireEvent.change(screen.getByRole('textbox'), { target: { value: 'My App' } });
-    expect(screen.getByText('Delete')).toBeEnabled();
+    expect(screen.getByText('Delete').closest('button')).toBeEnabled();
   });
 
   it('should show error and not close modal if deletion fails', async () => {

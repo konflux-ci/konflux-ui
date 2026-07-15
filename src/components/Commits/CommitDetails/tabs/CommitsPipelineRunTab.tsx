@@ -138,7 +138,7 @@ const CommitsPipelineRunTab: React.FC = () => {
 
   return (
     <>
-      <Title headingLevel="h4" className="pf-v5-c-title pf-v5-u-mt-lg pf-v5-u-mb-lg">
+      <Title headingLevel="h4" className="pf-v6-c-title pf-v6-u-mt-lg pf-v6-u-mb-lg">
         Pipeline runs
       </Title>
       <div>
@@ -196,7 +196,7 @@ const CommitsPipelineRunTab: React.FC = () => {
           }}
         />
         {isFetchingNextPage ? (
-          <Stack style={{ marginTop: 'var(--pf-v5-global--spacer--md)' }} hasGutter>
+          <Stack style={{ marginTop: 'var(--pf-t--global--spacer--md)' }} hasGutter>
             <Bullseye>
               <Spinner size="lg" aria-label="Loading more pipeline runs" />
             </Bullseye>
