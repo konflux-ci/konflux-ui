@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Table as PfTable } from '@patternfly/react-table';
 import { getParentScrollableElement } from '~/shared/hooks';
 import { computeColumnWidths } from './column-widths';
@@ -89,6 +89,17 @@ export const Table = <TData,>({
     }
   }, [scrollElementProp, tableNode]);
 
+  const scrollMargin = useMemo(() => {
+    if (!tableNode || !scrollElement) {
+      return 0;
+    }
+
+    const tableRect = tableNode.getBoundingClientRect();
+    const scrollRect = scrollElement.getBoundingClientRect();
+
+    return tableRect.top - scrollRect.top + scrollElement.scrollTop;
+  }, [tableNode, scrollElement]);
+
   const { columnState, setColumnState } = useColumnState(columnStateKey, columns);
   const { columnVisibility } = useResponsiveColumns(columns);
 
@@ -107,6 +118,7 @@ export const Table = <TData,>({
   const { virtualizer, virtualRows } = useVirtualization({
     count: rows.length,
     scrollElement,
+    scrollMargin,
   });
 
   useInfiniteScroll({
@@ -135,6 +147,7 @@ export const Table = <TData,>({
           expandedContent={expandedContent}
           visibleColumnCount={visibleColumnCount}
           isFetchingNextPage={isFetchingNextPage}
+          scrollMargin={scrollMargin}
         />
       </PfTable>
     </div>
