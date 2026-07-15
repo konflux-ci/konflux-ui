@@ -115,7 +115,7 @@ if [[ -n "$test_files" ]]; then
     agent_caused_failure=true
     if echo "$test_out" | grep -q "Cannot find module"; then
       module_error_sources=$(echo "$test_out" \
-        | grep -oP "Cannot find module .+ from '\K[^']+" || true)
+        | sed -nE "s/.*Cannot find module .+ from '([^']+)'.*/\1/p")
       if [[ -n "$module_error_sources" ]]; then
         agent_caused_failure=false
         while IFS= read -r src_file; do
