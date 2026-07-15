@@ -1,13 +1,13 @@
 import React, { useMemo, useState } from 'react';
 import { Form } from '@patternfly/react-core';
 import { useField, useFormikContext } from 'formik';
-<<<<<<< HEAD
-import { FIELD_SECRET_FOR_COMPONENT_OPTION, SecretLinkOptionLabels } from '~/consts/secrets';
+import {
+  FIELD_SECRET_FOR_COMPONENT_OPTION,
+  SecretLinkOptionLabels,
+  DEFAULT_OPAQUE_KEY_VALUES,
+  DEFAULT_OPAQUE_LABELS,
+} from '~/consts/secrets';
 import { InputField } from '~/shared/components/formik-base';
-=======
-import { InputField } from 'formik-pf';
-import { FIELD_SECRET_FOR_COMPONENT_OPTION, SecretLinkOptionLabels, DEFAULT_OPAQUE_KEY_VALUES, DEFAULT_OPAQUE_LABELS } from '~/consts/secrets';
->>>>>>> 83da231a (refactor: extract opaque secret sync helpers and shared defaults)
 import KeyValueInputField from '~/shared/components/formik-fields/key-value-input-field/KeyValueInputField';
 import {
   supportedPartnerTasksSecrets,
@@ -194,6 +194,7 @@ const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({
           entries={DEFAULT_OPAQUE_KEY_VALUES}
           disableRemoveAction={(values.opaque?.keyValues?.length ?? 1) === 1 || isUsingExisting}
           disableAddAction={isUsingExisting}
+          disableValueFields={isUsingExisting}
         />
       )}
 

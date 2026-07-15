@@ -105,9 +105,7 @@ describe('opaqueSecretSyncUtils', () => {
     });
 
     it('returns populated cluster values for partner tasks already in cluster', () => {
-      expect(
-        getOpaqueFieldsFromExistingSecret('snyk-secret', [populatedSnykSecret]),
-      ).toEqual({
+      expect(getOpaqueFieldsFromExistingSecret('snyk-secret', [populatedSnykSecret])).toEqual({
         keyValues: [
           { key: 'snyk_token', value: 'configured', readOnlyKey: true, readOnlyValue: true },
         ],

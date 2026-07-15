@@ -359,7 +359,7 @@ describe('SecretForm existing opaque secret', () => {
     });
   });
 
-  it('should disable Add key/value when using an existing cluster secret', async () => {
+  it('should hide Add key/value when using an existing cluster secret', async () => {
     const user = userEvent.setup();
     formikRenderer(<SecretForm existingSecrets={[clusterSecret]} />, secretFormValues);
 
@@ -367,7 +367,20 @@ describe('SecretForm existing opaque secret', () => {
     await user.click(screen.getByText('cluster-secret'));
 
     await waitFor(() => {
-      expect(screen.getByTestId('add-key-value-button')).toBeDisabled();
+      expect(screen.queryByTestId('add-key-value-button')).not.toBeInTheDocument();
+    });
+  });
+
+  it('should disable value fields when using an existing cluster secret', async () => {
+    const user = userEvent.setup();
+    formikRenderer(<SecretForm existingSecrets={[clusterSecret]} />, secretFormValues);
+
+    await user.click(screen.getByRole('button', { name: 'secret-name-dropdown' }));
+    await user.click(screen.getByText('cluster-secret'));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('key-value-pair')).toHaveClass('key-value--value-read-only');
+      expect(screen.getByTestId('file-upload-value').querySelector('textarea')).toBeDisabled();
     });
   });
 

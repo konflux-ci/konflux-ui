@@ -15,6 +15,7 @@ export type KeyValueEntry = {
   key: string;
   value: string;
   readOnlyKey?: boolean;
+  readOnlyValue?: boolean;
 };
 
 type KeyValueEntryFormProps = {
@@ -22,6 +23,7 @@ type KeyValueEntryFormProps = {
   helpText?: string;
   disableRemoveAction?: boolean;
   disableAddAction?: boolean;
+  disableValueFields?: boolean;
   entries: KeyValueEntry[];
   onChange?: (value: string, keyIndex: string) => void;
 };
@@ -34,6 +36,7 @@ const KeyValueFileInputField: React.FC<
   helpText = '',
   disableRemoveAction = false,
   disableAddAction = false,
+  disableValueFields = false,
   entries = [{ key: '', value: '' }],
   onChange,
 }) => {
@@ -52,9 +55,11 @@ const KeyValueFileInputField: React.FC<
         <FormGroup fieldId={fieldId} label={label}>
           <FieldHelperText helpText={helpText} />
           {fieldValues?.map((v, idx) => {
+            const isValueReadOnly = disableValueFields || !!v.readOnlyValue;
+
             return (
               <Flex
-                className="key-value--wrapper"
+                className={`key-value--wrapper${isValueReadOnly ? ' key-value--value-read-only' : ''}`}
                 data-test={'key-value-pair'}
                 key={`${idx.toString()}-${uniqId}`}
                 direction={{ default: 'column' }}
@@ -93,7 +98,7 @@ const KeyValueFileInputField: React.FC<
                     id="value"
                     type="text"
                     label="Value"
-                    isDisabled={v.readOnlyValue}
+                    isDisabled={isValueReadOnly}
                     name={`${name}.${idx.toString()}.value`}
                     filenamePlaceholder="Drag a file here or upload one"
                     onDataChange={(_, data: string) => {
@@ -113,17 +118,18 @@ const KeyValueFileInputField: React.FC<
               </Flex>
             );
           })}
-          <Button
-            className="pf-m-link--align-left"
-            onClick={() => arrayHelpers.push({ key: '', value: '' })}
-            type="button"
-            data-test="add-key-value-button"
-            variant="link"
-            icon={<PlusCircleIcon />}
-            isDisabled={disableAddAction}
-          >
-            Add key/value
-          </Button>
+          {!disableAddAction && (
+            <Button
+              className="pf-m-link--align-left"
+              onClick={() => arrayHelpers.push({ key: '', value: '' })}
+              type="button"
+              data-test="add-key-value-button"
+              variant="link"
+              icon={<PlusCircleIcon />}
+            >
+              Add key/value
+            </Button>
+          )}
         </FormGroup>
       )}
     />

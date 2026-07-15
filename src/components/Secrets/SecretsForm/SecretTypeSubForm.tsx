@@ -1,16 +1,11 @@
 import React, { useState } from 'react';
 import { useField, useFormikContext } from 'formik';
-<<<<<<< HEAD
-import { SecretLinkOptionLabels } from '~/consts/secrets';
+import { SecretLinkOptionLabels, DEFAULT_OPAQUE_KEY_VALUES } from '~/consts/secrets';
 import { DropdownItemObject } from '~/shared/components/dropdown';
 import { InputField } from '~/shared/components/formik-base';
 import KeyValueFileInputField from '~/shared/components/formik-fields/key-value-input-field/KeyValueInputField';
 import SelectInputField from '~/shared/components/formik-fields/SelectInputField';
 import { AddSecretFormValues, SecretFor, SecretTypeDropdownLabel, SourceSecretType } from '~/types';
-=======
-import { InputField } from 'formik-pf';
-import { SecretLinkOptionLabels, DEFAULT_OPAQUE_KEY_VALUES } from '~/consts/secrets';
->>>>>>> 83da231a (refactor: extract opaque secret sync helpers and shared defaults)
 import {
   getSupportedPartnerTaskKeyValuePairs,
   getSupportedPartnerTaskSecrets,
@@ -23,6 +18,7 @@ import { ImagePullSecretForm } from './ImagePullSecretForm';
 import { KeyValueSecretForm } from './KeyValueSecretForm';
 import { SecretLinkOptions } from './SecretLinkOption';
 import { SourceSecretForm } from './SourceSecretForm';
+
 import './SecretTypeSubForm.scss';
 
 const secretTypes = [
