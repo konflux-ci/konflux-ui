@@ -63,8 +63,6 @@ export const COMPONENT_ACTIVITY_CHILD_TAB_PATH = COMPONENT_ACTIVITY_PATH.extend(
   `:${RouterParams.activityTab}`,
 );
 
-export const COMPONENT_DEPENDENCY_PATH = COMPONENT_DETAILS_PATH.extend('dependency-updates');
-
 export const COMMIT_LIST_PATH = APPLICATION_DETAILS_PATH.extend('commit');
 
 export const COMMIT_DETAILS_PATH = COMMIT_LIST_PATH.extend(`:${RouterParams.commitName}`);
