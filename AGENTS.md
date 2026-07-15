@@ -36,6 +36,7 @@ Conventional Commits enforced by commitlint: `feat:`, `fix:`, `chore:`, etc. Hus
 
 ## PR Conventions
 
+- PR titles must follow the format `type(ticket-id): summary` where `ticket-id` is a Jira ticket (e.g., `KFLUXUI-123`, `KONFLUX-456`) or GitHub issue (e.g., `#123`). Allowed types: `feat`, `fix`, `chore`, `refactor`, `docs`, `test`, `ci`, `build`, `perf`, `style`, `revert`. This is enforced by the `pr-title-check` CI workflow. Note: this differs from the commit message format, which does not require a ticket scope.
 - Read `docs/pr-review-guidelines.md` before reviewing or creating PRs.
 - Fill every section of `.github/PULL_REQUEST_TEMPLATE.md` when creating a PR.
 
