@@ -1,14 +1,27 @@
 import { configure, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { useComponents, useSortedGroupComponents } from '../../../hooks/useComponents';
 import {
   componentCRMocks,
   sortedGroupedComponentsMocks,
 } from '../../Components/__data__/mock-data';
-import { ComponentRelationModal } from '../ComponentRelationModal';
+import {
+  ComponentRelationModal,
+  createComponentRelationModal,
+} from '../ComponentRelationModal';
 import { ComponentRelationNudgeType, ComponentRelationValue } from '../type';
 import { useNudgeData } from '../useNudgeData';
 import { updateNudgeDependencies } from '../utils';
 
 configure({ testIdAttribute: 'id' });
+
+jest.mock('~/monitoring/logger', () => ({
+  logger: {
+    error: jest.fn(),
+    warn: jest.fn(),
+    info: jest.fn(),
+    debug: jest.fn(),
+  },
+}));
 
 jest.mock('../../../hooks/useComponents', () => ({
   useComponents: jest.fn(() => [[componentCRMocks[0]], true, null]),
@@ -59,10 +72,16 @@ const mockComponentRelations: ComponentRelationValue[] = [
 window.ResizeObserver = MockResizeObserver;
 const useNudgeDataMock = useNudgeData as jest.Mock;
 const updateNudgeDependenciesMock = updateNudgeDependencies as jest.Mock;
+const useComponentsMock = useComponents as jest.Mock;
+const useSortedGroupComponentsMock = useSortedGroupComponents as jest.Mock;
 
 describe('ComponentRelationModal', () => {
   beforeEach(() => {
+    const { logger } = jest.requireMock<{ logger: { error: jest.Mock } }>('~/monitoring/logger');
+    logger.error.mockClear();
     useNudgeDataMock.mockReturnValue([[], true, null]);
+    useComponentsMock.mockReturnValue([[componentCRMocks[0]], true, null]);
+    useSortedGroupComponentsMock.mockReturnValue([sortedGroupedComponentsMocks, true, null]);
     updateNudgeDependenciesMock.mockResolvedValue(componentCRMocks);
   });
 
@@ -83,6 +102,21 @@ describe('ComponentRelationModal', () => {
     expect(screen.getAllByTestId(/remove-relation-\d+/)).toHaveLength(2);
     fireEvent.click(screen.getByTestId('remove-relation-0'));
     expect(screen.queryAllByTestId(/remove-relation-\d+/)).toHaveLength(1);
+  });
+
+  it('should reset the only relation instead of removing it', () => {
+    useNudgeDataMock.mockReturnValue([[mockComponentRelations[0]], true, null]);
+
+    render(<ComponentRelationModal modalProps={{ isOpen: true }} application="apps" />);
+
+    expect(screen.getByText('a')).toBeInTheDocument();
+    expect(screen.queryAllByTestId(/remove-relation-\d+/)).toHaveLength(1);
+
+    fireEvent.click(screen.getByTestId('remove-relation-0'));
+
+    expect(screen.queryAllByTestId(/remove-relation-\d+/)).toHaveLength(1);
+    expect(screen.getByText('Select a component')).toBeInTheDocument();
+    expect(screen.queryByText('a')).not.toBeInTheDocument();
   });
 
   it('should show cancelation modal when clicked on cancel', () => {
@@ -126,7 +160,7 @@ describe('ComponentRelationModal', () => {
     expect(screen.queryByText('Component relationships')).toBeInTheDocument();
     fireEvent.click(screen.getByTestId('nudged-by-0'));
     const saveButton = screen.getByText('Save relationships');
-    expect(saveButton.getAttribute('class')).not.toContain('pf-m-disabled');
+    await waitFor(() => expect(saveButton).not.toBeDisabled());
     fireEvent.click(saveButton);
     expect(saveButton.getAttribute('class')).toContain('pf-m-in-progress');
     await waitFor(() => {
@@ -153,8 +187,62 @@ describe('ComponentRelationModal', () => {
     expect(screen.queryByText('Component relationships')).toBeInTheDocument();
     fireEvent.click(screen.getByTestId('nudged-by-0'));
     const saveButton = screen.getByText('Save relationships');
-    expect(saveButton.getAttribute('class')).not.toContain('pf-m-disabled');
+    await waitFor(() => expect(saveButton).not.toBeDisabled());
     fireEvent.click(saveButton);
-    await waitFor(() => expect(screen.queryByText('Danger alert:')).toBeInTheDocument());
+    expect(await screen.findByText('error')).toBeInTheDocument();
+    const { logger } = jest.requireMock<{ logger: { error: jest.Mock } }>('~/monitoring/logger');
+    expect(logger.error).toHaveBeenCalledWith(
+      'Error while updating dependency data for component',
+      expect.any(Error),
+    );
+  });
+
+  it('should display an error when validation passes but save fails', async () => {
+    useNudgeDataMock.mockReturnValue([mockComponentRelations, true, null]);
+    updateNudgeDependenciesMock
+      .mockResolvedValueOnce([])
+      .mockRejectedValueOnce(new Error('save failed'));
+    render(<ComponentRelationModal modalProps={{ isOpen: true }} application="apps" />);
+    fireEvent.click(screen.getByTestId('nudged-by-0'));
+    const saveButton = screen.getByText('Save relationships');
+    await waitFor(() => expect(saveButton).not.toBeDisabled());
+    fireEvent.click(saveButton);
+    expect(await screen.findByText('save failed')).toBeInTheDocument();
+    const { logger } = jest.requireMock<{ logger: { error: jest.Mock } }>('~/monitoring/logger');
+    expect(logger.error).toHaveBeenCalledWith(
+      'Error while updating dependency data for component',
+      expect.any(Error),
+    );
+  });
+
+  it('should display a string error when rejection is not an Error instance', async () => {
+    useNudgeDataMock.mockReturnValue([mockComponentRelations, true, null]);
+    updateNudgeDependenciesMock.mockRejectedValue('plain error');
+    render(<ComponentRelationModal modalProps={{ isOpen: true }} application="apps" />);
+    fireEvent.click(screen.getByTestId('nudged-by-0'));
+    const saveButton = screen.getByText('Save relationships');
+    await waitFor(() => expect(saveButton).not.toBeDisabled());
+    fireEvent.click(saveButton);
+    expect(await screen.findByText('plain error')).toBeInTheDocument();
+    const { logger } = jest.requireMock<{ logger: { error: jest.Mock } }>('~/monitoring/logger');
+    expect(logger.error).toHaveBeenCalledWith(
+      'Error while updating dependency data for component',
+      undefined,
+    );
+  });
+
+  it('should render with empty component data when hooks return errors', () => {
+    useComponentsMock.mockReturnValue([[], true, new Error('component error')]);
+    useSortedGroupComponentsMock.mockReturnValue([{}, true, new Error('grouped error')]);
+
+    render(<ComponentRelationModal modalProps={{ isOpen: true }} application="apps" />);
+
+    expect(screen.getByText('Component relationships')).toBeInTheDocument();
+    expect(screen.getAllByTestId('toggle-component-menu')).toHaveLength(2);
+  });
+
+  it('should create modal launcher', () => {
+    const launcher = createComponentRelationModal({ application: 'test-app' });
+    expect(typeof launcher).toBe('function');
   });
 });

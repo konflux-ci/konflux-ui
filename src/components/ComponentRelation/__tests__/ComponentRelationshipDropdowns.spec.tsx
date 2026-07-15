@@ -104,12 +104,11 @@ describe('MultiSelectComponentDropdown', () => {
     screen.getByText('Choose components to nudge');
     const button = screen.getByTestId('toggle-component-menu');
     fireEvent.click(button);
-    expect(button.querySelector('.pf-m-read')).not.toBeInTheDocument();
+    expect(screen.queryByText('2 components selected')).not.toBeInTheDocument();
     const menu = screen.getAllByRole('menuitem');
     const selectAllButton = menu[0].querySelector('input');
     fireEvent.click(selectAllButton);
-    expect(button.querySelector('.pf-m-read')).toBeInTheDocument();
-    expect(button.querySelector('.pf-m-read').innerHTML).toEqual('2');
+    screen.getByText('2 components selected');
   });
 
   it('should select/unselect all item from menu', () => {
@@ -123,14 +122,13 @@ describe('MultiSelectComponentDropdown', () => {
     screen.getByText('Choose components to nudge');
     const button = screen.getByTestId('toggle-component-menu');
     fireEvent.click(button);
-    expect(button.querySelector('.pf-m-read')).not.toBeInTheDocument();
+    expect(screen.queryByText('2 components selected')).not.toBeInTheDocument();
     const menu = screen.getAllByRole('menuitem');
     const selectAllButton = menu[0].querySelector('input');
     fireEvent.click(selectAllButton);
-    expect(button.querySelector('.pf-m-read')).toBeInTheDocument();
-    expect(button.querySelector('.pf-m-read').innerHTML).toEqual('2');
+    screen.getByText('2 components selected');
     fireEvent.click(selectAllButton);
-    expect(button.querySelector('.pf-m-read')).not.toBeInTheDocument();
+    screen.getByText('Choose components to nudge');
   });
 
   it('should not select disabled menu item', () => {
@@ -145,12 +143,11 @@ describe('MultiSelectComponentDropdown', () => {
     screen.getByText('Choose components to nudge');
     const button = screen.getByTestId('toggle-component-menu');
     fireEvent.click(button);
-    expect(button.querySelector('.pf-m-read')).not.toBeInTheDocument();
+    expect(screen.queryByText('1 component selected')).not.toBeInTheDocument();
     const menu = screen.getAllByRole('menuitem');
     const selectAllButton = menu[0].querySelector('input');
     fireEvent.click(selectAllButton);
-    expect(button.querySelector('.pf-m-read')).toBeInTheDocument();
-    expect(button.querySelector('.pf-m-read').innerHTML).toEqual('1');
+    screen.getByText('1 component selected');
     const disabledItem = screen.getAllByRole('menu')[1].querySelectorAll('.pf-m-disabled');
     expect(disabledItem).toHaveLength(1);
   });

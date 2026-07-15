@@ -57,7 +57,7 @@ export const DefineComponentRelationModal: React.FC<DefineComponentRelationModal
           <ExternalLink href={LEARN_MORE_ABOUT_NUDGING}>Learn more about nudging.</ExternalLink>
         </>
       }
-      variant={ModalVariant.medium}
+      variant={ModalVariant.large}
       footer={
         <FormFooter
           submitLabel={'Save relationships'}
@@ -77,9 +77,8 @@ export const DefineComponentRelationModal: React.FC<DefineComponentRelationModal
               <Flex direction={{ default: 'column' }}>
                 {values.relations.map((_, index) => {
                   return (
-                    <>
+                    <React.Fragment key={index}>
                       <ComponentRelation
-                        key={index}
                         componentNames={componentNames}
                         sortedGroupedComponents={sortedGroupedComponents}
                         index={index}
@@ -99,7 +98,7 @@ export const DefineComponentRelationModal: React.FC<DefineComponentRelationModal
                         }}
                       />
                       {index !== values.relations.length - 1 ? <Divider /> : null}
-                    </>
+                    </React.Fragment>
                   );
                 })}
                 <FlexItem>
@@ -153,7 +152,7 @@ export const ConfirmSubmissionComponentRelationModal: React.FC<
   ConfirmSubmissionComponentRelationModalProps
 > = ({ modalProps: { onClose, ...rest } }) => {
   return (
-    <Modal {...rest} variant={ModalVariant.medium} showClose={false}>
+    <Modal {...rest} variant={ModalVariant.small} showClose={false}>
       <EmptyState>
         <EmptyStateHeader
           titleText="Relationships updated!"
