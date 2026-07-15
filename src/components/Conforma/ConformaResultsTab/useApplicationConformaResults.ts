@@ -132,9 +132,7 @@ export const useApplicationConformaResults = (
     }),
   });
 
-  const loaded = Boolean(
-    namespace?.length && componentsLoaded && taskRunsLoaded,
-  );
+  const loaded = Boolean(namespace?.length && componentsLoaded && taskRunsLoaded);
   const settling = !allSettled;
 
   const aggregateError = componentsError ?? taskRunsError ?? aggregatedLogError;
@@ -151,10 +149,7 @@ export const useApplicationConformaResults = (
 
       const data = logData[idx];
       if (data) {
-        conformaByComponent.set(
-          comp,
-          filterInvalidImageConformaRows(data.components ?? []),
-        );
+        conformaByComponent.set(comp, filterInvalidImageConformaRows(data.components ?? []));
       }
     });
 
@@ -172,8 +167,7 @@ export const useApplicationConformaResults = (
 
       const components = conformaByComponent.get(name);
       const taskRun = latestPerComponent.get(name);
-      const pipelineRunName =
-        taskRun?.metadata?.labels?.[TektonResourceLabel.pipelinerun];
+      const pipelineRunName = taskRun?.metadata?.labels?.[TektonResourceLabel.pipelinerun];
 
       if (!components) {
         return {

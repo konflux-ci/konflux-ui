@@ -68,7 +68,8 @@ export const useAutoScrollWithResume = ({
   const prevActiveLineTargetRef = React.useRef(activeLineTarget);
   React.useEffect(() => {
     const prev = prevActiveLineTargetRef.current;
-    const isNewTarget = activeLineTarget?.start !== prev?.start || activeLineTarget?.end !== prev?.end;
+    const isNewTarget =
+      activeLineTarget?.start !== prev?.start || activeLineTarget?.end !== prev?.end;
     if (activeLineTarget && isNewTarget) {
       setAutoScroll(false);
     }

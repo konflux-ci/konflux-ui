@@ -42,7 +42,7 @@ describe('VirtualizedLogViewer Integration Tests', () => {
         <VirtualizedLogViewer {...defaultProps} />,
       );
 
-      const mainElement = container.querySelector('.pf-v5-c-log-viewer__main');
+      const mainElement = container.querySelector('.pf-v6-c-log-viewer__main');
       expect(mainElement).toBeInTheDocument();
 
       const scrollContainer = container.querySelector('.log-content__list');
@@ -58,7 +58,7 @@ describe('VirtualizedLogViewer Integration Tests', () => {
       expect(logList).toBeInTheDocument();
 
       // Should render actual log items through VirtualizedLogContent
-      const logItems = container.querySelectorAll('.pf-v5-c-log-viewer__list-item');
+      const logItems = container.querySelectorAll('.pf-v6-c-log-viewer__list-item');
       expect(logItems.length).toBeGreaterThan(0);
     });
 
@@ -187,7 +187,7 @@ describe('VirtualizedLogViewer Integration Tests', () => {
       );
 
       // Should render search highlights through VirtualizedLogContent
-      const marks = container.querySelectorAll('mark.pf-v5-c-log-viewer__string.pf-m-match');
+      const marks = container.querySelectorAll('mark.pf-v6-c-log-viewer__string.pf-m-match');
       expect(marks.length).toBeGreaterThan(0);
     });
 
@@ -289,7 +289,7 @@ describe('VirtualizedLogViewer Integration Tests', () => {
       expect(logList).toBeInTheDocument();
 
       // Virtualization should only render visible items
-      const visibleItems = container.querySelectorAll('.pf-v5-c-log-viewer__list-item');
+      const visibleItems = container.querySelectorAll('.pf-v6-c-log-viewer__list-item');
       expect(visibleItems.length).toBeLessThan(1000);
     });
 

@@ -1,5 +1,5 @@
-import { global_palette_blue_300 as blueColor } from '@patternfly/react-tokens/dist/js/global_palette_blue_300';
-import { global_success_color_100 as greenColor } from '@patternfly/react-tokens/dist/js/global_success_color_100';
+import { t_global_icon_color_status_info_default as blueColor } from '@patternfly/react-tokens/dist/js/t_global_icon_color_status_info_default';
+import { t_global_icon_color_status_success_default as greenColor } from '@patternfly/react-tokens/dist/js/t_global_icon_color_status_success_default';
 import { renderHook } from '@testing-library/react';
 import * as faviconBadge from '~/shared/utils/favicon-badge';
 import { useFaviconStatusBadge } from '../useFaviconStatusBadge';

@@ -45,7 +45,7 @@ export const SectionedVirtualRow: React.FC<SectionedVirtualRowProps> = ({
   const lineNumber = getRowLineNumber(row);
   const isHighlighted = lineNumber !== null && isLineHighlighted(lineNumber);
 
-  const rowClassName = `pf-v5-c-log-viewer__list-item${
+  const rowClassName = `pf-v6-c-log-viewer__list-item${
     row.kind === 'content' && isLineHighlighted(row.globalLineNumber)
       ? ' log-content__line--highlighted'
       : ''

@@ -1,9 +1,8 @@
-import { global_danger_color_100 as dangerColor } from '@patternfly/react-tokens/dist/js/global_danger_color_100';
-import { global_info_color_100 as inProgressColor } from '@patternfly/react-tokens/dist/js/global_info_color_100';
-import { global_palette_black_400 as neutralColor } from '@patternfly/react-tokens/dist/js/global_palette_black_400';
-import { global_secondary_color_100 as skippedColor } from '@patternfly/react-tokens/dist/js/global_secondary_color_100';
-import { global_success_color_100 as successColor } from '@patternfly/react-tokens/dist/js/global_success_color_100';
-import { global_warning_color_100 as warningColor } from '@patternfly/react-tokens/dist/js/global_warning_color_100';
+import { t_global_color_severity_undefined_100 as neutralColor } from '@patternfly/react-tokens/dist/js/t_global_color_severity_undefined_100';
+import { t_global_icon_color_status_danger_default as dangerColor } from '@patternfly/react-tokens/dist/js/t_global_icon_color_status_danger_default';
+import { t_global_icon_color_status_info_default as inProgressColor } from '@patternfly/react-tokens/dist/js/t_global_icon_color_status_info_default';
+import { t_global_icon_color_status_success_default as successColor } from '@patternfly/react-tokens/dist/js/t_global_icon_color_status_success_default';
+import { t_global_icon_color_status_warning_default as warningColor } from '@patternfly/react-tokens/dist/js/t_global_icon_color_status_warning_default';
 import { runStatus } from '~/consts/pipelinerun';
 import { getStatusColor, getStatusColorName } from '~/utils/status-color-utils';
 
@@ -21,7 +20,7 @@ describe('getStatusColor', () => {
     [runStatus.TestWarning, warningColor.value],
     [runStatus.PipelineNotStarted, dangerColor.value],
     [runStatus.Idle, neutralColor.value],
-    [runStatus.Skipped, skippedColor.value],
+    [runStatus.Skipped, neutralColor.value],
     [runStatus.Unknown, neutralColor.value],
     [runStatus.NeedsMerge, neutralColor.value],
   ])('maps %s to %s', (status, expected) => {
@@ -34,13 +33,13 @@ describe('getStatusColorName', () => {
     [runStatus.Succeeded, 'green'],
     [runStatus.Failed, 'red'],
     [runStatus.FailedToStart, 'red'],
-    [runStatus.TestFailed, 'gold'],
+    [runStatus.TestFailed, 'yellow'],
     [runStatus.Running, 'blue'],
     [runStatus.Pending, 'grey'],
     [runStatus['In Progress'], 'blue'],
-    [runStatus.Cancelled, 'gold'],
-    [runStatus.Cancelling, 'gold'],
-    [runStatus.TestWarning, 'gold'],
+    [runStatus.Cancelled, 'yellow'],
+    [runStatus.Cancelling, 'yellow'],
+    [runStatus.TestWarning, 'yellow'],
     [runStatus.PipelineNotStarted, 'red'],
     [runStatus.Idle, 'grey'],
     [runStatus.Skipped, 'grey'],

@@ -64,7 +64,7 @@ const { data, isLoading, error } = useK8sWatchResource<ApplicationKind>(
 const { data, isLoading, error } = useK8sWatchResource<ComponentKind>(
   componentName
     ? { groupVersionKind: ComponentGroupVersionKind, namespace, name: componentName }
-    : undefined,   // undefined disables the query
+    : undefined, // undefined disables the query
   ComponentModel,
 );
 ```
@@ -90,7 +90,7 @@ const { data, isLoading, error } = useK8sWatchResource<ReleaseKind[]>(
 const { data, isLoading, error } = useK8sWatchResource<ApplicationKind[]>(
   { groupVersionKind: ApplicationGroupVersionKind, namespace, isList: true },
   ApplicationModel,
-  { filterData: (resources) => resources?.filter(r => !r.metadata?.deletionTimestamp) ?? [] },
+  { filterData: (resources) => resources?.filter((r) => !r.metadata?.deletionTimestamp) ?? [] },
 );
 ```
 
@@ -100,7 +100,7 @@ const { data, isLoading, error } = useK8sWatchResource<ApplicationKind[]>(
 const { data, isLoading, error } = useK8sWatchResource<PipelineRunKind[]>(
   { groupVersionKind, namespace, isList: true, watch: true },
   PipelineRunModel,
-  { retry: false },  // Don't retry -- fall back to Tekton Results on error
+  { retry: false }, // Don't retry -- fall back to Tekton Results on error
 );
 ```
 
@@ -145,13 +145,13 @@ await K8sQuerySecretListTableItems(namespace);
 
 **Key files:**
 
-| File | Purpose |
-|---|---|
-| `src/k8s/consts/k8s-accept.ts` | `K8S_ACCEPT_TABLE` header value, `K8S_QUERY_KEY_SECRET_TABLE` cache key suffix |
+| File                                      | Purpose                                                                                                                                  |
+| ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/k8s/consts/k8s-accept.ts`            | `K8S_ACCEPT_TABLE` header value, `K8S_QUERY_KEY_SECRET_TABLE` cache key suffix                                                           |
 | `src/utils/secrets/secret-table-utils.ts` | `SECRET_TABLE_K8S_FETCH_OPTIONS`, `parseSecretTableToSecretKinds`, `selectSecretList`, `selectSecretMetadata`, `fetchK8sSecretTableList` |
-| `src/utils/secrets/secret-table-query.ts` | `createSecretListTableQueryOptions`, `K8sQuerySecretListTableItems` (prefetch) |
-| `src/hooks/useSecrets.ts` | `useSecrets` with `metadataOnly` option |
-| `src/hooks/useSecretMetadata.ts` | `useSecretMetadata` single-resource hook |
+| `src/utils/secrets/secret-table-query.ts` | `createSecretListTableQueryOptions`, `K8sQuerySecretListTableItems` (prefetch)                                                           |
+| `src/hooks/useSecrets.ts`                 | `useSecrets` with `metadataOnly` option                                                                                                  |
+| `src/hooks/useSecretMetadata.ts`          | `useSecretMetadata` single-resource hook                                                                                                 |
 
 **Reveal/hide pattern for on-demand sensitive data:**
 
@@ -184,7 +184,7 @@ export const useMyResources = (namespace: string): [MyKind[], boolean, unknown] 
   const { data, isLoading, error } = useK8sWatchResource<MyKind[]>(
     { groupVersionKind: MyGroupVersionKind, namespace, isList: true },
     MyModel,
-    { filterData: (resources) => resources?.filter(r => !r.metadata?.deletionTimestamp) ?? [] },
+    { filterData: (resources) => resources?.filter((r) => !r.metadata?.deletionTimestamp) ?? [] },
   );
 
   return useMemo(() => [data ?? [], !isLoading, error], [data, isLoading, error]);
@@ -197,12 +197,12 @@ export const useMyResources = (namespace: string): [MyKind[], boolean, unknown] 
 
 Located in `src/k8s/query/fetch.ts`. These functions automatically invalidate the React Query cache after mutations.
 
-| Function | HTTP Method | Cache Effect |
-|---|---|---|
-| `K8sQueryCreateResource` | POST | `invalidateQueries` for namespace list |
-| `K8sQueryUpdateResource` | PUT | `invalidateQueries` for namespace list |
-| `K8sQueryPatchResource` | PATCH | `invalidateQueries` for namespace list |
-| `K8sQueryDeleteResource` | DELETE | `removeQueries` for item + `invalidateQueries` for list |
+| Function                 | HTTP Method | Cache Effect                                            |
+| ------------------------ | ----------- | ------------------------------------------------------- |
+| `K8sQueryCreateResource` | POST        | `invalidateQueries` for namespace list                  |
+| `K8sQueryUpdateResource` | PUT         | `invalidateQueries` for namespace list                  |
+| `K8sQueryPatchResource`  | PATCH       | `invalidateQueries` for namespace list                  |
+| `K8sQueryDeleteResource` | DELETE      | `removeQueries` for item + `invalidateQueries` for list |
 
 ### Usage
 
@@ -307,7 +307,7 @@ const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } = useI
   queryKey: ['tekton-results', namespace, options],
   queryFn: ({ pageParam }) => fetchPipelineRuns(namespace, { ...options, pageToken: pageParam }),
   getNextPageParam: (lastPage) => lastPage.nextPageToken,
-  select: (data) => data.pages.flatMap(page => page.items), // Flatten pages
+  select: (data) => data.pages.flatMap((page) => page.items), // Flatten pages
 });
 ```
 
@@ -459,16 +459,16 @@ const [visibleColumns, setVisibleColumns] = useVisibleColumns(
 
 ## State Management Summary
 
-| Data Type | Tool | Location |
-|---|---|---|
-| K8s resources (live) | `useK8sWatchResource` | `src/k8s/hooks/` |
-| K8s metadata-only (Table API) | `useSecrets({ metadataOnly })` / `useSecretMetadata` | `src/hooks/` |
-| K8s resources (archived) | `useK8sAndKarchResources` | `src/hooks/` |
-| REST API data | `useQuery` / `useInfiniteQuery` | `@tanstack/react-query` |
-| Mutations | `K8sQueryCreateResource` etc. | `src/k8s/query/fetch.ts` |
-| Global client state | Zustand (`useTaskStore`) | `src/utils/task-store.ts` |
-| Feature flags | `useIsOnFeatureFlag` | `src/feature-flags/hooks` |
-| URL filter state | `useSearchParamBatch` | `src/hooks/useSearchParam` |
-| Persistent preferences | `useLocalStorage` | `src/shared/hooks/useLocalStorage` |
-| Namespace context | `useNamespace` | `src/shared/providers/Namespace/` |
-| RBAC permissions | `useAccessReviewForModel` | `src/utils/rbac` |
+| Data Type                     | Tool                                                 | Location                           |
+| ----------------------------- | ---------------------------------------------------- | ---------------------------------- |
+| K8s resources (live)          | `useK8sWatchResource`                                | `src/k8s/hooks/`                   |
+| K8s metadata-only (Table API) | `useSecrets({ metadataOnly })` / `useSecretMetadata` | `src/hooks/`                       |
+| K8s resources (archived)      | `useK8sAndKarchResources`                            | `src/hooks/`                       |
+| REST API data                 | `useQuery` / `useInfiniteQuery`                      | `@tanstack/react-query`            |
+| Mutations                     | `K8sQueryCreateResource` etc.                        | `src/k8s/query/fetch.ts`           |
+| Global client state           | Zustand (`useTaskStore`)                             | `src/utils/task-store.ts`          |
+| Feature flags                 | `useIsOnFeatureFlag`                                 | `src/feature-flags/hooks`          |
+| URL filter state              | `useSearchParamBatch`                                | `src/hooks/useSearchParam`         |
+| Persistent preferences        | `useLocalStorage`                                    | `src/shared/hooks/useLocalStorage` |
+| Namespace context             | `useNamespace`                                       | `src/shared/providers/Namespace/`  |
+| RBAC permissions              | `useAccessReviewForModel`                            | `src/utils/rbac`                   |

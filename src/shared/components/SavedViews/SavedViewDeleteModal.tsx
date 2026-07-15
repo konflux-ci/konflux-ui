@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Button, ButtonVariant, ModalVariant, Text, TextContent } from '@patternfly/react-core';
+import { Button, ButtonVariant, Content, ModalVariant } from '@patternfly/react-core';
 import { ComponentProps, createModalLauncher } from '~/shared/components/modal/createModalLauncher';
 
 type SavedViewDeleteModalProps = ComponentProps & {
@@ -19,12 +19,12 @@ export const SavedViewDeleteModal: React.FC<SavedViewDeleteModalProps> = ({
 
   return (
     <>
-      <TextContent>
-        <Text>
+      <Content>
+        <Content>
           Are you sure you want to delete <strong>{viewLabel}</strong>? This action cannot be
           undone.
-        </Text>
-      </TextContent>
+        </Content>
+      </Content>
       <Button
         variant={ButtonVariant.danger}
         onClick={handleDelete}
@@ -43,5 +43,4 @@ export const createSavedViewDeleteModal = createModalLauncher(SavedViewDeleteMod
   'data-test': 'saved-view-delete-modal',
   title: 'Delete saved view',
   variant: ModalVariant.small,
-  titleIconVariant: 'warning',
 });

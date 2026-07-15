@@ -3,9 +3,8 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   ButtonVariant,
   EmptyStateBody,
-  Text,
-  TextContent,
-  TextVariants,
+  Content,
+  ContentVariants,
   Title,
   Truncate,
   EmptyStateActions,
@@ -197,14 +196,14 @@ const IntegrationTestsListView: React.FC<React.PropsWithChildren> = () => {
 
   return (
     <>
-      <Title headingLevel="h3" className="pf-v5-u-mt-lg pf-v5-u-mb-sm">
+      <Title headingLevel="h3" className="pf-v6-u-mt-lg pf-v6-u-mb-sm">
         Integration tests
       </Title>
-      <TextContent>
-        <Text component={TextVariants.p}>
+      <Content>
+        <Content component={ContentVariants.p}>
           Add an integration test to test all your components after you commit code.
-        </Text>
-      </TextContent>
+        </Content>
+      </Content>
       <TableContainer
         data={filteredData}
         unfilteredData={integrationTests}

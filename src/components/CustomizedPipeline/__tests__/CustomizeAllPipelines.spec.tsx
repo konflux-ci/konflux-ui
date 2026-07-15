@@ -42,7 +42,11 @@ describe('CustomizeAllPipelines', () => {
   it('should render error state', () => {
     useK8sWatchResourceMock.mockReturnValue([[], true, { code: 400 }]);
     const result = render(
-      <CustomizeAllPipelines applicationName="" namespace="" modalProps={{ isOpen: true }} />,
+      <CustomizeAllPipelines
+        applicationName=""
+        namespace=""
+        modalProps={{ isOpen: true, onClose: jest.fn() }}
+      />,
     );
     expect(result.getByText('Unable to load components')).toBeInTheDocument();
   });

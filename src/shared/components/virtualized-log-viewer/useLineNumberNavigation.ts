@@ -44,9 +44,10 @@ export const useLineNumberNavigation = (
   const shouldEnableUrlHash = React.useCallback((): boolean => {
     const pathname = window.location.pathname;
     const search = window.location.search;
-    return pathname.includes('/logs') && (search.includes('task=') || pathname.includes('taskruns'));
+    return (
+      pathname.includes('/logs') && (search.includes('task=') || pathname.includes('taskruns'))
+    );
   }, []);
-
 
   // Parse hash to get highlighted line(s)
   // No need for useCallback - function has no dependencies and is only called from effects
@@ -73,8 +74,8 @@ export const useLineNumberNavigation = (
 
   // Use lazy initialization to avoid calling getHighlightedLines on every render.
   // While navigation is deferred, don't apply any hash-derived highlight yet.
-  const [highlightedLines, setHighlightedLines] = React.useState<HighlightedLineRange | null>(
-    () => (readyToNavigate ? getHighlightedLines() : null),
+  const [highlightedLines, setHighlightedLines] = React.useState<HighlightedLineRange | null>(() =>
+    readyToNavigate ? getHighlightedLines() : null,
   );
 
   // Track the last hash to detect changes (including when hash is cleared)

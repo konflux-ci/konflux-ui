@@ -19,7 +19,7 @@ const BugTableRow: React.FC<Props> = ({ arrayHelper, bug, index }) => {
         {bug.id ?? '-'}
       </Td>
       <Td className={issueTableColumnClass.bugUrl} data-test="issue-url">
-        <Truncate content={bug.source} />
+        <Truncate content={bug.source ?? ''} />
       </Td>
       <Td className={issueTableColumnClass.summary} data-test="issue-summary">
         {bug.summary ? <Truncate content={bug.summary} /> : '-'}

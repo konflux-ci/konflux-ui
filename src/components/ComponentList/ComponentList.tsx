@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { EmptyStateBody, Text, TextContent, TextVariants, Title } from '@patternfly/react-core';
+import { EmptyStateBody, Content, ContentVariants, Title } from '@patternfly/react-core';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
@@ -79,17 +79,17 @@ const ComponentList: React.FC = () => {
 
   return (
     <>
-      <Title headingLevel="h3" className="pf-v5-u-mt-lg pf-v5-u-mb-sm pf-v5-u-pl-md">
+      <Title headingLevel="h3" className="pf-v6-u-mt-lg pf-v6-u-mb-sm pf-v6-u-pl-md">
         Components
-        <span className="pf-v5-u-ml-sm">
+        <span className="pf-v6-u-ml-sm">
           <FeatureFlagIndicator flags={['components-page']} />
         </span>
       </Title>
-      <TextContent className="pf-v5-u-pl-md">
-        <Text component={TextVariants.p}>
+      <Content className="pf-v6-u-pl-md">
+        <Content component={ContentVariants.p}>
           A component is an image built from source code in a repository.
-        </Text>
-      </TextContent>
+        </Content>
+      </Content>
       <Table
         virtualize={false}
         data={filteredComponents}

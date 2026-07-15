@@ -335,10 +335,7 @@ describe('EditSecretForm', () => {
 
       await waitFor(() => {
         expect(screen.getByText('Loading sensitive values...')).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: 'Loading...' })).toHaveAttribute(
-          'aria-disabled',
-          'true',
-        );
+        expect(screen.getByRole('button', { name: 'Loading...' })).toBeDisabled();
         expect(screen.getByLabelText('Loading secret values')).toBeInTheDocument();
       });
 

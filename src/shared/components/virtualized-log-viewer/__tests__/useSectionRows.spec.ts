@@ -17,10 +17,7 @@ describe('useSectionRows', () => {
   });
 
   it('should render content rows when expanded and fold indicators when collapsed', () => {
-    const sections = [
-      normSection('build', 'compile\nlink'),
-      normSection('test', 'running'),
-    ];
+    const sections = [normSection('build', 'compile\nlink'), normSection('test', 'running')];
     const expanded = new Set([1]);
     const { result } = renderHook(() => useSectionRows(sections, expanded));
 
@@ -58,10 +55,7 @@ describe('useSectionRows', () => {
   });
 
   it('should add a blank search line between multi-section blocks', () => {
-    const sections = [
-      normSection('build', 'a'),
-      normSection('test', 'b'),
-    ];
+    const sections = [normSection('build', 'a'), normSection('test', 'b')];
     const expanded = new Set([0, 1]);
     const { result } = renderHook(() => useSectionRows(sections, expanded));
 

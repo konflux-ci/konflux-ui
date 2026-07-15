@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useField, useFormikContext } from 'formik';
-import { InputField } from 'formik-pf';
 import { SecretLinkOptionLabels } from '~/consts/secrets';
 import { DropdownItemObject } from '~/shared/components/dropdown';
+import { InputField } from '~/shared/components/formik-base';
 import KeyValueFileInputField from '~/shared/components/formik-fields/key-value-input-field/KeyValueInputField';
 import SelectInputField from '~/shared/components/formik-fields/SelectInputField';
 import { AddSecretFormValues, SecretFor, SecretTypeDropdownLabel, SourceSecretType } from '~/types';

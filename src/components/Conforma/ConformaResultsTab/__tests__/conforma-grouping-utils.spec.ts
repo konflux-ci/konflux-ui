@@ -190,9 +190,7 @@ describe('conforma-grouping-utils', () => {
     });
 
     it('behaves like before when allComponentNames is not provided', () => {
-      const rows = [
-        mockRow({ component: 'api', status: CONFORMA_RESULT_STATUS.violations }),
-      ];
+      const rows = [mockRow({ component: 'api', status: CONFORMA_RESULT_STATUS.violations })];
 
       const groups = groupByComponent(rows);
 
@@ -204,9 +202,24 @@ describe('conforma-grouping-utils', () => {
   describe('collapseArchDuplicates', () => {
     it('merges rows with the same title, msg, component, and status but different images', () => {
       const rows = [
-        mockRow({ title: 'CVE rule', msg: 'CVE-2024-001', component: 'api', images: ['img@sha256:aaa'] }),
-        mockRow({ title: 'CVE rule', msg: 'CVE-2024-001', component: 'api', images: ['img@sha256:bbb'] }),
-        mockRow({ title: 'CVE rule', msg: 'CVE-2024-001', component: 'api', images: ['img@sha256:ccc'] }),
+        mockRow({
+          title: 'CVE rule',
+          msg: 'CVE-2024-001',
+          component: 'api',
+          images: ['img@sha256:aaa'],
+        }),
+        mockRow({
+          title: 'CVE rule',
+          msg: 'CVE-2024-001',
+          component: 'api',
+          images: ['img@sha256:bbb'],
+        }),
+        mockRow({
+          title: 'CVE rule',
+          msg: 'CVE-2024-001',
+          component: 'api',
+          images: ['img@sha256:ccc'],
+        }),
       ];
 
       const result = collapseArchDuplicates(rows);
@@ -217,8 +230,18 @@ describe('conforma-grouping-utils', () => {
 
     it('preserves distinct violations that differ in msg as separate rows', () => {
       const rows = [
-        mockRow({ title: 'CVE rule', msg: 'CVE-2024-001', component: 'api', images: ['img@sha256:aaa'] }),
-        mockRow({ title: 'CVE rule', msg: 'CVE-2024-002', component: 'api', images: ['img@sha256:bbb'] }),
+        mockRow({
+          title: 'CVE rule',
+          msg: 'CVE-2024-001',
+          component: 'api',
+          images: ['img@sha256:aaa'],
+        }),
+        mockRow({
+          title: 'CVE rule',
+          msg: 'CVE-2024-002',
+          component: 'api',
+          images: ['img@sha256:bbb'],
+        }),
       ];
 
       const result = collapseArchDuplicates(rows);
@@ -228,8 +251,18 @@ describe('conforma-grouping-utils', () => {
 
     it('preserves distinct violations that differ in component as separate rows', () => {
       const rows = [
-        mockRow({ title: 'CVE rule', msg: 'CVE-2024-001', component: 'comp-a', images: ['img@sha256:aaa'] }),
-        mockRow({ title: 'CVE rule', msg: 'CVE-2024-001', component: 'comp-b', images: ['img@sha256:bbb'] }),
+        mockRow({
+          title: 'CVE rule',
+          msg: 'CVE-2024-001',
+          component: 'comp-a',
+          images: ['img@sha256:aaa'],
+        }),
+        mockRow({
+          title: 'CVE rule',
+          msg: 'CVE-2024-001',
+          component: 'comp-b',
+          images: ['img@sha256:bbb'],
+        }),
       ];
 
       const result = collapseArchDuplicates(rows);
@@ -274,10 +307,7 @@ describe('conforma-grouping-utils', () => {
     });
 
     it('handles rows with no image gracefully', () => {
-      const rows = [
-        mockRow({ images: [] }),
-        mockRow({ images: [] }),
-      ];
+      const rows = [mockRow({ images: [] }), mockRow({ images: [] })];
 
       const result = collapseArchDuplicates(rows);
 
@@ -396,10 +426,7 @@ describe('conforma-grouping-utils', () => {
 
     it('returns undefined when images have different repo names', () => {
       expect(
-        getCommonImageName([
-          'quay.io/org/img-a@sha256:aaa',
-          'quay.io/org/img-b@sha256:bbb',
-        ]),
+        getCommonImageName(['quay.io/org/img-a@sha256:aaa', 'quay.io/org/img-b@sha256:bbb']),
       ).toBeUndefined();
     });
 
@@ -408,9 +435,7 @@ describe('conforma-grouping-utils', () => {
     });
 
     it('returns the full string when images have no @ separator', () => {
-      expect(getCommonImageName(['quay.io/org/img', 'quay.io/org/img'])).toBe(
-        'quay.io/org/img',
-      );
+      expect(getCommonImageName(['quay.io/org/img', 'quay.io/org/img'])).toBe('quay.io/org/img');
     });
 
     it('returns the name for a single-element array', () => {
@@ -468,9 +493,7 @@ describe('conforma-grouping-utils', () => {
     });
 
     it('combines search text and status filters', () => {
-      const results = filterResults(sampleRows, 'api-gateway', [
-        CONFORMA_RESULT_STATUS.violations,
-      ]);
+      const results = filterResults(sampleRows, 'api-gateway', [CONFORMA_RESULT_STATUS.violations]);
       expect(results).toHaveLength(1);
       expect(results[0].title).toBe('Missing CVE scan');
     });

@@ -69,7 +69,7 @@ function renderValue(value: unknown, level: number = 0): React.ReactNode {
         hasGutter={level === 0}
         style={
           level > 0
-            ? { paddingLeft: `var(--pf-v5-global--spacer--${level > 1 ? 'xl' : 'md'})` }
+            ? { paddingLeft: `var(--pf-t--global--spacer--${level > 1 ? 'xl' : 'md'})` }
             : undefined
         }
       >

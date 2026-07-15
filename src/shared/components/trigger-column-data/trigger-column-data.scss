@@ -1,0 +1,15 @@
+.trigger-column-data__commit-label {
+  overflow: visible;
+
+  .pf-v6-c-label__content,
+  .pf-v6-c-label__text {
+    overflow: visible;
+    max-width: none;
+  }
+}
+
+.trigger-column-data__commit-label .pf-v6-c-button__text {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--pf-t--global--spacer--xs);
+}

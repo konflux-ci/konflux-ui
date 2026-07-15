@@ -1,5 +1,8 @@
 import * as React from 'react';
-import { Button, Modal, ModalVariant, Text, TextContent } from '@patternfly/react-core';
+import { Button, ModalVariant, Content } from '@patternfly/react-core';
+import { ComponentProps, createModalLauncher } from '../../../components/modal/createModalLauncher';
+import { useModalLauncher } from '../../../components/modal/ModalProvider';
+
 import './Truncate.scss';
 
 const DEFAULT_MAX_LENGTH = 80;
@@ -13,13 +16,20 @@ export type TruncateProps = {
   'data-test'?: string;
 };
 
-/**
- * Truncate component
- *
- * Displays text content, truncating it if it exceeds the specified maxLength.
- * Default: clicking "more" opens a modal with the full content.
- * With expandInline=true: clicking "more"/"less" reveals/hides the full text inline.
- */
+type TruncateModalProps = ComponentProps & {
+  content: string;
+};
+
+const TruncateModal: React.FC<React.PropsWithChildren<TruncateModalProps>> = ({ content }) => {
+  return (
+    <Content>
+      <Content component="p" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+        {content}
+      </Content>
+    </Content>
+  );
+};
+
 export const Truncate: React.FC<TruncateProps> = ({
   content,
   modalTitle,
@@ -27,7 +37,7 @@ export const Truncate: React.FC<TruncateProps> = ({
   expandInline = false,
   'data-test': dataTest,
 }) => {
-  const [isModalOpen, setIsModalOpen] = React.useState(false);
+  const showModal = useModalLauncher();
   const [isExpanded, setIsExpanded] = React.useState(false);
   const shouldTruncate = content.length > maxLength;
 
@@ -58,21 +68,21 @@ export const Truncate: React.FC<TruncateProps> = ({
   return (
     <span data-test={dataTest}>
       {truncatedText}
-      <Button variant="link" isInline onClick={() => setIsModalOpen(true)}>
+      <Button
+        variant="link"
+        isInline
+        onClick={() =>
+          showModal(
+            createModalLauncher(TruncateModal, {
+              'data-test': dataTest ? `${dataTest}-modal` : 'truncate-modal',
+              variant: ModalVariant.medium,
+              title: modalTitle,
+            })({ content }),
+          )
+        }
+      >
         more
       </Button>
-      <Modal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title={modalTitle}
-        aria-label={modalTitle ? undefined : 'Full text'}
-        variant={ModalVariant.medium}
-        data-test={dataTest ? `${dataTest}-modal` : 'truncate-modal'}
-      >
-        <TextContent>
-          <Text className="truncate-text__modal-content">{content}</Text>
-        </TextContent>
-      </Modal>
     </span>
   );
 };
