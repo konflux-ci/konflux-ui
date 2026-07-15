@@ -144,7 +144,7 @@ const InternalFLAGS = {
   },
   mintmaker: {
     key: 'mintmaker',
-    description: 'Enable Mintmaker in the UI',
+    description: 'Enable MintMaker in the UI',
     defaultEnabled: false,
     status: 'wip',
   },

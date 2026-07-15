@@ -195,7 +195,7 @@ describe('DependencyRunsListView', () => {
     expect(usePipelineRunsV2Mock).toHaveBeenCalledWith(MINTMAKER_NAMESPACE, expect.anything());
   });
 
-  it('passes Mintmaker component and namespace labels as matchLabels to usePipelineRunsV2', () => {
+  it('passes MintMaker component and namespace labels as matchLabels to usePipelineRunsV2', () => {
     renderWithQueryClient(<TestedComponent />);
     expect(usePipelineRunsV2Mock).toHaveBeenCalledWith(
       expect.anything(),
