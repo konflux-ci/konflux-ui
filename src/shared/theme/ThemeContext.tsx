@@ -26,8 +26,11 @@ export type ThemeContextValue = {
   setContrastPreference: (newPreference: ContrastPreference) => void;
 };
 
-const themeStorage = createKeyedJSONStorage<ThemePreference>('konflux-theme-preference');
-const contrastStorage = createKeyedJSONStorage<ContrastPreference>('konflux-contrast-preference');
+const THEME_STORAGE_KEY = 'konflux-theme-preference';
+const CONTRAST_STORAGE_KEY = 'konflux-contrast-preference';
+
+const themeStorage = createKeyedJSONStorage<ThemePreference>(THEME_STORAGE_KEY);
+const contrastStorage = createKeyedJSONStorage<ContrastPreference>(CONTRAST_STORAGE_KEY);
 
 export const ThemeContext = React.createContext<ThemeContextValue>({
   preference: 'system',
@@ -58,6 +61,17 @@ const getStoredPreference = (): ThemePreference => {
   if (stored && THEME_PREFERENCES.includes(stored)) {
     return stored;
   }
+  // Migration: read raw localStorage value from pre-PF v6 format (bare strings)
+  try {
+    const raw = window.localStorage.getItem(THEME_STORAGE_KEY);
+    if (raw && (THEME_PREFERENCES as readonly string[]).includes(raw)) {
+      const preference = raw as ThemePreference;
+      themeStorage.set(preference);
+      return preference;
+    }
+  } catch {
+    // localStorage unavailable
+  }
   return THEME_SYSTEM;
 };
 
@@ -65,6 +79,17 @@ const getStoredContrastPreference = (): ContrastPreference => {
   const stored = contrastStorage.get();
   if (stored && CONTRAST_PREFERENCES.includes(stored)) {
     return stored;
+  }
+  // Migration: read raw localStorage value from pre-PF v6 format (bare strings)
+  try {
+    const raw = window.localStorage.getItem(CONTRAST_STORAGE_KEY);
+    if (raw && (CONTRAST_PREFERENCES as readonly string[]).includes(raw)) {
+      const preference = raw as ContrastPreference;
+      contrastStorage.set(preference);
+      return preference;
+    }
+  } catch {
+    // localStorage unavailable
   }
   return CONTRAST_SYSTEM;
 };
