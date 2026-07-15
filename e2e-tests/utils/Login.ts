@@ -76,14 +76,14 @@ export class Login {
     cy.get(stageLoginPO.username).type(username);
     cy.get(stageLoginPO.password).type(password, { log: false });
     cy.get(stageLoginPO.loginButton).click();
+
     // Click through OAuth consent page if it appears
-    cy.get(`${stageLoginPO.approveButton}, ${stageLoginPO.grantAccessClass}`, { timeout: 30000 })
-      .first()
-      .then(($el) => {
-        if ($el.is(stageLoginPO.approveButton)) {
-          cy.wrap($el).click();
-        }
-      });
+    cy.get('body', { timeout: 30000 }).then(($body) => {
+      if ($body.find(stageLoginPO.approveButton).length > 0) {
+        cy.get(stageLoginPO.approveButton).click();
+      }
+    });
+    // Grant Access is always required
     cy.contains(stageLoginPO.grantAccessClass, stageLoginPO.grantAccessText).click();
 
     // ----- Workaround -----
