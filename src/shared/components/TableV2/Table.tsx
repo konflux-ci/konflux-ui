@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Table as PfTable } from '@patternfly/react-table';
 import { getParentScrollableElement } from '~/shared/hooks';
 import { computeColumnWidths } from './column-widths';
