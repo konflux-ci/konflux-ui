@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
 import { Table as PfTable } from '@patternfly/react-table';
 import { getParentScrollableElement } from '~/shared/hooks';
 import { computeColumnWidths } from './column-widths';
@@ -89,15 +89,24 @@ export const Table = <TData,>({
     }
   }, [scrollElementProp, tableNode]);
 
-  const scrollMargin = useMemo(() => {
+  const [scrollMargin, setScrollMargin] = useState(0);
+  useLayoutEffect(() => {
     if (!tableNode || !scrollElement) {
-      return 0;
+      setScrollMargin(0);
+      return;
     }
 
-    const tableRect = tableNode.getBoundingClientRect();
-    const scrollRect = scrollElement.getBoundingClientRect();
+    const recalculate = () => {
+      const tableRect = tableNode.getBoundingClientRect();
+      const scrollRect = scrollElement.getBoundingClientRect();
+      setScrollMargin(tableRect.top - scrollRect.top + scrollElement.scrollTop);
+    };
 
-    return tableRect.top - scrollRect.top + scrollElement.scrollTop;
+    const observer = new ResizeObserver(recalculate);
+    observer.observe(scrollElement);
+    observer.observe(tableNode);
+
+    return () => observer.disconnect();
   }, [tableNode, scrollElement]);
 
   const { columnState, setColumnState } = useColumnState(columnStateKey, columns);
