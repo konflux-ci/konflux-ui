@@ -2,11 +2,7 @@ import { act, renderHook } from '@testing-library/react';
 import type { LogSection } from '../types';
 import { useSectionFold } from '../useSectionFold';
 
-const section = (
-  containerName: string,
-  data: string,
-  isCompleted?: boolean,
-): LogSection => ({
+const section = (containerName: string, data: string, isCompleted?: boolean): LogSection => ({
   containerName,
   data,
   isCompleted,
@@ -21,10 +17,7 @@ describe('useSectionFold', () => {
   });
 
   it('should expand running sections and collapse completed ones initially', () => {
-    const sections = [
-      section('build', 'done', true),
-      section('test', 'running', false),
-    ];
+    const sections = [section('build', 'done', true), section('test', 'running', false)];
     const { result } = renderHook(() => useSectionFold(sections));
 
     expect([...result.current.expandedSections]).toEqual([1]);
@@ -46,10 +39,7 @@ describe('useSectionFold', () => {
   });
 
   it('should expand a folded section without collapsing others', () => {
-    const sections = [
-      section('build', 'done', true),
-      section('test', 'running', false),
-    ];
+    const sections = [section('build', 'done', true), section('test', 'running', false)];
     const { result } = renderHook(() => useSectionFold(sections));
 
     act(() => {

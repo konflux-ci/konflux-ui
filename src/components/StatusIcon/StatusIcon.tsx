@@ -63,10 +63,10 @@ export const StatusIconWithText: React.FC<
   React.PropsWithChildren<StatusIconProps & { text?: string; dataTestAttribute?: string }>
 > = ({ status, text, dataTestAttribute, ...others }) => {
   return (
-    <>
+    <span className="status-icon-with-text">
       <span
         className={css(
-          'pf-v5-u-mr-xs status-icon',
+          'pf-v6-u-mr-xs status-icon',
           pipelineStyles.topologyPipelinesPillStatus,
           (status === runStatus.Running || status === runStatus['In Progress']) && 'icon-spin',
           getRunStatusModifier(runStatusToRunStatus(status)),
@@ -75,7 +75,7 @@ export const StatusIconWithText: React.FC<
         <StatusIcon status={status} {...others} />
       </span>
       <span data-test={dataTestAttribute}>{text ?? status}</span>
-    </>
+    </span>
   );
 };
 
@@ -83,7 +83,7 @@ export const StatusIconWithTextLabel: React.FC<
   React.PropsWithChildren<StatusIconProps & { text?: string; dataTestAttribute?: string }>
 > = ({ status, ...others }) => {
   return (
-    <Label color={getStatusColorName(status)}>
+    <Label color={getStatusColorName(status)} variant="outline">
       <StatusIconWithText status={status} {...others} />
     </Label>
   );

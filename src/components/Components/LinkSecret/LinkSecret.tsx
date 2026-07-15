@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { ModalVariant, Stack, StackItem } from '@patternfly/react-core';
+import { Stack, StackItem, ModalVariant } from '@patternfly/react-core';
 import { Formik } from 'formik';
 import { ComponentProps, createModalLauncher } from '../../modal/createModalLauncher';
 import { SecretSelector } from './SecretSelector';

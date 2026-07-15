@@ -4,8 +4,8 @@ import { FeatureFlagIndicator } from '../FeatureFlagIndicator';
 import { FlagKey, FLAGS, FLAGS_STATUS } from '../flags';
 import { useFeatureFlags } from '../hooks';
 
-const readyIconColor = 'var(--pf-v5-global--success-color--100)';
-const warningIconColor = 'var(--pf-v5-global--warning-color--100)';
+const readyIconColor = 'var(--pf-t--global--color--status--success--default)';
+const warningIconColor = 'var(--pf-t--global--color--status--warning--default)';
 
 jest.mock('../flags', () => {
   {

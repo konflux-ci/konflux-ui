@@ -1,6 +1,6 @@
 # 🔍 Conditions System — Developer Guide
 
- The **conditions system** lets you create feature flags that automatically control themselves based on runtime conditions like environment, service availability, or user state. Think "smart feature flags."
+The **conditions system** lets you create feature flags that automatically control themselves based on runtime conditions like environment, service availability, or user state. Think "smart feature flags."
 
 ---
 
@@ -15,7 +15,7 @@
 const showKubearchive = useIsOnFeatureFlag('kubearchive-integration') && isKubearchiveInstalled;
 
 // New way: Condition-guarded flag
-const showKubearchive = useIsOnFeatureFlag('kubearchive-integration'); 
+const showKubearchive = useIsOnFeatureFlag('kubearchive-integration');
 // ✅ Flag is enabled AND KubeArchive is installed
 // ❌ Flag switch is disabled if KubeArchive isn't installed (user can't enable it)
 ```
@@ -26,11 +26,11 @@ const showKubearchive = useIsOnFeatureFlag('kubearchive-integration');
 2. **Independent conditions**: Show/hide UI based on runtime conditions without involving feature flags
 3. **Route guards**: Block navigation to stable pages when a required service is unavailable (503 → `ServiceUnavailablePage`)
 
-| Use Case | When to Use | Example |
-|----------|-------------|---------|
-| **Guarded Flags** | Feature depends on external service/environment | KubeArchive integration only works if KubeArchive is installed |
-| **Independent Conditions** | UI needs to adapt to environment without feature flags | Show "staging environment" banner, hide unavailable features |
-| **Route Guards** | Stable page requires a cluster service | Issues page requires Kite (`ensureConditionOnLoader` → **503**) |
+| Use Case                   | When to Use                                            | Example                                                         |
+| -------------------------- | ------------------------------------------------------ | --------------------------------------------------------------- |
+| **Guarded Flags**          | Feature depends on external service/environment        | KubeArchive integration only works if KubeArchive is installed  |
+| **Independent Conditions** | UI needs to adapt to environment without feature flags | Show "staging environment" banner, hide unavailable features    |
+| **Route Guards**           | Stable page requires a cluster service                 | Issues page requires Kite (`ensureConditionOnLoader` → **503**) |
 
 See [When to use 503](#when-to-use-503-service-unavailable) for how this differs from **404** and other condition patterns.
 
@@ -38,9 +38,9 @@ See [When to use 503](#when-to-use-503-service-unavailable) for how this differs
 
 ```ts
 // These are already set up for you:
-'isKubearchiveEnabled' // → true if KubeArchive service is available
-'isKiteServiceEnabled' // → true if Kite plugin health check passes
-'isStagingCluster'     // → true if running in staging environment
+'isKubearchiveEnabled'; // → true if KubeArchive service is available
+'isKiteServiceEnabled'; // → true if Kite plugin health check passes
+'isStagingCluster'; // → true if running in staging environment
 ```
 
 ---
@@ -59,9 +59,9 @@ export const FLAGS = {
     defaultEnabled: false,
     status: 'wip',
     guard: {
-      allOf: ['isKubearchiveEnabled'],  // Requires KubeArchive
+      allOf: ['isKubearchiveEnabled'], // Requires KubeArchive
       failureReason: 'KubeArchive must be installed',
-      visibleInFeatureFlagPanel: true,  // when guard fails, show the flag entry disabled with the reason
+      visibleInFeatureFlagPanel: true, // when guard fails, show the flag entry disabled with the reason
       // visibleInFeatureFlagPanel: true => show the flag disabled with its reason
       // visibleInFeatureFlagPanel: false => hide the flag entirely when guard conditions aren’t met
     },
@@ -75,12 +75,8 @@ export const FLAGS = {
 // In your React component - no changes needed!
 const MyComponent = () => {
   const showFeature = useIsOnFeatureFlag('my-new-feature');
-  
-  return (
-    <div>
-      {showFeature && <NewFeatureComponent />}
-    </div>
-  );
+
+  return <div>{showFeature && <NewFeatureComponent />}</div>;
 };
 ```
 
@@ -91,7 +87,7 @@ const MyComponent = () => {
 ```ts
 guard: {
   allOf: ['condition1', 'condition2'],  // ALL must be true (AND logic)
-  anyOf: ['condition3', 'condition4'],  // ANY can be true (OR logic)  
+  anyOf: ['condition3', 'condition4'],  // ANY can be true (OR logic)
   failureReason: 'Shown to users when disabled',
   visibleInFeatureFlagPanel: true,  // Show condition status in dev panel
 }
@@ -112,7 +108,7 @@ export const FLAGS = {
     defaultEnabled: false,
     status: 'wip',
     guard: {
-      allOf: ['isKubearchiveEnabled'], 
+      allOf: ['isKubearchiveEnabled'],
       failureReason: 'KubeArchive not installed',
       visibleInFeatureFlagPanel: true,
     },
@@ -124,7 +120,7 @@ const MyPage = () => {
   const showKubearchive = useIsOnFeatureFlag('kubearchive-integration');
   // ✅ true only if flag is ON and KubeArchive is available
   // ❌ false if KubeArchive isn't available (user can't enable flag)
-  
+
   return <div>{showKubearchive && <KubearchivePage />}</div>;
 };
 ```
@@ -137,7 +133,7 @@ const useKubearchive = createConditionsHook(['isKubearchiveEnabled']);
 
 const MyPage = () => {
   const conditions = useKubearchive();
-  
+
   // Always shows appropriate UI based on service availability
   return (
     <div>
@@ -175,7 +171,7 @@ guard: {
 }
 ```
 
-### Service dependency features  
+### Service dependency features
 
 ```ts
 // Feature needs KubeArchive service
@@ -207,17 +203,21 @@ registerCondition('myCustomCheck', async () => {
 
 ```ts
 // Cache result for 5 minutes to avoid repeated API calls
-registerCondition('expensiveCheck', async () => {
-  const data = await fetch('/api/expensive-operation').then(r => r.json());
-  return data.isEnabled;
-}, 300000); // 5 minutes in milliseconds
+registerCondition(
+  'expensiveCheck',
+  async () => {
+    const data = await fetch('/api/expensive-operation').then((r) => r.json());
+    return data.isEnabled;
+  },
+  300000,
+); // 5 minutes in milliseconds
 ```
 
 ### Context-aware condition
 
 ```ts
 // Can receive context data
-registerCondition('hasPermission', async (context?: { user: User, action: string }) => {
+registerCondition('hasPermission', async (context?: { user: User; action: string }) => {
   if (!context) return false;
   return checkUserPermission(context.user, context.action);
 });
@@ -237,19 +237,19 @@ const useEnvironmentConditions = createConditionsHook(['isKubearchiveEnabled', '
 
 const MyComponent = () => {
   const conditions = useEnvironmentConditions();
-  
+
   return (
     <div>
       {/* Show staging banner regardless of any feature flag */}
       {conditions.isStagingCluster && <div>🚧 Staging Environment</div>}
-      
+
       {/* Show archive section only if service is available */}
       {conditions.isKubearchiveEnabled ? (
         <ArchiveSection />
       ) : (
         <div>Archive features unavailable - KubeArchive not installed</div>
       )}
-      
+
       <RegularContent />
     </div>
   );
@@ -257,6 +257,7 @@ const MyComponent = () => {
 ```
 
 **Use this when:**
+
 - You need to conditionally render UI based on environment/service availability
 - The condition logic is separate from any feature flag
 - You want to show different content based on what's available in the cluster
@@ -270,11 +271,11 @@ import { useAllFlagsConditions } from '~/feature-flags/hooks';
 
 const MyComponent = () => {
   const allConditions = useAllFlagsConditions();
-  
+
   // Has all conditions that any feature flag uses
   console.log(allConditions.isKubearchiveEnabled);
   console.log(allConditions.isStagingCluster);
-  
+
   return <div>...</div>;
 };
 ```
@@ -340,36 +341,36 @@ if (isKiteReady()) {
 
 ## When to use 503 (Service Unavailable)
 
-HTTP **503** means: *this page exists in Konflux, but something required to run it is missing or down on this cluster right now.*
+HTTP **503** means: _this page exists in Konflux, but something required to run it is missing or down on this cluster right now._
 
 Use `ensureConditionOnLoader` (which throws a **503** `Response`) when **all** of the following apply:
 
-| Criterion | Why |
-|-----------|-----|
-| The route is **stable** | The page is a normal, shipped part of the product — not experimental or behind a feature flag. |
-| The page **depends on an optional cluster service or plugin** | A condition such as `isKiteServiceEnabled` or `isKubearchiveEnabled` checks that the backend is reachable. |
-| You want to **block navigation at the route** | The loader/`lazy()` should stop before the page bundle loads when the service is unavailable. |
-| You want a **dedicated unavailable page** | `RouteErrorBoundry` renders `ServiceUnavailablePage` with a clear, page-specific message via `errorMessage`. |
+| Criterion                                                     | Why                                                                                                          |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| The route is **stable**                                       | The page is a normal, shipped part of the product — not experimental or behind a feature flag.               |
+| The page **depends on an optional cluster service or plugin** | A condition such as `isKiteServiceEnabled` or `isKubearchiveEnabled` checks that the backend is reachable.   |
+| You want to **block navigation at the route**                 | The loader/`lazy()` should stop before the page bundle loads when the service is unavailable.                |
+| You want a **dedicated unavailable page**                     | `RouteErrorBoundry` renders `ServiceUnavailablePage` with a clear, page-specific message via `errorMessage`. |
 
 **Good fit:** The Issues dashboard is stable, but only works when the Kite plugin is installed and healthy.
 
 **Do not use 503 when:**
 
-| Instead use… | When… |
-|--------------|-------|
-| `ensureFeatureFlagOnLoader` (**404**) | The route is **experimental or WIP** and gated by a feature flag. A missing flag means "this page doesn't exist yet", not "a service is down". See [feature-flags.md](./feature-flags.md). |
-| `createConditionsHook` or `ensureConditionIsOn` | You only need to **adapt UI inside a page** (hide a section, show inline fallback) without blocking the whole route. |
-| Guarded feature flags | The feature is still **flag-controlled** and should be disabled in the dev panel when a condition fails — no route guard needed. |
-| RBAC / access checks | The user lacks permission — that is **403**, handled separately by `RouteErrorBoundry`. |
+| Instead use…                                    | When…                                                                                                                                                                                      |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `ensureFeatureFlagOnLoader` (**404**)           | The route is **experimental or WIP** and gated by a feature flag. A missing flag means "this page doesn't exist yet", not "a service is down". See [feature-flags.md](./feature-flags.md). |
+| `createConditionsHook` or `ensureConditionIsOn` | You only need to **adapt UI inside a page** (hide a section, show inline fallback) without blocking the whole route.                                                                       |
+| Guarded feature flags                           | The feature is still **flag-controlled** and should be disabled in the dev panel when a condition fails — no route guard needed.                                                           |
+| RBAC / access checks                            | The user lacks permission — that is **403**, handled separately by `RouteErrorBoundry`.                                                                                                    |
 
 **503 vs 404 at a glance:**
 
-| | **503** (`ensureConditionOnLoader`) | **404** (`ensureFeatureFlagOnLoader`) |
-|---|--------------------------------------|---------------------------------------|
-| **Meaning** | Page exists; required service unavailable | Page not enabled / not released |
-| **Route type** | Stable | Experimental (feature flag) |
-| **User sees** | `ServiceUnavailablePage` with custom message | Not-found style empty state |
-| **Example** | Issues page when Kite is down | Pipeline runs page when flag is off |
+|                | **503** (`ensureConditionOnLoader`)          | **404** (`ensureFeatureFlagOnLoader`) |
+| -------------- | -------------------------------------------- | ------------------------------------- |
+| **Meaning**    | Page exists; required service unavailable    | Page not enabled / not released       |
+| **Route type** | Stable                                       | Experimental (feature flag)           |
+| **User sees**  | `ServiceUnavailablePage` with custom message | Not-found style empty state           |
+| **Example**    | Issues page when Kite is down                | Pipeline runs page when flag is off   |
 
 ---
 
@@ -423,10 +424,10 @@ ensureConditionOnLoader(
 
 **Compared to `ensureConditionIsOn`:**
 
-| Utility | Context | On failure |
-|---------|---------|------------|
-| `ensureConditionIsOn` | Imperative code (hooks, fetch helpers) | Returns `false` — caller decides |
-| `ensureConditionOnLoader` | Route `loader` / `lazy()` | Throws **503** → `ServiceUnavailablePage` |
+| Utility                   | Context                                | On failure                                |
+| ------------------------- | -------------------------------------- | ----------------------------------------- |
+| `ensureConditionIsOn`     | Imperative code (hooks, fetch helpers) | Returns `false` — caller decides          |
+| `ensureConditionOnLoader` | Route `loader` / `lazy()`              | Throws **503** → `ServiceUnavailablePage` |
 
 ---
 
@@ -438,7 +439,7 @@ Check the browser dev console - conditions cache their results, so you might nee
 
 ```ts
 // In browser console:
-window.FeatureFlagsStore.conditions  // See current condition states
+window.FeatureFlagsStore.conditions; // See current condition states
 ```
 
 ### Force refresh a condition
@@ -446,7 +447,7 @@ window.FeatureFlagsStore.conditions  // See current condition states
 ```ts
 import { invalidateConditions } from '~/feature-flags/conditions';
 
-// Force re-check specific conditions  
+// Force re-check specific conditions
 invalidateConditions(['isKubearchiveEnabled']);
 
 // Or all conditions
@@ -460,18 +461,20 @@ Look in `src/registers.ts` - if your condition isn't there, it will always be `f
 ### My flag is always disabled
 
 1. Check that your condition is returning `true`:
+
    ```ts
    const conditions = await evaluateConditions(['yourCondition']);
    console.log(conditions.yourCondition); // Should be true
    ```
 
 2. Check your guard logic:
+
    ```ts
    // This requires BOTH to be true
-   allOf: ['condition1', 'condition2']  
-   
-   // This requires EITHER to be true  
-   anyOf: ['condition1', 'condition2']
+   allOf: ['condition1', 'condition2'];
+
+   // This requires EITHER to be true
+   anyOf: ['condition1', 'condition2'];
    ```
 
 ---
@@ -495,6 +498,7 @@ registerCondition('serviceHealth', expensiveApiCall); // Cached forever!
 ## Quick Reference
 
 ### Adding condition to feature flag:
+
 ```ts
 // src/feature-flags/flags.ts
 guard: {
@@ -505,14 +509,20 @@ guard: {
 ```
 
 ### Creating new condition:
-```ts  
+
+```ts
 // src/registers.ts
-registerCondition('myCondition', async () => {
-  // return true/false
-}, cacheTimeMs);
+registerCondition(
+  'myCondition',
+  async () => {
+    // return true/false
+  },
+  cacheTimeMs,
+);
 ```
 
 ### Using conditions in React components:
+
 ```ts
 import { createConditionsHook } from '~/feature-flags/hooks';
 
@@ -525,6 +535,7 @@ const conditions = useMyConditions(); // { myCondition: boolean }
 ```
 
 ### Imperative condition checks (non-React):
+
 ```ts
 import { ensureConditionIsOn } from '~/feature-flags/utils';
 
@@ -536,6 +547,7 @@ if (isKubeArchiveEnabled()) {
 ```
 
 ### Route guards (loaders/lazy):
+
 ```ts
 // Stable route + optional cluster service → 503 + ServiceUnavailablePage
 import { ensureConditionOnLoader } from '~/feature-flags/utils';
@@ -549,6 +561,7 @@ await ensureConditionOnLoader(['isKiteServiceEnabled'], {
 For experimental routes behind a feature flag, use `ensureFeatureFlagOnLoader` instead (**404** — see [feature-flags.md](./feature-flags.md)).
 
 ### Available conditions:
+
 - `'isKubearchiveEnabled'` — KubeArchive service available
 - `'isKiteServiceEnabled'` — Kite plugin health check passes (used by the Issues route)
 - `'isStagingCluster'` — Running in staging environment

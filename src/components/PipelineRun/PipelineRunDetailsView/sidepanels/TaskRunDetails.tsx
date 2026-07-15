@@ -67,7 +67,7 @@ const TaskRunDetails: React.FC<React.PropsWithChildren<Props>> = ({
               </DescriptionListDescription>
             </DescriptionListGroup>
           </DescriptionList>
-          <DescriptionList className="pf-v5-u-mt-lg">
+          <DescriptionList className="pf-v6-u-mt-lg">
             <TaskDescriptionGroup content={taskDescription} />
             <ScanDescriptionListGroup taskRuns={[taskRun]} hideIfNotFound />
           </DescriptionList>
@@ -76,7 +76,7 @@ const TaskRunDetails: React.FC<React.PropsWithChildren<Props>> = ({
         <>
           <p>This task was skipped.</p>
           {taskDescription !== '-' ? (
-            <DescriptionList className="pf-v5-u-mt-lg">
+            <DescriptionList className="pf-v6-u-mt-lg">
               <TaskDescriptionGroup content={taskDescription} />
             </DescriptionList>
           ) : null}
@@ -91,7 +91,7 @@ const TaskRunDetails: React.FC<React.PropsWithChildren<Props>> = ({
 
       {specParams?.length && (
         <>
-          <Divider style={{ padding: 'var(--pf-v5-global--spacer--lg) 0' }} />
+          <Divider className="pf-v6-u-mt-lg pf-v6-u-mb-lg" />
           <RunParamsList params={specParams} compressed />
         </>
       )}

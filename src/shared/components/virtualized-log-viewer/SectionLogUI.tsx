@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, Flex, FlexItem, Text } from '@patternfly/react-core';
+import { Button, Flex, FlexItem, Content } from '@patternfly/react-core';
 import { AngleDownIcon, AngleRightIcon } from '@patternfly/react-icons/dist/esm/icons';
 import type { SectionHeaderRow } from './types';
 
@@ -12,7 +12,7 @@ export const SectionHeaderButton: React.FC<{ row: SectionHeaderRow; onToggle: ()
 }) => (
   <Button
     variant="plain"
-    className="pf-v5-u-p-0 log-content__section-header-btn"
+    className="pf-v6-u-p-0 log-content__section-header-btn"
     onClick={onToggle}
     aria-expanded={row.isExpanded}
     data-test={`fold-header-${row.sectionName}`}
@@ -21,7 +21,7 @@ export const SectionHeaderButton: React.FC<{ row: SectionHeaderRow; onToggle: ()
       <FlexItem>
         {row.isExpanded ? <AngleDownIcon aria-hidden /> : <AngleRightIcon aria-hidden />}
       </FlexItem>
-      <FlexItem className="pf-v5-c-log-viewer__text pf-v5-u-font-weight-bold">
+      <FlexItem className="pf-v6-c-log-viewer__text pf-v6-u-font-weight-bold">
         {row.sectionName}
       </FlexItem>
     </Flex>
@@ -29,9 +29,9 @@ export const SectionHeaderButton: React.FC<{ row: SectionHeaderRow; onToggle: ()
 );
 
 export const FoldIndicatorLine: React.FC<{ lineCount: number }> = ({ lineCount }) => (
-  <Text component="small" className="pf-v5-c-log-viewer__text log-content__fold-indicator">
+  <Content component="small" className="pf-v6-c-log-viewer__text log-content__fold-indicator">
     ··· {lineCount} {lineCount === 1 ? 'line' : 'lines'} hidden
-  </Text>
+  </Content>
 );
 
 export const StickySectionHeaderBar: React.FC<{
@@ -49,7 +49,10 @@ export const StickySectionHeaderBar: React.FC<{
     }}
     data-test={`sticky-header-${row.sectionName}`}
   >
-    <div className="log-content__gutter log-content__gutter--sticky" style={{ height: `${itemSize}px` }}>
+    <div
+      className="log-content__gutter log-content__gutter--sticky"
+      style={{ height: `${itemSize}px` }}
+    >
       <a
         href={`#L${row.lineNumber}`}
         className="line-number__line-number"
@@ -64,7 +67,7 @@ export const StickySectionHeaderBar: React.FC<{
       </a>
     </div>
     <div
-      className="log-content__row-content log-content__sticky-header-content pf-v5-c-log-viewer__list-item"
+      className="log-content__row-content log-content__sticky-header-content pf-v6-c-log-viewer__list-item"
       style={{ height: `${itemSize}px` }}
     >
       <SectionHeaderButton row={row} onToggle={onToggle} />

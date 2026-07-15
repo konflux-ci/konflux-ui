@@ -1,12 +1,12 @@
 import * as React from 'react';
-import { Divider, Flex, FlexItem, Text, TextVariants, Tooltip } from '@patternfly/react-core';
+import { Divider, Flex, FlexItem, Content, ContentVariants, Tooltip } from '@patternfly/react-core';
 import { CheckCircleIcon } from '@patternfly/react-icons/dist/esm/icons/check-circle-icon';
 import { ExclamationCircleIcon } from '@patternfly/react-icons/dist/esm/icons/exclamation-circle-icon';
 import { ExclamationTriangleIcon } from '@patternfly/react-icons/dist/esm/icons/exclamation-triangle-icon';
 import { UsersIcon } from '@patternfly/react-icons/dist/esm/icons/users-icon';
-import { global_danger_color_100 as dangerColor } from '@patternfly/react-tokens/dist/js/global_danger_color_100';
-import { global_success_color_100 as successColor } from '@patternfly/react-tokens/dist/js/global_success_color_100';
-import { global_warning_color_100 as warningColor } from '@patternfly/react-tokens/dist/js/global_warning_color_100';
+import { t_global_icon_color_status_danger_default as dangerColor } from '@patternfly/react-tokens/dist/js/t_global_icon_color_status_danger_default';
+import { t_global_icon_color_status_success_default as successColor } from '@patternfly/react-tokens/dist/js/t_global_icon_color_status_success_default';
+import { t_global_icon_color_status_warning_default as warningColor } from '@patternfly/react-tokens/dist/js/t_global_icon_color_status_warning_default';
 
 type ConformaSummaryBarProps = {
   totalComponents: number;
@@ -40,12 +40,9 @@ const SummaryItem: React.FC<SummaryItemDef> = ({ icon, count, rawCount, label, t
       <FlexItem>
         <strong>{count}</strong> {label}
         {rawCount !== undefined && rawCount !== count && (
-          <Text
-            component={TextVariants.small}
-            className="pf-v5-u-ml-xs pf-v5-u-color-400"
-          >
+          <Content component={ContentVariants.small} className="pf-v6-u-ml-xs pf-v6-u-color-400">
             ({rawCount} incl. multi-arch)
-          </Text>
+          </Content>
         )}
       </FlexItem>
     </Flex>
@@ -108,10 +105,7 @@ export const ConformaSummaryBar: React.FC<ConformaSummaryBarProps> = ({
       {items.map((item, i) => (
         <React.Fragment key={item.label}>
           {i > 0 && (
-            <Divider
-              orientation={{ default: 'vertical' }}
-              data-test="conforma-summary-divider"
-            />
+            <Divider orientation={{ default: 'vertical' }} data-test="conforma-summary-divider" />
           )}
           <FlexItem>
             <SummaryItem {...item} />

@@ -179,7 +179,7 @@ describe('BaseTextFilterToolbar', () => {
       />,
     );
 
-    expect(container.querySelector('.pf-v5-c-toolbar__content')).toHaveStyle({
+    expect(container.querySelector('.pf-v6-c-toolbar__content')).toHaveStyle({
       paddingLeft: '0',
     });
   });

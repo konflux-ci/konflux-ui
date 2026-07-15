@@ -20,9 +20,7 @@ describe('TaskRunDetails', () => {
   });
 
   it('should not display description for whitespace-only skipped task descriptions', () => {
-    const { container } = render(
-      <TaskRunDetails status={runStatus.Skipped} description="   " />,
-    );
+    const { container } = render(<TaskRunDetails status={runStatus.Skipped} description="   " />);
     expect(container).toHaveTextContent('This task was skipped.');
     expect(container).not.toHaveTextContent('Description');
   });
@@ -65,7 +63,9 @@ describe('TaskRunDetails', () => {
       />,
     );
     expect(result.getByText('Description')).toBeInTheDocument();
-    expect(result.getByText('Create an ephemeral OpenShift cluster on AWS HyperShift.')).toBeInTheDocument();
+    expect(
+      result.getByText('Create an ephemeral OpenShift cluster on AWS HyperShift.'),
+    ).toBeInTheDocument();
   });
 
   it('should prefer TaskRun taskSpec description over pipeline task description', () => {
@@ -87,7 +87,9 @@ describe('TaskRunDetails', () => {
 
   it('should display dash when idle task has no pipeline task description', () => {
     const result = render(<TaskRunDetails status={runStatus.Idle} />);
-    const descriptionGroup = result.getByText('Description').closest('.pf-v5-c-description-list__group');
+    const descriptionGroup = result
+      .getByText('Description')
+      .closest('.pf-v6-c-description-list__group');
     expect(descriptionGroup).not.toBeNull();
     expect(within(descriptionGroup as HTMLElement).getByText('-')).toBeInTheDocument();
   });

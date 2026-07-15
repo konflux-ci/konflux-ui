@@ -1,10 +1,11 @@
 import * as React from 'react';
 import { ValidatedOptions } from '@patternfly/react-core';
 import { useField } from 'formik';
-import { FileUploadField } from 'formik-pf';
 import { Base64 } from 'js-base64';
 import attempt from 'lodash-es/attempt';
 import isError from 'lodash-es/isError';
+import { FileUploadField } from '~/shared/components/formik-base';
+
 type EncodedFileUploadFieldProps = {
   id: string;
   name: string;
@@ -79,7 +80,7 @@ const EncodedFileUploadField: React.FC<React.PropsWithChildren<EncodedFileUpload
       allowEditingUploadedText
       required={required}
     >
-      {helpText && <div className="pf-v5-c-form__helper-text">{helpText}</div>}
+      {helpText && <div className="pf-v6-c-form__helper-text">{helpText}</div>}
     </FileUploadField>
   );
 };

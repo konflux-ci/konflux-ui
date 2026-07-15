@@ -32,13 +32,13 @@ const EnvironmentProvisionErrorAlert: React.FC<EnvironmentProvisionErrorAlertPro
       data-test="env-provision-err-alert"
       isInline
       isPlain
-      className="pf-v5-u-mt-md"
+      className="pf-v6-u-mt-md"
       variant="danger"
       title={title}
     >
       Snapshot failed to deploy at{' '}
       <Timestamp
-        className="pf-v5-u-display-inline"
+        className="pf-v6-u-display-inline"
         timestamp={errorStatus[0].lastUpdateTime}
         data-test="alert-timestamp"
       />

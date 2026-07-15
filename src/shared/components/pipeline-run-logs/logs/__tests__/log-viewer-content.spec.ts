@@ -1,4 +1,7 @@
-import { normalizeSection, singleLogSection } from '~/shared/components/virtualized-log-viewer/log-viewer-utils';
+import {
+  normalizeSection,
+  singleLogSection,
+} from '~/shared/components/virtualized-log-viewer/log-viewer-utils';
 import { prepareLogViewerContent } from '../log-viewer-content';
 
 describe('log-viewer-content', () => {
@@ -8,7 +11,9 @@ describe('log-viewer-content', () => {
     });
 
     it('should include step header for a single section', () => {
-      const result = prepareLogViewerContent([normalizeSection(singleLogSection('hello\nworld', 'TASK'))]);
+      const result = prepareLogViewerContent([
+        normalizeSection(singleLogSection('hello\nworld', 'TASK')),
+      ]);
       expect(result).toEqual(['TASK', 'hello', 'world']);
     });
 

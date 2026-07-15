@@ -59,8 +59,8 @@ export const BuildLogViewer: React.FC<React.PropsWithChildren<BuildLogViewerProp
 
   return (
     <>
-      <div className="pf-v5-c-modal-box__title build-log-viewer__title">
-        <span className="pf-v5-c-modal-box__title-text">{`Build pipeline run log for ${component.metadata.name}`}</span>
+      <div className="pf-v6-c-modal-box__title build-log-viewer__title">
+        <span className="pf-v6-c-modal-box__title-text">{`Build pipeline run log for ${component.metadata.name}`}</span>
         <StatusIconWithTextLabel status={plrStatus} />
         <FeatureFlagIndicator flags={['taskruns-kubearchive']} />
       </div>

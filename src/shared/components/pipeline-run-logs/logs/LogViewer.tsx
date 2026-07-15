@@ -128,7 +128,6 @@ const LogViewer: React.FC<Props> = ({
   }, [sections]);
 
   const [downloadAllStatus, setDownloadAllStatus] = React.useState(false);
-  const [showShortcutHint, setShowShortcutHint] = React.useState(false);
 
   const downloadLogs = () => {
     if (!downloadData) return;
@@ -192,13 +191,13 @@ const LogViewer: React.FC<Props> = ({
         <div
           ref={fullscreenRef}
           style={{ height: isFullscreen ? '100vh' : '100%' }}
-          className={classNames('log-viewer__container', 'pf-v5-c-log-viewer', {
+          className={classNames('log-viewer__container', 'pf-v6-c-log-viewer', {
             'pf-m-dark': logTheme === 'dark',
             'log-viewer--light': logTheme === 'light',
           })}
         >
           {/* Toolbar */}
-          <div className="pf-v5-c-log-viewer__header">
+          <div className="pf-v6-c-log-viewer__header">
             <Toolbar>
               <ToolbarContent
                 className={classNames({
@@ -218,7 +217,7 @@ const LogViewer: React.FC<Props> = ({
                     </ToolbarItem>
                   </ToolbarGroup>
                 )}
-                <ToolbarGroup align={{ default: 'alignRight' }}>
+                <ToolbarGroup align={{ default: 'alignEnd' }}>
                   <ToolbarItem>
                     <Checkbox
                       id={themeCheckboxId}
@@ -229,7 +228,7 @@ const LogViewer: React.FC<Props> = ({
                   </ToolbarItem>
                   <ToolbarItem variant="separator" className="log-viewer__divider" />
                   <ToolbarItem>
-                    <Button variant="link" onClick={downloadLogs} isInline>
+                    <Button variant="link" onClick={downloadLogs}>
                       <DownloadIcon className="log-viewer__icon" />
                       Download
                     </Button>
@@ -242,7 +241,6 @@ const LogViewer: React.FC<Props> = ({
                           variant="link"
                           onClick={startDownloadAll}
                           isDisabled={downloadAllStatus}
-                          isInline
                         >
                           <DownloadIcon className="log-viewer__icon" />
                           {downloadAllLabel}
@@ -253,8 +251,8 @@ const LogViewer: React.FC<Props> = ({
                     </>
                   )}
                   {fullscreenToggle && isFullscreenSupported && (
-                    <ToolbarItem spacer={{ default: 'spacerMd' }}>
-                      <Button variant="link" onClick={fullscreenToggle} isInline>
+                    <ToolbarItem gap={{ default: 'gapMd' }}>
+                      <Button variant="link" onClick={fullscreenToggle}>
                         {isFullscreen ? (
                           <>
                             <CompressIcon className="log-viewer__icon" />
@@ -273,8 +271,9 @@ const LogViewer: React.FC<Props> = ({
                   <ToolbarItem>
                     <Popover
                       aria-label="Keyboard shortcuts"
-                      isVisible={showShortcutHint}
-                      shouldClose={() => setShowShortcutHint(false)}
+                      appendTo={() =>
+                        document.getElementById('hacDev-modal-container') || document.body
+                      }
                       bodyContent={
                         <KeyboardShortcutHint
                           shortcuts={LOG_VIEWER_SHORTCUTS}
@@ -285,12 +284,10 @@ const LogViewer: React.FC<Props> = ({
                       hasAutoWidth
                     >
                       <Button
+                        icon={<OutlinedKeyboardIcon />}
                         variant="plain"
                         aria-label="Show keyboard shortcuts"
-                        onClick={() => setShowShortcutHint((prev) => !prev)}
-                      >
-                        <OutlinedKeyboardIcon />
-                      </Button>
+                      />
                     </Popover>
                   </ToolbarItem>
                 </ToolbarGroup>

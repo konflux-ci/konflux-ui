@@ -14,7 +14,7 @@ const FormBody: React.FC<
 > = ({ children, className, style, disablePaneBody = false, flexLayout = false, ...props }) => (
   <div
     {...props}
-    className={classNames('pf-v5-c-form', { 'pane-body': !disablePaneBody }, className)}
+    className={classNames('pf-v6-c-form', { 'pane-body': !disablePaneBody }, className)}
     style={
       flexLayout
         ? { display: 'flex', flex: 1, flexDirection: 'column', paddingBottom: 0, ...(style ?? {}) }

@@ -49,10 +49,10 @@ const ReleaseOverviewTab: React.FC = () => {
 
   return (
     <>
-      <Title headingLevel="h4" className="pf-v5-c-title pf-v5-u-mt-lg pf-v5-u-mb-lg" size="lg">
+      <Title headingLevel="h4" className="pf-v6-c-title pf-v6-u-mt-lg pf-v6-u-mb-lg" size="lg">
         Release details
       </Title>
-      <Flex className="pf-v5-u-py-lg">
+      <Flex className="pf-v6-u-py-lg">
         <FlexItem flex={{ default: 'flex_3' }}>
           <DescriptionList
             data-test="release-details"

@@ -34,7 +34,7 @@ export const pipelineRunTableColumnClasses = {
   snapshot: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-15',
   trigger: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-10',
   reference: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-15',
-  kebab: 'pf-v5-c-table__action',
+  kebab: 'pf-v6-c-table__action',
 };
 
 const createPipelineRunListHeader =

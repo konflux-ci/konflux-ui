@@ -24,9 +24,7 @@ export const useSectionFold = (sections: readonly LogSection[]) => {
   sectionsRef.current = sections;
 
   const prevSectionCountRef = React.useRef(sections.length);
-  const prevCompletionRef = React.useRef<boolean[]>(
-    sections.map((s) => s.isCompleted ?? false),
-  );
+  const prevCompletionRef = React.useRef<boolean[]>(sections.map((s) => s.isCompleted ?? false));
 
   React.useEffect(() => {
     if (!hasSections) {

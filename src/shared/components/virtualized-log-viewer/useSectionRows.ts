@@ -29,10 +29,7 @@ export const useSectionRows = (
   sections: readonly NormalizedLogSection[],
   expandedSections: Set<number>,
 ): SectionRowsResult => {
-  const allLines = React.useMemo(
-    () => sections.flatMap((s) => s.lines),
-    [sections],
-  );
+  const allLines = React.useMemo(() => sections.flatMap((s) => s.lines), [sections]);
 
   return React.useMemo(() => {
     if (sections.length === 0) return EMPTY_SECTION_ROWS;

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, Link, useParams } from 'react-router-dom';
-import { Bullseye, Spinner, Text, TextVariants } from '@patternfly/react-core';
+import { Bullseye, Spinner, Content, ContentVariants } from '@patternfly/react-core';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { useIntegrationTestScenario } from '../../../hooks/useIntegrationTestScenarios';
 import { IntegrationTestScenarioModel } from '../../../models';
@@ -66,9 +66,9 @@ const IntegrationTestDetailsView: React.FC<React.PropsWithChildren> = () => {
           },
         ]}
         title={
-          <Text component={TextVariants.h2}>
+          <Content component={ContentVariants.h2}>
             <b data-test="test-name">{integrationTest.metadata.name}</b>
-          </Text>
+          </Content>
         }
         actions={[
           {

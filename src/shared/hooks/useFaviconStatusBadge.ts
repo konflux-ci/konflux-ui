@@ -1,9 +1,5 @@
 import * as React from 'react';
-import {
-  applyFaviconBadge,
-  readFaviconHref,
-  restoreFaviconHref,
-} from '~/shared/utils';
+import { applyFaviconBadge, readFaviconHref, restoreFaviconHref } from '~/shared/utils';
 
 /**
  * Updates the browser tab favicon with a colored status badge overlay.

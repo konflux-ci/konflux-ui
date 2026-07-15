@@ -279,7 +279,7 @@ describe('CommitsListViewV2', () => {
     expect(
       screen
         .queryAllByRole('button', { name: TEXT_SEARCH_TYPES.NAME })
-        .find((button) => button.classList.contains('pf-v5-c-menu-toggle')),
+        .find((button) => button.classList.contains('pf-v6-c-menu-toggle')),
     ).toBeUndefined();
     expect(screen.getByPlaceholderText('Filter by name...')).toBeVisible();
   });
@@ -289,7 +289,7 @@ describe('CommitsListViewV2', () => {
     expect(
       screen
         .getAllByRole('button', { name: TEXT_SEARCH_TYPES.NAME })
-        .find((button) => button.classList.contains('pf-v5-c-menu-toggle')),
+        .find((button) => button.classList.contains('pf-v6-c-menu-toggle')),
     ).toBeVisible();
     expect(screen.queryByRole('button', { name: 'Version filter menu' })).not.toBeInTheDocument();
   });
@@ -421,7 +421,7 @@ describe('CommitsListViewV2', () => {
     const table = screen.getByRole('table', { name: 'table' });
     const statusSortButton = within(table)
       .getAllByRole('button', { name: /status/i })
-      .find((button) => button.classList.contains('pf-v5-c-table__button'));
+      .find((button) => button.classList.contains('pf-v6-c-table__button'));
     expect(statusSortButton).toBeDefined();
     fireEvent.click(statusSortButton);
 

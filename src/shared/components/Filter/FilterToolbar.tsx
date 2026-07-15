@@ -11,7 +11,7 @@ import { SwitchableSearchFilter } from './controls/SwitchableSearchFilter';
 /** Configuration for a named toolbar group. */
 export type ToolbarGroupConfig = {
   /** PF ToolbarGroup variant. Defaults to 'filter-group'. */
-  variant?: 'filter-group' | 'icon-button-group' | 'button-group';
+  variant?: 'filter-group' | 'action-group-plain' | 'action-group';
 };
 
 /**
@@ -110,7 +110,7 @@ export const FilterToolbar = <C extends readonly FilterConfig<unknown>[]>({
       <ToolbarContent>
         {Array.from(groupedConfigs.entries()).map(([groupName, groupConfigs_]) => {
           const variant = groupName
-            ? groupConfigs[groupName]?.variant ?? 'filter-group'
+            ? (groupConfigs[groupName]?.variant ?? 'filter-group')
             : 'filter-group';
           return (
             <ToolbarGroup

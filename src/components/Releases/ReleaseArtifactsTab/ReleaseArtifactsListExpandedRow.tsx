@@ -5,8 +5,8 @@ import {
   DescriptionListTerm,
   Stack,
   StackItem,
-  Text,
-  TextVariants,
+  Content,
+  ContentVariants,
 } from '@patternfly/react-core';
 import { ExpandableRowContent, Tr } from '@patternfly/react-table';
 import { TableData } from '../../../shared';
@@ -31,12 +31,12 @@ export const ReleaseArtifactsListExpandedRow: React.FC<Props> = ({ releaseArtifa
               <Stack>
                 {releaseArtifactImage.urls ? (
                   releaseArtifactImage.urls.map((url: string) => (
-                    <StackItem key={url} style={{ marginTop: 'var(--pf-v5-global--spacer--sm)' }}>
+                    <StackItem key={url} style={{ marginTop: 'var(--pf-t--global--spacer--sm)' }}>
                       <ExternalLink href={getImageLink(url)} text={url} />
                     </StackItem>
                   ))
                 ) : (
-                  <Text component={TextVariants.p}> - </Text>
+                  <Content component={ContentVariants.p}> - </Content>
                 )}
               </Stack>
             </DescriptionListDescription>

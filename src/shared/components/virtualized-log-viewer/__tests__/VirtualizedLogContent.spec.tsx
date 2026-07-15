@@ -85,7 +85,7 @@ describe('VirtualizedLogContent Integration Tests', () => {
     it('should render measurement element for virtualization', () => {
       renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
 
-      const measureElement = document.querySelector('.pf-v5-c-log-viewer__list-item');
+      const measureElement = document.querySelector('.pf-v6-c-log-viewer__list-item');
       expect(measureElement).toBeInTheDocument();
       expect(measureElement).toHaveStyle({
         position: 'absolute',
@@ -98,14 +98,14 @@ describe('VirtualizedLogContent Integration Tests', () => {
     it('should render virtualized items with real virtualizer', () => {
       renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
 
-      const items = document.querySelectorAll('.pf-v5-c-log-viewer__list-item');
+      const items = document.querySelectorAll('.pf-v6-c-log-viewer__list-item');
       expect(items.length).toBeGreaterThan(0);
     });
 
     it('should apply positioning styles to virtual items', () => {
       renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
 
-      const items = document.querySelectorAll('.pf-v5-c-log-viewer__list-item');
+      const items = document.querySelectorAll('.pf-v6-c-log-viewer__list-item');
       // Virtual items should have positioning (either absolute position or transform)
       const itemsWithPositioning = Array.from(items).filter((item) => {
         if (!(item instanceof HTMLElement)) return false;
@@ -118,9 +118,11 @@ describe('VirtualizedLogContent Integration Tests', () => {
 
     it('should efficiently handle large datasets with virtualization', () => {
       const longData = Array.from({ length: 1000 }, (_, i) => `line ${i + 1}`).join('\n');
-      renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} sections={[singleLogSection(longData)]} />);
+      renderWithQueryClientAndRouter(
+        <VirtualizedLogContent {...defaultProps} sections={[singleLogSection(longData)]} />,
+      );
 
-      const items = document.querySelectorAll('.pf-v5-c-log-viewer__list-item');
+      const items = document.querySelectorAll('.pf-v6-c-log-viewer__list-item');
       // Should only render visible items, not all 1000
       expect(items.length).toBeLessThan(1000);
       expect(items.length).toBeGreaterThan(0);
@@ -175,10 +177,13 @@ describe('VirtualizedLogContent Integration Tests', () => {
     it('should display non-breaking space for truly empty lines', () => {
       const dataWithEmptyLine = 'line 1\n\nline 3';
       const { container } = renderWithQueryClientAndRouter(
-        <VirtualizedLogContent {...defaultProps} sections={[singleLogSection(dataWithEmptyLine)]} />,
+        <VirtualizedLogContent
+          {...defaultProps}
+          sections={[singleLogSection(dataWithEmptyLine)]}
+        />,
       );
 
-      const textElements = container.querySelectorAll('.pf-v5-c-log-viewer__text');
+      const textElements = container.querySelectorAll('.pf-v6-c-log-viewer__text');
       // Find the empty line element (should contain only non-breaking space)
       const emptyLineElement = Array.from(textElements).find((el) => el.textContent === '\u00A0');
       expect(emptyLineElement).toBeInTheDocument();
@@ -195,10 +200,14 @@ describe('VirtualizedLogContent Integration Tests', () => {
 
     it('should highlight search matches in log content', () => {
       renderWithQueryClientAndRouter(
-        <VirtualizedLogContent {...defaultProps} sections={[singleLogSection('error on line 1')]} searchText="error" />,
+        <VirtualizedLogContent
+          {...defaultProps}
+          sections={[singleLogSection('error on line 1')]}
+          searchText="error"
+        />,
       );
 
-      const marks = document.querySelectorAll('mark.pf-v5-c-log-viewer__string.pf-m-match');
+      const marks = document.querySelectorAll('mark.pf-v6-c-log-viewer__string.pf-m-match');
       expect(marks.length).toBeGreaterThan(0);
     });
 
@@ -218,10 +227,14 @@ describe('VirtualizedLogContent Integration Tests', () => {
 
     it('should handle multiple matches in single line', () => {
       renderWithQueryClientAndRouter(
-        <VirtualizedLogContent {...defaultProps} sections={[singleLogSection('error error error')]} searchText="error" />,
+        <VirtualizedLogContent
+          {...defaultProps}
+          sections={[singleLogSection('error error error')]}
+          searchText="error"
+        />,
       );
 
-      const marks = document.querySelectorAll('mark.pf-v5-c-log-viewer__string.pf-m-match');
+      const marks = document.querySelectorAll('mark.pf-v6-c-log-viewer__string.pf-m-match');
       expect(marks.length).toBe(3);
     });
 
@@ -234,7 +247,7 @@ describe('VirtualizedLogContent Integration Tests', () => {
         />,
       );
 
-      const marks = container.querySelectorAll('mark.pf-v5-c-log-viewer__string.pf-m-match');
+      const marks = container.querySelectorAll('mark.pf-v6-c-log-viewer__string.pf-m-match');
       // Syntax highlighting may split "[error]" into multiple tokens, creating multiple marks
       // but the combined text should be "[error]" and should NOT match the standalone "error"
       expect(marks.length).toBeGreaterThan(0);
@@ -255,10 +268,14 @@ describe('VirtualizedLogContent Integration Tests', () => {
 
     it('should be case insensitive in search', () => {
       renderWithQueryClientAndRouter(
-        <VirtualizedLogContent {...defaultProps} sections={[singleLogSection('ERROR Warning error')]} searchText="error" />,
+        <VirtualizedLogContent
+          {...defaultProps}
+          sections={[singleLogSection('ERROR Warning error')]}
+          searchText="error"
+        />,
       );
 
-      const marks = document.querySelectorAll('mark.pf-v5-c-log-viewer__string.pf-m-match');
+      const marks = document.querySelectorAll('mark.pf-v6-c-log-viewer__string.pf-m-match');
       // Should match both "ERROR" and "error"
       expect(marks.length).toBe(2);
     });
@@ -309,9 +326,11 @@ describe('VirtualizedLogContent Integration Tests', () => {
 
     it('should handle very long lines without breaking', () => {
       const longLine = 'a'.repeat(5000);
-      renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} sections={[singleLogSection(longLine)]} />);
+      renderWithQueryClientAndRouter(
+        <VirtualizedLogContent {...defaultProps} sections={[singleLogSection(longLine)]} />,
+      );
 
-      const textElement = document.querySelector('.pf-v5-c-log-viewer__text');
+      const textElement = document.querySelector('.pf-v6-c-log-viewer__text');
       expect(textElement).toBeInTheDocument();
     });
 
@@ -346,10 +365,13 @@ describe('VirtualizedLogContent Integration Tests', () => {
     it('should preserve empty lines with non-breaking space', () => {
       const dataWithEmptyLines = 'line 1\n\nline 3\n\n\nline 6';
       const { container } = renderWithQueryClientAndRouter(
-        <VirtualizedLogContent {...defaultProps} sections={[singleLogSection(dataWithEmptyLines)]} />,
+        <VirtualizedLogContent
+          {...defaultProps}
+          sections={[singleLogSection(dataWithEmptyLines)]}
+        />,
       );
 
-      const textElements = container.querySelectorAll('.pf-v5-c-log-viewer__text');
+      const textElements = container.querySelectorAll('.pf-v6-c-log-viewer__text');
       expect(textElements.length).toBeGreaterThan(0);
 
       // Empty lines should contain non-breaking space (\u00A0)
@@ -366,17 +388,21 @@ describe('VirtualizedLogContent Integration Tests', () => {
     it('should preserve empty lines when searching', () => {
       const dataWithEmptyLines = 'error\n\nerror';
       const { container } = renderWithQueryClientAndRouter(
-        <VirtualizedLogContent {...defaultProps} sections={[singleLogSection(dataWithEmptyLines)]} searchText="error" />,
+        <VirtualizedLogContent
+          {...defaultProps}
+          sections={[singleLogSection(dataWithEmptyLines)]}
+          searchText="error"
+        />,
       );
 
-      const textElements = container.querySelectorAll('.pf-v5-c-log-viewer__text');
+      const textElements = container.querySelectorAll('.pf-v6-c-log-viewer__text');
 
       // Find the empty line element (should contain only non-breaking space)
       const emptyLineElement = Array.from(textElements).find((el) => el.textContent === '\u00A0');
       expect(emptyLineElement).toBeInTheDocument();
 
       // Should have search highlights for the two "error" lines
-      const marks = container.querySelectorAll('mark.pf-v5-c-log-viewer__string.pf-m-match');
+      const marks = container.querySelectorAll('mark.pf-v6-c-log-viewer__string.pf-m-match');
       expect(marks.length).toBe(2);
     });
   });
@@ -389,11 +415,11 @@ describe('VirtualizedLogContent Integration Tests', () => {
         <VirtualizedLogContent {...defaultProps} sections={[singleLogSection(longLine)]} />,
       );
 
-      const logText = container.querySelector('.pf-v5-c-log-viewer__text');
+      const logText = container.querySelector('.pf-v6-c-log-viewer__text');
       expect(logText).toBeInTheDocument();
 
       // Verify element has the correct class for styling
-      expect(logText?.className).toContain('pf-v5-c-log-viewer__text');
+      expect(logText?.className).toContain('pf-v6-c-log-viewer__text');
     });
 
     it('should break long words/URLs with word-break', () => {
@@ -436,7 +462,7 @@ Another short line`;
       const scrollContainer = container.querySelector('.log-content__list');
       expect(scrollContainer).toBeInTheDocument();
 
-      const listItems = scrollContainer?.querySelectorAll('.pf-v5-c-log-viewer__list-item');
+      const listItems = scrollContainer?.querySelectorAll('.pf-v6-c-log-viewer__list-item');
       expect(listItems).toBeDefined();
       expect(listItems?.length).toBeGreaterThan(0);
 
@@ -593,7 +619,9 @@ Another short line`;
       window.location.hash = '#L100';
       const shortData = Array.from({ length: 10 }, (_, i) => `line ${i + 1}`).join('\n');
 
-      renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} sections={[singleLogSection(shortData)]} />);
+      renderWithQueryClientAndRouter(
+        <VirtualizedLogContent {...defaultProps} sections={[singleLogSection(shortData)]} />,
+      );
 
       // Component should render without errors
       const listElement = document.querySelector('.log-content__list');
@@ -607,7 +635,9 @@ Another short line`;
       window.location.hash = '#L50-L100';
       const shortData = Array.from({ length: 10 }, (_, i) => `line ${i + 1}`).join('\n');
 
-      renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} sections={[singleLogSection(shortData)]} />);
+      renderWithQueryClientAndRouter(
+        <VirtualizedLogContent {...defaultProps} sections={[singleLogSection(shortData)]} />,
+      );
 
       // Component should render without errors even with out-of-range hash
       const listElement = document.querySelector('.log-content__list');
@@ -627,7 +657,9 @@ Another short line`;
 
       // Update with actual data
       const dataWithLines = Array.from({ length: 10 }, (_, i) => `line ${i + 1}`).join('\n');
-      rerender(<VirtualizedLogContent {...defaultProps} sections={[singleLogSection(dataWithLines)]} />);
+      rerender(
+        <VirtualizedLogContent {...defaultProps} sections={[singleLogSection(dataWithLines)]} />,
+      );
 
       // Should now have content and handle the hash
       listElement = document.querySelector('.log-content__list');
@@ -669,14 +701,16 @@ Another short line`;
       window.location.hash = '#L500';
       const longData = Array.from({ length: 1000 }, (_, i) => `line ${i + 1}`).join('\n');
 
-      renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} sections={[singleLogSection(longData)]} />);
+      renderWithQueryClientAndRouter(
+        <VirtualizedLogContent {...defaultProps} sections={[singleLogSection(longData)]} />,
+      );
 
       // Should render without performance issues
       const listElement = document.querySelector('.log-content__list');
       expect(listElement).toBeInTheDocument();
 
       // Should only render visible items due to virtualization
-      const items = document.querySelectorAll('.pf-v5-c-log-viewer__list-item');
+      const items = document.querySelectorAll('.pf-v6-c-log-viewer__list-item');
       expect(items.length).toBeLessThan(1000);
     });
 

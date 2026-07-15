@@ -1,5 +1,5 @@
 import React from 'react';
-import { Text } from '@patternfly/react-core';
+import { Content } from '@patternfly/react-core';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { normalizeSection } from './log-viewer-utils';
 import { SectionedVirtualRow } from './SectionedVirtualRow';
@@ -107,7 +107,11 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
     return { rowIndex: flatLineIndex, matchIndex: currentSearchMatch.matchIndex };
   }, [currentSearchMatch, searchLineToFlatLineIndex]);
 
-  const renderLine = useLineRenderer({ tokenizeLine, searchRegex, currentSearchMatch: contentSearchMatch });
+  const renderLine = useLineRenderer({
+    tokenizeLine,
+    searchRegex,
+    currentSearchMatch: contentSearchMatch,
+  });
 
   React.useEffect(() => {
     if (!isMultiSection || !expandSearchTargetRow || expandSearchTargetRow <= 0) return;
@@ -284,12 +288,12 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
     <div className="log-content__container">
       <div
         ref={measureCallbackRef}
-        className="pf-v5-c-log-viewer__list-item"
+        className="pf-v6-c-log-viewer__list-item"
         style={{ position: 'absolute', visibility: 'hidden', pointerEvents: 'none' }}
       >
-        <Text component="small" className="pf-v5-c-log-viewer__text">
+        <Content component="small" className="pf-v6-c-log-viewer__text">
           M
-        </Text>
+        </Content>
       </div>
 
       <div

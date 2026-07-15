@@ -88,7 +88,7 @@ export const applyFaviconBadge = async (
     const dataUrl = compositeFaviconWithBadge(img, color);
     if (dataUrl && !isCancelled?.()) {
       setFaviconHref(dataUrl);
-    } 
+    }
   } catch {
     restoreFaviconHref(baseHref);
   }

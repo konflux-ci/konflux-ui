@@ -1,6 +1,6 @@
-import { global_danger_color_100 as redColor } from '@patternfly/react-tokens/dist/js/global_danger_color_100';
-import { global_palette_black_400 as grayColor } from '@patternfly/react-tokens/dist/js/global_palette_black_400';
-import { global_palette_blue_300 as blueColor } from '@patternfly/react-tokens/dist/js/global_palette_blue_300';
+import { t_global_color_severity_undefined_100 as grayColor } from '@patternfly/react-tokens/dist/js/t_global_color_severity_undefined_100';
+import { t_global_icon_color_status_danger_default as redColor } from '@patternfly/react-tokens/dist/js/t_global_icon_color_status_danger_default';
+import { t_global_icon_color_status_info_default as blueColor } from '@patternfly/react-tokens/dist/js/t_global_icon_color_status_info_default';
 import {
   applyFaviconBadge,
   compositeFaviconWithBadge,

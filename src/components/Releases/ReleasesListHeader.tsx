@@ -27,7 +27,7 @@ export const releasesTableColumnClasses = {
   managedPipelineRun: 'pf-m-hidden    pf-m-width-10-on-xl pf-m-visible-on-xl',
   tenantPipelineRun: 'pf-m-hidden    pf-m-width-10-on-xl pf-m-visible-on-xl',
   finalPipelineRun: 'pf-m-hidden    pf-m-width-10-on-xl pf-m-visible-on-xl',
-  kebab: 'pf-v5-c-table__action',
+  kebab: 'pf-v6-c-table__action',
 };
 
 const releaseColumns = RELEASE_COLUMNS_DEFINITIONS.map((col) => ({

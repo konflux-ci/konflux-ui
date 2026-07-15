@@ -17,7 +17,7 @@ const renderFilter = (config: BooleanFilterConfig = defaultConfig) =>
 describe('BooleanFilter', () => {
   it('renders switch with label', () => {
     renderFilter();
-    expect(screen.getByRole('checkbox', { name: 'Active' })).toBeInTheDocument();
+    expect(screen.getByRole('switch', { name: 'Active' })).toBeInTheDocument();
   });
 
   it('has data-test="boolean-filter-{param}" attribute', () => {
@@ -27,7 +27,7 @@ describe('BooleanFilter', () => {
 
   it('is unchecked by default', () => {
     renderFilter();
-    expect(screen.getByRole('checkbox', { name: 'Active' })).not.toBeChecked();
+    expect(screen.getByRole('switch', { name: 'Active' })).not.toBeChecked();
   });
 
   it('is checked when URL param is true', () => {
@@ -36,13 +36,13 @@ describe('BooleanFilter', () => {
         <BooleanFilter config={defaultConfig} />
       </NuqsTestingAdapter>,
     );
-    expect(screen.getByRole('checkbox', { name: 'Active' })).toBeChecked();
+    expect(screen.getByRole('switch', { name: 'Active' })).toBeChecked();
   });
 
   it('toggles on when clicked', async () => {
     const user = userEvent.setup();
     renderFilter();
-    const toggle = screen.getByRole('checkbox', { name: 'Active' });
+    const toggle = screen.getByRole('switch', { name: 'Active' });
     expect(toggle).not.toBeChecked();
     await user.click(toggle);
     expect(toggle).toBeChecked();
@@ -55,7 +55,7 @@ describe('BooleanFilter', () => {
         <BooleanFilter config={defaultConfig} />
       </NuqsTestingAdapter>,
     );
-    const toggle = screen.getByRole('checkbox', { name: 'Active' });
+    const toggle = screen.getByRole('switch', { name: 'Active' });
     expect(toggle).toBeChecked();
     await user.click(toggle);
     expect(toggle).not.toBeChecked();
