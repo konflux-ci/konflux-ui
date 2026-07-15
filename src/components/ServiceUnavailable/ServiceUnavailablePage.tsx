@@ -6,14 +6,16 @@ import {
   EmptyState,
   EmptyStateBody,
   EmptyStateFooter,
-  EmptyStateHeader,
-  EmptyStateIcon,
   EmptyStateVariant,
 } from '@patternfly/react-core';
 import { ExclamationCircleIcon } from '@patternfly/react-icons/dist/esm/icons/exclamation-circle-icon';
 import { css } from '@patternfly/react-styles';
 
 import '~/shared/components/empty-state/EmptyState.scss';
+
+const EmptyStateImg = () => (
+  <ExclamationCircleIcon className="app-empty-state__icon m-is-error" role="img" />
+);
 
 const ServiceUnavailablePage: React.FC<{ errorMessage: string }> = ({ errorMessage }) => {
   const navigate = useNavigate();
@@ -23,17 +25,10 @@ const ServiceUnavailablePage: React.FC<{ errorMessage: string }> = ({ errorMessa
       className={css('app-empty-state')}
       variant={EmptyStateVariant.full}
       data-test="service-unavailable-state"
+      titleText="Service unavailable"
+      icon={EmptyStateImg}
+      headingLevel="h2"
     >
-      <EmptyStateHeader
-        titleText="Service unavailable"
-        icon={
-          <EmptyStateIcon
-            className={css('app-empty-state__icon m-is-error')}
-            icon={ExclamationCircleIcon}
-          />
-        }
-        headingLevel="h2"
-      />
       <EmptyStateBody>{errorMessage}</EmptyStateBody>
       <EmptyStateFooter>
         <Button

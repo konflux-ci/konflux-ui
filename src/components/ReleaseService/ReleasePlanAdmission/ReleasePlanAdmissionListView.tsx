@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Bullseye, PageSection, PageSectionVariants, Spinner } from '@patternfly/react-core';
+import { Bullseye, PageSection, Spinner } from '@patternfly/react-core';
 import { FilterContext, FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 import { getErrorState } from '~/shared/utils/error-utils';
@@ -50,7 +50,7 @@ const ReleasePlanAdmissionListView: React.FC<React.PropsWithChildren<unknown>> =
   }
 
   return (
-    <PageSection padding={{ default: 'noPadding' }} variant={PageSectionVariants.light} isFilled>
+    <PageSection hasBodyWrapper={false} padding={{ default: 'noPadding' }} isFilled>
       <BaseTextFilterToolbar
         text={nameFilter}
         label="name"

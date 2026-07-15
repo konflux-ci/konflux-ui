@@ -6,10 +6,7 @@ import { useComponents } from '~/hooks/useComponents';
 import { useTaskRunsV2 } from '~/hooks/useTaskRunsV2';
 import { useNamespace } from '~/shared/providers/Namespace';
 import type { ComponentKind, TaskRunKind } from '~/types';
-import {
-  CONFORMA_RESULT_STATUS,
-  type ConformaResult,
-} from '~/types/conforma';
+import { CONFORMA_RESULT_STATUS, type ConformaResult } from '~/types/conforma';
 import { resolveConformaResultFromTaskRun } from '../conforma-fetchers';
 import { useApplicationConformaResults } from '../useApplicationConformaResults';
 import '@testing-library/jest-dom';
@@ -32,8 +29,8 @@ jest.mock('~/feature-flags/hooks', () => ({
 
 jest.mock('../conforma-fetchers', () => ({
   resolveConformaResultFromTaskRun: jest.fn(),
-  filterInvalidImageConformaRows: jest.requireActual('../conforma-fetchers')
-    .filterInvalidImageConformaRows,
+  filterInvalidImageConformaRows:
+    jest.requireActual('../conforma-fetchers').filterInvalidImageConformaRows,
   mapConformaResultData: jest.requireActual('../conforma-fetchers').mapConformaResultData,
 }));
 
@@ -510,8 +507,20 @@ describe('useApplicationConformaResults', () => {
 
   it('picks the latest TaskRun per component by timestamp', async () => {
     const components = [createComponent('comp-a')];
-    const olderTr = createSecurityTaskRun('tr-old', 'comp-a', 'pod-old', '2025-01-01T00:00:00Z', 'pr-old');
-    const newerTr = createSecurityTaskRun('tr-new', 'comp-a', 'pod-new', '2026-06-01T00:00:00Z', 'pr-new');
+    const olderTr = createSecurityTaskRun(
+      'tr-old',
+      'comp-a',
+      'pod-old',
+      '2025-01-01T00:00:00Z',
+      'pr-old',
+    );
+    const newerTr = createSecurityTaskRun(
+      'tr-new',
+      'comp-a',
+      'pod-new',
+      '2026-06-01T00:00:00Z',
+      'pr-new',
+    );
     mockUseComponents.mockReturnValue([components, true, undefined]);
     mockUseTaskRunsV2.mockReturnValue([[olderTr, newerTr], true, undefined, jest.fn(), {}]);
     mockResolveConforma.mockResolvedValue(mockConformaResult);

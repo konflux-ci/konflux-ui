@@ -29,6 +29,16 @@ const TaskDescriptionGroup: React.FC<{ content: string }> = ({ content }) => (
   </DescriptionListGroup>
 );
 
+const getTaskDescription = (
+  taskRun: TaskRunKind | undefined,
+  pipelineTaskDescription: string | undefined,
+): string => {
+  const taskSpecDescription = taskRun?.status?.taskSpec?.description?.trim();
+  const trimmedPipelineDescription = pipelineTaskDescription?.trim();
+
+  return taskSpecDescription || trimmedPipelineDescription || '-';
+};
+
 const TaskRunDetails: React.FC<React.PropsWithChildren<Props>> = ({
   taskRun,
   status,
@@ -36,6 +46,7 @@ const TaskRunDetails: React.FC<React.PropsWithChildren<Props>> = ({
 }) => {
   const results = isTaskV1Beta1(taskRun) ? taskRun?.status?.taskResults : taskRun?.status?.results;
   const specParams = taskRun?.spec?.params;
+  const taskDescription = getTaskDescription(taskRun, description);
   return (
     <>
       {status !== runStatus.Skipped ? (
@@ -56,17 +67,17 @@ const TaskRunDetails: React.FC<React.PropsWithChildren<Props>> = ({
               </DescriptionListDescription>
             </DescriptionListGroup>
           </DescriptionList>
-          <DescriptionList className="pf-v5-u-mt-lg">
-            <TaskDescriptionGroup content={taskRun?.status?.taskSpec?.description || '-'} />
+          <DescriptionList className="pf-v6-u-mt-lg">
+            <TaskDescriptionGroup content={taskDescription} />
             <ScanDescriptionListGroup taskRuns={[taskRun]} hideIfNotFound />
           </DescriptionList>
         </>
       ) : (
         <>
           <p>This task was skipped.</p>
-          {description?.trim() ? (
-            <DescriptionList className="pf-v5-u-mt-lg">
-              <TaskDescriptionGroup content={description} />
+          {taskDescription !== '-' ? (
+            <DescriptionList className="pf-v6-u-mt-lg">
+              <TaskDescriptionGroup content={taskDescription} />
             </DescriptionList>
           ) : null}
         </>
@@ -80,7 +91,7 @@ const TaskRunDetails: React.FC<React.PropsWithChildren<Props>> = ({
 
       {specParams?.length && (
         <>
-          <Divider style={{ padding: 'var(--pf-v5-global--spacer--lg) 0' }} />
+          <Divider className="pf-v6-u-mt-lg pf-v6-u-mb-lg" />
           <RunParamsList params={specParams} compressed />
         </>
       )}

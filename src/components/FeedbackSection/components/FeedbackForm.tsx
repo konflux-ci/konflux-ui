@@ -5,10 +5,9 @@ import {
   Form,
   FormGroup,
   PanelFooter,
-  Text,
-  TextContent,
+  Content,
   TextInput,
-  TextVariants,
+  ContentVariants,
   Radio,
   FormHelperText,
   HelperText,
@@ -40,15 +39,15 @@ const FeedbackSection: React.FC<FeedbackSectionProps> = ({ onClose, onBack, onSu
   return (
     <>
       <div className="feedback-modal__panel-header">
-        <TextContent>
-          <Text component={TextVariants.h1}>Share feedback</Text>
-        </TextContent>
+        <Content>
+          <Content component={ContentVariants.h1}>Share feedback</Content>
+        </Content>
 
-        <TextContent className="feedback-modal__spacer-bottom">
-          <Text component={TextVariants.small}>
+        <Content className="feedback-modal__spacer-bottom">
+          <Content component={ContentVariants.small}>
             Please share your experience using Konflux directly to the product team
-          </Text>
-        </TextContent>
+          </Content>
+        </Content>
       </div>
       <Form
         className="feedback-modal__form"
@@ -62,12 +61,12 @@ const FeedbackSection: React.FC<FeedbackSectionProps> = ({ onClose, onBack, onSu
             label={
               <>
                 How happy are you with recent experience using Konflux
-                <TextContent>
-                  <Text component={TextVariants.p}>
+                <Content>
+                  <Content component={ContentVariants.p}>
                     Please rate using the following scale, 5 - very satisfied to 1 - very
                     dissatisfied.
-                  </Text>
-                </TextContent>
+                  </Content>
+                </Content>
               </>
             }
           >

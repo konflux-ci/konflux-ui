@@ -108,9 +108,7 @@ describe('ConformaGroupedTable', () => {
 
   it('shows detail sub-table when a group is expanded', () => {
     const expandedGroups = new Set(['Missing CVE scan']);
-    routerRenderer(
-      <ConformaGroupedTable {...defaultProps} expandedGroups={expandedGroups} />,
-    );
+    routerRenderer(<ConformaGroupedTable {...defaultProps} expandedGroups={expandedGroups} />);
 
     expect(screen.getAllByText('api-gateway').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText('auth-service').length).toBeGreaterThanOrEqual(1);
@@ -124,9 +122,7 @@ describe('ConformaGroupedTable', () => {
 
   it('renders all column headers in expanded detail sub-table', () => {
     const expandedGroups = new Set(['Missing CVE scan']);
-    routerRenderer(
-      <ConformaGroupedTable {...defaultProps} expandedGroups={expandedGroups} />,
-    );
+    routerRenderer(<ConformaGroupedTable {...defaultProps} expandedGroups={expandedGroups} />);
 
     expect(screen.getAllByText('Image').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText('Status').length).toBeGreaterThanOrEqual(1);
@@ -142,7 +138,11 @@ describe('ConformaGroupedTable', () => {
         successes: 0,
         rows: [
           createRow({
-            images: ['quay.io/test/img@sha256:aaa', 'quay.io/test/img@sha256:bbb', 'quay.io/test/img@sha256:ccc'],
+            images: [
+              'quay.io/test/img@sha256:aaa',
+              'quay.io/test/img@sha256:bbb',
+              'quay.io/test/img@sha256:ccc',
+            ],
           }),
         ],
       },
@@ -269,10 +269,7 @@ describe('ConformaGroupedTable', () => {
         violations: 1,
         warnings: 0,
         successes: 0,
-        rows: [
-          createRow({ images: ['quay.io/test/img@sha256:abc'] }),
-          createRow({ images: [] }),
-        ],
+        rows: [createRow({ images: ['quay.io/test/img@sha256:abc'] }), createRow({ images: [] })],
       },
     ];
     const expandedGroups = new Set(['Has image rule']);

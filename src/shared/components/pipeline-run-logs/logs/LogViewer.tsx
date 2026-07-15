@@ -39,10 +39,15 @@ import {
 import { useAutoScrollWithResume } from '~/shared/components/pipeline-run-logs/logs/useAutoScrollWithResume';
 import { useLogViewerSearch } from '~/shared/components/pipeline-run-logs/logs/useLogViewerSearch';
 import { LoadingInline } from '~/shared/components/status-box/StatusBox';
-import { VirtualizedLogViewer, type LogSection } from '~/shared/components/virtualized-log-viewer';
-import { buildLines } from '~/shared/components/virtualized-log-viewer/log-viewer-utils';
+import {
+  VirtualizedLogViewer,
+  type LogSection,
+  normalizeSection,
+  useLineNumberNavigation,
+} from '~/shared/components/virtualized-log-viewer';
 import { useFullscreen } from '~/shared/hooks/fullscreen';
 import { TaskRunKind } from '~/types';
+import { prepareLogViewerContent } from './log-viewer-content';
 import LogsTaskDuration from './LogsTaskDuration';
 import { useLogViewerTheme } from './useLogViewerTheme';
 
@@ -88,16 +93,26 @@ const LogViewer: React.FC<Props> = ({
   const [logTheme, setLogTheme] = useLogViewerTheme();
   const themeCheckboxId = React.useId();
 
-  // Auto-scroll and resume button logic
+  const normalizedSections = React.useMemo(() => sections.map(normalizeSection), [sections]);
+
+  const lines = React.useMemo(
+    () => prepareLogViewerContent(normalizedSections),
+    [normalizedSections],
+  );
+
+  // Tracks the line currently targeted via URL hash navigation (e.g. `#L20000`). Computed here
+  // (rather than read from VirtualizedLogContent) so it's available in the very same render —
+  // no round-trip delay through child effects/callbacks — and used to pause auto-scroll-to-bottom
+  // so it doesn't keep fighting the scroll-to-that-line navigation as new log lines stream in.
+  const { highlightedLines: activeLineTarget } = useLineNumberNavigation();
+
   const { autoScroll, showResumeStreamButton, handleScroll, handleResumeClick } =
     useAutoScrollWithResume({
       allowAutoScroll,
+      activeLineTarget,
       onScroll: onScrollProp,
     });
 
-  const lines = React.useMemo(() => buildLines(sections), [sections]);
-
-  // Search state and context management
   const { logViewerContextValue, toolbarContextValue, scrolledRow } = useLogViewerSearch({
     lines,
     autoScroll,
@@ -105,14 +120,14 @@ const LogViewer: React.FC<Props> = ({
 
   const [isFullscreen, fullscreenRef, fullscreenToggle, isFullscreenSupported] =
     useFullscreen<HTMLDivElement>();
-  const [downloadAllStatus, setDownloadAllStatus] = React.useState(false);
-  const [showShortcutHint, setShowShortcutHint] = React.useState(false);
 
   const downloadData = React.useMemo(() => {
     return sections
       .map((s) => (s.containerName ? `${s.containerName}\n${s.data}` : s.data))
       .join('\n\n');
   }, [sections]);
+
+  const [downloadAllStatus, setDownloadAllStatus] = React.useState(false);
 
   const downloadLogs = () => {
     if (!downloadData) return;
@@ -176,13 +191,13 @@ const LogViewer: React.FC<Props> = ({
         <div
           ref={fullscreenRef}
           style={{ height: isFullscreen ? '100vh' : '100%' }}
-          className={classNames('log-viewer__container', 'pf-v5-c-log-viewer', {
+          className={classNames('log-viewer__container', 'pf-v6-c-log-viewer', {
             'pf-m-dark': logTheme === 'dark',
             'log-viewer--light': logTheme === 'light',
           })}
         >
           {/* Toolbar */}
-          <div className="pf-v5-c-log-viewer__header">
+          <div className="pf-v6-c-log-viewer__header">
             <Toolbar>
               <ToolbarContent
                 className={classNames({
@@ -202,7 +217,7 @@ const LogViewer: React.FC<Props> = ({
                     </ToolbarItem>
                   </ToolbarGroup>
                 )}
-                <ToolbarGroup align={{ default: 'alignRight' }}>
+                <ToolbarGroup align={{ default: 'alignEnd' }}>
                   <ToolbarItem>
                     <Checkbox
                       id={themeCheckboxId}
@@ -213,7 +228,7 @@ const LogViewer: React.FC<Props> = ({
                   </ToolbarItem>
                   <ToolbarItem variant="separator" className="log-viewer__divider" />
                   <ToolbarItem>
-                    <Button variant="link" onClick={downloadLogs} isInline>
+                    <Button variant="link" onClick={downloadLogs}>
                       <DownloadIcon className="log-viewer__icon" />
                       Download
                     </Button>
@@ -226,7 +241,6 @@ const LogViewer: React.FC<Props> = ({
                           variant="link"
                           onClick={startDownloadAll}
                           isDisabled={downloadAllStatus}
-                          isInline
                         >
                           <DownloadIcon className="log-viewer__icon" />
                           {downloadAllLabel}
@@ -237,8 +251,8 @@ const LogViewer: React.FC<Props> = ({
                     </>
                   )}
                   {fullscreenToggle && isFullscreenSupported && (
-                    <ToolbarItem spacer={{ default: 'spacerMd' }}>
-                      <Button variant="link" onClick={fullscreenToggle} isInline>
+                    <ToolbarItem gap={{ default: 'gapMd' }}>
+                      <Button variant="link" onClick={fullscreenToggle}>
                         {isFullscreen ? (
                           <>
                             <CompressIcon className="log-viewer__icon" />
@@ -257,8 +271,9 @@ const LogViewer: React.FC<Props> = ({
                   <ToolbarItem>
                     <Popover
                       aria-label="Keyboard shortcuts"
-                      isVisible={showShortcutHint}
-                      shouldClose={() => setShowShortcutHint(false)}
+                      appendTo={() =>
+                        document.getElementById('hacDev-modal-container') || document.body
+                      }
                       bodyContent={
                         <KeyboardShortcutHint
                           shortcuts={LOG_VIEWER_SHORTCUTS}
@@ -269,12 +284,10 @@ const LogViewer: React.FC<Props> = ({
                       hasAutoWidth
                     >
                       <Button
+                        icon={<OutlinedKeyboardIcon />}
                         variant="plain"
                         aria-label="Show keyboard shortcuts"
-                        onClick={() => setShowShortcutHint((prev) => !prev)}
-                      >
-                        <OutlinedKeyboardIcon />
-                      </Button>
+                      />
                     </Popover>
                   </ToolbarItem>
                 </ToolbarGroup>
@@ -326,9 +339,11 @@ const LogViewer: React.FC<Props> = ({
               <VirtualizedLogViewer
                 key={taskRun?.metadata?.uid || 'default'}
                 sections={sections}
+                normalizedSections={normalizedSections}
                 height={viewerHeight}
                 scrollToRow={scrolledRow}
                 onScroll={handleScroll}
+                readyToNavigate={!isLoading}
               />
             )}
           </div>

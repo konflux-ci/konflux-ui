@@ -120,7 +120,7 @@ describe('ComponentDetailTab', () => {
   it('should allow the user to edit the pipeline build plan', () => {
     renderWithQueryClientAndRouter(<ComponentDetailsTab />);
     const buildPipeline = screen.getByTestId('edit-build-pipeline');
-    const editButton = buildPipeline.getElementsByClassName('pf-v5-c-label__content')[0];
+    const editButton = buildPipeline.getElementsByClassName('pf-v6-c-label__content')[0];
     fireEvent.click(editButton);
     expect(showModalMock).toHaveBeenCalled();
   });

@@ -95,13 +95,12 @@ export const ComponentRelation: React.FC<ComponentRelationProps> = ({
       </GridItem>
       <GridItem span={1}>
         <Button
+          icon={<MinusCircleIcon />}
           id={`remove-relation-${index}`}
           variant="plain"
           onClick={onRemove}
           isDisabled={disableRemove}
-        >
-          <MinusCircleIcon />
-        </Button>
+        />
       </GridItem>
     </Grid>
   );

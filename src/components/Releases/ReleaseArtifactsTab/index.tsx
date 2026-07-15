@@ -81,11 +81,11 @@ const ReleaseArtifactsTab: React.FC = () => {
   return (
     <>
       <DetailsSection title="Release artifacts">
-        <Stack style={{ marginTop: 'var(--pf-v5-global--spacer--2xl)' }}>
+        <Stack style={{ marginTop: 'var(--pf-t--global--spacer--2xl)' }}>
           <StackItem>
             <ReleaseURLsDescriptionList release={release} />
           </StackItem>
-          <StackItem style={{ paddingTop: 'var(--pf-v5-global--spacer--xl)' }}>
+          <StackItem style={{ paddingTop: 'var(--pf-t--global--spacer--xl)' }}>
             <Title headingLevel="h5" size="md">
               Components
             </Title>

@@ -30,7 +30,7 @@ This document explains how to build list views using the shared table system in 
   |                   +-- <Row>       -- your domain ListRow component
   |                       +-- <>
   |                           +-- <TableData className="...">...</TableData>
-  |                           +-- <TableData className="pf-v5-c-table__action">
+  |                           +-- <TableData className="pf-v6-c-table__action">
   |                                 <ActionMenu />
   |                               </TableData>
   |
@@ -52,7 +52,7 @@ export const myFeatureTableColumnClasses = {
   status: 'pf-m-width-15',
   created: 'pf-m-width-20',
   description: 'pf-m-width-25',
-  kebab: 'pf-v5-c-table__action',
+  kebab: 'pf-v6-c-table__action',
 };
 
 // Sortable column indices
@@ -122,7 +122,7 @@ export default MyFeatureListRow;
 Key conventions:
 - The row renders a **React fragment** (`<>...</>`), not a `<tr>`. The `TableRow`/`VirtualBody` wraps it.
 - Every cell uses `<TableData className={columnClasses.columnName}>`.
-- The last cell is always the kebab menu with class `pf-v5-c-table__action`.
+- The last cell is always the kebab menu with class `pf-v6-c-table__action`.
 - Use `<Timestamp>` for dates, `<ActionMenu>` for actions, `<Link>` for navigation.
 
 ### Step 3: Create the List View
@@ -441,4 +441,4 @@ const getDynamicClasses = (visibleColumns: Set<MyColumnKeys>) =>
 | `pf-m-width-25` | 25% | Medium text, descriptions |
 | `pf-m-width-30` | 30% | Primary name column |
 | `pf-m-width-35` | 35% | Wide name column |
-| `pf-v5-c-table__action` | Auto | Always for the kebab/action column |
+| `pf-v6-c-table__action` | Auto | Always for the kebab/action column |

@@ -1,15 +1,5 @@
 import * as React from 'react';
-import {
-  EmptyStateBody,
-  PageSectionVariants,
-  PageSection,
-  Title,
-  TextContent,
-  Text,
-  TextVariants,
-  Flex,
-  FlexItem,
-} from '@patternfly/react-core';
+import { EmptyStateBody, Title, Content } from '@patternfly/react-core';
 import emptySnapshotImgUrl from '~/assets/Snapshots.svg';
 import ColumnManagement from '~/components/ColumnManagement/ColumnManagement';
 import { LEARN_MORE_SNAPSHOTS } from '~/consts/documentation';
@@ -109,24 +99,15 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
   }
 
   return (
-    <PageSection padding={{ default: 'noPadding' }} variant={PageSectionVariants.light} isFilled>
-      <Flex
-        justifyContent={{ default: 'justifyContentSpaceBetween' }}
-        alignItems={{ default: 'alignItemsCenter' }}
-      >
-        <FlexItem>
-          <Title size="lg" headingLevel="h3" className="pf-v5-c-title pf-v5-u-mt-lg pf-v5-u-mb-sm">
-            Snapshots
-          </Title>
-        </FlexItem>
-      </Flex>
+    <>
+      <Title size="lg" headingLevel="h3" className="pf-v6-c-title pf-v6-u-mt-lg pf-v6-u-mb-sm">
+        Snapshots
+      </Title>
 
-      <TextContent>
-        <Text component={TextVariants.p}>
-          A snapshot is a point-in-time, immutable record of an application&apos;s container images.{' '}
-          <ExternalLink href={LEARN_MORE_SNAPSHOTS}>Learn more</ExternalLink>
-        </Text>
-      </TextContent>
+      <Content>
+        A snapshot is a point-in-time, immutable record of an application&apos;s container images.{' '}
+        <ExternalLink href={LEARN_MORE_SNAPSHOTS}>Learn more</ExternalLink>
+      </Content>
 
       <TableContainer
         data={finalFilteredSnapshots}
@@ -171,7 +152,7 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
           meta={meta}
         />
       </TableContainer>
-    </PageSection>
+    </>
   );
 };
 

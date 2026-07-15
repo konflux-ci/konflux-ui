@@ -1,5 +1,5 @@
 import React from 'react';
-import { Form, PageSection, PageSectionVariants } from '@patternfly/react-core';
+import { Form, PageSection } from '@patternfly/react-core';
 import { FormikProps, useFormikContext } from 'formik';
 import isEmpty from 'lodash/isEmpty';
 import PageLayout from '../../../components/PageLayout/PageLayout';
@@ -57,7 +57,7 @@ export const UserAccessForm: React.FC<React.PropsWithChildren<Props>> = ({
         />
       }
     >
-      <PageSection isFilled variant={PageSectionVariants.light}>
+      <PageSection hasBodyWrapper={false} isFilled>
         <Form onSubmit={handleSubmit}>
           <UsernameSection disabled={!missingSubjects && edit} />
           <RoleSection />

@@ -6,11 +6,11 @@ import {
   EqualsIcon,
   UnknownIcon as PFUnknownIcon,
 } from '@patternfly/react-icons/dist/esm/icons';
-import { global_palette_black_400 as blackColor } from '@patternfly/react-tokens/dist/js/global_palette_black_400';
-import { global_palette_blue_300 as blueColor } from '@patternfly/react-tokens/dist/js/global_palette_blue_300';
-import { global_palette_gold_400 as goldColor } from '@patternfly/react-tokens/dist/js/global_palette_gold_400';
-import { global_palette_orange_300 as orangeColor } from '@patternfly/react-tokens/dist/js/global_palette_orange_300';
-import { global_palette_red_200 as redColor } from '@patternfly/react-tokens/dist/js/global_palette_red_200';
+import { t_global_color_severity_critical_100 as redColor } from '@patternfly/react-tokens/dist/js/t_global_color_severity_critical_100'; // critical
+import { t_global_color_severity_important_100 as orangeColor } from '@patternfly/react-tokens/dist/js/t_global_color_severity_important_100'; // important
+import { t_global_color_severity_minor_100 as blueColor } from '@patternfly/react-tokens/dist/js/t_global_color_severity_minor_100'; // minor
+import { t_global_color_severity_moderate_100 as goldColor } from '@patternfly/react-tokens/dist/js/t_global_color_severity_moderate_100'; // moderate
+import { t_global_color_severity_undefined_100 as blackColor } from '@patternfly/react-tokens/dist/js/t_global_color_severity_undefined_100'; // undefined
 import { ScanResults } from '../../utils/scan/scan-utils';
 
 import './ScanDetailStatus.scss';

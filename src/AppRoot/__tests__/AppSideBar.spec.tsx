@@ -61,7 +61,9 @@ describe('AppSideBar', () => {
     expect(screen.getByText('Applications').closest('li')).toHaveClass(
       'app-side-bar__nav-item--disabled',
     );
-    expect(screen.getByText('Issues').closest('li')).toHaveClass('app-side-bar__nav-item--disabled');
+    expect(screen.getByText('Issues').closest('li')).toHaveClass(
+      'app-side-bar__nav-item--disabled',
+    );
     expect(screen.getByText('Pipeline Runs').closest('li')).toHaveClass(
       'app-side-bar__nav-item--disabled',
     );

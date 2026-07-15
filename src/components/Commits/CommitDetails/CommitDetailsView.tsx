@@ -1,6 +1,6 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
-import { Bullseye, Spinner, Text, TextVariants } from '@patternfly/react-core';
+import { Bullseye, Spinner, Content, ContentVariants } from '@patternfly/react-core';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { usePipelineRunsForCommitV2 } from '~/hooks/usePipelineRunsForCommitV2';
 import { HttpError } from '~/k8s/error';
@@ -90,14 +90,14 @@ const CommitDetailsView: React.FC = () => {
           },
         ]}
         title={
-          <Text component={TextVariants.h2}>
-            <span className="pf-v5-u-mr-sm">
+          <Content component={ContentVariants.h2}>
+            <span className="pf-v6-u-mr-sm">
               <CommitIcon isPR={commit.isPullRequest} className="commit-details__title-icon" />{' '}
               <b>{commit.shaTitle}</b>
             </span>
             <StatusIconWithTextLabel status={commitStatus} />
             <FeatureFlagIndicator flags={['pipelineruns-kubearchive']} />
-          </Text>
+          </Content>
         }
         actions={[
           {

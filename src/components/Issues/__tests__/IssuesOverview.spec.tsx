@@ -63,10 +63,10 @@ describe('IssuesOverview', () => {
   it('should render the grid layout with correct structure', () => {
     const { container } = renderComponent();
 
-    const grid = container.querySelector('.pf-v5-l-grid');
+    const grid = container.querySelector('.pf-v6-l-grid');
     expect(grid).toBeInTheDocument();
 
-    const gridItems = container.querySelectorAll('.pf-v5-l-grid__item');
+    const gridItems = container.querySelectorAll('.pf-v6-l-grid__item');
     expect(gridItems.length).toBe(3);
   });
 });

@@ -2,16 +2,16 @@
   display: flex;
   flex-direction: row;
   align-items: center;
-  padding: var(--pf-v5-global--spacer--md);
-  margin-bottom: var(--pf-v5-global--spacer--sm);
+  padding: var(--pf-t--global--spacer--md);
+  margin-bottom: var(--pf-t--global--spacer--sm);
   &__content {
-    margin-left: var(--pf-v5-global--spacer--xl);
-    margin-right: var(--pf-v5-global--spacer--lg);
+    margin-left: var(--pf-t--global--spacer--xl);
+    margin-right: var(--pf-t--global--spacer--lg);
   }
 
   &__icon {
-    min-width: var(--pf-v5-global--target-size--MinWidth);
-    min-height: var(--pf-v5-global--target-size--MinHeight);
+    min-width: 44px;
+    min-height: 44px;
     width: 55px;
     height: 55px;
   }

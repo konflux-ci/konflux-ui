@@ -1,6 +1,6 @@
 import React from 'react';
 import { useField, useFormikContext } from 'formik';
-import { InputField } from 'formik-pf';
+import { InputField } from '~/shared/components/formik-base';
 import DropdownField from '~/shared/components/formik-fields/DropdownField';
 import { SourceSecretType } from '~/types/secret';
 import EncodedFileUploadField from './EncodedFileUploadField';

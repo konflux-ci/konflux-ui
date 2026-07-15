@@ -13,7 +13,7 @@ export const useKeyboardNavigation = ({
   scrollElementRef,
   lineHeight = DEFAULT_LINE_HEIGHT,
   enabled = true,
-}: UseKeyboardNavigationParams): RefObject<HTMLDivElement | null> => {
+}: UseKeyboardNavigationParams) => {
   return useHotkeys<HTMLDivElement>(
     'up,down,pageup,pagedown,home,end',
     (event) => {
