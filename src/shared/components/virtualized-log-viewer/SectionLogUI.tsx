@@ -1,31 +1,66 @@
 import React from 'react';
-import { Button, Flex, FlexItem, Content } from '@patternfly/react-core';
-import { AngleDownIcon, AngleRightIcon } from '@patternfly/react-icons/dist/esm/icons';
+import { Button, Flex, FlexItem, Content, Label } from '@patternfly/react-core';
+import {
+  AngleDownIcon,
+  AngleRightIcon,
+  ExternalLinkAltIcon,
+} from '@patternfly/react-icons/dist/esm/icons';
+import { KUBEARCHIVE_LOG_TAIL_LINES } from '~/kubearchive/const';
 import type { SectionHeaderRow } from './types';
 
 import './SectionLogUI.scss';
 import './VirtualizedLogContent.scss';
 
+const TailedLogIndicator: React.FC<{ fullLogUrl: string }> = ({ fullLogUrl }) => (
+  <Label
+    color="blue"
+    isCompact
+    data-test="tailed-log-indicator"
+    render={({ className, content }) => (
+      <a
+        href={fullLogUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={className}
+        data-test="tailed-log-link"
+      >
+        {content}
+      </a>
+    )}
+  >
+    Showing last {KUBEARCHIVE_LOG_TAIL_LINES} lines, see full logs <ExternalLinkAltIcon />
+  </Label>
+);
+
 export const SectionHeaderButton: React.FC<{ row: SectionHeaderRow; onToggle: () => void }> = ({
   row,
   onToggle,
 }) => (
-  <Button
-    variant="plain"
-    className="pf-v6-u-p-0 log-content__section-header-btn"
-    onClick={onToggle}
-    aria-expanded={row.isExpanded}
-    data-test={`fold-header-${row.sectionName}`}
-  >
-    <Flex alignItems={{ default: 'alignItemsCenter' }} spaceItems={{ default: 'spaceItemsXs' }}>
+  <Flex alignItems={{ default: 'alignItemsCenter' }} spaceItems={{ default: 'spaceItemsXs' }}>
+    <FlexItem>
+      <Button
+        variant="plain"
+        className="pf-v6-u-p-0 log-content__section-header-btn"
+        onClick={onToggle}
+        aria-expanded={row.isExpanded}
+        data-test={`fold-header-${row.sectionName}`}
+      >
+        <Flex alignItems={{ default: 'alignItemsCenter' }} spaceItems={{ default: 'spaceItemsXs' }}>
+          <FlexItem>
+            {row.isExpanded ? <AngleDownIcon aria-hidden /> : <AngleRightIcon aria-hidden />}
+          </FlexItem>
+          <FlexItem className="pf-v6-c-log-viewer__text pf-v6-u-font-weight-bold">
+            {row.sectionName}
+          </FlexItem>
+        </Flex>
+      </Button>
+    </FlexItem>
+    {row.fullLogUrl && (
       <FlexItem>
-        {row.isExpanded ? <AngleDownIcon aria-hidden /> : <AngleRightIcon aria-hidden />}
+        <TailedLogIndicator fullLogUrl={row.fullLogUrl} />
       </FlexItem>
-      <FlexItem className="pf-v6-c-log-viewer__text pf-v6-u-font-weight-bold">
-        {row.sectionName}
-      </FlexItem>
-    </Flex>
-  </Button>
+    )}
+  </Flex>
 );
 
 export const FoldIndicatorLine: React.FC<{ lineCount: number }> = ({ lineCount }) => (

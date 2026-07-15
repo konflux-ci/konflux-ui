@@ -45,7 +45,7 @@ export const useSectionRows = (
     let searchLine = 0;
 
     for (let i = 0; i < sections.length; i++) {
-      const { containerName, lines: sectionLines } = sections[i];
+      const { containerName, lines: sectionLines, fullLogUrl } = sections[i];
       const isExpanded = expandedSections.has(i);
 
       const headerDisplayIdx = rows.length;
@@ -56,6 +56,7 @@ export const useSectionRows = (
         lineNumber: globalLineNumber,
         lineCount: sectionLines.length,
         isExpanded,
+        ...(fullLogUrl ? { fullLogUrl } : undefined),
       });
       searchToDisplay.set(searchLine, headerDisplayIdx);
       searchToSection.set(searchLine, i);

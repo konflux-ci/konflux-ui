@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Base64 } from 'js-base64';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
-import { KUBEARCHIVE_PATH_PREFIX } from '~/kubearchive/const';
+import { KUBEARCHIVE_LOG_TAIL_LINES, KUBEARCHIVE_PATH_PREFIX } from '~/kubearchive/const';
 import { type LogSection } from '~/shared/components/virtualized-log-viewer';
 import { ResourceSource } from '~/types/k8s';
 import { commonFetchText } from '../../../../k8s';
@@ -16,6 +16,7 @@ import { containerToLogSourceStatus, LOG_SOURCE_TERMINATED } from '../utils';
 import LogViewer, { type Props as LogViewerProps } from './LogViewer';
 
 type LogSources = { [containerName: string]: string };
+type FullLogUrls = { [containerName: string]: string };
 
 const WEB_SOCKET_RETRY_COUNT = 5;
 
@@ -74,6 +75,7 @@ const Logs: React.FC<LogsProps> = ({
 
   // state to hold the logs for each container individually
   const [logSources, setLogSources] = React.useState<LogSources>({});
+  const [fullLogUrls, setFullLogUrls] = React.useState<FullLogUrls>({});
   const [error, setError] = React.useState<boolean>(false);
   const pendingFetchesRef = React.useRef(0);
   const [isFetchingLogs, setIsFetchingLogs] = React.useState(false);
@@ -115,13 +117,21 @@ const Logs: React.FC<LogsProps> = ({
       const status = allStatuses.find((c) => c.name === name);
       const resourceStatus = containerToLogSourceStatus(status);
 
+      const isKubearchiveSource = isKubearchiveEnabled && source === ResourceSource.Archive;
+      const baseQueryParams: Record<string, string> = {
+        container: name,
+        follow: resourceStatus === LOG_SOURCE_TERMINATED ? 'false' : 'true',
+      };
+
       const urlOpts = {
         ns: resNamespace,
         name: resName,
         path: 'log',
         queryParams: {
-          container: name,
-          follow: resourceStatus === LOG_SOURCE_TERMINATED ? 'false' : 'true',
+          ...baseQueryParams,
+          ...(isKubearchiveSource && resourceStatus === LOG_SOURCE_TERMINATED
+            ? { tailLines: String(KUBEARCHIVE_LOG_TAIL_LINES) }
+            : undefined),
         },
       };
       const watchURL = getK8sResourceURL(PodModel, undefined, urlOpts);
@@ -133,11 +143,26 @@ const Logs: React.FC<LogsProps> = ({
         markFetchStarted();
         commonFetchText(watchURL, {
           signal,
-          ...(isKubearchiveEnabled && source === ResourceSource.Archive
-            ? { pathPrefix: KUBEARCHIVE_PATH_PREFIX }
-            : undefined),
+          ...(isKubearchiveSource ? { pathPrefix: KUBEARCHIVE_PATH_PREFIX } : undefined),
         })
-          .then((res) => appendLog(name, res))
+          .then((res) => {
+            appendLog(name, res);
+
+            if (isKubearchiveSource) {
+              const lineCount = res.split('\n').length;
+              if (lineCount >= KUBEARCHIVE_LOG_TAIL_LINES) {
+                const fullUrlOpts = {
+                  ns: resNamespace,
+                  name: resName,
+                  path: 'log',
+                  queryParams: baseQueryParams,
+                };
+                const fullPath = getK8sResourceURL(PodModel, undefined, fullUrlOpts);
+                const fullUrl = `/api/k8s/${KUBEARCHIVE_PATH_PREFIX}${fullPath}`;
+                setFullLogUrls((prev) => ({ ...prev, [name]: fullUrl }));
+              }
+            }
+          })
           .catch((err) => {
             if (err.name !== 'AbortError') {
               // Gracefully handle empty logs (404) from kubearch, similar to how Tekton Results handles 404
@@ -220,9 +245,10 @@ const Logs: React.FC<LogsProps> = ({
           containerName: c.name.toUpperCase(),
           data: logSources[c.name],
           isCompleted: containerToLogSourceStatus(status) === LOG_SOURCE_TERMINATED,
+          ...(fullLogUrls[c.name] ? { fullLogUrl: fullLogUrls[c.name] } : undefined),
         };
       });
-  }, [logSources, containers, resource?.status?.containerStatuses]);
+  }, [logSources, fullLogUrls, containers, resource?.status?.containerStatuses]);
 
   return (
     <LogViewer

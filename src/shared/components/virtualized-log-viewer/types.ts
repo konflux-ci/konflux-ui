@@ -22,12 +22,14 @@ export interface LogSection {
   containerName: string;
   data: string;
   isCompleted?: boolean;
+  fullLogUrl?: string;
 }
 
 /** A LogSection whose data has been normalized (ANSI stripped, line endings unified, split into lines) */
 export interface NormalizedLogSection {
   containerName: string;
   lines: string[];
+  fullLogUrl?: string;
 }
 
 export type SectionHeaderRow = {
@@ -37,6 +39,7 @@ export type SectionHeaderRow = {
   readonly lineNumber: number;
   readonly lineCount: number;
   readonly isExpanded: boolean;
+  readonly fullLogUrl?: string;
 };
 
 export type ContentRow = {
