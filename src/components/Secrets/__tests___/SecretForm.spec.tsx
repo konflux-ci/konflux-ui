@@ -441,3 +441,92 @@ describe('SecretForm existing opaque secret', () => {
     });
   });
 });
+
+describe('SecretForm edit mode', () => {
+  const clusterSecret = {
+    type: SecretType.opaque,
+    name: 'cluster-secret',
+    providerUrl: '',
+    tokenKeyName: 'cluster-secret',
+    opaque: {
+      keyValuePairs: [
+        { key: 'token', value: 'secret-value', readOnlyKey: true, readOnlyValue: true },
+      ],
+    },
+    labels: [{ key: 'app', value: 'konflux' }],
+  };
+
+  const uniqueEditValues = {
+    ...secretFormValues,
+    secretName: 'my-unique-secret',
+    opaque: {
+      keyValues: [{ key: 'api-key', value: 'dGVzdA==' }],
+    },
+  };
+
+  const clusterBackedEditValues = {
+    ...secretFormValues,
+    secretName: 'cluster-secret',
+    opaque: {
+      keyValues: [{ key: 'token', value: 'secret-value', readOnlyKey: true, readOnlyValue: true }],
+    },
+    labels: [{ key: 'app', value: 'konflux' }],
+  };
+
+  beforeEach(() => {
+    mockKeyValueFileInputField.mockImplementation((props) => (
+      <InternalKeyValueFileInputField {...props} />
+    ));
+  });
+
+  it('allows renaming a unique build secret in edit mode', async () => {
+    const user = userEvent.setup();
+    formikRenderer(<SecretForm existingSecrets={[clusterSecret]} isEdit />, uniqueEditValues);
+
+    await waitFor(() => {
+      expect(screen.getByText('Unique name of the new secret.')).toBeInTheDocument();
+    });
+
+    const combobox = screen.getByRole('combobox');
+    expect(combobox).not.toBeDisabled();
+
+    await user.clear(combobox);
+    await user.type(combobox, 'renamed-secret');
+
+    await waitFor(() => {
+      expect(combobox).toHaveValue('renamed-secret');
+    });
+  });
+
+  it('allows changing secret type for a unique build secret in edit mode', async () => {
+    const user = userEvent.setup();
+    formikRenderer(<SecretForm existingSecrets={[clusterSecret]} isEdit />, uniqueEditValues);
+
+    const secretTypeToggle = screen.getAllByTestId('dropdown-toggle')[0];
+    expect(secretTypeToggle).not.toHaveAttribute('aria-disabled', 'true');
+
+    await user.click(secretTypeToggle);
+    await user.click(screen.getByText('Source secret'));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('secret-name')).toBeInTheDocument();
+    });
+  });
+
+  it('keeps name and secret type locked when editing a cluster-backed secret', async () => {
+    formikRenderer(
+      <SecretForm existingSecrets={[clusterSecret]} isEdit />,
+      clusterBackedEditValues,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('You cannot edit the existing secret name')).toBeInTheDocument();
+      expect(screen.getByText('You cannot edit the secret type in edit mode')).toBeInTheDocument();
+    });
+
+    expect(screen.getByRole('combobox')).toBeDisabled();
+
+    const secretTypeToggle = screen.getAllByTestId('dropdown-toggle')[0];
+    expect(secretTypeToggle).toHaveAttribute('aria-disabled', 'true');
+  });
+});

@@ -106,7 +106,9 @@ const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({
       currentType === SecretTypeDropdownLabel.source) ||
       currentType === SecretTypeDropdownLabel.image);
 
-  const secretNameHelperText = isEdit
+  const isIdentityLocked = isEdit && isUsingExisting;
+
+  const secretNameHelperText = isIdentityLocked
     ? 'You cannot edit the existing secret name'
     : isUsingExisting
       ? 'Reusing an existing cluster secret.'
@@ -116,8 +118,8 @@ const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({
     <Form data-test="secret-form">
       <SecretTypeSelector
         dropdownItems={dropdownItems}
-        isDisabled={isEdit}
-        isEditMode={isEdit}
+        isDisabled={isIdentityLocked}
+        isEditMode={isIdentityLocked}
         onChange={(type) => {
           setCurrentType(type);
           void setValue(SecretForComponentOption.none);
@@ -146,7 +148,7 @@ const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({
           helpText={secretNameHelperText}
           isCreatable
           hasOnCreateOption
-          isDisabled={isEdit}
+          isDisabled={isIdentityLocked}
           options={options}
           variant="typeahead"
           toggleId="secret-name-toggle"
@@ -173,7 +175,7 @@ const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({
           label="Secret name"
           helperText={secretNameHelperText}
           placeholder="Enter name"
-          isDisabled={isEdit}
+          isDisabled={isIdentityLocked}
           isRequired
         />
       )}
@@ -185,7 +187,9 @@ const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({
           radioLabels={SecretLinkOptionLabels.default}
         />
       )}
-      {currentType === SecretTypeDropdownLabel.source && <SourceSecretForm isEditMode={isEdit} />}
+      {currentType === SecretTypeDropdownLabel.source && (
+        <SourceSecretForm isEditMode={isIdentityLocked} />
+      )}
       {currentType === SecretTypeDropdownLabel.image && <ImagePullSecretForm />}
       {currentType === SecretTypeDropdownLabel.opaque && (
         <KeyValueFileInputField
