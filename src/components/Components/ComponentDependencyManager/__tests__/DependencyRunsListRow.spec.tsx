@@ -113,7 +113,7 @@ describe('Dependency runs column renderers', () => {
       } as PipelineRunStatus,
     });
     renderTable([run]);
-    expect(screen.getByTestId('dependency-run-started')).toBeInTheDocument();
+    expect(screen.getByTestId('dependency-run-started')).toHaveTextContent('-');
   });
 
   it('renders "-" for duration when startTime is absent', () => {
