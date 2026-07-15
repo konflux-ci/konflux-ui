@@ -42,8 +42,8 @@ const CommitDetailsView: React.FC = () => {
     [loaded, pipelineruns],
   );
 
-  const [commitStatus] = useCommitStatus(applicationName, commitName);
-  useStatusOnFavicon(commitStatus);
+  const [commitStatus, commitLoaded] = useCommitStatus(applicationName, commitName);
+  useStatusOnFavicon(commitLoaded ? commitStatus : null);
 
   const commitDisplayName = getCommitShortName(commitName);
 

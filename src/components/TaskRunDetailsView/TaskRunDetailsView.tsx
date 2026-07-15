@@ -38,11 +38,7 @@ export const TaskRunDetailsView: React.FC = () => {
     [loaded, taskRun],
   );
 
-  const faviconStatus = React.useMemo(
-    () => (loaded && taskRun ? taskRunStatus(taskRun) : null),
-    [loaded, taskRun],
-  );
-  useStatusOnFavicon(faviconStatus);
+  useStatusOnFavicon(trStatus || null);
 
   const applicationName = taskRun?.metadata?.labels?.[PipelineRunLabel.APPLICATION];
   const baseURL = TASKRUN_DETAILS_PATH.createPath({
