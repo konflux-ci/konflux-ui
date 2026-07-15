@@ -284,6 +284,29 @@ describe('ConformaGroupedTable', () => {
     expect(screen.getAllByText('-').length).toBeGreaterThanOrEqual(1);
   });
 
+  it('renders row code in the detail sub-table when present', () => {
+    const groupsWithCode: GroupedConformaRow[] = [
+      {
+        groupKey: 'Trusted task rule',
+        violations: 1,
+        warnings: 0,
+        successes: 0,
+        rows: [createRow({ code: 'trusted_task.trusted' })],
+      },
+    ];
+    const expandedGroups = new Set(['Trusted task rule']);
+
+    routerRenderer(
+      <ConformaGroupedTable
+        {...defaultProps}
+        groups={groupsWithCode}
+        expandedGroups={expandedGroups}
+      />,
+    );
+
+    expect(screen.getByText('trusted_task.trusted')).toBeInTheDocument();
+  });
+
   it('renders empty string msg instead of falling back to dash', () => {
     const groupsWithEmptyMsg: GroupedConformaRow[] = [
       {
