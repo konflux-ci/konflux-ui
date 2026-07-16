@@ -19,10 +19,11 @@ describe('useFaviconStatusBadge', () => {
     jest.clearAllMocks();
   });
 
-  it('does not apply favicon badge when color is null', () => {
+  it('does not apply favicon badge and restores favicon when color is null', () => {
     renderHook(() => useFaviconStatusBadge(null));
 
     expect(applyFaviconBadgeMock).not.toHaveBeenCalled();
+    expect(restoreFaviconHrefMock).toHaveBeenCalledWith('/favicon.ico');
   });
 
   it('applies favicon badge when color is provided', () => {
@@ -54,6 +55,23 @@ describe('useFaviconStatusBadge', () => {
       '/favicon.ico',
       expect.any(Function),
     );
+  });
+
+  it('restores favicon when color changes to null', () => {
+    const { rerender } = renderHook(
+      ({ color }: { color: string | null }) => useFaviconStatusBadge(color),
+      {
+        initialProps: { color: blueColor.value as string | null },
+      },
+    );
+
+    expect(applyFaviconBadgeMock).toHaveBeenCalledTimes(1);
+    restoreFaviconHrefMock.mockClear();
+
+    rerender({ color: null });
+
+    expect(applyFaviconBadgeMock).toHaveBeenCalledTimes(1);
+    expect(restoreFaviconHrefMock).toHaveBeenCalledWith('/favicon.ico');
   });
 
   it('restores favicon on unmount', () => {

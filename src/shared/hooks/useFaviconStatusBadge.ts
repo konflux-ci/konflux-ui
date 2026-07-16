@@ -19,7 +19,8 @@ export const useFaviconStatusBadge = (color: string | null): void => {
   }, []);
 
   React.useEffect(() => {
-    if (!color) {
+    if (color === null) {
+      restoreFaviconHref(baselineHrefRef.current);
       return;
     }
 

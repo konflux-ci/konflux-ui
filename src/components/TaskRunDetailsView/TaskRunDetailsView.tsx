@@ -34,11 +34,11 @@ export const TaskRunDetailsView: React.FC = () => {
   const [taskRun, loaded, error] = useTaskRunV2(namespace, taskRunName);
 
   const trStatus = React.useMemo(
-    () => loaded && taskRun && taskRunStatus(taskRun),
-    [loaded, taskRun],
+    () => (loaded && taskRun && !error ? taskRunStatus(taskRun) : null),
+    [loaded, taskRun, error],
   );
 
-  useStatusOnFavicon(trStatus || null);
+  useStatusOnFavicon(trStatus);
 
   const applicationName = taskRun?.metadata?.labels?.[PipelineRunLabel.APPLICATION];
   const baseURL = TASKRUN_DETAILS_PATH.createPath({

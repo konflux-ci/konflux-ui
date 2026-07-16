@@ -166,6 +166,24 @@ describe('PipelineRunDetailsView', () => {
     expect(useStatusOnFaviconMock).toHaveBeenCalledWith(runStatus.Succeeded);
   });
 
+  it('passes null to useStatusOnFavicon while pipeline run is loading', () => {
+    mockUsePipelineRunV2.mockReturnValue(mockPipelineRunStates.loading());
+
+    routerRenderer(<PipelineRunDetailsView />);
+
+    expect(useStatusOnFaviconMock).toHaveBeenCalledWith(null);
+  });
+
+  it('passes null to useStatusOnFavicon when pipeline run fails to load', () => {
+    mockUsePipelineRunV2.mockReturnValue(
+      mockPipelineRunStates.error({ message: 'Pipeline run not found', code: 404 }),
+    );
+
+    routerRenderer(<PipelineRunDetailsView />);
+
+    expect(useStatusOnFaviconMock).toHaveBeenCalledWith(null);
+  });
+
   it('should render standard tabs for non-enterprise-contract pipeline', () => {
     mockUsePipelineRunV2.mockReturnValue(mockPipelineRunStates.loaded(mockPipelineRun));
 

@@ -100,6 +100,22 @@ describe('CommitDetailsView', () => {
     expect(useStatusOnFaviconMock).toHaveBeenCalledWith(runStatus.Cancelled);
   });
 
+  it('passes null to useStatusOnFavicon while commit status is loading', () => {
+    watchCommitPrsMock.mockReturnValue([[], false]);
+    useCommitStatusMock.mockReturnValue([runStatus.Cancelled, false, undefined]);
+    renderWithQueryClient(<CommitDetailsView />);
+
+    expect(useStatusOnFaviconMock).toHaveBeenCalledWith(null);
+  });
+
+  it('passes null to useStatusOnFavicon when commit status fails to load', () => {
+    watchCommitPrsMock.mockReturnValue([[], false]);
+    useCommitStatusMock.mockReturnValue([runStatus.Cancelled, true, { code: 500 }]);
+    renderWithQueryClient(<CommitDetailsView />);
+
+    expect(useStatusOnFaviconMock).toHaveBeenCalledWith(null);
+  });
+
   it('should not use integration test pipeline to get details', () => {
     watchResourceMock.mockReturnValue([[pipelineWithCommits[0], pipelineWithCommits[4]], true]);
     renderWithQueryClient(

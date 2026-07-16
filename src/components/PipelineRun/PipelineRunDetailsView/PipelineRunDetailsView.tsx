@@ -40,15 +40,11 @@ export const PipelineRunDetailsView: React.FC = () => {
   const [canPatchPipeline] = useAccessReviewForModel(PipelineRunModel, 'patch');
 
   const plrStatus = React.useMemo(
-    () => loaded && pipelineRun && pipelineRunStatus(pipelineRun),
-    [loaded, pipelineRun],
+    () => (loaded && pipelineRun && !error ? pipelineRunStatus(pipelineRun) : null),
+    [loaded, pipelineRun, error],
   );
 
-  const faviconStatus = React.useMemo(
-    () => (loaded && pipelineRun ? pipelineRunStatus(pipelineRun) : null),
-    [loaded, pipelineRun],
-  );
-  useStatusOnFavicon(faviconStatus);
+  useStatusOnFavicon(plrStatus);
 
   const hasConformaTaskRun = React.useMemo(
     () => isTaskRunInPipelineRun(pipelineRun, CONFORMA_TASK),

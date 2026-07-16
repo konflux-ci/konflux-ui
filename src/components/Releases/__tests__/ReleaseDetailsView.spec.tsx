@@ -136,6 +136,29 @@ describe('ReleaseDetailsView', () => {
     expect(useStatusOnFaviconMock).toHaveBeenCalledWith(runStatus.Succeeded);
   });
 
+  it('passes null to useStatusOnFavicon while release is loading', () => {
+    useMockRelease.mockReturnValue({
+      data: mockRelease,
+      isLoading: true,
+      fetchError: undefined,
+    });
+    renderWithQueryClientAndRouter(<ReleaseDetailsView />);
+
+    expect(useStatusOnFaviconMock).toHaveBeenCalledWith(null);
+  });
+
+  it('passes null to useStatusOnFavicon when release fails to load', () => {
+    useMockRelease.mockReturnValue({
+      data: {},
+      isLoading: false,
+      fetchError: { code: 404 },
+      isError: true,
+    });
+    renderWithQueryClientAndRouter(<ReleaseDetailsView />);
+
+    expect(useStatusOnFaviconMock).toHaveBeenCalledWith(null);
+  });
+
   describe('Re-run release action', () => {
     it('should render re-run release action in actions dropdown', async () => {
       const user = userEvent.setup();

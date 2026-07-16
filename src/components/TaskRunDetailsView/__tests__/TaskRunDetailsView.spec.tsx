@@ -91,6 +91,20 @@ describe('TaskRunDetailsView', () => {
     expect(useStatusOnFaviconMock).toHaveBeenCalledWith(taskRunStatus(mockTaskRun));
   });
 
+  it('passes null to useStatusOnFavicon while task run is loading', () => {
+    useTaskRunMock.mockReturnValue([null, false]);
+    renderWithQueryClientAndRouter(<TaskRunDetailsView />);
+
+    expect(useStatusOnFaviconMock).toHaveBeenCalledWith(null);
+  });
+
+  it('passes null to useStatusOnFavicon when task run fails to load', () => {
+    useTaskRunMock.mockReturnValue([null, true, { code: 404 }]);
+    renderWithQueryClientAndRouter(<TaskRunDetailsView />);
+
+    expect(useStatusOnFaviconMock).toHaveBeenCalledWith(null);
+  });
+
   it('should render the actions button and download YAML when clicked', async () => {
     const user = userEvent.setup();
     useTaskRunMock.mockReturnValue([mockTaskRun, true]);

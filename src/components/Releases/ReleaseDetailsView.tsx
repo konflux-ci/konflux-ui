@@ -35,11 +35,11 @@ const ReleaseDetailsView: React.FC = () => {
     user: { email },
   } = useAuth();
 
-  const faviconStatus = React.useMemo(
-    () => (loaded && release ? getReleaseStatus(release) : null),
-    [loaded, release],
+  const releaseStatus = React.useMemo(
+    () => (loaded && release && !error ? getReleaseStatus(release) : null),
+    [loaded, release, error],
   );
-  useStatusOnFavicon(faviconStatus);
+  useStatusOnFavicon(releaseStatus);
 
   if (!loaded) {
     return (
