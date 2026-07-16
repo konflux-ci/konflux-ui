@@ -9,6 +9,7 @@ import {
   FlexItem,
   List,
   ListItem,
+  PopoverProps,
 } from '@patternfly/react-core';
 import { FlaskIcon } from '@patternfly/react-icons/dist/esm/icons/flask-icon';
 import { FLAGS, FLAGS_STATUS, type FlagKey } from './flags';
@@ -18,6 +19,8 @@ type FeatureFlagIndicatorProps = {
   flags: FlagKey[];
   fullLabel?: boolean;
   'data-test'?: string;
+  hasNoPadding?: boolean;
+  popOverTriggerAction?: PopoverProps['triggerAction'];
 };
 
 const warningColor = 'var(--pf-t--global--color--status--warning--default)';
@@ -27,6 +30,8 @@ export const FeatureFlagIndicator: React.FC<FeatureFlagIndicatorProps> = ({
   flags,
   fullLabel = false,
   'data-test': dataTest,
+  hasNoPadding = false,
+  popOverTriggerAction = 'click',
 }) => {
   const [allFlags] = useFeatureFlags();
   const activeFlags = flags.filter((f) => allFlags[f]);
@@ -67,6 +72,7 @@ export const FeatureFlagIndicator: React.FC<FeatureFlagIndicatorProps> = ({
       variant="plain"
       aria-label="Feature flag information"
       data-test={dataTest ?? `ff-indicator-${flags.join('-')}`}
+      hasNoPadding={hasNoPadding}
     >
       <Label icon={<FlaskIcon style={iconStyle} />} color={labelColor}>
         {statusText}
@@ -78,13 +84,19 @@ export const FeatureFlagIndicator: React.FC<FeatureFlagIndicatorProps> = ({
       variant="plain"
       aria-label="Feature flag information"
       data-test={dataTest ?? `ff-indicator-${flags.join('-')}`}
+      hasNoPadding={hasNoPadding}
     >
       <FlaskIcon style={iconStyle} />
     </Button>
   );
 
   return (
-    <Popover position="right" headerContent={header} bodyContent={body}>
+    <Popover
+      position="right"
+      headerContent={header}
+      bodyContent={body}
+      triggerAction={popOverTriggerAction}
+    >
       {trigger}
     </Popover>
   );
