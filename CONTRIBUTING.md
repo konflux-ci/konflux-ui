@@ -55,24 +55,27 @@ We welcome contributions of all kinds! Follow these steps to get started:
    - If you're contributing a feature that is not yet fully implemented or will be completed in follow-up PRs, please wrap it with a feature flag.
    - Refer to our [feature flags guide](./docs/feature-flags.md) for more information.
 
-6. Submit a Pull Request following our [PR template](.github/PULL_REQUEST_TEMPLATE.md).  
+6. For new features or changes that affect the UI/UX, open a GitHub Issue first to discuss the approach.
+   This avoids wasted effort - significant changes made without prior discussion may be rejected during review.
+
+7. Submit a Pull Request following our [PR template](.github/PULL_REQUEST_TEMPLATE.md).
    The template includes required fields such as:
 
    - **Fixes**: include references to related issues, if applicable
-   - **Description**: clear overview of what was changed
+   - **Description**: clear overview of what was changed and **why** — demonstrate understanding of the problem, not just what the diff contains
    - **Screenshots**: required for any UI changes
    - **How to test or reproduce**: how to verify the change
 
 > Tip: If your PR is still a work in progress and not ready for review, mark it as a draft to let others know that it's not ready for approval yet.
 
-7. Tag reviewers in your Pull Request:
+8. Tag reviewers in your Pull Request:
 
    - Please tag at least one or two active maintainers who are responsible for reviewing PRs.
    - You can also tag the [konflux-ui team](https://github.com/orgs/konflux-ci/teams/konflux-ui) for broader visibility if needed.
    - If you’re unsure who to tag, check recent contributors.
    - The reviewer reviews the code. If the code is safe to run, reviewer may add `ok-to-test` label to enable the E2E tests on this PR.
 
-8. Once your PR is ready:
+9. Once your PR is ready:
 
    - ✅ Ensure tests pass and all required checks are green.
 
@@ -234,35 +237,30 @@ Commonly used aliases:
 - Use descriptive commit messages (e.g., `fix: resolve alignment issue in table header`).
 - Follow [Conventional Commits](https://www.conventionalcommits.org/) if possible (e.g., `feat: add dark mode support`).
 
-### AI Assistance in Commits
+### AI-Assisted Contributions
 
-If you use AI tools (like code assistants or generators) to help with your changes, please acknowledge this by adding an `Assisted-by: <ToolName>` trailer in your commit messages.
+We welcome the use of AI tools to speed up development, but contributors are fully responsible for the quality of their PRs. AI-generated code is held to the same standard as human-written code.
+
+**Expectations:**
+
+- You **must review and understand** any AI-generated code before submitting. "The AI wrote it" is not an acceptable explanation during review.
+- **Tests are mandatory** — submitting AI-generated code without tests signals that the contributor did not verify behavior.
+- **Commit messages must be meaningful** - no verbose, auto-generated descriptions. Follow Conventional Commits as described above.
+- **No AI-generated text** in PR comments, issue discussions, or review responses.
+- **No bulk AI refactors** (mass renames, restructures, style changes) without prior discussion via a GitHub Issue.
+- Low-effort or un-reviewed AI-generated PRs **will be closed**.
+
+**Attribution:**
+
+Add an `Assisted-by: <ToolName>` trailer to commits that used AI assistance.
 
 For example: _Assisted-by: Cursor_
 
-This helps keep contributions transparent and compliant with our policies.
+**Loading project rules into AI tools:**
 
----
+This project tracks AI development guidelines in [.cursor/rules/](.cursor/rules/) (for Cursor) and includes a `CLAUDE.md` with project conventions, build commands, and guidelines that Claude Code loads automatically. The `.claude/` directory also contains additional skills and commands for common workflows - no extra setup needed, just run Claude Code from the repo root.
 
-## AI Assistance in Development
-
-We encourage contributors to use AI tools to speed up development, but please ensure they follow the same rules as human-written code.
-
-Our project tracks AI development guidelines in [.cursor/rules/](.cursor/rules/), which includes:
-
-- Project structure and conventions
-- Styling components
-- Package management
-- Feature flags workflow
-- Testing best practices
-- AI-assisted workflow
-
-When using AI tools, please make sure these rules are loaded into your environment before generating code.
-
-For example, with **Claude AI**, you can create a `CLAUDE.local.md` file that imports all the rules. When Claude starts, these rules will be auto-loaded.
-Other AI tools may have different ways of configuring rules—please check their documentation.
-
-This ensures that pull requests remain consistent with the team’s existing styles and conventions.
+Other AI tools may have different ways of configuring rules - please check their documentation and make sure project conventions are loaded before generating code.
 
 ---
 
