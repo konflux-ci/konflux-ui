@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Virtualizer } from '@tanstack/react-virtual';
-import { FoldIndicatorLine, SectionErrorLine, SectionHeaderButton } from './SectionLogUI';
+import { FoldIndicatorLine, SectionHeaderButton } from './SectionLogUI';
 import type { LogDisplayRow } from './types';
 
 import './LineNumberGutter.scss';
@@ -96,17 +96,6 @@ export const SectionedVirtualRow: React.FC<SectionedVirtualRowProps> = ({
         {gutterCell}
         <div className="log-content__row-content">
           <FoldIndicatorLine lineCount={row.lineCount} />
-        </div>
-      </div>
-    );
-  }
-
-  if (row.kind === 'section-error') {
-    return (
-      <div {...rowProps}>
-        {gutterCell}
-        <div className="log-content__row-content">
-          <SectionErrorLine error={row.error} />
         </div>
       </div>
     );

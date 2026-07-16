@@ -22,20 +22,12 @@ export interface LogSection {
   containerName: string;
   data: string;
   isCompleted?: boolean;
-  /**
-   * Set when this section's log data failed to fetch (e.g. a network error for this
-   * specific container/step). Any log data already received for the section is still
-   * shown; this is surfaced as an indicator on the section's header rather than failing
-   * the whole log viewer.
-   */
-  error?: string;
 }
 
 /** A LogSection whose data has been normalized (ANSI stripped, line endings unified, split into lines) */
 export interface NormalizedLogSection {
   containerName: string;
   lines: string[];
-  error?: string;
 }
 
 export type SectionHeaderRow = {
@@ -45,7 +37,6 @@ export type SectionHeaderRow = {
   readonly lineNumber: number;
   readonly lineCount: number;
   readonly isExpanded: boolean;
-  readonly error?: string;
 };
 
 export type ContentRow = {
@@ -61,11 +52,4 @@ export type FoldIndicatorRow = {
   readonly lineCount: number;
 };
 
-/** Renders the section's fetch error as a visible line in the log body (not just the header icon) */
-export type SectionErrorRow = {
-  readonly kind: 'section-error';
-  readonly sectionIndex: number;
-  readonly error: string;
-};
-
-export type LogDisplayRow = SectionHeaderRow | ContentRow | FoldIndicatorRow | SectionErrorRow;
+export type LogDisplayRow = SectionHeaderRow | ContentRow | FoldIndicatorRow;

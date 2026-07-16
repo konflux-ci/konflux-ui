@@ -45,7 +45,7 @@ export const useSectionRows = (
     let searchLine = 0;
 
     for (let i = 0; i < sections.length; i++) {
-      const { containerName, lines: sectionLines, error: sectionError } = sections[i];
+      const { containerName, lines: sectionLines } = sections[i];
       const isExpanded = expandedSections.has(i);
 
       const headerDisplayIdx = rows.length;
@@ -56,7 +56,6 @@ export const useSectionRows = (
         lineNumber: globalLineNumber,
         lineCount: sectionLines.length,
         isExpanded,
-        error: sectionError,
       });
       searchToDisplay.set(searchLine, headerDisplayIdx);
       searchToSection.set(searchLine, i);
@@ -72,13 +71,6 @@ export const useSectionRows = (
       }
 
       if (isExpanded) {
-        if (sectionError) {
-          // Surface the error inline in the body too, right where the section's content would
-          // otherwise start -- the header icon/tooltip alone is easy to miss, especially when
-          // the section has no log lines at all to draw attention to it.
-          rows.push({ kind: 'section-error', sectionIndex: i, error: sectionError });
-        }
-
         for (let j = 0; j < sectionLines.length; j++) {
           const contentDisplayIdx = rows.length;
           rows.push({

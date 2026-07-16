@@ -16,7 +16,6 @@ import { containerToLogSourceStatus, LOG_SOURCE_TERMINATED } from '../utils';
 import LogViewer, { type Props as LogViewerProps } from './LogViewer';
 
 type LogSources = { [containerName: string]: string };
-type LogErrors = { [containerName: string]: string };
 
 const WEB_SOCKET_RETRY_COUNT = 5;
 
@@ -73,23 +72,9 @@ const Logs: React.FC<LogsProps> = ({
   const { metadata = {} } = resource;
   const { name: resName, namespace: resNamespace } = metadata;
 
-  // An archived pod (fetched from KubeArchive rather than the live cluster) can never have
-  // "live" logs to stream -- the pod is already gone from the cluster by definition. Treat
-  // every one of its containers as terminated so we always use the plain HTTP/kubearchive
-  // fetch path below, and never attempt to open a websocket watch against a pod that no
-  // longer exists (which would just fail with a 404 on the websocket upgrade handshake).
-  const isArchiveSource = isKubearchiveEnabled && source === ResourceSource.Archive;
-
-  const getEffectiveLogSourceStatus = React.useCallback(
-    (status: ContainerStatus | undefined) =>
-      isArchiveSource ? LOG_SOURCE_TERMINATED : containerToLogSourceStatus(status),
-    [isArchiveSource],
-  );
-
   // state to hold the logs for each container individually
   const [logSources, setLogSources] = React.useState<LogSources>({});
-  // per-container fetch errors, so a single failed step doesn't fail the whole log view
-  const [logErrors, setLogErrors] = React.useState<LogErrors>({});
+  const [error, setError] = React.useState<boolean>(false);
   const pendingFetchesRef = React.useRef(0);
   const [isFetchingLogs, setIsFetchingLogs] = React.useState(false);
   // to track which containers already started fetching
@@ -100,19 +85,6 @@ const Logs: React.FC<LogsProps> = ({
       ...prev,
       [containerName]: (prev[containerName] || '') + message,
     }));
-  }, []);
-
-  const setContainerError = React.useCallback((containerName: string, message: string) => {
-    setLogErrors((prev) => ({ ...prev, [containerName]: message }));
-  }, []);
-
-  const clearContainerError = React.useCallback((containerName: string) => {
-    setLogErrors((prev) => {
-      if (!(containerName in prev)) return prev;
-      const next = { ...prev };
-      delete next[containerName];
-      return next;
-    });
   }, []);
 
   // loops through the containers and initiates fetching for each one
@@ -141,7 +113,7 @@ const Logs: React.FC<LogsProps> = ({
       const { name } = container;
       const allStatuses: ContainerStatus[] = resource?.status?.containerStatuses ?? [];
       const status = allStatuses.find((c) => c.name === name);
-      const resourceStatus = getEffectiveLogSourceStatus(status);
+      const resourceStatus = containerToLogSourceStatus(status);
 
       const urlOpts = {
         ns: resNamespace,
@@ -161,29 +133,24 @@ const Logs: React.FC<LogsProps> = ({
         markFetchStarted();
         commonFetchText(watchURL, {
           signal,
-          ...(isArchiveSource ? { pathPrefix: KUBEARCHIVE_PATH_PREFIX } : undefined),
+          ...(isKubearchiveEnabled && source === ResourceSource.Archive
+            ? { pathPrefix: KUBEARCHIVE_PATH_PREFIX }
+            : undefined),
         })
-          .then((res) => {
-            clearContainerError(name);
-            appendLog(name, res);
-          })
+          .then((res) => appendLog(name, res))
           .catch((err) => {
             if (err.name !== 'AbortError') {
               // Gracefully handle empty logs (404) from kubearch, similar to how Tekton Results handles 404
               // When logs don't exist, both kubearch and Tekton Results return 404
               if (err?.code === 404) {
-                // Don't show an error for missing logs - just leave it empty
+                // Don't append any error message for missing logs - just leave it empty
                 // This matches the behavior of Tekton Results which returns empty logs for 404
                 return;
               }
 
-              // Surface the failure on this specific step only, so other steps' logs
-              // (already fetched or still in flight) continue to be shown.
-              setContainerError(
+              appendLog(
                 name,
-                err instanceof Error
-                  ? err.message
-                  : String(t('An error occurred while retrieving the requested logs.')),
+                `\x1b[1;31mLOG FETCH ERROR${err instanceof Error ? `:\n${err.message}` : ''}\x1b[0m\n`,
               );
             }
           })
@@ -196,14 +163,11 @@ const Logs: React.FC<LogsProps> = ({
           watchURL,
           wsOpts,
           (msg) => {
-            clearContainerError(name);
+            setError(false);
             appendLog(name, Base64.decode(msg as string));
           },
           () => {
-            setContainerError(
-              name,
-              String(t('An error occurred while retrieving the requested logs.')),
-            );
+            setError(true);
           },
         );
 
@@ -221,59 +185,44 @@ const Logs: React.FC<LogsProps> = ({
         }
       });
     };
-  }, [
-    containers,
-    resource,
-    resName,
-    resNamespace,
-    appendLog,
-    setContainerError,
-    clearContainerError,
-    isArchiveSource,
-    getEffectiveLogSourceStatus,
-    t,
-  ]);
+  }, [containers, resource, resName, resNamespace, appendLog, source, isKubearchiveEnabled]);
 
   const allLogsTerminated = React.useMemo<boolean>(() => {
     if (containers.length === 0) return false;
 
     const allStatuses: ContainerStatus[] = resource?.status?.containerStatuses ?? [];
+    const terminatedContainers: string[] = [];
     const runningContainers: string[] = [];
 
     containers.forEach((container) => {
       const status = allStatuses.find((c) => c.name === container.name);
-      const resourceStatus = getEffectiveLogSourceStatus(status);
+      const resourceStatus = containerToLogSourceStatus(status);
 
-      if (resourceStatus !== LOG_SOURCE_TERMINATED) {
+      if (resourceStatus === LOG_SOURCE_TERMINATED) {
+        terminatedContainers.push(container.name);
+      } else {
         runningContainers.push(container.name);
       }
     });
 
-    return runningContainers.length === 0;
-  }, [containers, resource?.status?.containerStatuses, getEffectiveLogSourceStatus]);
+    const allTerminated = runningContainers.length === 0;
+
+    return allTerminated;
+  }, [containers, resource?.status?.containerStatuses]);
 
   const sections = React.useMemo<LogSection[]>(() => {
     const allStatuses: ContainerStatus[] = resource?.status?.containerStatuses ?? [];
-    // Only containers that have log data and/or a fetch error are shown, so a step that
-    // failed to fetch is still shown (with its error) alongside steps that succeeded.
     return containers
-      .filter((c) => logSources[c.name] || logErrors[c.name])
+      .filter((c) => logSources[c.name])
       .map((c) => {
         const status = allStatuses.find((s) => s.name === c.name);
         return {
           containerName: c.name.toUpperCase(),
-          data: logSources[c.name] ?? '',
-          isCompleted: getEffectiveLogSourceStatus(status) === LOG_SOURCE_TERMINATED,
-          error: logErrors[c.name],
+          data: logSources[c.name],
+          isCompleted: containerToLogSourceStatus(status) === LOG_SOURCE_TERMINATED,
         };
       });
-  }, [
-    logSources,
-    logErrors,
-    containers,
-    resource?.status?.containerStatuses,
-    getEffectiveLogSourceStatus,
-  ]);
+  }, [logSources, containers, resource?.status?.containerStatuses]);
 
   return (
     <LogViewer
@@ -284,7 +233,7 @@ const Logs: React.FC<LogsProps> = ({
       onDownloadAll={onDownloadAll}
       taskRun={taskRun}
       isLoading={isLoading || isFetchingLogs}
-      errorMessage={null}
+      errorMessage={error ? t('An error occurred while retrieving the requested logs.') : null}
     />
   );
 };

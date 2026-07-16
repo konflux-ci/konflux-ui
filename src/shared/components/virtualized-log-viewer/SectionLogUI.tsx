@@ -1,16 +1,6 @@
 import React from 'react';
-import {
-  Button,
-  Content,
-  Flex,
-  FlexItem,
-  HelperText,
-  HelperTextItem,
-  Icon,
-  Tooltip,
-} from '@patternfly/react-core';
+import { Button, Flex, FlexItem, Content } from '@patternfly/react-core';
 import { AngleDownIcon, AngleRightIcon } from '@patternfly/react-icons/dist/esm/icons';
-import { ExclamationCircleIcon } from '@patternfly/react-icons/dist/esm/icons/exclamation-circle-icon';
 import type { SectionHeaderRow } from './types';
 
 import './SectionLogUI.scss';
@@ -34,19 +24,6 @@ export const SectionHeaderButton: React.FC<{ row: SectionHeaderRow; onToggle: ()
       <FlexItem className="pf-v6-c-log-viewer__text pf-v6-u-font-weight-bold">
         {row.sectionName}
       </FlexItem>
-      {row.error && (
-        <FlexItem>
-          <Tooltip content={row.error}>
-            <Icon
-              status="danger"
-              data-test={`fold-header-error-${row.sectionName}`}
-              aria-label={`Failed to fetch logs for this step: ${row.error}`}
-            >
-              <ExclamationCircleIcon aria-hidden />
-            </Icon>
-          </Tooltip>
-        </FlexItem>
-      )}
     </Flex>
   </Button>
 );
@@ -55,14 +32,6 @@ export const FoldIndicatorLine: React.FC<{ lineCount: number }> = ({ lineCount }
   <Content component="small" className="pf-v6-c-log-viewer__text log-content__fold-indicator">
     ··· {lineCount} {lineCount === 1 ? 'line' : 'lines'} hidden
   </Content>
-);
-
-export const SectionErrorLine: React.FC<{ error: string }> = ({ error }) => (
-  <HelperText data-test="section-error-line">
-    <HelperTextItem icon={<ExclamationCircleIcon />} variant="error">
-      Failed to fetch logs for this step: {error}
-    </HelperTextItem>
-  </HelperText>
 );
 
 export const StickySectionHeaderBar: React.FC<{

@@ -15,11 +15,7 @@ export function normalizeLogLines(data: string): string[] {
 }
 
 export function normalizeSection(section: LogSection): NormalizedLogSection {
-  return {
-    containerName: section.containerName,
-    lines: normalizeLogLines(section.data),
-    error: section.error,
-  };
+  return { containerName: section.containerName, lines: normalizeLogLines(section.data) };
 }
 
 export function singleLogSection(
