@@ -13,10 +13,10 @@ import {
 import { FilterToolbar, type FilterOption } from '~/shared/components/Filter';
 import { HelpTooltipIcon } from '~/shared/components/help-tooltip';
 import type { GroupByMode } from './conforma-grouping-utils';
-import { filterConfigs, STATUS_FILTER_OPTIONS } from './conforma-table-config';
+import { filterConfigs } from './conforma-table-config';
 
 type ConformaResultsToolbarProps = {
-  statusOptions?: FilterOption[];
+  statusOptions: FilterOption[];
   groupBy: GroupByMode;
   onGroupByChange: (value: GroupByMode) => void;
   allExpanded: boolean;
@@ -44,68 +44,63 @@ export const ConformaResultsToolbar: React.FC<ConformaResultsToolbarProps> = ({
 }) => {
   const [isGroupByOpen, setIsGroupByOpen] = React.useState(false);
 
-  const options = React.useMemo(
-    () => ({ status: statusOptions ?? STATUS_FILTER_OPTIONS }),
-    [statusOptions],
-  );
+  const options = React.useMemo(() => ({ status: statusOptions }), [statusOptions]);
 
   return (
-    <div data-test="conforma-results-toolbar">
-      <FilterToolbar configs={filterConfigs} options={options}>
-        <Flex alignItems={{ default: 'alignItemsCenter' }} gap={{ default: 'gapMd' }}>
-          <FlexItem>
-            <Select
-              toggle={(toggleRef) => (
-                <MenuToggle
-                  ref={toggleRef}
-                  isExpanded={isGroupByOpen}
-                  onClick={() => setIsGroupByOpen(!isGroupByOpen)}
-                  data-test="conforma-group-by-select"
-                >
-                  {`Group by: ${groupByLabels[groupBy]}`}
-                </MenuToggle>
-              )}
-              onSelect={(_, value) => {
-                onGroupByChange(value as GroupByMode);
-                setIsGroupByOpen(false);
-              }}
-              selected={groupBy}
-              isOpen={isGroupByOpen}
-              onOpenChange={setIsGroupByOpen}
-            >
-              <SelectList>
-                <SelectOption value="rule">Rule</SelectOption>
-                <SelectOption value="component">Component</SelectOption>
-              </SelectList>
-            </Select>
-          </FlexItem>
-          <FlexItem>
-            <Button
-              variant={ButtonVariant.primary}
-              onClick={onToggleExpandAll}
-              data-test={allExpanded ? 'conforma-collapse-all' : 'conforma-expand-all'}
-            >
-              {allExpanded ? 'Collapse all' : 'Expand all'}
-            </Button>
-          </FlexItem>
-          <FlexItem>
-            <Flex alignItems={{ default: 'alignItemsCenter' }} gap={{ default: 'gapSm' }}>
-              <FlexItem>
-                <Switch
-                  id="conforma-show-duplicates"
-                  label="Show multi-arch duplicates"
-                  isChecked={showDuplicates}
-                  onChange={(_event, checked) => onShowDuplicatesChange(checked)}
-                  data-test="conforma-show-duplicates"
-                />
-              </FlexItem>
-              <FlexItem>
-                <HelpTooltipIcon content={SHOW_DUPLICATES_HELP_TEXT} />
-              </FlexItem>
-            </Flex>
-          </FlexItem>
-        </Flex>
-      </FilterToolbar>
-    </div>
+    <FilterToolbar configs={filterConfigs} options={options} dataTest="conforma-results-toolbar">
+      <Flex alignItems={{ default: 'alignItemsCenter' }} gap={{ default: 'gapMd' }}>
+        <FlexItem>
+          <Select
+            toggle={(toggleRef) => (
+              <MenuToggle
+                ref={toggleRef}
+                isExpanded={isGroupByOpen}
+                onClick={() => setIsGroupByOpen(!isGroupByOpen)}
+                data-test="conforma-group-by-select"
+              >
+                {`Group by: ${groupByLabels[groupBy]}`}
+              </MenuToggle>
+            )}
+            onSelect={(_, value) => {
+              onGroupByChange(value as GroupByMode);
+              setIsGroupByOpen(false);
+            }}
+            selected={groupBy}
+            isOpen={isGroupByOpen}
+            onOpenChange={setIsGroupByOpen}
+          >
+            <SelectList>
+              <SelectOption value="rule">Rule</SelectOption>
+              <SelectOption value="component">Component</SelectOption>
+            </SelectList>
+          </Select>
+        </FlexItem>
+        <FlexItem>
+          <Button
+            variant={ButtonVariant.primary}
+            onClick={onToggleExpandAll}
+            data-test={allExpanded ? 'conforma-collapse-all' : 'conforma-expand-all'}
+          >
+            {allExpanded ? 'Collapse all' : 'Expand all'}
+          </Button>
+        </FlexItem>
+        <FlexItem>
+          <Flex alignItems={{ default: 'alignItemsCenter' }} gap={{ default: 'gapSm' }}>
+            <FlexItem>
+              <Switch
+                id="conforma-show-duplicates"
+                label="Show multi-arch duplicates"
+                isChecked={showDuplicates}
+                onChange={(_event, checked) => onShowDuplicatesChange(checked)}
+                data-test="conforma-show-duplicates"
+              />
+            </FlexItem>
+            <FlexItem>
+              <HelpTooltipIcon content={SHOW_DUPLICATES_HELP_TEXT} />
+            </FlexItem>
+          </Flex>
+        </FlexItem>
+      </Flex>
+    </FilterToolbar>
   );
 };

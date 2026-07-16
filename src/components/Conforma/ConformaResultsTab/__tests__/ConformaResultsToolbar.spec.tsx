@@ -1,6 +1,7 @@
 import { fireEvent, screen } from '@testing-library/react';
 import { routerRenderer } from '~/unit-test-utils/mock-react-router';
 import type { GroupByMode } from '../conforma-grouping-utils';
+import { STATUS_FILTER_OPTIONS } from '../conforma-table-config';
 import { ConformaResultsToolbar } from '../ConformaResultsToolbar';
 import '@testing-library/jest-dom';
 
@@ -10,6 +11,7 @@ describe('ConformaResultsToolbar', () => {
   const onShowDuplicatesChange = jest.fn();
 
   const defaultProps = {
+    statusOptions: STATUS_FILTER_OPTIONS,
     groupBy: 'rule' as GroupByMode,
     onGroupByChange,
     allExpanded: false,

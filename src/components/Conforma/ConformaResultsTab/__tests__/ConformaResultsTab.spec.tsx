@@ -357,8 +357,7 @@ describe('ConformaResultsTab', () => {
 
     fireEvent.click(screen.getByRole('switch', { name: /show multi-arch duplicates/i }));
 
-    const expandButton = screen.queryByTestId('conforma-expand-all');
-    const collapseButton = screen.queryByTestId('conforma-collapse-all');
-    expect(expandButton || collapseButton).toBeTruthy();
+    expect(screen.getByTestId('conforma-collapse-all')).toBeInTheDocument();
+    expect(screen.queryByTestId('conforma-expand-all')).not.toBeInTheDocument();
   });
 });

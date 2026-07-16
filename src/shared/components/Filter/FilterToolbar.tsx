@@ -28,6 +28,8 @@ type FilterToolbarProps<C extends readonly FilterConfig<unknown>[]> = {
   groups?: Record<string, ToolbarGroupConfig>;
   /** Extra toolbar items rendered after the filter controls (e.g. action buttons). */
   children?: React.ReactNode;
+  /** Test id for the rendered `Toolbar` element. Defaults to `'filter-toolbar'`. */
+  dataTest?: string;
 };
 
 /**
@@ -87,6 +89,7 @@ export const FilterToolbar = <C extends readonly FilterConfig<unknown>[]>({
   options = {},
   groups: groupConfigs = {},
   children,
+  dataTest = 'filter-toolbar',
 }: FilterToolbarProps<C>) => {
   const { clearAll } = useFilterState(configs);
 
@@ -106,7 +109,7 @@ export const FilterToolbar = <C extends readonly FilterConfig<unknown>[]>({
   }, [configs]);
 
   return (
-    <Toolbar data-test="filter-toolbar" clearAllFilters={clearAll}>
+    <Toolbar data-test={dataTest} clearAllFilters={clearAll}>
       <ToolbarContent>
         {Array.from(groupedConfigs.entries()).map(([groupName, groupConfigs_]) => {
           const variant = groupName
