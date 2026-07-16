@@ -62,3 +62,6 @@ storybook-static/
 
 # Snapshots (no snapshot tests)
 **/__snapshots__/
+
+# Local agent scratch
+.superpowers/
