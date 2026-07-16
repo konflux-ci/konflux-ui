@@ -113,7 +113,7 @@ describe('ConformaResultsToolbar', () => {
     renderToolbar();
 
     fireEvent.click(screen.getByTestId('conforma-group-by-select'));
-    fireEvent.click(screen.getByText('Component'));
+    fireEvent.click(screen.getByRole('option', { name: 'Component' }));
 
     expect(onGroupByChange).toHaveBeenCalledWith('component');
   });

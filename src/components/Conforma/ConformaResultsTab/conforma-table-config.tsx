@@ -1,7 +1,7 @@
-import { CONFORMA_RESULT_STATUS, type ConformaResultRow } from '~/types/conforma';
 import { defineFilters } from '~/shared/components/Filter';
-import { textMatch } from '~/utils/text-filter-utils';
 import type { ColumnDefinition } from '~/shared/components/TableV2';
+import { CONFORMA_RESULT_STATUS, type ConformaResultRow } from '~/types/conforma';
+import { textMatch } from '~/utils/text-filter-utils';
 import type { GroupedConformaRow } from './conforma-grouping-utils';
 import { ConformaCountBadge } from './ConformaCountBadge';
 

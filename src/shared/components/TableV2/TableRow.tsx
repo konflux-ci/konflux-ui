@@ -45,6 +45,7 @@ export const TableRow = <TData,>({
             rowIndex: virtualIndex,
             isExpanded: row.getIsExpanded(),
             onToggle: row.getToggleExpandedHandler(),
+            expandId: `${rowId}-expand`,
           }}
         />
       )}

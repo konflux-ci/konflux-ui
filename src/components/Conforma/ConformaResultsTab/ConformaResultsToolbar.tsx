@@ -10,9 +10,8 @@ import {
   SelectOption,
   Switch,
 } from '@patternfly/react-core';
-import { HelpTooltipIcon } from '~/shared';
-import { FilterToolbar, type ToolbarGroupConfig } from '~/shared/components/Filter';
-import type { FilterOption } from '~/shared/components/Filter';
+import { FilterToolbar, type FilterOption } from '~/shared/components/Filter';
+import { HelpTooltipIcon } from '~/shared/components/help-tooltip';
 import type { GroupByMode } from './conforma-grouping-utils';
 import { filterConfigs, STATUS_FILTER_OPTIONS } from './conforma-table-config';
 
@@ -34,8 +33,6 @@ const groupByLabels: Record<GroupByMode, string> = {
 const SHOW_DUPLICATES_HELP_TEXT =
   'When enabled, policy violations that share the same rule, message, and component but differ only by image digest (e.g. multi-arch builds) are shown as separate rows instead of being merged.';
 
-const TOOLBAR_GROUPS: Record<string, ToolbarGroupConfig> = {};
-
 export const ConformaResultsToolbar: React.FC<ConformaResultsToolbarProps> = ({
   statusOptions,
   groupBy,
@@ -54,7 +51,7 @@ export const ConformaResultsToolbar: React.FC<ConformaResultsToolbarProps> = ({
 
   return (
     <div data-test="conforma-results-toolbar">
-      <FilterToolbar configs={filterConfigs} options={options} groups={TOOLBAR_GROUPS}>
+      <FilterToolbar configs={filterConfigs} options={options}>
         <Flex alignItems={{ default: 'alignItemsCenter' }} gap={{ default: 'gapMd' }}>
           <FlexItem>
             <Select

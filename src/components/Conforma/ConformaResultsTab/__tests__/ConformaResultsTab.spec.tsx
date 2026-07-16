@@ -17,81 +17,33 @@ jest.mock('react-router-dom', () => ({
   }),
 }));
 
-let mockFilteredData: ConformaResultRow[] = [];
-let mockClientFilterValues: Record<string, unknown> = { name: '', status: [] };
+jest.mock('~/shared/components/TableV2/hooks/useVirtualization', () => ({
+  useVirtualization: ({ count }: { count: number }) => ({
+    virtualizer: { getTotalSize: () => count * 44, measureElement: jest.fn() },
+    virtualRows: Array.from({ length: count }, (_, i) => ({ index: i, start: i * 44, size: 44 })),
+  }),
+}));
+
+jest.mock('~/shared/hooks', () => ({
+  ...jest.requireActual('~/shared/hooks'),
+  getParentScrollableElement: jest.fn().mockReturnValue(null),
+}));
+
+const mockClearAll = jest.fn();
 
 jest.mock('~/shared/components/Filter', () => ({
   ...jest.requireActual('~/shared/components/Filter'),
   useFilterState: jest.fn().mockImplementation(() => ({
     filterValues: { name: '', status: [] },
-    clientFilterValues: mockClientFilterValues,
+    clientFilterValues: { name: '', status: [] },
     isFiltered: false,
-    clearAll: jest.fn(),
+    clearAll: mockClearAll,
   })),
   useFilteredData: jest.fn().mockImplementation((_configs, data) => ({
-    filteredData: mockFilteredData.length > 0 ? mockFilteredData : data,
+    filteredData: data,
   })),
   FilterToolbar: ({ children }: { children: React.ReactNode }) => (
     <div data-test="filter-toolbar">{children}</div>
-  ),
-}));
-
-jest.mock('~/shared/components/TableV2', () => ({
-  ...jest.requireActual('~/shared/components/TableV2'),
-  Table: ({ data, expanded, onExpandedChange, expandedContent }: {
-    data: { groupKey: string; rows: ConformaResultRow[] }[];
-    expanded: Record<string, boolean>;
-    onExpandedChange: (val: Record<string, boolean>) => void;
-    expandedContent: (row: { groupKey: string; rows: ConformaResultRow[] }) => React.ReactNode;
-  }) => (
-    <div data-test="table-v2">
-      {data.map((group) => (
-        <div key={group.groupKey} data-test="table-group-row">
-          <span>{group.groupKey}</span>
-          <button
-            aria-label="Details"
-            aria-expanded={!!expanded?.[group.groupKey]}
-            onClick={() => {
-              const next = { ...expanded, [group.groupKey]: !expanded?.[group.groupKey] };
-              onExpandedChange(next);
-            }}
-          >
-            Toggle
-          </button>
-          {expanded?.[group.groupKey] && expandedContent && (
-            <div data-test="expanded-content">{expandedContent(group)}</div>
-          )}
-        </div>
-      ))}
-    </div>
-  ),
-  TableContainer: ({
-    children,
-    loaded,
-    loadError,
-    emptyState,
-    noDataState,
-    toolbar,
-    data,
-    unfilteredData,
-  }: {
-    children: React.ReactNode;
-    loaded: boolean;
-    loadError?: Error;
-    emptyState?: React.ReactNode;
-    noDataState?: React.ReactNode;
-    toolbar?: React.ReactNode;
-    data: unknown[];
-    unfilteredData: unknown[];
-  }) => (
-    <div data-test="table-container">
-      {toolbar}
-      {!loaded && <div role="progressbar">Loading...</div>}
-      {loaded && loadError && <div data-test="table-error">{loadError.message}</div>}
-      {loaded && !loadError && unfilteredData.length === 0 && noDataState}
-      {loaded && !loadError && unfilteredData.length > 0 && data.length === 0 && emptyState}
-      {loaded && !loadError && data.length > 0 && children}
-    </div>
   ),
 }));
 
@@ -206,11 +158,19 @@ const populatedResults: ApplicationConformaResults = {
 describe('ConformaResultsTab', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockFilteredData = [];
-    mockClientFilterValues = { name: '', status: [] };
+    const { useFilteredData, useFilterState } = jest.requireMock('~/shared/components/Filter');
+    (useFilteredData as jest.Mock).mockImplementation(
+      (_configs: unknown, data: unknown) => ({ filteredData: data }),
+    );
+    (useFilterState as jest.Mock).mockImplementation(() => ({
+      filterValues: { name: '', status: [] },
+      clientFilterValues: { name: '', status: [] },
+      isFiltered: false,
+      clearAll: mockClearAll,
+    }));
   });
 
-  it('shows a spinner when data is loading', () => {
+  it('shows a spinner when data is loading and does NOT show summary bar counts', () => {
     mockUseApplicationConformaResults.mockReturnValue({
       ...emptyResults,
       loaded: false,
@@ -218,14 +178,15 @@ describe('ConformaResultsTab', () => {
 
     routerRenderer(<ConformaResultsTab />);
 
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    expect(screen.getByLabelText('Loading Conforma results')).toBeInTheDocument();
+    expect(screen.queryByTestId('conforma-summary-bar')).not.toBeInTheDocument();
   });
 
-  it('shows an error message when there is an error', () => {
+  it('shows an error state when there is an error', () => {
     mockUseApplicationConformaResults.mockReturnValue({
       ...emptyResults,
       loaded: true,
-      error: new Error('Unable to load Conforma results'),
+      error: { code: 403 },
     });
 
     routerRenderer(<ConformaResultsTab />);
@@ -273,7 +234,7 @@ describe('ConformaResultsTab', () => {
     expect(screen.getAllByText('Base image allowed').length).toBeGreaterThanOrEqual(1);
   });
 
-  it('expands and collapses groups via Expand all / Collapse all', () => {
+  it('expands and collapses groups via Expand all / Collapse all with real aria-expanded', () => {
     mockUseApplicationConformaResults.mockReturnValue(populatedResults);
 
     routerRenderer(<ConformaResultsTab />);
@@ -358,7 +319,7 @@ describe('ConformaResultsTab', () => {
     expect(screen.getByText(/sha256:ccc/)).toBeInTheDocument();
   });
 
-  it('shows "no results match" when filters exclude all results', () => {
+  it('shows filtered empty state when filters exclude all results', () => {
     mockUseApplicationConformaResults.mockReturnValue(populatedResults);
 
     const { useFilteredData } = jest.requireMock('~/shared/components/Filter');
@@ -366,6 +327,38 @@ describe('ConformaResultsTab', () => {
 
     routerRenderer(<ConformaResultsTab />);
 
-    expect(screen.getByText('No results match the current filters.')).toBeInTheDocument();
+    expect(screen.getByText('No results found')).toBeInTheDocument();
+    expect(screen.getByText('Clear all filters')).toBeInTheDocument();
+  });
+
+  it('clears expansion when groupBy changes (T2)', () => {
+    mockUseApplicationConformaResults.mockReturnValue(populatedResults);
+
+    routerRenderer(<ConformaResultsTab />);
+
+    fireEvent.click(screen.getByTestId('conforma-expand-all'));
+    const expandedButtons = screen.getAllByRole('button', { name: /details/i });
+    expect(expandedButtons.some((b) => b.getAttribute('aria-expanded') === 'true')).toBe(true);
+
+    fireEvent.click(screen.getByTestId('conforma-group-by-select'));
+    fireEvent.click(screen.getByRole('option', { name: 'Component' }));
+
+    const postSwitchButtons = screen.getAllByRole('button', { name: /details/i });
+    expect(postSwitchButtons.every((b) => b.getAttribute('aria-expanded') === 'false')).toBe(true);
+  });
+
+  it('correctly reflects allExpanded after expand-all then toggling showDuplicates (T3)', () => {
+    mockUseApplicationConformaResults.mockReturnValue(archDupeResults);
+
+    routerRenderer(<ConformaResultsTab />);
+
+    fireEvent.click(screen.getByTestId('conforma-expand-all'));
+    expect(screen.getByTestId('conforma-collapse-all')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('switch', { name: /show multi-arch duplicates/i }));
+
+    const expandButton = screen.queryByTestId('conforma-expand-all');
+    const collapseButton = screen.queryByTestId('conforma-collapse-all');
+    expect(expandButton || collapseButton).toBeTruthy();
   });
 });

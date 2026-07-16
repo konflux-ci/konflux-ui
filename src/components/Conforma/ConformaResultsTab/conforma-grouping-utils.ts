@@ -1,6 +1,5 @@
 import { CONFORMA_RESULT_STATUS } from '~/types/conforma';
 import type { ConformaResultRow } from '~/types/conforma';
-import { textMatch } from '~/utils/text-filter-utils';
 
 export type GroupByMode = 'rule' | 'component';
 
@@ -87,23 +86,6 @@ export const groupByComponent = (
     return { groupKey, ...counts, rows };
   });
 };
-
-export const filterResults = (
-  results: ConformaResultRow[],
-  searchText: string,
-  statusFilters: string[],
-): ConformaResultRow[] =>
-  results.filter((row) => {
-    if (searchText && !textMatch(row.title, searchText) && !textMatch(row.component, searchText)) {
-      return false;
-    }
-
-    if (statusFilters.length > 0 && !statusFilters.includes(row.status)) {
-      return false;
-    }
-
-    return true;
-  });
 
 /**
  * Extracts the shared image name (everything before `@`) from an array of

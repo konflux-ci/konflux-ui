@@ -2,13 +2,16 @@ import * as React from 'react';
 import { useParams } from 'react-router-dom';
 import {
   Bullseye,
-  PageSection,
   Content,
   ContentVariants,
+  PageSection,
+  Spinner,
   Title,
 } from '@patternfly/react-core';
+import FilteredEmptyState from '~/shared/components/empty-state/FilteredEmptyState';
 import { useFilterState, useFilteredData } from '~/shared/components/Filter';
-import { TableContainer, type ExpandedState } from '~/shared/components/TableV2';
+import { TableContainer, TableSkeleton, type ExpandedState } from '~/shared/components/TableV2';
+import { getErrorState } from '~/shared/utils/error-utils';
 import type { GroupByMode } from './conforma-grouping-utils';
 import {
   collapseArchDuplicates,
@@ -16,10 +19,10 @@ import {
   groupByComponent,
   groupByRule,
 } from './conforma-grouping-utils';
+import { filterConfigs } from './conforma-table-config';
 import { ConformaGroupedTable } from './ConformaGroupedTable';
 import { ConformaResultsToolbar } from './ConformaResultsToolbar';
 import { ConformaSummaryBar } from './ConformaSummaryBar';
-import { filterConfigs } from './conforma-table-config';
 import { useApplicationConformaResults } from './useApplicationConformaResults';
 import './ConformaResultsTab.scss';
 
@@ -28,7 +31,7 @@ const ConformaResultsTabContent: React.FC = () => {
   const { allResults, componentStatuses, totalComponents, totalFailed, loaded, error } =
     useApplicationConformaResults(applicationName);
 
-  const { clientFilterValues } = useFilterState(filterConfigs);
+  const { clientFilterValues, clearAll } = useFilterState(filterConfigs);
 
   const [groupBy, setGroupBy] = React.useState<GroupByMode>('rule');
   const [expanded, setExpanded] = React.useState<ExpandedState>({});
@@ -63,7 +66,7 @@ const ConformaResultsTabContent: React.FC = () => {
   );
 
   const allExpanded =
-    groups.length > 0 && groups.every((g) => (expanded as Record<string, boolean>)[g.groupKey]);
+    groups.length > 0 && (expanded === true || groups.every((g) => expanded[g.groupKey]));
 
   const handleToggleExpandAll = React.useCallback(() => {
     if (allExpanded) {
@@ -76,6 +79,21 @@ const ConformaResultsTabContent: React.FC = () => {
       setExpanded(next);
     }
   }, [allExpanded, groups]);
+
+  if (!loaded) {
+    return (
+      <PageSection>
+        <Bullseye>
+          <Spinner size="xl" aria-label="Loading Conforma results" />
+        </Bullseye>
+      </PageSection>
+    );
+  }
+
+  const errorState = getErrorState(error, loaded, 'Conforma results');
+  if (errorState) {
+    return errorState;
+  }
 
   const toolbar = (
     <ConformaResultsToolbar
@@ -119,8 +137,8 @@ const ConformaResultsTabContent: React.FC = () => {
           data={groups}
           unfilteredData={displayResults}
           loaded={loaded}
-          loadError={error instanceof Error ? error : undefined}
           toolbar={toolbar}
+          skeleton={<TableSkeleton columns={4} />}
           noDataState={
             <Bullseye>
               <Content component={ContentVariants.p}>
@@ -128,13 +146,7 @@ const ConformaResultsTabContent: React.FC = () => {
               </Content>
             </Bullseye>
           }
-          emptyState={
-            <Bullseye>
-              <Content component={ContentVariants.p}>
-                No results match the current filters.
-              </Content>
-            </Bullseye>
-          }
+          emptyState={<FilteredEmptyState onClearFilters={clearAll} />}
         >
           <ConformaGroupedTable
             groups={groups}
