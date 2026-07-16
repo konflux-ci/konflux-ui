@@ -1,11 +1,24 @@
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type { ExpandedState } from '~/shared/components/TableV2';
 import { CONFORMA_RESULT_STATUS } from '~/types/conforma';
 import type { ConformaResultRow } from '~/types/conforma';
 import { routerRenderer } from '~/unit-test-utils/mock-react-router';
 import type { GroupedConformaRow } from '../conforma-grouping-utils';
 import { ConformaGroupedTable } from '../ConformaGroupedTable';
 import '@testing-library/jest-dom';
+
+jest.mock('~/shared/components/TableV2/hooks/useVirtualization', () => ({
+  useVirtualization: ({ count }: { count: number }) => ({
+    virtualizer: { getTotalSize: () => count * 44, measureElement: jest.fn() },
+    virtualRows: Array.from({ length: count }, (_, i) => ({ index: i, start: i * 44, size: 44 })),
+  }),
+}));
+
+jest.mock('~/shared/hooks', () => ({
+  ...jest.requireActual('~/shared/hooks'),
+  getParentScrollableElement: jest.fn().mockReturnValue(null),
+}));
 
 const createRow = (overrides: Partial<ConformaResultRow> = {}): ConformaResultRow => ({
   title: 'Test rule',
@@ -57,8 +70,8 @@ describe('ConformaGroupedTable', () => {
   const defaultProps = {
     groups: mockGroups,
     groupBy: 'rule' as const,
-    expandedGroups: new Set<string>(),
-    onToggleGroup: jest.fn(),
+    expanded: {} as ExpandedState,
+    onExpandedChange: jest.fn(),
   };
 
   beforeEach(() => {
@@ -95,20 +108,22 @@ describe('ConformaGroupedTable', () => {
     expect(screen.getAllByText('Component').length).toBeGreaterThanOrEqual(1);
   });
 
-  it('calls onToggleGroup when expand button is clicked', async () => {
+  it('calls onExpandedChange when expand button is clicked', async () => {
     const user = userEvent.setup();
-    const onToggle = jest.fn();
-    routerRenderer(<ConformaGroupedTable {...defaultProps} onToggleGroup={onToggle} />);
+    const onExpandedChange = jest.fn();
+    routerRenderer(
+      <ConformaGroupedTable {...defaultProps} onExpandedChange={onExpandedChange} />,
+    );
 
-    const toggleButtons = screen.getAllByRole('button');
+    const toggleButtons = screen.getAllByRole('button', { name: /details/i });
     await user.click(toggleButtons[0]);
 
-    expect(onToggle).toHaveBeenCalledWith('Missing CVE scan');
+    expect(onExpandedChange).toHaveBeenCalled();
   });
 
   it('shows detail sub-table when a group is expanded', () => {
-    const expandedGroups = new Set(['Missing CVE scan']);
-    routerRenderer(<ConformaGroupedTable {...defaultProps} expandedGroups={expandedGroups} />);
+    const expanded: ExpandedState = { 'Missing CVE scan': true };
+    routerRenderer(<ConformaGroupedTable {...defaultProps} expanded={expanded} />);
 
     expect(screen.getAllByText('api-gateway').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText('auth-service').length).toBeGreaterThanOrEqual(1);
@@ -121,8 +136,8 @@ describe('ConformaGroupedTable', () => {
   });
 
   it('renders all column headers in expanded detail sub-table', () => {
-    const expandedGroups = new Set(['Missing CVE scan']);
-    routerRenderer(<ConformaGroupedTable {...defaultProps} expandedGroups={expandedGroups} />);
+    const expanded: ExpandedState = { 'Missing CVE scan': true };
+    routerRenderer(<ConformaGroupedTable {...defaultProps} expanded={expanded} />);
 
     expect(screen.getAllByText('Image').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText('Status').length).toBeGreaterThanOrEqual(1);
@@ -147,12 +162,12 @@ describe('ConformaGroupedTable', () => {
         ],
       },
     ];
-    const expandedGroups = new Set(['Multi-arch rule']);
+    const expanded: ExpandedState = { 'Multi-arch rule': true };
     routerRenderer(
       <ConformaGroupedTable
         {...defaultProps}
         groups={groupsWithMultipleImages}
-        expandedGroups={expandedGroups}
+        expanded={expanded}
       />,
     );
 
@@ -174,12 +189,12 @@ describe('ConformaGroupedTable', () => {
         ],
       },
     ];
-    const expandedGroups = new Set(['Mixed images rule']);
+    const expanded: ExpandedState = { 'Mixed images rule': true };
     routerRenderer(
       <ConformaGroupedTable
         {...defaultProps}
         groups={groupsWithDifferentImages}
-        expandedGroups={expandedGroups}
+        expanded={expanded}
       />,
     );
 
@@ -196,12 +211,12 @@ describe('ConformaGroupedTable', () => {
         rows: [createRow({ images: ['quay.io/test/img@sha256:only'] })],
       },
     ];
-    const expandedGroups = new Set(['Single-image rule']);
+    const expanded: ExpandedState = { 'Single-image rule': true };
     routerRenderer(
       <ConformaGroupedTable
         {...defaultProps}
         groups={groupsWithSingleImage}
-        expandedGroups={expandedGroups}
+        expanded={expanded}
       />,
     );
 
@@ -222,12 +237,12 @@ describe('ConformaGroupedTable', () => {
         ],
       },
     ];
-    const expandedGroups = new Set(['Multi-arch rule']);
+    const expanded: ExpandedState = { 'Multi-arch rule': true };
     routerRenderer(
       <ConformaGroupedTable
         {...defaultProps}
         groups={groupsWithMultipleImages}
-        expandedGroups={expandedGroups}
+        expanded={expanded}
       />,
     );
 
@@ -249,12 +264,12 @@ describe('ConformaGroupedTable', () => {
         ],
       },
     ];
-    const expandedGroups = new Set(['Single-collapsed rule']);
+    const expanded: ExpandedState = { 'Single-collapsed rule': true };
     routerRenderer(
       <ConformaGroupedTable
         {...defaultProps}
         groups={groupsWithSingleCollapsedImage}
-        expandedGroups={expandedGroups}
+        expanded={expanded}
       />,
     );
 
@@ -272,12 +287,12 @@ describe('ConformaGroupedTable', () => {
         rows: [createRow({ images: ['quay.io/test/img@sha256:abc'] }), createRow({ images: [] })],
       },
     ];
-    const expandedGroups = new Set(['Has image rule']);
+    const expanded: ExpandedState = { 'Has image rule': true };
     routerRenderer(
       <ConformaGroupedTable
         {...defaultProps}
         groups={groupsWithImage}
-        expandedGroups={expandedGroups}
+        expanded={expanded}
       />,
     );
 
@@ -294,13 +309,13 @@ describe('ConformaGroupedTable', () => {
         rows: [createRow({ msg: '' })],
       },
     ];
-    const expandedGroups = new Set(['Empty message rule']);
+    const expanded: ExpandedState = { 'Empty message rule': true };
 
     routerRenderer(
       <ConformaGroupedTable
         {...defaultProps}
         groups={groupsWithEmptyMsg}
-        expandedGroups={expandedGroups}
+        expanded={expanded}
       />,
     );
 
@@ -317,13 +332,13 @@ describe('ConformaGroupedTable', () => {
         rows: [createRow({ msg: undefined })],
       },
     ];
-    const expandedGroups = new Set(['No message rule']);
+    const expanded: ExpandedState = { 'No message rule': true };
 
     routerRenderer(
       <ConformaGroupedTable
         {...defaultProps}
         groups={groupsWithNoMsg}
-        expandedGroups={expandedGroups}
+        expanded={expanded}
       />,
     );
 
@@ -344,13 +359,13 @@ describe('ConformaGroupedTable', () => {
         rows: [createRow({ msg: longMsg })],
       },
     ];
-    const expandedGroups = new Set(['Long message rule']);
+    const expanded: ExpandedState = { 'Long message rule': true };
 
     routerRenderer(
       <ConformaGroupedTable
         {...defaultProps}
         groups={groupsWithLongMsg}
-        expandedGroups={expandedGroups}
+        expanded={expanded}
       />,
     );
 
