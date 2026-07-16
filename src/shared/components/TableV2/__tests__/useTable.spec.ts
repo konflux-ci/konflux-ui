@@ -153,6 +153,50 @@ describe('useTable', () => {
       const callArgs = mockUseReactTable.mock.calls[0][0];
       expect(callArgs.getRowId).toBe(defaultOptions.getRowId);
     });
+
+    it('passes controlled expanded state into state.expanded when provided', () => {
+      const expanded = { '1': true };
+
+      renderHook(() =>
+        useTable({
+          ...defaultOptions,
+          enableExpansion: true,
+          expanded,
+        }),
+      );
+
+      const callArgs = mockUseReactTable.mock.calls[0][0];
+      expect(callArgs.state?.expanded).toBe(expanded);
+    });
+
+    it('wires onExpandedChange when provided', () => {
+      const onExpandedChange = jest.fn();
+
+      renderHook(() =>
+        useTable({
+          ...defaultOptions,
+          enableExpansion: true,
+          expanded: {},
+          onExpandedChange,
+        }),
+      );
+
+      const callArgs = mockUseReactTable.mock.calls[0][0];
+      expect(callArgs.onExpandedChange).toBe(onExpandedChange);
+    });
+
+    it('omits state.expanded and onExpandedChange when not provided (uncontrolled)', () => {
+      renderHook(() =>
+        useTable({
+          ...defaultOptions,
+          enableExpansion: true,
+        }),
+      );
+
+      const callArgs = mockUseReactTable.mock.calls[0][0];
+      expect(callArgs.state?.expanded).toBeUndefined();
+      expect(callArgs.onExpandedChange).toBeUndefined();
+    });
   });
 
   describe('meta passthrough', () => {
