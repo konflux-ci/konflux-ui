@@ -1,25 +1,24 @@
 import * as React from 'react';
 import { Content, Tooltip, Truncate as PfTruncate } from '@patternfly/react-core';
-import { ExpandableRowContent, Table, Tbody, Td, Th, Thead, Tr } from '@patternfly/react-table';
+import { Table as PfTable, Tbody, Td, Th, Thead, Tr } from '@patternfly/react-table';
 import { getRuleStatus } from '~/components/Conforma/utils';
-import type { ComponentProps } from '~/shared/components/table/Table';
+import { Table, type ExpandedState, type OnChangeFn } from '~/shared/components/TableV2';
 import { Truncate } from '~/shared/components/truncate-text/Truncate';
 import type { ConformaResultRow } from '~/types/conforma';
 import type { GroupByMode, GroupedConformaRow } from './conforma-grouping-utils';
 import { getCommonImageName } from './conforma-grouping-utils';
-import { getConformaGroupedHeader } from './ConformaResultsListHeader';
-import ConformaResultsListRow from './ConformaResultsListRow';
+import { buildConformaGroupedColumns } from './conforma-table-config';
 import './ConformaResultsTab.scss';
 
 type ConformaGroupedTableProps = {
   groups: GroupedConformaRow[];
   groupBy: GroupByMode;
-  expandedGroups: Set<string>;
-  onToggleGroup: (groupKey: string) => void;
+  expanded: ExpandedState;
+  onExpandedChange: OnChangeFn<ExpandedState>;
 };
 
 const DetailSubTable: React.FC<{ rows: ConformaResultRow[] }> = ({ rows }) => (
-  <Table
+  <PfTable
     aria-label="Conforma detail rows"
     variant="compact"
     borders={false}
@@ -95,64 +94,30 @@ const DetailSubTable: React.FC<{ rows: ConformaResultRow[] }> = ({ rows }) => (
         );
       })}
     </Tbody>
-  </Table>
+  </PfTable>
 );
 
 export const ConformaGroupedTable: React.FC<ConformaGroupedTableProps> = ({
   groups,
   groupBy,
-  expandedGroups,
-  onToggleGroup,
+  expanded,
+  onExpandedChange,
 }) => {
   const groupLabel = groupBy === 'rule' ? 'Rule' : 'Component';
-
-  // Build column definitions using the shared createTableHeaders utility so
-  // the header config follows the same pattern as other table components.
-  const headerColumns = React.useMemo(
-    () => getConformaGroupedHeader(groupLabel)({} as ComponentProps<unknown>),
-    [groupLabel],
-  );
+  const columns = React.useMemo(() => buildConformaGroupedColumns(groupLabel), [groupLabel]);
 
   return (
-    <Table aria-label="Conforma results grouped table" data-test="conforma-grouped-table">
-      <Thead>
-        <Tr>
-          <Th screenReaderText="Expand" />
-          {headerColumns.map((col) => (
-            <Th key={String(col.title)} {...col.props}>
-              {col.title}
-            </Th>
-          ))}
-        </Tr>
-      </Thead>
-      {groups.map((group, groupIdx) => {
-        const isExpanded = expandedGroups.has(group.groupKey);
-        const rowId = `conforma-group-${groupIdx}`;
-
-        return (
-          <Tbody key={group.groupKey} isExpanded={isExpanded}>
-            <Tr>
-              <Td
-                expand={{
-                  rowIndex: groupIdx,
-                  isExpanded,
-                  onToggle: () => onToggleGroup(group.groupKey),
-                  expandId: `${rowId}-expand`,
-                }}
-              />
-              {/* Reuse the shared Row fragment for the main summary cells */}
-              <ConformaResultsListRow obj={group} />
-            </Tr>
-            <Tr isExpanded={isExpanded}>
-              <Td colSpan={headerColumns.length + 1} noPadding={false}>
-                <ExpandableRowContent>
-                  {isExpanded && <DetailSubTable rows={group.rows} />}
-                </ExpandableRowContent>
-              </Td>
-            </Tr>
-          </Tbody>
-        );
-      })}
-    </Table>
+    <div data-test="conforma-grouped-table">
+      <Table
+        data={groups}
+        columns={columns}
+        getRowId={(g) => g.groupKey}
+        aria-label="Conforma results grouped table"
+        enableExpansion
+        expandedContent={(group) => <DetailSubTable rows={group.rows} />}
+        expanded={expanded}
+        onExpandedChange={onExpandedChange}
+      />
+    </div>
   );
 };
