@@ -1,6 +1,7 @@
 import { render, screen, act, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
+import { WebSocketFactory } from '~/k8s/web-socket/WebSocketFactory';
 import { ResourceSource } from '~/types/k8s';
 import { commonFetchText } from '../../../../../k8s';
 import {
@@ -17,6 +18,11 @@ const mockLogViewer = jest.fn();
 const getLastSectionsData = (): string => {
   const lastCall = mockLogViewer.mock.calls[mockLogViewer.mock.calls.length - 1][0];
   return (lastCall.sections || []).map((s: { data: string }) => s.data).join('\n');
+};
+
+const getLastSectionsErrors = (): string => {
+  const lastCall = mockLogViewer.mock.calls[mockLogViewer.mock.calls.length - 1][0];
+  return (lastCall.sections || []).map((s: { error?: string }) => s.error || '').join('\n');
 };
 
 jest.mock('../LogViewer', () => {
@@ -464,10 +470,65 @@ describe('Logs', () => {
 
       expect(commonFetchText as jest.Mock).toHaveBeenCalled();
 
-      // Should show error message in LogViewer
+      // Should surface the error on this specific step's section, not the whole log data
       await waitFor(() => {
-        expect(getLastSectionsData()).toContain('LOG FETCH ERROR');
+        expect(getLastSectionsErrors()).toContain('Network error');
       });
+      expect(getLastSectionsData()).not.toContain('Network error');
+    });
+
+    it('should still show other containers logs when one container fails to fetch', async () => {
+      const terminatedContainer1: ContainerStatus = {
+        name: 'container1',
+        state: { terminated: { exitCode: 0 } },
+        ready: false,
+        restartCount: 0,
+        image: 'test-image',
+        imageID: 'test-image-id',
+      };
+      const terminatedContainer2: ContainerStatus = {
+        name: 'container2',
+        state: { terminated: { exitCode: 1 } },
+        ready: false,
+        restartCount: 0,
+        image: 'test-image',
+        imageID: 'test-image-id',
+      };
+
+      const resourceWithStatus: PodKind = {
+        ...mockResource,
+        status: {
+          phase: 'Failed',
+          containerStatuses: [terminatedContainer1, terminatedContainer2],
+        },
+      };
+
+      (containerToLogSourceStatus as jest.Mock).mockReturnValue('terminated');
+      (commonFetchText as jest.Mock)
+        .mockResolvedValueOnce('log line 1\nlog line 2')
+        .mockRejectedValueOnce(new Error('Network error'));
+
+      render(
+        <Logs
+          {...defaultProps}
+          resource={resourceWithStatus}
+          containers={[{ name: 'container1' }, { name: 'container2' }]}
+        />,
+      );
+
+      await waitFor(() => {
+        const lastCall = mockLogViewer.mock.calls[mockLogViewer.mock.calls.length - 1][0];
+        expect(lastCall.sections).toHaveLength(2);
+      });
+
+      const lastCall = mockLogViewer.mock.calls[mockLogViewer.mock.calls.length - 1][0];
+      expect(lastCall.sections[0]).toMatchObject({
+        containerName: 'CONTAINER1',
+        data: 'log line 1\nlog line 2',
+      });
+      expect(lastCall.sections[0].error).toBeUndefined();
+      expect(lastCall.sections[1]).toMatchObject({ containerName: 'CONTAINER2', data: '' });
+      expect(lastCall.sections[1].error).toContain('Network error');
     });
 
     it('should gracefully handle 404 errors (empty logs) from kubearch', async () => {
@@ -504,8 +565,11 @@ describe('Logs', () => {
 
       // Should NOT show error message for 404 (missing logs) - should remain empty
       await waitFor(() => {
-        expect(getLastSectionsData()).not.toContain('LOG FETCH ERROR');
+        expect(mockLogViewer).toHaveBeenCalled();
       });
+      expect(getLastSectionsErrors()).not.toContain('LOG FETCH ERROR');
+      const lastCall = mockLogViewer.mock.calls[mockLogViewer.mock.calls.length - 1][0];
+      expect(lastCall.sections).toHaveLength(0);
     });
 
     it('should use websocket for running containers', async () => {
@@ -598,6 +662,78 @@ describe('Logs', () => {
       await waitFor(() => {
         expect(getLastSectionsData()).toContain('decoded-aGVsbG8gd29ybGQ=');
       });
+    });
+  });
+
+  describe('archive source containers', () => {
+    it('should use HTTP fetch (never a websocket) for a container whose archived status is not yet terminated', () => {
+      // The archived pod's status snapshot claims this container is still "running", but
+      // since the pod only exists in KubeArchive (not the live cluster), a live websocket
+      // watch against it can never succeed -- we must always fall back to the HTTP/
+      // kubearchive-aware fetch path instead.
+      const staleRunningContainer: ContainerStatus = {
+        name: 'container1',
+        state: { running: { startedAt: new Date().toISOString() } },
+        ready: true,
+        restartCount: 0,
+        image: 'test-image',
+        imageID: 'test-image-id',
+      };
+
+      const resourceWithStatus: PodKind = {
+        ...mockResource,
+        status: {
+          phase: 'Running',
+          containerStatuses: [staleRunningContainer],
+        },
+      };
+
+      (containerToLogSourceStatus as jest.Mock).mockReturnValue('running');
+      (useIsOnFeatureFlag as jest.Mock).mockReturnValue(true); // kubearchive enabled
+      (commonFetchText as jest.Mock).mockResolvedValue('archived logs');
+
+      render(
+        <Logs
+          {...defaultProps}
+          resource={resourceWithStatus}
+          containers={[{ name: 'container1' }]}
+          source={ResourceSource.Archive}
+        />,
+      );
+
+      expect(commonFetchText as jest.Mock).toHaveBeenCalledWith(
+        'http://test-url',
+        expect.objectContaining({
+          signal: expect.any(AbortSignal),
+          pathPrefix: 'plugins/kubearchive',
+        }),
+      );
+      expect(WebSocketFactory).not.toHaveBeenCalled();
+      expect(getK8sResourceURL as jest.Mock).toHaveBeenCalledWith(
+        expect.objectContaining({ kind: 'Pod' }),
+        undefined,
+        expect.objectContaining({
+          queryParams: expect.objectContaining({
+            follow: 'false',
+          }),
+        }),
+      );
+    });
+
+    it('should still use a websocket for non-terminated containers when source is Cluster', () => {
+      (containerToLogSourceStatus as jest.Mock).mockReturnValue('running');
+      (useIsOnFeatureFlag as jest.Mock).mockReturnValue(true); // kubearchive enabled, but source is Cluster
+
+      render(
+        <Logs
+          {...defaultProps}
+          containers={[{ name: 'container1' }]}
+          source={ResourceSource.Cluster}
+        />,
+      );
+
+      expect(commonFetchText as jest.Mock).not.toHaveBeenCalled();
+      expect(WebSocketFactory).toHaveBeenCalled();
     });
   });
 

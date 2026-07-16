@@ -1,7 +1,51 @@
 import Prism from 'prismjs';
-import { flattenTokenText, getLineMatches, isMatchCurrent } from '../log-viewer-utils';
+import {
+  flattenTokenText,
+  getLineMatches,
+  isMatchCurrent,
+  normalizeSection,
+  singleLogSection,
+} from '../log-viewer-utils';
 
 describe('log-viewer-utils', () => {
+  describe('normalizeSection', () => {
+    it('should strip ANSI codes and split data into lines', () => {
+      const normalized = normalizeSection({ containerName: 'BUILD', data: 'compile\nlink' });
+      expect(normalized).toEqual({
+        containerName: 'BUILD',
+        lines: ['compile', 'link'],
+        error: undefined,
+      });
+    });
+
+    it('should carry the section error through normalization', () => {
+      const normalized = normalizeSection({
+        containerName: 'VALIDATE',
+        data: '',
+        error: 'Network error',
+      });
+      expect(normalized.error).toBe('Network error');
+    });
+  });
+
+  describe('singleLogSection', () => {
+    it('should default containerName to "log" and isCompleted to true', () => {
+      expect(singleLogSection('line 1\nline 2')).toEqual({
+        containerName: 'log',
+        data: 'line 1\nline 2',
+        isCompleted: true,
+      });
+    });
+
+    it('should allow overriding containerName and isCompleted', () => {
+      expect(singleLogSection('data', 'BUILD', false)).toEqual({
+        containerName: 'BUILD',
+        data: 'data',
+        isCompleted: false,
+      });
+    });
+  });
+
   describe('flattenTokenText', () => {
     it('should return string as-is when token is a string', () => {
       expect(flattenTokenText('hello world')).toBe('hello world');

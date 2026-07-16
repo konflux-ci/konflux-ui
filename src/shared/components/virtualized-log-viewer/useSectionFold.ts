@@ -3,12 +3,16 @@ import type { LogSection } from './types';
 
 const EMPTY_EXPANDED_SECTIONS = new Set<number>();
 
+// A section stays expanded (rather than auto-folded) while it's still running, or if its
+// logs failed to fetch -- folding a failed step would hide the only indication of why.
+const shouldStayExpanded = (section: LogSection): boolean => !section.isCompleted || !!section.error;
+
 function getInitialExpandedSections(sections: readonly LogSection[]): Set<number> {
   if (sections.length === 1) return new Set([0]);
 
   const expanded = new Set<number>();
   for (let i = 0; i < sections.length; i++) {
-    if (!sections[i].isCompleted) expanded.add(i);
+    if (shouldStayExpanded(sections[i])) expanded.add(i);
   }
   return expanded;
 }
@@ -25,17 +29,20 @@ export const useSectionFold = (sections: readonly LogSection[]) => {
 
   const prevSectionCountRef = React.useRef(sections.length);
   const prevCompletionRef = React.useRef<boolean[]>(sections.map((s) => s.isCompleted ?? false));
+  const prevErrorRef = React.useRef<boolean[]>(sections.map((s) => !!s.error));
 
   React.useEffect(() => {
     if (!hasSections) {
       prevSectionCountRef.current = 0;
       prevCompletionRef.current = [];
+      prevErrorRef.current = [];
       return;
     }
 
     const currentSections = sectionsRef.current;
     const prevCount = prevSectionCountRef.current;
     const prevCompletion = prevCompletionRef.current;
+    const prevError = prevErrorRef.current;
     const lengthChanged = currentSections.length !== prevCount;
 
     setExpandedSections((prev) => {
@@ -49,14 +56,15 @@ export const useSectionFold = (sections: readonly LogSection[]) => {
         const base = next ?? prev;
         next = new Set(base);
         for (let i = prevCount; i < currentSections.length; i++) {
-          if (!currentSections[i].isCompleted) next.add(i);
+          if (shouldStayExpanded(currentSections[i])) next.add(i);
         }
       }
 
       if (prevCompletion.length > 0) {
         const newlyCompleted: number[] = [];
         currentSections.forEach((s, i) => {
-          if (s.isCompleted && prevCompletion[i] === false) newlyCompleted.push(i);
+          // Don't auto-collapse a step that just finished but failed to fetch its logs.
+          if (s.isCompleted && !s.error && prevCompletion[i] === false) newlyCompleted.push(i);
         });
         if (newlyCompleted.length > 0) {
           const base = next ?? prev;
@@ -65,11 +73,24 @@ export const useSectionFold = (sections: readonly LogSection[]) => {
         }
       }
 
+      // A step that already rendered can still fail after the fact (e.g. a websocket
+      // connection that later drops) -- expand it so the error becomes visible.
+      const newlyErrored: number[] = [];
+      currentSections.forEach((s, i) => {
+        if (s.error && !prevError[i]) newlyErrored.push(i);
+      });
+      if (newlyErrored.length > 0) {
+        const base = next ?? prev;
+        next = new Set(base);
+        newlyErrored.forEach((i) => next.add(i));
+      }
+
       return next ?? prev;
     });
 
     prevSectionCountRef.current = currentSections.length;
     prevCompletionRef.current = currentSections.map((s) => s.isCompleted ?? false);
+    prevErrorRef.current = currentSections.map((s) => !!s.error);
   }, [hasSections, sections]);
 
   const toggleSection = React.useCallback((sectionIndex: number) => {
