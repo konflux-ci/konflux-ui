@@ -37,10 +37,7 @@ export const useOpaqueSecretSync = ({
   }, [setFieldValue]);
 
   const resetKeyValues = useCallback(() => {
-    void setFieldValue(
-      'opaque.keyValues',
-      getResetKeyValuesForImage(opaqueKeyValuesRef.current),
-    );
+    void setFieldValue('opaque.keyValues', getResetKeyValuesForImage(opaqueKeyValuesRef.current));
   }, [setFieldValue]);
 
   const makeOpaqueFieldsEditable = useCallback(() => {
@@ -90,7 +87,6 @@ export const useOpaqueSecretSync = ({
         resetOpaqueFields();
         break;
       case 'none':
-        break;
       default:
         break;
     }
