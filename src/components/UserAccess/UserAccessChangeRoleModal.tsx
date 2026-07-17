@@ -17,6 +17,7 @@ import {
   Spinner,
   Content,
   ModalBody,
+  ModalHeader,
 } from '@patternfly/react-core';
 import textStyles from '@patternfly/react-styles/css/utilities/Text/text.mjs';
 import { useRoleMap } from '~/hooks/useRole';
@@ -204,13 +205,11 @@ export const UserAccessChangeRoleModal: React.FC<UserAccessChangeRoleModalProps>
       appendTo={() => document.querySelector('#hacDev-modal-container') ?? document.body}
     >
       <ModalBody>
+        <ModalHeader
+          title={`Change role for ${selectedCount} user${selectedCount !== 1 ? 's' : ''} (highest role
+              displayed)`}
+        />
         <Flex direction={{ default: 'column' }} gap={{ default: 'gapMd' }}>
-          <FlexItem>
-            <Content>
-              Change role for {selectedCount} user{selectedCount !== 1 ? 's' : ''} (highest role
-              displayed)
-            </Content>
-          </FlexItem>
           {hasUnrankedRoles ? (
             <FlexItem>
               <Alert variant={AlertVariant.danger} title="Unsupported roles" isInline>
