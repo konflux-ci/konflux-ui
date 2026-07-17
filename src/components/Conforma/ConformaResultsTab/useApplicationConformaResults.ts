@@ -83,12 +83,22 @@ export const useApplicationConformaResults = (
     [applicationName],
   );
 
-  const [securityTaskRuns, taskRunsLoaded, taskRunsError] = useTaskRunsV2(
-    namespace?.length ? namespace : null,
-    { selector },
-  );
+  const [securityTaskRuns, taskRunsLoaded, taskRunsError, getNextPage, nextPageProps] =
+    useTaskRunsV2(namespace?.length ? namespace : null, { selector });
+
+  React.useEffect(() => {
+    if (nextPageProps.hasNextPage && !nextPageProps.isFetchingNextPage && taskRunsLoaded && !taskRunsError) {
+      getNextPage();
+    }
+  }, [nextPageProps.hasNextPage, nextPageProps.isFetchingNextPage, taskRunsLoaded, getNextPage, taskRunsError]);
+
+  const taskRunsFullyLoaded =
+    taskRunsLoaded &&
+    !nextPageProps.isFetchingNextPage &&
+    (!nextPageProps.hasNextPage || !!taskRunsError);
 
   const latestPerComponent = React.useMemo((): Map<string, TaskRunKind> => {
+    if (!taskRunsFullyLoaded) return new Map();
     const newestByComp = new Map<string, TaskRunKind>();
 
     for (const tr of securityTaskRuns ?? []) {
@@ -110,7 +120,7 @@ export const useApplicationConformaResults = (
     }
 
     return newestByComp;
-  }, [securityTaskRuns]);
+  }, [securityTaskRuns, taskRunsFullyLoaded]);
 
   const latestTaskRuns = React.useMemo(
     () => Array.from(latestPerComponent.values()),
@@ -132,7 +142,7 @@ export const useApplicationConformaResults = (
     }),
   });
 
-  const loaded = Boolean(namespace?.length && componentsLoaded && taskRunsLoaded);
+  const loaded = Boolean(namespace?.length && componentsLoaded && taskRunsFullyLoaded);
   const settling = !allSettled;
 
   const aggregateError = componentsError ?? taskRunsError ?? aggregatedLogError;

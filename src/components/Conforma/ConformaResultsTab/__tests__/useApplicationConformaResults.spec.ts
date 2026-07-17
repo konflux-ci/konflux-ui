@@ -771,4 +771,126 @@ describe('useApplicationConformaResults', () => {
 
     expect(result.current.componentStatuses[0].pipelineRunName).toBe('pr-1');
   });
+
+  describe('pagination', () => {
+    it('calls getNextPage and reports loaded=false while hasNextPage is true', async () => {
+      const components = [createComponent('comp-a')];
+      const taskRuns = [createSecurityTaskRun('tr-1', 'comp-a', 'pod-1')];
+      const getNextPage = jest.fn();
+
+      mockUseComponents.mockReturnValue([components, true, undefined]);
+      mockUseTaskRunsV2.mockReturnValue([
+        taskRuns,
+        true,
+        undefined,
+        getNextPage,
+        { hasNextPage: true, isFetchingNextPage: false },
+      ]);
+      mockResolveConforma.mockResolvedValue(mockConformaResult);
+
+      const { result } = renderHook(() => useApplicationConformaResults('test-app'), {
+        wrapper: createWrapper(),
+      });
+
+      await flushEffects();
+
+      expect(result.current.loaded).toBe(false);
+      expect(getNextPage).toHaveBeenCalled();
+    });
+
+    it('becomes loaded with all results once pagination completes', async () => {
+      const components = [createComponent('comp-a'), createComponent('comp-b')];
+      const page1TaskRuns = [createSecurityTaskRun('tr-1', 'comp-a', 'pod-1')];
+      const getNextPage = jest.fn();
+
+      mockUseComponents.mockReturnValue([components, true, undefined]);
+      mockUseTaskRunsV2.mockReturnValue([
+        page1TaskRuns,
+        true,
+        undefined,
+        getNextPage,
+        { hasNextPage: true, isFetchingNextPage: false },
+      ]);
+      mockResolveConforma.mockResolvedValue(mockConformaResult);
+
+      const { result, rerender } = renderHook(
+        () => useApplicationConformaResults('test-app'),
+        { wrapper: createWrapper() },
+      );
+
+      await flushEffects();
+      expect(result.current.loaded).toBe(false);
+
+      const allTaskRuns = [
+        createSecurityTaskRun('tr-1', 'comp-a', 'pod-1'),
+        createSecurityTaskRun('tr-2', 'comp-b', 'pod-2'),
+      ];
+      mockUseTaskRunsV2.mockReturnValue([
+        allTaskRuns,
+        true,
+        undefined,
+        getNextPage,
+        { hasNextPage: false, isFetchingNextPage: false },
+      ]);
+
+      rerender();
+      await flushEffects();
+
+      expect(result.current.loaded).toBe(true);
+      expect(result.current.allResults.length).toBeGreaterThan(0);
+      const resultComponents = result.current.allResults.map((r) => r.component);
+      expect(resultComponents).toContain('comp-a');
+      expect(resultComponents).toContain('comp-b');
+    });
+
+    it('reports loaded=true and surfaces error when pagination errors with hasNextPage still true', async () => {
+      const components = [createComponent('comp-a')];
+      const taskRuns = [createSecurityTaskRun('tr-1', 'comp-a', 'pod-1')];
+      const getNextPage = jest.fn();
+      const paginationError = new Error('pagination failed');
+
+      mockUseComponents.mockReturnValue([components, true, undefined]);
+      mockUseTaskRunsV2.mockReturnValue([
+        taskRuns,
+        true,
+        paginationError,
+        getNextPage,
+        { hasNextPage: true, isFetchingNextPage: false },
+      ]);
+
+      const { result } = renderHook(() => useApplicationConformaResults('test-app'), {
+        wrapper: createWrapper(),
+      });
+
+      await flushEffects();
+
+      expect(result.current.loaded).toBe(true);
+      expect(result.current.error).toBe(paginationError);
+      expect(getNextPage).not.toHaveBeenCalled();
+    });
+
+    it('does not call getNextPage while isFetchingNextPage is true', async () => {
+      const components = [createComponent('comp-a')];
+      const taskRuns = [createSecurityTaskRun('tr-1', 'comp-a', 'pod-1')];
+      const getNextPage = jest.fn();
+
+      mockUseComponents.mockReturnValue([components, true, undefined]);
+      mockUseTaskRunsV2.mockReturnValue([
+        taskRuns,
+        true,
+        undefined,
+        getNextPage,
+        { hasNextPage: true, isFetchingNextPage: true },
+      ]);
+
+      const { result } = renderHook(() => useApplicationConformaResults('test-app'), {
+        wrapper: createWrapper(),
+      });
+
+      await flushEffects();
+
+      expect(result.current.loaded).toBe(false);
+      expect(getNextPage).not.toHaveBeenCalled();
+    });
+  });
 });
