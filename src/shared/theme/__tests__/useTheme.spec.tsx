@@ -1,4 +1,5 @@
 import { renderHook, act } from '@testing-library/react';
+import { logger } from '~/monitoring/logger';
 import { useEventListener } from '../../hooks/useEventListener';
 import {
   THEME_SYSTEM,
@@ -10,6 +11,10 @@ import {
 } from '../const';
 import { ThemeProvider } from '../ThemeContext';
 import { useTheme } from '../useTheme';
+
+jest.mock('~/monitoring/logger', () => ({
+  logger: { warn: jest.fn(), error: jest.fn(), info: jest.fn(), debug: jest.fn() },
+}));
 
 const THEME_STORAGE_KEY = 'konflux-theme-preference';
 const CONTRAST_STORAGE_KEY = 'konflux-contrast-preference';
@@ -50,6 +55,7 @@ beforeEach(() => {
   mockLocalStorage.setItem.mockClear();
   mockMatchMedia.mockClear();
   mockUseEventListener.mockClear();
+  (logger.warn as jest.Mock).mockClear();
 
   // Default: light system preference, no contrast preference
   mockMatchMedia.mockReturnValue({
@@ -293,6 +299,47 @@ describe('useTheme', () => {
     const { result } = renderHook(() => useTheme(), { wrapper: TestWrapper });
 
     expect(result.current.contrastPreference).toBe(CONTRAST_SYSTEM);
+  });
+
+  it('should log a warning when localStorage throws during theme migration', () => {
+    const themeCallCount: Record<string, number> = {};
+    mockLocalStorage.getItem.mockImplementation((key: string) => {
+      themeCallCount[key] = (themeCallCount[key] || 0) + 1;
+      // First call for theme key comes from themeStorage.get() (JSON layer) - return null
+      // Second call comes from the migration block - throw
+      if (key === THEME_STORAGE_KEY && themeCallCount[key] > 1) {
+        throw new Error('localStorage is disabled');
+      }
+      return null;
+    });
+
+    const { result } = renderHook(() => useTheme(), { wrapper: TestWrapper });
+
+    expect(result.current.preference).toBe(THEME_SYSTEM);
+    expect(logger.warn).toHaveBeenCalledWith('Theme migration: localStorage is unavailable', {
+      error: 'localStorage is disabled',
+    });
+  });
+
+  it('should log a warning when localStorage throws during contrast migration', () => {
+    const contrastCallCount: Record<string, number> = {};
+    mockLocalStorage.getItem.mockImplementation((key: string) => {
+      contrastCallCount[key] = (contrastCallCount[key] || 0) + 1;
+      // First call for contrast key comes from contrastStorage.get() (JSON layer) - return null
+      // Second call comes from the migration block - throw
+      if (key === CONTRAST_STORAGE_KEY && contrastCallCount[key] > 1) {
+        throw new Error('localStorage is disabled');
+      }
+      return null;
+    });
+
+    const { result } = renderHook(() => useTheme(), { wrapper: TestWrapper });
+
+    expect(result.current.contrastPreference).toBe(CONTRAST_SYSTEM);
+    expect(logger.warn).toHaveBeenCalledWith(
+      'Contrast migration: localStorage is unavailable',
+      { error: 'localStorage is disabled' },
+    );
   });
 
   it('should not auto-enable high contrast when contrast is explicitly set to default', () => {

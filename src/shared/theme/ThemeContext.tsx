@@ -1,4 +1,5 @@
 import React from 'react';
+import { logger } from '~/monitoring/logger';
 import { useEventListener } from '../hooks/useEventListener';
 import { createKeyedJSONStorage } from '../utils/storage';
 import {
@@ -69,8 +70,10 @@ const getStoredPreference = (): ThemePreference => {
       themeStorage.set(preference);
       return preference;
     }
-  } catch {
-    // localStorage unavailable
+  } catch (e) {
+    logger.warn('Theme migration: localStorage is unavailable', {
+      error: e instanceof Error ? e.message : String(e),
+    });
   }
   return THEME_SYSTEM;
 };
@@ -88,8 +91,10 @@ const getStoredContrastPreference = (): ContrastPreference => {
       contrastStorage.set(preference);
       return preference;
     }
-  } catch {
-    // localStorage unavailable
+  } catch (e) {
+    logger.warn('Contrast migration: localStorage is unavailable', {
+      error: e instanceof Error ? e.message : String(e),
+    });
   }
   return CONTRAST_SYSTEM;
 };
