@@ -1,5 +1,9 @@
 import React from 'react';
+<<<<<<< HEAD
 import { capitalize, Flex } from '@patternfly/react-core';
+=======
+import { Flex } from '@patternfly/react-core';
+>>>>>>> 7fc8b195 (fix: resolve review comments)
 import { MINTMAKER_NAMESPACE } from '~/consts/constants';
 import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { useComponent } from '~/hooks/useComponents';
@@ -43,7 +47,7 @@ export const DependencyRunsListView = ({ componentName }: DependencyRunsListView
       () => ({
         selector: {
           filterByCreationTimestampAfter: component?.metadata?.creationTimestamp,
-          filterByName: nameFilter || undefined,
+          filterByName: nameFilter,
           matchLabels: {
             [PipelineRunLabel.MINTMAKER_COMPONENT_LABEL]: componentName,
             [PipelineRunLabel.MINTMAKER_NAMESPACE_LABEL]: namespace,
