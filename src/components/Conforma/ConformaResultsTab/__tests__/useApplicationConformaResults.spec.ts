@@ -4,9 +4,13 @@ import { renderHook, act } from '@testing-library/react-hooks';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useComponents } from '~/hooks/useComponents';
 import { useTaskRunsV2 } from '~/hooks/useTaskRunsV2';
+import { k8sListResource } from '~/k8s';
+import { KUBEARCHIVE_RESOURCE_LIMIT } from '~/kubearchive/const';
+import { convertToKubearchiveQueryParams } from '~/kubearchive/fetch-utils';
 import { useNamespace } from '~/shared/providers/Namespace';
 import type { ComponentKind, TaskRunKind } from '~/types';
 import { CONFORMA_RESULT_STATUS, type ConformaResult } from '~/types/conforma';
+import { getTaskRuns } from '~/utils/tekton-results';
 import { resolveConformaResultFromTaskRun } from '../conforma-fetchers';
 import { useApplicationConformaResults } from '../useApplicationConformaResults';
 import '@testing-library/jest-dom';
@@ -32,10 +36,26 @@ jest.mock('../conforma-fetchers', () => ({
   filterInvalidImageConformaRows:
     jest.requireActual('../conforma-fetchers').filterInvalidImageConformaRows,
   mapConformaResultData: jest.requireActual('../conforma-fetchers').mapConformaResultData,
+  buildSecurityTaskRunSelector: jest.requireActual('../conforma-fetchers').buildSecurityTaskRunSelector,
+  fetchLatestSecurityTaskRunForComponent:
+    jest.requireActual('../conforma-fetchers').fetchLatestSecurityTaskRunForComponent,
 }));
 
 jest.mock('~/monitoring/logger', () => ({
   logger: { warn: jest.fn(), error: jest.fn(), info: jest.fn(), debug: jest.fn() },
+}));
+
+jest.mock('~/utils/tekton-results', () => ({
+  getTaskRuns: jest.fn(),
+}));
+
+jest.mock('~/k8s', () => ({
+  k8sListResource: jest.fn(),
+}));
+
+jest.mock('~/kubearchive/fetch-utils', () => ({
+  convertToKubearchiveQueryParams: jest.fn(),
+  withKubearchivePathPrefix: jest.fn((opts: unknown) => opts),
 }));
 
 const mockUseComponents = useComponents as jest.Mock;
@@ -43,6 +63,9 @@ const mockUseTaskRunsV2 = useTaskRunsV2 as jest.Mock;
 const mockUseNamespace = useNamespace as jest.Mock;
 const mockUseIsOnFeatureFlag = useIsOnFeatureFlag as jest.Mock;
 const mockResolveConforma = resolveConformaResultFromTaskRun as jest.Mock;
+const mockGetTaskRuns = getTaskRuns as jest.Mock;
+const mockK8sListResource = k8sListResource as jest.Mock;
+const mockConvertToKubearchiveQueryParams = convertToKubearchiveQueryParams as jest.Mock;
 
 const DEFAULT_WATCH_META = {
   dataUpdatedAt: 1000,
@@ -184,10 +207,17 @@ describe('useApplicationConformaResults', () => {
     });
 
     mockUseNamespace.mockReturnValue('test-ns');
-    mockUseIsOnFeatureFlag.mockReturnValue(false);
+    mockUseIsOnFeatureFlag.mockImplementation((flag: string) => {
+      if (flag === 'kubearchive-logs') return false;
+      if (flag === 'taskruns-kubearchive') return false;
+      return false;
+    });
     mockUseComponents.mockReturnValue([[], true, undefined]);
     mockUseTaskRunsV2.mockReturnValue(createTaskRunsV2Return());
     mockResolveConforma.mockResolvedValue(undefined);
+    mockGetTaskRuns.mockResolvedValue([[], { nextPageToken: null, records: [] }]);
+    mockK8sListResource.mockResolvedValue({ items: [] });
+    mockConvertToKubearchiveQueryParams.mockReturnValue({ ns: 'test-ns', queryParams: {} });
   });
 
   afterEach(() => {
@@ -207,6 +237,7 @@ describe('useApplicationConformaResults', () => {
       totalComponents: 0,
       totalFailed: 0,
       loaded: false,
+      settling: false,
       error: undefined,
       partialLogError: undefined,
       refresh: expect.objectContaining({
@@ -828,5 +859,265 @@ describe('useApplicationConformaResults', () => {
     await flushEffects();
 
     expect(result.current.componentStatuses[0].pipelineRunName).toBe('pr-1');
+  });
+
+  // --- New tests for batch limit and fill-in ---
+
+  it('passes correct batch limit (max(N*3, 10)) to useTaskRunsV2', () => {
+    const components = [
+      createComponent('comp-a'),
+      createComponent('comp-b'),
+      createComponent('comp-c'),
+      createComponent('comp-d'),
+      createComponent('comp-e'),
+    ];
+    mockUseComponents.mockReturnValue([components, true, undefined]);
+    mockUseTaskRunsV2.mockReturnValue(createTaskRunsV2Return([], true, undefined));
+
+    renderHook(() => useApplicationConformaResults('test-app'), {
+      wrapper: createWrapper(),
+    });
+
+    expect(mockUseTaskRunsV2).toHaveBeenCalledWith(
+      'test-ns',
+      expect.objectContaining({
+        limit: 15,
+      }),
+      expect.objectContaining({ staleTime: Infinity }),
+    );
+  });
+
+  it('uses minimum limit of 10 when N*3 < 10', () => {
+    const components = [createComponent('comp-a'), createComponent('comp-b')];
+    mockUseComponents.mockReturnValue([components, true, undefined]);
+    mockUseTaskRunsV2.mockReturnValue(createTaskRunsV2Return());
+
+    renderHook(() => useApplicationConformaResults('test-app'), {
+      wrapper: createWrapper(),
+    });
+
+    expect(mockUseTaskRunsV2).toHaveBeenCalledWith(
+      'test-ns',
+      expect.objectContaining({
+        limit: 10,
+      }),
+      expect.objectContaining({ staleTime: Infinity }),
+    );
+  });
+
+  it('applies the batch-limit floor of 10 while components are still loading', () => {
+    mockUseComponents.mockReturnValue([[], false, undefined]);
+    mockUseTaskRunsV2.mockReturnValue(createTaskRunsV2Return([], false));
+
+    renderHook(() => useApplicationConformaResults('test-app'), {
+      wrapper: createWrapper(),
+    });
+
+    expect(mockUseTaskRunsV2).toHaveBeenCalledWith(
+      'test-ns',
+      expect.objectContaining({
+        limit: 10,
+      }),
+      expect.objectContaining({ staleTime: Infinity }),
+    );
+  });
+
+  it('fill-in recovers a missing component via Tekton Results (kubearchive OFF)', async () => {
+    const components = [createComponent('comp-a'), createComponent('comp-b')];
+    const taskRuns = [createSecurityTaskRun('tr-1', 'comp-a', 'pod-1')];
+    mockUseComponents.mockReturnValue([components, true, undefined]);
+    mockUseTaskRunsV2.mockReturnValue(createTaskRunsV2Return(taskRuns));
+
+    const fillInTr = createSecurityTaskRun('tr-fillin', 'comp-b', 'pod-fillin', '2025-06-01T00:00:00Z', 'pr-fillin');
+    mockGetTaskRuns.mockResolvedValue([[fillInTr], { nextPageToken: null, records: [] }]);
+    mockResolveConforma.mockResolvedValue(mockConformaResult);
+
+    const { result } = renderHook(() => useApplicationConformaResults('test-app'), {
+      wrapper: createWrapper(),
+    });
+
+    await flushEffects();
+
+    expect(mockGetTaskRuns).toHaveBeenCalledWith(
+      'test-ns',
+      expect.objectContaining({
+        selector: expect.objectContaining({
+          matchLabels: expect.objectContaining({
+            'appstudio.openshift.io/component': 'comp-b',
+          }),
+        }),
+        limit: 1,
+      }),
+    );
+
+    const compB = result.current.componentStatuses.find((c) => c.componentName === 'comp-b');
+    expect(compB?.pipelineRunName).toBe('pr-fillin');
+  });
+
+  it('fill-in recovers a missing component via KubeArchive (kubearchive ON)', async () => {
+    mockUseIsOnFeatureFlag.mockImplementation((flag: string) => {
+      if (flag === 'taskruns-kubearchive') return true;
+      return false;
+    });
+
+    const components = [createComponent('comp-a'), createComponent('comp-b')];
+    const taskRuns = [createSecurityTaskRun('tr-1', 'comp-a', 'pod-1')];
+    mockUseComponents.mockReturnValue([components, true, undefined]);
+    mockUseTaskRunsV2.mockReturnValue(createTaskRunsV2Return(taskRuns));
+
+    const fillInTr = createSecurityTaskRun('tr-fillin', 'comp-b', 'pod-fillin', '2025-06-01T00:00:00Z', 'pr-fillin');
+    mockK8sListResource.mockResolvedValue({ items: [fillInTr] });
+    mockResolveConforma.mockResolvedValue(mockConformaResult);
+
+    const { result } = renderHook(() => useApplicationConformaResults('test-app'), {
+      wrapper: createWrapper(),
+    });
+
+    await flushEffects();
+
+    expect(mockK8sListResource).toHaveBeenCalled();
+    expect(mockGetTaskRuns).not.toHaveBeenCalled();
+
+    const compB = result.current.componentStatuses.find((c) => c.componentName === 'comp-b');
+    expect(compB?.pipelineRunName).toBe('pr-fillin');
+  });
+
+  it('settling is true while fill-in queries are in-flight', async () => {
+    const components = [createComponent('comp-a'), createComponent('comp-b')];
+    const taskRuns = [createSecurityTaskRun('tr-1', 'comp-a', 'pod-1')];
+    mockUseComponents.mockReturnValue([components, true, undefined]);
+    mockUseTaskRunsV2.mockReturnValue(createTaskRunsV2Return(taskRuns));
+
+    let resolveFillIn: (v: [TaskRunKind[], unknown]) => void;
+    const pendingFillIn = new Promise<[TaskRunKind[], unknown]>((r) => {
+      resolveFillIn = r;
+    });
+    mockGetTaskRuns.mockReturnValue(pendingFillIn);
+    mockResolveConforma.mockResolvedValue(mockConformaResult);
+
+    const { result } = renderHook(() => useApplicationConformaResults('test-app'), {
+      wrapper: createWrapper(),
+    });
+
+    await flushEffects();
+
+    expect(result.current.loaded).toBe(true);
+    expect(result.current.settling).toBe(true);
+
+    const fillInTr = createSecurityTaskRun('tr-fillin', 'comp-b', 'pod-fillin');
+    await act(async () => {
+      resolveFillIn([[fillInTr], {}]);
+      await pendingFillIn;
+    });
+    await flushEffects();
+
+    expect(result.current.settling).toBe(false);
+  });
+
+  it('settling is true while fill-in and logs are both in-flight, false when both done', async () => {
+    const components = [createComponent('comp-a'), createComponent('comp-b')];
+    const taskRuns = [createSecurityTaskRun('tr-1', 'comp-a', 'pod-1')];
+    mockUseComponents.mockReturnValue([components, true, undefined]);
+    mockUseTaskRunsV2.mockReturnValue(createTaskRunsV2Return(taskRuns));
+
+    const fillInTr = createSecurityTaskRun('tr-fillin', 'comp-b', 'pod-fillin');
+    mockGetTaskRuns.mockResolvedValue([[fillInTr], { nextPageToken: null, records: [] }]);
+
+    let resolveLog: (v: ConformaResult) => void;
+    const pendingLog = new Promise<ConformaResult>((r) => {
+      resolveLog = r;
+    });
+    mockResolveConforma.mockReturnValue(pendingLog);
+
+    const { result } = renderHook(() => useApplicationConformaResults('test-app'), {
+      wrapper: createWrapper(),
+    });
+
+    await flushEffects();
+
+    expect(result.current.loaded).toBe(true);
+    expect(result.current.settling).toBe(true);
+
+    await act(async () => {
+      resolveLog(mockConformaResult);
+      await pendingLog;
+    });
+    await flushEffects();
+
+    expect(result.current.settling).toBe(false);
+  });
+
+  it('does not trigger fill-in when all components have TaskRuns in batch', async () => {
+    const components = [createComponent('comp-a'), createComponent('comp-b')];
+    const taskRuns = [
+      createSecurityTaskRun('tr-1', 'comp-a', 'pod-1'),
+      createSecurityTaskRun('tr-2', 'comp-b', 'pod-2'),
+    ];
+    mockUseComponents.mockReturnValue([components, true, undefined]);
+    mockUseTaskRunsV2.mockReturnValue(createTaskRunsV2Return(taskRuns));
+    mockResolveConforma.mockResolvedValue(mockConformaResult);
+
+    renderHook(() => useApplicationConformaResults('test-app'), {
+      wrapper: createWrapper(),
+    });
+
+    await flushEffects();
+
+    expect(mockGetTaskRuns).not.toHaveBeenCalled();
+    expect(mockK8sListResource).not.toHaveBeenCalled();
+  });
+
+  it('fill-in query rejection: settling becomes false, component stays unknown, no crash', async () => {
+    const { logger } = jest.requireMock('~/monitoring/logger');
+    const components = [createComponent('comp-a'), createComponent('comp-b')];
+    const taskRuns = [createSecurityTaskRun('tr-1', 'comp-a', 'pod-1')];
+    mockUseComponents.mockReturnValue([components, true, undefined]);
+    mockUseTaskRunsV2.mockReturnValue(createTaskRunsV2Return(taskRuns));
+    mockGetTaskRuns.mockRejectedValue(new Error('tekton-results unavailable'));
+    mockResolveConforma.mockResolvedValue(mockConformaResult);
+
+    const { result } = renderHook(() => useApplicationConformaResults('test-app'), {
+      wrapper: createWrapper(),
+    });
+
+    await flushEffects();
+
+    expect(result.current.settling).toBe(false);
+    const compB = result.current.componentStatuses.find((c) => c.componentName === 'comp-b');
+    expect(compB?.status).toBe('unknown');
+    expect(logger.warn).toHaveBeenCalledWith(
+      'useApplicationConformaResults: fill-in query failed',
+      expect.objectContaining({ error: expect.any(Error) }),
+    );
+  });
+
+  it('KubeArchive fill-in passes the bounded KUBEARCHIVE_RESOURCE_LIMIT in queryParams', async () => {
+    mockUseIsOnFeatureFlag.mockImplementation((flag: string) => {
+      if (flag === 'taskruns-kubearchive') return true;
+      return false;
+    });
+
+    const components = [createComponent('comp-a'), createComponent('comp-b')];
+    const taskRuns = [createSecurityTaskRun('tr-1', 'comp-a', 'pod-1')];
+    mockUseComponents.mockReturnValue([components, true, undefined]);
+    mockUseTaskRunsV2.mockReturnValue(createTaskRunsV2Return(taskRuns));
+
+    const fillInTr = createSecurityTaskRun('tr-fillin', 'comp-b', 'pod-fillin');
+    mockK8sListResource.mockResolvedValue({ items: [fillInTr] });
+    mockResolveConforma.mockResolvedValue(mockConformaResult);
+
+    renderHook(() => useApplicationConformaResults('test-app'), {
+      wrapper: createWrapper(),
+    });
+
+    await flushEffects();
+
+    expect(mockK8sListResource).toHaveBeenCalledWith(
+      expect.objectContaining({
+        queryOptions: expect.objectContaining({
+          queryParams: expect.objectContaining({ limit: KUBEARCHIVE_RESOURCE_LIMIT }),
+        }),
+      }),
+    );
   });
 });

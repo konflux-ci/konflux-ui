@@ -41,6 +41,7 @@ const emptyResults: ApplicationConformaResults = {
   totalComponents: 0,
   totalFailed: 0,
   loaded: true,
+  settling: false,
   error: undefined,
   refresh: noOpRefresh,
 };
@@ -81,6 +82,7 @@ const archDupeResults: ApplicationConformaResults = {
   totalComponents: 1,
   totalFailed: 1,
   loaded: true,
+  settling: false,
   error: undefined,
   refresh: noOpRefresh,
 };
@@ -127,6 +129,7 @@ const populatedResults: ApplicationConformaResults = {
   totalComponents: 2,
   totalFailed: 1,
   loaded: true,
+  settling: false,
   error: undefined,
   refresh: noOpRefresh,
 };
@@ -311,6 +314,61 @@ describe('ConformaResultsTab', () => {
     expect(screen.getByText(/sha256:aaa/)).toBeInTheDocument();
     expect(screen.getByText(/sha256:bbb/)).toBeInTheDocument();
     expect(screen.getByText(/sha256:ccc/)).toBeInTheDocument();
+  });
+
+  it('shows an inline settling spinner when loaded but still settling', () => {
+    mockUseApplicationConformaResults.mockReturnValue({
+      ...populatedResults,
+      settling: true,
+    });
+
+    routerRenderer(<ConformaResultsTab />);
+
+    expect(
+      screen.getByLabelText('Finalizing Conforma results'),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId('conforma-results-settling-spinner')).toBeInTheDocument();
+
+    const liveRegion = screen.getByTestId('conforma-results-settling-spinner').closest('[aria-live]');
+    expect(liveRegion).toHaveAttribute('aria-live', 'polite');
+    expect(liveRegion).toHaveAttribute('aria-atomic', 'true');
+  });
+
+  it('does not show settling spinner when settling is false', () => {
+    mockUseApplicationConformaResults.mockReturnValue(populatedResults);
+
+    routerRenderer(<ConformaResultsTab />);
+
+    expect(
+      screen.queryByLabelText('Finalizing Conforma results'),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByTestId('conforma-results-settling-spinner')).not.toBeInTheDocument();
+  });
+
+  it('does not show empty state when loaded and settling with empty results', () => {
+    mockUseApplicationConformaResults.mockReturnValue({
+      ...emptyResults,
+      settling: true,
+    });
+
+    routerRenderer(<ConformaResultsTab />);
+
+    expect(
+      screen.queryByText('No Conforma results available for this application.'),
+    ).not.toBeInTheDocument();
+    expect(screen.getByTestId('conforma-results-settling-spinner')).toBeInTheDocument();
+  });
+
+  it('sets aria-busy on summary wrapper while settling', () => {
+    mockUseApplicationConformaResults.mockReturnValue({
+      ...populatedResults,
+      settling: true,
+    });
+
+    const { container } = routerRenderer(<ConformaResultsTab />);
+
+    const summaryWrapper = container.querySelector('.conforma-results-tab__summary-wrapper');
+    expect(summaryWrapper).toHaveAttribute('aria-busy', 'true');
   });
 
   it('shows "no results match" when filters exclude all results', () => {
