@@ -17,6 +17,7 @@ const mapToConformaResultRow = (
   v: ConformaRule,
   compResult: ComponentConformaResult,
   status: CONFORMA_RESULT_STATUS,
+  pipelineRunName?: string,
 ): ConformaResultRow => ({
   title: v.metadata?.title,
   description: v.metadata?.description,
@@ -28,20 +29,28 @@ const mapToConformaResultRow = (
   solution: v.metadata?.solution,
   images: compResult.containerImage ? [compResult.containerImage] : [],
   code: v.metadata?.code,
+  pipelineRunName,
 });
 
 export const mapConformaResultData = (
   conformaResult: ComponentConformaResult[],
+  pipelineRunName?: string,
 ): ConformaResultRow[] => {
   return conformaResult.reduce((acc, compResult) => {
     compResult?.violations?.forEach((v) => {
-      acc.push(mapToConformaResultRow(v, compResult, CONFORMA_RESULT_STATUS.violations));
+      acc.push(
+        mapToConformaResultRow(v, compResult, CONFORMA_RESULT_STATUS.violations, pipelineRunName),
+      );
     });
     compResult?.warnings?.forEach((v) => {
-      acc.push(mapToConformaResultRow(v, compResult, CONFORMA_RESULT_STATUS.warnings));
+      acc.push(
+        mapToConformaResultRow(v, compResult, CONFORMA_RESULT_STATUS.warnings, pipelineRunName),
+      );
     });
     compResult?.successes?.forEach((v) => {
-      acc.push(mapToConformaResultRow(v, compResult, CONFORMA_RESULT_STATUS.successes));
+      acc.push(
+        mapToConformaResultRow(v, compResult, CONFORMA_RESULT_STATUS.successes, pipelineRunName),
+      );
     });
     return acc;
   }, [] as ConformaResultRow[]);

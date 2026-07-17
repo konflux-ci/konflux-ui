@@ -226,7 +226,11 @@ export const useApplicationConformaResults = (
 
     const allResults: ConformaResultRow[] = [];
     for (const [realComponentName, components] of conformaByComponent.entries()) {
-      const rows = mapConformaResultData(components);
+      const pipelineRunName =
+        latestPerComponent.get(realComponentName)?.metadata?.labels?.[
+          TektonResourceLabel.pipelinerun
+        ];
+      const rows = mapConformaResultData(components, pipelineRunName);
       // The EC/Conforma report assigns its own per-image `name` to each
       // components[] entry (see ComponentConformaResult), which is NOT the
       // real K8s component name and can differ across architecture images

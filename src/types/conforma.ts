@@ -76,6 +76,7 @@ export type ConformaResultRow = {
   images: string[];
   /** Policy rule code — stable identifier used as primary group key. Optional for backward-compat. */
   code?: string;
+  pipelineRunName?: string;
 };
 
 export type ComponentConformaStatus = {

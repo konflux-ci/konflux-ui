@@ -177,6 +177,7 @@ export const collapseArchDuplicates = (rows: ConformaResultRow[]): ConformaResul
           existing.images = [...existing.images, image];
         }
       }
+      existing.pipelineRunName = existing.pipelineRunName || row.pipelineRunName;
     } else {
       map.set(key, { ...row, images: [...row.images] });
     }
