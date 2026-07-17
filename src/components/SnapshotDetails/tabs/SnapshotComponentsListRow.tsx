@@ -27,12 +27,13 @@ const SnapshotComponentsListRow: React.FC<
   const { isImageControllerEnabled } = useIsImageControllerEnabled();
   const [urlInfo, proxyLoaded, proxyError] = useImageProxy();
 
-  // Fetch ImageRepository to get visibility setting
+  // Fetch ImageRepository to get visibility setting (only when image controller is enabled)
   const [imageRepository, imageRepoLoaded, imageRepoError] = useImageRepository(
     namespace,
     obj.name,
     obj.application,
     false,
+    isImageControllerEnabled,
   );
 
   // Get the appropriate image URL based on visibility

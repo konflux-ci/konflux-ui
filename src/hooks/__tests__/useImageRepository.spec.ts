@@ -280,5 +280,46 @@ describe('useImageRepository', () => {
       expect(loaded).toBe(true);
       expect(error).toBeUndefined();
     });
+
+    it('should not fetch when enabled is false', () => {
+      useK8sWatchResourceMock.mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        error: undefined,
+      });
+
+      const { result } = renderHook(() =>
+        useImageRepository('test-ns', 'test-component', null, false, false),
+      );
+      const [imageRepository, loaded, error] = result.current;
+
+      expect(imageRepository).toBeNull();
+      expect(loaded).toBe(true);
+      expect(error).toBeUndefined();
+      expect(useK8sWatchResourceMock).toHaveBeenCalledWith(undefined, expect.any(Object));
+    });
+
+    it('should fetch when enabled is true', () => {
+      useK8sWatchResourceMock.mockReturnValue({
+        data: [mockPublicImageRepository],
+        isLoading: false,
+        error: undefined,
+      });
+
+      const { result } = renderHook(() =>
+        useImageRepository('test-ns', 'test-component', null, false, true),
+      );
+      const [imageRepository, loaded] = result.current;
+
+      expect(imageRepository).toEqual(mockPublicImageRepository);
+      expect(loaded).toBe(true);
+      expect(useK8sWatchResourceMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          isList: true,
+          namespace: 'test-ns',
+        }),
+        expect.any(Object),
+      );
+    });
   });
 });

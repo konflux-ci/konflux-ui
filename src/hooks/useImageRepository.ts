@@ -9,8 +9,9 @@ export const useImageRepository = (
   componentName: string | null,
   applicationName?: string | null,
   watch?: boolean,
+  enabled: boolean = true,
 ): [ImageRepositoryKind | null, boolean, unknown] => {
-  const enabled = Boolean(namespace && componentName);
+  const shouldFetch = Boolean(enabled && namespace && componentName);
 
   const matchLabels = applicationName
     ? { [ImageRepositoryLabel.APPLICATION]: applicationName }
@@ -21,7 +22,7 @@ export const useImageRepository = (
     isLoading,
     error,
   } = useK8sWatchResource<ImageRepositoryKind[]>(
-    enabled
+    shouldFetch
       ? {
           groupVersionKind: ImageRepositoryGroupVersionKind,
           namespace,
@@ -44,7 +45,7 @@ export const useImageRepository = (
   );
 
   return React.useMemo(() => {
-    if (!enabled) {
+    if (!shouldFetch) {
       return [null, true, undefined];
     }
 
@@ -57,5 +58,5 @@ export const useImageRepository = (
     }
 
     return [null, true, error];
-  }, [enabled, isLoading, imageRepository, error]);
+  }, [shouldFetch, isLoading, imageRepository, error]);
 };
