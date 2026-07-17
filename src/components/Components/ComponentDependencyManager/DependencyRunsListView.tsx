@@ -1,28 +1,23 @@
 import React from 'react';
-import { Bullseye, Flex, Spinner, Stack } from '@patternfly/react-core';
-import PipelineRunEmptyStateV2 from '~/components/PipelineRun/PipelineRunEmptyStateV2';
+import { Flex } from '@patternfly/react-core';
 import { MINTMAKER_NAMESPACE } from '~/consts/constants';
 import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { useComponent } from '~/hooks/useComponents';
 import { usePipelineRunsV2 } from '~/hooks/usePipelineRunsV2';
 import FilteredEmptyState from '~/shared/components/empty-state/FilteredEmptyState';
-import {
-  buildOptions,
-  useFilterState,
-  useFilteredData,
-  FilterToolbar,
-} from '~/shared/components/Filter';
+import { useFilterState, useFilteredData, FilterToolbar } from '~/shared/components/Filter';
+import { FilterOption } from '~/shared/components/Filter/types';
 import { Table, TableContainer } from '~/shared/components/TableV2';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { PipelineRunKind } from '~/types';
 import { statuses } from '~/utils/commits-utils';
-import { pipelineRunStatus } from '~/utils/pipeline-utils';
 import {
   DEPENDENCY_RUNS_COLUMN_STATE_KEY,
-  dependencyRunsColumns,
-  filterConfigs,
+  dependencyRunsTableColumns,
+  dependencyRunsFilterConfig,
 } from './dependency-runs-table-config';
+import { DependencyRunsEmptyState } from './DependencyRunsEmptyState';
 
 type DependencyRunsListViewProps = {
   componentName: string;
@@ -30,7 +25,9 @@ type DependencyRunsListViewProps = {
 
 export const DependencyRunsListView = ({ componentName }: DependencyRunsListViewProps) => {
   const namespace = useNamespace();
-  const { filterValues, clientFilterValues, clearAll, isFiltered } = useFilterState(filterConfigs);
+  const { filterValues, clientFilterValues, clearAll, isFiltered } = useFilterState(
+    dependencyRunsFilterConfig,
+  );
 
   const nameFilter = filterValues.name ?? '';
 
@@ -47,7 +44,7 @@ export const DependencyRunsListView = ({ componentName }: DependencyRunsListView
       () => ({
         selector: {
           filterByCreationTimestampAfter: component?.metadata?.creationTimestamp,
-          filterByName: nameFilter || undefined,
+          filterByName: nameFilter,
           matchLabels: {
             [PipelineRunLabel.MINTMAKER_COMPONENT_LABEL]: componentName,
             [PipelineRunLabel.MINTMAKER_NAMESPACE_LABEL]: namespace,
@@ -58,22 +55,20 @@ export const DependencyRunsListView = ({ componentName }: DependencyRunsListView
     ),
   );
 
-  const sortedDependencyRuns = React.useMemo((): PipelineRunKind[] => {
-    if (!dependencyRuns) {
-      return [];
-    }
+  const dependencyRunsList = React.useMemo(
+    (): PipelineRunKind[] => dependencyRuns ?? [],
+    [dependencyRuns],
+  );
 
-    return [...dependencyRuns].sort((a, b) =>
-      String(b.status?.startTime || '').localeCompare(String(a.status?.startTime || '')),
-    );
-  }, [dependencyRuns]);
+  const { filteredData } = useFilteredData(
+    dependencyRunsFilterConfig,
+    dependencyRunsList,
+    clientFilterValues,
+  );
 
-  const { filteredData } = useFilteredData(filterConfigs, sortedDependencyRuns, clientFilterValues);
-
-  const statusOptions = React.useMemo(
-    () =>
-      buildOptions(sortedDependencyRuns, (run) => pipelineRunStatus(run), { validKeys: statuses }),
-    [sortedDependencyRuns],
+  const statusOptions: FilterOption[] = React.useMemo(
+    () => statuses.map((s) => ({ label: s.charAt(0).toUpperCase() + s.slice(1), value: s })),
+    [],
   );
 
   const error = componentError ?? dependencyRunsError;
@@ -86,39 +81,31 @@ export const DependencyRunsListView = ({ componentName }: DependencyRunsListView
     <Flex direction={{ default: 'column' }}>
       <TableContainer
         data={filteredData}
-        unfilteredData={sortedDependencyRuns}
-        loaded={isFetchingNextPage || dependencyRunsLoaded}
+        unfilteredData={dependencyRunsList}
+        loaded={dependencyRunsLoaded}
         emptyState={<FilteredEmptyState onClearFilters={clearAll} />}
-        noDataState={<PipelineRunEmptyStateV2 />}
+        noDataState={<DependencyRunsEmptyState />}
         toolbar={
-          isFiltered || sortedDependencyRuns.length > 0 ? (
-            <FilterToolbar configs={filterConfigs} options={{ status: statusOptions }} />
+          isFiltered || dependencyRunsList.length > 0 ? (
+            <FilterToolbar
+              configs={dependencyRunsFilterConfig}
+              options={{ status: statusOptions }}
+            />
           ) : undefined
         }
       >
         <Table
           data={filteredData}
-          columns={dependencyRunsColumns}
+          columns={dependencyRunsTableColumns}
           getRowId={(row) => row.metadata?.uid ?? row.metadata?.name ?? ''}
           aria-label="Dependency run list"
           enableSorting
           hasNextPage={hasNextPage}
           isFetchingNextPage={isFetchingNextPage}
-          fetchNextPage={() => {
-            if (hasNextPage && !isFetchingNextPage) {
-              getNextPage?.();
-            }
-          }}
+          fetchNextPage={getNextPage}
           columnStateKey={DEPENDENCY_RUNS_COLUMN_STATE_KEY}
         />
       </TableContainer>
-      {isFetchingNextPage ? (
-        <Stack style={{ marginTop: 'var(--pf-t--global--spacer--md)' }} hasGutter>
-          <Bullseye>
-            <Spinner size="lg" aria-label="Loading more pipeline runs" />
-          </Bullseye>
-        </Stack>
-      ) : null}
     </Flex>
   );
 };

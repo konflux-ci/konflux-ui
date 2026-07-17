@@ -89,6 +89,8 @@ export const Table = <TData,>({
     }
   }, [scrollElementProp, tableNode]);
 
+  // Tracks how far the table is from the top of the scroll container so the
+  // virtualizer can correctly offset row positions (accounts for toolbars, headers, etc.).
   const [scrollMargin, setScrollMargin] = useState(0);
   useLayoutEffect(() => {
     if (!tableNode || !scrollElement) {
@@ -101,6 +103,8 @@ export const Table = <TData,>({
       const scrollRect = scrollElement.getBoundingClientRect();
       setScrollMargin(tableRect.top - scrollRect.top + scrollElement.scrollTop);
     };
+
+    recalculate();
 
     const observer = new ResizeObserver(recalculate);
     observer.observe(scrollElement);

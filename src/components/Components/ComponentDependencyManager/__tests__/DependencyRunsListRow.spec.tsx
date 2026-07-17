@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react';
 import { Table, TableContainer } from '~/shared/components/TableV2';
 import { PipelineRunKind, PipelineRunStatus } from '~/types';
 import { setupVirtualizerMock } from '~/unit-test-utils/mock-virtualizer';
-import { dependencyRunsColumns } from '../dependency-runs-table-config';
+import { dependencyRunsTableColumns } from '../dependency-runs-table-config';
 
 jest.mock('@tanstack/react-virtual', () => ({
   useVirtualizer: jest.fn(),
@@ -39,7 +39,7 @@ const renderTable = (data: PipelineRunKind[]) =>
     <TableContainer data={data} unfilteredData={data} loaded={true}>
       <Table
         data={data}
-        columns={dependencyRunsColumns}
+        columns={dependencyRunsTableColumns}
         getRowId={(row) => row.metadata?.uid ?? row.metadata?.name ?? ''}
         aria-label="Dependency run list"
       />
