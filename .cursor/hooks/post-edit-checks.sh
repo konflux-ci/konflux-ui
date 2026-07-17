@@ -112,18 +112,31 @@ if [[ -n "$test_files" ]]; then
   test_out=$(echo "$test_files" | tr '\n' '\0' | xargs -0 yarn jest --passWithNoTests 2>&1) || {
     # Ignore "Cannot find module" failures sourced from files the agent didn't touch —
     # those are pre-existing environment issues, not caused by this turn.
+    # Only suppress when ALL failures are module-load crashes from untouched files;
+    # if any test actually ran and failed (assertion errors), report everything.
     agent_caused_failure=true
     if echo "$test_out" | grep -q "Cannot find module"; then
       module_error_sources=$(echo "$test_out" \
         | sed -nE "s/.*Cannot find module .+ from '([^']+)'.*/\1/p")
       if [[ -n "$module_error_sources" ]]; then
-        agent_caused_failure=false
+        module_from_agent=false
         while IFS= read -r src_file; do
           if echo "$changed_files" | grep -qF "$src_file"; then
-            agent_caused_failure=true
+            module_from_agent=true
             break
           fi
         done <<< "$module_error_sources"
+
+        if [[ "$module_from_agent" == false ]]; then
+          # Module errors are pre-existing. Only suppress if there are no other
+          # test failures — jest marks assertion failures as "● <test name>"
+          # vs suite-load crashes as "● Test suite failed to run".
+          has_assertion_failures=$(echo "$test_out" \
+            | grep -E '^\s+● ' | grep -v 'Test suite failed to run' || true)
+          if [[ -z "$has_assertion_failures" ]]; then
+            agent_caused_failure=false
+          fi
+        fi
       fi
     fi
 
