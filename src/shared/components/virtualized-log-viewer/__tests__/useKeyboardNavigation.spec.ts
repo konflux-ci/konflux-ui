@@ -12,7 +12,7 @@ const TestComponent: React.FC<{
   const ref = React.useCallback(
     (node: HTMLDivElement | null) => {
       (scrollElementRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
-      (navRef as unknown as React.MutableRefObject<HTMLDivElement | null>).current = node;
+      navRef(node);
     },
     [scrollElementRef, navRef],
   );
