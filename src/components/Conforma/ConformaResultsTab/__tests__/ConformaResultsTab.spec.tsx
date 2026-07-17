@@ -19,6 +19,10 @@ jest.mock('react-router-dom', () => ({
 
 const mockUseApplicationConformaResults = useApplicationConformaResults as jest.Mock;
 
+const SETTLING_STATUS_FINALIZING = 'Finalizing Conforma results.';
+const SETTLING_STATUS_COMPLETE = 'Conforma results finalized.';
+const SETTLING_COMPLETE_ANNOUNCEMENT_MS = 2000;
+
 const createMockRow = (overrides: Partial<ConformaResultRow> = {}): ConformaResultRow => ({
   title: 'Test rule',
   description: 'A test rule description',
@@ -41,6 +45,7 @@ const emptyResults: ApplicationConformaResults = {
   totalComponents: 0,
   totalFailed: 0,
   loaded: true,
+  settling: false,
   error: undefined,
   refresh: noOpRefresh,
 };
@@ -81,6 +86,7 @@ const archDupeResults: ApplicationConformaResults = {
   totalComponents: 1,
   totalFailed: 1,
   loaded: true,
+  settling: false,
   error: undefined,
   refresh: noOpRefresh,
 };
@@ -127,6 +133,7 @@ const populatedResults: ApplicationConformaResults = {
   totalComponents: 2,
   totalFailed: 1,
   loaded: true,
+  settling: false,
   error: undefined,
   refresh: noOpRefresh,
 };
@@ -134,6 +141,10 @@ const populatedResults: ApplicationConformaResults = {
 describe('ConformaResultsTab', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
   });
 
   it('shows a spinner when data is loading', () => {
@@ -311,6 +322,158 @@ describe('ConformaResultsTab', () => {
     expect(screen.getByText(/sha256:aaa/)).toBeInTheDocument();
     expect(screen.getByText(/sha256:bbb/)).toBeInTheDocument();
     expect(screen.getByText(/sha256:ccc/)).toBeInTheDocument();
+  });
+
+  it('shows an inline settling spinner and status when loaded but still settling', () => {
+    mockUseApplicationConformaResults.mockReturnValue({
+      ...populatedResults,
+      settling: true,
+    });
+
+    routerRenderer(<ConformaResultsTab />);
+
+    expect(screen.getByText(SETTLING_STATUS_FINALIZING)).toBeInTheDocument();
+    expect(screen.getByTestId('conforma-results-settling-spinner')).toBeInTheDocument();
+    expect(screen.getByTestId('conforma-results-settling-status')).toBeInTheDocument();
+
+    const liveRegion = screen.getByTestId('conforma-results-settling-live-region');
+    expect(liveRegion).toHaveAttribute('aria-live', 'polite');
+    expect(liveRegion).toHaveAttribute('aria-atomic', 'true');
+  });
+
+  it('does not show settling UI when settling is false and never started', () => {
+    mockUseApplicationConformaResults.mockReturnValue(populatedResults);
+
+    routerRenderer(<ConformaResultsTab />);
+
+    expect(screen.queryByText(SETTLING_STATUS_FINALIZING)).not.toBeInTheDocument();
+    expect(screen.queryByText(SETTLING_STATUS_COMPLETE)).not.toBeInTheDocument();
+    expect(screen.queryByTestId('conforma-results-settling-spinner')).not.toBeInTheDocument();
+  });
+
+  it('shows a completion message in the live region when settling finishes', () => {
+    mockUseApplicationConformaResults.mockReturnValue({
+      ...populatedResults,
+      settling: true,
+    });
+
+    const { rerender } = routerRenderer(<ConformaResultsTab />);
+
+    expect(screen.getByText(SETTLING_STATUS_FINALIZING)).toBeInTheDocument();
+
+    mockUseApplicationConformaResults.mockReturnValue({
+      ...populatedResults,
+      settling: false,
+    });
+    rerender(<ConformaResultsTab />);
+
+    expect(screen.queryByText(SETTLING_STATUS_FINALIZING)).not.toBeInTheDocument();
+    expect(screen.queryByTestId('conforma-results-settling-spinner')).not.toBeInTheDocument();
+    expect(screen.getByText(SETTLING_STATUS_COMPLETE)).toBeInTheDocument();
+    expect(screen.getByTestId('conforma-results-settled-status')).toBeInTheDocument();
+    expect(screen.getByTestId('conforma-results-settling-live-region')).toBeInTheDocument();
+  });
+
+  it('auto-clears the completion message after the announcement timeout', () => {
+    jest.useFakeTimers();
+    mockUseApplicationConformaResults.mockReturnValue({
+      ...populatedResults,
+      settling: true,
+    });
+
+    const { rerender } = routerRenderer(<ConformaResultsTab />);
+
+    mockUseApplicationConformaResults.mockReturnValue({
+      ...populatedResults,
+      settling: false,
+    });
+    rerender(<ConformaResultsTab />);
+
+    expect(screen.getByText(SETTLING_STATUS_COMPLETE)).toBeInTheDocument();
+
+    act(() => {
+      jest.advanceTimersByTime(SETTLING_COMPLETE_ANNOUNCEMENT_MS);
+    });
+
+    expect(screen.queryByText(SETTLING_STATUS_COMPLETE)).not.toBeInTheDocument();
+  });
+
+  it('does not let a stale auto-clear timer from a prior "complete" phase override a new settling cycle', () => {
+    jest.useFakeTimers();
+
+    // Step 1: settling starts -> announcement becomes 'finalizing'.
+    mockUseApplicationConformaResults.mockReturnValue({
+      ...populatedResults,
+      settling: true,
+    });
+    const { rerender } = routerRenderer(<ConformaResultsTab />);
+
+    expect(screen.getByText(SETTLING_STATUS_FINALIZING)).toBeInTheDocument();
+
+    // Step 2: settling finishes -> announcement becomes 'complete' and the
+    // 2-second auto-clear timer is scheduled.
+    mockUseApplicationConformaResults.mockReturnValue({
+      ...populatedResults,
+      settling: false,
+    });
+    rerender(<ConformaResultsTab />);
+
+    expect(screen.getByText(SETTLING_STATUS_COMPLETE)).toBeInTheDocument();
+
+    // Step 3: advance partway through the 2-second window (well before it fires).
+    act(() => {
+      jest.advanceTimersByTime(500);
+    });
+
+    // Step 4: a new refresh/fill-in cycle starts before the old timer fires.
+    mockUseApplicationConformaResults.mockReturnValue({
+      ...populatedResults,
+      settling: true,
+    });
+    rerender(<ConformaResultsTab />);
+
+    expect(screen.getByText(SETTLING_STATUS_FINALIZING)).toBeInTheDocument();
+    expect(screen.getByTestId('conforma-results-settling-spinner')).toBeInTheDocument();
+    expect(screen.queryByText(SETTLING_STATUS_COMPLETE)).not.toBeInTheDocument();
+
+    // Step 5: advance well past the moment the original (step 2) timer would
+    // have fired (500ms + 2000ms+ = well beyond the original 2000ms mark).
+    act(() => {
+      jest.advanceTimersByTime(SETTLING_COMPLETE_ANNOUNCEMENT_MS);
+    });
+
+    // Step 6: the stale timer must not have reverted the announcement to
+    // 'idle'. The UI should still correctly show the finalizing state.
+    expect(screen.getByText(SETTLING_STATUS_FINALIZING)).toBeInTheDocument();
+    expect(screen.getByTestId('conforma-results-settling-spinner')).toBeInTheDocument();
+    expect(screen.queryByText(SETTLING_STATUS_COMPLETE)).not.toBeInTheDocument();
+  });
+
+  it('does not show empty state when loaded and settling with empty results', () => {
+    mockUseApplicationConformaResults.mockReturnValue({
+      ...emptyResults,
+      settling: true,
+    });
+
+    routerRenderer(<ConformaResultsTab />);
+
+    expect(
+      screen.queryByText('No Conforma results available for this application.'),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('No results match the current filters.')).not.toBeInTheDocument();
+    expect(screen.getByTestId('conforma-results-settling-spinner')).toBeInTheDocument();
+  });
+
+  it('sets aria-busy on summary wrapper while settling', () => {
+    mockUseApplicationConformaResults.mockReturnValue({
+      ...populatedResults,
+      settling: true,
+    });
+
+    routerRenderer(<ConformaResultsTab />);
+
+    const summaryWrapper = screen.getByTestId('conforma-results-summary-wrapper');
+    expect(summaryWrapper).toHaveAttribute('aria-busy', 'true');
   });
 
   it('shows "no results match" when filters exclude all results', () => {

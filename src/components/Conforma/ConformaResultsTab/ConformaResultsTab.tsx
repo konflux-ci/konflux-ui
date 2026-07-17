@@ -4,6 +4,7 @@ import {
   Alert,
   AlertVariant,
   Bullseye,
+  Flex,
   PageSection,
   Content,
   ContentVariants,
@@ -23,6 +24,7 @@ import {
 } from './conforma-grouping-utils';
 import { ConformaGroupedTable } from './ConformaGroupedTable';
 import { ConformaResultsToolbar } from './ConformaResultsToolbar';
+import { ConformaSettlingAnnouncement } from './ConformaSettlingAnnouncement';
 import { ConformaSummaryBar } from './ConformaSummaryBar';
 import { useApplicationConformaResults } from './useApplicationConformaResults';
 import { useConformaFilters } from './useConformaFilters';
@@ -41,6 +43,7 @@ const ConformaResultsTabContent: React.FC = () => {
     totalComponents,
     totalFailed,
     loaded,
+    settling,
     error,
     partialLogError,
     refresh,
@@ -133,7 +136,7 @@ const ConformaResultsTabContent: React.FC = () => {
     );
   }
 
-  const isEmpty = allResults.length === 0;
+  const isEmpty = allResults.length === 0 && !settling;
 
   return (
     <>
@@ -147,7 +150,11 @@ const ConformaResultsTabContent: React.FC = () => {
             validating them against a clearly defined policy.
           </Content>
         </Content>
-        <div className="conforma-results-tab__summary-wrapper">
+        <div
+          className="conforma-results-tab__summary-wrapper"
+          aria-busy={settling}
+          data-test="conforma-results-summary-wrapper"
+        >
           <ConformaSummaryBar
             totalComponents={totalComponents}
             totalFailed={totalFailed}
@@ -158,6 +165,11 @@ const ConformaResultsTabContent: React.FC = () => {
             totalWarningsRaw={rawCounts.totalWarnings}
             totalSuccessesRaw={rawCounts.totalSuccesses}
           />
+          {settling ? (
+            <Flex justifyContent={{ default: 'justifyContentCenter' }}>
+              <Spinner size="md" aria-label="Updating summary" />
+            </Flex>
+          ) : null}
         </div>
       </PageSection>
 
@@ -194,9 +206,13 @@ const ConformaResultsTabContent: React.FC = () => {
             </Content>
           </Bullseye>
         ) : groups.length === 0 ? (
-          <Bullseye>
-            <Content component={ContentVariants.p}>No results match the current filters.</Content>
-          </Bullseye>
+          settling ? null : (
+            <Bullseye>
+              <Content component={ContentVariants.p}>
+                No results match the current filters.
+              </Content>
+            </Bullseye>
+          )
         ) : (
           <ConformaGroupedTable
             groups={groups}
@@ -206,6 +222,8 @@ const ConformaResultsTabContent: React.FC = () => {
           />
         )}
       </PageSection>
+
+      <ConformaSettlingAnnouncement settling={settling} />
     </>
   );
 };
