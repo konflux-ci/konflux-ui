@@ -37,7 +37,6 @@ export const ImageUrlDisplay: React.FC<ImageUrlDisplayProps> = ({
     componentName,
     applicationName,
     false,
-    isImageControllerEnabled,
   );
 
   const visibility = isImageControllerEnabled

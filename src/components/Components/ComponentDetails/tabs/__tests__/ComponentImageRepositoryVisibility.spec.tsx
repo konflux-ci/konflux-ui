@@ -194,7 +194,6 @@ describe('ComponentImageRepositoryVisibility', () => {
       );
 
       // Verify useImageRepository was called with actual namespace/name
-      // ComponentImageRepositoryVisibility does not pass enabled (defaults to true)
       expect(useImageRepositoryMock).toHaveBeenCalledWith(
         mockComponent.metadata.namespace,
         mockComponent.metadata.name,

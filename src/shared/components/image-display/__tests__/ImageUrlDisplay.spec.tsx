@@ -185,7 +185,6 @@ describe('ImageUrlDisplay', () => {
       testComponentName,
       undefined,
       false,
-      true,
     );
   });
 

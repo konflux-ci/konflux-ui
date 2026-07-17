@@ -102,7 +102,6 @@ const PipelineRunDetailsTab: React.FC = () => {
     componentName,
     null,
     false,
-    isImageControllerEnabled,
   );
 
   const sboms = React.useMemo(

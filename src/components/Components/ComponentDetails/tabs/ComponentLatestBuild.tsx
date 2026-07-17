@@ -50,13 +50,12 @@ const ComponentLatestBuild: React.FC<React.PropsWithChildren<ComponentLatestBuil
   const { isImageControllerEnabled } = useIsImageControllerEnabled();
   const [urlInfo, proxyLoaded, proxyError] = useImageProxy();
 
-  // Fetch ImageRepository for this component (only when image controller is enabled)
+  // Fetch ImageRepository for this component
   const [imageRepository, imageRepoLoaded, imageRepoError] = useImageRepository(
     component.metadata.namespace,
     component.metadata.name,
     null,
     false,
-    isImageControllerEnabled,
   );
 
   // Avoid getLastestImage fallback to spec.containerImage, which lacks image tag

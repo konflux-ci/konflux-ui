@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { ImageRepositoryLabel } from '~/consts/imagerepo';
+import { useIsImageControllerEnabled } from '~/image-controller/conditional-checks';
 import { useK8sWatchResource } from '~/k8s';
 import { ComponentModel, ImageRepositoryGroupVersionKind, ImageRepositoryModel } from '~/models';
 import { ImageRepositoryKind } from '~/types';
@@ -9,9 +10,9 @@ export const useImageRepository = (
   componentName: string | null,
   applicationName?: string | null,
   watch?: boolean,
-  enabled: boolean = true,
 ): [ImageRepositoryKind | null, boolean, unknown] => {
-  const shouldFetch = Boolean(enabled && namespace && componentName);
+  const { isImageControllerEnabled } = useIsImageControllerEnabled();
+  const shouldFetch = Boolean(isImageControllerEnabled && namespace && componentName);
 
   const matchLabels = applicationName
     ? { [ImageRepositoryLabel.APPLICATION]: applicationName }

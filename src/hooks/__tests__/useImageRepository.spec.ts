@@ -4,13 +4,23 @@ import {
   mockPublicImageRepository,
 } from '~/__data__/image-repository-data';
 import { ImageRepositoryLabel } from '~/consts/imagerepo';
+import { useIsImageControllerEnabled } from '~/image-controller/conditional-checks';
 import { ImageRepositoryKind } from '~/types';
 import { createK8sWatchResourceMock } from '~/utils/test-utils';
 import { useImageRepository } from '../useImageRepository';
 
+jest.mock('~/image-controller/conditional-checks', () => ({
+  useIsImageControllerEnabled: jest.fn(),
+}));
+
+const useIsImageControllerEnabledMock = useIsImageControllerEnabled as jest.Mock;
 const useK8sWatchResourceMock = createK8sWatchResourceMock();
 
 describe('useImageRepository', () => {
+  beforeEach(() => {
+    useIsImageControllerEnabledMock.mockReturnValue({ isImageControllerEnabled: true });
+  });
+
   afterEach(() => {
     jest.clearAllMocks();
   });
@@ -281,7 +291,8 @@ describe('useImageRepository', () => {
       expect(error).toBeUndefined();
     });
 
-    it('should not fetch when enabled is false', () => {
+    it('should not fetch when image controller is disabled', () => {
+      useIsImageControllerEnabledMock.mockReturnValue({ isImageControllerEnabled: false });
       useK8sWatchResourceMock.mockReturnValue({
         data: undefined,
         isLoading: false,
@@ -289,7 +300,7 @@ describe('useImageRepository', () => {
       });
 
       const { result } = renderHook(() =>
-        useImageRepository('test-ns', 'test-component', null, false, false),
+        useImageRepository('test-ns', 'test-component', null, false),
       );
       const [imageRepository, loaded, error] = result.current;
 
@@ -299,7 +310,8 @@ describe('useImageRepository', () => {
       expect(useK8sWatchResourceMock).toHaveBeenCalledWith(undefined, expect.any(Object));
     });
 
-    it('should fetch when enabled is true', () => {
+    it('should fetch when image controller is enabled', () => {
+      useIsImageControllerEnabledMock.mockReturnValue({ isImageControllerEnabled: true });
       useK8sWatchResourceMock.mockReturnValue({
         data: [mockPublicImageRepository],
         isLoading: false,
@@ -307,7 +319,7 @@ describe('useImageRepository', () => {
       });
 
       const { result } = renderHook(() =>
-        useImageRepository('test-ns', 'test-component', null, false, true),
+        useImageRepository('test-ns', 'test-component', null, false),
       );
       const [imageRepository, loaded] = result.current;
 
