@@ -3,11 +3,9 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   ButtonVariant,
   EmptyStateBody,
-  Content,
-  ContentVariants,
-  Title,
   Truncate,
   EmptyStateActions,
+  Flex,
 } from '@patternfly/react-core';
 import { INTEGRATION_TEST_ADD_PATH, INTEGRATION_TEST_DETAILS_PATH } from '@routes/paths';
 import ActionMenu from '~/shared/components/action-menu/ActionMenu';
@@ -20,6 +18,7 @@ import {
   FilterToolbar,
 } from '~/shared/components/Filter';
 import ExternalLink from '~/shared/components/links/ExternalLink';
+import ListHeader from '~/shared/components/list-layout/ListHeader';
 import { Table, TableContainer, type ColumnDefinition } from '~/shared/components/TableV2';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
@@ -195,15 +194,12 @@ const IntegrationTestsListView: React.FC<React.PropsWithChildren> = () => {
   }
 
   return (
-    <>
-      <Title headingLevel="h3" className="pf-v6-u-mt-lg pf-v6-u-mb-sm">
-        Integration tests
-      </Title>
-      <Content>
-        <Content component={ContentVariants.p}>
-          Add an integration test to test all your components after you commit code.
-        </Content>
-      </Content>
+    <Flex direction={{ default: 'column' }} rowGap={{ default: 'rowGapSm' }}>
+      <ListHeader
+        title="Integration tests"
+        description={'Add an integration test to test all your components after you commit code.'}
+      />
+
       <TableContainer
         data={filteredData}
         unfilteredData={integrationTests}
@@ -236,7 +232,7 @@ const IntegrationTestsListView: React.FC<React.PropsWithChildren> = () => {
           aria-label="Integration tests"
         />
       </TableContainer>
-    </>
+    </Flex>
   );
 };
 
