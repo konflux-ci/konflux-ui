@@ -5,10 +5,6 @@ metadata:
   name: e2e-main-pipeline
   namespace: konflux-ui-tenant
 spec:
-  workspaces:
-    - name: shared-data
-      description: Workspace for git cloning and image building state
-      optional: true
   params:
     - name: SNAPSHOT
       description: 'The JSON string representing the snapshot of the application under test.'
