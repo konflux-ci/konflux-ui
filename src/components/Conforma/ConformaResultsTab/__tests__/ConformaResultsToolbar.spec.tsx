@@ -20,10 +20,10 @@ const mockRow = (overrides: Partial<ConformaResultRow> = {}): ConformaResultRow 
 });
 
 const allResults: ConformaResultRow[] = [
-  mockRow({ status: CONFORMA_RESULT_STATUS.violations }),
-  mockRow({ status: CONFORMA_RESULT_STATUS.violations }),
-  mockRow({ status: CONFORMA_RESULT_STATUS.warnings }),
-  mockRow({ status: CONFORMA_RESULT_STATUS.successes }),
+  mockRow({ status: CONFORMA_RESULT_STATUS.violations, component: 'api-gateway' }),
+  mockRow({ status: CONFORMA_RESULT_STATUS.violations, component: 'auth-service' }),
+  mockRow({ status: CONFORMA_RESULT_STATUS.warnings, component: 'api-gateway' }),
+  mockRow({ status: CONFORMA_RESULT_STATUS.successes, component: 'auth-service' }),
 ];
 
 const makeRefresh = (overrides: Partial<ConformaRefreshState> = {}): ConformaRefreshState => ({
@@ -52,7 +52,7 @@ describe('ConformaResultsToolbar', () => {
 
   const renderToolbar = (props: Partial<typeof defaultProps> = {}) => {
     routerRenderer(
-      <FilterContextProvider filterParams={['name', 'status']}>
+      <FilterContextProvider filterParams={['name', 'status', 'component']}>
         <ConformaResultsToolbar {...defaultProps} {...props} />
       </FilterContextProvider>,
     );
@@ -150,7 +150,7 @@ describe('ConformaResultsToolbar', () => {
     renderToolbar();
 
     fireEvent.click(screen.getByTestId('conforma-group-by-select'));
-    fireEvent.click(screen.getByText('Component'));
+    fireEvent.click(screen.getByRole('option', { name: 'Component' }));
 
     expect(onGroupByChange).toHaveBeenCalledWith('component');
   });
@@ -218,5 +218,30 @@ describe('ConformaResultsToolbar', () => {
     renderToolbar({ refresh: makeRefresh({ lastFetchedAt: 0 }) });
 
     expect(screen.queryByTestId('conforma-last-checked')).not.toBeInTheDocument();
+  });
+
+  it('renders Component filter toggle button', () => {
+    renderToolbar();
+
+    expect(screen.getByRole('button', { name: /component filter menu/i })).toBeInTheDocument();
+  });
+
+  it('opens Component menu and shows distinct component names from allResults', () => {
+    renderToolbar();
+
+    fireEvent.click(screen.getByRole('button', { name: /component filter menu/i }));
+
+    expect(screen.getByText('api-gateway')).toBeInTheDocument();
+    expect(screen.getByText('auth-service')).toBeInTheDocument();
+  });
+
+  it('shows badge count on Component toggle after selecting an option', () => {
+    renderToolbar();
+
+    const toggle = screen.getByRole('button', { name: /component filter menu/i });
+    fireEvent.click(toggle);
+    fireEvent.click(screen.getByText('api-gateway'));
+
+    expect(toggle).toHaveTextContent('1');
   });
 });
