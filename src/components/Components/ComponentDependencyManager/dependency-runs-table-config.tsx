@@ -10,7 +10,7 @@ import { pipelineRunStatus } from '~/utils/pipeline-utils';
 
 export const DEPENDENCY_RUNS_COLUMN_STATE_KEY = 'dependency-runs-list';
 
-export const filterConfigs = defineFilters<PipelineRunKind>()([
+export const dependencyRunsFilterConfig = defineFilters<PipelineRunKind>()([
   {
     type: 'search',
     param: 'name',
@@ -25,7 +25,7 @@ export const filterConfigs = defineFilters<PipelineRunKind>()([
   },
 ] as const);
 
-export const dependencyRunsColumns: ColumnDefinition<PipelineRunKind>[] = [
+export const dependencyRunsTableColumns: ColumnDefinition<PipelineRunKind>[] = [
   {
     id: 'name',
     header: 'Name',

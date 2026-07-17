@@ -127,7 +127,7 @@ describe('ComponentDetailsView', () => {
 
     await act(() => fireEvent.click(dependencyTab));
     expect(navigateMock).toHaveBeenCalledWith(
-      '/ns/test-ns/applications/test-application/components/human-resources/dependency-updates',
+      '/ns/test-ns/applications/test-application/components/human-resources/dep-updates',
     );
   });
 });

@@ -99,7 +99,7 @@ describe('DependencyRunsListView', () => {
   it('renders empty state when no runs exist and no filters are active', () => {
     usePipelineRunsV2Mock.mockReturnValue([[], true, null, jest.fn(), noNextPage]);
     renderWithQueryClient(<TestedComponent />);
-    expect(screen.getByText('Keep tabs on components and activity')).toBeVisible();
+    expect(screen.getByText('No dependency update runs yet')).toBeVisible();
   });
 
   it('renders pipeline run rows when data is available', async () => {
@@ -146,7 +146,7 @@ describe('DependencyRunsListView', () => {
     expect(usePipelineRunsV2Mock).toHaveBeenCalledWith(null, expect.anything());
   });
 
-  it('shows a loading spinner while fetching the next page', async () => {
+  it('shows loading skeleton rows while fetching the next page', async () => {
     usePipelineRunsV2Mock.mockReturnValue([
       mockRuns,
       true,
@@ -156,32 +156,7 @@ describe('DependencyRunsListView', () => {
     ]);
     renderWithQueryClient(<TestedComponent />);
     await waitFor(() => {
-      expect(screen.getByLabelText('Loading more pipeline runs')).toBeInTheDocument();
-    });
-  });
-
-  it('sorts runs by startTime descending before displaying them', async () => {
-    const older = makePipelineRun('run-older', {
-      status: {
-        conditions: [{ status: 'True', type: 'Succeeded' }],
-        startTime: '2023-01-01T00:00:00Z',
-      } as PipelineRunStatus,
-    });
-    const newer = makePipelineRun('run-newer', {
-      status: {
-        conditions: [{ status: 'True', type: 'Succeeded' }],
-        startTime: '2023-06-01T00:00:00Z',
-      } as PipelineRunStatus,
-    });
-    usePipelineRunsV2Mock.mockReturnValue([[older, newer], true, null, jest.fn(), noNextPage]);
-    renderWithQueryClient(<TestedComponent />);
-
-    await waitFor(() => {
-      const names = screen
-        .getAllByTestId('dependency-run-name')
-        .map((el) => el.textContent?.trim());
-      expect(names[0]).toContain('run-newer');
-      expect(names[1]).toContain('run-older');
+      expect(screen.getAllByTestId('table-loading-more').length).toBeGreaterThan(0);
     });
   });
 

@@ -145,9 +145,7 @@ const ComponentDetailsView: React.FC = () => {
             key: 'activity',
             label: 'Activity',
           },
-          ...(isMintMakerEnabled
-            ? [{ key: 'dependency-updates', label: 'Dependency updates' }]
-            : []),
+          ...(isMintMakerEnabled ? [{ key: 'dep-updates', label: 'Dependency updates' }] : []),
         ]}
       />
     </>

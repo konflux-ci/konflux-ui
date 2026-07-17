@@ -1,4 +1,3 @@
-import { ComponentDependencyTab } from '~/components/Components/ComponentDependencyManager/ComponentDependencyTab';
 import { ensureFeatureFlagOnLoader } from '~/feature-flags/utils';
 import {
   ComponentActivityTab,
@@ -32,12 +31,16 @@ const componentRoutes = [
         element: <ComponentActivityTab />,
       },
       {
-        path: `dependency-updates`,
+        path: `dep-updates`,
         loader: () => {
           ensureFeatureFlagOnLoader('mintmaker');
           return null;
         },
-        element: <ComponentDependencyTab />,
+        async lazy() {
+          const { ComponentDependencyTab } =
+            await import('~/components/Components/ComponentDependencyManager/ComponentDependencyTab');
+          return { element: <ComponentDependencyTab /> };
+        },
       },
     ],
   },
