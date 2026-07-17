@@ -1,5 +1,5 @@
 import React from 'react';
-import { Text, TextVariants } from '@patternfly/react-core';
+import { Content, ContentVariants } from '@patternfly/react-core';
 import { ExternalLink, RowFunctionArgs, TableData } from '../../../shared';
 import { ReleaseArtifactsImages } from '../../../types';
 import { releaseArtifactsTableColumnClasses } from './ReleaseArtifactsListHeader';
@@ -15,7 +15,7 @@ export const ReleaseArtifactsListRow: React.FC<Props> = ({ obj: releaseArtifactI
       <TableData
         className={`${releaseArtifactsTableColumnClasses.componentName} vertical-center-cell`}
       >
-        <Text component={TextVariants.p}>{releaseArtifactImage.name}</Text>
+        <Content component={ContentVariants.p}>{releaseArtifactImage.name}</Content>
       </TableData>
 
       <TableData className={`${releaseArtifactsTableColumnClasses.url} vertical-center-cell`}>
@@ -26,15 +26,15 @@ export const ReleaseArtifactsListRow: React.FC<Props> = ({ obj: releaseArtifactI
             stopPropagation
           />
         ) : (
-          <Text component={TextVariants.p}> - </Text>
+          <Content component={ContentVariants.p}> - </Content>
         )}
       </TableData>
 
       <TableData className={`${releaseArtifactsTableColumnClasses.arches} vertical-center-cell`}>
         {releaseArtifactImage.arches ? (
-          <Text component={TextVariants.p}>{releaseArtifactImage.arches.join(', ')}</Text>
+          <Content component={ContentVariants.p}>{releaseArtifactImage.arches.join(', ')}</Content>
         ) : (
-          <Text component={TextVariants.p}> - </Text>
+          <Content component={ContentVariants.p}> - </Content>
         )}
       </TableData>
     </>

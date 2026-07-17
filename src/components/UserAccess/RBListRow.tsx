@@ -17,7 +17,7 @@ export function useUserAccessRowDisplay(obj: UserAccessTableRow) {
     roleNode: !loaded ? (
       <Skeleton width="200px" height="20px" />
     ) : (
-      roleMap?.roleMap[roleBinding.roleRef.name] ?? roleBinding.roleRef.name
+      (roleMap?.roleMap[roleBinding.roleRef.name] ?? roleBinding.roleRef.name)
     ),
     bindingName: roleBinding.metadata?.name,
     actionMenu: <ActionMenu actions={actions} />,
@@ -37,7 +37,7 @@ export const RBListDataTds: React.FC<{ obj: UserAccessTableRow }> = ({ obj }) =>
       <Td className={rbTableColumnClasses.rolebinding} dataLabel="Role Binding">
         {bindingName}
       </Td>
-      <Td className={`${rbTableColumnClasses.kebab} pf-v5-u-pr-0`} dataLabel="Actions">
+      <Td className={`${rbTableColumnClasses.kebab} pf-v6-u-pr-0`} dataLabel="Actions">
         {actionMenu}
       </Td>
     </>

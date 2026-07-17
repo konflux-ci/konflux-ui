@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { ButtonProps, ButtonVariant, Icon } from '@patternfly/react-core';
+import { ButtonProps, ButtonVariant } from '@patternfly/react-core';
 import { ExternalLinkAltIcon } from '@patternfly/react-icons/dist/esm/icons/external-link-alt-icon';
 import { css } from '@patternfly/react-styles';
 import AnalyticsButton from '../../../components/AnalyticsButton/AnalyticsButton';
@@ -19,7 +19,6 @@ type ExternalLinkProps = {
   isInline?: boolean;
   onClick?: ButtonProps['onClick'];
   analytics?: AnalyticsButtonProperties;
-  size?: 'sm' | 'md' | 'lg' | 'xl';
   isHighlightable?: boolean;
 };
 
@@ -36,7 +35,6 @@ const ExternalLink: React.FC<React.PropsWithChildren<ExternalLinkProps>> = ({
   isInline = true,
   icon,
   onClick,
-  size = 'sm',
   isHighlightable,
 }) => (
   <AnalyticsButton
@@ -58,14 +56,7 @@ const ExternalLink: React.FC<React.PropsWithChildren<ExternalLinkProps>> = ({
     }}
   >
     {children || text}
-    {!hideIcon ? (
-      <>
-        {' '}
-        <Icon iconSize={size}>
-          <ExternalLinkAltIcon />
-        </Icon>
-      </>
-    ) : null}
+    {!hideIcon ? <ExternalLinkAltIcon className="external-link__icon" /> : null}
   </AnalyticsButton>
 );
 

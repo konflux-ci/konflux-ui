@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bullseye, Form, PageSection, PageSectionVariants, Spinner } from '@patternfly/react-core';
+import { Bullseye, Form, PageSection, Spinner } from '@patternfly/react-core';
 import { Formik } from 'formik';
 import { isEmpty } from 'lodash-es';
 import PageLayout from '~/components/PageLayout/PageLayout';
@@ -279,7 +279,7 @@ const EditSecretForm: React.FC = () => {
               />
             }
           >
-            <PageSection variant={PageSectionVariants.light} isFilled isWidthLimited>
+            <PageSection hasBodyWrapper isFilled isWidthLimited>
               <Form className="edit-secret-form__content">
                 <SecretTypeSubForm isEditMode={true} />
               </Form>

@@ -12,6 +12,15 @@ export interface UseLineNumberNavigationResult {
   isLineHighlighted: (lineNumber: number) => boolean;
 }
 
+export interface UseLineNumberNavigationOptions {
+  /**
+   * When false, URL hash line navigation (highlighting + auto-scroll) is deferred until this
+   * becomes true — e.g. while logs are still being fetched and line numbers/sections are
+   * unstable. Manual line clicks are unaffected and always apply immediately. Defaults to true.
+   */
+  readyToNavigate?: boolean;
+}
+
 /**
  * Custom hook to manage line number navigation and highlighting
  *
@@ -20,8 +29,13 @@ export interface UseLineNumberNavigationResult {
  * - Range selection with shift-click (#L10-L20)
  * - URL hash parsing and updates
  * - Highlight state management
+ * - Deferring URL hash navigation until logs are fully fetched (`readyToNavigate`)
  */
-export const useLineNumberNavigation = (): UseLineNumberNavigationResult => {
+export const useLineNumberNavigation = (
+  options: UseLineNumberNavigationOptions = {},
+): UseLineNumberNavigationResult => {
+  const { readyToNavigate = true } = options;
+
   // Track the first selected line for range selection
   const [firstSelectedLine, setFirstSelectedLine] = React.useState<number | null>(null);
 
@@ -30,9 +44,10 @@ export const useLineNumberNavigation = (): UseLineNumberNavigationResult => {
   const shouldEnableUrlHash = React.useCallback((): boolean => {
     const pathname = window.location.pathname;
     const search = window.location.search;
-    return pathname.includes('/logs') && (search.includes('task=') || pathname.includes('taskruns'));
+    return (
+      pathname.includes('/logs') && (search.includes('task=') || pathname.includes('taskruns'))
+    );
   }, []);
-
 
   // Parse hash to get highlighted line(s)
   // No need for useCallback - function has no dependencies and is only called from effects
@@ -57,11 +72,25 @@ export const useLineNumberNavigation = (): UseLineNumberNavigationResult => {
     return null;
   };
 
-  // Use lazy initialization to avoid calling getHighlightedLines on every render
-  const [highlightedLines, setHighlightedLines] = React.useState(() => getHighlightedLines());
+  // Use lazy initialization to avoid calling getHighlightedLines on every render.
+  // While navigation is deferred, don't apply any hash-derived highlight yet.
+  const [highlightedLines, setHighlightedLines] = React.useState<HighlightedLineRange | null>(() =>
+    readyToNavigate ? getHighlightedLines() : null,
+  );
 
   // Track the last hash to detect changes (including when hash is cleared)
   const lastHashRef = React.useRef(window.location.hash);
+
+  // Once navigation becomes ready, apply whatever hash is currently in the URL — it may have
+  // changed while navigation was deferred (e.g. logs were still being fetched).
+  const prevReadyToNavigateRef = React.useRef(readyToNavigate);
+  React.useEffect(() => {
+    if (readyToNavigate && !prevReadyToNavigateRef.current) {
+      lastHashRef.current = window.location.hash;
+      setHighlightedLines(getHighlightedLines());
+    }
+    prevReadyToNavigateRef.current = readyToNavigate;
+  }, [readyToNavigate]);
 
   // Effect to detect hash changes on every render (including changes without hashchange event)
   // This runs frequently but the ref comparison prevents unnecessary state updates
@@ -76,6 +105,12 @@ export const useLineNumberNavigation = (): UseLineNumberNavigationResult => {
       // Just update the ref to prevent stale comparisons
       lastHashRef.current = currentHash;
 
+      return;
+    }
+
+    if (!readyToNavigate) {
+      // Remember that the hash changed; it's applied once ready (see effect above).
+      lastHashRef.current = currentHash;
       return;
     }
 
@@ -108,6 +143,12 @@ export const useLineNumberNavigation = (): UseLineNumberNavigationResult => {
 
       const newHash = window.location.hash;
       lastHashRef.current = newHash;
+
+      if (!readyToNavigate) {
+        // Applied once ready (see effect above).
+        return;
+      }
+
       const newHighlight = getHighlightedLines();
       setHighlightedLines(newHighlight);
 
@@ -117,7 +158,7 @@ export const useLineNumberNavigation = (): UseLineNumberNavigationResult => {
 
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
-  }, [shouldEnableUrlHash]);
+  }, [shouldEnableUrlHash, readyToNavigate]);
 
   // Handle line number click for hash navigation
   const handleLineClick = React.useCallback(

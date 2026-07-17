@@ -289,7 +289,7 @@ describe('PipelineRunsListViewV2', () => {
     expect(
       screen
         .queryAllByRole('button', { name: TEXT_SEARCH_TYPES.NAME })
-        .find((button) => button.classList.contains('pf-v5-c-menu-toggle')),
+        .find((button) => button.classList.contains('pf-v6-c-menu-toggle')),
     ).toBeUndefined();
     expect(screen.getByPlaceholderText('Filter by name...')).toBeVisible();
   });
@@ -299,7 +299,7 @@ describe('PipelineRunsListViewV2', () => {
     expect(
       screen
         .getAllByRole('button', { name: TEXT_SEARCH_TYPES.NAME })
-        .find((button) => button.classList.contains('pf-v5-c-menu-toggle')),
+        .find((button) => button.classList.contains('pf-v6-c-menu-toggle')),
     ).toBeVisible();
     expect(screen.queryByRole('button', { name: 'Version filter menu' })).not.toBeInTheDocument();
   });
@@ -462,7 +462,7 @@ describe('PipelineRunsListViewV2', () => {
 
     const nameSearchToggle = screen
       .getAllByRole('button', { name: TEXT_SEARCH_TYPES.NAME })
-      .find((button) => button.classList.contains('pf-v5-c-menu-toggle'));
+      .find((button) => button.classList.contains('pf-v6-c-menu-toggle'));
     expect(nameSearchToggle).toBeDefined();
     await user.click(nameSearchToggle);
     await user.click(screen.getByRole('menuitem', { name: TEXT_SEARCH_TYPES.VERSION }));

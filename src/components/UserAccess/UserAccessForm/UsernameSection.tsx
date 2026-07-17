@@ -1,7 +1,7 @@
 import React from 'react';
 import {
-  Chip,
-  ChipGroup,
+  Label,
+  LabelGroup,
   FormGroup,
   FormHelperText,
   FormSection,
@@ -83,7 +83,7 @@ export const UsernameSection: React.FC<React.PropsWithChildren<Props>> = ({ disa
       <FormGroup
         fieldId={fieldId}
         label="Enter usernames"
-        labelIcon={
+        labelHelp={
           <HelpPopover
             aria-label="Usernames in Konflux"
             headerContent="Usernames in Konflux"
@@ -106,25 +106,24 @@ export const UsernameSection: React.FC<React.PropsWithChildren<Props>> = ({ disa
             onKeyDown={handleKeyDown}
             onBlur={handleBlur}
           >
-            <ChipGroup>
+            <LabelGroup>
               {usernames?.map((name) => (
-                <Chip
+                <Label
+                  variant="outline"
                   closeBtnAriaLabel="Remove"
                   key={name}
-                  onClick={() => setValue(usernames.filter((n) => n !== name))}
+                  onClose={() => setValue(usernames.filter((n) => n !== name))}
                 >
                   {name}
-                </Chip>
+                </Label>
               ))}
-            </ChipGroup>
+            </LabelGroup>
           </TextInputGroupMain>
         </TextInputGroup>
         <FormHelperText>
           <HelperText>
             {error ? (
-              <HelperTextItem variant="error" hasIcon>
-                {error}
-              </HelperTextItem>
+              <HelperTextItem variant="error">{error}</HelperTextItem>
             ) : (
               <HelperTextItem>
                 Provide Konflux usernames for the users you want to invite.

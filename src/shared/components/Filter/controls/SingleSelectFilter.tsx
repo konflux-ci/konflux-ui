@@ -70,8 +70,8 @@ export const SingleSelectFilter = <T,>({ config, options }: SingleSelectFilterPr
 
   return (
     <ToolbarFilter
-      chips={selected ? [labelForValue(selected)] : []}
-      deleteChip={handleDeleteChip}
+      labels={selected ? [labelForValue(selected)] : []}
+      deleteLabel={handleDeleteChip}
       categoryName={label}
     >
       <Select

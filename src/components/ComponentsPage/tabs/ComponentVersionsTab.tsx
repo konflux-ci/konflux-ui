@@ -10,7 +10,7 @@ export const ComponentVersionsTab: React.FC = () => {
 
   return (
     <>
-      <Title size="lg" headingLevel="h4" className="pf-v5-c-title pf-v5-u-mt-lg pf-v5-u-mb-sm">
+      <Title size="lg" headingLevel="h4" className="pf-v6-c-title pf-v6-u-mt-lg pf-v6-u-mb-sm">
         Versions
       </Title>
       <FilterContextProvider filterParams={['name']}>

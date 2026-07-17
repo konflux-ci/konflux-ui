@@ -2,11 +2,7 @@ import * as React from 'react';
 import { CONFORMA_TASK, EC_TASK } from '~/consts/security';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { usePipelineRunV2 } from '~/hooks/usePipelineRunsV2';
-import {
-  ComponentConformaResult,
-  ConformaResult,
-  UIConformaData,
-} from '~/types/conforma';
+import { ComponentConformaResult, ConformaResult, UIConformaData } from '~/types/conforma';
 import { isResourceEnterpriseContract } from '~/utils/conforma-utils';
 import { isTaskRunInPipelineRun } from '~/utils/pipeline-utils';
 import { useTaskRunsForPipelineRuns } from '../../hooks/useTaskRunsV2';

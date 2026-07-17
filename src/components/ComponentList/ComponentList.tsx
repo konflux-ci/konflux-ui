@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { EmptyStateBody, Text, TextContent, TextVariants, Title } from '@patternfly/react-core';
+import { EmptyStateBody, PageSection } from '@patternfly/react-core';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
@@ -13,6 +13,7 @@ import { ComponentKind } from '~/types';
 import { filterByText } from '~/utils/text-filter-utils';
 import emptyStateImgUrl from '../../assets/Components.svg';
 import { ButtonWithAccessTooltip } from '../ButtonWithAccessTooltip';
+import PageLayout from '../PageLayout/PageLayout';
 import ComponentsListHeader from './ComponentListHeader';
 import ComponentsListRow from './ComponentListRow';
 
@@ -78,35 +79,36 @@ const ComponentList: React.FC = () => {
   }
 
   return (
-    <>
-      <Title headingLevel="h3" className="pf-v5-u-mt-lg pf-v5-u-mb-sm pf-v5-u-pl-md">
-        Components
-        <span className="pf-v5-u-ml-sm">
-          <FeatureFlagIndicator flags={['components-page']} />
-        </span>
-      </Title>
-      <TextContent className="pf-v5-u-pl-md">
-        <Text component={TextVariants.p}>
-          A component is an image built from source code in a repository.
-        </Text>
-      </TextContent>
-      <Table
-        virtualize={false}
-        data={filteredComponents}
-        unfilteredData={components}
-        EmptyMsg={EmptyMessage}
-        NoDataEmptyMsg={NoDataEmptyMessage}
-        Toolbar={toolbar}
-        aria-label="Components List"
-        Header={ComponentsListHeader}
-        Row={ComponentsListRow}
-        loaded={allComponentsLoaded}
-        getRowProps={(obj: ComponentKind) => ({
-          id: `${obj.metadata.name}-component-list-item`,
-          'aria-label': obj.metadata.name,
-        })}
-      />
-    </>
+    <PageLayout
+      title={
+        <>
+          Components
+          <span className="pf-v6-u-ml-sm">
+            <FeatureFlagIndicator flags={['components-page']} />
+          </span>
+        </>
+      }
+      description="A component is an image built from source code in a repository."
+    >
+      <PageSection hasBodyWrapper={false} isFilled>
+        <Table
+          virtualize={false}
+          data={filteredComponents}
+          unfilteredData={components}
+          EmptyMsg={EmptyMessage}
+          NoDataEmptyMsg={NoDataEmptyMessage}
+          Toolbar={toolbar}
+          aria-label="Components List"
+          Header={ComponentsListHeader}
+          Row={ComponentsListRow}
+          loaded={allComponentsLoaded}
+          getRowProps={(obj: ComponentKind) => ({
+            id: `${obj.metadata.name}-component-list-item`,
+            'aria-label': obj.metadata.name,
+          })}
+        />
+      </PageSection>
+    </PageLayout>
   );
 };
 

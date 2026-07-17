@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Alert, ClipboardCopy, Skeleton, Text, TextContent } from '@patternfly/react-core';
+import { Alert, ClipboardCopy, Skeleton, Content } from '@patternfly/react-core';
 import { useImageProxy } from '~/hooks/useImageProxy';
 import ExternalLink from '~/shared/components/links/ExternalLink';
 import { getErrorState } from '~/shared/utils/error-utils';
@@ -33,12 +33,12 @@ const ComponentRegistryLogin: React.FC = () => {
 
   return (
     <>
-      <TextContent className="pf-v5-u-mb-sm">
-        <Text>
+      <Content className="pf-v6-u-mb-sm">
+        <Content component="p">
           <ExternalLink href={oauthUrl}>Get your authentication token</ExternalLink>
           {' and use it as the password when prompted'}
-        </Text>
-      </TextContent>
+        </Content>
+      </Content>
       <ClipboardCopy isReadOnly hoverTip="Copy" clickTip="Copied" style={{ width: '60%' }}>
         {`podman login -u unused ${urlInfo.hostname}`}
       </ClipboardCopy>

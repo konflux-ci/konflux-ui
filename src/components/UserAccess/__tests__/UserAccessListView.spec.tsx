@@ -155,8 +155,8 @@ describe('UserAccessListView', () => {
   it('should not allow creating a role binding if the user does not have permission', () => {
     useAccessReviewModalMock.mockReturnValue([false]);
     render(UserAccessList);
-    const grantAccessButton = screen.getByText('Grant access');
-    expect(grantAccessButton.getAttribute('aria-disabled')).toEqual('true');
+    const grantAccessButton = screen.getByText('Grant access').closest('button');
+    expect(grantAccessButton).toHaveAttribute('aria-disabled', 'true');
   });
 
   it('should handle undefined subjects in role bindings', () => {

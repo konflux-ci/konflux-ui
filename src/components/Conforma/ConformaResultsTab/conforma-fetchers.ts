@@ -26,7 +26,7 @@ const mapToUIConformaData = (
   msg: v.msg,
   collection: v.metadata?.collections,
   solution: v.metadata?.solution,
-  image: compResult.containerImage,
+  images: compResult.containerImage ? [compResult.containerImage] : [],
   code: v.metadata?.code,
 });
 
@@ -63,10 +63,9 @@ export async function fetchConformaLogFromKubearchive(
     queryParams: { container: 'step-report-json', follow: 'true' },
   };
 
-  return commonFetchJSON<ConformaResult>(
-    getK8sResourceURL(PodModel, undefined, podLogOpts),
-    { pathPrefix: KUBEARCHIVE_PATH_PREFIX },
-  );
+  return commonFetchJSON<ConformaResult>(getK8sResourceURL(PodModel, undefined, podLogOpts), {
+    pathPrefix: KUBEARCHIVE_PATH_PREFIX,
+  });
 }
 
 export async function fetchConformaLogFromTektonResults(

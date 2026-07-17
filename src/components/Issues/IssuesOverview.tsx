@@ -9,7 +9,7 @@ const IssuesOverview: React.FunctionComponent = () => {
     <Grid
       hasGutter
       style={{
-        paddingTop: 'var(--pf-v5-global--spacer--lg)',
+        paddingTop: 'var(--pf-t--global--spacer--lg)',
       }}
     >
       <GridItem span={8}>

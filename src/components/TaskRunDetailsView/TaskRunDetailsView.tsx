@@ -107,7 +107,7 @@ export const TaskRunDetailsView: React.FC = () => {
       title={
         <>
           <FeatureFlagIndicator flags={['taskruns-kubearchive']} />
-          <span className="pf-v5-u-mr-sm">
+          <span className="pf-v6-u-mr-sm">
             {taskRunName}
             {taskDisplayName ? ` (${taskDisplayName})` : ''}
           </span>

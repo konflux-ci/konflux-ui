@@ -22,10 +22,9 @@ export type TQueryInfiniteOptions<
   TQueryFnData = unknown,
   TError = unknown,
   TData = TQueryFnData,
-  TQueryData = TQueryFnData,
   TQueryKey extends QueryKey = QueryKey,
   TPageParam = unknown,
 > = Omit<
-  UseInfiniteQueryOptions<TQueryFnData, TError, TData, TQueryData, TQueryKey, TPageParam>,
+  UseInfiniteQueryOptions<TQueryFnData, TError, TData, TQueryKey, TPageParam>,
   'queryKey' | 'queryFn' | 'initialPageParam' | 'getNextPageParam'
 >;

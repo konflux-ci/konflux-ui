@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bullseye, Spinner } from '@patternfly/react-core';
+import { Bullseye, PageSection, Spinner } from '@patternfly/react-core';
 import ColumnManagement from '~/components/ColumnManagement/ColumnManagement';
 import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
@@ -243,40 +243,46 @@ export const PipelineRunsPage: React.FC = () => {
         </FilterToolbar>
       }
     >
-      <FilterToolbar
-        configs={filterConfigs}
-        options={optionsMap}
-        groups={{
-          resource: { variant: 'filter-group' },
-          attributes: { variant: 'filter-group' },
-          archive: { variant: 'filter-group' },
-        }}
-      >
-        <ColumnManagement columns={columns} columnStateKey={columnStateKey} showColumnManagement />
-      </FilterToolbar>
-      {hasRequiredFilters ? (
-        <TableContainer
-          data={filteredData}
-          unfilteredData={pipelineRuns}
-          loaded={plrLoaded}
-          emptyState={<FilteredEmptyState onClearFilters={clearAll} />}
-          loadError={plrError as Error | undefined}
-          noDataState={<PipelineRunsEmptyState />}
+      <PageSection isFilled={false}>
+        <FilterToolbar
+          configs={filterConfigs}
+          options={optionsMap}
+          groups={{
+            resource: { variant: 'filter-group' },
+            attributes: { variant: 'filter-group' },
+            archive: { variant: 'filter-group' },
+          }}
         >
-          <Table
-            data={filteredData}
+          <ColumnManagement
             columns={columns}
-            getRowId={(row) => row.metadata?.uid ?? row.metadata?.name ?? ''}
-            aria-label="Pipeline runs"
             columnStateKey={columnStateKey}
-            hasNextPage={hasNextPage}
-            isFetchingNextPage={isFetchingNextPage}
-            fetchNextPage={getNextPage}
+            showColumnManagement
           />
-        </TableContainer>
-      ) : (
-        <PipelineRunsEmptyState />
-      )}
+        </FilterToolbar>
+        {hasRequiredFilters ? (
+          <TableContainer
+            data={filteredData}
+            unfilteredData={pipelineRuns}
+            loaded={plrLoaded}
+            emptyState={<FilteredEmptyState onClearFilters={clearAll} />}
+            loadError={plrError as Error | undefined}
+            noDataState={<PipelineRunsEmptyState />}
+          >
+            <Table
+              data={filteredData}
+              columns={columns}
+              getRowId={(row) => row.metadata?.uid ?? row.metadata?.name ?? ''}
+              aria-label="Pipeline runs"
+              columnStateKey={columnStateKey}
+              hasNextPage={hasNextPage}
+              isFetchingNextPage={isFetchingNextPage}
+              fetchNextPage={getNextPage}
+            />
+          </TableContainer>
+        ) : (
+          <PipelineRunsEmptyState />
+        )}
+      </PageSection>
     </PageLayout>
   );
 };

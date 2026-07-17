@@ -1,0 +1,30 @@
+.log-content__sticky-header {
+  display: flex;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: var(
+    --pf-v6-c-log-viewer__main--BackgroundColor,
+    var(--pf-t--global--background--color--secondary--default)
+  );
+  box-shadow: var(--pf-t--global--box-shadow--sm);
+}
+
+// Restore pointer events for clickable children inside the pointer-events:none sticky bar
+.log-content__gutter--sticky,
+.log-content__section-header-btn {
+  pointer-events: auto;
+}
+
+.log-content__sticky-header-content {
+  display: flex;
+  align-items: center;
+}
+
+.log-content__fold-indicator {
+  font-style: italic;
+  color: var(--pf-t--global--text--color--disabled);
+}

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useParams } from 'react-router-dom';
-import { PageSection, PageSectionVariants, Title, Spinner, Bullseye } from '@patternfly/react-core';
+import { Title, Spinner, Bullseye } from '@patternfly/react-core';
 import { SortByDirection } from '@patternfly/react-table';
 import { textMatch } from '~/utils/text-filter-utils';
 import { SESSION_STORAGE_KEYS } from '../../consts/constants';
@@ -129,8 +129,8 @@ const ReleasesListView: React.FC = () => {
   }
 
   return (
-    <PageSection padding={{ default: 'noPadding' }} variant={PageSectionVariants.light} isFilled>
-      <Title size="lg" headingLevel="h3" className="pf-v5-c-title pf-v5-u-mt-lg pf-v5-u-mb-sm">
+    <>
+      <Title size="lg" headingLevel="h3" className="pf-v6-c-title pf-v6-u-mt-lg pf-v6-u-mb-sm">
         Releases
       </Title>
       <>
@@ -198,7 +198,7 @@ const ReleasesListView: React.FC = () => {
           description="Selected columns will be displayed in the releases table."
         />
       </>
-    </PageSection>
+    </>
   );
 };
 

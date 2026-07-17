@@ -8,8 +8,8 @@ import {
 import { MinusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/minus-circle-icon';
 import { PlusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/plus-circle-icon';
 import { FieldArray, useField, useFormikContext } from 'formik';
-import { InputField } from 'formik-pf';
 import { uniqueId } from 'lodash-es';
+import { InputField } from '~/shared/components/formik-base';
 import { getRegistryCreds } from '~/utils/secrets/secret-utils';
 import {
   useAreSecretSensitiveFieldsHidden,
@@ -129,7 +129,7 @@ export const MultiImageCredentialForm: React.FC<
             : null}
           {!sensitiveFieldsHidden ? (
             <Button
-              className="pf-v5-u-text-align-left"
+              className="pf-v6-u-text-align-left"
               onClick={() =>
                 arrayHelpers.push({ registry: '', username: '', password: '', email: '' })
               }

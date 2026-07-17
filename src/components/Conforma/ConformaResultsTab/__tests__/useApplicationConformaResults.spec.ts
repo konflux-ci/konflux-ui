@@ -6,10 +6,7 @@ import { useComponents } from '~/hooks/useComponents';
 import { useTaskRunsV2 } from '~/hooks/useTaskRunsV2';
 import { useNamespace } from '~/shared/providers/Namespace';
 import type { ComponentKind, TaskRunKind } from '~/types';
-import {
-  CONFORMA_RESULT_STATUS,
-  type ConformaResult,
-} from '~/types/conforma';
+import { CONFORMA_RESULT_STATUS, type ConformaResult } from '~/types/conforma';
 import { resolveConformaResultFromTaskRun } from '../conforma-fetchers';
 import { useApplicationConformaResults } from '../useApplicationConformaResults';
 import '@testing-library/jest-dom';
@@ -32,8 +29,8 @@ jest.mock('~/feature-flags/hooks', () => ({
 
 jest.mock('../conforma-fetchers', () => ({
   resolveConformaResultFromTaskRun: jest.fn(),
-  filterInvalidImageConformaRows: jest.requireActual('../conforma-fetchers')
-    .filterInvalidImageConformaRows,
+  filterInvalidImageConformaRows:
+    jest.requireActual('../conforma-fetchers').filterInvalidImageConformaRows,
   mapConformaResultData: jest.requireActual('../conforma-fetchers').mapConformaResultData,
 }));
 
@@ -189,9 +186,6 @@ describe('useApplicationConformaResults', () => {
       allResults: [],
       totalComponents: 0,
       totalFailed: 0,
-      totalViolations: 0,
-      totalWarnings: 0,
-      totalSuccesses: 0,
       loaded: false,
       settling: false,
       error: undefined,
@@ -265,9 +259,6 @@ describe('useApplicationConformaResults', () => {
     await flushEffects();
 
     expect(result.current.loaded).toBe(true);
-    expect(result.current.totalViolations).toBe(1);
-    expect(result.current.totalWarnings).toBe(1);
-    expect(result.current.totalSuccesses).toBe(1);
     expect(result.current.totalFailed).toBe(1);
     expect(result.current.allResults).toHaveLength(3);
     expect(result.current.componentStatuses[0].status).toBe('fail');
@@ -288,7 +279,7 @@ describe('useApplicationConformaResults', () => {
     );
     expect(violation?.title).toBe('Missing CVE scan');
     expect(violation?.solution).toBe('Run a CVE scan');
-    expect(violation?.image).toBe('quay.io/test/image@sha256:abc');
+    expect(violation?.images).toEqual(['quay.io/test/image@sha256:abc']);
   });
 
   it('maps warning rows with solution field', async () => {
@@ -516,8 +507,20 @@ describe('useApplicationConformaResults', () => {
 
   it('picks the latest TaskRun per component by timestamp', async () => {
     const components = [createComponent('comp-a')];
-    const olderTr = createSecurityTaskRun('tr-old', 'comp-a', 'pod-old', '2025-01-01T00:00:00Z', 'pr-old');
-    const newerTr = createSecurityTaskRun('tr-new', 'comp-a', 'pod-new', '2026-06-01T00:00:00Z', 'pr-new');
+    const olderTr = createSecurityTaskRun(
+      'tr-old',
+      'comp-a',
+      'pod-old',
+      '2025-01-01T00:00:00Z',
+      'pr-old',
+    );
+    const newerTr = createSecurityTaskRun(
+      'tr-new',
+      'comp-a',
+      'pod-new',
+      '2026-06-01T00:00:00Z',
+      'pr-new',
+    );
     mockUseComponents.mockReturnValue([components, true, undefined]);
     mockUseTaskRunsV2.mockReturnValue([[olderTr, newerTr], true, undefined, jest.fn(), {}]);
     mockResolveConforma.mockResolvedValue(mockConformaResult);
@@ -698,6 +701,62 @@ describe('useApplicationConformaResults', () => {
 
     expect(result.current.loaded).toBe(true);
     expect(result.current.settling).toBe(false);
+  });
+
+  it('overwrites the noisy per-image EC component name with the real K8s component name', async () => {
+    const multiArchResult: ConformaResult = {
+      components: [
+        {
+          containerImage: 'quay.io/test/image@sha256:arm64digest',
+          name: 'comp-a-arm64',
+          success: false,
+          violations: [
+            {
+              metadata: {
+                title: 'Missing CVE scan',
+                description: 'No CVE scan found',
+                collections: ['slsa3'],
+                code: 'cve_scan.missing',
+                solution: 'Run a CVE scan',
+              },
+              msg: 'CVE scan is missing',
+            },
+          ],
+        },
+        {
+          containerImage: 'quay.io/test/image@sha256:amd64digest',
+          name: 'comp-a-amd64',
+          success: false,
+          violations: [
+            {
+              metadata: {
+                title: 'Missing CVE scan',
+                description: 'No CVE scan found',
+                collections: ['slsa3'],
+                code: 'cve_scan.missing',
+                solution: 'Run a CVE scan',
+              },
+              msg: 'CVE scan is missing',
+            },
+          ],
+        },
+      ],
+    };
+    setupTaskRunPipeline();
+    mockResolveConforma.mockResolvedValue(multiArchResult);
+
+    const { result } = renderHook(() => useApplicationConformaResults('test-app'), {
+      wrapper: createWrapper(),
+    });
+
+    await flushEffects();
+
+    expect(result.current.allResults).toHaveLength(2);
+    expect(result.current.allResults.every((r) => r.component === 'comp-a')).toBe(true);
+    expect(result.current.allResults.map((r) => r.images)).toEqual([
+      ['quay.io/test/image@sha256:arm64digest'],
+      ['quay.io/test/image@sha256:amd64digest'],
+    ]);
   });
 
   it('preserves pipelineRunName on componentStatuses from TaskRun labels', async () => {

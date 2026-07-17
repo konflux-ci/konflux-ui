@@ -49,7 +49,7 @@ export const SensitiveValuesRevealBanner: React.FC<SensitiveValuesRevealBannerPr
       variant="info"
       isInline
       title={title}
-      className="pf-v5-u-mb-md"
+      className="pf-v6-u-mb-md"
       actionLinks={
         <AlertActionLink onClick={handleToggle} isDisabled={isLoadingReveal}>
           {actionLabel}
@@ -58,7 +58,7 @@ export const SensitiveValuesRevealBanner: React.FC<SensitiveValuesRevealBannerPr
     >
       {isLoadingReveal ? (
         <>
-          <Spinner size="sm" className="pf-v5-u-mr-sm" aria-label="Loading secret values" />
+          <Spinner size="sm" className="pf-v6-u-mr-sm" aria-label="Loading secret values" />
           Loading secret values from the cluster.
         </>
       ) : (

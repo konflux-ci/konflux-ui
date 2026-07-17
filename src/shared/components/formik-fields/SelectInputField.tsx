@@ -225,9 +225,12 @@ const SelectInputField: React.FC<React.PropsWithChildren<SelectInputFieldProps>>
         <TextInputGroupUtilities
           {...(!hasValue ? { className: 'select-input-field__utilities--hidden' } : {})}
         >
-          <Button variant="plain" onClick={onClearSelection} aria-label="Clear input value">
-            <TimesIcon aria-hidden />
-          </Button>
+          <Button
+            icon={<TimesIcon aria-hidden />}
+            variant="plain"
+            onClick={onClearSelection}
+            aria-label="Clear input value"
+          />
         </TextInputGroupUtilities>
       </TextInputGroup>
     </MenuToggle>

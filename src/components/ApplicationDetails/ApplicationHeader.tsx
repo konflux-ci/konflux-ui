@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Flex, FlexItem, Text } from '@patternfly/react-core';
+import { Flex, FlexItem, Content } from '@patternfly/react-core';
 import { ApplicationKind } from '../../types';
 
 export const ApplicationHeader: React.FC<
@@ -8,9 +8,9 @@ export const ApplicationHeader: React.FC<
   return (
     <Flex>
       <FlexItem alignSelf={{ default: 'alignSelfCenter' }}>
-        <Text component="h1" data-test="details__title">
+        <Content component="h1" data-test="details__title">
           {application?.spec?.displayName || ''}
-        </Text>
+        </Content>
       </FlexItem>
     </Flex>
   );

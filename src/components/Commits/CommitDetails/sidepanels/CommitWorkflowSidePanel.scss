@@ -2,8 +2,8 @@
   &__head {
     &-title {
       display: flex;
-      gap: var(--pf-v5-global--spacer--sm);
-      .pf-v5-c-label {
+      gap: var(--pf-t--global--spacer--sm);
+      .pf-v6-c-label {
         height: fit-content;
       }
       .commit-icon.commit-details__title-icon {
@@ -12,6 +12,6 @@
     }
   }
   &__subtext {
-    color: var(--pf-v5-global--Color--200);
+    color: var(--pf-t--global--text--color--subtle);
   }
 }
