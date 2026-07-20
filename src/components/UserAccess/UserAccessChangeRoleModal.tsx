@@ -204,11 +204,11 @@ export const UserAccessChangeRoleModal: React.FC<UserAccessChangeRoleModalProps>
       onClose={handleClose}
       appendTo={() => document.querySelector('#hacDev-modal-container') ?? document.body}
     >
-      <ModalBody>
-        <ModalHeader
-          title={`Change role for ${selectedCount} user${selectedCount !== 1 ? 's' : ''} (highest role
+      <ModalHeader
+        title={`Change role for ${selectedCount} user${selectedCount !== 1 ? 's' : ''} (highest role
               displayed)`}
-        />
+      />
+      <ModalBody>
         <Flex direction={{ default: 'column' }} gap={{ default: 'gapMd' }}>
           {hasUnrankedRoles ? (
             <FlexItem>
