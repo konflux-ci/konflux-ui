@@ -316,7 +316,7 @@ describe('usePACStatesForComponents', () => {
     const components = [componentWithDoneMessage];
     const results = renderHook(() => usePACStatesForComponents(components)).result.current;
 
-    expect(results['my-done-component']).not.toBe(PACState.pending);
+    expect(results['my-done-component']).toBe(PACState.ready);
   });
 
   it('should identify ready state for component with build status not enabled', () => {
@@ -348,16 +348,6 @@ describe('usePACStatesForComponents', () => {
     expect(results['my-component']).toBe(PACState.disabled);
   });
 
-  it('should set pending state when getNextPage is undefined and build status is enabled', () => {
-    useK8sWatchResourceMock.mockReturnValue([[], true]);
-    useTRPipelineRunsMock.mockReturnValue([[], true, undefined, undefined]);
-
-    const components = [createComponent('my-loading-component', ComponentBuildState.enabled)];
-    const results = renderHook(() => usePACStatesForComponents(components)).result.current;
-
-    expect(results['my-loading-component']).toBe(PACState.pending);
-  });
-
   it('should keep error state when build status state is not enabled', () => {
     useK8sWatchResourceMock.mockReturnValue([[], true]);
     useTRPipelineRunsMock.mockReturnValue([[], true, undefined, undefined]);
@@ -387,7 +377,7 @@ describe('usePACStatesForComponents', () => {
     expect(results['my-component']).toBe(PACState.error);
   });
 
-  it('should not set pending state when build status message is done', () => {
+  it('should set ready state when build status message is done and no pipeline runs exist', () => {
     useK8sWatchResourceMock.mockReturnValue([[], true]);
     useTRPipelineRunsMock.mockReturnValue([[], true, undefined, undefined]);
 
@@ -414,16 +404,6 @@ describe('usePACStatesForComponents', () => {
     const components = [componentWithDoneMessage];
     const results = renderHook(() => usePACStatesForComponents(components)).result.current;
 
-    expect(results['my-component']).toBe(PACState.loading);
-  });
-
-  it('should set pending state for components with enabled state when no pipeline runs exist', () => {
-    useK8sWatchResourceMock.mockReturnValue([[], true]);
-    useTRPipelineRunsMock.mockReturnValue([[], true, undefined, undefined]);
-
-    const components = [createComponent('my-enabled-component', ComponentBuildState.enabled)];
-    const results = renderHook(() => usePACStatesForComponents(components)).result.current;
-
-    expect(results['my-enabled-component']).toBe(PACState.pending);
+    expect(results['my-component']).toBe(PACState.ready);
   });
 });
