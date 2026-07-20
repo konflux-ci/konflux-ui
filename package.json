@@ -32,7 +32,7 @@
     "@patternfly/patternfly": "^6.5.2",
     "@patternfly/react-charts": "7.4.5",
     "@patternfly/react-code-editor": "^6.5.1",
-    "@patternfly/react-core": "6.5.1",
+    "@patternfly/react-core": "6.6.0",
     "@patternfly/react-drag-drop": "^6.5.1",
     "@patternfly/react-icons": "6.5.1",
     "@patternfly/react-log-viewer": "6.4.0",
