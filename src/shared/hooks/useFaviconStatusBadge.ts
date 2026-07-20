@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { applyFaviconBadge, readFaviconHref, restoreFaviconHref } from '~/shared/utils';
+import { applyFaviconBadge, getFaviconBaselineHref, restoreFaviconHref } from '~/shared/utils';
 
 /**
  * Updates the browser tab favicon with a colored status badge overlay.
@@ -9,7 +9,8 @@ import { applyFaviconBadge, readFaviconHref, restoreFaviconHref } from '~/shared
 export const useFaviconStatusBadge = (color: string | null): void => {
   const baselineHrefRef = React.useRef<string | undefined>(undefined);
   if (baselineHrefRef.current === undefined) {
-    baselineHrefRef.current = readFaviconHref();
+    // Ignore in-flight data: badges from a previous page so unmount restores the real favicon.
+    baselineHrefRef.current = getFaviconBaselineHref();
   }
 
   React.useEffect(() => {
