@@ -70,6 +70,7 @@ export type Props = {
   allowAutoScroll?: boolean;
   downloadAllLabel?: string;
   onDownloadAll?: () => Promise<Error>;
+  onDownloadFullLogs?: (sectionIndex: number) => Promise<void>;
   taskRun: TaskRunKind | null;
   isLoading: boolean;
   errorMessage: string | null;
@@ -87,6 +88,7 @@ const LogViewer: React.FC<Props> = ({
   normalizedSections: normalizedSectionsProp,
   downloadAllLabel,
   onDownloadAll,
+  onDownloadFullLogs,
   taskRun,
   isLoading,
   errorMessage,
@@ -352,6 +354,7 @@ const LogViewer: React.FC<Props> = ({
                 scrollToRow={scrolledRow}
                 onScroll={handleScroll}
                 readyToNavigate={!isLoading}
+                onDownloadFullLogs={onDownloadFullLogs}
               />
             )}
           </div>

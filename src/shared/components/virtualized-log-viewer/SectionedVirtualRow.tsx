@@ -28,6 +28,7 @@ type SectionedVirtualRowProps = {
   measureElement: Virtualizer<HTMLDivElement, Element>['measureElement'];
   isLineHighlighted: (lineNumber: number) => boolean;
   onToggleSection: (sectionIndex: number) => void;
+  onDownloadFullLogs?: (sectionIndex: number) => Promise<void>;
   renderLogLine: (flatLineIndex: number) => React.ReactNode;
   onLineClick: (lineNumber: number, event: React.MouseEvent) => void;
 };
@@ -39,6 +40,7 @@ export const SectionedVirtualRow: React.FC<SectionedVirtualRowProps> = ({
   measureElement,
   isLineHighlighted,
   onToggleSection,
+  onDownloadFullLogs,
   renderLogLine,
   onLineClick,
 }) => {
@@ -84,7 +86,15 @@ export const SectionedVirtualRow: React.FC<SectionedVirtualRowProps> = ({
       <div {...rowProps}>
         {gutterCell}
         <div className="log-content__row-content">
-          <SectionHeaderButton row={row} onToggle={() => onToggleSection(row.sectionIndex)} />
+          <SectionHeaderButton
+            row={row}
+            onToggle={() => onToggleSection(row.sectionIndex)}
+            onDownloadFullLogs={
+              row.isTailed && onDownloadFullLogs
+                ? () => onDownloadFullLogs(row.sectionIndex)
+                : undefined
+            }
+          />
         </div>
       </div>
     );

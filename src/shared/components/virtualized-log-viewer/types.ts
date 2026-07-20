@@ -29,6 +29,7 @@ export interface NormalizedLogSection {
   containerName: string;
   lines: string[];
   isCompleted?: boolean;
+  isTailed?: boolean;
 }
 
 export type SectionHeaderRow = {
@@ -38,6 +39,7 @@ export type SectionHeaderRow = {
   readonly lineNumber: number;
   readonly lineCount: number;
   readonly isExpanded: boolean;
+  readonly isTailed: boolean;
 };
 
 export type ContentRow = {
