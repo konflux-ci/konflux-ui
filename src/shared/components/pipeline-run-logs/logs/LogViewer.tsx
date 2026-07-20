@@ -34,6 +34,7 @@ import { useAutoScrollWithResume } from '~/shared/components/pipeline-run-logs/l
 import { LoadingInline } from '~/shared/components/status-box/StatusBox';
 import {
   type LogSection,
+  type NormalizedLogSection,
   normalizeSection,
   useLineNumberNavigation,
   VirtualizedLogContent,
@@ -59,7 +60,8 @@ const LOG_VIEWER_SHORTCUTS: ShortcutEntry[] = [
 
 export type Props = {
   showSearch?: boolean;
-  sections: LogSection[];
+  sections?: LogSection[];
+  normalizedSections?: NormalizedLogSection[];
   allowAutoScroll?: boolean;
   downloadAllLabel?: string;
   onDownloadAll?: () => Promise<Error>;
@@ -77,6 +79,7 @@ const LogViewer: React.FC<Props> = ({
   showSearch = true,
   allowAutoScroll,
   sections,
+  normalizedSections: normalizedSectionsProp,
   downloadAllLabel,
   onDownloadAll,
   taskRun,
@@ -88,7 +91,10 @@ const LogViewer: React.FC<Props> = ({
   const [logTheme, setLogTheme] = useLogViewerTheme();
   const themeCheckboxId = React.useId();
 
-  const normalizedSections = React.useMemo(() => sections.map(normalizeSection), [sections]);
+  const normalizedSections = React.useMemo(
+    () => normalizedSectionsProp ?? sections?.map(normalizeSection) ?? [],
+    [normalizedSectionsProp, sections],
+  );
 
   // Tracks the line currently targeted via URL hash navigation (e.g. `#L20000`). Computed here
   // (rather than read from VirtualizedLogContent) so it's available in the very same render —
@@ -107,10 +113,12 @@ const LogViewer: React.FC<Props> = ({
     useFullscreen<HTMLDivElement>();
 
   const downloadData = React.useMemo(() => {
-    return sections
-      .map((s) => (s.containerName ? `${s.containerName}\n${s.data}` : s.data))
+    return normalizedSections
+      .map((s) =>
+        s.containerName ? `${s.containerName}\n${s.lines.join('\n')}` : s.lines.join('\n'),
+      )
       .join('\n\n');
-  }, [sections]);
+  }, [normalizedSections]);
 
   const [downloadAllStatus, setDownloadAllStatus] = React.useState(false);
 
@@ -352,7 +360,7 @@ const LogViewer: React.FC<Props> = ({
           <div className="pf-v6-c-log-viewer__main">
             <VirtualizedLogContent
               key={taskRun?.metadata?.uid || 'default'}
-              sections={sections}
+              sections={sections ?? []}
               normalizedSections={normalizedSections}
               height={viewerHeight}
               width="100%"

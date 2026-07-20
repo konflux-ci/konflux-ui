@@ -3,7 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { Base64 } from 'js-base64';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { KUBEARCHIVE_PATH_PREFIX } from '~/kubearchive/const';
-import { type LogSection } from '~/shared/components/virtualized-log-viewer';
+import { type NormalizedLogSection } from '~/shared/components/virtualized-log-viewer';
+import { LineBuffer } from '~/shared/utils/line-buffer';
 import { ResourceSource } from '~/types/k8s';
 import { commonFetchText } from '../../../../k8s';
 import { getK8sResourceURL, getWebsocketSubProtocolAndPathPrefix } from '../../../../k8s/k8s-utils';
@@ -18,8 +19,6 @@ import {
   LOG_SOURCE_TERMINATED,
 } from '../utils';
 import LogViewer, { type Props as LogViewerProps } from './LogViewer';
-
-type LogSources = { [containerName: string]: string };
 
 const WEB_SOCKET_RETRY_COUNT = 5;
 
@@ -76,8 +75,9 @@ const Logs: React.FC<LogsProps> = ({
   const { metadata = {} } = resource;
   const { name: resName, namespace: resNamespace } = metadata;
 
-  // state to hold the logs for each container individually
-  const [logSources, setLogSources] = React.useState<LogSources>({});
+  const buffersRef = React.useRef(new Map<string, LineBuffer>());
+  const [renderTick, forceRender] = React.useReducer((x: number) => x + 1, 0);
+  const rafRef = React.useRef(0);
   const [error, setError] = React.useState<boolean>(false);
   const pendingFetchesRef = React.useRef(0);
   const [isFetchingLogs, setIsFetchingLogs] = React.useState(false);
@@ -85,10 +85,19 @@ const Logs: React.FC<LogsProps> = ({
   const connectionManagerRef = React.useRef(new Map<string, () => void>());
 
   const appendLog = React.useCallback((containerName: string, message: string) => {
-    setLogSources((prev) => ({
-      ...prev,
-      [containerName]: (prev[containerName] || '') + message,
-    }));
+    let buf = buffersRef.current.get(containerName);
+    if (!buf) {
+      buf = new LineBuffer();
+      buffersRef.current.set(containerName, buf);
+    }
+    buf.append(message);
+
+    if (!rafRef.current) {
+      rafRef.current = requestAnimationFrame(() => {
+        rafRef.current = 0;
+        forceRender();
+      });
+    }
   }, []);
 
   // loops through the containers and initiates fetching for each one
@@ -215,22 +224,26 @@ const Logs: React.FC<LogsProps> = ({
     return allTerminated;
   }, [containers, resource?.status?.containerStatuses]);
 
-  const sections = React.useMemo<LogSection[]>(() => {
+  const sections = React.useMemo<NormalizedLogSection[]>(() => {
+    void renderTick;
     const statusByName = new Map(
       (resource?.status?.containerStatuses ?? []).map((status) => [status.name, status]),
     );
     return containers
-      .filter((c) => c.name in logSources)
-      .map((c) => ({
-        containerName: c.name.toUpperCase(),
-        data: logSources[c.name],
-        isCompleted: isContainerStepCompleted(statusByName.get(c.name)),
-      }));
-  }, [logSources, containers, resource?.status?.containerStatuses]);
+      .filter((c) => buffersRef.current.has(c.name))
+      .map((c) => {
+        const buf = buffersRef.current.get(c.name);
+        return {
+          containerName: c.name.toUpperCase(),
+          lines: buf?.getLines() ?? [],
+          isCompleted: isContainerStepCompleted(statusByName.get(c.name)),
+        };
+      });
+  }, [renderTick, resource?.status?.containerStatuses, containers]);
 
   return (
     <LogViewer
-      sections={sections}
+      normalizedSections={sections}
       allowAutoScroll={allowAutoScroll && !allLogsTerminated}
       onScroll={onScroll}
       downloadAllLabel={downloadAllLabel}
