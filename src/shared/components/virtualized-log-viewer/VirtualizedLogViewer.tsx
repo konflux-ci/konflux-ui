@@ -23,6 +23,7 @@ export interface VirtualizedLogViewerProps {
    * Defaults to true.
    */
   readyToNavigate?: boolean;
+  onDownloadFullLogs?: (sectionIndex: number) => Promise<void>;
 }
 
 export const VirtualizedLogViewer: React.FC<VirtualizedLogViewerProps> = ({
@@ -33,6 +34,7 @@ export const VirtualizedLogViewer: React.FC<VirtualizedLogViewerProps> = ({
   scrollToRow,
   onScroll,
   readyToNavigate = true,
+  onDownloadFullLogs,
 }) => {
   const toolbarContext = React.useContext(LogViewerToolbarContext);
   const searchedInput =
@@ -83,6 +85,7 @@ export const VirtualizedLogViewer: React.FC<VirtualizedLogViewerProps> = ({
         searchText={searchedInput}
         currentSearchMatch={rowInFocus}
         readyToNavigate={readyToNavigate}
+        onDownloadFullLogs={onDownloadFullLogs}
       />
     </div>
   );
