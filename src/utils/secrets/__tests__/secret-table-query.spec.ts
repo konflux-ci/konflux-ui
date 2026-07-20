@@ -90,7 +90,6 @@ describe('createSecretListTableQueryOptions', () => {
     }
 
     const table = await queryFn({
-      client: queryClient,
       queryKey: createSecretListTableQueryKey('test-ns'),
       signal: new AbortController().signal,
       meta: undefined,

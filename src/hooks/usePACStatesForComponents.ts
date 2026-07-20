@@ -124,10 +124,14 @@ const usePACStatesForComponents = (components: ComponentKind[]): PacStatesForCom
           (r) =>
             !r.metadata?.annotations?.[PipelineRunLabel.COMMIT_USER_LABEL]?.includes(prBotName),
         );
-        if (prMerged) {
+        if (
+          prMerged ||
+          (buildStatus?.message === PAC_STATE_DONE_MESSAGE &&
+            buildStatus?.pac?.state === ComponentBuildState.enabled)
+        ) {
           updates[componentName] = PACState.ready;
           update = true;
-        } else if (!getNextPage && buildStatus?.message !== PAC_STATE_DONE_MESSAGE) {
+        } else if (!getNextPage) {
           updates[componentName] = PACState.pending;
           update = true;
         } else {
