@@ -16,15 +16,23 @@ const mockLogViewer = jest.fn();
 
 const getLastSectionsData = (): string => {
   const lastCall = mockLogViewer.mock.calls[mockLogViewer.mock.calls.length - 1][0];
-  return (lastCall.sections || []).map((s: { data: string }) => s.data).join('\n');
+  return (lastCall.normalizedSections || [])
+    .map((s: { lines: string[] }) => s.lines.join('\n'))
+    .join('\n');
 };
 
 jest.mock('../LogViewer', () => {
   return function MockLogViewer(props: {
-    sections: Array<{ containerName: string; data: string; isCompleted?: boolean }>;
+    normalizedSections: Array<{
+      containerName: string;
+      lines: string[];
+      isCompleted?: boolean;
+      isTailed?: boolean;
+    }>;
     allowAutoScroll: boolean;
     isLoading?: boolean;
     onScroll?: () => void;
+    onDownloadFullLogs?: (sectionIndex: number) => Promise<void>;
   }) {
     mockLogViewer(props);
     return <div data-test="mock-log-viewer" />;
@@ -71,10 +79,10 @@ jest.mock('react-i18next', () => ({
   }),
 }));
 
-// Mock Base64 decoding
+// Mock Base64 decoding (append newline so LineBuffer.append flushes the line from the tail)
 jest.mock('js-base64', () => ({
   Base64: {
-    decode: jest.fn((str: string) => `decoded-${str}`),
+    decode: jest.fn((str: string) => `decoded-${str}\n`),
   },
 }));
 
@@ -146,7 +154,7 @@ describe('Logs', () => {
 
       expect(mockLogViewer).toHaveBeenCalledWith(
         expect.objectContaining({
-          sections: expect.any(Array),
+          normalizedSections: expect.any(Array),
           allowAutoScroll: true,
           onScroll: undefined,
         }),
@@ -179,7 +187,7 @@ describe('Logs', () => {
         expect(screen.getByTestId('mock-log-viewer')).toBeInTheDocument();
         expect(mockLogViewer).toHaveBeenCalledWith(
           expect.objectContaining({
-            sections: [],
+            normalizedSections: [],
           }),
         );
       });
@@ -215,8 +223,8 @@ describe('Logs', () => {
 
       (containerToLogSourceStatus as jest.Mock).mockReturnValue('terminated');
       (commonFetchText as jest.Mock)
-        .mockResolvedValueOnce('log line 1\nlog line 2')
-        .mockResolvedValueOnce('log line 3\nlog line 4');
+        .mockResolvedValueOnce('log line 1\nlog line 2\n')
+        .mockResolvedValueOnce('log line 3\nlog line 4\n');
 
       render(
         <Logs
@@ -226,18 +234,24 @@ describe('Logs', () => {
         />,
       );
 
-      await act(async () => {
-        await Promise.resolve();
+      await waitFor(() => {
+        expect(mockLogViewer).toHaveBeenLastCalledWith(
+          expect.objectContaining({
+            normalizedSections: expect.arrayContaining([
+              expect.objectContaining({
+                containerName: 'CONTAINER1',
+                lines: ['log line 1', 'log line 2'],
+                isCompleted: true,
+              }),
+              expect.objectContaining({
+                containerName: 'CONTAINER2',
+                lines: ['log line 3', 'log line 4'],
+                isCompleted: true,
+              }),
+            ]),
+          }),
+        );
       });
-
-      expect(mockLogViewer).toHaveBeenLastCalledWith(
-        expect.objectContaining({
-          sections: expect.arrayContaining([
-            { containerName: 'CONTAINER1', data: 'log line 1\nlog line 2', isCompleted: true },
-            { containerName: 'CONTAINER2', data: 'log line 3\nlog line 4', isCompleted: true },
-          ]),
-        }),
-      );
     });
 
     it('should preserve container ordering from containers prop', async () => {
@@ -267,7 +281,9 @@ describe('Logs', () => {
       };
 
       (containerToLogSourceStatus as jest.Mock).mockReturnValue('terminated');
-      (commonFetchText as jest.Mock).mockResolvedValueOnce('first').mockResolvedValueOnce('second');
+      (commonFetchText as jest.Mock)
+        .mockResolvedValueOnce('first\n')
+        .mockResolvedValueOnce('second\n');
 
       render(
         <Logs
@@ -277,13 +293,11 @@ describe('Logs', () => {
         />,
       );
 
-      await act(async () => {
-        await Promise.resolve();
+      await waitFor(() => {
+        const lastCall = mockLogViewer.mock.calls[mockLogViewer.mock.calls.length - 1][0];
+        expect(lastCall.normalizedSections[0].containerName).toBe('CONTAINER2');
+        expect(lastCall.normalizedSections[1].containerName).toBe('CONTAINER1');
       });
-
-      const lastCall = mockLogViewer.mock.calls[mockLogViewer.mock.calls.length - 1][0];
-      expect(lastCall.sections[0].containerName).toBe('CONTAINER2');
-      expect(lastCall.sections[1].containerName).toBe('CONTAINER1');
     });
 
     it('should include containers with empty fetched logs so folding can evaluate them', async () => {
@@ -313,7 +327,7 @@ describe('Logs', () => {
       };
 
       (containerToLogSourceStatus as jest.Mock).mockReturnValue('terminated');
-      (commonFetchText as jest.Mock).mockResolvedValueOnce('has logs').mockResolvedValueOnce(''); // container2 returns empty string (no logs)
+      (commonFetchText as jest.Mock).mockResolvedValueOnce('has logs\n').mockResolvedValueOnce(''); // container2 returns empty string (no logs)
 
       render(
         <Logs
@@ -323,22 +337,14 @@ describe('Logs', () => {
         />,
       );
 
-      await act(async () => {
-        await Promise.resolve();
-      });
-
-      // Empty fetched logs still create a section (e.g. 404 / no output) so fold state is consistent.
-      const lastCall = mockLogViewer.mock.calls[mockLogViewer.mock.calls.length - 1][0];
-      expect(lastCall.sections).toHaveLength(2);
-      expect(lastCall.sections[0]).toEqual({
-        containerName: 'CONTAINER1',
-        data: 'has logs',
-        isCompleted: true,
-      });
-      expect(lastCall.sections[1]).toEqual({
-        containerName: 'CONTAINER2',
-        data: '',
-        isCompleted: true,
+      await waitFor(() => {
+        // Both containers appear in sections; container2 has an empty buffer
+        const lastCall = mockLogViewer.mock.calls[mockLogViewer.mock.calls.length - 1][0];
+        expect(lastCall.normalizedSections).toHaveLength(2);
+        expect(lastCall.normalizedSections[0].containerName).toBe('CONTAINER1');
+        expect(lastCall.normalizedSections[0].lines).toEqual(['has logs']);
+        expect(lastCall.normalizedSections[1].containerName).toBe('CONTAINER2');
+        expect(lastCall.normalizedSections[1].lines).toEqual([]);
       });
     });
 
@@ -347,7 +353,7 @@ describe('Logs', () => {
 
       expect(mockLogViewer).toHaveBeenCalledWith(
         expect.objectContaining({
-          sections: [],
+          normalizedSections: [],
         }),
       );
     });
@@ -942,7 +948,7 @@ describe('Logs', () => {
       expect(mockLogViewer).toHaveBeenCalledWith(
         expect.objectContaining({
           isLoading: false,
-          sections: [],
+          normalizedSections: [],
         }),
       );
     });
