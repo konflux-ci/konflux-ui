@@ -1,14 +1,18 @@
 import React from 'react';
-import type { LogSection } from './types';
+
+interface FoldableSection {
+  containerName: string;
+  isCompleted?: boolean;
+}
 
 const EMPTY_EXPANDED_SECTIONS = new Set<number>();
 const EMPTY_OVERRIDES: ReadonlyMap<number, boolean> = new Map();
 
 /** Default: in-progress open, completed folded. */
-const isExpandedByDefault = (section: LogSection): boolean => !section.isCompleted;
+const isExpandedByDefault = (section: FoldableSection): boolean => !section.isCompleted;
 
 const resolveIsExpanded = (
-  sections: readonly LogSection[],
+  sections: readonly FoldableSection[],
   overrides: ReadonlyMap<number, boolean>,
   index: number,
 ): boolean => {
@@ -17,7 +21,7 @@ const resolveIsExpanded = (
 };
 
 /** Stable identity key so log-content updates don't reset overrides. */
-const sectionNamesKey = (sections: readonly LogSection[]): string =>
+const sectionNamesKey = (sections: readonly FoldableSection[]): string =>
   sections.map((s) => s.containerName).join('\0');
 
 const isPrefixGrowth = (prev: readonly string[], next: readonly string[]): boolean =>
@@ -42,7 +46,7 @@ const withOverride = (
   return next;
 };
 
-export const useSectionFold = (sections: readonly LogSection[]) => {
+export const useSectionFold = (sections: readonly FoldableSection[]) => {
   const sectionsRef = React.useRef(sections);
   sectionsRef.current = sections;
 

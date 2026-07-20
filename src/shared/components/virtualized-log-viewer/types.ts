@@ -28,6 +28,7 @@ export interface LogSection {
 export interface NormalizedLogSection {
   containerName: string;
   lines: string[];
+  isCompleted?: boolean;
 }
 
 export type SectionHeaderRow = {
