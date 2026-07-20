@@ -117,6 +117,7 @@ export const FilterToolbar = <C extends readonly FilterConfig<unknown>[]>({
               key={groupName ?? '__default'}
               variant={variant}
               data-test={groupName ? `filter-group-${groupName}` : 'filter-group-default'}
+              alignSelf="center"
             >
               {groupConfigs_.map((config) => renderControl(config, options))}
             </ToolbarGroup>
