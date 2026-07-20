@@ -46,6 +46,7 @@ export const useSectionRows = (
         lineNumber: globalLineNumber,
         lineCount: sectionLines.length,
         isExpanded,
+        isTailed: sections[i].isTailed ?? false,
       });
       lineNumToDisplay.set(globalLineNumber, headerDisplayIdx);
       lineNumToSection.set(globalLineNumber, i);
