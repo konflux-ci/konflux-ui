@@ -2,6 +2,8 @@ import truncate from 'lodash/truncate';
 
 export const LINE_PATTERN = /^.*(\n|$)/gm;
 const TRUNCATE_LENGTH = 1024;
+// eslint-disable-next-line no-control-regex
+const ANSI_ESCAPE_REGEX = /\u001b\[[0-9;]*m/g;
 
 export class LineBuffer {
   private _buffer: string[];
@@ -57,5 +59,28 @@ export class LineBuffer {
 
   length(): number {
     return this._buffer.length;
+  }
+
+  append(text: string): void {
+    const stripped = text.replace(ANSI_ESCAPE_REGEX, '');
+    const lines = stripped.match(LINE_PATTERN);
+    if (!lines) return;
+
+    for (const line of lines) {
+      const next = this._tail + line;
+      if (/\n$/.test(line)) {
+        this._buffer.push(next.trimEnd());
+        this._tail = '';
+      } else {
+        this._tail = next;
+      }
+    }
+  }
+
+  replace(newLines: string[]): number {
+    const prevCount = this._buffer.length;
+    this._buffer = newLines;
+    this._tail = '';
+    return prevCount;
   }
 }
