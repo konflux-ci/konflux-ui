@@ -116,10 +116,11 @@ jobs:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       JOB_TYPE: 'on-pr'
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           repository: ${{ github.repository }}
           ref: '${{ github.event.pull_request.head.sha }}'
+          allow-unsafe-pr-checkout: true
 
       - name: Enable Corepack 📦
         run: corepack enable
