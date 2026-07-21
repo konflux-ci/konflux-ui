@@ -1,6 +1,8 @@
 import { render, screen, act, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import { saveAs } from 'file-saver';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
+import { KUBEARCHIVE_TAIL_LINES } from '~/kubearchive/const';
 import { ResourceSource } from '~/types/k8s';
 import { commonFetchText } from '../../../../../k8s';
 import {
@@ -20,6 +22,15 @@ const getLastSectionsData = (): string => {
     .map((s: { lines: string[] }) => s.lines.join('\n'))
     .join('\n');
 };
+
+const getLastOnDownloadFullLogs = (): ((sectionIndex: number) => Promise<void>) | undefined => {
+  const lastCall = mockLogViewer.mock.calls[mockLogViewer.mock.calls.length - 1][0];
+  return lastCall.onDownloadFullLogs;
+};
+
+jest.mock('file-saver', () => ({
+  saveAs: jest.fn(),
+}));
 
 jest.mock('../LogViewer', () => {
   return function MockLogViewer(props: {
@@ -980,5 +991,416 @@ describe('Logs', () => {
         }),
       }),
     );
+  });
+
+  describe('tailed container detection', () => {
+    it('should mark container as tailed when log lines reach KUBEARCHIVE_TAIL_LINES', async () => {
+      const terminatedContainer: ContainerStatus = {
+        name: 'container1',
+        state: { terminated: { exitCode: 0 } },
+        ready: false,
+        restartCount: 0,
+        image: 'test-image',
+        imageID: 'test-image-id',
+      };
+
+      const resourceWithStatus: PodKind = {
+        ...mockResource,
+        status: {
+          phase: 'Succeeded',
+          containerStatuses: [terminatedContainer],
+        },
+      };
+
+      // Generate log text with KUBEARCHIVE_TAIL_LINES lines
+      const lines = Array.from({ length: KUBEARCHIVE_TAIL_LINES }, (_, i) => `line ${i}`).join(
+        '\n',
+      );
+
+      (containerToLogSourceStatus as jest.Mock).mockReturnValue('terminated');
+      (useIsOnFeatureFlag as jest.Mock).mockReturnValue(true);
+      (commonFetchText as jest.Mock).mockResolvedValue(`${lines}\n`);
+
+      render(
+        <Logs
+          {...defaultProps}
+          resource={resourceWithStatus}
+          containers={[{ name: 'container1' }]}
+          source={ResourceSource.Archive}
+        />,
+      );
+
+      await waitFor(() => {
+        const lastCall = mockLogViewer.mock.calls[mockLogViewer.mock.calls.length - 1][0];
+        expect(lastCall.normalizedSections[0].isTailed).toBe(true);
+      });
+    });
+
+    it('should not mark container as tailed when log lines are below KUBEARCHIVE_TAIL_LINES', async () => {
+      const terminatedContainer: ContainerStatus = {
+        name: 'container1',
+        state: { terminated: { exitCode: 0 } },
+        ready: false,
+        restartCount: 0,
+        image: 'test-image',
+        imageID: 'test-image-id',
+      };
+
+      const resourceWithStatus: PodKind = {
+        ...mockResource,
+        status: {
+          phase: 'Succeeded',
+          containerStatuses: [terminatedContainer],
+        },
+      };
+
+      (containerToLogSourceStatus as jest.Mock).mockReturnValue('terminated');
+      (useIsOnFeatureFlag as jest.Mock).mockReturnValue(true);
+      (commonFetchText as jest.Mock).mockResolvedValue('short log\n');
+
+      render(
+        <Logs
+          {...defaultProps}
+          resource={resourceWithStatus}
+          containers={[{ name: 'container1' }]}
+          source={ResourceSource.Archive}
+        />,
+      );
+
+      await waitFor(() => {
+        const lastCall = mockLogViewer.mock.calls[mockLogViewer.mock.calls.length - 1][0];
+        expect(lastCall.normalizedSections[0].isTailed).toBe(false);
+      });
+    });
+
+    it('should not mark container as tailed for cluster source', async () => {
+      const terminatedContainer: ContainerStatus = {
+        name: 'container1',
+        state: { terminated: { exitCode: 0 } },
+        ready: false,
+        restartCount: 0,
+        image: 'test-image',
+        imageID: 'test-image-id',
+      };
+
+      const resourceWithStatus: PodKind = {
+        ...mockResource,
+        status: {
+          phase: 'Succeeded',
+          containerStatuses: [terminatedContainer],
+        },
+      };
+
+      const lines = Array.from({ length: KUBEARCHIVE_TAIL_LINES }, (_, i) => `line ${i}`).join(
+        '\n',
+      );
+
+      (containerToLogSourceStatus as jest.Mock).mockReturnValue('terminated');
+      (useIsOnFeatureFlag as jest.Mock).mockReturnValue(true);
+      (commonFetchText as jest.Mock).mockResolvedValue(`${lines}\n`);
+
+      render(
+        <Logs
+          {...defaultProps}
+          resource={resourceWithStatus}
+          containers={[{ name: 'container1' }]}
+          source={ResourceSource.Cluster}
+        />,
+      );
+
+      await waitFor(() => {
+        const lastCall = mockLogViewer.mock.calls[mockLogViewer.mock.calls.length - 1][0];
+        expect(lastCall.normalizedSections[0].isTailed).toBe(false);
+      });
+    });
+  });
+
+  describe('kubearchive tailLines query param', () => {
+    it('should include tailLines query param for archive source', () => {
+      const terminatedContainer: ContainerStatus = {
+        name: 'container1',
+        state: { terminated: { exitCode: 0 } },
+        ready: false,
+        restartCount: 0,
+        image: 'test-image',
+        imageID: 'test-image-id',
+      };
+
+      const resourceWithStatus: PodKind = {
+        ...mockResource,
+        status: {
+          phase: 'Succeeded',
+          containerStatuses: [terminatedContainer],
+        },
+      };
+
+      (containerToLogSourceStatus as jest.Mock).mockReturnValue('terminated');
+      (useIsOnFeatureFlag as jest.Mock).mockReturnValue(true);
+      (commonFetchText as jest.Mock).mockResolvedValue('logs');
+
+      render(
+        <Logs
+          {...defaultProps}
+          resource={resourceWithStatus}
+          containers={[{ name: 'container1' }]}
+          source={ResourceSource.Archive}
+        />,
+      );
+
+      expect(getK8sResourceURL as jest.Mock).toHaveBeenCalledWith(
+        expect.objectContaining({ kind: 'Pod' }),
+        undefined,
+        expect.objectContaining({
+          queryParams: expect.objectContaining({
+            tailLines: String(KUBEARCHIVE_TAIL_LINES),
+          }),
+        }),
+      );
+    });
+
+    it('should not include tailLines query param for cluster source', () => {
+      const terminatedContainer: ContainerStatus = {
+        name: 'container1',
+        state: { terminated: { exitCode: 0 } },
+        ready: false,
+        restartCount: 0,
+        image: 'test-image',
+        imageID: 'test-image-id',
+      };
+
+      const resourceWithStatus: PodKind = {
+        ...mockResource,
+        status: {
+          phase: 'Succeeded',
+          containerStatuses: [terminatedContainer],
+        },
+      };
+
+      (containerToLogSourceStatus as jest.Mock).mockReturnValue('terminated');
+      (useIsOnFeatureFlag as jest.Mock).mockReturnValue(false);
+      (commonFetchText as jest.Mock).mockResolvedValue('logs');
+
+      render(
+        <Logs
+          {...defaultProps}
+          resource={resourceWithStatus}
+          containers={[{ name: 'container1' }]}
+          source={ResourceSource.Cluster}
+        />,
+      );
+
+      expect(getK8sResourceURL as jest.Mock).toHaveBeenCalledWith(
+        expect.objectContaining({ kind: 'Pod' }),
+        undefined,
+        expect.objectContaining({
+          queryParams: expect.not.objectContaining({
+            tailLines: expect.anything(),
+          }),
+        }),
+      );
+    });
+  });
+
+  describe('handleDownloadFullLogs', () => {
+    it('should pass onDownloadFullLogs when source is archive', async () => {
+      const terminatedContainer: ContainerStatus = {
+        name: 'container1',
+        state: { terminated: { exitCode: 0 } },
+        ready: false,
+        restartCount: 0,
+        image: 'test-image',
+        imageID: 'test-image-id',
+      };
+
+      const resourceWithStatus: PodKind = {
+        ...mockResource,
+        status: {
+          phase: 'Succeeded',
+          containerStatuses: [terminatedContainer],
+        },
+      };
+
+      (containerToLogSourceStatus as jest.Mock).mockReturnValue('terminated');
+      (useIsOnFeatureFlag as jest.Mock).mockReturnValue(true);
+      (commonFetchText as jest.Mock).mockResolvedValue('log data\n');
+
+      render(
+        <Logs
+          {...defaultProps}
+          resource={resourceWithStatus}
+          containers={[{ name: 'container1' }]}
+          source={ResourceSource.Archive}
+        />,
+      );
+
+      await waitFor(() => {
+        const onDownloadFullLogs = getLastOnDownloadFullLogs();
+        expect(onDownloadFullLogs).toBeDefined();
+      });
+    });
+
+    it('should not pass onDownloadFullLogs when source is cluster', () => {
+      (containerToLogSourceStatus as jest.Mock).mockReturnValue('terminated');
+      (useIsOnFeatureFlag as jest.Mock).mockReturnValue(false);
+
+      render(
+        <Logs
+          {...defaultProps}
+          containers={[{ name: 'container1' }]}
+          source={ResourceSource.Cluster}
+        />,
+      );
+
+      const onDownloadFullLogs = getLastOnDownloadFullLogs();
+      expect(onDownloadFullLogs).toBeUndefined();
+    });
+
+    it('should fetch full logs and save file when onDownloadFullLogs is called', async () => {
+      const terminatedContainer: ContainerStatus = {
+        name: 'container1',
+        state: { terminated: { exitCode: 0 } },
+        ready: false,
+        restartCount: 0,
+        image: 'test-image',
+        imageID: 'test-image-id',
+      };
+
+      const resourceWithStatus: PodKind = {
+        ...mockResource,
+        status: {
+          phase: 'Succeeded',
+          containerStatuses: [terminatedContainer],
+        },
+      };
+
+      (containerToLogSourceStatus as jest.Mock).mockReturnValue('terminated');
+      (useIsOnFeatureFlag as jest.Mock).mockReturnValue(true);
+      const tailedLog = `${Array.from({ length: KUBEARCHIVE_TAIL_LINES }, (_, i) => `line ${i}`).join('\n')}\n`;
+      (commonFetchText as jest.Mock).mockResolvedValue(tailedLog);
+
+      render(
+        <Logs
+          {...defaultProps}
+          resource={resourceWithStatus}
+          containers={[{ name: 'container1' }]}
+          source={ResourceSource.Archive}
+        />,
+      );
+
+      await waitFor(() => {
+        const lastCall = mockLogViewer.mock.calls[mockLogViewer.mock.calls.length - 1][0];
+        expect(lastCall.normalizedSections).toHaveLength(1);
+        expect(lastCall.onDownloadFullLogs).toBeDefined();
+      });
+
+      (commonFetchText as jest.Mock).mockResolvedValue('full log content for download');
+
+      const onDownloadFullLogs = getLastOnDownloadFullLogs();
+      await act(async () => {
+        await onDownloadFullLogs?.(0);
+      });
+
+      expect(commonFetchText as jest.Mock).toHaveBeenCalledWith(
+        'http://test-url',
+        expect.objectContaining({
+          pathPrefix: 'plugins/kubearchive',
+        }),
+      );
+      expect(saveAs).toHaveBeenCalledWith(expect.any(Blob), 'container1.log');
+    });
+
+    it('should not save file when section index is invalid', async () => {
+      const terminatedContainer: ContainerStatus = {
+        name: 'container1',
+        state: { terminated: { exitCode: 0 } },
+        ready: false,
+        restartCount: 0,
+        image: 'test-image',
+        imageID: 'test-image-id',
+      };
+
+      const resourceWithStatus: PodKind = {
+        ...mockResource,
+        status: {
+          phase: 'Succeeded',
+          containerStatuses: [terminatedContainer],
+        },
+      };
+
+      (containerToLogSourceStatus as jest.Mock).mockReturnValue('terminated');
+      (useIsOnFeatureFlag as jest.Mock).mockReturnValue(true);
+      (commonFetchText as jest.Mock).mockResolvedValue('log data\n');
+
+      render(
+        <Logs
+          {...defaultProps}
+          resource={resourceWithStatus}
+          containers={[{ name: 'container1' }]}
+          source={ResourceSource.Archive}
+        />,
+      );
+
+      await waitFor(() => {
+        const onDownloadFullLogs = getLastOnDownloadFullLogs();
+        expect(onDownloadFullLogs).toBeDefined();
+      });
+
+      (commonFetchText as jest.Mock).mockClear();
+
+      const onDownloadFullLogs = getLastOnDownloadFullLogs();
+      await act(async () => {
+        await onDownloadFullLogs?.(999); // invalid index
+      });
+
+      // Should not have fetched anything for an invalid section index
+      expect(commonFetchText).not.toHaveBeenCalled();
+      expect(saveAs).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('rAF cleanup', () => {
+    it('should cancel pending animation frame on unmount', () => {
+      const cancelAnimationFrameSpy = jest.spyOn(window, 'cancelAnimationFrame');
+
+      const runningContainer: ContainerStatus = {
+        name: 'container1',
+        state: { running: { startedAt: new Date().toISOString() } },
+        ready: true,
+        restartCount: 0,
+        image: 'test-image',
+        imageID: 'test-image-id',
+      };
+
+      const resourceWithStatus: PodKind = {
+        ...mockResource,
+        status: {
+          phase: 'Running',
+          containerStatuses: [runningContainer],
+        },
+      };
+
+      (containerToLogSourceStatus as jest.Mock).mockReturnValue('running');
+
+      const { unmount } = render(
+        <Logs
+          {...defaultProps}
+          resource={resourceWithStatus}
+          containers={[{ name: 'container1' }]}
+        />,
+      );
+
+      // Simulate a websocket message to trigger rAF scheduling
+      const messageHandler = mockWebSocketInstance.onMessage.mock.calls[0][0];
+      act(() => {
+        messageHandler('dGVzdA==');
+      });
+
+      unmount();
+
+      // cancelAnimationFrame should have been called during cleanup
+      expect(cancelAnimationFrameSpy).toHaveBeenCalled();
+
+      cancelAnimationFrameSpy.mockRestore();
+    });
   });
 });
