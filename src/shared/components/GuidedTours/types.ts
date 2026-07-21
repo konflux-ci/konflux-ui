@@ -1,8 +1,9 @@
 import * as React from 'react';
+import { STEP_TYPES, TOUR_ACTIONS, TOUR_STATUS } from './consts';
 
-export type StepType = 'modal' | 'spotlight' | 'highlight';
+export type StepType = (typeof STEP_TYPES)[keyof typeof STEP_TYPES];
 export type TourTrigger = 'auto' | 'manual';
-export type TourStatus = 'completed' | 'dismissed';
+export type TourStatus = (typeof TOUR_STATUS)[keyof typeof TOUR_STATUS];
 export type PopoverPosition = 'top' | 'bottom' | 'left' | 'right' | 'auto';
 
 export interface BaseStepConfig {
@@ -71,11 +72,11 @@ export interface TourState {
 }
 
 export type TourAction =
-  | { type: 'START'; payload: { mergedSteps: MergedStep[]; sourceIds: string[] } }
-  | { type: 'NEXT' }
-  | { type: 'PREV' }
-  | { type: 'SKIP' }
-  | { type: 'DONE' };
+  | { type: typeof TOUR_ACTIONS.START; payload: { mergedSteps: MergedStep[]; sourceIds: string[] } }
+  | { type: typeof TOUR_ACTIONS.NEXT }
+  | { type: typeof TOUR_ACTIONS.PREV }
+  | { type: typeof TOUR_ACTIONS.SKIP }
+  | { type: typeof TOUR_ACTIONS.DONE };
 
 export interface TourContextValue {
   state: TourState;

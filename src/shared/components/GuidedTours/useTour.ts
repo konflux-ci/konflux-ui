@@ -1,9 +1,8 @@
 import { useCallback, useMemo } from 'react';
 import { useLocalStorage } from '~/shared/hooks/useLocalStorage';
+import { TOUR_ACTIONS, TOUR_STATUS, TOUR_STORAGE_KEY } from './consts';
 import { useTourContext } from './TourProvider';
 import { MergedStep, TourStepConfig, TourStorage } from './types';
-
-const TOUR_STORAGE_KEY = 'konflux-tours';
 
 export const useTour = () => {
   const { state, dispatch } = useTourContext();
@@ -11,16 +10,16 @@ export const useTour = () => {
 
   const startTour = useCallback(
     (mergedSteps: MergedStep[], sourceIds: string[]) => {
-      dispatch({ type: 'START', payload: { mergedSteps, sourceIds } });
+      dispatch({ type: TOUR_ACTIONS.START, payload: { mergedSteps, sourceIds } });
     },
     [dispatch],
   );
 
-  const next = useCallback(() => dispatch({ type: 'NEXT' }), [dispatch]);
-  const prev = useCallback(() => dispatch({ type: 'PREV' }), [dispatch]);
+  const next = useCallback(() => dispatch({ type: TOUR_ACTIONS.NEXT }), [dispatch]);
+  const prev = useCallback(() => dispatch({ type: TOUR_ACTIONS.PREV }), [dispatch]);
 
   const markSeen = useCallback(
-    (status: 'completed' | 'dismissed') => {
+    (status: typeof TOUR_STATUS.COMPLETED | typeof TOUR_STATUS.DISMISSED) => {
       setSeen((previousSeen) => {
         const updated = { ...(previousSeen ?? {}) };
         state.sourceIds.forEach((id) => {
@@ -33,13 +32,13 @@ export const useTour = () => {
   );
 
   const skip = useCallback(() => {
-    markSeen('dismissed');
-    dispatch({ type: 'SKIP' });
+    markSeen(TOUR_STATUS.DISMISSED);
+    dispatch({ type: TOUR_ACTIONS.SKIP });
   }, [dispatch, markSeen]);
 
   const done = useCallback(() => {
-    markSeen('completed');
-    dispatch({ type: 'DONE' });
+    markSeen(TOUR_STATUS.COMPLETED);
+    dispatch({ type: TOUR_ACTIONS.DONE });
   }, [dispatch, markSeen]);
 
   const currentStep: TourStepConfig | undefined = useMemo(

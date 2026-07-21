@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { getTourElement } from './consts';
 
 /**
  * Finds a DOM element by data-tour attribute, waits for it if not immediately available
@@ -9,7 +10,7 @@ export const useTargetElement = (target: string) => {
   const [targetRect, setTargetRect] = React.useState<DOMRect | null>(null);
 
   React.useEffect(() => {
-    const el = document.querySelector<HTMLElement>(`[data-tour="${target}"]`);
+    const el = getTourElement(target);
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'center' });
       setTargetEl(el);
@@ -19,7 +20,7 @@ export const useTargetElement = (target: string) => {
 
     // Watch for target appearing in DOM (dynamic/lazy content)
     const observer = new MutationObserver(() => {
-      const found = document.querySelector<HTMLElement>(`[data-tour="${target}"]`);
+      const found = getTourElement(target);
       if (found) {
         found.scrollIntoView({ behavior: 'smooth', block: 'center' });
         setTargetEl(found);
