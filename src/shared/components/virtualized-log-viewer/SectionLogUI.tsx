@@ -3,6 +3,7 @@ import { Button, Flex, FlexItem, Content, Label } from '@patternfly/react-core';
 import { AngleDownIcon } from '@patternfly/react-icons/dist/esm/icons/angle-down-icon';
 import { AngleRightIcon } from '@patternfly/react-icons/dist/esm/icons/angle-right-icon';
 import { DownloadIcon } from '@patternfly/react-icons/dist/esm/icons/download-icon';
+import { logger } from '~/monitoring/logger';
 import type { SectionHeaderRow } from './types';
 
 import './SectionLogUI.scss';
@@ -19,7 +20,13 @@ export const SectionHeaderButton: React.FC<{
     e.stopPropagation();
     if (!onDownloadFullLogs || isDownloading) return;
     setIsDownloading(true);
-    void onDownloadFullLogs().finally(() => setIsDownloading(false));
+    void onDownloadFullLogs()
+      .catch((err: unknown) => {
+        logger.warn('Failed to download full logs', {
+          error: err instanceof Error ? err.message : '',
+        });
+      })
+      .finally(() => setIsDownloading(false));
   };
 
   return (
