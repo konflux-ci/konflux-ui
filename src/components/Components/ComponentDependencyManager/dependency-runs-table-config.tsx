@@ -14,6 +14,7 @@ const ViewLogsCell = ({ pipelineRun }: { pipelineRun: PipelineRunKind }) => {
   return (
     <Button
       variant="link"
+      isInline
       size="sm"
       data-test={`view-logs-${pipelineRun.metadata?.name}`}
       onClick={openModal}
@@ -69,7 +70,7 @@ export const dependencyRunsTableColumns: ColumnDefinition<PipelineRunKind>[] = [
     id: 'duration',
     header: 'Duration',
     accessorFn: (row) => row.status?.startTime ?? '',
-    size: 1,
+    size: 2,
     cell: (info) => {
       const plr = info.row.original;
       const status = pipelineRunStatus(plr);
