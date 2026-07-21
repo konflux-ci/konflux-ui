@@ -16,6 +16,7 @@ export class LineBuffer {
     this._hasTruncated = false;
   }
 
+  /** Accumulate text for download — truncates lines at 1024 chars. */
   ingest(text): number {
     const lines = text.match(LINE_PATTERN);
     let lineCount = 0;
@@ -61,6 +62,7 @@ export class LineBuffer {
     return this._buffer.length;
   }
 
+  /** Accumulate text for display — strips ANSI codes, no truncation. */
   append(text: string): void {
     const stripped = text.replace(ANSI_ESCAPE_REGEX, '');
     const lines = stripped.match(LINE_PATTERN);
