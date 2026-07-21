@@ -99,6 +99,13 @@ const Logs: React.FC<LogsProps> = ({
     }
   }, []);
 
+  React.useEffect(
+    () => () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    },
+    [],
+  );
+
   // loops through the containers and initiates fetching for each one
   React.useEffect(() => {
     const activeConnections = connectionManagerRef.current;
