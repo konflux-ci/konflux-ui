@@ -149,85 +149,349 @@ export const Highlight: Story = {
   ),
 };
 
-// --- Full Tour Flow ---
+// ---------------------------------------------------------------------------
+// E2E: Realistic page with a full guided tour
+// ---------------------------------------------------------------------------
 
-const DEMO_STEPS: MergedStep[] = [
+/**
+ * Simulates a real application page with diverse elements in different
+ * positions, shapes, and sizes. The tour walks through 7 steps using all
+ * three step types (modal, spotlight, highlight) exactly as a consumer would
+ * define a tour config.
+ */
+
+const E2E_TOUR_STEPS: MergedStep[] = [
   {
     step: {
       type: 'modal',
-      title: 'Welcome to Konflux',
-      content: 'This tour will introduce you to the key features of the platform.',
+      title: 'Welcome to your workspace',
+      content:
+        'This quick tour will walk you through the main areas of the application page. You can dismiss it at any time by clicking X.',
+      variant: 'medium',
     },
-    sourceId: 'demo-tour',
+    sourceId: 'workspace-tour',
   },
   {
     step: {
       type: 'spotlight',
-      title: 'Create Application',
-      content: 'Use this button to create a new application.',
-      target: 'tour-create-btn',
+      title: 'Create an application',
+      content:
+        'Click here to start creating a new application. You will be guided through selecting a repository, configuring components, and setting up pipelines.',
+      target: 'e2e-create-btn',
       position: 'bottom',
     },
-    sourceId: 'demo-tour',
+    sourceId: 'workspace-tour',
   },
   {
     step: {
       type: 'highlight',
-      title: 'Application Card',
-      content: 'Your applications appear here with status and details.',
-      target: 'tour-app-card',
+      title: 'Navigation sidebar',
+      content:
+        'Use the sidebar to navigate between Applications, Components, Secrets, and other sections of your workspace.',
+      target: 'e2e-sidebar',
+      position: 'right',
+    },
+    sourceId: 'workspace-tour',
+  },
+  {
+    step: {
+      type: 'spotlight',
+      title: 'Search and filter',
+      content:
+        'Use the search bar to quickly find applications by name. You can also use the filter dropdown for advanced filtering.',
+      target: 'e2e-search',
       position: 'bottom',
     },
-    sourceId: 'demo-tour',
+    sourceId: 'workspace-tour',
+  },
+  {
+    step: {
+      type: 'highlight',
+      title: 'Application list',
+      content:
+        'All your applications are listed here. Each row shows the application name, status, component count, and last build time.',
+      target: 'e2e-app-table',
+      position: 'top',
+    },
+    sourceId: 'workspace-tour',
+  },
+  {
+    step: {
+      type: 'highlight',
+      title: 'Pipeline status overview',
+      content:
+        'This panel gives you a quick summary of pipeline run statuses across all applications -- at a glance you can see what succeeded, what failed, and what is running.',
+      target: 'e2e-stats-panel',
+      position: 'left',
+    },
+    sourceId: 'workspace-tour',
   },
   {
     step: {
       type: 'modal',
-      title: 'Tour Complete',
-      content: 'You are all set! Explore the platform at your own pace.',
+      title: 'You are all set!',
+      content:
+        'That covers the basics. For more details, check our documentation at docs.konflux.dev. You can replay this tour from the Help menu at any time.',
       closing: true,
     },
-    sourceId: 'demo-tour',
+    sourceId: 'workspace-tour',
   },
 ];
 
-const DemoPageContent: React.FC = () => {
+// -- Simulated page layout --------------------------------------------------
+
+const SidebarNav: React.FC = () => (
+  <nav
+    data-tour="e2e-sidebar"
+    style={{
+      width: 220,
+      background: 'var(--pf-t--global--background--color--secondary--default, #f0f0f0)',
+      padding: 'var(--pf-t--global--spacer--md, 16px)',
+      borderRight: '1px solid var(--pf-t--global--border--color--default, #d2d2d2)',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 4,
+    }}
+  >
+    <Title headingLevel="h4" style={{ marginBottom: 12 }}>
+      Workspace
+    </Title>
+    {['Applications', 'Components', 'Secrets', 'Pipelines', 'Releases', 'Access'].map((item) => (
+      <Button key={item} variant="link" isInline style={{ textAlign: 'left', padding: '6px 8px' }}>
+        {item}
+      </Button>
+    ))}
+  </nav>
+);
+
+const StatusBadge: React.FC<{ label: string; color: string }> = ({ label, color }) => (
+  <span
+    style={{
+      display: 'inline-block',
+      padding: '2px 10px',
+      borderRadius: 12,
+      fontSize: 12,
+      fontWeight: 600,
+      color: '#fff',
+      background: color,
+    }}
+  >
+    {label}
+  </span>
+);
+
+const AppRow: React.FC<{
+  name: string;
+  status: string;
+  statusColor: string;
+  components: number;
+  lastBuild: string;
+}> = ({ name, status, statusColor, components, lastBuild }) => (
+  <tr>
+    <td
+      style={{
+        padding: '10px 16px',
+        fontWeight: 500,
+        color: 'var(--pf-t--global--color--brand--default)',
+      }}
+    >
+      {name}
+    </td>
+    <td style={{ padding: '10px 16px' }}>
+      <StatusBadge label={status} color={statusColor} />
+    </td>
+    <td style={{ padding: '10px 16px', textAlign: 'center' }}>{components}</td>
+    <td style={{ padding: '10px 16px', color: '#6a6e73' }}>{lastBuild}</td>
+  </tr>
+);
+
+const StatsPanel: React.FC = () => (
+  <Card data-tour="e2e-stats-panel" style={{ width: 260, flexShrink: 0 }}>
+    <CardTitle>Pipeline status</CardTitle>
+    <CardBody>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {[
+          { label: 'Succeeded', value: 24, color: '#3e8635' },
+          { label: 'Failed', value: 3, color: '#c9190b' },
+          { label: 'Running', value: 2, color: '#06c' },
+          { label: 'Pending', value: 1, color: '#6a6e73' },
+        ].map(({ label, value, color }) => (
+          <div
+            key={label}
+            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+          >
+            <span>{label}</span>
+            <span style={{ fontWeight: 700, fontSize: 18, color }}>{value}</span>
+          </div>
+        ))}
+      </div>
+    </CardBody>
+  </Card>
+);
+
+/** The main page content that both stories share */
+const WorkspacePage: React.FC<{ autoStart?: boolean }> = ({ autoStart = false }) => {
   const { startTour, isActive } = useTour();
+  const startedRef = React.useRef(false);
+
+  // Auto-trigger on mount (simulates useTourAutoTrigger for first-visit)
+  React.useEffect(() => {
+    if (autoStart && !startedRef.current) {
+      startedRef.current = true;
+      // Small delay so the DOM elements render before the tour targets them
+      const timer = setTimeout(() => {
+        startTour(E2E_TOUR_STEPS, ['workspace-tour']);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+    return undefined;
+  }, [autoStart, startTour]);
 
   return (
-    <>
-      <PageSection>
-        <Title headingLevel="h1">My Workspace</Title>
-        <div style={{ display: 'flex', gap: '16px', marginTop: '16px', alignItems: 'flex-start' }}>
-          <Button data-tour="tour-create-btn" variant="primary">
-            Create Application
-          </Button>
-          <Button
-            variant="secondary"
-            onClick={() => startTour(DEMO_STEPS, ['demo-tour'])}
-            isDisabled={isActive}
+    <div
+      style={{
+        display: 'flex',
+        height: '100vh',
+        fontFamily: 'var(--pf-t--global--font--family--text)',
+      }}
+    >
+      {/* Sidebar */}
+      <SidebarNav />
+
+      {/* Main content */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'auto' }}>
+        {/* Toolbar */}
+        <PageSection
+          style={{
+            borderBottom: '1px solid var(--pf-t--global--border--color--default, #d2d2d2)',
+            padding: '16px 24px',
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Title headingLevel="h1">Applications</Title>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <Button data-tour="e2e-create-btn" variant="primary">
+                Create application
+              </Button>
+              <Button variant="secondary">Import</Button>
+              {!autoStart && (
+                <Button
+                  variant="link"
+                  onClick={() => startTour(E2E_TOUR_STEPS, ['workspace-tour'])}
+                  isDisabled={isActive}
+                >
+                  Start guided tour
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {/* Search bar */}
+          <div
+            data-tour="e2e-search"
+            style={{
+              marginTop: 16,
+              display: 'flex',
+              gap: 8,
+            }}
           >
-            Start Tour
-          </Button>
+            <input
+              type="text"
+              placeholder="Search applications..."
+              style={{
+                flex: 1,
+                maxWidth: 400,
+                padding: '6px 12px',
+                border: '1px solid var(--pf-t--global--border--color--default, #d2d2d2)',
+                borderRadius: 4,
+                fontSize: 14,
+              }}
+            />
+            <Button variant="control">Filter</Button>
+          </div>
+        </PageSection>
+
+        {/* Body: table + stats side panel */}
+        <div style={{ display: 'flex', flex: 1, gap: 24, padding: 24 }}>
+          {/* Table */}
+          <div data-tour="e2e-app-table" style={{ flex: 1 }}>
+            <table
+              style={{
+                width: '100%',
+                borderCollapse: 'collapse',
+                border: '1px solid var(--pf-t--global--border--color--default, #d2d2d2)',
+                borderRadius: 4,
+              }}
+            >
+              <thead>
+                <tr
+                  style={{
+                    background:
+                      'var(--pf-t--global--background--color--secondary--default, #f0f0f0)',
+                    textAlign: 'left',
+                  }}
+                >
+                  <th style={{ padding: '10px 16px' }}>Name</th>
+                  <th style={{ padding: '10px 16px' }}>Status</th>
+                  <th style={{ padding: '10px 16px', textAlign: 'center' }}>Components</th>
+                  <th style={{ padding: '10px 16px' }}>Last build</th>
+                </tr>
+              </thead>
+              <tbody>
+                <AppRow
+                  name="frontend-app"
+                  status="Succeeded"
+                  statusColor="#3e8635"
+                  components={2}
+                  lastBuild="12 min ago"
+                />
+                <AppRow
+                  name="backend-api"
+                  status="Running"
+                  statusColor="#06c"
+                  components={4}
+                  lastBuild="3 min ago"
+                />
+                <AppRow
+                  name="auth-service"
+                  status="Failed"
+                  statusColor="#c9190b"
+                  components={1}
+                  lastBuild="1 hour ago"
+                />
+                <AppRow
+                  name="worker-jobs"
+                  status="Succeeded"
+                  statusColor="#3e8635"
+                  components={3}
+                  lastBuild="45 min ago"
+                />
+                <AppRow
+                  name="ml-pipeline"
+                  status="Pending"
+                  statusColor="#6a6e73"
+                  components={2}
+                  lastBuild="2 hours ago"
+                />
+              </tbody>
+            </table>
+          </div>
+
+          {/* Stats */}
+          <StatsPanel />
         </div>
-        <div style={{ marginTop: '24px' }}>
-          <Card data-tour="tour-app-card" style={{ maxWidth: '400px' }}>
-            <CardTitle>my-app</CardTitle>
-            <CardBody>
-              <p>Status: Running</p>
-              <p>Components: 3</p>
-              <p>Last deployed: 2 hours ago</p>
-            </CardBody>
-          </Card>
-        </div>
-      </PageSection>
+      </div>
+
+      {/* Tour renderer (renders the active step) */}
       <TourRenderer />
-    </>
+    </div>
   );
 };
 
-export const FullTourFlow: Story = {
-  name: 'Full Tour Flow',
+// -- Stories -----------------------------------------------------------------
+
+export const EndToEndManualTour: Story = {
+  name: 'E2E / Manual Tour',
   decorators: [
     (Story) => (
       <TourProvider>
@@ -235,5 +499,17 @@ export const FullTourFlow: Story = {
       </TourProvider>
     ),
   ],
-  render: () => <DemoPageContent />,
+  render: () => <WorkspacePage />,
+};
+
+export const EndToEndAutoTriggered: Story = {
+  name: 'E2E / Auto-Triggered Tour',
+  decorators: [
+    (Story) => (
+      <TourProvider>
+        <Story />
+      </TourProvider>
+    ),
+  ],
+  render: () => <WorkspacePage autoStart />,
 };
