@@ -1,3 +1,4 @@
+import { TOUR_ACTIONS } from '../consts';
 import { tourReducer, initialTourState } from '../tour-reducer';
 import { MergedStep, TourState } from '../types';
 
@@ -19,7 +20,7 @@ describe('tourReducer', () => {
   it('START sets active tour state', () => {
     const steps = [makeStep('A'), makeStep('B')];
     const state = tourReducer(initialTourState, {
-      type: 'START',
+      type: TOUR_ACTIONS.START,
       payload: { mergedSteps: steps, sourceIds: ['tour-1'] },
     });
     expect(state.isActive).toBe(true);
@@ -35,7 +36,7 @@ describe('tourReducer', () => {
       currentStepIndex: 0,
       sourceIds: ['t'],
     };
-    const state = tourReducer(active, { type: 'NEXT' });
+    const state = tourReducer(active, { type: TOUR_ACTIONS.NEXT });
     expect(state.currentStepIndex).toBe(1);
   });
 
@@ -46,7 +47,7 @@ describe('tourReducer', () => {
       currentStepIndex: 0,
       sourceIds: ['t'],
     };
-    const state = tourReducer(active, { type: 'NEXT' });
+    const state = tourReducer(active, { type: TOUR_ACTIONS.NEXT });
     expect(state.currentStepIndex).toBe(0);
   });
 
@@ -57,7 +58,7 @@ describe('tourReducer', () => {
       currentStepIndex: 1,
       sourceIds: ['t'],
     };
-    const state = tourReducer(active, { type: 'PREV' });
+    const state = tourReducer(active, { type: TOUR_ACTIONS.PREV });
     expect(state.currentStepIndex).toBe(0);
   });
 
@@ -68,7 +69,7 @@ describe('tourReducer', () => {
       currentStepIndex: 0,
       sourceIds: ['t'],
     };
-    const state = tourReducer(active, { type: 'PREV' });
+    const state = tourReducer(active, { type: TOUR_ACTIONS.PREV });
     expect(state.currentStepIndex).toBe(0);
   });
 
@@ -79,7 +80,7 @@ describe('tourReducer', () => {
       currentStepIndex: 0,
       sourceIds: ['t'],
     };
-    const state = tourReducer(active, { type: 'SKIP' });
+    const state = tourReducer(active, { type: TOUR_ACTIONS.SKIP });
     expect(state).toEqual(initialTourState);
   });
 
@@ -90,7 +91,7 @@ describe('tourReducer', () => {
       currentStepIndex: 0,
       sourceIds: ['t'],
     };
-    const state = tourReducer(active, { type: 'DONE' });
+    const state = tourReducer(active, { type: TOUR_ACTIONS.DONE });
     expect(state).toEqual(initialTourState);
   });
 });

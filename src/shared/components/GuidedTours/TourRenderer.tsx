@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { STEP_TYPES } from './consts';
 import { HighlightStep } from './steps/HighlightStep';
 import { ModalStep } from './steps/ModalStep';
 import { SpotlightStep } from './steps/SpotlightStep';
@@ -34,7 +35,7 @@ export const TourRenderer: React.FC = () => {
   };
 
   switch (currentStep.type) {
-    case 'modal':
+    case STEP_TYPES.MODAL:
       return (
         <ModalStep
           title={currentStep.title}
@@ -43,7 +44,7 @@ export const TourRenderer: React.FC = () => {
           {...commonProps}
         />
       );
-    case 'spotlight':
+    case STEP_TYPES.SPOTLIGHT:
       return (
         <SpotlightStep
           title={currentStep.title}
@@ -53,7 +54,7 @@ export const TourRenderer: React.FC = () => {
           {...commonProps}
         />
       );
-    case 'highlight':
+    case STEP_TYPES.HIGHLIGHT:
       return (
         <HighlightStep
           title={currentStep.title}
