@@ -142,6 +142,12 @@ const InternalFLAGS = {
       visibleInFeatureFlagPanel: false,
     },
   },
+  'guided-tours': {
+    key: 'guided-tours',
+    description: 'Enable guided tours for new users',
+    defaultEnabled: false,
+    status: 'wip',
+  },
 } satisfies Record<string, FeatureMeta>;
 
 export type FlagKey = keyof typeof InternalFLAGS;
