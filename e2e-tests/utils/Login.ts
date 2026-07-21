@@ -83,6 +83,14 @@ export class Login {
         cy.get(stageLoginPO.approveButton).click();
       }
     });
+
+    // Click through IDP selection page if it appears
+    cy.get('body', { timeout: 30000 }).then(($body) => {
+      if ($body.find('a[title="Log in with redhat-sso"]').length > 0) {
+        cy.get('a[title="Log in with redhat-sso"]').click();
+      }
+    });
+
     // Grant Access is always required
     cy.contains(stageLoginPO.grantAccessClass, stageLoginPO.grantAccessText).click();
 
