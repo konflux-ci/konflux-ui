@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { saveAs } from 'file-saver';
 import { Base64 } from 'js-base64';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
-import { KUBEARCHIVE_PATH_PREFIX } from '~/kubearchive/const';
+import { KUBEARCHIVE_PATH_PREFIX, KUBEARCHIVE_TAIL_LINES } from '~/kubearchive/const';
 import { type NormalizedLogSection } from '~/shared/components/virtualized-log-viewer';
 import { LineBuffer } from '~/shared/utils/line-buffer';
 import { ResourceSource } from '~/types/k8s';
@@ -18,7 +18,6 @@ import { containerToLogSourceStatus, LOG_SOURCE_TERMINATED } from '../utils';
 import LogViewer, { type Props as LogViewerProps } from './LogViewer';
 
 const WEB_SOCKET_RETRY_COUNT = 5;
-const KUBEARCHIVE_TAIL_LINES = 500;
 
 const retryWebSocket = (
   watchURL: string,
