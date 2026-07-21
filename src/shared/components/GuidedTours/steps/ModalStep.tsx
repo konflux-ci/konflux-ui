@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Modal, ModalBody, ModalHeader, ModalVariant } from '@patternfly/react-core';
+import { Modal, ModalBody, ModalFooter, ModalHeader, ModalVariant } from '@patternfly/react-core';
 import { StepNavigation } from './StepNavigation';
 
 interface ModalStepProps {
@@ -44,6 +44,8 @@ export const ModalStep: React.FC<ModalStepProps> = ({
     <ModalHeader title={title} />
     <ModalBody>
       <p>{content}</p>
+    </ModalBody>
+    <ModalFooter>
       <StepNavigation
         currentStep={currentStep}
         totalSteps={totalSteps}
@@ -53,6 +55,6 @@ export const ModalStep: React.FC<ModalStepProps> = ({
         onPrev={onPrev}
         onDone={onDone}
       />
-    </ModalBody>
+    </ModalFooter>
   </Modal>
 );

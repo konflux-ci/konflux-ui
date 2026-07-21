@@ -65,24 +65,22 @@ export const HighlightStep: React.FC<HighlightStepProps> = ({
   return (
     <Popover
       isVisible
+      footerContent={
+        <StepNavigation
+          currentStep={currentStep}
+          totalSteps={totalSteps}
+          isFirstStep={isFirstStep}
+          isLastStep={isLastStep}
+          onNext={onNext}
+          onPrev={onPrev}
+          onDone={onDone}
+        />
+      }
       shouldClose={onSkip}
       position={POSITION_MAP[position]}
       triggerRef={triggerRef as React.RefObject<HTMLElement>}
       headerContent={title}
-      bodyContent={
-        <>
-          <p>{content}</p>
-          <StepNavigation
-            currentStep={currentStep}
-            totalSteps={totalSteps}
-            isFirstStep={isFirstStep}
-            isLastStep={isLastStep}
-            onNext={onNext}
-            onPrev={onPrev}
-            onDone={onDone}
-          />
-        </>
-      }
+      bodyContent={content}
       appendTo={() => document.querySelector('#hacDev-modal-container') ?? document.body}
       data-test="tour-highlight-step"
     />
