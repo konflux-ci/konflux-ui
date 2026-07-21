@@ -3,12 +3,12 @@ import { routerRenderer } from '~/unit-test-utils';
 import { SpotlightStep } from '../steps/SpotlightStep';
 
 // Mock SpotlightOverlay to avoid SVG rendering complexity in jsdom
-jest.mock('../SpotlightOverlay', () => ({
+jest.mock('../steps/SpotlightOverlay', () => ({
   SpotlightOverlay: () => <div data-test="mock-overlay" />,
 }));
 
 // Mock useTargetElement to control target element behavior
-jest.mock('../useTargetElement', () => ({
+jest.mock('../hooks/useTargetElement', () => ({
   useTargetElement: () => ({
     targetEl: document.createElement('div'),
     targetRect: {

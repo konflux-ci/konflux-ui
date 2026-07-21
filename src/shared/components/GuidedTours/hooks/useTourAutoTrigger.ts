@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
-import { collectAndMerge } from './merge-utils';
-import { getToursByRoute } from './registry';
+import { collectAndMerge } from '../merge-utils';
+import { getToursByRoute } from '../registry';
 import { useTour } from './useTour';
 
 /**

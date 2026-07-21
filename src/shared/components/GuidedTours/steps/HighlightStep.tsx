@@ -1,9 +1,9 @@
 import * as React from 'react';
 import { Popover } from '@patternfly/react-core';
+import { useTargetElement } from '../hooks/useTargetElement';
 import { PopoverPosition } from '../types';
-import { useTargetElement } from '../useTargetElement';
+import './HighlightStep.scss';
 import { StepNavigation } from './StepNavigation';
-import '../GuidedTours.scss';
 
 interface HighlightStepProps {
   title: string;

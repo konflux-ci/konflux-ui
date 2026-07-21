@@ -1,9 +1,9 @@
 import * as React from 'react';
 import { STEP_TYPES } from './consts';
+import { useTour } from './hooks/useTour';
 import { HighlightStep } from './steps/HighlightStep';
 import { ModalStep } from './steps/ModalStep';
 import { SpotlightStep } from './steps/SpotlightStep';
-import { useTour } from './useTour';
 
 export const TourRenderer: React.FC = () => {
   const {

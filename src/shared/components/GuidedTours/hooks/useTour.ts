@@ -1,8 +1,8 @@
 import { useCallback, useMemo } from 'react';
 import { useLocalStorage } from '~/shared/hooks/useLocalStorage';
-import { TOUR_ACTIONS, TOUR_STATUS, TOUR_STORAGE_KEY } from './consts';
-import { useTourContext } from './TourProvider';
-import { MergedStep, TourStepConfig, TourStorage } from './types';
+import { TOUR_ACTIONS, TOUR_STATUS, TOUR_STORAGE_KEY } from '../consts';
+import { useTourContext } from '../TourProvider';
+import { MergedStep, TourStepConfig, TourStorage } from '../types';
 
 export const useTour = () => {
   const { state, dispatch } = useTourContext();

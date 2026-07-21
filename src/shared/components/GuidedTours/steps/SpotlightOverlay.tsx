@@ -1,5 +1,5 @@
 import * as React from 'react';
-import './GuidedTours.scss';
+import './SpotlightOverlay.scss';
 
 interface SpotlightOverlayProps {
   targetRect: DOMRect;

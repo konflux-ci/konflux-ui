@@ -18,7 +18,7 @@ const mockUseTour = {
   seen: {},
 };
 
-jest.mock('../useTour', () => ({
+jest.mock('../hooks/useTour', () => ({
   useTour: () => mockUseTour,
 }));
 
