@@ -140,12 +140,6 @@ describe('Dependency runs column renderers', () => {
     expect(screen.getByTestId('dependency-run-duration')).toHaveTextContent('-');
   });
 
-  it('renders a logs cell with a "View logs" button', () => {
-    renderRow(makePipelineRun());
-    expect(screen.getByTestId('dependency-run-logs')).toBeInTheDocument();
-    expect(screen.getByText('View logs')).toBeInTheDocument();
-  });
-
   it('renders the "View logs" button with a data-test attribute containing the run name', () => {
     renderRow(makePipelineRun());
     expect(screen.getByTestId('view-logs-test-dependency-run')).toBeInTheDocument();

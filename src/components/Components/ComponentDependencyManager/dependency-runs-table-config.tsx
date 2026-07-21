@@ -12,16 +12,14 @@ import { pipelineRunStatus } from '~/utils/pipeline-utils';
 const ViewLogsCell = ({ pipelineRun }: { pipelineRun: PipelineRunKind }) => {
   const openModal = useMintmakerLogViewerModal(pipelineRun);
   return (
-    <span data-test="dependency-run-logs">
-      <Button
-        variant="link"
-        size="sm"
-        data-test={`view-logs-${pipelineRun.metadata?.name}`}
-        onClick={openModal}
-      >
-        View logs
-      </Button>
-    </span>
+    <Button
+      variant="link"
+      size="sm"
+      data-test={`view-logs-${pipelineRun.metadata?.name}`}
+      onClick={openModal}
+    >
+      View logs
+    </Button>
   );
 };
 
