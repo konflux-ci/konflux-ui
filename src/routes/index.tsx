@@ -6,6 +6,7 @@ import { ModalProvider } from '../components/modal/ModalProvider';
 import { Overview } from '../components/Overview/Overview';
 import { HttpError } from '../k8s/error';
 import ErrorEmptyState from '../shared/components/empty-state/ErrorEmptyState';
+import { TourProvider } from '../shared/components/GuidedTours';
 import { namespaceLoader, NamespaceProvider } from '../shared/providers/Namespace';
 import applicationRoutes from './page-routes/application';
 import commitRoutes from './page-routes/commit';
@@ -39,7 +40,9 @@ export const router = sentryCreateBrowserRouter([
     element: (
       <NamespaceProvider>
         <ModalProvider>
-          <AppRoot />
+          <TourProvider>
+            <AppRoot />
+          </TourProvider>
         </ModalProvider>
       </NamespaceProvider>
     ),
