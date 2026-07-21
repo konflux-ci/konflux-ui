@@ -10,6 +10,8 @@ import {
   ModalVariant,
   Spinner,
 } from '@patternfly/react-core';
+import { ComponentProps, createModalLauncher } from '~/components/modal/createModalLauncher';
+import { useModalLauncher } from '~/components/modal/ModalProvider';
 import { MINTMAKER_NAMESPACE } from '~/consts/constants';
 import { PipelineRunLabel, runStatus } from '~/consts/pipelinerun';
 import { useTaskRunsForPipelineRuns } from '~/hooks/useTaskRunsV2';
@@ -21,8 +23,6 @@ import { getErrorState } from '~/shared/utils/error-utils';
 import { PipelineRunKind } from '~/types';
 import { WatchK8sResource } from '~/types/k8s';
 import { pipelineRunStatus } from '~/utils/pipeline-utils';
-import { ComponentProps, createModalLauncher } from '../modal/createModalLauncher';
-import { useModalLauncher } from '../modal/ModalProvider';
 
 import './MintmakerLogViewer.scss';
 
