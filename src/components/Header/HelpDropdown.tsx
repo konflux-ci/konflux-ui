@@ -15,12 +15,14 @@ import {
   EXTERNAL_DOCUMENTATION_BASE_URL,
   INTERNAL_DOCUMENTATION_BASE_URL,
 } from '~/consts/documentation';
+import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useKonfluxPublicInfo } from '~/hooks/useKonfluxPublicInfo';
 import { ExternalLink } from '~/shared';
 import { createAboutModal } from './AboutModal';
 
 export const HelpDropdown: React.FC = () => {
   const [isOpen, setIsOpen] = React.useState(false);
+  const isGuidedToursEnabled = useIsOnFeatureFlag('guided-tours');
   const showModal = useModalLauncher();
   const [parsedData] = useKonfluxPublicInfo();
   const isInternal = parsedData?.visibility === 'private';
@@ -64,6 +66,11 @@ export const HelpDropdown: React.FC = () => {
       >
         <DropdownGroup>
           <DropdownList>
+            {isGuidedToursEnabled && (
+              <DropdownItem key="guided-tour" data-test="help-dropdown-guided-tour">
+                Guided tour
+              </DropdownItem>
+            )}
             <DropdownItem key="about" onClick={handleAboutClick} data-test="help-dropdown-about">
               About Konflux
             </DropdownItem>
