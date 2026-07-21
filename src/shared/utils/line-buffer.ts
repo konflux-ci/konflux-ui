@@ -42,10 +42,6 @@ export class LineBuffer {
   }
 
   getLines(): string[] {
-    if (this._tail) {
-      this._buffer.push(this._tail);
-      this._tail = '';
-    }
     return this._buffer;
   }
 
