@@ -42,6 +42,10 @@ export class LineBuffer {
   }
 
   getLines(): string[] {
+    if (this._tail) {
+      this._buffer.push(this._tail);
+      this._tail = '';
+    }
     return this._buffer;
   }
 
@@ -75,12 +79,5 @@ export class LineBuffer {
         this._tail = next;
       }
     }
-  }
-
-  replace(newLines: string[]): number {
-    const prevCount = this._buffer.length;
-    this._buffer = newLines;
-    this._tail = '';
-    return prevCount;
   }
 }
