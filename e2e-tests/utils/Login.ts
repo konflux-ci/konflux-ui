@@ -75,9 +75,9 @@ export class Login {
     cy.get(stageLoginPO.dex).should('be.visible').click();
 
     // Click through IDP selection page if it appears
-    cy.get('body', { timeout: 30000 }).then(($body) => {
-      if ($body.find('a[title="Log in with redhat-sso"]').length > 0) {
-        cy.get('a[title="Log in with redhat-sso"]').click();
+    cy.get('body').then(($body) => {
+      if ($body.find(stageLoginPO.idpRedHatSsoButton).length > 0) {
+        cy.get(stageLoginPO.idpRedHatSsoButton).click();
       }
     });
 
