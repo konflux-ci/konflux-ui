@@ -8,10 +8,10 @@ describe('LineBuffer', () => {
       expect(buf.getLines()).toEqual(['line1', 'line2', 'line3']);
     });
 
-    it('should include trailing content without a final newline', () => {
+    it('should keep trailing content without a final newline in tail, not in lines', () => {
       const buf = new LineBuffer();
       buf.append('line1\nline2');
-      expect(buf.getLines()).toEqual(['line1', 'line2']);
+      expect(buf.getLines()).toEqual(['line1']);
     });
 
     it('should accumulate across multiple append calls', () => {
@@ -72,11 +72,10 @@ describe('LineBuffer', () => {
       expect(buf.getLines()).toEqual([]);
     });
 
-    it('should include incomplete trailing line', () => {
+    it('should not include incomplete trailing content', () => {
       const buf = new LineBuffer();
       buf.append('complete\nincomplete');
-      const lines = buf.getLines();
-      expect(lines).toEqual(['complete', 'incomplete']);
+      expect(buf.getLines()).toEqual(['complete']);
     });
 
     it('should not include trailing line when it is empty', () => {
