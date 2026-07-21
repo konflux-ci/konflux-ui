@@ -12,17 +12,18 @@ import {
   EXTERNAL_DOCUMENTATION_BASE_URL,
   INTERNAL_DOCUMENTATION_BASE_URL,
 } from '~/consts/documentation';
-import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useKonfluxPublicInfo } from '~/hooks/useKonfluxPublicInfo';
 import { ExternalLink } from '~/shared';
+import { getToursByRoute, useTour } from '~/shared/components/GuidedTours';
+import { collectAndMerge } from '~/shared/components/GuidedTours/merge-utils';
 import { createFeedbackModal } from '../FeedbackSection/FeedbackModal';
 import { useModalLauncher } from '../modal/ModalProvider';
 import { createAboutModal } from './AboutModal';
 
 export const HelpDropdown: React.FC = () => {
   const [isOpen, setIsOpen] = React.useState(false);
-  const isGuidedToursEnabled = useIsOnFeatureFlag('guided-tours');
   const showModal = useModalLauncher();
+  const { startTour } = useTour();
   const [parsedData] = useKonfluxPublicInfo();
   const isInternal = parsedData?.visibility === 'private';
   const documentationLink = isInternal
@@ -37,6 +38,22 @@ export const HelpDropdown: React.FC = () => {
   const handleFeedbackClick = () => {
     setIsOpen(false);
     showModal(createFeedbackModal());
+  };
+
+  const handleGuidedTourClick = () => {
+    setIsOpen(false);
+    // For manual trigger: get ALL tours for current route, ignore seen state
+    // TODO: route matching will be connected when actual tours are registered
+    const currentPath = window.location.pathname;
+    // Strip leading slash to match route patterns
+    const routePattern = currentPath.startsWith('/') ? currentPath.slice(1) : currentPath;
+    const entries = getToursByRoute(routePattern);
+    if (entries.length === 0) return;
+
+    const result = collectAndMerge(entries);
+    if (result.mergedSteps.length === 0) return;
+
+    startTour(result.mergedSteps, result.sourceIds);
   };
 
   return (
@@ -60,11 +77,13 @@ export const HelpDropdown: React.FC = () => {
       >
         <DropdownGroup>
           <DropdownList>
-            {isGuidedToursEnabled && (
-              <DropdownItem key="guided-tour" data-test="help-dropdown-guided-tour">
-                Guided tour
-              </DropdownItem>
-            )}
+            <DropdownItem
+              key="guided-tour"
+              onClick={handleGuidedTourClick}
+              data-test="help-dropdown-guided-tour"
+            >
+              Guided tour
+            </DropdownItem>
             <DropdownItem key="about" onClick={handleAboutClick} data-test="help-dropdown-about">
               About Konflux
             </DropdownItem>

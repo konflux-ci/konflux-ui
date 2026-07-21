@@ -4,32 +4,25 @@ import {
   EXTERNAL_DOCUMENTATION_BASE_URL,
   INTERNAL_DOCUMENTATION_BASE_URL,
 } from '~/consts/documentation';
-import { FeatureFlagsStore } from '~/feature-flags/store';
 import { ModalProvider } from '../../modal/ModalProvider';
 import { HelpDropdown } from '../HelpDropdown';
+
+const mockStartTour = jest.fn();
+
+jest.mock('~/shared/components/GuidedTours', () => ({
+  useTour: () => ({ startTour: mockStartTour }),
+  getToursByRoute: jest.fn(() => []),
+}));
+
+jest.mock('~/shared/components/GuidedTours/merge-utils', () => ({
+  collectAndMerge: jest.fn(() => ({ mergedSteps: [], sourceIds: [], hasPrompt: false })),
+}));
 
 const mockUseKonfluxPublicInfo = jest.fn();
 
 jest.mock('~/hooks/useKonfluxPublicInfo', () => ({
   useKonfluxPublicInfo: () => mockUseKonfluxPublicInfo(),
 }));
-
-jest.mock('~/feature-flags/hooks', () => {
-  const actual = jest.requireActual('~/feature-flags/hooks');
-  return {
-    ...actual,
-    useFeatureFlags: jest.fn(() => [{ 'feedback-section': true }, jest.fn()]),
-  };
-});
-
-jest.mock('~/feature-flags/store', () => ({
-  FeatureFlagsStore: {
-    isOn: jest.fn(),
-    subscribe: jest.fn(),
-  },
-}));
-
-const mockFeatureFlagsStore = FeatureFlagsStore as jest.Mocked<typeof FeatureFlagsStore>;
 
 const renderWithModalProvider = (component: React.ReactElement) => {
   return render(<ModalProvider>{component}</ModalProvider>);
@@ -39,7 +32,6 @@ describe('HelpDropdown Component', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockUseKonfluxPublicInfo.mockReturnValue([{ visibility: 'public' }]);
-    mockFeatureFlagsStore.isOn.mockReturnValue(true);
   });
 
   describe('Rendering', () => {
