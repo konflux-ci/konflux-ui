@@ -1,8 +1,8 @@
 import * as React from 'react';
 import { Popover } from '@patternfly/react-core';
-import { SpotlightOverlay } from '../SpotlightOverlay';
+import { useTargetElement } from '../hooks/useTargetElement';
 import { PopoverPosition } from '../types';
-import { useTargetElement } from '../useTargetElement';
+import { SpotlightOverlay } from './SpotlightOverlay';
 import { StepNavigation } from './StepNavigation';
 
 interface SpotlightStepProps {

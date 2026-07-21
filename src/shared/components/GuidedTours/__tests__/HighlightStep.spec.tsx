@@ -4,7 +4,7 @@ import { HighlightStep } from '../steps/HighlightStep';
 
 // Mock useTargetElement
 const mockTargetEl = document.createElement('div');
-jest.mock('../useTargetElement', () => ({
+jest.mock('../hooks/useTargetElement', () => ({
   useTargetElement: () => ({
     targetEl: mockTargetEl,
     targetRect: {

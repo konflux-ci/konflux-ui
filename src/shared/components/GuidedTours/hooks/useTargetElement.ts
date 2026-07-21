@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { getTourElement } from './consts';
+import { getTourElement } from '../consts';
 
 /**
  * Finds a DOM element by data-tour attribute, waits for it if not immediately available
