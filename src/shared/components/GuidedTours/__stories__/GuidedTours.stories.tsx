@@ -1,15 +1,15 @@
 import React from 'react';
 import { Button, Card, CardBody, CardTitle, PageSection, Title } from '@patternfly/react-core';
 import type { Meta, StoryObj } from '@storybook/react';
-import { fn } from 'storybook/test';
-import { useTour } from '~/shared/components/GuidedTours/hooks/useTour';
-import { HighlightStep } from '~/shared/components/GuidedTours/steps/HighlightStep';
-import { ModalStep } from '~/shared/components/GuidedTours/steps/ModalStep';
-import { SpotlightStep } from '~/shared/components/GuidedTours/steps/SpotlightStep';
-import { StepNavigation } from '~/shared/components/GuidedTours/steps/StepNavigation';
-import { TourProvider } from '~/shared/components/GuidedTours/TourProvider';
-import { TourRenderer } from '~/shared/components/GuidedTours/TourRenderer';
-import type { MergedStep } from '~/shared/components/GuidedTours/types';
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
+import { useTour } from '../hooks/useTour';
+import { HighlightStep } from '../steps/HighlightStep';
+import { ModalStep } from '../steps/ModalStep';
+import { SpotlightStep } from '../steps/SpotlightStep';
+import { StepNavigation } from '../steps/StepNavigation';
+import { TourProvider } from '../TourProvider';
+import { TourRenderer } from '../TourRenderer';
+import type { MergedStep } from '../types';
 
 const meta: Meta = {
   title: 'GuidedTours',
@@ -34,6 +34,14 @@ export const StepNavigationFirstStep: Story = {
       onDone={fn()}
     />
   ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await expect(canvas.getByText('1 of 5')).toBeInTheDocument();
+    await expect(canvas.getByRole('button', { name: /next/i })).toBeInTheDocument();
+    // Back button hidden on first step
+    await expect(canvas.queryByRole('button', { name: /back/i })).not.toBeInTheDocument();
+  },
 };
 
 export const StepNavigationMiddleStep: Story = {
@@ -49,6 +57,13 @@ export const StepNavigationMiddleStep: Story = {
       onDone={fn()}
     />
   ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await expect(canvas.getByText('3 of 5')).toBeInTheDocument();
+    await expect(canvas.getByRole('button', { name: /next/i })).toBeInTheDocument();
+    await expect(canvas.getByRole('button', { name: /back/i })).toBeInTheDocument();
+  },
 };
 
 export const StepNavigationLastStep: Story = {
@@ -64,6 +79,15 @@ export const StepNavigationLastStep: Story = {
       onDone={fn()}
     />
   ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await expect(canvas.getByText('5 of 5')).toBeInTheDocument();
+    await expect(canvas.getByRole('button', { name: /done/i })).toBeInTheDocument();
+    await expect(canvas.getByRole('button', { name: /back/i })).toBeInTheDocument();
+    // Next button replaced by Done on last step
+    await expect(canvas.queryByRole('button', { name: /next/i })).not.toBeInTheDocument();
+  },
 };
 
 // --- ModalStep ---
@@ -84,6 +108,19 @@ export const Modal: Story = {
       onDone={fn()}
     />
   ),
+  play: async () => {
+    // Modal renders in a portal outside canvasElement, query the document body
+    const body = within(document.body);
+
+    await expect(body.getByText('Welcome to Konflux')).toBeInTheDocument();
+    await expect(
+      body.getByText('This guided tour will walk you through the key features of the application.'),
+    ).toBeInTheDocument();
+    await expect(body.getByText('1 of 3')).toBeInTheDocument();
+    await expect(body.getByRole('button', { name: /next/i })).toBeInTheDocument();
+    // Close (X) button exists
+    await expect(body.getByLabelText('Close')).toBeInTheDocument();
+  },
 };
 
 // --- SpotlightStep ---
@@ -114,6 +151,24 @@ export const Spotlight: Story = {
       onDone={fn()}
     />
   ),
+  play: async () => {
+    const body = within(document.body);
+
+    // Popover content renders
+    await waitFor(() => expect(body.getByText('Create Application')).toBeInTheDocument());
+    await expect(
+      body.getByText('Click this button to create your first application.'),
+    ).toBeInTheDocument();
+    await expect(body.getByText('2 of 3')).toBeInTheDocument();
+
+    // Spotlight overlay SVG exists
+    const overlay = document.querySelector('[data-test="tour-spotlight-overlay"]');
+    await expect(overlay).toBeTruthy();
+
+    // Click blocker exists
+    const blocker = document.querySelector('[data-test="tour-click-blocker"]');
+    await expect(blocker).toBeTruthy();
+  },
 };
 
 // --- HighlightStep ---
@@ -147,6 +202,23 @@ export const Highlight: Story = {
       onDone={fn()}
     />
   ),
+  play: async () => {
+    const body = within(document.body);
+
+    // Popover content renders
+    await waitFor(() => expect(body.getByText('Application Details')).toBeInTheDocument());
+    await expect(
+      body.getByText(
+        'This card provides an overview of your application status and configuration.',
+      ),
+    ).toBeInTheDocument();
+    await expect(body.getByText('3 of 3')).toBeInTheDocument();
+    await expect(body.getByRole('button', { name: /done/i })).toBeInTheDocument();
+
+    // Highlight ring class applied to target
+    const target = document.querySelector('[data-tour="demo-card"]');
+    await expect(target?.classList.contains('guided-tours__highlight-ring')).toBe(true);
+  },
 };
 
 // ---------------------------------------------------------------------------
@@ -500,6 +572,72 @@ export const EndToEndManualTour: Story = {
     ),
   ],
   render: () => <WorkspacePage />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const body = within(document.body);
+
+    // Page renders with tour trigger button
+    await expect(canvas.getByText('Start guided tour')).toBeInTheDocument();
+    await expect(canvas.getByText('Applications')).toBeInTheDocument();
+
+    // Click "Start guided tour"
+    await userEvent.click(canvas.getByText('Start guided tour'));
+
+    // Step 1: Modal - "Welcome to your workspace"
+    await waitFor(() => expect(body.getByText('Welcome to your workspace')).toBeInTheDocument());
+    await expect(body.getByText('1 of 7')).toBeInTheDocument();
+    await userEvent.click(body.getByRole('button', { name: /next/i }));
+
+    // Step 2: Spotlight on "Create application" button
+    await waitFor(() => expect(body.getByText('Create an application')).toBeInTheDocument());
+    await expect(body.getByText('2 of 7')).toBeInTheDocument();
+    await expect(document.querySelector('[data-test="tour-spotlight-overlay"]')).toBeTruthy();
+    await userEvent.click(body.getByRole('button', { name: /next/i }));
+
+    // Step 3: Highlight on sidebar
+    await waitFor(() => expect(body.getByText('Navigation sidebar')).toBeInTheDocument());
+    await expect(body.getByText('3 of 7')).toBeInTheDocument();
+    const sidebar = document.querySelector('[data-tour="e2e-sidebar"]');
+    await expect(sidebar?.classList.contains('guided-tours__highlight-ring')).toBe(true);
+
+    // Test Back button goes to previous step
+    await userEvent.click(body.getByRole('button', { name: /back/i }));
+    await waitFor(() => expect(body.getByText('Create an application')).toBeInTheDocument());
+    await expect(body.getByText('2 of 7')).toBeInTheDocument();
+
+    // Go forward again
+    await userEvent.click(body.getByRole('button', { name: /next/i }));
+    await waitFor(() => expect(body.getByText('Navigation sidebar')).toBeInTheDocument());
+
+    // Continue through remaining steps
+    await userEvent.click(body.getByRole('button', { name: /next/i }));
+
+    // Step 4: Spotlight on search
+    await waitFor(() => expect(body.getByText('Search and filter')).toBeInTheDocument());
+    await expect(body.getByText('4 of 7')).toBeInTheDocument();
+    await userEvent.click(body.getByRole('button', { name: /next/i }));
+
+    // Step 5: Highlight on app table
+    await waitFor(() => expect(body.getByText('Application list')).toBeInTheDocument());
+    await expect(body.getByText('5 of 7')).toBeInTheDocument();
+    await userEvent.click(body.getByRole('button', { name: /next/i }));
+
+    // Step 6: Highlight on stats panel
+    await waitFor(() => expect(body.getByText('Pipeline status overview')).toBeInTheDocument());
+    await expect(body.getByText('6 of 7')).toBeInTheDocument();
+    await userEvent.click(body.getByRole('button', { name: /next/i }));
+
+    // Step 7: Closing modal
+    await waitFor(() => expect(body.getByText('You are all set!')).toBeInTheDocument());
+    await expect(body.getByText('7 of 7')).toBeInTheDocument();
+    await expect(body.getByRole('button', { name: /done/i })).toBeInTheDocument();
+
+    // Click Done to finish
+    await userEvent.click(body.getByRole('button', { name: /done/i }));
+
+    // Tour is dismissed, trigger button is enabled again
+    await waitFor(() => expect(canvas.getByText('Start guided tour')).toBeInTheDocument());
+  },
 };
 
 export const EndToEndAutoTriggered: Story = {
@@ -512,4 +650,25 @@ export const EndToEndAutoTriggered: Story = {
     ),
   ],
   render: () => <WorkspacePage autoStart />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const body = within(document.body);
+
+    // Page renders
+    await expect(canvas.getByText('Create application')).toBeInTheDocument();
+
+    // Tour auto-starts with modal (300ms delay)
+    await waitFor(() => expect(body.getByText('Welcome to your workspace')).toBeInTheDocument(), {
+      timeout: 2000,
+    });
+    await expect(body.getByText('1 of 7')).toBeInTheDocument();
+
+    // Dismiss tour via X button
+    await userEvent.click(body.getByLabelText('Close'));
+
+    // Tour is dismissed -- no modal or popover visible
+    await waitFor(() =>
+      expect(body.queryByText('Welcome to your workspace')).not.toBeInTheDocument(),
+    );
+  },
 };

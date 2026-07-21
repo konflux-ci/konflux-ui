@@ -56,23 +56,21 @@ export const SpotlightStep: React.FC<SpotlightStepProps> = ({
       <Popover
         isVisible
         shouldClose={onSkip}
+        footerContent={
+          <StepNavigation
+            currentStep={currentStep}
+            totalSteps={totalSteps}
+            isFirstStep={isFirstStep}
+            isLastStep={isLastStep}
+            onNext={onNext}
+            onPrev={onPrev}
+            onDone={onDone}
+          />
+        }
         position={POSITION_MAP[position]}
         triggerRef={triggerRef as React.RefObject<HTMLElement>}
         headerContent={title}
-        bodyContent={
-          <>
-            <p>{content}</p>
-            <StepNavigation
-              currentStep={currentStep}
-              totalSteps={totalSteps}
-              isFirstStep={isFirstStep}
-              isLastStep={isLastStep}
-              onNext={onNext}
-              onPrev={onPrev}
-              onDone={onDone}
-            />
-          </>
-        }
+        bodyContent={content}
         appendTo={() => document.querySelector('#hacDev-modal-container') ?? document.body}
         data-test="tour-spotlight-step"
       />
