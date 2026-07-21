@@ -54,11 +54,11 @@ export const MintmakerLogViewer: FC<PropsWithChildren<MintmakerLogViewerProps>> 
         ? {
             name: podName,
             groupVersionKind: PodGroupVersionKind,
-            namespace: dependencyRun.metadata.namespace,
+            namespace: MINTMAKER_NAMESPACE,
             isList: false,
           }
         : null,
-    [podName, dependencyRun.metadata.namespace],
+    [podName],
   );
 
   const renderLogs = () => {
