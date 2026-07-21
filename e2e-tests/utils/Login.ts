@@ -73,6 +73,14 @@ export class Login {
     console.log('Logging in to stage Konflux...');
     cy.visit(Cypress.env('KONFLUX_BASE_URL'));
     cy.get(stageLoginPO.dex).should('be.visible').click();
+
+    // Click through IDP selection page if it appears
+    cy.get('body', { timeout: 30000 }).then(($body) => {
+      if ($body.find('a[title="Log in with redhat-sso"]').length > 0) {
+        cy.get('a[title="Log in with redhat-sso"]').click();
+      }
+    });
+
     cy.get(stageLoginPO.username).type(username);
     cy.get(stageLoginPO.password).type(password, { log: false });
     cy.get(stageLoginPO.loginButton).click();
@@ -81,13 +89,6 @@ export class Login {
     cy.get('body', { timeout: 30000 }).then(($body) => {
       if ($body.find(stageLoginPO.approveButton).length > 0) {
         cy.get(stageLoginPO.approveButton).click();
-      }
-    });
-
-    // Click through IDP selection page if it appears
-    cy.get('body', { timeout: 30000 }).then(($body) => {
-      if ($body.find('a[title="Log in with redhat-sso"]').length > 0) {
-        cy.get('a[title="Log in with redhat-sso"]').click();
       }
     });
 
