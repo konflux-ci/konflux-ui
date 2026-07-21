@@ -10,6 +10,14 @@ import { FeatureFlagsStore } from '~/feature-flags/store';
 import { ModalProvider } from '../../modal/ModalProvider';
 import { HelpDropdown } from '../HelpDropdown';
 
+const mockStartTour = jest.fn();
+
+jest.mock('~/shared/components/GuidedTours', () => ({
+  useTour: () => ({ startTour: mockStartTour }),
+  getToursByRoute: jest.fn(() => []),
+  collectAndMerge: jest.fn(() => ({ mergedSteps: [], sourceIds: [], hasPrompt: false })),
+}));
+
 const mockUseKonfluxPublicInfo = jest.fn();
 
 jest.mock('~/components/CLILogin/CliLoginModal', () => ({

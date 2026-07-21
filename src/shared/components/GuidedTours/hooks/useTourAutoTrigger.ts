@@ -1,5 +1,4 @@
 import { useEffect, useRef } from 'react';
-import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { collectAndMerge } from '../merge-utils';
 import { getToursByRoute } from '../registry';
 import { useTour } from './useTour';
@@ -10,12 +9,11 @@ import { useTour } from './useTour';
  * @param currentRoute - the route pattern (e.g., 'ns/:workspaceName/applications')
  */
 export const useTourAutoTrigger = (currentRoute: string | undefined): void => {
-  const isEnabled = useIsOnFeatureFlag('guided-tours');
   const { isActive, startTour, seen } = useTour();
   const triggeredRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!isEnabled || isActive || !currentRoute) return;
+    if (isActive || !currentRoute) return;
     if (triggeredRef.current === currentRoute) return;
 
     const entries = getToursByRoute(currentRoute, 'auto');
@@ -26,5 +24,5 @@ export const useTourAutoTrigger = (currentRoute: string | undefined): void => {
 
     triggeredRef.current = currentRoute;
     startTour(result.mergedSteps, result.sourceIds);
-  }, [isEnabled, isActive, currentRoute, seen, startTour]);
+  }, [isActive, currentRoute, seen, startTour]);
 };
