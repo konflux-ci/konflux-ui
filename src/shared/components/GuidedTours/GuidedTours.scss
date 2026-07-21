@@ -1,0 +1,35 @@
+.guided-tours {
+  &__overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: var(--pf-t--global--z-index--lg, 500);
+    pointer-events: none;
+
+    &-backdrop {
+      fill: rgba(0, 0, 0, 0.5);
+    }
+
+    &-cutout {
+      fill: black;
+    }
+  }
+
+  &__click-blocker {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: var(--pf-t--global--z-index--lg, 499);
+  }
+
+  &__highlight-ring {
+    box-shadow: 0 0 0 4px var(--pf-t--global--color--brand--default);
+    border-radius: var(--pf-t--global--border--radius--small);
+    position: relative;
+    z-index: 1;
+  }
+}
