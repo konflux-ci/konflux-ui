@@ -23,6 +23,7 @@ export const StepNavigation: React.FC<StepNavigationProps> = ({
   <Flex
     alignItems={{ default: 'alignItemsCenter' }}
     justifyContent={{ default: 'justifyContentSpaceBetween' }}
+    style={{ width: '100%' }}
   >
     <FlexItem>
       <span data-test="tour-step-counter">{`${currentStep + 1} of ${totalSteps}`}</span>
