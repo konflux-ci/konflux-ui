@@ -44,7 +44,7 @@ export const DependencyRunsListView = ({ componentName }: DependencyRunsListView
       () => ({
         selector: {
           filterByCreationTimestampAfter: component?.metadata?.creationTimestamp,
-          filterByName: nameFilter,
+          filterByName: nameFilter || undefined,
           matchLabels: {
             [PipelineRunLabel.MINTMAKER_COMPONENT_LABEL]: componentName,
             [PipelineRunLabel.MINTMAKER_NAMESPACE_LABEL]: namespace,
