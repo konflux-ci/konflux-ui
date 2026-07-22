@@ -166,10 +166,7 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
     onScroll,
   });
 
-  // const { highlightedLines, handleLineClick, isLineHighlighted } = useLineNumberNavigation({
-  //   readyToNavigate,
-  // });
-  const { highlightedLines, handleLineClick, isLineHighlighted } = lineNumberNavigationProps || {};
+  const { highlightedLines, handleLineClick, isLineHighlighted } = lineNumberNavigationProps;
 
   React.useEffect(() => {
     if (!isMultiSection || !highlightedLines) return;
