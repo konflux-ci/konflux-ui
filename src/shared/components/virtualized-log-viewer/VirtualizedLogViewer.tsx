@@ -1,6 +1,7 @@
 import React from 'react';
 import { LogViewerToolbarContext } from '@patternfly/react-log-viewer';
 import type { LogSection, NormalizedLogSection } from './types';
+import { UseLineNumberNavigationResult } from './useLineNumberNavigation';
 import { VirtualizedLogContent } from './VirtualizedLogContent';
 import '@patternfly/react-log-viewer/dist/css/log-viewer.css';
 
@@ -18,11 +19,7 @@ export interface VirtualizedLogViewerProps {
     scrollOffset: number;
     scrollUpdateWasRequested: boolean;
   }) => void;
-  /**
-   * When false, URL hash line navigation (`#L123`) is deferred until logs are fully fetched.
-   * Defaults to true.
-   */
-  readyToNavigate?: boolean;
+  lineNumberNavigationProps: UseLineNumberNavigationResult;
 }
 
 export const VirtualizedLogViewer: React.FC<VirtualizedLogViewerProps> = ({
@@ -32,7 +29,7 @@ export const VirtualizedLogViewer: React.FC<VirtualizedLogViewerProps> = ({
   width = '100%',
   scrollToRow,
   onScroll,
-  readyToNavigate = true,
+  lineNumberNavigationProps,
 }) => {
   const toolbarContext = React.useContext(LogViewerToolbarContext);
   const searchedInput =
@@ -82,7 +79,7 @@ export const VirtualizedLogViewer: React.FC<VirtualizedLogViewerProps> = ({
         onScroll={onScroll}
         searchText={searchedInput}
         currentSearchMatch={rowInFocus}
-        readyToNavigate={readyToNavigate}
+        lineNumberNavigationProps={lineNumberNavigationProps}
       />
     </div>
   );
