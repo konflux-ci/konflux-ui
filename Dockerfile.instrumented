@@ -41,7 +41,7 @@ COPY aliases.config.js aliases.config.js
 RUN yarn install --immutable
 RUN yarn build:instrumented
 
-FROM registry.access.redhat.com/ubi9/nginx-120@sha256:154529f16f9ddd9b5539ad5add955a35ed48d9d717904bb5b9b27dff685725b1
+FROM registry.access.redhat.com/ubi9/nginx-120@sha256:40e7d1fafa5ccfef15adc412ddfd69ded09734df4efa84f242f6008d80a32945
 
 COPY --from=builder /opt/app-root/src/dist/* /opt/app-root/src/
 
