@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { AIChatStateProvider } from '~/components/AIChat/AIChatStateProvider';
 import { IfFeature } from '~/feature-flags/hooks';
 import { useIsLightspeedAvailable } from '~/lightspeed/conditional-checks';
 import { lazyLoad, LazyLoadArguments } from '~/shared/components/lazy-load/lazy';
@@ -24,6 +25,8 @@ const AIChatDockLoader: React.FC = () => {
  */
 export const AIChatGate: React.FC = () => (
   <IfFeature flag="ai-chat">
-    <AIChatDockLoader />
+    <AIChatStateProvider>
+      <AIChatDockLoader />
+    </AIChatStateProvider>
   </IfFeature>
 );
