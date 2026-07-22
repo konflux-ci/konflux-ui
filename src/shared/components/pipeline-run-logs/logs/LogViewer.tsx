@@ -337,10 +337,15 @@ const LogViewer: React.FC<Props> = ({
               currentSearchMatch={currentMatch}
               onDownloadFullLogs={onDownloadFullLogs}
               onViewFullLogs={onViewFullLogs}
-              lineNumberNavigationProps={{
-                ...lineNumberNavigationProps,
-                highlightedLines: isLoading ? null : lineNumberNavigationProps.highlightedLines,
-              }}
+              lineNumberNavigationProps={
+                isLoading
+                  ? {
+                      ...lineNumberNavigationProps,
+                      highlightedLines: null,
+                      isLineHighlighted: () => false,
+                    }
+                  : lineNumberNavigationProps
+              }
             />
           </div>
         )}
