@@ -104,12 +104,14 @@ const LogViewer: React.FC<Props> = ({
   // (rather than read from VirtualizedLogContent) so it's available in the very same render —
   // no round-trip delay through child effects/callbacks — and used to pause auto-scroll-to-bottom
   // so it doesn't keep fighting the scroll-to-that-line navigation as new log lines stream in.
-  const { highlightedLines: activeLineTarget } = useLineNumberNavigation();
+  const lineNumberNavigationProps = useLineNumberNavigation({
+    readyToNavigate: !isLoading,
+  });
 
   const { autoScroll, showResumeStreamButton, handleScroll, handleResumeClick } =
     useAutoScrollWithResume({
       allowAutoScroll,
-      activeLineTarget,
+      activeLineTarget: lineNumberNavigationProps.highlightedLines,
       onScroll: onScrollProp,
     });
 
@@ -343,7 +345,7 @@ const LogViewer: React.FC<Props> = ({
                 height={viewerHeight}
                 scrollToRow={scrolledRow}
                 onScroll={handleScroll}
-                readyToNavigate={!isLoading}
+                lineNumberNavigationProps={lineNumberNavigationProps}
               />
             )}
           </div>
