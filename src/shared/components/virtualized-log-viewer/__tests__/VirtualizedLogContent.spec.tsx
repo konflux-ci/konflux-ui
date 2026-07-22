@@ -10,22 +10,6 @@ import { VirtualizedLogContent } from '../VirtualizedLogContent';
 // Register the log language
 registerLogSyntax(Prism);
 
-// Spy to capture scrollToIndex calls from the virtualizer.
-const scrollToIndexSpy: jest.Mock | null = null;
-jest.mock('@tanstack/react-virtual', () => {
-  const actual = jest.requireActual('@tanstack/react-virtual');
-  return {
-    ...actual,
-    useVirtualizer: (options: unknown) => {
-      const virtualizer = actual.useVirtualizer(options);
-      if (scrollToIndexSpy) {
-        return { ...virtualizer, scrollToIndex: scrollToIndexSpy };
-      }
-      return virtualizer;
-    },
-  };
-});
-
 // Mock lodash-es debounce to make tests synchronous
 jest.mock('lodash-es', () => ({
   ...jest.requireActual('lodash-es'),
