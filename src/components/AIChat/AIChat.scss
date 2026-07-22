@@ -16,8 +16,8 @@
     background-color: var(--konflux-brand-primary);
 
     .pf-v6-c-button__icon {
-      --pf-v6-c-button__icon--Color: var(--pf-t--color--white);
-      color: var(--pf-t--color--white);
+      --pf-v6-c-button__icon--Color: color-mix(in srgb, var(--pf-t--color--white) 70%, black);
+        color: color-mix(in srgb, var(--pf-t--color--white) 70%, black);
     }
 
     &:hover,
@@ -25,8 +25,8 @@
       background-color: var(--konflux-brand-primary);
 
       .pf-v6-c-button__icon {
-        --pf-v6-c-button__icon--Color: color-mix(in srgb, var(--pf-t--color--white) 70%, black);
-        color: color-mix(in srgb, var(--pf-t--color--white) 70%, black);
+        --pf-v6-c-button__icon--Color: var(--pf-t--color--white);
+        color: var(--pf-t--color--white);
       }
     }
   }
@@ -45,6 +45,11 @@
   // Welcome "Hello" — PF uses brand blue; portal is outside .konflux-ui__theme
   .pf-chatbot__hello {
     color: var(--konflux-brand-primary);
+  }
+
+  // Jump arrows default to 75%; center them horizontally
+  .pf-chatbot__jump {
+    inset-inline-start: 50% !important;
   }
 
   // Wordmark uses currentColor
