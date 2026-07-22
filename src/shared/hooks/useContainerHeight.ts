@@ -6,7 +6,11 @@ type UseContainerHeightReturn = {
   viewerHeight: number | undefined;
 };
 
-export const useContainerHeight = (): UseContainerHeightReturn => {
+type Props = {
+  isFullscreen: boolean;
+};
+
+export const useContainerHeight = ({ isFullscreen }: Props): UseContainerHeightReturn => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [viewerHeight, setViewerHeight] = useState<number | undefined>(undefined);
 
@@ -40,9 +44,7 @@ export const useContainerHeight = (): UseContainerHeightReturn => {
       window.removeEventListener('resize', debouncedUpdateHeight);
       debouncedUpdateHeight.cancel();
     };
-  }, []);
+  }, [isFullscreen]);
 
   return useMemo(() => ({ containerRef, viewerHeight }), [viewerHeight]);
 };
-
-export default useContainerHeight;

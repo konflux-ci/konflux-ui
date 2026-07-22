@@ -16,7 +16,7 @@ describe('useContainerHeight', () => {
   });
 
   it('should return undefined height initially when no element is attached', () => {
-    const { result } = renderHook(() => useContainerHeight());
+    const { result } = renderHook(() => useContainerHeight({ isFullscreen: false }));
     expect(result.current.viewerHeight).toBeUndefined();
     expect(result.current.containerRef.current).toBeNull();
   });
@@ -25,7 +25,7 @@ describe('useContainerHeight', () => {
     const div = document.createElement('div');
     Object.defineProperty(div, 'clientHeight', { value: 400 });
 
-    const { result } = renderHook(() => useContainerHeight());
+    const { result } = renderHook(() => useContainerHeight({ isFullscreen: false }));
 
     act(() => {
       Object.defineProperty(result.current.containerRef, 'current', {
@@ -34,13 +34,13 @@ describe('useContainerHeight', () => {
       });
     });
 
-    const { rerender } = renderHook(() => useContainerHeight());
+    const { rerender } = renderHook(() => useContainerHeight({ isFullscreen: false }));
     rerender();
 
     // Height is set on mount via immediate update
     // Since ref was attached after first render, we need a fresh mount
     const { result: result2 } = renderHook(() => {
-      const hook = useContainerHeight();
+      const hook = useContainerHeight({ isFullscreen: false });
       Object.defineProperty(hook.containerRef, 'current', {
         value: div,
         writable: true,
@@ -54,13 +54,13 @@ describe('useContainerHeight', () => {
   });
 
   it('should register a resize event listener', () => {
-    renderHook(() => useContainerHeight());
+    renderHook(() => useContainerHeight({ isFullscreen: false }));
 
     expect(addEventListenerSpy).toHaveBeenCalledWith('resize', expect.any(Function));
   });
 
   it('should remove resize listener on unmount', () => {
-    const { unmount } = renderHook(() => useContainerHeight());
+    const { unmount } = renderHook(() => useContainerHeight({ isFullscreen: false }));
     unmount();
 
     expect(removeEventListenerSpy).toHaveBeenCalledWith('resize', expect.any(Function));
@@ -71,7 +71,7 @@ describe('useContainerHeight', () => {
     Object.defineProperty(div, 'clientHeight', { value: 0 });
 
     const { result } = renderHook(() => {
-      const hook = useContainerHeight();
+      const hook = useContainerHeight({ isFullscreen: false });
       Object.defineProperty(hook.containerRef, 'current', {
         value: div,
         writable: true,
@@ -84,7 +84,7 @@ describe('useContainerHeight', () => {
   });
 
   it('should return stable reference when height has not changed', () => {
-    const { result, rerender } = renderHook(() => useContainerHeight());
+    const { result, rerender } = renderHook(() => useContainerHeight({ isFullscreen: false }));
 
     const first = result.current;
     rerender();

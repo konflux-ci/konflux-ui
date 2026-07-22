@@ -150,7 +150,7 @@ const LogViewer: React.FC<Props> = ({
   };
 
   // Use containerRef to measure actual height for VirtualizedLogViewer
-  const { containerRef, viewerHeight } = useContainerHeight();
+  const { containerRef, viewerHeight } = useContainerHeight({ isFullscreen });
 
   return (
     <LogViewerContext.Provider value={logViewerContextValue}>
