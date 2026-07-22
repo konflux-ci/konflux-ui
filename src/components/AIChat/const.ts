@@ -2,6 +2,8 @@ import { ChatbotDisplayMode } from '@patternfly/chatbot/dist/dynamic/Chatbot';
 
 export const KONFLUX_AI_DISPLAY_MODE = ChatbotDisplayMode.default;
 
+export const KONFLUX_ASSISTANT_NAME = 'Konflux Assistant';
+
 export const KONFLUX_AI_FOOTNOTE =
   'Always review AI-generated content before use.';
 
