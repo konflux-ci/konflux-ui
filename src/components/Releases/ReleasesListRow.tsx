@@ -1,8 +1,5 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
-import { PipelineRunLabel } from '~/consts/pipelinerun';
-import { ReleaseColumnKeys, RELEASE_COLUMN_ORDER } from '~/consts/release';
-import { useReleaseStatus } from '~/hooks/useReleaseStatus';
 import {
   APPLICATION_RELEASE_DETAILS_PATH,
   APPLICATION_RELEASE_LIST_PATH,
@@ -10,6 +7,10 @@ import {
   PIPELINERUN_DETAILS_PATH,
   SNAPSHOT_DETAILS_PATH,
 } from '@routes/paths';
+import { StatusIconWithText } from '~/components/StatusIcon/StatusIcon';
+import { PipelineRunLabel } from '~/consts/pipelinerun';
+import { ReleaseColumnKeys, RELEASE_COLUMN_ORDER } from '~/consts/release';
+import { useReleaseStatus } from '~/hooks/useReleaseStatus';
 import ActionMenu from '~/shared/components/action-menu/ActionMenu';
 import { RowFunctionArgs, TableData } from '~/shared/components/table';
 import { Timestamp } from '~/shared/components/timestamp/Timestamp';
@@ -23,7 +24,6 @@ import {
   getTenantPipelineRunFromRelease,
   getFinalPipelineRunFromRelease,
 } from '~/utils/release-utils';
-import { StatusIconWithText } from '~/components/StatusIcon/StatusIcon';
 import { useReleaseActions } from './release-actions';
 import { releasesTableColumnClasses, getDynamicReleaseColumnClasses } from './ReleasesListHeader';
 

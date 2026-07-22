@@ -11,17 +11,17 @@ import {
   Spinner,
   Title,
 } from '@patternfly/react-core';
-import { PipelineRunLabel } from '~/consts/pipelinerun';
-import { getErrorState } from '~/shared/utils/error-utils';
-import { useRelease } from '~/hooks/useReleases';
-import { useReleaseStatus } from '~/hooks/useReleaseStatus';
 import { COMPONENT_DETAILS_PATH, SNAPSHOT_DETAILS_PATH } from '@routes/paths';
 import { RouterParams } from '@routes/utils';
-import { Timestamp } from '~/shared/components/timestamp/Timestamp';
-import { useNamespace } from '~/shared/providers/Namespace';
-import { calculateDuration } from '~/utils/pipeline-utils';
 import MetadataList from '~/components/MetadataList';
 import { StatusIconWithText } from '~/components/StatusIcon/StatusIcon';
+import { PipelineRunLabel } from '~/consts/pipelinerun';
+import { useRelease } from '~/hooks/useReleases';
+import { useReleaseStatus } from '~/hooks/useReleaseStatus';
+import { Timestamp } from '~/shared/components/timestamp/Timestamp';
+import { useNamespace } from '~/shared/providers/Namespace';
+import { getErrorState } from '~/shared/utils/error-utils';
+import { calculateDuration } from '~/utils/pipeline-utils';
 
 const ReleaseOverviewTab: React.FC = () => {
   const { releaseName } = useParams<RouterParams>();
