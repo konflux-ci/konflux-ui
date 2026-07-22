@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { useRelease } from '~/hooks/useReleases';
 import { mockUseNamespaceHook } from '../../../unit-test-utils/mock-namespace';
 import { mockReleases } from '../__data__/mock-release-data';
@@ -69,6 +69,6 @@ describe('ReleaseOverviewTab', () => {
     render(<ReleaseOverviewTab />);
     expect(screen.getByText('Component')).toBeVisible();
     const componentGroup = screen.getByText('Component').closest('div');
-    expect(componentGroup.parentElement).toHaveTextContent('-');
+    expect(within(componentGroup).getByText('-')).toBeTruthy();
   });
 });
