@@ -14615,6 +14615,7 @@ __metadata:
     react-i18next: "npm:15.0.1"
     react-refresh: "npm:^0.18.0"
     react-router-dom: "npm:6.25.1"
+    rehype-sanitize: "npm:^6.0.0"
     sanitize-html: "npm:^2.13.0"
     sass: "npm:^1.77.8"
     sass-loader: "npm:^14.2.1"

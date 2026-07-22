@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { AIChatStateProvider } from '~/components/AIChat/AIChatStateProvider';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 
 const AIChatDock = React.lazy(() =>
@@ -16,8 +17,10 @@ export const AIChatGate: React.FC = () => {
   }
 
   return (
-    <React.Suspense fallback={null}>
-      <AIChatDock />
-    </React.Suspense>
+    <AIChatStateProvider>
+      <React.Suspense fallback={null}>
+        <AIChatDock />
+      </React.Suspense>
+    </AIChatStateProvider>
   );
 };

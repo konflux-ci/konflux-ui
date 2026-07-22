@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { createPortal } from 'react-dom';
 import Chatbot, { ChatbotDisplayMode } from '@patternfly/chatbot/dist/dynamic/Chatbot';
+import ChatbotAlert from '@patternfly/chatbot/dist/dynamic/ChatbotAlert';
 import ChatbotContent from '@patternfly/chatbot/dist/dynamic/ChatbotContent';
 import ChatbotFooter, { ChatbotFootnote } from '@patternfly/chatbot/dist/dynamic/ChatbotFooter';
 import ChatbotHeader, {
@@ -11,10 +12,12 @@ import ChatbotHeader, {
 } from '@patternfly/chatbot/dist/dynamic/ChatbotHeader';
 import ChatbotToggle from '@patternfly/chatbot/dist/dynamic/ChatbotToggle';
 import ChatbotWelcomePrompt from '@patternfly/chatbot/dist/dynamic/ChatbotWelcomePrompt';
+import Message from '@patternfly/chatbot/dist/dynamic/Message';
 import MessageBar from '@patternfly/chatbot/dist/dynamic/MessageBar';
 import MessageBox from '@patternfly/chatbot/dist/dynamic/MessageBox';
 import { Brand } from '@patternfly/react-core';
 import KonfluxLogo from '~/assets/konflux-logo.svg';
+import { CHAT_MESSAGE_REHYPE_PLUGINS } from '~/components/AIChat/chatMessagePlugins';
 import {
   KONFLUX_AI_FOOTNOTE,
   KONFLUX_AI_MESSAGE_PLACEHOLDER,
@@ -23,6 +26,7 @@ import {
   KONFLUX_AI_WELCOME_DESCRIPTION,
   KONFLUX_AI_WELCOME_TITLE,
 } from '~/components/AIChat/consts';
+import { useLightspeedChat } from '~/components/AIChat/hooks/useLightspeedChat';
 
 import '@patternfly/chatbot/dist/css/main.css';
 import './AIChat.scss';
@@ -30,10 +34,26 @@ import './AIChat.scss';
 const displayMode = ChatbotDisplayMode.default;
 
 /**
- * Basic PatternFly chatbot shell with no backend/send behavior.
+ * PatternFly chatbot dock with Lightspeed SSE send/receive.
  */
 export const AIChatDock: React.FC = () => {
   const [isChatbotVisible, setIsChatbotVisible] = React.useState(false);
+  const scrollToBottomRef = React.useRef<HTMLDivElement>(null);
+  const {
+    messages,
+    announcement,
+    isSendButtonDisabled,
+    isInitializing,
+    backendError,
+    sendMessage,
+  } = useLightspeedChat();
+
+  React.useLayoutEffect(() => {
+    if (messages.length === 0) {
+      return;
+    }
+    scrollToBottomRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'end' });
+  }, [messages]);
 
   return createPortal(
     <div className="konflux-ai-chat" data-test="ai-chat-dock">
@@ -57,17 +77,33 @@ export const AIChatDock: React.FC = () => {
           </ChatbotHeaderActions>
         </ChatbotHeader>
         <ChatbotContent>
-          <MessageBox>
-            <ChatbotWelcomePrompt
-              title={KONFLUX_AI_WELCOME_TITLE}
-              description={KONFLUX_AI_WELCOME_DESCRIPTION}
-            />
+          {backendError ? (
+            <ChatbotAlert variant="danger" title="Konflux AI is unavailable" isInline>
+              {backendError}
+            </ChatbotAlert>
+          ) : null}
+          <MessageBox announcement={announcement}>
+            {messages.length === 0 && !isInitializing ? (
+              <ChatbotWelcomePrompt
+                title={KONFLUX_AI_WELCOME_TITLE}
+                description={KONFLUX_AI_WELCOME_DESCRIPTION}
+              />
+            ) : null}
+            {messages.map((message, index) => (
+              <React.Fragment key={message.id}>
+                <Message {...message} additionalRehypePlugins={CHAT_MESSAGE_REHYPE_PLUGINS} />
+                {index === messages.length - 1 ? <div ref={scrollToBottomRef} /> : null}
+              </React.Fragment>
+            ))}
           </MessageBox>
         </ChatbotContent>
         <ChatbotFooter>
           <MessageBar
             hasAttachButton={false}
-            onSendMessage={() => undefined}
+            isSendButtonDisabled={isSendButtonDisabled}
+            onSendMessage={(message) => {
+              void sendMessage(message);
+            }}
             placeholder={KONFLUX_AI_MESSAGE_PLACEHOLDER}
           />
           <ChatbotFootnote label={KONFLUX_AI_FOOTNOTE} />

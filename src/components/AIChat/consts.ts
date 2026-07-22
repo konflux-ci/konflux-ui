@@ -1,5 +1,7 @@
 export const LIGHTSPEED_API_BASE = '/api/lightspeed';
 
+export const KONFLUX_ASSISTANT_NAME = 'Konflux Assistant';
+
 export const KONFLUX_AI_FOOTNOTE =
   'Konflux AI is experimental. Always review AI-generated content before use.';
 
