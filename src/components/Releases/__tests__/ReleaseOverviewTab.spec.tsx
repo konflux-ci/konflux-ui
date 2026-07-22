@@ -39,10 +39,36 @@ describe('ReleaseOverviewTab', () => {
     expect(screen.getByText('Release Plan')).toBeVisible();
     expect(screen.getByText('test-plan')).toBeVisible();
 
+    expect(screen.getByText('Component')).toBeVisible();
+    expect(screen.getByText('test-component')).toBeVisible();
+
     expect(screen.getByText('Snapshot')).toBeVisible();
     expect(screen.getByText('test-snapshot')).toBeVisible();
 
     expect(screen.getByText('Release Target (Managed Namespace)')).toBeVisible();
     expect(screen.getByText('test-target')).toBeVisible();
+  });
+
+  it('should show dash when component label is missing', () => {
+    const releaseWithoutComponent = {
+      ...mockReleases[0],
+      metadata: {
+        ...mockReleases[0].metadata,
+        labels: {
+          'appstudio.openshift.io/application': 'test-app',
+        },
+      },
+    };
+    useMockRelease.mockImplementation(() => [
+      releaseWithoutComponent,
+      true,
+      undefined,
+      undefined,
+      false,
+    ]);
+    render(<ReleaseOverviewTab />);
+    expect(screen.getByText('Component')).toBeVisible();
+    const componentGroup = screen.getByText('Component').closest('div');
+    expect(componentGroup.parentElement).toHaveTextContent('-');
   });
 });

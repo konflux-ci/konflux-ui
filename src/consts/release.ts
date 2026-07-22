@@ -10,6 +10,7 @@ export type ReleaseColumnKeys =
   | 'created'
   | 'duration'
   | 'status'
+  | 'component'
   | 'releasePlan'
   | 'releaseSnapshot'
   | 'tenantCollectorPipelineRun'
@@ -22,6 +23,7 @@ export const RELEASE_COLUMNS_DEFINITIONS: readonly ColumnDefinition<ReleaseColum
   { key: 'created', title: 'Created', sortable: true },
   { key: 'duration', title: 'Duration', sortable: false },
   { key: 'status', title: 'Status', sortable: false },
+  { key: 'component', title: 'Component', sortable: false },
   { key: 'releasePlan', title: 'Release Plan', sortable: false },
   { key: 'releaseSnapshot', title: 'Release Snapshot', sortable: false },
   { key: 'tenantCollectorPipelineRun', title: 'Tenant Collector', sortable: false },
@@ -36,6 +38,7 @@ export const DEFAULT_VISIBLE_RELEASE_COLUMNS: Set<ReleaseColumnKeys> = new Set([
   'created',
   'duration',
   'status',
+  'component',
   'releasePlan',
   'releaseSnapshot',
 ]);
@@ -49,6 +52,7 @@ export const RELEASE_COLUMN_ORDER: readonly ReleaseColumnKeys[] = [
   'created',
   'duration',
   'status',
+  'component',
   'releasePlan',
   'releaseSnapshot',
   'tenantCollectorPipelineRun',

@@ -15,7 +15,7 @@ import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { useRelease } from '../../hooks/useReleases';
 import { useReleaseStatus } from '../../hooks/useReleaseStatus';
-import { SNAPSHOT_DETAILS_PATH } from '../../routes/paths';
+import { COMPONENT_DETAILS_PATH, SNAPSHOT_DETAILS_PATH } from '../../routes/paths';
 import { RouterParams } from '../../routes/utils';
 import { Timestamp } from '../../shared/components/timestamp/Timestamp';
 import { useNamespace } from '../../shared/providers/Namespace';
@@ -41,7 +41,8 @@ const ReleaseOverviewTab: React.FC = () => {
     return getErrorState(error, loaded, 'release');
   }
 
-  const applicationName = release.metadata.labels[PipelineRunLabel.APPLICATION];
+  const applicationName = release.metadata.labels?.[PipelineRunLabel.APPLICATION];
+  const componentName = release.metadata.labels?.[PipelineRunLabel.COMPONENT];
   const duration = calculateDuration(
     typeof release.status?.startTime === 'string' ? release.status?.startTime : '',
     typeof release.status?.completionTime === 'string' ? release.status?.completionTime : '',
@@ -117,6 +118,24 @@ const ReleaseOverviewTab: React.FC = () => {
                 <DescriptionListTerm>Release Trigger</DescriptionListTerm>
                 <DescriptionListDescription>
                   {release.status?.automated ? 'Automatic' : 'Manual'}
+                </DescriptionListDescription>
+              </DescriptionListGroup>
+              <DescriptionListGroup>
+                <DescriptionListTerm>Component</DescriptionListTerm>
+                <DescriptionListDescription>
+                  {componentName ? (
+                    <Link
+                      to={COMPONENT_DETAILS_PATH.createPath({
+                        workspaceName: namespace,
+                        applicationName,
+                        componentName,
+                      })}
+                    >
+                      {componentName}
+                    </Link>
+                  ) : (
+                    '-'
+                  )}
                 </DescriptionListDescription>
               </DescriptionListGroup>
               {release.spec.snapshot && (
