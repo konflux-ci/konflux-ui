@@ -92,46 +92,6 @@ export const useLineNumberNavigation = (
     prevReadyToNavigateRef.current = readyToNavigate;
   }, [readyToNavigate]);
 
-  // Effect to detect hash changes on every render (including changes without hashchange event)
-  // This runs frequently but the ref comparison prevents unnecessary state updates
-  // Only syncs from hash when URL hash navigation is enabled (on logs page)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  React.useEffect(() => {
-    const currentHash = window.location.hash;
-
-    // Only sync from hash if we're on a page that supports URL hash navigation
-    if (!shouldEnableUrlHash()) {
-      // In side panel mode (no URL hash), don't sync from hash
-      // Just update the ref to prevent stale comparisons
-      lastHashRef.current = currentHash;
-
-      return;
-    }
-
-    if (!readyToNavigate) {
-      // Remember that the hash changed; it's applied once ready (see effect above).
-      lastHashRef.current = currentHash;
-      return;
-    }
-
-    // Check if this was an internal navigation using history.state
-    const isInternalNavigation = window.history.state?.source === 'line-click';
-
-    // Only update if hash actually changed (ref comparison prevents infinite loops)
-    if (currentHash !== lastHashRef.current) {
-      lastHashRef.current = currentHash;
-      const newHighlight = getHighlightedLines();
-      setHighlightedLines(newHighlight);
-
-      // Reset firstSelectedLine if:
-      // 1. Hash was cleared (switching views), OR
-      // 2. This was NOT an internal navigation (external hash change or browser navigation)
-      if (!currentHash || !newHighlight || !isInternalNavigation) {
-        setFirstSelectedLine(null);
-      }
-    }
-  });
-
   // Separate effect for hashchange event listener (browser back/forward)
   // Only active when URL hash navigation is enabled
   React.useEffect(() => {
