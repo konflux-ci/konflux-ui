@@ -3,7 +3,11 @@ import { commonFetchJSON, getK8sResourceURL } from '~/k8s';
 import { KUBEARCHIVE_PATH_PREFIX } from '~/kubearchive/const';
 import { PodModel } from '~/models/pod';
 import type { TaskRunKind } from '~/types';
-import { CONFORMA_RESULT_STATUS, type ComponentConformaResult, type ConformaResult } from '~/types/conforma';
+import {
+  CONFORMA_RESULT_STATUS,
+  type ComponentConformaResult,
+  type ConformaResult,
+} from '~/types/conforma';
 import { getPipelineRunFromTaskRunOwnerRef } from '~/utils/common-utils';
 import { getTaskRunLog } from '~/utils/tekton-results';
 import {
@@ -74,10 +78,7 @@ describe('fetchConformaLogFromKubearchive', () => {
   it('fetches pod log via kubearchive pathPrefix', async () => {
     jest.mocked(commonFetchJSON).mockResolvedValue(mockConformaResult);
 
-    const result = await fetchConformaLogFromKubearchive(
-      NAMESPACE,
-      createTaskRun('tr-1', 'pod-1'),
-    );
+    const result = await fetchConformaLogFromKubearchive(NAMESPACE, createTaskRun('tr-1', 'pod-1'));
 
     expect(getK8sResourceURL).toHaveBeenCalledWith(
       PodModel,
@@ -96,9 +97,9 @@ describe('fetchConformaLogFromKubearchive', () => {
   });
 
   it('throws when TaskRun has no podName', async () => {
-    await expect(
-      fetchConformaLogFromKubearchive(NAMESPACE, createTaskRun('tr-1')),
-    ).rejects.toThrow('TaskRun has no podName');
+    await expect(fetchConformaLogFromKubearchive(NAMESPACE, createTaskRun('tr-1'))).rejects.toThrow(
+      'TaskRun has no podName',
+    );
 
     expect(commonFetchJSON).not.toHaveBeenCalled();
   });
@@ -141,9 +142,9 @@ describe('fetchConformaLogFromTektonResults', () => {
     } as unknown as TaskRunKind;
     jest.mocked(getPipelineRunFromTaskRunOwnerRef).mockReturnValue(undefined);
 
-    await expect(
-      fetchConformaLogFromTektonResults(NAMESPACE, bareboneTaskRun),
-    ).rejects.toThrow('TaskRun missing uid/namespace or PipelineRun ownerRef');
+    await expect(fetchConformaLogFromTektonResults(NAMESPACE, bareboneTaskRun)).rejects.toThrow(
+      'TaskRun missing uid/namespace or PipelineRun ownerRef',
+    );
 
     expect(getTaskRunLog).not.toHaveBeenCalled();
   });

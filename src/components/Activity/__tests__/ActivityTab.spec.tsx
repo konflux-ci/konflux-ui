@@ -109,7 +109,7 @@ describe('Activity Tab', () => {
     });
     let activitiesPage = renderWithProviders(<ActivityTab />);
     let tabs = activitiesPage.getByTestId('activities-tabs-id');
-    let activeTab = tabs.querySelector('.pf-v5-c-tabs__item.pf-m-current .pf-v5-c-tabs__item-text');
+    let activeTab = tabs.querySelector('.pf-v6-c-tabs__item.pf-m-current .pf-v6-c-tabs__item-text');
     expect(activeTab).toHaveTextContent('Pipeline runs');
     activitiesPage.unmount();
 
@@ -120,7 +120,7 @@ describe('Activity Tab', () => {
     });
     activitiesPage = renderWithProviders(<ActivityTab />);
     tabs = activitiesPage.getByTestId('activities-tabs-id');
-    activeTab = tabs.querySelector('.pf-v5-c-tabs__item.pf-m-current .pf-v5-c-tabs__item-text');
+    activeTab = tabs.querySelector('.pf-v6-c-tabs__item.pf-m-current .pf-v6-c-tabs__item-text');
     expect(activeTab).toHaveTextContent('Latest commits');
     activitiesPage.unmount();
   });

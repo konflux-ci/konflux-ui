@@ -7,10 +7,10 @@ import IntroBanner from './IntroBanner';
 export const Overview: React.FC = () => {
   useDocumentTitle('Overview | Konflux');
   return (
-    <PageSection>
+    <PageSection hasBodyWrapper={false}>
       <IntroBanner />
       <InfoBanner />
-      <PageSection isFilled>
+      <PageSection hasBodyWrapper={false} isFilled>
         <AboutSection />
       </PageSection>
     </PageSection>

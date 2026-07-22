@@ -35,7 +35,7 @@ const GithubRedirect: React.FC = () => {
       ) : (
         <Bullseye>
           <Flex direction={{ default: 'column' }}>
-            <Bullseye style={{ marginBottom: 'var(--pf-v5-global--spacer--md)' }}>
+            <Bullseye style={{ marginBottom: 'var(--pf-t--global--spacer--md)' }}>
               <Spinner size="xl" />
             </Bullseye>
             <HelperText>

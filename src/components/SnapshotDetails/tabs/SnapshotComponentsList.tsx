@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { PageSection, PageSectionVariants, Text, Title } from '@patternfly/react-core';
+import { PageSection, Content, Title } from '@patternfly/react-core';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 import { filterByText } from '~/utils/text-filter-utils';
@@ -31,7 +31,7 @@ const SnapshotComponentsList: React.FC<React.PropsWithChildren<SnapshotComponent
   );
 
   return (
-    <PageSection padding={{ default: 'noPadding' }} variant={PageSectionVariants.light} isFilled>
+    <PageSection hasBodyWrapper={false} padding={{ default: 'noPadding' }} isFilled>
       <>
         <Title size="lg" headingLevel="h2" className="pf-c-title pf-u-mt-lg pf-u-mb-sm">
           Components
@@ -40,7 +40,9 @@ const SnapshotComponentsList: React.FC<React.PropsWithChildren<SnapshotComponent
           <SnapshotComponentsEmptyState applicationName={applicationName} />
         ) : (
           <>
-            <Text className="pf-u-mb-lg">Component builds that are included in this snapshot</Text>
+            <Content component="p" className="pf-u-mb-lg">
+              Component builds that are included in this snapshot
+            </Content>
             <BaseTextFilterToolbar
               text={nameFilter}
               label="name"

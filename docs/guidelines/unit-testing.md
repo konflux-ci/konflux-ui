@@ -4,11 +4,11 @@ This document covers testing patterns, utilities, and conventions for writing un
 
 ## Quick Reference
 
-| Task | Command |
-|---|---|
-| Run all tests | `yarn test` |
-| Run single file | `yarn test -- path/to/file.spec.tsx` |
-| Run with coverage | `yarn coverage` |
+| Task              | Command                              |
+| ----------------- | ------------------------------------ |
+| Run all tests     | `yarn test`                          |
+| Run single file   | `yarn test -- path/to/file.spec.tsx` |
+| Run with coverage | `yarn coverage`                      |
 
 ## Test File Conventions
 
@@ -30,13 +30,13 @@ This document covers testing patterns, utilities, and conventions for writing un
 
 Import from `~/unit-test-utils/`:
 
-| Utility | Use When |
-|---|---|
+| Utility                          | Use When                                                          |
+| -------------------------------- | ----------------------------------------------------------------- |
 | `renderWithQueryClientAndRouter` | Component needs BrowserRouter + QueryClientProvider (most common) |
-| `renderWithQueryClient` | Component needs only QueryClientProvider (no routing) |
-| `routerRenderer` | Component needs only BrowserRouter |
-| `formikRenderer` | Component uses Formik fields |
-| `namespaceRenderer` | Component uses `useNamespace()` via context |
+| `renderWithQueryClient`          | Component needs only QueryClientProvider (no routing)             |
+| `routerRenderer`                 | Component needs only BrowserRouter                                |
+| `formikRenderer`                 | Component uses Formik fields                                      |
+| `namespaceRenderer`              | Component uses `useNamespace()` via context                       |
 
 ```tsx
 import { renderWithQueryClientAndRouter } from '~/unit-test-utils';
@@ -400,8 +400,7 @@ screen.getByRole('button', { name: /Submit/i });
 expect(screen.queryByText('Error')).not.toBeInTheDocument();
 
 // PatternFly disabled buttons use aria-disabled, not disabled attribute
-expect(screen.getByRole('button', { name: /Delete/i }))
-  .toHaveAttribute('aria-disabled', 'true');
+expect(screen.getByRole('button', { name: /Delete/i })).toHaveAttribute('aria-disabled', 'true');
 
 // Waiting for loading to finish
 import { waitForLoadingToFinish } from '~/unit-test-utils';
@@ -434,7 +433,7 @@ Or use the describe-level mock utilities (e.g., `mockUseNamespaceHook`) which se
 
 ### 2. Using `fireEvent` for complex interactions
 
-`fireEvent` dispatches events synchronously and doesn't simulate browser behavior. Use `userEvent.setup()` for anything beyond simple change/click events.
+`fireEvent` dispatches events synchronously and doesn't simulate browser behavior. Use `userEvent.setup()` for anything beyond simple change/click events. `fireEvent` is acceptable for simple synchronous events such as `fireEvent.change` on a debounced input with fake timers (see [Pattern 7](#pattern-7-debounced-input-testing)). The [PR review checklist](../pr-review-guidelines.md#3-testing) follows the same standard.
 
 ### 3. Forgetting to flush async state
 
@@ -451,16 +450,16 @@ beforeEach(() => {
 });
 ```
 
-### 5. Testing PF disabled state with wrong attribute
+### 5. Testing PF disabled state
 
-PatternFly uses `aria-disabled="true"` instead of the HTML `disabled` attribute:
+PF v6 changed how `isDisabled` works on native `<button>` elements — it now sets the HTML `disabled` attribute, not `aria-disabled`. Only `isAriaDisabled` sets `aria-disabled`.
 
 ```tsx
-// Wrong
-expect(button).toBeDisabled();
+// Button with isDisabled (native <button>) — use .toBeDisabled()
+expect(screen.getByRole('button', { name: /Delete/i })).toBeDisabled();
 
-// Correct for PF buttons with isAriaDisabled
-expect(button).toHaveAttribute('aria-disabled', 'true');
+// Button with isAriaDisabled — check aria-disabled
+expect(screen.getByRole('button', { name: /Create/i })).toHaveAttribute('aria-disabled', 'true');
 ```
 
 ### 6. Not using `act()` for state updates
@@ -497,6 +496,9 @@ export const mockMyFeature: MyFeatureKind = {
 
 export const mockMyFeatureList: MyFeatureKind[] = [
   mockMyFeature,
-  { ...mockMyFeature, metadata: { ...mockMyFeature.metadata, name: 'test-feature-2', uid: 'uid-2' } },
+  {
+    ...mockMyFeature,
+    metadata: { ...mockMyFeature.metadata, name: 'test-feature-2', uid: 'uid-2' },
+  },
 ];
 ```

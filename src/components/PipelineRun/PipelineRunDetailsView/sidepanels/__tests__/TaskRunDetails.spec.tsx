@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react';
+import { render, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { runStatus } from '~/consts/pipelinerun';
 import { TaskRunKind } from '../../../../../types';
@@ -20,9 +20,7 @@ describe('TaskRunDetails', () => {
   });
 
   it('should not display description for whitespace-only skipped task descriptions', () => {
-    const { container } = render(
-      <TaskRunDetails status={runStatus.Skipped} description="   " />,
-    );
+    const { container } = render(<TaskRunDetails status={runStatus.Skipped} description="   " />);
     expect(container).toHaveTextContent('This task was skipped.');
     expect(container).not.toHaveTextContent('Description');
   });
@@ -55,6 +53,45 @@ describe('TaskRunDetails', () => {
     );
     expect(result.queryByText('Description')).toBeInTheDocument();
     expect(result.queryByText('test')).toBeInTheDocument();
+  });
+
+  it('should display pipeline task description for idle tasks without a TaskRun', () => {
+    const result = render(
+      <TaskRunDetails
+        status={runStatus.Idle}
+        description="Create an ephemeral OpenShift cluster on AWS HyperShift."
+      />,
+    );
+    expect(result.getByText('Description')).toBeInTheDocument();
+    expect(
+      result.getByText('Create an ephemeral OpenShift cluster on AWS HyperShift.'),
+    ).toBeInTheDocument();
+  });
+
+  it('should prefer TaskRun taskSpec description over pipeline task description', () => {
+    const result = render(
+      <TaskRunDetails
+        status={runStatus.Running}
+        description="Pipeline task description"
+        taskRun={
+          {
+            apiVersion: 'tekton.dev/v1',
+            status: { taskSpec: { description: 'Resolved task description' } },
+          } as TaskRunKind
+        }
+      />,
+    );
+    expect(result.getByText('Resolved task description')).toBeInTheDocument();
+    expect(result.queryByText('Pipeline task description')).not.toBeInTheDocument();
+  });
+
+  it('should display dash when idle task has no pipeline task description', () => {
+    const result = render(<TaskRunDetails status={runStatus.Idle} />);
+    const descriptionGroup = result
+      .getByText('Description')
+      .closest('.pf-v6-c-description-list__group');
+    expect(descriptionGroup).not.toBeNull();
+    expect(within(descriptionGroup as HTMLElement).getByText('-')).toBeInTheDocument();
   });
 
   it('should display task results', () => {

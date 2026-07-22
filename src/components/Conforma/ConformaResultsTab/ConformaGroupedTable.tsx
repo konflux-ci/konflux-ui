@@ -1,14 +1,6 @@
 import * as React from 'react';
-import { Text, TextContent, Tooltip, Truncate as PfTruncate } from '@patternfly/react-core';
-import {
-  ExpandableRowContent,
-  Table,
-  Tbody,
-  Td,
-  Th,
-  Thead,
-  Tr,
-} from '@patternfly/react-table';
+import { Content, Tooltip, Truncate as PfTruncate } from '@patternfly/react-core';
+import { ExpandableRowContent, Table, Tbody, Td, Th, Thead, Tr } from '@patternfly/react-table';
 import { getRuleStatus } from '~/components/Conforma/utils';
 import type { ComponentProps } from '~/shared/components/table/Table';
 import { Truncate } from '~/shared/components/truncate-text/Truncate';
@@ -48,12 +40,12 @@ const DetailSubTable: React.FC<{ rows: ConformaResultRow[] }> = ({ rows }) => (
         return (
           <Tr key={`${row.component}-${row.title}-${idx}`}>
             <Td dataLabel="Rule">
-              <TextContent>
-                <Text component="p">
+              <Content>
+                <Content component="p">
                   <strong>{row.title ?? '-'}</strong>
-                </Text>
-                {row.description && <Text component="small">{row.description}</Text>}
-              </TextContent>
+                </Content>
+                {row.description && <Content component="small">{row.description}</Content>}
+              </Content>
             </Td>
             <Td dataLabel="Component">{row.component}</Td>
             <Td dataLabel="Image">
@@ -67,18 +59,18 @@ const DetailSubTable: React.FC<{ rows: ConformaResultRow[] }> = ({ rows }) => (
                     </ul>
                   }
                 >
-                  <TextContent>
+                  <Content>
                     {commonName ? (
                       <>
-                        <Text component="p">
+                        <Content component="p">
                           <PfTruncate content={commonName} />
-                        </Text>
-                        <Text component="small">{row.images.length} arch variants</Text>
+                        </Content>
+                        <Content component="small">{row.images.length} arch variants</Content>
                       </>
                     ) : (
-                      <Text component="p">Affects {row.images.length} images</Text>
+                      <Content component="p">Affects {row.images.length} images</Content>
                     )}
-                  </TextContent>
+                  </Content>
                 </Tooltip>
               ) : row.images.length === 1 ? (
                 <PfTruncate content={row.images[0]} />
@@ -88,16 +80,16 @@ const DetailSubTable: React.FC<{ rows: ConformaResultRow[] }> = ({ rows }) => (
             </Td>
             <Td dataLabel="Status">{getRuleStatus(row.status)}</Td>
             <Td dataLabel="Message">
-              <TextContent>
-                <Text component="p">
+              <Content>
+                <Content component="p">
                   {row.msg != null ? (
                     <Truncate content={row.msg} expandInline data-test="conforma-violation-msg" />
                   ) : (
                     '-'
                   )}
-                </Text>
-                {row.solution && <Text component="small">Solution: {row.solution}</Text>}
-              </TextContent>
+                </Content>
+                {row.solution && <Content component="small">Solution: {row.solution}</Content>}
+              </Content>
             </Td>
           </Tr>
         );

@@ -2,12 +2,8 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@routes/*": [
-        "src/routes/*"
-      ],
-      "~/*": [
-        "src/*"
-      ]
+      "@routes/*": ["src/routes/*"],
+      "~/*": ["src/*"]
     },
     "composite": true,
     "target": "ES2020",
@@ -26,16 +22,6 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": [
-    "src/",
-    "@types"
-  ],
-  "exclude": [
-    "*.config.js",
-    ".*.cjs",
-    "node_modules",
-    "config/*",
-    "scripts/*",
-    "**/__stories__/**"
-  ]
+  "include": ["src/", "@types"],
+  "exclude": ["*.config.js", ".*.cjs", "node_modules", "config/*", "scripts/*", "**/__stories__/**"]
 }

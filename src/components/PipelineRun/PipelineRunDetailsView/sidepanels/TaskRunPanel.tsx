@@ -61,11 +61,7 @@ const TaskRunPanel: React.FC<React.PropsWithChildren<Props>> = ({ taskNode, onCl
         <Tabs defaultActiveKey="details" unmountOnExit className="">
           <Tab title="Details" eventKey="details">
             <DrawerPanelBody>
-              <TaskRunDetails
-                taskRun={taskRun}
-                status={status}
-                description={task?.description}
-              />
+              <TaskRunDetails taskRun={taskRun} status={status} description={task?.description} />
             </DrawerPanelBody>
           </Tab>
           <Tab title="Logs" eventKey="logs">

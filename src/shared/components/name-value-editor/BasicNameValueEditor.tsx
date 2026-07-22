@@ -78,14 +78,13 @@ const PairElement: React.FC<React.PropsWithChildren<PairElementProps>> = ({
         <span className="pairs-list__row--remove">
           <Tooltip content={toolTip || 'Remove'}>
             <Button
+              icon={deleteIcon}
               type="button"
               data-test="delete-button"
               onClick={() => onRemove(index)}
               isDisabled={isEmpty && !alwaysAllowRemove}
               variant="plain"
-            >
-              {deleteIcon}
-            </Button>
+            />
           </Tooltip>
         </span>
       )}
@@ -179,6 +178,9 @@ const BasicNameValueEditor: React.FC<React.PropsWithChildren<NameValueEditorProp
         {readOnly ? null : (
           <FlexItem>
             <Button
+              icon={
+                <PlusCircleIcon data-test="pairs-list__add-icon" className="pairs-list__add-icon" />
+              }
               className="pf-m-link--align-left"
               data-test="add-button"
               onClick={onAppend}
@@ -186,7 +188,6 @@ const BasicNameValueEditor: React.FC<React.PropsWithChildren<NameValueEditorProp
               variant="link"
               isInline
             >
-              <PlusCircleIcon data-test="pairs-list__add-icon" className="pairs-list__add-icon" />
               {addString}
             </Button>
           </FlexItem>

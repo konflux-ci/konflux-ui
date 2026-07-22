@@ -71,31 +71,29 @@ export const ConformaTable: React.FC<React.PropsWithChildren<ConformaTableProps>
   }, [activeSortDirection, activeSortIndex, crResult]);
 
   return sortedCRResult ? (
-    <div className="pf-v5-c-table pf-m-compact pf-m-grid-md">
-      <Table
-        virtualize
-        data={sortedCRResult}
-        aria-label="conforma-table"
-        Header={ConformaHeader}
-        ExpandedContent={(props) => {
-          const obj = props.obj as UIConformaData;
-          return <ConformaExpandedRowContent {...props} obj={obj} />;
-        }}
-        Row={(props) => {
-          const obj = props.obj as UIConformaData;
+    <Table
+      virtualize
+      data={sortedCRResult}
+      aria-label="conforma-table"
+      Header={ConformaHeader}
+      ExpandedContent={(props) => {
+        const obj = props.obj as UIConformaData;
+        return <ConformaExpandedRowContent {...props} obj={obj} />;
+      }}
+      Row={(props) => {
+        const obj = props.obj as UIConformaData;
 
-          return (
-            <WrappedConformaRow
-              {...props}
-              obj={obj}
-              customData={{ sortedConformaResult: sortedCRResult }}
-            />
-          );
-        }}
-        loaded
-        customData={{ sortedCRResult }}
-        expand
-      />
-    </div>
+        return (
+          <WrappedConformaRow
+            {...props}
+            obj={obj}
+            customData={{ sortedConformaResult: sortedCRResult }}
+          />
+        );
+      }}
+      loaded
+      customData={{ sortedCRResult }}
+      expand
+    />
   ) : null;
 };

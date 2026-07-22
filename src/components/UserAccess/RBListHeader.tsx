@@ -5,7 +5,7 @@ export const rbTableColumnClasses = {
   username: 'pf-m-width-25',
   role: 'pf-m-width-20',
   rolebinding: 'pf-m-width-40 wrap-column',
-  kebab: 'pf-v5-c-table__action',
+  kebab: 'pf-v6-c-table__action',
 };
 
 const usernameColumnInfoPopover =

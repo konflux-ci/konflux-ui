@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Bullseye, Button, Spinner, Text, TextVariants } from '@patternfly/react-core';
+import { Bullseye, Button, Spinner, Content, ContentVariants } from '@patternfly/react-core';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { TaskRunKind } from '~/types';
 import { WatchK8sResource } from '~/types/k8s';
@@ -30,7 +30,7 @@ class LoadErrorBoundary extends React.Component<
     if (this.state.error) {
       return (
         <Bullseye>
-          <Text component={TextVariants.p}>An unknown error occurred.</Text>
+          <Content component={ContentVariants.p}>An unknown error occurred.</Content>
           <Button variant="primary" onClick={() => window.location.reload()}>
             Reload Page
           </Button>

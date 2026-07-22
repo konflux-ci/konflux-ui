@@ -2,11 +2,9 @@ import * as React from 'react';
 import {
   EmptyState,
   EmptyStateBody,
-  EmptyStateIcon,
   EmptyStateProps,
   EmptyStateVariant,
   Title,
-  EmptyStateHeader,
   EmptyStateFooter,
 } from '@patternfly/react-core';
 import { ExclamationCircleIcon } from '@patternfly/react-icons/dist/esm/icons/exclamation-circle-icon';
@@ -36,21 +34,15 @@ const ErrorEmptyState: React.FC<React.PropsWithChildren<ErrorEmptyStateProps>> =
   }
   return (
     <EmptyState
+      icon={ExclamationCircleIcon}
       className={css('app-empty-state', className)}
       variant={EmptyStateVariant.full}
+      status="danger"
       {...props}
     >
-      <EmptyStateHeader
-        icon={
-          <EmptyStateIcon
-            className={css('app-empty-state__icon m-is-error')}
-            icon={ExclamationCircleIcon}
-          />
-        }
-      />
       <EmptyStateFooter>
         {title ? (
-          <Title className="pf-v5-u-mt-lg" headingLevel="h2" size="lg">
+          <Title className="pf-v6-u-mt-lg" headingLevel="h2" size="lg">
             {title}
           </Title>
         ) : null}

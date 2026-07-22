@@ -10,7 +10,7 @@ const testValidUsernameInput = async (inputValue: string, keyCode: string) => {
   });
 
   await waitFor(() => {
-    expect(screen.getByRole('list', { name: 'Chip group category' })).toBeVisible();
+    expect(screen.getByRole('list', { name: 'Label group category' })).toBeVisible();
     expect(screen.getByText(inputValue)).toBeVisible();
   });
 };
@@ -24,7 +24,7 @@ const testValidUsernameInputWithBlur = async (inputValue: string) => {
   });
 
   await waitFor(() => {
-    expect(screen.getByRole('list', { name: 'Chip group category' })).toBeVisible();
+    expect(screen.getByRole('list', { name: 'Label group category' })).toBeVisible();
     expect(screen.getByText(inputValue)).toBeVisible();
   });
 };
@@ -44,7 +44,7 @@ const testInvalidUsernameInput = async (inputValue: string, expectedError: strin
     });
   } else {
     await waitFor(() => {
-      expect(screen.getByRole('list', { name: 'Chip group category' })).toBeVisible();
+      expect(screen.getByRole('list', { name: 'Label group category' })).toBeVisible();
     });
   }
 };
@@ -65,7 +65,7 @@ describe('UsernameSection', () => {
   it('should add username chip when entered', async () => {
     formikRenderer(<UsernameSection />, { usernames: [] });
     await testValidUsernameInput('user1', 'Enter');
-    await act(() => fireEvent.click(screen.getByRole('button', { name: 'Remove user1' })));
+    await act(() => fireEvent.click(screen.getByRole('button', { name: 'Remove' })));
     expect(screen.queryByText('user1')).not.toBeInTheDocument();
     await testValidUsernameInput('user2', 'Enter');
   });
@@ -73,7 +73,7 @@ describe('UsernameSection', () => {
   it('should add username chip when tab', async () => {
     formikRenderer(<UsernameSection />, { usernames: [] });
     await testValidUsernameInput('user1', 'Tab');
-    await act(() => fireEvent.click(screen.getByRole('button', { name: 'Remove user1' })));
+    await act(() => fireEvent.click(screen.getByRole('button', { name: 'Remove' })));
     expect(screen.queryByText('user1')).not.toBeInTheDocument();
     await testValidUsernameInput('user2', 'Tab');
   });

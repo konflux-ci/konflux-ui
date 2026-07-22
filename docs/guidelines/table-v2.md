@@ -40,33 +40,28 @@ The main orchestrator. Composes hooks and sub-components into a full-featured ta
 **Import:** `import { Table } from '~/shared/components/TableV2';`
 
 ```tsx
-<Table
-  data={items}
-  columns={columns}
-  getRowId={(row) => row.metadata.uid}
-  aria-label="My items"
-/>
+<Table data={items} columns={columns} getRowId={(row) => row.metadata.uid} aria-label="My items" />
 ```
 
 #### Props (`TableProps<TData>`)
 
-| Prop | Type | Required | Description |
-|---|---|---|---|
-| `data` | `TData[]` | Yes | Array of row data to display |
-| `columns` | `ColumnDefinition<TData>[]` | Yes | Column definitions |
-| `getRowId` | `(row: TData) => string` | Yes | Stable unique row ID |
-| `aria-label` | `string` | Yes | Accessible label for the table element |
-| `meta` | `Record<string, unknown>` | No | Arbitrary metadata passed to TanStack's `table.options.meta` |
-| `enableSorting` | `boolean` | No | Enable client-side column sorting |
-| `enableExpansion` | `boolean` | No | Enable expandable rows |
-| `expandedContent` | `(row: TData) => ReactNode` | No | Render function for expanded row content |
-| `hasNextPage` | `boolean` | No | Whether more data is available for infinite scroll |
-| `isFetchingNextPage` | `boolean` | No | Whether next page is currently loading |
-| `fetchNextPage` | `() => void` | No | Callback to fetch the next page |
-| `columnStateKey` | `string` | No | localStorage key for persisting column state |
-| `columnState` | `ColumnState` | No | Externally managed column state (overrides internal state) |
-| `onColumnStateChange` | `(state: ColumnState) => void` | No | Callback when column state changes (required with `columnState`) |
-| `scrollElement` | `HTMLElement \| null` | No | External scroll container for virtualization |
+| Prop                  | Type                           | Required | Description                                                      |
+| --------------------- | ------------------------------ | -------- | ---------------------------------------------------------------- |
+| `data`                | `TData[]`                      | Yes      | Array of row data to display                                     |
+| `columns`             | `ColumnDefinition<TData>[]`    | Yes      | Column definitions                                               |
+| `getRowId`            | `(row: TData) => string`       | Yes      | Stable unique row ID                                             |
+| `aria-label`          | `string`                       | Yes      | Accessible label for the table element                           |
+| `meta`                | `Record<string, unknown>`      | No       | Arbitrary metadata passed to TanStack's `table.options.meta`     |
+| `enableSorting`       | `boolean`                      | No       | Enable client-side column sorting                                |
+| `enableExpansion`     | `boolean`                      | No       | Enable expandable rows                                           |
+| `expandedContent`     | `(row: TData) => ReactNode`    | No       | Render function for expanded row content                         |
+| `hasNextPage`         | `boolean`                      | No       | Whether more data is available for infinite scroll               |
+| `isFetchingNextPage`  | `boolean`                      | No       | Whether next page is currently loading                           |
+| `fetchNextPage`       | `() => void`                   | No       | Callback to fetch the next page                                  |
+| `columnStateKey`      | `string`                       | No       | localStorage key for persisting column state                     |
+| `columnState`         | `ColumnState`                  | No       | Externally managed column state (overrides internal state)       |
+| `onColumnStateChange` | `(state: ColumnState) => void` | No       | Callback when column state changes (required with `columnState`) |
+| `scrollElement`       | `HTMLElement \| null`          | No       | External scroll container for virtualization                     |
 
 ### `TableContainer`
 
@@ -90,13 +85,13 @@ State machine wrapper that renders the correct content based on loading, error, 
 
 #### Resolution Order
 
-| Priority | Condition | Renders |
-|---|---|---|
-| 1 | `!loaded` | `skeleton` prop (default: `<TableSkeleton columns={3} />`) |
-| 2 | `loadError` | Error message |
-| 3 | `unfilteredData.length === 0` | `noDataState` (no resources exist at all) |
-| 4 | `data.length === 0` | `emptyState` (resources exist but filters match nothing) |
-| 5 | Otherwise | `children` (the table) |
+| Priority | Condition                     | Renders                                                    |
+| -------- | ----------------------------- | ---------------------------------------------------------- |
+| 1        | `!loaded`                     | `skeleton` prop (default: `<TableSkeleton columns={3} />`) |
+| 2        | `loadError`                   | Error message                                              |
+| 3        | `unfilteredData.length === 0` | `noDataState` (no resources exist at all)                  |
+| 4        | `data.length === 0`           | `emptyState` (resources exist but filters match nothing)   |
+| 5        | Otherwise                     | `children` (the table)                                     |
 
 The `toolbar` is **always** rendered regardless of state.
 
@@ -152,6 +147,7 @@ const { columnState, setColumnState } = useColumnState(undefined, columns);
 ```
 
 **Schema migration:** When column definitions change (columns added or removed), persisted state is automatically migrated:
+
 - Stale column IDs are removed, preserving persisted order
 - New column IDs are appended at the end
 - Sort is cleared if the sorted column was removed
@@ -188,6 +184,7 @@ const { table, rows } = useTable({
 ```
 
 Handles:
+
 - Mapping `ColumnDefinition` to TanStack `ColumnDef`
 - Merging user visibility (from `ColumnState`) with responsive visibility
 - Applying column order from `ColumnState.visibleColumns`
@@ -217,8 +214,8 @@ import { useVirtualization } from '~/shared/components/TableV2';
 const { virtualizer, virtualRows } = useVirtualization({
   count: rows.length,
   scrollElement: containerRef.current,
-  estimateSize: 44,  // default
-  overscan: 10,      // default
+  estimateSize: 44, // default
+  overscan: 10, // default
 });
 ```
 
@@ -280,33 +277,33 @@ const columns: ColumnDefinition<MyItem>[] = [
 
 ### Property Reference
 
-| Property | Type | Required | Description |
-|---|---|---|---|
-| `id` | `string` | Yes | Unique column identifier. Must be stable across renders. |
-| `header` | `string \| ReactNode` | Yes | Column header label |
-| `accessorFn` | `(row: TData) => unknown` | Yes | Extracts the cell value from a row |
-| `cell` | `(info: CellContext<TData>) => ReactNode` | No | Custom cell renderer |
-| `size` | `number` | No | Flex proportion for column width (default: `1`) |
-| `width` | `string` | No | Fixed CSS width (e.g. `'120px'`, `'8rem'`). Overrides `size`. |
-| `sortable` | `boolean` | No | Whether the column supports sorting (default: `false`) |
-| `sortFn` | `SortingFn<TData>` | No | Custom sorting function |
-| `visibleFrom` | `Breakpoint` | No | Responsive breakpoint at which the column becomes visible |
-| `nonHidable` | `boolean` | No | Prevents users from hiding this column via column management |
-| `pinned` | `'start' \| 'end'` | No | Pins the column to the start or end of the table |
-| `enableResizing` | `boolean` | No | Reserved for future use |
-| `filterFn` | `FilterFn<TData>` | No | Reserved for future use |
+| Property         | Type                                      | Required | Description                                                   |
+| ---------------- | ----------------------------------------- | -------- | ------------------------------------------------------------- |
+| `id`             | `string`                                  | Yes      | Unique column identifier. Must be stable across renders.      |
+| `header`         | `string \| ReactNode`                     | Yes      | Column header label                                           |
+| `accessorFn`     | `(row: TData) => unknown`                 | Yes      | Extracts the cell value from a row                            |
+| `cell`           | `(info: CellContext<TData>) => ReactNode` | No       | Custom cell renderer                                          |
+| `size`           | `number`                                  | No       | Flex proportion for column width (default: `1`)               |
+| `width`          | `string`                                  | No       | Fixed CSS width (e.g. `'120px'`, `'8rem'`). Overrides `size`. |
+| `sortable`       | `boolean`                                 | No       | Whether the column supports sorting (default: `false`)        |
+| `sortFn`         | `SortingFn<TData>`                        | No       | Custom sorting function                                       |
+| `visibleFrom`    | `Breakpoint`                              | No       | Responsive breakpoint at which the column becomes visible     |
+| `nonHidable`     | `boolean`                                 | No       | Prevents users from hiding this column via column management  |
+| `pinned`         | `'start' \| 'end'`                        | No       | Pins the column to the start or end of the table              |
+| `enableResizing` | `boolean`                                 | No       | Reserved for future use                                       |
+| `filterFn`       | `FilterFn<TData>`                         | No       | Reserved for future use                                       |
 
 > **Why `accessorFn` only?** `accessorKey` is intentionally not supported because row data in this codebase is often a Kubernetes resource with deeply nested or computed fields. An explicit function avoids type mismatches and keeps column definitions self-documenting.
 
 ### Breakpoint Values
 
 | Breakpoint | Min Width |
-|---|---|
-| `sm` | 576px |
-| `md` | 768px |
-| `lg` | 992px |
-| `xl` | 1200px |
-| `2xl` | 1450px |
+| ---------- | --------- |
+| `sm`       | 576px     |
+| `md`       | 768px     |
+| `lg`       | 992px     |
+| `xl`       | 1200px    |
+| `2xl`      | 1450px    |
 
 ## Column Widths
 
@@ -431,6 +428,7 @@ const MyListView = () => {
 ```
 
 **Key behaviors:**
+
 - Pinned columns (`pinned: 'start'` or `'end'`) cannot be dragged or hidden
 - `nonHidable` columns have a disabled checkbox
 - "Restore defaults" resets to the original column order and visibility
@@ -459,12 +457,7 @@ const MyListView = () => {
       loaded={!isLoading}
       noDataState={<EmptyState>No items</EmptyState>}
     >
-      <Table
-        data={data ?? []}
-        columns={columns}
-        getRowId={(row) => row.id}
-        aria-label="My items"
-      />
+      <Table data={data ?? []} columns={columns} getRowId={(row) => row.id} aria-label="My items" />
     </TableContainer>
   );
 };
@@ -499,10 +492,24 @@ const MyListView = () => {
   const { filteredData } = useFilteredData(filterConfigs, data ?? [], clientFilterValues);
 
   const columns: ColumnDefinition<MyItem>[] = [
-    { id: 'name', header: 'Name', accessorFn: (r) => r.name, size: 3, sortable: true, nonHidable: true },
+    {
+      id: 'name',
+      header: 'Name',
+      accessorFn: (r) => r.name,
+      size: 3,
+      sortable: true,
+      nonHidable: true,
+    },
     { id: 'status', header: 'Status', accessorFn: (r) => r.status, size: 1, visibleFrom: 'md' },
     { id: 'created', header: 'Created', accessorFn: (r) => r.createdAt, size: 2, sortable: true },
-    { id: 'actions', header: '', accessorFn: () => null, width: '48px', pinned: 'end', nonHidable: true },
+    {
+      id: 'actions',
+      header: '',
+      accessorFn: () => null,
+      width: '48px',
+      pinned: 'end',
+      nonHidable: true,
+    },
   ];
 
   const { columnState, setColumnState } = useColumnState('my-table', columns);
@@ -584,17 +591,17 @@ const MyListView = () => {
 
 ## Migration from Legacy Table
 
-| Legacy (`src/shared/components/table/`) | TableV2 (`src/shared/components/TableV2/`) |
-|---|---|
-| `createTableHeaders(columns)` | `ColumnDefinition[]` array |
-| `Row` component as `React.FC<RowFunctionArgs>` | `cell` function on each column definition |
-| `<TableData className={...}>` | Automatic `<Td>` via `flexRender` |
-| `pf-m-width-*` CSS classes | `size` (flex proportion) or `width` (fixed CSS) |
-| `FilterContextProvider` + `useFilterContext` | `useFilterState` + `useFilteredData` (see [filter-system.md](./filter-system.md)) |
-| `useSortedResources` + sort index state | `enableSorting` + `sortable` on columns |
-| `StatusBox` empty state logic | `TableContainer` with explicit `emptyState`/`noDataState` |
-| `isInfiniteLoading` + `infiniteLoaderProps` | `hasNextPage` + `isFetchingNextPage` + `fetchNextPage` |
-| `useVisibleColumns` + `ColumnManagement` | `useColumnState` + `ColumnManagementModal` |
+| Legacy (`src/shared/components/table/`)        | TableV2 (`src/shared/components/TableV2/`)                                        |
+| ---------------------------------------------- | --------------------------------------------------------------------------------- |
+| `createTableHeaders(columns)`                  | `ColumnDefinition[]` array                                                        |
+| `Row` component as `React.FC<RowFunctionArgs>` | `cell` function on each column definition                                         |
+| `<TableData className={...}>`                  | Automatic `<Td>` via `flexRender`                                                 |
+| `pf-m-width-*` CSS classes                     | `size` (flex proportion) or `width` (fixed CSS)                                   |
+| `FilterContextProvider` + `useFilterContext`   | `useFilterState` + `useFilteredData` (see [filter-system.md](./filter-system.md)) |
+| `useSortedResources` + sort index state        | `enableSorting` + `sortable` on columns                                           |
+| `StatusBox` empty state logic                  | `TableContainer` with explicit `emptyState`/`noDataState`                         |
+| `isInfiniteLoading` + `infiniteLoaderProps`    | `hasNextPage` + `isFetchingNextPage` + `fetchNextPage`                            |
+| `useVisibleColumns` + `ColumnManagement`       | `useColumnState` + `ColumnManagementModal`                                        |
 
 ### Migration Steps
 
@@ -606,14 +613,14 @@ const MyListView = () => {
 
 ## DO / DON'T
 
-| DO | DON'T |
-|---|---|
-| Use `accessorFn` for all columns | Use `accessorKey` (not supported) |
-| Use stable `getRowId` (e.g. `metadata.uid`) | Use array index as row ID |
-| Place `<Table>` inside a bounded-height scroll container | Let the table overflow the page without constraint |
-| Use `size` for proportional widths | Hardcode pixel widths on flex columns |
-| Use `columnState` + `onColumnStateChange` when sharing state | Use `columnStateKey` when you need the modal to work |
-| Use `useCallback` for `scrollContainerRef` | Use `useRef` for the virtualizer scroll container (stale ref) |
+| DO                                                                                 | DON'T                                                                                     |
+| ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| Use `accessorFn` for all columns                                                   | Use `accessorKey` (not supported)                                                         |
+| Use stable `getRowId` (e.g. `metadata.uid`)                                        | Use array index as row ID                                                                 |
+| Place `<Table>` inside a bounded-height scroll container                           | Let the table overflow the page without constraint                                        |
+| Use `size` for proportional widths                                                 | Hardcode pixel widths on flex columns                                                     |
+| Use `columnState` + `onColumnStateChange` when sharing state                       | Use `columnStateKey` when you need the modal to work                                      |
+| Use `useCallback` for `scrollContainerRef`                                         | Use `useRef` for the virtualizer scroll container (stale ref)                             |
 | Spread column def properties conditionally with `...(value ? { key: value } : {})` | Spread `undefined` into column defs (TanStack treats `undefined` differently from absent) |
 
 ## Known Gotchas
@@ -630,6 +637,6 @@ const MyListView = () => {
 
 The following capabilities are **not yet supported** by TableV2. If your view requires one of these, extend `TableV2` with the capability rather than building a bespoke table with inline PatternFly primitives.
 
-| Capability | Status | Tracking |
-|---|---|---|
+| Capability                                                     | Status              | Tracking     |
+| -------------------------------------------------------------- | ------------------- | ------------ |
 | Row selection (single & multi-select with `Set<string>` state) | Not yet implemented | KFLUXUI-1346 |

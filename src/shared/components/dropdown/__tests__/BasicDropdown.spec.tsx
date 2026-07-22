@@ -78,7 +78,7 @@ describe('BasicDropdown', () => {
       const menuItems = screen.getAllByRole('menuitem');
       // Items without a description field should not have PF's description element
       menuItems.forEach((item) => {
-        const descriptionEl = item.querySelector('.pf-v5-c-menu__item-description');
+        const descriptionEl = item.querySelector('.pf-v6-c-menu__item-description');
         expect(descriptionEl).toBeNull();
       });
     });

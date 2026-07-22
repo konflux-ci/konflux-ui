@@ -599,12 +599,12 @@ describe('Pipeline run List', () => {
     renderWithQueryClient(<TestedComponent name={appName} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Manage columns' }));
-    expect(screen.getByRole('dialog', { name: 'Manage pipeline run columns' })).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: /Manage pipeline run columns/ })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Close' }));
 
     expect(
-      screen.queryByRole('dialog', { name: 'Manage pipeline run columns' }),
+      screen.queryByRole('dialog', { name: /Manage pipeline run columns/ }),
     ).not.toBeInTheDocument();
   });
 

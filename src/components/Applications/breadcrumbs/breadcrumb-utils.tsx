@@ -16,7 +16,7 @@ export const useApplicationBreadcrumbs = (appDisplayName = null, withLink = true
       {applicationName ? (
         <Link
           data-test="applications-breadcrumb-link"
-          className="pf-v5-c-breadcrumb__link"
+          className="pf-v6-c-breadcrumb__link"
           to={APPLICATION_LIST_PATH.createPath({ workspaceName: namespace })}
         >
           Applications

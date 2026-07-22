@@ -1,4 +1,4 @@
-import type { RefObject } from 'react';
+import type { RefCallback, RefObject } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 
 const DEFAULT_LINE_HEIGHT = 20;
@@ -13,7 +13,7 @@ export const useKeyboardNavigation = ({
   scrollElementRef,
   lineHeight = DEFAULT_LINE_HEIGHT,
   enabled = true,
-}: UseKeyboardNavigationParams): RefObject<HTMLDivElement | null> => {
+}: UseKeyboardNavigationParams): RefCallback<HTMLDivElement | null> => {
   return useHotkeys<HTMLDivElement>(
     'up,down,pageup,pagedown,home,end',
     (event) => {

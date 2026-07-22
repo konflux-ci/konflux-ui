@@ -2,14 +2,14 @@ import * as React from 'react';
 import {
   Brand,
   Masthead,
-  MastheadBrand,
+  MastheadLogo,
   MastheadContent,
   MastheadMain,
   MastheadToggle,
+  MastheadBrand,
   PageToggleButton,
 } from '@patternfly/react-core';
-import { BarsIcon } from '@patternfly/react-icons/dist/esm/icons/bars-icon';
-import konfluxLogo from '../assets/iconsUrl/konflux.svg';
+import KonfluxLogo from '../assets/konflux-logo.svg';
 import { Header } from '../components/Header/Header';
 
 interface AppHeaderPros {
@@ -26,20 +26,23 @@ const AppHeaderComponent: React.FC<AppHeaderPros> = ({
 }) => {
   return (
     <Masthead>
-      <MastheadToggle>
-        <PageToggleButton
-          variant="plain"
-          aria-label="Sidebar toggle"
-          data-test="sidebar-toggle"
-          onSidebarToggle={onSideBarOpen}
-          isSidebarOpen={isSideBarOpen}
-        >
-          <BarsIcon />
-        </PageToggleButton>
-      </MastheadToggle>
       <MastheadMain>
+        <MastheadToggle>
+          <PageToggleButton
+            isHamburgerButton
+            variant="plain"
+            aria-label="Sidebar toggle"
+            data-test="sidebar-toggle"
+            onSidebarToggle={onSideBarOpen}
+            isSidebarOpen={isSideBarOpen}
+          />
+        </MastheadToggle>
         <MastheadBrand>
-          <Brand src={konfluxLogo} alt="konflux" heights={{ default: '36px' }} />
+          <MastheadLogo>
+            <Brand alt="" heights={{ default: '36px' }}>
+              <KonfluxLogo aria-label="konflux" />
+            </Brand>
+          </MastheadLogo>
         </MastheadBrand>
       </MastheadMain>
       <MastheadContent>

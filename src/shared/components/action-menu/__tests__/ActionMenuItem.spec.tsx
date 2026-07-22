@@ -81,7 +81,7 @@ describe('ActionMenuItem', () => {
       },
     });
 
-    fireEvent.click(within(getByTestId('Action 1')).getByRole('button'));
+    fireEvent.click(within(getByTestId('Action 1')).getByRole('menuitem'));
 
     await waitFor(() => {
       expect(handleCta).toHaveBeenCalledTimes(1);
@@ -99,7 +99,7 @@ describe('ActionMenuItem', () => {
       },
     });
 
-    fireEvent.click(within(getByTestId('Action 1')).getByRole('button'));
+    fireEvent.click(within(getByTestId('Action 1')).getByRole('menuitem'));
 
     await waitFor(() => {
       expect(useNavigateMock).toHaveBeenCalledTimes(1);
@@ -136,7 +136,7 @@ describe('ActionMenuItem', () => {
       },
     });
 
-    fireEvent.keyDown(within(getByTestId('Action 1')).getByRole('button'), {
+    fireEvent.keyDown(within(getByTestId('Action 1')).getByRole('menuitem'), {
       key: 'Enter',
       code: 'Enter',
       keyCode: 13,
@@ -158,7 +158,7 @@ describe('ActionMenuItem', () => {
       onEscape: onEscapeHandler,
     });
 
-    fireEvent.keyDown(within(getByTestId('Action 1')).getByRole('button'), {
+    fireEvent.keyDown(within(getByTestId('Action 1')).getByRole('menuitem'), {
       key: 'ESCAPE',
       keyCode: 27,
     });
@@ -179,7 +179,7 @@ describe('ActionMenuItem', () => {
       onClick: onClickHandler,
     });
 
-    fireEvent.click(within(getByTestId('Action 1')).getByRole('button'));
+    fireEvent.click(within(getByTestId('Action 1')).getByRole('menuitem'));
 
     await waitFor(() => {
       expect(onClickHandler).toHaveBeenCalledTimes(1);
@@ -197,7 +197,7 @@ describe('ActionMenuItem', () => {
       },
     });
 
-    fireEvent.click(within(getByTestId('Action 1')).getByRole('button'));
+    fireEvent.click(within(getByTestId('Action 1')).getByRole('menuitem'));
 
     await waitFor(() => {
       expect(handleCta).not.toHaveBeenCalled();

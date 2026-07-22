@@ -91,9 +91,9 @@ export const MultiSelectFilter = <T,>({
 
   return (
     <ToolbarFilter
-      chips={selected.map(labelForValue)}
-      deleteChip={handleDeleteChip}
-      deleteChipGroup={handleDeleteChipGroup}
+      labels={selected.map(labelForValue)}
+      deleteLabel={handleDeleteChip}
+      deleteLabelGroup={handleDeleteChipGroup}
       categoryName={label}
     >
       <Select

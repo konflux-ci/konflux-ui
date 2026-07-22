@@ -59,7 +59,7 @@ export const ReleaseURLsDescriptionList: React.FC<Props> = ({ release }) => {
       </Title>
       <DescriptionList
         columnModifier={{ default: '1Col' }}
-        style={{ marginTop: 'var(--pf-v5-global--spacer--lg)' }}
+        style={{ marginTop: 'var(--pf-t--global--spacer--lg)' }}
       >
         {!!releaseNotesReferences?.length && (
           <DescriptionSection term="Release notes" links={releaseNotesReferences} />
