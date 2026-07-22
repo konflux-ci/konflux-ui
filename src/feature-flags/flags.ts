@@ -130,6 +130,12 @@ const InternalFLAGS = {
     defaultEnabled: true,
     status: 'wip',
   },
+  'ai-chat': {
+    key: 'ai-chat',
+    description: 'Enable experimental Konflux AI chat UI',
+    defaultEnabled: false,
+    status: 'wip',
+  },
   'pipeline-runs-page': {
     key: 'pipeline-runs-page',
     description:
