@@ -72,6 +72,7 @@
     "react-hotkeys-hook": "^5.2.4",
     "react-i18next": "15.0.1",
     "react-router-dom": "6.25.1",
+    "rehype-sanitize": "^6.0.0",
     "sanitize-html": "^2.13.0",
     "showdown": "^2.1.0",
     "yaml": "^2.7.1",
