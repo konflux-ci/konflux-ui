@@ -1,4 +1,5 @@
 import { checkIfAnalyticsIsEnabled } from '~/analytics/conditional-checks';
+import { checkIfLightspeedIsAvailable } from '~/components/AIChat/conditional-checks';
 import { checkIfSystemNotificationsAccessible } from '~/components/KonfluxSystemNotifications/conditional-checks';
 import { getKonfluxPublicInfo } from '~/hooks/useKonfluxPublicInfo';
 import { KonfluxInstanceEnvironments } from '~/types/konflux-public-info';
@@ -12,6 +13,7 @@ registerCondition('isKiteServiceEnabled', checkIfKiteServiceIsEnabled);
 registerCondition('isImageControllerEnabled', checkIfImageControllerIsEnabled);
 registerCondition('isSystemNotificationsAccessible', checkIfSystemNotificationsAccessible);
 registerCondition('isAnalyticsEnabled', checkIfAnalyticsIsEnabled);
+registerCondition('isLightspeedAvailable', checkIfLightspeedIsAvailable);
 
 registerCondition('isStagingCluster', async () => {
   try {

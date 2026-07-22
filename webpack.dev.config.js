@@ -74,6 +74,13 @@ export default merge(commonConfig, {
         toProxy: true,
         // pathRewrite: { '^/wss/k8s': '' },
       },
+      {
+        context: ['/api/lightspeed'],
+        target: process.env.LIGHTSPEED_URL,
+        secure: false,
+        changeOrigin: true,
+        pathRewrite: (path) => path.replace(/^\/api\/lightspeed/, ''),
+      },
     ],
   },
   module: {

@@ -4326,6 +4326,43 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@redhat-cloud-services/ai-client-common@npm:0.13.0, @redhat-cloud-services/ai-client-common@npm:^0.13.0":
+  version: 0.13.0
+  resolution: "@redhat-cloud-services/ai-client-common@npm:0.13.0"
+  checksum: 10/ed366f4f6f884be5268abda952e1256c5d5e27f5ed93dd810dcc64e3f10dfce0bc92e2ce61981b8a7b0818ab63fb62f82c1afbe9c9ea9f4461858cacbe85a1b5
+  languageName: node
+  linkType: hard
+
+"@redhat-cloud-services/ai-client-state@npm:0.15.0, @redhat-cloud-services/ai-client-state@npm:^0.15.0":
+  version: 0.15.0
+  resolution: "@redhat-cloud-services/ai-client-state@npm:0.15.0"
+  dependencies:
+    "@redhat-cloud-services/ai-client-common": "npm:0.13.0"
+  checksum: 10/36cfc4fbae309be2861fbe9f287412b6e94647000b6b11540fc38c667d6ef7e03f1f1a8ddd7ee617e465147c66b884293f41acfef53b1e289309ab991feb751f
+  languageName: node
+  linkType: hard
+
+"@redhat-cloud-services/ai-react-state@npm:^0.15.0":
+  version: 0.15.0
+  resolution: "@redhat-cloud-services/ai-react-state@npm:0.15.0"
+  dependencies:
+    "@redhat-cloud-services/ai-client-common": "npm:0.13.0"
+    "@redhat-cloud-services/ai-client-state": "npm:0.15.0"
+  peerDependencies:
+    react: ">=16.8.0"
+  checksum: 10/bdb3c0f3b5ca9f069d8a5b12b6dd1af74b72b2ecd8ee8741672f1a6f04122393c19ddefd64807b62cbbf86e764336b084a62b304d9e05b9921631ec24d9e1e38
+  languageName: node
+  linkType: hard
+
+"@redhat-cloud-services/lightspeed-client@npm:^0.15.0":
+  version: 0.15.0
+  resolution: "@redhat-cloud-services/lightspeed-client@npm:0.15.0"
+  dependencies:
+    "@redhat-cloud-services/ai-client-common": "npm:0.13.0"
+  checksum: 10/9bd4799292ea7d3e9779ec1b2bd11968a5d67c74d28fcb86fb29a1f093cc5cee528c9acf373711a6ccbb8e5fdc9b6f555114edfc8e764a6a2870318f58593e7b
+  languageName: node
+  linkType: hard
+
 "@remix-run/router@npm:1.18.0":
   version: 1.18.0
   resolution: "@remix-run/router@npm:1.18.0"
@@ -14499,6 +14536,10 @@ __metadata:
     "@patternfly/react-topology": "npm:6.6.0"
     "@patternfly/react-virtualized-extension": "npm:6.2.0"
     "@pmmmwh/react-refresh-webpack-plugin": "npm:^0.5.15"
+    "@redhat-cloud-services/ai-client-common": "npm:^0.13.0"
+    "@redhat-cloud-services/ai-client-state": "npm:^0.15.0"
+    "@redhat-cloud-services/ai-react-state": "npm:^0.15.0"
+    "@redhat-cloud-services/lightspeed-client": "npm:^0.15.0"
     "@segment/analytics-next": "npm:^1.81.1"
     "@sentry/react": "npm:^10.38.0"
     "@storybook/addon-a11y": "npm:10.5.0"

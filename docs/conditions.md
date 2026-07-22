@@ -41,6 +41,7 @@ See [When to use 503](#when-to-use-503-service-unavailable) for how this differs
 'isKubearchiveEnabled'; // → true if KubeArchive service is available
 'isKiteServiceEnabled'; // → true if Kite plugin health check passes
 'isStagingCluster'; // → true if running in staging environment
+'isLightspeedAvailable'; // → true if Konflux AI Lightspeed liveness check passes
 ```
 
 ---
@@ -565,5 +566,6 @@ For experimental routes behind a feature flag, use `ensureFeatureFlagOnLoader` i
 - `'isKubearchiveEnabled'` — KubeArchive service available
 - `'isKiteServiceEnabled'` — Kite plugin health check passes (used by the Issues route)
 - `'isStagingCluster'` — Running in staging environment
+- `'isLightspeedAvailable'` — Konflux AI Lightspeed liveness check passed
 
 That's it! You now know everything you need to use conditions

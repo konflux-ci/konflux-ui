@@ -135,6 +135,11 @@ const InternalFLAGS = {
     description: 'Enable experimental Konflux AI chat UI',
     defaultEnabled: false,
     status: 'wip',
+    guard: {
+      allOf: ['isLightspeedAvailable'],
+      failureReason: 'Konflux AI is not available on this cluster',
+      visibleInFeatureFlagPanel: false,
+    },
   },
   'pipeline-runs-page': {
     key: 'pipeline-runs-page',
