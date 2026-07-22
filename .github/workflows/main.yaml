@@ -6,7 +6,6 @@ on:
   pull_request:
     branches:
       - main
-      - patternfly-v6
   merge_group:
     types: [checks_requested]
   # Triggers the workflow on manual dispatch
@@ -26,7 +25,7 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: Checkout 🛎️
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Enable Corepack 📦
         run: corepack enable
@@ -64,7 +63,7 @@ jobs:
 
     steps:
       - name: Checkout 🛎️
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Enable Corepack 📦
         run: corepack enable
@@ -84,7 +83,7 @@ jobs:
           CI: true
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v6.0.2
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
         with:
           files: ./coverage/lcov.info
           token: ${{ secrets.CODECOV_TOKEN }}

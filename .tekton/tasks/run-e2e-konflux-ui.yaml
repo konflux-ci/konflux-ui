@@ -1,0 +1,220 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: run-e2e-konflux-ui
+  annotations:
+    tekton.dev/displayName: 'konflux-ui-e2e-tests'
+    tekton.dev/categories: 'Pipeline'
+    tekton.dev/tags: 'e2e,cypress,konflux-ui'
+spec:
+  description: >-
+    Runs E2E tests for Konflux UI and pushes test artifacts to OCI repository.
+  params:
+    - name: job-type
+      type: string
+      default: 'pr-check'
+    - name: test-image-tag
+      type: string
+      default: 'latest'
+      description: >-
+        Tag for the E2E test image (quay.io/konflux_ui_qe/konflux-ui-tests:<tag>).
+        Repository is fixed so PipelineRuns cannot point the secret-bearing step at an arbitrary image.
+    - name: cypress-credentials-secret
+      type: string
+      default: 'cypress-credentials'
+    - name: cypress-cloud-secret
+      type: string
+      default: 'cypress-cloud-credentials'
+    - name: github-credentials-secret
+      type: string
+      default: 'github-credentials'
+    - name: spec-file
+      type: string
+      default: 'tests/basic-happy-path.spec.ts'
+    - name: oci-ref
+      type: string
+      description: 'OCI repository to store test artifacts'
+    - name: oci-credentials
+      type: string
+      default: 'quay-secret'
+      description: 'Secret name for OCI registry authentication'
+  volumes:
+    # Enlarge /dev/shm for Cypress/Chrome; default container shm (~64MB) causes flaky browser crashes
+    - name: dshm
+      emptyDir:
+        medium: Memory
+        sizeLimit: 3Gi
+    - name: kubeconfig-data
+      emptyDir: {}
+    - name: test-artifacts
+      emptyDir: {}
+    - name: oci-credentials
+      secret:
+        secretName: $(params.oci-credentials)
+        optional: true
+        items:
+          - key: oci-storage-dockerconfigjson
+            path: oci-storage-dockerconfigjson
+  stepTemplate:
+    volumeMounts:
+      - name: test-artifacts
+        mountPath: /artifacts
+  steps:
+    - name: run-e2e-test
+      image: quay.io/konflux_ui_qe/konflux-ui-tests:$(params.test-image-tag)
+      onError: continue
+      workingDir: /tmp/e2e
+      # We should set the appropriate requests/limits based on our future observing
+      # Setting default values for memory and cpu by a guess
+      computeResources:
+        limits:
+          memory: 8Gi
+          cpu: '2'
+        requests:
+          memory: 8Gi
+          cpu: '1'
+      volumeMounts:
+        # Mount the dshm (shared memory) volume at /dev/shm for UI end-to-end (E2E) tests.
+        # Chromium-based browsers (such as Cypress and Playwright) require /dev/shm for reliable operation inside containers.
+        - name: dshm
+          mountPath: /dev/shm
+        - name: kubeconfig-data
+          mountPath: /shared
+          readOnly: true
+      env:
+        - name: CYPRESS_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: $(params.cypress-credentials-secret)
+              key: username
+        - name: CYPRESS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: $(params.cypress-credentials-secret)
+              key: password
+        - name: CYPRESS_GH_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: $(params.github-credentials-secret)
+              key: token
+        - name: CYPRESS_PROJECT_ID
+          valueFrom:
+            secretKeyRef:
+              name: $(params.cypress-cloud-secret)
+              key: project-id
+        - name: CYPRESS_RECORD_KEY
+          valueFrom:
+            secretKeyRef:
+              name: $(params.cypress-cloud-secret)
+              key: record-key
+      script: |
+        #!/usr/bin/env bash
+        # Note: NOT using 'set -e' so script continues after test failure
+        set -uo pipefail
+
+        echo "=== Loading configuration from setup step ==="
+
+        # Read base URL from shared volume
+        if [ "$(params.job-type)" = "periodic-stage" ]; then
+          export CYPRESS_KONFLUX_BASE_URL="https://konflux-ui.apps.stone-stg-rh01.l2vh.p1.openshiftapps.com"
+          export CYPRESS_LOCAL_CLUSTER=false
+          export CYPRESS_PERIODIC_RUN_STAGE=true
+        else
+          export CYPRESS_KONFLUX_BASE_URL=$(cat /shared/base-url)
+          export CYPRESS_LOCAL_CLUSTER=true
+        fi
+        echo "Konflux base URL: ${CYPRESS_KONFLUX_BASE_URL}"
+
+        echo "=== Running E2E tests ==="
+        SPEC_FILE="$(params.spec-file)"
+        
+        echo "Running test spec: ${SPEC_FILE}"
+   
+        # Run tests and capture exit code (don't exit on failure)
+        set +e
+        yarn run cy:run --spec "${SPEC_FILE}"
+        TEST_RESULT=$?
+        set -e
+
+        echo ""
+        echo "=========================================="
+        echo "Test completed with exit code: ${TEST_RESULT}"
+        echo "=========================================="
+        echo ""
+
+        echo "=== Collecting test artifacts ==="
+        mkdir -p /artifacts
+
+        # Copy Cypress artifacts if they exist
+        if [ -d "cypress/videos" ]; then
+          echo "Copying videos..."
+          cp -r cypress/videos /artifacts/ || true
+        fi
+
+        if [ -d "cypress/screenshots" ]; then
+          echo "Copying screenshots..."
+          cp -r cypress/screenshots /artifacts/ || true
+        fi
+
+        # Copy test reports
+        for f in cypress/junit-*.xml; do
+          if [ -f "$f" ]; then
+            echo "Copying JUnit report: $f"
+            cp "$f" /artifacts/ || true
+          fi
+        done
+
+        # Create a simple test log
+        echo "Test execution completed with exit code: ${TEST_RESULT}" > /artifacts/e2e-tests.log
+        echo "Timestamp: $(date)" >> /artifacts/e2e-tests.log
+        echo "Base URL: ${CYPRESS_KONFLUX_BASE_URL}" >> /artifacts/e2e-tests.log
+
+        # Save test result for later steps
+        echo "${TEST_RESULT}" > /artifacts/test-exit-code
+
+        # List collected artifacts
+        echo "Artifacts collected:"
+        ls -lah /artifacts/
+
+
+        # Now exit with the test result
+        echo ""
+        echo "=== Final Result ==="
+        if [ ${TEST_RESULT} -ne 0 ]; then
+          echo "❌ E2E tests failed with exit code: ${TEST_RESULT}"
+          exit ${TEST_RESULT}
+        else
+          echo "✅ E2E tests passed"
+          exit 0
+        fi
+
+    - name: secure-push-oci
+      ref:
+        resolver: git
+        params:
+          - name: url
+            value: https://github.com/konflux-ci/tekton-integration-catalog.git
+          - name: revision
+            value: main
+          - name: pathInRepo
+            value: stepactions/secure-push-oci/0.2/secure-push-oci.yaml
+      params:
+        - name: workdir-path
+          value: /artifacts
+        - name: oci-ref
+          value: $(params.oci-ref)
+        - name: credentials-volume-name
+          value: oci-credentials
+        - name: credentials-volume-key
+          value: oci-storage-dockerconfigjson
+
+    - name: fail-if-any-step-failed
+      ref:
+        resolver: git
+        params:
+          - name: url
+            value: https://github.com/konflux-ci/tekton-integration-catalog.git
+          - name: revision
+            value: main
+          - name: pathInRepo
+            value: stepactions/fail-if-any-step-failed/0.1/fail-if-any-step-failed.yaml

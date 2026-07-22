@@ -6,6 +6,20 @@ This document defines how PatternFly (PF) components, layout primitives, design 
 
 **Always use PatternFly components instead of raw HTML.** Never write `<div style={{ display: 'flex' }}>` when `<Flex>` exists. Never use `<button>` when `<Button>` exists.
 
+## CSS Class Prefix: `pf-v6-`
+
+This repo uses **PatternFly v6**. All CSS utility and component class prefixes must use `pf-v6-` (e.g., `pf-v6-u-ml-sm`, `pf-v6-c-button`). Never use `pf-v5-` -- those classes are incompatible with PatternFly v6 and will silently fail to apply styles.
+
+```tsx
+// Correct
+<Toolbar className="pf-v6-u-py-md">
+<ToolbarItem className="pf-v6-u-ml-0">
+
+// Wrong -- pf-v5- classes do not exist in PatternFly v6
+<Toolbar className="pf-v5-u-py-md">
+<ToolbarItem className="pf-v5-u-ml-0">
+```
+
 ## Layout Components
 
 ### Flex / FlexItem -- Primary Row Layout

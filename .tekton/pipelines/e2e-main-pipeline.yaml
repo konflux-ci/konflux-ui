@@ -1,0 +1,315 @@
+---
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: e2e-main-pipeline
+  namespace: konflux-ui-tenant
+spec:
+  params:
+    - name: SNAPSHOT
+      description: 'The JSON string representing the snapshot of the application under test.'
+      # Should there be test image or UI builded image? Or are there both? Where to find out?
+      # Should be verified during https://redhat.atlassian.net/browse/KFLUXUI-1497
+      default: '{"components": [{"name":"konflux-ui", "containerImage": "quay.io/konflux_ui_qe/konflux-ui-tests:latest"}]}'
+      type: string
+    - name: konflux-test-infra-secret
+      description: The name of secret where testing infrastructures credentials are stored.
+      type: string
+      # repository for storing task's artefacts, common for Konflux components
+      # visible in dashboard https://app-artifact-browser.apps.rosa.konflux-qe.zmr9.p3.openshiftapps.com/
+    - name: oci-container-repo
+      default: 'quay.io/konflux-test-storage/konflux-team/konflux-ui'
+      description: The ORAS container used to store all test artifacts.
+    - name: artifact-browser-url
+      description: 'URL to the artifact browser deployment. If provided, a link will be added to PR comments.'
+      default: 'https://app-artifact-browser.apps.rosa.konflux-qe.zmr9.p3.openshiftapps.com'
+      type: string
+    - name: github-credentials-secret
+      description: 'Secret name containing GitHub token'
+      default: 'github-credentials'
+      type: string
+    - name: cypress-credentials-secret
+      description: 'Secret name containing Cypress credentials'
+      default: 'cypress-credentials'
+      type: string
+    - name: cypress-cloud-secret
+      description: 'Secret name containing Cypress Cloud credentials'
+      default: 'cypress-cloud-credentials'
+      type: string
+    - name: slack-credentials-secret
+      description: 'Secret name containing Slack credentials'
+      default: 'slack-credentials'
+      type: string
+    - name: oci-credentials-secret
+      description: 'Secret containing OCI registry credentials (oci-storage-dockerconfigjson key)'
+      default: 'quay-repo'
+      type: string
+    - name: build-credentials-secret
+      type: string
+      default: build-credentials
+    - name: skip-provision
+      description: 'Skip provisioning Kind cluster (use existing cluster instead)'
+      default: 'false'
+      type: string
+    - name: skip-deploy
+      description: 'Skip deploying Konflux (use existing deployment for debugging)'
+      default: 'false'
+      type: string
+    - name: skip-deprovision
+      description: 'Skip deprovisioning Kind cluster (keep cluster for debugging)'
+      default: 'false'
+      type: string
+    - name: spec-file
+      description: 'Cypress test spec file to run (for debugging, run single test)'
+      default: 'tests/basic-happy-path.spec.ts'
+      type: string
+    - name: job-type
+      description: 'Type of job (pr-check, periodic-local, periodic-stage)'
+      default: 'pr-check'
+      type: string
+    - name: test-image-tag
+      description: >-
+        Tag for the E2E test image (quay.io/konflux_ui_qe/konflux-ui-tests:<tag>).
+        Repository is fixed so PipelineRuns cannot point the secret-bearing step at an arbitrary image.
+      default: 'latest'
+      type: string
+  tasks:
+    - name: test-metadata
+      taskRef:
+        resolver: git
+        params:
+          - name: url
+            value: https://github.com/konflux-ci/tekton-integration-catalog.git
+          - name: revision
+            value: main
+          - name: pathInRepo
+            value: tasks/test-metadata/0.4/test-metadata.yaml
+      params:
+        - name: SNAPSHOT
+          value: $(params.SNAPSHOT)
+        - name: test-name
+          value: $(context.pipelineRun.name)
+          
+    - name: provision-kind-cluster
+      runAfter:
+        - test-metadata
+      when:
+        - input: '$(params.skip-provision)'
+          operator: in
+          values: ['false']
+        - input: '$(params.job-type)'
+          operator: notin
+          values: ['periodic-stage']
+      taskRef:
+        resolver: git
+        params:
+          - name: url
+            value: https://github.com/konflux-ci/tekton-integration-catalog
+          - name: revision
+            value: main
+          - name: pathInRepo
+            value: tasks/mapt-oci/kind-aws-spot/provision/0.2/kind-aws-provision.yaml
+      params:
+        - name: secret-aws-credentials
+          value: $(params.konflux-test-infra-secret)
+        - name: cluster-access-secret-name
+          value: kfg-$(context.pipelineRun.name)
+        - name: id
+          value: $(context.pipelineRun.name)
+        - name: tags
+          value: 'owner=konflux-ui@redhat.com,project=Konflux,created-by=integration-pipeline,component=konflux-ui'
+        - name: debug
+          value: 'false'
+        - name: ownerKind
+          value: PipelineRun
+        - name: ownerName
+          value: $(context.pipelineRun.name)
+        - name: ownerUid
+          value: $(context.pipelineRun.uid)
+        - name: oci-ref
+          value: $(params.oci-container-repo):$(context.pipelineRun.name)
+        - name: oci-credentials
+          value: $(params.oci-credentials-secret)
+        - name: cpus
+          value: '4'
+        - name: memory
+          value: '16'
+
+    - name: deploy-konflux
+      when:
+        - input: '$(params.skip-deploy)'
+          operator: in
+          values: ['false']
+        - input: '$(params.job-type)'
+          operator: notin
+          values: ['periodic-stage']
+      runAfter:
+        - provision-kind-cluster
+      taskRef:
+        resolver: git
+        params:
+          - name: url
+            value: https://github.com/konflux-ci/tekton-integration-catalog
+          - name: revision
+            value: main
+          - name: pathInRepo
+            value: tasks/konflux-ci/deploy/0.3/deploy-konflux-ci.yaml
+      params:
+        - name: cluster-access-secret
+          value: kfg-$(context.pipelineRun.name)
+        - name: component-name
+          value: ui
+        - name: component-pr-owner
+          value: $(tasks.test-metadata.results.pull-request-author)
+        - name: component-pr-sha
+          value: $(tasks.test-metadata.results.git-revision)
+        - name: component-pr-source-branch
+          value: $(tasks.test-metadata.results.source-repo-branch)
+        - name: oci-ref
+          value: $(params.oci-container-repo):$(context.pipelineRun.name)
+        - name: oci-credentials
+          value: $(params.oci-credentials-secret)
+        - name: build-credentials
+          value: $(params.build-credentials-secret)
+
+    - name: monitor-webhook-logs
+      when:
+        - input: '$(params.job-type)'
+          operator: notin
+          values: ['periodic-stage']
+      runAfter:
+        - deploy-konflux
+      taskRef:
+        resolver: git
+        params:
+          - name: url
+            value: https://github.com/konflux-ci/konflux-ui
+          - name: revision
+            value: main
+          - name: pathInRepo
+            value: .tekton/tasks/monitor-webhook-logs.yaml
+      params:
+        - name: monitoring-duration
+          value: '5m'
+
+    - name: run-e2e-konflux-ui
+      runAfter:
+        - deploy-konflux
+      taskRef:
+        resolver: git
+        params:
+          - name: url
+            value: https://github.com/konflux-ci/konflux-ui
+          - name: revision
+            value: main
+          - name: pathInRepo
+            value: .tekton/tasks/run-e2e-konflux-ui.yaml
+      params:
+          # says if it is PR check or periodic job
+        - name: job-type
+          value: '$(params.job-type)'
+          # oci for storing artefacts
+        - name: oci-ref
+          value: $(params.oci-container-repo):$(context.pipelineRun.name)
+        - name: oci-credentials
+          value: $(params.oci-credentials-secret)
+        - name: test-image-tag
+          value: $(params.test-image-tag)
+        - name: spec-file
+          value: $(params.spec-file)
+        - name: github-credentials-secret
+          value: $(params.github-credentials-secret)
+        - name: cypress-credentials-secret
+          value: $(params.cypress-credentials-secret)
+        - name: cypress-cloud-secret
+          value: $(params.cypress-cloud-secret)
+  finally:
+    - name: deprovision-kind-cluster
+      when:
+        - input: '$(params.skip-deprovision)'
+          operator: in
+          values: ['false']
+        - input: '$(params.skip-provision)'
+          operator: in
+          values: ['false']
+        - input: '$(params.job-type)'
+          operator: notin
+          values: ['periodic-stage']
+      taskRef:
+        resolver: git
+        params:
+          - name: url
+            value: https://github.com/konflux-ci/tekton-integration-catalog
+          - name: revision
+            value: main
+          - name: pathInRepo
+            value: tasks/mapt-oci/kind-aws-spot/deprovision/0.1/kind-aws-deprovision.yaml
+      params:
+        - name: secret-aws-credentials
+          value: $(params.konflux-test-infra-secret)
+        - name: id
+          value: $(context.pipelineRun.name)
+        - name: cluster-access-secret
+          value: kfg-$(context.pipelineRun.name)
+        - name: oci-container
+          value: $(params.oci-container-repo):$(context.pipelineRun.name)
+        - name: oci-credentials
+          value: $(params.oci-credentials-secret)
+
+    - name: pull-request-status-message
+      when: 
+        - input: '$(params.job-type)'
+          operator: notin
+          values: ['periodic-stage']
+      taskRef:
+        resolver: git
+        params:
+          - name: url
+            value: https://github.com/konflux-ci/tekton-integration-catalog.git
+          - name: revision
+            value: main
+          - name: pathInRepo
+            value: tasks/pull-request-comment/0.2/pull-request-comment.yaml
+      params:
+        - name: test-name
+          value: '$(context.pipelineRun.name)'
+        - name: oci-container
+          value: '$(params.oci-container-repo):$(context.pipelineRun.name)'
+        - name: job-spec
+          value: '$(tasks.test-metadata.results.job-spec)'
+        - name: pipeline-aggregate-status
+          value: '$(tasks.status)'
+        - name: junit-report-name
+          value: e2e-report.xml
+        - name: e2e-log-name
+          value: e2e-tests.log
+        - name: cluster-provision-log-name
+          value: cluster-provision.log
+        - name: enable-test-results-analysis
+          value: 'true'
+        - name: artifact-browser-url
+          value: '$(params.artifact-browser-url)'
+        - name: konflux-test-infra-secret
+          value: $(params.konflux-test-infra-secret)
+
+    - name: send-slack-notification
+      taskRef:
+        resolver: git
+        params:
+          - name: url
+            value: https://github.com/konflux-ci/konflux-ui
+          - name: revision
+            value: main
+          - name: pathInRepo
+            value: .tekton/tasks/send-slack-notification.yaml
+      params:
+        - name: pipeline-aggregate-status
+          value: '$(tasks.status)'
+        - name: test-name
+          value: '$(context.pipelineRun.name)'
+        - name: job-type
+          value: '$(params.job-type)'
+        - name: suite
+          value: 'basic'
+        - name: slack-credentials-secret
+          value: $(params.slack-credentials-secret)

@@ -267,9 +267,7 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
   const scrollContainerRef = React.useCallback(
     (node: HTMLDivElement | null) => {
       scrollRef.current = node;
-      if (navRef && 'current' in navRef) {
-        (navRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
-      }
+      navRef(node);
     },
     [navRef],
   );

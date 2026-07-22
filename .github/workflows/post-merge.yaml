@@ -6,7 +6,6 @@ on:
   push:
     branches:
       - main
-      - patternfly-v6
 
 # Cancel in-progress runs when new commits are pushed to main
 concurrency:
@@ -23,7 +22,7 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: Checkout 🛎️
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Enable Corepack 📦
         run: corepack enable
@@ -43,7 +42,7 @@ jobs:
           CI: true
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v6.0.2
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
         with:
           files: ./coverage/lcov.info
           token: ${{ secrets.CODECOV_TOKEN }}
@@ -54,7 +53,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout 🛎️
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Build E2E Test Image
         env:
