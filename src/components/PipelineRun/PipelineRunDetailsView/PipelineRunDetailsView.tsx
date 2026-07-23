@@ -1,29 +1,30 @@
 import * as React from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { Bullseye, Spinner } from '@patternfly/react-core';
+import { useApplicationBreadcrumbs } from '~/components/Applications/breadcrumbs/breadcrumb-utils';
+import { DetailsPage } from '~/components/DetailsPage';
 import { createDetailsPageAction } from '~/components/DetailsPage/utils';
+import { usePipelinererunAction } from '~/components/PipelineRun/PipelineRunListView/pipelinerun-actions';
+import { StatusIconWithTextLabel } from '~/components/topology/StatusIcon';
+import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { CONFORMA_TASK } from '~/consts/security';
-import { getErrorState } from '~/shared/utils/error-utils';
-import { downloadYamlAction } from '~/utils/common-utils';
-import { PipelineRunLabel } from '../../../consts/pipelinerun';
-import { usePipelineRunV2 } from '../../../hooks/usePipelineRunsV2';
-import { PipelineRunModel } from '../../../models';
+import { usePipelineRunV2 } from '~/hooks/usePipelineRunsV2';
+import { useStatusOnFavicon } from '~/hooks/useStatusOnFavicon';
+import { PipelineRunModel } from '~/models';
 import {
   INTEGRATION_TEST_PIPELINE_LIST_PATH,
   PIPELINE_RUNS_DETAILS_PATH,
   PIPELINE_RUNS_LIST_PATH,
   RELEASE_PIPELINE_LIST_PATH,
-} from '../../../routes/paths';
-import { RouterParams } from '../../../routes/utils';
-import { useNamespace } from '../../../shared/providers/Namespace';
-import { isResourceEnterpriseContract } from '../../../utils/conforma-utils';
-import { pipelineRunCancel, pipelineRunStop } from '../../../utils/pipeline-actions';
-import { isTaskRunInPipelineRun, pipelineRunStatus } from '../../../utils/pipeline-utils';
-import { useAccessReviewForModel } from '../../../utils/rbac';
-import { useApplicationBreadcrumbs } from '../../Applications/breadcrumbs/breadcrumb-utils';
-import { DetailsPage } from '../../DetailsPage';
-import { StatusIconWithTextLabel } from '../../StatusIcon/StatusIcon';
-import { usePipelinererunAction } from '../PipelineRunListView/pipelinerun-actions';
+} from '~/routes/paths';
+import { RouterParams } from '~/routes/utils';
+import { useNamespace } from '~/shared/providers/Namespace';
+import { getErrorState } from '~/shared/utils/error-utils';
+import { downloadYamlAction } from '~/utils/common-utils';
+import { isResourceEnterpriseContract } from '~/utils/conforma-utils';
+import { pipelineRunCancel, pipelineRunStop } from '~/utils/pipeline-actions';
+import { isTaskRunInPipelineRun, pipelineRunStatus } from '~/utils/pipeline-utils';
+import { useAccessReviewForModel } from '~/utils/rbac';
 
 export const PipelineRunDetailsView: React.FC = () => {
   const { pipelineRunName } = useParams<RouterParams>();
@@ -39,9 +40,11 @@ export const PipelineRunDetailsView: React.FC = () => {
   const [canPatchPipeline] = useAccessReviewForModel(PipelineRunModel, 'patch');
 
   const plrStatus = React.useMemo(
-    () => loaded && pipelineRun && pipelineRunStatus(pipelineRun),
-    [loaded, pipelineRun],
+    () => (loaded && pipelineRun && !error ? pipelineRunStatus(pipelineRun) : null),
+    [loaded, pipelineRun, error],
   );
+
+  useStatusOnFavicon(plrStatus);
 
   const hasConformaTaskRun = React.useMemo(
     () => isTaskRunInPipelineRun(pipelineRun, CONFORMA_TASK),
