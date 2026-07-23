@@ -10,11 +10,8 @@ import { HelpDropdown } from '../HelpDropdown';
 const mockStartTour = jest.fn();
 
 jest.mock('~/shared/components/GuidedTours', () => ({
-  useTour: () => ({ startTour: mockStartTour }),
+  useTour: () => ({ startTour: mockStartTour, currentRoute: undefined }),
   getToursByRoute: jest.fn(() => []),
-}));
-
-jest.mock('~/shared/components/GuidedTours/merge-utils', () => ({
   collectAndMerge: jest.fn(() => ({ mergedSteps: [], sourceIds: [], hasPrompt: false })),
 }));
 

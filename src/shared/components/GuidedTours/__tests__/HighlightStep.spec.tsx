@@ -17,6 +17,7 @@ jest.mock('../hooks/useTargetElement', () => ({
       bottom: 140,
       left: 50,
     },
+    triggerRef: { current: mockTargetEl },
   }),
 }));
 

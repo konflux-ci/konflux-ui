@@ -81,4 +81,6 @@ export type TourAction =
 export interface TourContextValue {
   state: TourState;
   dispatch: React.Dispatch<TourAction>;
+  currentRoute: string | undefined;
+  setCurrentRoute: (route: string | undefined) => void;
 }

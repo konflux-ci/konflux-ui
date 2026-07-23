@@ -5,7 +5,7 @@ import { useTourContext } from '../TourProvider';
 import { MergedStep, TourStepConfig, TourStorage } from '../types';
 
 export const useTour = () => {
-  const { state, dispatch } = useTourContext();
+  const { state, dispatch, currentRoute } = useTourContext();
   const [seen, setSeen] = useLocalStorage<TourStorage>(TOUR_STORAGE_KEY, {});
 
   const startTour = useCallback(
@@ -56,6 +56,7 @@ export const useTour = () => {
     totalSteps: state.mergedSteps.length,
     isFirstStep,
     isLastStep,
+    currentRoute,
     startTour,
     next,
     prev,

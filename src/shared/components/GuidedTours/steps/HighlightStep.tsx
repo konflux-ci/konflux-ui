@@ -44,8 +44,7 @@ export const HighlightStep: React.FC<HighlightStepProps> = ({
   onSkip,
   onDone,
 }) => {
-  const { targetEl } = useTargetElement(target);
-  const triggerRef = React.useRef<HTMLElement | null>(null);
+  const { targetEl, triggerRef } = useTargetElement(target);
 
   // Add/remove highlight ring class
   React.useEffect(() => {
@@ -55,8 +54,6 @@ export const HighlightStep: React.FC<HighlightStepProps> = ({
       targetEl.classList.remove(HIGHLIGHT_CLASS);
     };
   }, [targetEl]);
-
-  triggerRef.current = targetEl;
 
   if (!targetEl) {
     return null;

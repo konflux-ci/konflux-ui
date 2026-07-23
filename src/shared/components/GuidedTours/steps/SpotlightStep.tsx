@@ -42,9 +42,7 @@ export const SpotlightStep: React.FC<SpotlightStepProps> = ({
   onSkip,
   onDone,
 }) => {
-  const { targetEl, targetRect } = useTargetElement(target);
-  const triggerRef = React.useRef<HTMLElement | null>(null);
-  triggerRef.current = targetEl;
+  const { targetEl, targetRect, triggerRef } = useTargetElement(target);
 
   if (!targetEl || !targetRect) {
     return null;

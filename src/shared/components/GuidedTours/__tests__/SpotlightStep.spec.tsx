@@ -21,6 +21,7 @@ jest.mock('../hooks/useTargetElement', () => ({
       bottom: 250,
       left: 100,
     },
+    triggerRef: { current: document.createElement('div') },
   }),
 }));
 
