@@ -66,18 +66,9 @@ registerTour(applicationsTour);
 <Button data-tour="create-application-btn">Create application</Button>
 ```
 
-### 4. Wire up auto-trigger in the page component
+### 4. Auto-trigger is already wired up
 
-```tsx
-import { useTourAutoTrigger } from '~/shared/components/GuidedTours';
-
-const ApplicationsPage = () => {
-  useTourAutoTrigger('ns/:workspaceName/applications');
-  return <>{/* page content */}</>;
-};
-```
-
-The `TourProvider` and `TourRenderer` are already mounted at the app root -- you do not need to add them.
+The `TourProvider`, `TourRenderer`, and `TourAutoTrigger` are already mounted at the app root. `TourAutoTrigger` uses `useLocation()` and `matchPath()` to resolve the current URL to a registered tour route, so no per-page wiring is needed.
 
 ## Tour Configuration
 
@@ -85,9 +76,9 @@ The `TourProvider` and `TourRenderer` are already mounted at the app root -- you
 
 ```ts
 interface TourConfig {
-  /** Unique identifier, also used as localStorage key */
+  /** Unique identifier, used as an entry key within the `konflux-tours` localStorage JSON object */
   id: string;
-  /** Route pattern to match (e.g., 'ns/:workspaceName/applications') */
+  /** Registry key for route lookup (e.g., 'ns/:workspaceName/applications') */
   route: string;
   /** 'auto' = first visit trigger, 'manual' = help menu only */
   trigger: TourTrigger;
@@ -146,7 +137,7 @@ interface HighlightStepConfig extends BaseStepConfig {
 
 ## Registering Tours
 
-Call `registerTour()` at module level. The function adds the config to an internal `Map<route, TourConfig[]>`.
+Call `registerTour()` at module level. The function adds the config to an internal `Map<route, TourConfig[]>` using the `route` field as an exact key (no pattern matching occurs in the registry itself; URL-to-route resolution happens in `useTourAutoTrigger` via React Router's `matchPath`).
 
 ```ts
 import { registerTour, TourConfig } from '~/shared/components/GuidedTours';
@@ -328,24 +319,20 @@ localStorage.setItem('konflux-tours', JSON.stringify(tours));
 
 ### Auto-trigger (first visit)
 
-`useTourAutoTrigger(routePattern)` runs on page mount. It:
+`useTourAutoTrigger` is mounted once at the app root via the `TourAutoTrigger` component. It uses `useLocation()` to watch for route changes, then calls `matchPath()` against all registered tour routes to resolve the current URL to a registry key. It:
 
-1. Looks up all tours registered for the route with `trigger: 'auto'`
-2. Filters out already-seen entries
-3. Merges remaining entries via `collectAndMerge()`
-4. Starts the tour if there are steps to show
-5. Uses a ref to prevent re-triggering on the same route within the same session
+1. Resolves the current URL to a registered route key via `matchPath()`
+2. Looks up all tours registered for that route with `trigger: 'auto'`
+3. Filters out already-seen entries
+4. Merges remaining entries via `collectAndMerge()`
+5. Starts the tour if there are steps to show
+6. Uses a ref to prevent re-triggering on the same route within the same session
 
-```tsx
-const MyPage = () => {
-  useTourAutoTrigger('ns/:workspaceName/applications');
-  // ...
-};
-```
+No per-page wiring is needed -- registering a tour with `trigger: 'auto'` is sufficient.
 
 ### Manual trigger (help menu)
 
-Use `useTour()` to start a tour programmatically, bypassing the seen filter:
+The help menu calls `getToursByRoute(route)` **without** a trigger filter, so it returns ALL tours for the current route (both `auto` and `manual`), ignoring seen state. This is intentional -- the user explicitly asked to see the tour again.
 
 ```tsx
 import { useTour, getToursByRoute } from '~/shared/components/GuidedTours';
@@ -355,8 +342,10 @@ const HelpMenuItem = () => {
   const { startTour } = useTour();
 
   const handleClick = () => {
+    // No trigger filter: returns ALL tours (auto + manual) for the route
     const entries = getToursByRoute('ns/:workspaceName/applications');
-    const { mergedSteps, sourceIds } = collectAndMerge(entries); // no seen filter
+    // No seen filter: always show regardless of prior completion/dismissal
+    const { mergedSteps, sourceIds } = collectAndMerge(entries);
     if (mergedSteps.length > 0) {
       startTour(mergedSteps, sourceIds);
     }
@@ -366,13 +355,11 @@ const HelpMenuItem = () => {
 };
 ```
 
-Note: pass `seen` to `collectAndMerge()` to respect previously seen state, or omit it to always show the tour.
-
 ## Architecture
 
 ### File structure
 
-```
+```text
 src/shared/components/GuidedTours/
   index.ts              Public exports
   types.ts              TypeScript interfaces (TourConfig, step configs, state)
@@ -400,11 +387,11 @@ src/shared/components/GuidedTours/
 
 ### Data flow
 
-```
-Page mounts
+```text
+Route changes (useLocation)
     |
     v
-useTourAutoTrigger(route)
+useTourAutoTrigger  -->  matchPath(url, registeredRoutes)  -->  resolved route key
     |
     v
 getToursByRoute(route, 'auto')  -->  registry (Map<route, TourConfig[]>)
@@ -427,7 +414,7 @@ User clicks Next/Back/Skip/Done  -->  dispatch action  -->  update state / local
 
 ### App wiring
 
-`TourProvider` wraps the app at the router level (`src/routes/index.tsx`). `TourRenderer` should be placed inside the provider to render active tour steps. Individual pages call `useTourAutoTrigger()` to opt in to auto-triggering.
+`TourProvider` wraps the app at the router level (`src/routes/index.tsx`). `TourRenderer` is placed inside the provider to render active tour steps. `TourAutoTrigger` is also mounted at the app root -- it watches for route changes and auto-triggers tours without any per-page wiring.
 
 ## Adding a New Tour -- Checklist
 
@@ -435,6 +422,6 @@ User clicks Next/Back/Skip/Done  -->  dispatch action  -->  update state / local
 2. **Call `registerTour()`** at module level in the same file
 3. **Import the file** so registration executes (e.g., import it in the page component or a central tour index)
 4. **Add `data-tour` attributes** to any target elements referenced by spotlight/highlight steps
-5. **Call `useTourAutoTrigger(route)`** in the page component if the tour uses `trigger: 'auto'`
+5. **Verify auto-trigger works** -- `TourAutoTrigger` is already mounted at the app root; tours with `trigger: 'auto'` are triggered automatically when the user navigates to the matching route
 6. **Test locally** -- clear `konflux-tours` from localStorage to re-trigger, verify each step renders correctly
 7. **Write unit tests** -- see existing tests in `__tests__/` for patterns (mock `useTour`, verify step rendering)
