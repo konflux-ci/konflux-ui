@@ -86,6 +86,12 @@ if [[ -n "$ts_changed" ]]; then
       [[ -n "$file_errors" ]] && tsc_out="${tsc_out:+$tsc_out
 }$file_errors"
     done <<< "$ts_changed"
+    # tsc failed but produced no diagnostic tied to a changed file, and the output
+    # contains no TS-coded diagnostic at all (e.g. crash, OOM, broken tsconfig) —
+    # surface the raw output instead of silently treating this as a clean run.
+    if [[ -z "$tsc_out" ]] && ! printf '%s\n' "$tsc_full" | grep -qE 'TS[0-9]+:'; then
+      tsc_out="$tsc_full"
+    fi
     [[ -n "$tsc_out" ]] && errors="${errors}
 === TypeScript Errors ===
 ${tsc_out}"
@@ -121,7 +127,7 @@ if [[ -n "$test_files" ]]; then
       if [[ -n "$module_error_sources" ]]; then
         module_from_agent=false
         while IFS= read -r src_file; do
-          if echo "$changed_files" | grep -qF "$src_file"; then
+          if echo "$changed_files" | grep -qxF "$src_file"; then
             module_from_agent=true
             break
           fi
