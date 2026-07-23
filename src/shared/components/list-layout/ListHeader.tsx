@@ -6,12 +6,10 @@ type ListHeaderProps = {
   description: React.ReactNode;
 };
 
-const ListHeader: React.FC<React.PropsWithChildren<ListHeaderProps>> = ({ title, description }) => {
+const ListHeader: React.FC<ListHeaderProps> = ({ title, description }) => {
   return (
     <>
-      <Title size="lg" headingLevel="h3">
-        {title}
-      </Title>
+      <Title headingLevel="h3">{title}</Title>
       <Content component={ContentVariants.p}>{description}</Content>
     </>
   );

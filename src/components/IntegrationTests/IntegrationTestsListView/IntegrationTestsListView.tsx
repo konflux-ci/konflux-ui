@@ -5,7 +5,6 @@ import {
   EmptyStateBody,
   Truncate,
   EmptyStateActions,
-  Flex,
 } from '@patternfly/react-core';
 import { INTEGRATION_TEST_ADD_PATH, INTEGRATION_TEST_DETAILS_PATH } from '@routes/paths';
 import ActionMenu from '~/shared/components/action-menu/ActionMenu';
@@ -18,7 +17,7 @@ import {
   FilterToolbar,
 } from '~/shared/components/Filter';
 import ExternalLink from '~/shared/components/links/ExternalLink';
-import ListHeader from '~/shared/components/list-layout/ListHeader';
+import ListLayout from '~/shared/components/list-layout/ListLayout';
 import { Table, TableContainer, type ColumnDefinition } from '~/shared/components/TableV2';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
@@ -194,12 +193,10 @@ const IntegrationTestsListView: React.FC<React.PropsWithChildren> = () => {
   }
 
   return (
-    <Flex direction={{ default: 'column' }} rowGap={{ default: 'rowGapSm' }}>
-      <ListHeader
-        title="Integration tests"
-        description={'Add an integration test to test all your components after you commit code.'}
-      />
-
+    <ListLayout
+      title="Integration tests"
+      description="Add an integration test to test all your components after you commit code."
+    >
       <TableContainer
         data={filteredData}
         unfilteredData={integrationTests}
@@ -232,7 +229,7 @@ const IntegrationTestsListView: React.FC<React.PropsWithChildren> = () => {
           aria-label="Integration tests"
         />
       </TableContainer>
-    </Flex>
+    </ListLayout>
   );
 };
 

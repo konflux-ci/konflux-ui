@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { EmptyStateBody, Flex } from '@patternfly/react-core';
+import { EmptyStateBody } from '@patternfly/react-core';
 import emptySnapshotImgUrl from '~/assets/Snapshots.svg';
 import ColumnManagement from '~/components/ColumnManagement/ColumnManagement';
 import { LEARN_MORE_SNAPSHOTS } from '~/consts/documentation';
@@ -10,7 +10,7 @@ import { ExternalLink } from '~/shared';
 import AppEmptyState from '~/shared/components/empty-state/AppEmptyState';
 import FilteredEmptyState from '~/shared/components/empty-state/FilteredEmptyState';
 import { useFilterState, useFilteredData, FilterToolbar } from '~/shared/components/Filter';
-import ListHeader from '~/shared/components/list-layout/ListHeader';
+import ListLayout from '~/shared/components/list-layout/ListLayout';
 import { Table, TableContainer } from '~/shared/components/TableV2';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
@@ -100,16 +100,15 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
   }
 
   return (
-    <Flex direction={{ default: 'column' }} rowGap={{ default: 'rowGapSm' }}>
-      <ListHeader
-        title="Snapshots"
-        description={
-          <>
-            A snapshot is a point-in-time, immutable record of an application&apos;s container
-            images. <ExternalLink href={LEARN_MORE_SNAPSHOTS}>Learn more</ExternalLink>
-          </>
-        }
-      />
+    <ListLayout
+      title="Snapshots"
+      description={
+        <>
+          A snapshot is a point-in-time, immutable record of an application&apos;s container images.{' '}
+          <ExternalLink href={LEARN_MORE_SNAPSHOTS}>Learn more</ExternalLink>
+        </>
+      }
+    >
       <TableContainer
         data={finalFilteredSnapshots}
         unfilteredData={snapshots ?? []}
@@ -153,7 +152,7 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
           meta={meta}
         />
       </TableContainer>
-    </Flex>
+    </ListLayout>
   );
 };
 
