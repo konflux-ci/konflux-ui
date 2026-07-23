@@ -4,7 +4,7 @@ This document explains how to use the Guided Tours system in `src/shared/compone
 
 ## Overview
 
-The Guided Tours system renders interactive walkthroughs that guide users through page features. Tours are defined as config objects, registered against route patterns, and rendered automatically on first visit or manually from a help menu.
+The Guided Tours system renders interactive walkthroughs that guide users through page features. Tours are defined as config objects, registered against route keys, and rendered automatically on first visit or manually from a help menu.
 
 Each tour step is one of three types:
 

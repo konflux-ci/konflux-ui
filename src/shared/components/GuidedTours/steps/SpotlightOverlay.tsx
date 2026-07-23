@@ -7,7 +7,7 @@ interface SpotlightOverlayProps {
 }
 
 export const SpotlightOverlay: React.FC<SpotlightOverlayProps> = ({ targetRect, padding = 8 }) => {
-  const maskId = 'guided-tour-spotlight-mask';
+  const maskId = React.useId();
   const x = targetRect.x - padding;
   const y = targetRect.y - padding;
   const width = targetRect.width + padding * 2;

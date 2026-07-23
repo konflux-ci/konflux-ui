@@ -55,4 +55,14 @@ describe('HighlightStep', () => {
     routerRenderer(<HighlightStep {...defaultProps} />);
     expect(screen.getByText('1 of 2')).toBeInTheDocument();
   });
+
+  it('renders nothing when target element is not found', () => {
+    jest.mocked(useTargetElement).mockReturnValueOnce({
+      targetEl: null,
+      targetRect: null,
+      triggerRef: { current: null },
+    });
+    const { container } = routerRenderer(<HighlightStep {...defaultProps} />);
+    expect(container).toBeEmptyDOMElement();
+  });
 });

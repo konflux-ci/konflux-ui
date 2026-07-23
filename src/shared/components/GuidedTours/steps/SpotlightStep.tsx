@@ -20,7 +20,7 @@ interface SpotlightStepProps {
   onDone: () => void;
 }
 
-const POSITION_MAP: Record<string, 'top' | 'bottom' | 'left' | 'right' | 'auto'> = {
+const POSITION_MAP: Record<PopoverPosition, 'top' | 'bottom' | 'left' | 'right' | 'auto'> = {
   top: 'top',
   bottom: 'bottom',
   left: 'left',

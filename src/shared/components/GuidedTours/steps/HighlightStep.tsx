@@ -22,7 +22,7 @@ interface HighlightStepProps {
 
 const HIGHLIGHT_CLASS = 'guided-tours__highlight-ring';
 
-const POSITION_MAP: Record<string, 'top' | 'bottom' | 'left' | 'right' | 'auto'> = {
+const POSITION_MAP: Record<PopoverPosition, 'top' | 'bottom' | 'left' | 'right' | 'auto'> = {
   top: 'top',
   bottom: 'bottom',
   left: 'left',
