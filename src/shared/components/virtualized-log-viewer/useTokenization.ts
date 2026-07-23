@@ -19,26 +19,22 @@ export const MONSTER_LINE_THRESHOLD = 30 * 1024;
  */
 export function useTokenization(lines: string[]) {
   // Lazy tokenization cache - only tokenize visible lines
-  // Cache key: lineIndex -> tokenized line data (tokens and text only, NOT matches)
-  const tokenizationCache = React.useRef<Map<number, TokenizedLine>>(new Map());
-
-  // Clear cache only when data changes (NOT when search changes, as tokens remain the same)
-  React.useEffect(() => {
-    tokenizationCache.current.clear();
-  }, [lines]);
+  // Cache key: line content -> tokenized line data (tokens and text only, NOT matches)
+  const tokenizationCache = React.useRef<Map<string, TokenizedLine>>(new Map());
 
   // Tokenize a single line on-demand with caching
   const tokenizeLine = React.useCallback(
     (lineIndex: number): TokenizedLine => {
-      // Check cache first
-      const cached = tokenizationCache.current.get(lineIndex);
-      if (cached) return cached;
-
       // Get the line text
       const line = lines[lineIndex];
+
+      // Check cache first
+      const cached = tokenizationCache.current.get(line);
+      if (cached) return cached;
+
       if (!line) {
         const result = { tokens: [], text: '' };
-        tokenizationCache.current.set(lineIndex, result);
+        tokenizationCache.current.set('', result);
         return result;
       }
 
@@ -50,7 +46,7 @@ export function useTokenization(lines: string[]) {
       if (lineLength >= MONSTER_LINE_THRESHOLD) {
         // Monster line: render as plain text without syntax highlighting
         const result = { tokens: [], text: line };
-        tokenizationCache.current.set(lineIndex, result);
+        tokenizationCache.current.set(line, result);
         return result;
       }
 
@@ -61,7 +57,7 @@ export function useTokenization(lines: string[]) {
         const tokens = Prism.tokenize(line, Prism.languages.log);
         const text = tokens.map(flattenTokenText).join('');
         const result = { tokens, text };
-        tokenizationCache.current.set(lineIndex, result);
+        tokenizationCache.current.set(line, result);
 
         // Log performance warning for slow tokenization
         if (process.env.NODE_ENV !== 'production') {
@@ -81,7 +77,7 @@ export function useTokenization(lines: string[]) {
         });
         // Fallback to plain text on error
         const result = { tokens: [], text: line };
-        tokenizationCache.current.set(lineIndex, result);
+        tokenizationCache.current.set(line, result);
         return result;
       }
     },
