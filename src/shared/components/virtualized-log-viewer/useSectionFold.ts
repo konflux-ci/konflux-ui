@@ -2,102 +2,117 @@ import React from 'react';
 import type { LogSection } from './types';
 
 const EMPTY_EXPANDED_SECTIONS = new Set<number>();
+const EMPTY_OVERRIDES: ReadonlyMap<number, boolean> = new Map();
 
-function getInitialExpandedSections(sections: readonly LogSection[]): Set<number> {
-  if (sections.length === 1) return new Set([0]);
+/** Default: in-progress open, completed folded. */
+const isExpandedByDefault = (section: LogSection): boolean => !section.isCompleted;
 
-  const expanded = new Set<number>();
-  for (let i = 0; i < sections.length; i++) {
-    if (!sections[i].isCompleted) expanded.add(i);
+const resolveIsExpanded = (
+  sections: readonly LogSection[],
+  overrides: ReadonlyMap<number, boolean>,
+  index: number,
+): boolean => {
+  const override = overrides.get(index);
+  return override !== undefined ? override : isExpandedByDefault(sections[index]);
+};
+
+/** Stable identity key so log-content updates don't reset overrides. */
+const sectionNamesKey = (sections: readonly LogSection[]): string =>
+  sections.map((s) => s.containerName).join('\0');
+
+const isPrefixGrowth = (prev: readonly string[], next: readonly string[]): boolean =>
+  next.length >= prev.length && prev.every((name, i) => name === next[i]);
+
+/** Store only deviations from the default expand policy. */
+const withOverride = (
+  prev: ReadonlyMap<number, boolean>,
+  index: number,
+  expanded: boolean,
+  defaultExpanded: boolean,
+): ReadonlyMap<number, boolean> => {
+  if (expanded === defaultExpanded) {
+    if (!prev.has(index)) return prev;
+    const next = new Map(prev);
+    next.delete(index);
+    return next.size > 0 ? next : EMPTY_OVERRIDES;
   }
-  return expanded;
-}
+  if (prev.get(index) === expanded) return prev;
+  const next = new Map(prev);
+  next.set(index, expanded);
+  return next;
+};
 
 export const useSectionFold = (sections: readonly LogSection[]) => {
-  const hasSections = sections.length >= 1;
-
-  const [expandedSections, setExpandedSections] = React.useState<Set<number>>(() =>
-    hasSections ? getInitialExpandedSections(sections) : EMPTY_EXPANDED_SECTIONS,
-  );
-
   const sectionsRef = React.useRef(sections);
   sectionsRef.current = sections;
 
-  const prevSectionCountRef = React.useRef(sections.length);
-  const prevCompletionRef = React.useRef<boolean[]>(sections.map((s) => s.isCompleted ?? false));
+  const [overrides, setOverrides] = React.useState<ReadonlyMap<number, boolean>>(EMPTY_OVERRIDES);
+
+  const namesKey = sectionNamesKey(sections);
+  const prevNamesRef = React.useRef<string[]>(sections.map((s) => s.containerName));
 
   React.useEffect(() => {
-    if (!hasSections) {
-      prevSectionCountRef.current = 0;
-      prevCompletionRef.current = [];
-      return;
+    const prevNames = prevNamesRef.current;
+    const nextNames = namesKey === '' ? [] : namesKey.split('\0');
+
+    // Task switch: drop overrides. Progressive step append: keep them.
+    if (!isPrefixGrowth(prevNames, nextNames) && !isPrefixGrowth(nextNames, prevNames)) {
+      setOverrides(EMPTY_OVERRIDES);
+    } else if (nextNames.length < prevNames.length) {
+      setOverrides((prev) => {
+        if (prev.size === 0) return prev;
+        let changed = false;
+        const pruned = new Map<number, boolean>();
+        prev.forEach((value, index) => {
+          if (index < nextNames.length) pruned.set(index, value);
+          else changed = true;
+        });
+        if (!changed) return prev;
+        return pruned.size > 0 ? pruned : EMPTY_OVERRIDES;
+      });
     }
 
-    const currentSections = sectionsRef.current;
-    const prevCount = prevSectionCountRef.current;
-    const prevCompletion = prevCompletionRef.current;
-    const lengthChanged = currentSections.length !== prevCount;
+    prevNamesRef.current = nextNames;
+  }, [namesKey]);
 
-    setExpandedSections((prev) => {
-      let next: Set<number> | undefined;
+  const expandedSections = React.useMemo(() => {
+    if (sections.length === 0) return EMPTY_EXPANDED_SECTIONS;
 
-      if (lengthChanged && currentSections.length > 0 && prev.size === 0) {
-        next = getInitialExpandedSections(currentSections);
-      }
-
-      if (currentSections.length > prevCount && prev.size > 0) {
-        const base = next ?? prev;
-        next = new Set(base);
-        for (let i = prevCount; i < currentSections.length; i++) {
-          if (!currentSections[i].isCompleted) next.add(i);
-        }
-      }
-
-      if (prevCompletion.length > 0) {
-        const newlyCompleted: number[] = [];
-        currentSections.forEach((s, i) => {
-          if (s.isCompleted && prevCompletion[i] === false) newlyCompleted.push(i);
-        });
-        if (newlyCompleted.length > 0) {
-          const base = next ?? prev;
-          next = new Set(base);
-          newlyCompleted.forEach((i) => next.delete(i));
-        }
-      }
-
-      return next ?? prev;
-    });
-
-    prevSectionCountRef.current = currentSections.length;
-    prevCompletionRef.current = currentSections.map((s) => s.isCompleted ?? false);
-  }, [hasSections, sections]);
+    const expanded = new Set<number>();
+    for (let i = 0; i < sections.length; i++) {
+      if (resolveIsExpanded(sections, overrides, i)) expanded.add(i);
+    }
+    return expanded;
+  }, [sections, overrides]);
 
   const toggleSection = React.useCallback((sectionIndex: number) => {
-    if (sectionsRef.current.length === 0) return;
-    setExpandedSections((prev) => {
-      const next = new Set(prev);
-      if (next.has(sectionIndex)) next.delete(sectionIndex);
-      else next.add(sectionIndex);
-      return next;
+    const currentSections = sectionsRef.current;
+    if (sectionIndex < 0 || sectionIndex >= currentSections.length) return;
+
+    setOverrides((prev) => {
+      const defaultExpanded = isExpandedByDefault(currentSections[sectionIndex]);
+      const nextExpanded = !resolveIsExpanded(currentSections, prev, sectionIndex);
+      return withOverride(prev, sectionIndex, nextExpanded, defaultExpanded);
     });
   }, []);
 
   const expandSection = React.useCallback((sectionIndex: number) => {
-    if (sectionsRef.current.length === 0) return;
-    setExpandedSections((prev) => {
-      if (prev.has(sectionIndex)) return prev;
-      const next = new Set(prev);
-      next.add(sectionIndex);
-      return next;
+    const currentSections = sectionsRef.current;
+    if (sectionIndex < 0 || sectionIndex >= currentSections.length) return;
+
+    setOverrides((prev) => {
+      if (resolveIsExpanded(currentSections, prev, sectionIndex)) return prev;
+      return withOverride(
+        prev,
+        sectionIndex,
+        true,
+        isExpandedByDefault(currentSections[sectionIndex]),
+      );
     });
   }, []);
 
   return React.useMemo(
-    () => ({
-      expandedSections: hasSections ? expandedSections : EMPTY_EXPANDED_SECTIONS,
-      toggleSection,
-      expandSection,
-    }),
-    [hasSections, expandedSections, toggleSection, expandSection],
+    () => ({ expandedSections, toggleSection, expandSection }),
+    [expandedSections, toggleSection, expandSection],
   );
 };
