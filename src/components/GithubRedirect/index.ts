@@ -7,6 +7,7 @@ import { checkReviewAccesses } from '../../utils/rbac';
 
 export const githubRedirectLoader: LoaderFunction = async ({ params }) => {
   const namespace = params[GithubRedirectRouteParams.ns];
+  const pipelineRunName = params[GithubRedirectRouteParams.pipelineRunName];
   const allowed = await checkReviewAccesses(
     {
       model: PipelineRunModel,
@@ -15,16 +16,13 @@ export const githubRedirectLoader: LoaderFunction = async ({ params }) => {
     namespace,
   );
   if (!allowed) throw new Response('Access check Denied', { status: 403 });
-  if (!params[GithubRedirectRouteParams.pipelineRunName]) return null;
-
-  const ns = params[GithubRedirectRouteParams.ns];
-  const pipelineRunName = params[GithubRedirectRouteParams.pipelineRunName];
+  if (!pipelineRunName) return null;
 
   if (isFeatureFlagOn('pipelineruns-kubearchive')) {
-    return QueryPipelineRunWithKubearchive(ns, pipelineRunName);
+    return QueryPipelineRunWithKubearchive(namespace, pipelineRunName);
   }
 
-  return QueryPipelineRun(ns, pipelineRunName);
+  return QueryPipelineRun(namespace, pipelineRunName);
 };
 
 export { default as GithubRedirect } from './GithubRedirect';
