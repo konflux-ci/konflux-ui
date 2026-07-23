@@ -46,8 +46,8 @@ export const useTour = () => {
     [state.mergedSteps, state.currentStepIndex],
   );
 
-  const isLastStep = state.currentStepIndex === state.mergedSteps.length - 1;
-  const isFirstStep = state.currentStepIndex === 0;
+  const isLastStep = state.isActive && state.currentStepIndex === state.mergedSteps.length - 1;
+  const isFirstStep = state.isActive && state.currentStepIndex === 0;
 
   return {
     isActive: state.isActive,

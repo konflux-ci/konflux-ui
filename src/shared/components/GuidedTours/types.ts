@@ -10,7 +10,12 @@ export interface BaseStepConfig {
   title: string;
   content: string;
   closing?: boolean;
-  /** Route override for cross-page steps */
+  /**
+   * Route override for cross-page steps.
+   * TODO: Cross-page step navigation is not yet implemented. When a step has a different
+   * route than the current page, the tour engine should pause, navigate to the target route,
+   * and wait for the target element via MutationObserver. See design spec for full flow.
+   */
   route?: string;
 }
 
@@ -42,7 +47,12 @@ export interface TourConfig {
   route: string;
   /** 'auto' = first visit trigger, 'manual' = help menu only */
   trigger: TourTrigger;
-  /** If true + auto, show confirmation prompt before starting */
+  /**
+   * If true + auto, show confirmation prompt before starting.
+   * TODO: PromptPopover component is not yet implemented. When prompt is true,
+   * useTourAutoTrigger should show a "Want a quick tour?" confirmation instead
+   * of auto-starting. See design spec for the PromptPopover specification.
+   */
   prompt?: boolean;
   /** Controls ordering when merging (lower = earlier, default: 0) */
   priority?: number;

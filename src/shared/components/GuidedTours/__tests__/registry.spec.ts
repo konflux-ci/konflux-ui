@@ -49,10 +49,17 @@ describe('tour registry', () => {
   });
 
   it('filters by trigger type when specified', () => {
-    registerTour(makeTour({ id: 'auto', trigger: 'auto' }));
-    registerTour(makeTour({ id: 'manual', trigger: 'manual' }));
-    expect(getToursByRoute('ns/:workspaceName/applications', 'auto')).toHaveLength(1);
-    expect(getToursByRoute('ns/:workspaceName/applications', 'manual')).toHaveLength(1);
+    registerTour(makeTour({ id: 'auto-tour', trigger: 'auto' }));
+    registerTour(makeTour({ id: 'manual-tour', trigger: 'manual' }));
+
+    const autoTours = getToursByRoute('ns/:workspaceName/applications', 'auto');
+    expect(autoTours).toHaveLength(1);
+    expect(autoTours[0].id).toBe('auto-tour');
+
+    const manualTours = getToursByRoute('ns/:workspaceName/applications', 'manual');
+    expect(manualTours).toHaveLength(1);
+    expect(manualTours[0].id).toBe('manual-tour');
+
     expect(getToursByRoute('ns/:workspaceName/applications')).toHaveLength(2);
   });
 });

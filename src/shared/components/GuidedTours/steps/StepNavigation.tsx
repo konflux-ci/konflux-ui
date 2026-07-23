@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { Button, Flex, FlexItem } from '@patternfly/react-core';
+import './StepNavigation.scss';
 
 interface StepNavigationProps {
   currentStep: number;
@@ -21,9 +22,9 @@ export const StepNavigation: React.FC<StepNavigationProps> = ({
   onDone,
 }) => (
   <Flex
+    className="guided-tours__step-navigation"
     alignItems={{ default: 'alignItemsCenter' }}
     justifyContent={{ default: 'justifyContentSpaceBetween' }}
-    style={{ width: '100%' }}
   >
     <FlexItem>
       <span data-test="tour-step-counter">{`${currentStep + 1} of ${totalSteps}`}</span>
