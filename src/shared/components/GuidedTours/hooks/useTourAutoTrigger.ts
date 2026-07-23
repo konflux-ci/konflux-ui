@@ -1,20 +1,32 @@
 import { useEffect, useRef } from 'react';
+import { matchPath, useLocation } from 'react-router-dom';
 import { collectAndMerge } from '../merge-utils';
-import { getToursByRoute } from '../registry';
+import { getRegisteredRoutes, getToursByRoute } from '../registry';
 import { useTourContext } from '../TourProvider';
 import { useTour } from './useTour';
 
 /**
- * Auto-triggers tours on first page visit.
- *
- * @param currentRoute - the route pattern (e.g., 'ns/:workspaceName/applications')
+ * Resolves the current URL pathname to a registered tour route pattern
+ * using React Router's matchPath. Returns the matching route key or undefined.
  */
-export const useTourAutoTrigger = (currentRoute: string | undefined): void => {
+const resolveCurrentRoute = (pathname: string): string | undefined => {
+  const routes = getRegisteredRoutes();
+  return routes.find((route) => matchPath({ path: `/${route}`, end: true }, pathname));
+};
+
+/**
+ * Auto-triggers tours on first page visit. Mounted at the app root.
+ * Uses URL-to-pattern matching to determine which tours apply to the current page.
+ */
+export const useTourAutoTrigger = (): void => {
+  const location = useLocation();
   const { setCurrentRoute } = useTourContext();
   const { isActive, startTour, seen } = useTour();
   const triggeredRef = useRef<string | null>(null);
 
-  // Always update current route in context so HelpDropdown can read it
+  const currentRoute = resolveCurrentRoute(location.pathname);
+
+  // Keep context in sync so HelpDropdown can read it
   useEffect(() => {
     setCurrentRoute(currentRoute);
   }, [currentRoute, setCurrentRoute]);

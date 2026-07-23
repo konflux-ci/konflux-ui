@@ -16,6 +16,11 @@ export const getToursByRoute = (route: string, triggerFilter?: TourTrigger): Tou
   return tours;
 };
 
+/** Returns all route patterns that have registered tours */
+export const getRegisteredRoutes = (): string[] => {
+  return Array.from(toursByRoute.keys());
+};
+
 /** For testing only */
 export const clearRegistry = (): void => {
   toursByRoute.clear();

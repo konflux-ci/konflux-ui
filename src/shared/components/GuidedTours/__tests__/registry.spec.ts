@@ -1,4 +1,4 @@
-import { registerTour, getToursByRoute, clearRegistry } from '../registry';
+import { registerTour, getToursByRoute, getRegisteredRoutes, clearRegistry } from '../registry';
 import { TourConfig } from '../types';
 
 const makeTour = (overrides: Partial<TourConfig> = {}): TourConfig => ({
@@ -37,6 +37,15 @@ describe('tour registry', () => {
     registerTour(makeTour({ id: 'b', route: 'ns/:workspaceName/secrets' }));
     expect(getToursByRoute('ns/:workspaceName/applications')).toHaveLength(1);
     expect(getToursByRoute('ns/:workspaceName/secrets')).toHaveLength(1);
+  });
+
+  it('getRegisteredRoutes returns all registered route patterns', () => {
+    registerTour(makeTour({ id: 'a', route: 'ns/:workspaceName/applications' }));
+    registerTour(makeTour({ id: 'b', route: 'ns/:workspaceName/secrets' }));
+    const routes = getRegisteredRoutes();
+    expect(routes).toHaveLength(2);
+    expect(routes).toContain('ns/:workspaceName/applications');
+    expect(routes).toContain('ns/:workspaceName/secrets');
   });
 
   it('filters by trigger type when specified', () => {
