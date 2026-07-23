@@ -1,5 +1,4 @@
 import React from 'react';
-import { logger } from '~/monitoring/logger';
 import { useEventListener } from '../hooks/useEventListener';
 import { createKeyedJSONStorage } from '../utils/storage';
 import {
@@ -62,19 +61,6 @@ const getStoredPreference = (): ThemePreference => {
   if (stored && THEME_PREFERENCES.includes(stored)) {
     return stored;
   }
-  // Migration: read raw localStorage value from pre-PF v6 format (bare strings)
-  try {
-    const raw = window.localStorage.getItem(THEME_STORAGE_KEY);
-    if (raw && (THEME_PREFERENCES as readonly string[]).includes(raw)) {
-      const preference = raw as ThemePreference;
-      themeStorage.set(preference);
-      return preference;
-    }
-  } catch (e) {
-    logger.warn('Theme migration: localStorage is unavailable', {
-      error: e instanceof Error ? e.message : String(e),
-    });
-  }
   return THEME_SYSTEM;
 };
 
@@ -82,19 +68,6 @@ const getStoredContrastPreference = (): ContrastPreference => {
   const stored = contrastStorage.get();
   if (stored && CONTRAST_PREFERENCES.includes(stored)) {
     return stored;
-  }
-  // Migration: read raw localStorage value from pre-PF v6 format (bare strings)
-  try {
-    const raw = window.localStorage.getItem(CONTRAST_STORAGE_KEY);
-    if (raw && (CONTRAST_PREFERENCES as readonly string[]).includes(raw)) {
-      const preference = raw as ContrastPreference;
-      contrastStorage.set(preference);
-      return preference;
-    }
-  } catch (e) {
-    logger.warn('Contrast migration: localStorage is unavailable', {
-      error: e instanceof Error ? e.message : String(e),
-    });
   }
   return CONTRAST_SYSTEM;
 };
