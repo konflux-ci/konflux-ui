@@ -10,7 +10,6 @@ import { FilterOption } from '~/shared/components/Filter/types';
 import { Table, TableContainer } from '~/shared/components/TableV2';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
-import { PipelineRunKind } from '~/types';
 import { statuses } from '~/utils/commits-utils';
 import {
   DEPENDENCY_RUNS_COLUMN_STATE_KEY,
@@ -55,10 +54,7 @@ export const DependencyRunsListView = ({ componentName }: DependencyRunsListView
     ),
   );
 
-  const dependencyRunsList = React.useMemo(
-    (): PipelineRunKind[] => dependencyRuns ?? [],
-    [dependencyRuns],
-  );
+  const dependencyRunsList = dependencyRuns ?? [];
 
   const { filteredData } = useFilteredData(
     dependencyRunsFilterConfig,
