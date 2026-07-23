@@ -14,8 +14,12 @@ export const useTourContext = (): TourContextValue => {
 
 export const TourProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
   const [state, dispatch] = React.useReducer(tourReducer, initialTourState);
+  const [currentRoute, setCurrentRoute] = React.useState<string | undefined>(undefined);
 
-  const value = React.useMemo<TourContextValue>(() => ({ state, dispatch }), [state]);
+  const value = React.useMemo<TourContextValue>(
+    () => ({ state, dispatch, currentRoute, setCurrentRoute }),
+    [state, currentRoute],
+  );
 
   return <TourContext.Provider value={value}>{children}</TourContext.Provider>;
 };

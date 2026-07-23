@@ -8,6 +8,13 @@ import { getTourElement } from '../consts';
 export const useTargetElement = (target: string) => {
   const [targetEl, setTargetEl] = React.useState<HTMLElement | null>(null);
   const [targetRect, setTargetRect] = React.useState<DOMRect | null>(null);
+  const triggerRef = React.useRef<HTMLElement | null>(null);
+
+  // Sync ref with element state synchronously after DOM updates
+  // useLayoutEffect ensures the ref is set before Popover positioning effects run
+  React.useLayoutEffect(() => {
+    triggerRef.current = targetEl;
+  }, [targetEl]);
 
   React.useEffect(() => {
     const el = getTourElement(target);
@@ -54,5 +61,5 @@ export const useTargetElement = (target: string) => {
     };
   }, [targetEl]);
 
-  return { targetEl, targetRect };
+  return { targetEl, targetRect, triggerRef };
 };

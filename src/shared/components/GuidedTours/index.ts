@@ -1,4 +1,5 @@
 export { STEP_TYPES, TOUR_ACTIONS, TOUR_STATUS, TOUR_STORAGE_KEY, getTourElement } from './consts';
+export { collectAndMerge } from './merge-utils';
 export { TourProvider } from './TourProvider';
 export { TourRenderer } from './TourRenderer';
 export { useTour } from './hooks/useTour';
