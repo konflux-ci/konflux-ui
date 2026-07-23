@@ -1,4 +1,5 @@
 import isEmpty from 'lodash/isEmpty';
+import type { ContainerStatus } from '../types';
 
 export const LOG_SOURCE_RESTARTING = 'restarting';
 export const LOG_SOURCE_RUNNING = 'running';
@@ -21,3 +22,7 @@ export const containerToLogSourceStatus = (container): string => {
   }
   return LOG_SOURCE_RUNNING;
 };
+
+/** Terminated steps fold; only in-progress stays open. */
+export const isContainerStepCompleted = (container?: ContainerStatus): boolean =>
+  Boolean(container?.state?.terminated);

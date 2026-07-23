@@ -1,5 +1,6 @@
 import { hacAPIEndpoints } from '../../../utils/APIEndpoints';
 import { APIHelper } from '../../../utils/APIHelper';
+import { LogViewerHelper } from '../../../utils/LogViewerHelper';
 import { UIhelper } from '../../../utils/UIhelper';
 import { pipelinerunsTabPO } from '../../pageObjects/pages-po';
 
@@ -183,6 +184,8 @@ export class DetailsTab {
   }
 
   static verifyLogs(logText: string | RegExp) {
+    // Completed steps start folded; expand only until the target text is in the DOM.
+    LogViewerHelper.expandUntilLogTextFound(logText);
     cy.get(pipelinerunsTabPO.logText)
       .contains(logText, { timeout: 80000 })
       .scrollIntoView()

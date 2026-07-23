@@ -1,4 +1,5 @@
 import { Common } from '../../utils/Common';
+import { LogViewerHelper } from '../../utils/LogViewerHelper';
 import { pageTitles } from '../constants/PageTitle';
 import {
   addComponentPagePO,
@@ -23,11 +24,13 @@ export class ApplicationDetailPage {
       .scrollIntoView()
       .should('be.visible')
       .click();
+    LogViewerHelper.expandUntilLogTextFound(textToVerify);
     cy.get(buildLogModalContentPO.logText).should('contain.text', textToVerify);
   }
 
   checkPodLog(podName: string, textToVerify: string) {
     cy.get(buildLogModalContentPO.podLogNavList).contains('a', podName).click();
+    LogViewerHelper.expandUntilLogTextFound(textToVerify);
     cy.get(buildLogModalContentPO.logText).should('contain.text', textToVerify);
   }
 
