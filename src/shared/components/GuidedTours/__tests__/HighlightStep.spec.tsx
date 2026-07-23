@@ -4,21 +4,22 @@ import { HighlightStep } from '../steps/HighlightStep';
 
 // Mock useTargetElement
 const mockTargetEl = document.createElement('div');
+const mockUseTargetElement = jest.fn().mockReturnValue({
+  targetEl: mockTargetEl,
+  targetRect: {
+    x: 50,
+    y: 100,
+    width: 200,
+    height: 40,
+    top: 100,
+    right: 250,
+    bottom: 140,
+    left: 50,
+  },
+  triggerRef: { current: mockTargetEl },
+});
 jest.mock('../hooks/useTargetElement', () => ({
-  useTargetElement: () => ({
-    targetEl: mockTargetEl,
-    targetRect: {
-      x: 50,
-      y: 100,
-      width: 200,
-      height: 40,
-      top: 100,
-      right: 250,
-      bottom: 140,
-      left: 50,
-    },
-    triggerRef: { current: mockTargetEl },
-  }),
+  useTargetElement: (...args: unknown[]) => mockUseTargetElement(...args),
 }));
 
 describe('HighlightStep', () => {
@@ -57,7 +58,7 @@ describe('HighlightStep', () => {
   });
 
   it('renders nothing when target element is not found', () => {
-    jest.mocked(useTargetElement).mockReturnValueOnce({
+    mockUseTargetElement.mockReturnValueOnce({
       targetEl: null,
       targetRect: null,
       triggerRef: { current: null },
