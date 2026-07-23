@@ -26,8 +26,11 @@ export type ThemeContextValue = {
   setContrastPreference: (newPreference: ContrastPreference) => void;
 };
 
-const themeStorage = createKeyedJSONStorage<ThemePreference>('konflux-theme-preference');
-const contrastStorage = createKeyedJSONStorage<ContrastPreference>('konflux-contrast-preference');
+const THEME_STORAGE_KEY = 'konflux-theme-preference';
+const CONTRAST_STORAGE_KEY = 'konflux-contrast-preference';
+
+const themeStorage = createKeyedJSONStorage<ThemePreference>(THEME_STORAGE_KEY);
+const contrastStorage = createKeyedJSONStorage<ContrastPreference>(CONTRAST_STORAGE_KEY);
 
 export const ThemeContext = React.createContext<ThemeContextValue>({
   preference: 'system',

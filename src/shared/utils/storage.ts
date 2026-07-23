@@ -81,7 +81,23 @@ export function createKeyedJSONStorage<Value>(
 
   return {
     get: (initialValue?: Value): Value | undefined => {
-      return storage.getItem(key, initialValue);
+      const value = storage.getItem(key, initialValue);
+      if (value !== undefined) {
+        return value;
+      }
+      // Fallback: handle raw (non-JSON) string values (e.g., bare strings
+      // stored by older code before migration to JSON-encoded storage).
+      try {
+        const raw = getStorage()?.getItem(key);
+        if (raw) {
+          const rawValue = raw as unknown as Value;
+          storage.setItem(key, rawValue);
+          return rawValue;
+        }
+      } catch {
+        // Storage unavailable; fall through to initialValue
+      }
+      return initialValue;
     },
     set: (value: Value): void => {
       storage.setItem(key, value);
