@@ -4,16 +4,14 @@
   left: 0;
   width: var(--pf-t--global--spacer--3xl);
   flex-shrink: 0;
-  background-color: var(--pf-t--global--background--color--secondary--default);
+  background-color: var(
+    --pf-v6-c-log-viewer__main--BackgroundColor,
+    var(--pf-t--global--background--color--primary--default)
+  );
   border-right: var(--pf-t--global--border--width--regular) solid
     var(--pf-t--global--border--color--default);
   user-select: none;
   overflow: hidden;
-
-  .pf-m-dark & {
-    background-color: var(--pf-t--global--background--color--primary--default);
-    border-right-color: var(--pf-t--global--border--color--default);
-  }
 }
 .line-number__gutter-cell {
   display: flex;
