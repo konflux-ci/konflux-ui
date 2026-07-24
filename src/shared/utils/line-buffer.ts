@@ -2,6 +2,8 @@ import truncate from 'lodash/truncate';
 
 export const LINE_PATTERN = /^.*(\n|$)/gm;
 const TRUNCATE_LENGTH = 1024;
+// eslint-disable-next-line no-control-regex
+const ANSI_ESCAPE_REGEX = /\u001b\[[0-9;]*m/g;
 
 export class LineBuffer {
   private _buffer: string[];
@@ -14,6 +16,7 @@ export class LineBuffer {
     this._hasTruncated = false;
   }
 
+  /** Accumulate text for download — truncates lines at 1024 chars. */
   ingest(text): number {
     const lines = text.match(LINE_PATTERN);
     let lineCount = 0;
@@ -57,5 +60,22 @@ export class LineBuffer {
 
   length(): number {
     return this._buffer.length;
+  }
+
+  /** Accumulate text for display — strips ANSI codes, no truncation. */
+  append(text: string): void {
+    const stripped = text.replace(ANSI_ESCAPE_REGEX, '');
+    const lines = stripped.match(LINE_PATTERN);
+    if (!lines) return;
+
+    for (const line of lines) {
+      const next = this._tail + line;
+      if (/\n$/.test(line)) {
+        this._buffer.push(next.trimEnd());
+        this._tail = '';
+      } else {
+        this._tail = next;
+      }
+    }
   }
 }

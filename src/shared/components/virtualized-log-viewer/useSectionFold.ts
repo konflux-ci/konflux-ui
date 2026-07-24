@@ -1,9 +1,12 @@
 import React from 'react';
-import type { LogSection } from './types';
+
+interface SectionWithCompletion {
+  isCompleted?: boolean;
+}
 
 const EMPTY_EXPANDED_SECTIONS = new Set<number>();
 
-function getInitialExpandedSections(sections: readonly LogSection[]): Set<number> {
+function getInitialExpandedSections(sections: readonly SectionWithCompletion[]): Set<number> {
   if (sections.length === 1) return new Set([0]);
 
   const expanded = new Set<number>();
@@ -13,7 +16,7 @@ function getInitialExpandedSections(sections: readonly LogSection[]): Set<number
   return expanded;
 }
 
-export const useSectionFold = (sections: readonly LogSection[]) => {
+export const useSectionFold = (sections: readonly SectionWithCompletion[]) => {
   const hasSections = sections.length >= 1;
 
   const [expandedSections, setExpandedSections] = React.useState<Set<number>>(() =>

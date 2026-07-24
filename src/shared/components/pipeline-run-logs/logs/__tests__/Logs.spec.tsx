@@ -1,6 +1,8 @@
 import { render, screen, act, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import { saveAs } from 'file-saver';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
+import { KUBEARCHIVE_TAIL_LINES } from '~/kubearchive/const';
 import { ResourceSource } from '~/types/k8s';
 import { commonFetchText } from '../../../../../k8s';
 import {
@@ -16,15 +18,32 @@ const mockLogViewer = jest.fn();
 
 const getLastSectionsData = (): string => {
   const lastCall = mockLogViewer.mock.calls[mockLogViewer.mock.calls.length - 1][0];
-  return (lastCall.sections || []).map((s: { data: string }) => s.data).join('\n');
+  return (lastCall.normalizedSections || [])
+    .map((s: { lines: string[] }) => s.lines.join('\n'))
+    .join('\n');
 };
+
+const getLastOnDownloadFullLogs = (): ((sectionIndex: number) => Promise<void>) | undefined => {
+  const lastCall = mockLogViewer.mock.calls[mockLogViewer.mock.calls.length - 1][0];
+  return lastCall.onDownloadFullLogs;
+};
+
+jest.mock('file-saver', () => ({
+  saveAs: jest.fn(),
+}));
 
 jest.mock('../LogViewer', () => {
   return function MockLogViewer(props: {
-    sections: Array<{ containerName: string; data: string; isCompleted?: boolean }>;
+    normalizedSections: Array<{
+      containerName: string;
+      lines: string[];
+      isCompleted?: boolean;
+      isTailed?: boolean;
+    }>;
     allowAutoScroll: boolean;
     isLoading?: boolean;
     onScroll?: () => void;
+    onDownloadFullLogs?: (sectionIndex: number) => Promise<void>;
   }) {
     mockLogViewer(props);
     return <div data-test="mock-log-viewer" />;
@@ -70,10 +89,10 @@ jest.mock('react-i18next', () => ({
   }),
 }));
 
-// Mock Base64 decoding
+// Mock Base64 decoding (append newline so LineBuffer.append flushes the line from the tail)
 jest.mock('js-base64', () => ({
   Base64: {
-    decode: jest.fn((str: string) => `decoded-${str}`),
+    decode: jest.fn((str: string) => `decoded-${str}\n`),
   },
 }));
 
@@ -142,7 +161,7 @@ describe('Logs', () => {
 
       expect(mockLogViewer).toHaveBeenCalledWith(
         expect.objectContaining({
-          sections: expect.any(Array),
+          normalizedSections: expect.any(Array),
           allowAutoScroll: true,
           onScroll: undefined,
         }),
@@ -175,7 +194,7 @@ describe('Logs', () => {
         expect(screen.getByTestId('mock-log-viewer')).toBeInTheDocument();
         expect(mockLogViewer).toHaveBeenCalledWith(
           expect.objectContaining({
-            sections: [],
+            normalizedSections: [],
           }),
         );
       });
@@ -211,8 +230,8 @@ describe('Logs', () => {
 
       (containerToLogSourceStatus as jest.Mock).mockReturnValue('terminated');
       (commonFetchText as jest.Mock)
-        .mockResolvedValueOnce('log line 1\nlog line 2')
-        .mockResolvedValueOnce('log line 3\nlog line 4');
+        .mockResolvedValueOnce('log line 1\nlog line 2\n')
+        .mockResolvedValueOnce('log line 3\nlog line 4\n');
 
       render(
         <Logs
@@ -222,18 +241,24 @@ describe('Logs', () => {
         />,
       );
 
-      await act(async () => {
-        await Promise.resolve();
+      await waitFor(() => {
+        expect(mockLogViewer).toHaveBeenLastCalledWith(
+          expect.objectContaining({
+            normalizedSections: expect.arrayContaining([
+              expect.objectContaining({
+                containerName: 'CONTAINER1',
+                lines: ['log line 1', 'log line 2'],
+                isCompleted: true,
+              }),
+              expect.objectContaining({
+                containerName: 'CONTAINER2',
+                lines: ['log line 3', 'log line 4'],
+                isCompleted: true,
+              }),
+            ]),
+          }),
+        );
       });
-
-      expect(mockLogViewer).toHaveBeenLastCalledWith(
-        expect.objectContaining({
-          sections: expect.arrayContaining([
-            { containerName: 'CONTAINER1', data: 'log line 1\nlog line 2', isCompleted: true },
-            { containerName: 'CONTAINER2', data: 'log line 3\nlog line 4', isCompleted: true },
-          ]),
-        }),
-      );
     });
 
     it('should preserve container ordering from containers prop', async () => {
@@ -263,7 +288,9 @@ describe('Logs', () => {
       };
 
       (containerToLogSourceStatus as jest.Mock).mockReturnValue('terminated');
-      (commonFetchText as jest.Mock).mockResolvedValueOnce('first').mockResolvedValueOnce('second');
+      (commonFetchText as jest.Mock)
+        .mockResolvedValueOnce('first\n')
+        .mockResolvedValueOnce('second\n');
 
       render(
         <Logs
@@ -273,13 +300,11 @@ describe('Logs', () => {
         />,
       );
 
-      await act(async () => {
-        await Promise.resolve();
+      await waitFor(() => {
+        const lastCall = mockLogViewer.mock.calls[mockLogViewer.mock.calls.length - 1][0];
+        expect(lastCall.normalizedSections[0].containerName).toBe('CONTAINER2');
+        expect(lastCall.normalizedSections[1].containerName).toBe('CONTAINER1');
       });
-
-      const lastCall = mockLogViewer.mock.calls[mockLogViewer.mock.calls.length - 1][0];
-      expect(lastCall.sections[0].containerName).toBe('CONTAINER2');
-      expect(lastCall.sections[1].containerName).toBe('CONTAINER1');
     });
 
     it('should skip containers without log sources', async () => {
@@ -309,7 +334,7 @@ describe('Logs', () => {
       };
 
       (containerToLogSourceStatus as jest.Mock).mockReturnValue('terminated');
-      (commonFetchText as jest.Mock).mockResolvedValueOnce('has logs').mockResolvedValueOnce(''); // container2 returns empty string (no logs)
+      (commonFetchText as jest.Mock).mockResolvedValueOnce('has logs\n').mockResolvedValueOnce(''); // container2 returns empty string (no logs)
 
       render(
         <Logs
@@ -319,15 +344,15 @@ describe('Logs', () => {
         />,
       );
 
-      await act(async () => {
-        await Promise.resolve();
+      await waitFor(() => {
+        // Both containers appear in sections; container2 has an empty buffer
+        const lastCall = mockLogViewer.mock.calls[mockLogViewer.mock.calls.length - 1][0];
+        expect(lastCall.normalizedSections).toHaveLength(2);
+        expect(lastCall.normalizedSections[0].containerName).toBe('CONTAINER1');
+        expect(lastCall.normalizedSections[0].lines).toEqual(['has logs']);
+        expect(lastCall.normalizedSections[1].containerName).toBe('CONTAINER2');
+        expect(lastCall.normalizedSections[1].lines).toEqual([]);
       });
-
-      // Containers without logs are omitted from sections
-      const lastCall = mockLogViewer.mock.calls[mockLogViewer.mock.calls.length - 1][0];
-      expect(lastCall.sections).toHaveLength(1);
-      expect(lastCall.sections[0].containerName).toBe('CONTAINER1');
-      expect(lastCall.sections[0].data).toBe('has logs');
     });
 
     it('should pass empty sections when no containers have logs', () => {
@@ -335,7 +360,7 @@ describe('Logs', () => {
 
       expect(mockLogViewer).toHaveBeenCalledWith(
         expect.objectContaining({
-          sections: [],
+          normalizedSections: [],
         }),
       );
     });
@@ -930,7 +955,7 @@ describe('Logs', () => {
       expect(mockLogViewer).toHaveBeenCalledWith(
         expect.objectContaining({
           isLoading: false,
-          sections: [],
+          normalizedSections: [],
         }),
       );
     });
@@ -966,5 +991,416 @@ describe('Logs', () => {
         }),
       }),
     );
+  });
+
+  describe('tailed container detection', () => {
+    it('should mark container as tailed when log lines reach KUBEARCHIVE_TAIL_LINES', async () => {
+      const terminatedContainer: ContainerStatus = {
+        name: 'container1',
+        state: { terminated: { exitCode: 0 } },
+        ready: false,
+        restartCount: 0,
+        image: 'test-image',
+        imageID: 'test-image-id',
+      };
+
+      const resourceWithStatus: PodKind = {
+        ...mockResource,
+        status: {
+          phase: 'Succeeded',
+          containerStatuses: [terminatedContainer],
+        },
+      };
+
+      // Generate log text with KUBEARCHIVE_TAIL_LINES lines
+      const lines = Array.from({ length: KUBEARCHIVE_TAIL_LINES }, (_, i) => `line ${i}`).join(
+        '\n',
+      );
+
+      (containerToLogSourceStatus as jest.Mock).mockReturnValue('terminated');
+      (useIsOnFeatureFlag as jest.Mock).mockReturnValue(true);
+      (commonFetchText as jest.Mock).mockResolvedValue(`${lines}\n`);
+
+      render(
+        <Logs
+          {...defaultProps}
+          resource={resourceWithStatus}
+          containers={[{ name: 'container1' }]}
+          source={ResourceSource.Archive}
+        />,
+      );
+
+      await waitFor(() => {
+        const lastCall = mockLogViewer.mock.calls[mockLogViewer.mock.calls.length - 1][0];
+        expect(lastCall.normalizedSections[0].isTailed).toBe(true);
+      });
+    });
+
+    it('should not mark container as tailed when log lines are below KUBEARCHIVE_TAIL_LINES', async () => {
+      const terminatedContainer: ContainerStatus = {
+        name: 'container1',
+        state: { terminated: { exitCode: 0 } },
+        ready: false,
+        restartCount: 0,
+        image: 'test-image',
+        imageID: 'test-image-id',
+      };
+
+      const resourceWithStatus: PodKind = {
+        ...mockResource,
+        status: {
+          phase: 'Succeeded',
+          containerStatuses: [terminatedContainer],
+        },
+      };
+
+      (containerToLogSourceStatus as jest.Mock).mockReturnValue('terminated');
+      (useIsOnFeatureFlag as jest.Mock).mockReturnValue(true);
+      (commonFetchText as jest.Mock).mockResolvedValue('short log\n');
+
+      render(
+        <Logs
+          {...defaultProps}
+          resource={resourceWithStatus}
+          containers={[{ name: 'container1' }]}
+          source={ResourceSource.Archive}
+        />,
+      );
+
+      await waitFor(() => {
+        const lastCall = mockLogViewer.mock.calls[mockLogViewer.mock.calls.length - 1][0];
+        expect(lastCall.normalizedSections[0].isTailed).toBe(false);
+      });
+    });
+
+    it('should not mark container as tailed for cluster source', async () => {
+      const terminatedContainer: ContainerStatus = {
+        name: 'container1',
+        state: { terminated: { exitCode: 0 } },
+        ready: false,
+        restartCount: 0,
+        image: 'test-image',
+        imageID: 'test-image-id',
+      };
+
+      const resourceWithStatus: PodKind = {
+        ...mockResource,
+        status: {
+          phase: 'Succeeded',
+          containerStatuses: [terminatedContainer],
+        },
+      };
+
+      const lines = Array.from({ length: KUBEARCHIVE_TAIL_LINES }, (_, i) => `line ${i}`).join(
+        '\n',
+      );
+
+      (containerToLogSourceStatus as jest.Mock).mockReturnValue('terminated');
+      (useIsOnFeatureFlag as jest.Mock).mockReturnValue(true);
+      (commonFetchText as jest.Mock).mockResolvedValue(`${lines}\n`);
+
+      render(
+        <Logs
+          {...defaultProps}
+          resource={resourceWithStatus}
+          containers={[{ name: 'container1' }]}
+          source={ResourceSource.Cluster}
+        />,
+      );
+
+      await waitFor(() => {
+        const lastCall = mockLogViewer.mock.calls[mockLogViewer.mock.calls.length - 1][0];
+        expect(lastCall.normalizedSections[0].isTailed).toBe(false);
+      });
+    });
+  });
+
+  describe('kubearchive tailLines query param', () => {
+    it('should include tailLines query param for archive source', () => {
+      const terminatedContainer: ContainerStatus = {
+        name: 'container1',
+        state: { terminated: { exitCode: 0 } },
+        ready: false,
+        restartCount: 0,
+        image: 'test-image',
+        imageID: 'test-image-id',
+      };
+
+      const resourceWithStatus: PodKind = {
+        ...mockResource,
+        status: {
+          phase: 'Succeeded',
+          containerStatuses: [terminatedContainer],
+        },
+      };
+
+      (containerToLogSourceStatus as jest.Mock).mockReturnValue('terminated');
+      (useIsOnFeatureFlag as jest.Mock).mockReturnValue(true);
+      (commonFetchText as jest.Mock).mockResolvedValue('logs');
+
+      render(
+        <Logs
+          {...defaultProps}
+          resource={resourceWithStatus}
+          containers={[{ name: 'container1' }]}
+          source={ResourceSource.Archive}
+        />,
+      );
+
+      expect(getK8sResourceURL as jest.Mock).toHaveBeenCalledWith(
+        expect.objectContaining({ kind: 'Pod' }),
+        undefined,
+        expect.objectContaining({
+          queryParams: expect.objectContaining({
+            tailLines: String(KUBEARCHIVE_TAIL_LINES),
+          }),
+        }),
+      );
+    });
+
+    it('should not include tailLines query param for cluster source', () => {
+      const terminatedContainer: ContainerStatus = {
+        name: 'container1',
+        state: { terminated: { exitCode: 0 } },
+        ready: false,
+        restartCount: 0,
+        image: 'test-image',
+        imageID: 'test-image-id',
+      };
+
+      const resourceWithStatus: PodKind = {
+        ...mockResource,
+        status: {
+          phase: 'Succeeded',
+          containerStatuses: [terminatedContainer],
+        },
+      };
+
+      (containerToLogSourceStatus as jest.Mock).mockReturnValue('terminated');
+      (useIsOnFeatureFlag as jest.Mock).mockReturnValue(false);
+      (commonFetchText as jest.Mock).mockResolvedValue('logs');
+
+      render(
+        <Logs
+          {...defaultProps}
+          resource={resourceWithStatus}
+          containers={[{ name: 'container1' }]}
+          source={ResourceSource.Cluster}
+        />,
+      );
+
+      expect(getK8sResourceURL as jest.Mock).toHaveBeenCalledWith(
+        expect.objectContaining({ kind: 'Pod' }),
+        undefined,
+        expect.objectContaining({
+          queryParams: expect.not.objectContaining({
+            tailLines: expect.anything(),
+          }),
+        }),
+      );
+    });
+  });
+
+  describe('handleDownloadFullLogs', () => {
+    it('should pass onDownloadFullLogs when source is archive', async () => {
+      const terminatedContainer: ContainerStatus = {
+        name: 'container1',
+        state: { terminated: { exitCode: 0 } },
+        ready: false,
+        restartCount: 0,
+        image: 'test-image',
+        imageID: 'test-image-id',
+      };
+
+      const resourceWithStatus: PodKind = {
+        ...mockResource,
+        status: {
+          phase: 'Succeeded',
+          containerStatuses: [terminatedContainer],
+        },
+      };
+
+      (containerToLogSourceStatus as jest.Mock).mockReturnValue('terminated');
+      (useIsOnFeatureFlag as jest.Mock).mockReturnValue(true);
+      (commonFetchText as jest.Mock).mockResolvedValue('log data\n');
+
+      render(
+        <Logs
+          {...defaultProps}
+          resource={resourceWithStatus}
+          containers={[{ name: 'container1' }]}
+          source={ResourceSource.Archive}
+        />,
+      );
+
+      await waitFor(() => {
+        const onDownloadFullLogs = getLastOnDownloadFullLogs();
+        expect(onDownloadFullLogs).toBeDefined();
+      });
+    });
+
+    it('should not pass onDownloadFullLogs when source is cluster', () => {
+      (containerToLogSourceStatus as jest.Mock).mockReturnValue('terminated');
+      (useIsOnFeatureFlag as jest.Mock).mockReturnValue(false);
+
+      render(
+        <Logs
+          {...defaultProps}
+          containers={[{ name: 'container1' }]}
+          source={ResourceSource.Cluster}
+        />,
+      );
+
+      const onDownloadFullLogs = getLastOnDownloadFullLogs();
+      expect(onDownloadFullLogs).toBeUndefined();
+    });
+
+    it('should fetch full logs and save file when onDownloadFullLogs is called', async () => {
+      const terminatedContainer: ContainerStatus = {
+        name: 'container1',
+        state: { terminated: { exitCode: 0 } },
+        ready: false,
+        restartCount: 0,
+        image: 'test-image',
+        imageID: 'test-image-id',
+      };
+
+      const resourceWithStatus: PodKind = {
+        ...mockResource,
+        status: {
+          phase: 'Succeeded',
+          containerStatuses: [terminatedContainer],
+        },
+      };
+
+      (containerToLogSourceStatus as jest.Mock).mockReturnValue('terminated');
+      (useIsOnFeatureFlag as jest.Mock).mockReturnValue(true);
+      const tailedLog = `${Array.from({ length: KUBEARCHIVE_TAIL_LINES }, (_, i) => `line ${i}`).join('\n')}\n`;
+      (commonFetchText as jest.Mock).mockResolvedValue(tailedLog);
+
+      render(
+        <Logs
+          {...defaultProps}
+          resource={resourceWithStatus}
+          containers={[{ name: 'container1' }]}
+          source={ResourceSource.Archive}
+        />,
+      );
+
+      await waitFor(() => {
+        const lastCall = mockLogViewer.mock.calls[mockLogViewer.mock.calls.length - 1][0];
+        expect(lastCall.normalizedSections).toHaveLength(1);
+        expect(lastCall.onDownloadFullLogs).toBeDefined();
+      });
+
+      (commonFetchText as jest.Mock).mockResolvedValue('full log content for download');
+
+      const onDownloadFullLogs = getLastOnDownloadFullLogs();
+      await act(async () => {
+        await onDownloadFullLogs?.(0);
+      });
+
+      expect(commonFetchText as jest.Mock).toHaveBeenCalledWith(
+        'http://test-url',
+        expect.objectContaining({
+          pathPrefix: 'plugins/kubearchive',
+        }),
+      );
+      expect(saveAs).toHaveBeenCalledWith(expect.any(Blob), 'container1.log');
+    });
+
+    it('should not save file when section index is invalid', async () => {
+      const terminatedContainer: ContainerStatus = {
+        name: 'container1',
+        state: { terminated: { exitCode: 0 } },
+        ready: false,
+        restartCount: 0,
+        image: 'test-image',
+        imageID: 'test-image-id',
+      };
+
+      const resourceWithStatus: PodKind = {
+        ...mockResource,
+        status: {
+          phase: 'Succeeded',
+          containerStatuses: [terminatedContainer],
+        },
+      };
+
+      (containerToLogSourceStatus as jest.Mock).mockReturnValue('terminated');
+      (useIsOnFeatureFlag as jest.Mock).mockReturnValue(true);
+      (commonFetchText as jest.Mock).mockResolvedValue('log data\n');
+
+      render(
+        <Logs
+          {...defaultProps}
+          resource={resourceWithStatus}
+          containers={[{ name: 'container1' }]}
+          source={ResourceSource.Archive}
+        />,
+      );
+
+      await waitFor(() => {
+        const onDownloadFullLogs = getLastOnDownloadFullLogs();
+        expect(onDownloadFullLogs).toBeDefined();
+      });
+
+      (commonFetchText as jest.Mock).mockClear();
+
+      const onDownloadFullLogs = getLastOnDownloadFullLogs();
+      await act(async () => {
+        await onDownloadFullLogs?.(999); // invalid index
+      });
+
+      // Should not have fetched anything for an invalid section index
+      expect(commonFetchText).not.toHaveBeenCalled();
+      expect(saveAs).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('rAF cleanup', () => {
+    it('should cancel pending animation frame on unmount', () => {
+      const cancelAnimationFrameSpy = jest.spyOn(window, 'cancelAnimationFrame');
+
+      const runningContainer: ContainerStatus = {
+        name: 'container1',
+        state: { running: { startedAt: new Date().toISOString() } },
+        ready: true,
+        restartCount: 0,
+        image: 'test-image',
+        imageID: 'test-image-id',
+      };
+
+      const resourceWithStatus: PodKind = {
+        ...mockResource,
+        status: {
+          phase: 'Running',
+          containerStatuses: [runningContainer],
+        },
+      };
+
+      (containerToLogSourceStatus as jest.Mock).mockReturnValue('running');
+
+      const { unmount } = render(
+        <Logs
+          {...defaultProps}
+          resource={resourceWithStatus}
+          containers={[{ name: 'container1' }]}
+        />,
+      );
+
+      // Simulate a websocket message to trigger rAF scheduling
+      const messageHandler = mockWebSocketInstance.onMessage.mock.calls[0][0];
+      act(() => {
+        messageHandler('dGVzdA==');
+      });
+
+      unmount();
+
+      // cancelAnimationFrame should have been called during cleanup
+      expect(cancelAnimationFrameSpy).toHaveBeenCalled();
+
+      cancelAnimationFrameSpy.mockRestore();
+    });
   });
 });
