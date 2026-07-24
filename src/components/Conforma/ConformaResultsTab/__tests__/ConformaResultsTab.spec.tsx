@@ -1,4 +1,4 @@
-import { act, fireEvent, screen } from '@testing-library/react';
+import { fireEvent, screen } from '@testing-library/react';
 import type { ApplicationConformaResults, ConformaResultRow } from '~/types/conforma';
 import { CONFORMA_RESULT_STATUS } from '~/types/conforma';
 import { routerRenderer } from '~/unit-test-utils/mock-react-router';
@@ -15,6 +15,36 @@ jest.mock('react-router-dom', () => ({
   useParams: () => ({
     applicationName: 'test-app',
   }),
+}));
+
+jest.mock('~/shared/components/TableV2/hooks/useVirtualization', () => ({
+  useVirtualization: ({ count }: { count: number }) => ({
+    virtualizer: { getTotalSize: () => count * 44, measureElement: jest.fn() },
+    virtualRows: Array.from({ length: count }, (_, i) => ({ index: i, start: i * 44, size: 44 })),
+  }),
+}));
+
+jest.mock('~/shared/hooks', () => ({
+  ...jest.requireActual('~/shared/hooks'),
+  getParentScrollableElement: jest.fn().mockReturnValue(null),
+}));
+
+const mockClearAll = jest.fn();
+
+jest.mock('~/shared/components/Filter', () => ({
+  ...jest.requireActual('~/shared/components/Filter'),
+  useFilterState: jest.fn().mockImplementation(() => ({
+    filterValues: { name: '', status: [] },
+    clientFilterValues: { name: '', status: [] },
+    isFiltered: false,
+    clearAll: mockClearAll,
+  })),
+  useFilteredData: jest.fn().mockImplementation((_configs, data) => ({
+    filteredData: data,
+  })),
+  FilterToolbar: ({ children }: { children: React.ReactNode }) => (
+    <div data-test="filter-toolbar">{children}</div>
+  ),
 }));
 
 const mockUseApplicationConformaResults = useApplicationConformaResults as jest.Mock;
@@ -128,9 +158,19 @@ const populatedResults: ApplicationConformaResults = {
 describe('ConformaResultsTab', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    const { useFilteredData, useFilterState } = jest.requireMock('~/shared/components/Filter');
+    (useFilteredData as jest.Mock).mockImplementation(
+      (_configs: unknown, data: unknown) => ({ filteredData: data }),
+    );
+    (useFilterState as jest.Mock).mockImplementation(() => ({
+      filterValues: { name: '', status: [] },
+      clientFilterValues: { name: '', status: [] },
+      isFiltered: false,
+      clearAll: mockClearAll,
+    }));
   });
 
-  it('shows a spinner when data is loading', () => {
+  it('shows a spinner when data is loading and does NOT show summary bar counts', () => {
     mockUseApplicationConformaResults.mockReturnValue({
       ...emptyResults,
       loaded: false,
@@ -138,14 +178,15 @@ describe('ConformaResultsTab', () => {
 
     routerRenderer(<ConformaResultsTab />);
 
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    expect(screen.getByLabelText('Loading Conforma results')).toBeInTheDocument();
+    expect(screen.queryByTestId('conforma-summary-bar')).not.toBeInTheDocument();
   });
 
-  it('shows an error message when there is an error', () => {
+  it('shows an error state when there is an error', () => {
     mockUseApplicationConformaResults.mockReturnValue({
       ...emptyResults,
       loaded: true,
-      error: new Error('fetch failed'),
+      error: { code: 403 },
     });
 
     routerRenderer(<ConformaResultsTab />);
@@ -169,7 +210,6 @@ describe('ConformaResultsTab', () => {
     routerRenderer(<ConformaResultsTab />);
 
     expect(screen.getByTestId('conforma-summary-bar')).toBeInTheDocument();
-    expect(screen.getByTestId('conforma-results-toolbar')).toBeInTheDocument();
     expect(screen.getByTestId('conforma-grouped-table')).toBeInTheDocument();
   });
 
@@ -194,22 +234,20 @@ describe('ConformaResultsTab', () => {
     expect(screen.getAllByText('Base image allowed').length).toBeGreaterThanOrEqual(1);
   });
 
-  it('expands and collapses groups via Expand all / Collapse all', () => {
+  it('expands and collapses groups via Expand all / Collapse all with real aria-expanded', () => {
     mockUseApplicationConformaResults.mockReturnValue(populatedResults);
 
     routerRenderer(<ConformaResultsTab />);
 
-    // Expand all — detail rows become visible
     fireEvent.click(screen.getByTestId('conforma-expand-all'));
-    expect(screen.getAllByText('api-gateway').length).toBeGreaterThanOrEqual(1);
 
-    // Collapse all — detail rows should no longer be visible (S3 assertion)
+    const expandedButtons = screen.getAllByRole('button', { name: /details/i });
+    expect(expandedButtons.some((b) => b.getAttribute('aria-expanded') === 'true')).toBe(true);
+
     fireEvent.click(screen.getByTestId('conforma-collapse-all'));
-    // After collapsing, the detail sub-table rows are hidden. The only remaining
-    // 'api-gateway' occurrences would be in the toolbar or summary, not in
-    // expanded row content. We verify the grouped table still exists (collapsed).
-    expect(screen.getByTestId('conforma-grouped-table')).toBeInTheDocument();
-    expect(screen.queryAllByText('Test message').length).toBe(0);
+
+    const collapsedButtons = screen.getAllByRole('button', { name: /details/i });
+    expect(collapsedButtons.every((b) => b.getAttribute('aria-expanded') === 'false')).toBe(true);
   });
 
   it('toggles individual group expansion', () => {
@@ -217,17 +255,14 @@ describe('ConformaResultsTab', () => {
 
     routerRenderer(<ConformaResultsTab />);
 
-    // Click the first group expand button
     const toggleButtons = screen.getAllByRole('button', { name: /details/i });
     fireEvent.click(toggleButtons[0]);
 
-    // After expanding, detail row content becomes visible
-    expect(screen.getAllByText('api-gateway').length).toBeGreaterThanOrEqual(1);
+    expect(toggleButtons[0]).toHaveAttribute('aria-expanded', 'true');
 
-    // Collapse it again
     fireEvent.click(toggleButtons[0]);
-    // After collapse, detail sub-table content is hidden (S3 assertion)
-    expect(screen.queryAllByText('Test message').length).toBe(0);
+
+    expect(toggleButtons[0]).toHaveAttribute('aria-expanded', 'false');
   });
 
   it('renders "Show multi-arch duplicates" switch unchecked by default (duplicates collapsed)', () => {
@@ -243,7 +278,6 @@ describe('ConformaResultsTab', () => {
 
     routerRenderer(<ConformaResultsTab />);
 
-    // Expand the single collapsed group
     const toggleButtons = screen.getAllByRole('button', { name: /details/i });
     fireEvent.click(toggleButtons[0]);
 
@@ -256,8 +290,6 @@ describe('ConformaResultsTab', () => {
 
     routerRenderer(<ConformaResultsTab />);
 
-    // 3 arch-duplicate violations collapse into 1 row; the true count (3)
-    // must still be surfaced, not silently dropped.
     expect(screen.getByText('(3 incl. multi-arch)')).toBeInTheDocument();
   });
 
@@ -268,8 +300,6 @@ describe('ConformaResultsTab', () => {
 
     fireEvent.click(screen.getByRole('switch', { name: /show multi-arch duplicates/i }));
 
-    // Once duplicates are shown individually, the displayed count already
-    // matches the raw count, so the qualifier is no longer needed.
     expect(screen.queryByText(/incl\. multi-arch/i)).not.toBeInTheDocument();
   });
 
@@ -278,37 +308,56 @@ describe('ConformaResultsTab', () => {
 
     routerRenderer(<ConformaResultsTab />);
 
-    // Turn on the show duplicates switch
     fireEvent.click(screen.getByRole('switch', { name: /show multi-arch duplicates/i }));
 
-    // Expand the group — now all 3 raw rows are visible
     const toggleButtons = screen.getAllByRole('button', { name: /details/i });
     fireEvent.click(toggleButtons[0]);
 
     expect(screen.queryByText(/affects.*images/i)).not.toBeInTheDocument();
-    // All 3 image digests appear individually
     expect(screen.getByText(/sha256:aaa/)).toBeInTheDocument();
     expect(screen.getByText(/sha256:bbb/)).toBeInTheDocument();
     expect(screen.getByText(/sha256:ccc/)).toBeInTheDocument();
   });
 
-  it('shows "no results match" when filters exclude all results', () => {
-    jest.useFakeTimers();
+  it('shows filtered empty state when filters exclude all results', () => {
+    mockUseApplicationConformaResults.mockReturnValue(populatedResults);
+
+    const { useFilteredData } = jest.requireMock('~/shared/components/Filter');
+    (useFilteredData as jest.Mock).mockReturnValue({ filteredData: [] });
+
+    routerRenderer(<ConformaResultsTab />);
+
+    expect(screen.getByText('No results found')).toBeInTheDocument();
+    expect(screen.getByText('Clear all filters')).toBeInTheDocument();
+  });
+
+  it('clears expansion when groupBy changes (T2)', () => {
     mockUseApplicationConformaResults.mockReturnValue(populatedResults);
 
     routerRenderer(<ConformaResultsTab />);
 
-    // S4: Use getByRole('textbox') instead of PF internal class selectors
-    const searchInput = screen.getByRole('textbox');
-    fireEvent.change(searchInput, { target: { value: 'zzz-no-match-zzz' } });
+    fireEvent.click(screen.getByTestId('conforma-expand-all'));
+    const expandedButtons = screen.getAllByRole('button', { name: /details/i });
+    expect(expandedButtons.some((b) => b.getAttribute('aria-expanded') === 'true')).toBe(true);
 
-    // Advance the debounce timer used by BaseTextFilterToolbar
-    act(() => {
-      jest.advanceTimersByTime(700);
-    });
+    fireEvent.click(screen.getByTestId('conforma-group-by-select'));
+    fireEvent.click(screen.getByRole('option', { name: 'Component' }));
 
-    expect(screen.getByText('No results match the current filters.')).toBeInTheDocument();
+    const postSwitchButtons = screen.getAllByRole('button', { name: /details/i });
+    expect(postSwitchButtons.every((b) => b.getAttribute('aria-expanded') === 'false')).toBe(true);
+  });
 
-    jest.useRealTimers();
+  it('correctly reflects allExpanded after expand-all then toggling showDuplicates (T3)', () => {
+    mockUseApplicationConformaResults.mockReturnValue(archDupeResults);
+
+    routerRenderer(<ConformaResultsTab />);
+
+    fireEvent.click(screen.getByTestId('conforma-expand-all'));
+    expect(screen.getByTestId('conforma-collapse-all')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('switch', { name: /show multi-arch duplicates/i }));
+
+    expect(screen.getByTestId('conforma-collapse-all')).toBeInTheDocument();
+    expect(screen.queryByTestId('conforma-expand-all')).not.toBeInTheDocument();
   });
 });

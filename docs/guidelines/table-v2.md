@@ -55,6 +55,8 @@ The main orchestrator. Composes hooks and sub-components into a full-featured ta
 | `enableSorting`       | `boolean`                      | No       | Enable client-side column sorting                                |
 | `enableExpansion`     | `boolean`                      | No       | Enable expandable rows                                           |
 | `expandedContent`     | `(row: TData) => ReactNode`    | No       | Render function for expanded row content                         |
+| `expanded`            | `ExpandedState`                | No       | Controlled expansion state (use with `enableExpansion`)          |
+| `onExpandedChange`    | `OnChangeFn<ExpandedState>`    | No       | Updater for controlled expansion state                           |
 | `hasNextPage`         | `boolean`                      | No       | Whether more data is available for infinite scroll               |
 | `isFetchingNextPage`  | `boolean`                      | No       | Whether next page is currently loading                           |
 | `fetchNextPage`       | `() => void`                   | No       | Callback to fetch the next page                                  |

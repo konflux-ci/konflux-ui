@@ -3,6 +3,8 @@ import {
   type CellContext as TanStackCellContext,
   type SortingFn,
   type FilterFn,
+  type ExpandedState,
+  type OnChangeFn,
 } from '@tanstack/react-table';
 
 /**
@@ -192,6 +194,15 @@ export interface TableProps<TData> {
 
   /** Render function for expanded row content. Only called when the row is expanded. */
   expandedContent?: (row: TData) => ReactNode;
+
+  /**
+   * Controlled expansion state. When provided (with {@link enableExpansion}),
+   * expansion is driven by the caller instead of TanStack's internal state.
+   */
+  expanded?: ExpandedState;
+
+  /** Updater for {@link expanded}. Required to make expansion controlled. */
+  onExpandedChange?: OnChangeFn<ExpandedState>;
 
   /** Enables row grouping by a column or custom function. Reserved for future use. */
   enableGrouping?: boolean;

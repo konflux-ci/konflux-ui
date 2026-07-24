@@ -6,6 +6,7 @@ export type {
   TableProps,
   TableContainerProps,
 } from './types';
+export type { ExpandedState, OnChangeFn } from '@tanstack/react-table';
 
 export { useColumnState } from './hooks/useColumnState';
 export { useResponsiveColumns } from './hooks/useResponsiveColumns';

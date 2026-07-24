@@ -53,11 +53,12 @@ const renderToolbar = (
   options?: Record<string, OptionItem[]>,
   children?: React.ReactNode,
   groups?: Record<string, ToolbarGroupConfig>,
+  dataTest?: string,
 ) =>
   render(
     <MemoryRouter>
       <NuqsAdapter>
-        <FilterToolbar configs={configs} options={options} groups={groups}>
+        <FilterToolbar configs={configs} options={options} groups={groups} dataTest={dataTest}>
           {children}
         </FilterToolbar>
       </NuqsAdapter>
@@ -73,6 +74,11 @@ describe('FilterToolbar', () => {
   it('has data-test="filter-toolbar" attribute', () => {
     renderToolbar([searchConfig]);
     expect(screen.getByTestId('filter-toolbar')).toBeInTheDocument();
+  });
+
+  it('uses the provided dataTest prop for the data-test attribute', () => {
+    renderToolbar([searchConfig], undefined, undefined, undefined, 'custom-test-id');
+    expect(screen.getByTestId('custom-test-id')).toBeInTheDocument();
   });
 
   it('renders correct controls for each config type', () => {

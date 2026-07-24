@@ -117,6 +117,26 @@ describe('Table', () => {
     );
   });
 
+  it('forwards expanded and onExpandedChange to useTable', () => {
+    const onExpandedChange = jest.fn();
+
+    render(
+      <Table
+        {...defaultProps}
+        enableExpansion
+        expanded={{ '1': true }}
+        onExpandedChange={onExpandedChange}
+      />,
+    );
+
+    expect(useTable).toHaveBeenCalledWith(
+      expect.objectContaining({
+        expanded: { '1': true },
+        onExpandedChange,
+      }),
+    );
+  });
+
   it('calls useVirtualization with the row count', () => {
     jest.mocked(useTable).mockReturnValue({
       table: { getVisibleLeafColumns: () => [1, 2] } as never,

@@ -8,6 +8,8 @@ import {
   type SortingState,
   type Table,
   type Row,
+  type ExpandedState,
+  type OnChangeFn,
 } from '@tanstack/react-table';
 import { type ColumnDefinition, type ColumnState } from '../types';
 
@@ -33,6 +35,13 @@ export interface UseTableOptions<TData> {
   enableSorting?: boolean;
   /** Enables expandable rows. */
   enableExpansion?: boolean;
+  /**
+   * Controlled expansion state. When provided (with {@link enableExpansion}),
+   * expansion is driven by the caller instead of TanStack's internal state.
+   */
+  expanded?: ExpandedState;
+  /** Updater for {@link expanded}. Required to make expansion controlled. */
+  onExpandedChange?: OnChangeFn<ExpandedState>;
   /** Enables row grouping. Reserved for future use. */
   enableGrouping?: boolean;
   /** Arbitrary metadata passed to TanStack Table's `meta` option. */
@@ -127,6 +136,8 @@ export function useTable<TData>(options: UseTableOptions<TData>): UseTableResult
     responsiveColumnVisibility,
     enableSorting,
     enableExpansion,
+    expanded,
+    onExpandedChange,
     meta,
   } = options;
 
@@ -159,12 +170,14 @@ export function useTable<TData>(options: UseTableOptions<TData>): UseTableResult
       ? {
           getExpandedRowModel: getExpandedRowModel(),
           getRowCanExpand: () => true,
+          ...(onExpandedChange ? { onExpandedChange } : {}),
         }
       : {}),
     state: {
       columnVisibility,
       columnOrder,
       ...(sorting ? { sorting } : {}),
+      ...(enableExpansion && expanded !== undefined ? { expanded } : {}),
     },
     meta,
   });

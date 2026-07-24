@@ -2,7 +2,6 @@ import { CONFORMA_RESULT_STATUS, type ConformaResultRow } from '~/types/conforma
 import {
   collapseArchDuplicates,
   countResultsByStatus,
-  filterResults,
   getCommonImageName,
   groupByComponent,
   groupByRule,
@@ -443,67 +442,4 @@ describe('conforma-grouping-utils', () => {
     });
   });
 
-  describe('filterResults', () => {
-    const sampleRows = [
-      mockRow({
-        title: 'Missing CVE scan',
-        component: 'api-gateway',
-        status: CONFORMA_RESULT_STATUS.violations,
-      }),
-      mockRow({
-        title: 'Base image allowed',
-        component: 'auth-service',
-        status: CONFORMA_RESULT_STATUS.successes,
-      }),
-      mockRow({
-        title: 'Deprecated API usage',
-        component: 'api-gateway',
-        status: CONFORMA_RESULT_STATUS.warnings,
-      }),
-    ];
-
-    it('returns all rows when no filters are applied', () => {
-      expect(filterResults(sampleRows, '', [])).toHaveLength(3);
-    });
-
-    it('filters by search text matching title', () => {
-      const results = filterResults(sampleRows, 'CVE', []);
-      expect(results).toHaveLength(1);
-      expect(results[0].title).toBe('Missing CVE scan');
-    });
-
-    it('filters by search text matching component (case-insensitive)', () => {
-      const results = filterResults(sampleRows, 'AUTH', []);
-      expect(results).toHaveLength(1);
-      expect(results[0].component).toBe('auth-service');
-    });
-
-    it('filters by status array', () => {
-      const results = filterResults(sampleRows, '', [CONFORMA_RESULT_STATUS.violations]);
-      expect(results).toHaveLength(1);
-      expect(results[0].status).toBe(CONFORMA_RESULT_STATUS.violations);
-    });
-
-    it('filters by multiple statuses', () => {
-      const results = filterResults(sampleRows, '', [
-        CONFORMA_RESULT_STATUS.violations,
-        CONFORMA_RESULT_STATUS.warnings,
-      ]);
-      expect(results).toHaveLength(2);
-    });
-
-    it('combines search text and status filters', () => {
-      const results = filterResults(sampleRows, 'api-gateway', [CONFORMA_RESULT_STATUS.violations]);
-      expect(results).toHaveLength(1);
-      expect(results[0].title).toBe('Missing CVE scan');
-    });
-
-    it('returns empty array when nothing matches', () => {
-      expect(filterResults(sampleRows, 'nonexistent', [])).toHaveLength(0);
-    });
-
-    it('returns empty array for empty input', () => {
-      expect(filterResults([], 'test', [])).toHaveLength(0);
-    });
-  });
 });

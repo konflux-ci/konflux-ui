@@ -1,35 +1,17 @@
 import { fireEvent, screen } from '@testing-library/react';
-import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
-import { CONFORMA_RESULT_STATUS, type ConformaResultRow } from '~/types/conforma';
 import { routerRenderer } from '~/unit-test-utils/mock-react-router';
 import type { GroupByMode } from '../conforma-grouping-utils';
+import { STATUS_FILTER_OPTIONS } from '../conforma-table-config';
 import { ConformaResultsToolbar } from '../ConformaResultsToolbar';
 import '@testing-library/jest-dom';
-
-const mockRow = (overrides: Partial<ConformaResultRow> = {}): ConformaResultRow => ({
-  title: 'Test rule',
-  description: 'A test rule description',
-  status: CONFORMA_RESULT_STATUS.violations,
-  component: 'test-component',
-  images: [],
-  ...overrides,
-});
-
-const allResults: ConformaResultRow[] = [
-  mockRow({ status: CONFORMA_RESULT_STATUS.violations }),
-  mockRow({ status: CONFORMA_RESULT_STATUS.violations }),
-  mockRow({ status: CONFORMA_RESULT_STATUS.warnings }),
-  mockRow({ status: CONFORMA_RESULT_STATUS.successes }),
-];
 
 describe('ConformaResultsToolbar', () => {
   const onGroupByChange = jest.fn();
   const onToggleExpandAll = jest.fn();
-
   const onShowDuplicatesChange = jest.fn();
 
   const defaultProps = {
-    allResults,
+    statusOptions: STATUS_FILTER_OPTIONS,
     groupBy: 'rule' as GroupByMode,
     onGroupByChange,
     allExpanded: false,
@@ -39,11 +21,7 @@ describe('ConformaResultsToolbar', () => {
   };
 
   const renderToolbar = (props: Partial<typeof defaultProps> = {}) => {
-    routerRenderer(
-      <FilterContextProvider filterParams={['name', 'status']}>
-        <ConformaResultsToolbar {...defaultProps} {...props} />
-      </FilterContextProvider>,
-    );
+    routerRenderer(<ConformaResultsToolbar {...defaultProps} {...props} />);
   };
 
   beforeEach(() => {
@@ -89,9 +67,8 @@ describe('ConformaResultsToolbar', () => {
   it('renders search input with proper placeholder text', () => {
     renderToolbar();
 
-    // S4: Use role-based query instead of PF internal DOM class selectors
-    const textInput = screen.getByRole('textbox');
-    expect(textInput).toHaveAttribute('placeholder', 'Filter by rule...');
+    const textInput = screen.getByRole('textbox', { name: /rule or component/i });
+    expect(textInput).toHaveAttribute('placeholder', 'Filter by Rule or component...');
   });
 
   it('calls onToggleExpandAll when Expand all button is clicked', () => {
@@ -138,7 +115,7 @@ describe('ConformaResultsToolbar', () => {
     renderToolbar();
 
     fireEvent.click(screen.getByTestId('conforma-group-by-select'));
-    fireEvent.click(screen.getByText('Component'));
+    fireEvent.click(screen.getByRole('option', { name: 'Component' }));
 
     expect(onGroupByChange).toHaveBeenCalledWith('component');
   });
@@ -146,17 +123,16 @@ describe('ConformaResultsToolbar', () => {
   it('renders Status filter toggle', () => {
     renderToolbar();
 
-    // MultiSelect renders with aria-label "{label} filter menu"
-    expect(screen.getByRole('button', { name: /status filter menu/i })).toBeInTheDocument();
+    expect(screen.getByTestId('multi-select-filter-status')).toBeInTheDocument();
   });
 
   it('opens Status filter menu when clicked', () => {
     renderToolbar();
 
-    fireEvent.click(screen.getByRole('button', { name: /status filter menu/i }));
+    fireEvent.click(screen.getByTestId('multi-select-filter-status'));
 
-    expect(screen.getByText(CONFORMA_RESULT_STATUS.violations)).toBeInTheDocument();
-    expect(screen.getByText(CONFORMA_RESULT_STATUS.warnings)).toBeInTheDocument();
-    expect(screen.getByText(CONFORMA_RESULT_STATUS.successes)).toBeInTheDocument();
+    expect(screen.getByText('Violations')).toBeInTheDocument();
+    expect(screen.getByText('Warnings')).toBeInTheDocument();
+    expect(screen.getByText('Successes')).toBeInTheDocument();
   });
 });

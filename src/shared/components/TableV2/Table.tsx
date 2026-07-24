@@ -64,6 +64,8 @@ export const Table = <TData,>({
   enableSorting,
   enableExpansion,
   expandedContent,
+  expanded,
+  onExpandedChange,
   hasNextPage,
   isFetchingNextPage,
   fetchNextPage,
@@ -101,6 +103,8 @@ export const Table = <TData,>({
     responsiveColumnVisibility: columnVisibility,
     enableSorting,
     enableExpansion,
+    expanded,
+    onExpandedChange,
     meta,
   });
 
