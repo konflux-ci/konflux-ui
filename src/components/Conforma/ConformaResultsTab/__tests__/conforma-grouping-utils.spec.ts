@@ -525,5 +525,35 @@ describe('conforma-grouping-utils', () => {
     it('returns empty array for empty input', () => {
       expect(filterResults([], 'test', [])).toHaveLength(0);
     });
+
+    it('filters by a single component', () => {
+      const results = filterResults(sampleRows, '', [], ['auth-service']);
+      expect(results).toHaveLength(1);
+      expect(results[0].component).toBe('auth-service');
+    });
+
+    it('filters by multiple components', () => {
+      const results = filterResults(sampleRows, '', [], ['api-gateway', 'auth-service']);
+      expect(results).toHaveLength(3);
+    });
+
+    it('returns all rows when componentFilters is empty', () => {
+      expect(filterResults(sampleRows, '', [], [])).toHaveLength(3);
+    });
+
+    it('composes with text search and status filters', () => {
+      const results = filterResults(
+        sampleRows,
+        'CVE',
+        [CONFORMA_RESULT_STATUS.violations],
+        ['api-gateway'],
+      );
+      expect(results).toHaveLength(1);
+      expect(results[0].title).toBe('Missing CVE scan');
+    });
+
+    it('returns empty when filtering by a nonexistent component', () => {
+      expect(filterResults(sampleRows, '', [], ['nonexistent'])).toHaveLength(0);
+    });
   });
 });

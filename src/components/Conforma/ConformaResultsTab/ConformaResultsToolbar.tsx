@@ -62,9 +62,14 @@ export const ConformaResultsToolbar: React.FC<ConformaResultsToolbarProps> = ({
 }) => {
   const { setFilters, onClearFilters } = React.useContext(FilterContext);
   const filters = useConformaFilters();
-  const { name: nameFilter, status: statusFilter } = filters;
+  const { name: nameFilter, status: statusFilter, component: componentFilter } = filters;
 
   const [isGroupByOpen, setIsGroupByOpen] = React.useState(false);
+
+  const componentFilterObj = React.useMemo(
+    () => createFilterObj(allResults, (r) => r.component),
+    [allResults],
+  );
 
   const statusFilterObj = React.useMemo(
     () => createFilterObj(allResults, (r) => r.status, statuses),
@@ -79,6 +84,16 @@ export const ConformaResultsToolbar: React.FC<ConformaResultsToolbarProps> = ({
       onClearFilters={onClearFilters}
       dataTest="conforma-results-toolbar"
     >
+      <MultiSelect
+        label="Component"
+        filterKey="component"
+        values={componentFilter}
+        setValues={(component) => setFilters({ ...filters, component })}
+        options={componentFilterObj}
+        hasInlineFilter
+        inlineFilterPlaceholderText="Filter components"
+        inlineFilterThreshold={10}
+      />
       <MultiSelect
         label="Status"
         filterKey="status"
