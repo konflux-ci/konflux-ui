@@ -41,6 +41,7 @@ const ConformaResultsTabContent: React.FC = () => {
     totalComponents,
     totalFailed,
     loaded,
+    settling,
     error,
     partialLogError,
     refresh,
@@ -121,7 +122,7 @@ const ConformaResultsTabContent: React.FC = () => {
     );
   }
 
-  const isEmpty = allResults.length === 0;
+  const isEmpty = allResults.length === 0 && !settling;
 
   return (
     <>
@@ -135,7 +136,7 @@ const ConformaResultsTabContent: React.FC = () => {
             validating them against a clearly defined policy.
           </Content>
         </Content>
-        <div className="conforma-results-tab__summary-wrapper">
+        <div className="conforma-results-tab__summary-wrapper" aria-busy={settling}>
           <ConformaSummaryBar
             totalComponents={totalComponents}
             totalFailed={totalFailed}
@@ -146,6 +147,7 @@ const ConformaResultsTabContent: React.FC = () => {
             totalWarningsRaw={rawCounts.totalWarnings}
             totalSuccessesRaw={rawCounts.totalSuccesses}
           />
+          {settling ? <Spinner size="sm" aria-label="Updating summary" /> : null}
         </div>
       </PageSection>
 
@@ -194,6 +196,19 @@ const ConformaResultsTabContent: React.FC = () => {
           />
         )}
       </PageSection>
+
+      {/* Stable live region so assistive tech announces when settling finishes. */}
+      <div aria-live="polite" aria-atomic="true">
+        {settling ? (
+          <Bullseye className="conforma-results-tab__settling">
+            <Spinner
+              size="lg"
+              aria-label="Finalizing Conforma results"
+              data-test="conforma-results-settling-spinner"
+            />
+          </Bullseye>
+        ) : null}
+      </div>
     </>
   );
 };

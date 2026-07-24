@@ -1,6 +1,10 @@
 import { extractConformaResultsFromTaskRunLogs } from '~/components/Conforma/utils';
-import { commonFetchJSON, getK8sResourceURL } from '~/k8s';
-import { KUBEARCHIVE_PATH_PREFIX } from '~/kubearchive/const';
+import { PipelineRunLabel, PipelineRunType } from '~/consts/pipelinerun';
+import { CONFORMA_TASK, EC_TASK } from '~/consts/security';
+import { commonFetchJSON, getK8sResourceURL, k8sListResource, K8sResourceListOptions } from '~/k8s';
+import { KUBEARCHIVE_PATH_PREFIX, KUBEARCHIVE_RESOURCE_LIMIT } from '~/kubearchive/const';
+import { convertToKubearchiveQueryParams, withKubearchivePathPrefix } from '~/kubearchive/fetch-utils';
+import { TaskRunGroupVersionKind, TaskRunModel } from '~/models';
 import { PodModel } from '~/models/pod';
 import type { TaskRunKind } from '~/types';
 import {
@@ -10,8 +14,81 @@ import {
   type ConformaResultRow,
   type ConformaRule,
 } from '~/types/conforma';
+import { TektonResourceLabel } from '~/types/coreTekton';
+import type { Selector } from '~/types/k8s';
 import { getPipelineRunFromTaskRunOwnerRef } from '~/utils/common-utils';
-import { getTaskRunLog } from '~/utils/tekton-results';
+import { getTaskRunLog, getTaskRuns } from '~/utils/tekton-results';
+
+export const buildSecurityTaskRunSelector = (
+  applicationName: string,
+  componentName?: string,
+): Selector => ({
+  matchLabels: {
+    [PipelineRunLabel.APPLICATION]: applicationName,
+    ...(componentName ? { [PipelineRunLabel.COMPONENT]: componentName } : {}),
+    [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.TEST,
+  },
+  matchExpressions: [
+    {
+      key: TektonResourceLabel.pipelineTask,
+      operator: 'In' as const,
+      values: [EC_TASK, CONFORMA_TASK],
+    },
+  ],
+});
+
+/**
+ * KubeArchive's list API has no server-side ordering support (unlike Tekton
+ * Results, which orders by `create_time desc`), so the newest TaskRun must be
+ * selected client-side from a bounded window of results.
+ */
+export const pickNewestTaskRun = (taskRuns: TaskRunKind[]): TaskRunKind | null => {
+  if (!taskRuns.length) {
+    return null;
+  }
+  return taskRuns.reduce((newest, current) => {
+    const newestTimestamp = newest.metadata?.creationTimestamp ?? '';
+    const currentTimestamp = current.metadata?.creationTimestamp ?? '';
+    if (currentTimestamp === newestTimestamp) {
+      return (current.metadata?.name ?? '') > (newest.metadata?.name ?? '') ? current : newest;
+    }
+    return currentTimestamp > newestTimestamp ? current : newest;
+  });
+};
+
+export async function fetchLatestSecurityTaskRunForComponent(
+  namespace: string,
+  applicationName: string,
+  componentName: string,
+  isKubearchiveTaskRunsEnabled: boolean,
+): Promise<TaskRunKind | null> {
+  const selector = buildSecurityTaskRunSelector(applicationName, componentName);
+
+  if (isKubearchiveTaskRunsEnabled) {
+    const k8sQueryOptions = convertToKubearchiveQueryParams({
+      groupVersionKind: TaskRunGroupVersionKind,
+      namespace,
+      isList: true,
+      selector,
+    });
+    const res = await k8sListResource<TaskRunKind>(
+      withKubearchivePathPrefix<K8sResourceListOptions>({
+        model: TaskRunModel,
+        queryOptions: {
+          ...(k8sQueryOptions || {}),
+          queryParams: {
+            ...(k8sQueryOptions?.queryParams || {}),
+            limit: KUBEARCHIVE_RESOURCE_LIMIT,
+          },
+        },
+      }),
+    );
+    return pickNewestTaskRun(res?.items ?? []);
+  }
+
+  const [results] = await getTaskRuns(namespace, { selector, limit: 1 });
+  return results[0] ?? null;
+}
 
 const mapToConformaResultRow = (
   v: ConformaRule,
