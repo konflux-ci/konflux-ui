@@ -81,7 +81,7 @@
     "@babel/preset-typescript": "^7.24.0",
     "@commitlint/cli": "^19.3.0",
     "@commitlint/config-conventional": "^19.2.2",
-    "@dotenvx/dotenvx": "^1.7.0",
+    "@dotenvx/dotenvx": "^2.0.0",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.15",
     "@storybook/addon-a11y": "10.5.0",
     "@storybook/addon-webpack5-compiler-swc": "4.0.3",
