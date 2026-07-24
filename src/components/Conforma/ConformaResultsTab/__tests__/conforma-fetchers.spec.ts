@@ -87,7 +87,7 @@ describe('fetchConformaLogFromKubearchive', () => {
         ns: NAMESPACE,
         name: 'pod-1',
         path: 'log',
-        queryParams: { container: 'step-report-json', follow: 'true' },
+        queryParams: { container: 'step-report-json' },
       }),
     );
     expect(commonFetchJSON).toHaveBeenCalledWith('/fake-url', {
