@@ -1,5 +1,4 @@
 import { Common } from '../../utils/Common';
-import { LogViewerHelper } from '../../utils/LogViewerHelper';
 import { pageTitles } from '../constants/PageTitle';
 import {
   addComponentPagePO,
@@ -24,13 +23,12 @@ export class ApplicationDetailPage {
       .scrollIntoView()
       .should('be.visible')
       .click();
-    // Search expands the folded step and scrolls the match into the virtualized viewport.
-    LogViewerHelper.searchAndReveal(textToVerify);
+    cy.get(buildLogModalContentPO.logText).should('contain.text', textToVerify);
   }
 
   checkPodLog(podName: string, textToVerify: string) {
     cy.get(buildLogModalContentPO.podLogNavList).contains('a', podName).click();
-    LogViewerHelper.searchAndReveal(textToVerify);
+    cy.get(buildLogModalContentPO.logText).should('contain.text', textToVerify);
   }
 
   openBuildLog(componentName: string) {

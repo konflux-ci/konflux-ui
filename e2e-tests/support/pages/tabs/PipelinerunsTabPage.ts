@@ -1,6 +1,5 @@
 import { hacAPIEndpoints } from '../../../utils/APIEndpoints';
 import { APIHelper } from '../../../utils/APIHelper';
-import { LogViewerHelper } from '../../../utils/LogViewerHelper';
 import { UIhelper } from '../../../utils/UIhelper';
 import { pipelinerunsTabPO } from '../../pageObjects/pages-po';
 
@@ -184,14 +183,10 @@ export class DetailsTab {
   }
 
   static verifyLogs(logText: string | RegExp) {
-    // Completed steps start folded; search expands + scrolls to the match in the virtualized list.
-    LogViewerHelper.revealLogText(logText, 80000);
-    if (typeof logText !== 'string') {
-      cy.get(pipelinerunsTabPO.logText)
-        .contains(logText, { timeout: 80000 })
-        .scrollIntoView()
-        .should('be.visible');
-    }
+    cy.get(pipelinerunsTabPO.logText)
+      .contains(logText, { timeout: 80000 })
+      .scrollIntoView()
+      .should('be.visible');
   }
 
   static closeDrawerPanel() {
