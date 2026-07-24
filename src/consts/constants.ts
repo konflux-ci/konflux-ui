@@ -17,3 +17,5 @@ export const TEXT_SEARCH_TYPES = {
   NAME: 'Name',
   VERSION: 'Version',
 } as const;
+
+export const MINTMAKER_NAMESPACE = 'mintmaker';

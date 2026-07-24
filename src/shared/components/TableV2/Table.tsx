@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
 import { Table as PfTable } from '@patternfly/react-table';
 import { getParentScrollableElement } from '~/shared/hooks';
 import { computeColumnWidths } from './column-widths';
@@ -89,6 +89,30 @@ export const Table = <TData,>({
     }
   }, [scrollElementProp, tableNode]);
 
+  // Tracks how far the table is from the top of the scroll container so the
+  // virtualizer can correctly offset row positions (accounts for toolbars, headers, etc.).
+  const [scrollMargin, setScrollMargin] = useState(0);
+  useLayoutEffect(() => {
+    if (!tableNode || !scrollElement) {
+      setScrollMargin(0);
+      return;
+    }
+
+    const recalculate = () => {
+      const tableRect = tableNode.getBoundingClientRect();
+      const scrollRect = scrollElement.getBoundingClientRect();
+      setScrollMargin(tableRect.top - scrollRect.top + scrollElement.scrollTop);
+    };
+
+    recalculate();
+
+    const observer = new ResizeObserver(recalculate);
+    observer.observe(scrollElement);
+    observer.observe(tableNode);
+
+    return () => observer.disconnect();
+  }, [tableNode, scrollElement]);
+
   const { columnState, setColumnState } = useColumnState(columnStateKey, columns);
   const { columnVisibility } = useResponsiveColumns(columns);
 
@@ -107,6 +131,7 @@ export const Table = <TData,>({
   const { virtualizer, virtualRows } = useVirtualization({
     count: rows.length,
     scrollElement,
+    scrollMargin,
   });
 
   useInfiniteScroll({
@@ -135,6 +160,7 @@ export const Table = <TData,>({
           expandedContent={expandedContent}
           visibleColumnCount={visibleColumnCount}
           isFetchingNextPage={isFetchingNextPage}
+          scrollMargin={scrollMargin}
         />
       </PfTable>
     </div>
