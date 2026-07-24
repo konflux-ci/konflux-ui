@@ -1,5 +1,6 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { screen, fireEvent, act } from '@testing-library/react';
+import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useComponent } from '../../../../hooks/useComponents';
 import { PACState } from '../../../../hooks/usePACState';
 import { mockUseNamespaceHook } from '../../../../unit-test-utils/mock-namespace';
@@ -36,6 +37,11 @@ jest.mock('react-router-dom', () => {
   };
 });
 
+jest.mock('~/feature-flags/hooks', () => ({
+  ...jest.requireActual('~/feature-flags/hooks'),
+  useIsOnFeatureFlag: jest.fn(() => false),
+}));
+
 jest.mock('../../../../hooks/usePACState', () => {
   const actual = jest.requireActual('../../../../hooks/usePACState');
   return {
@@ -48,6 +54,7 @@ jest.mock('../../../../hooks/usePACState', () => {
 const useNavigateMock = useNavigate as jest.Mock;
 const useParamsMock = useParams as jest.Mock;
 const useComponentMock = useComponent as jest.Mock;
+const useIsOnFeatureFlagMock = useIsOnFeatureFlag as jest.Mock;
 const watchResourceMock = createK8sWatchResourceMock();
 const useModalLauncherMock = useModalLauncher as jest.Mock;
 
@@ -103,6 +110,24 @@ describe('ComponentDetailsView', () => {
     await act(() => fireEvent.click(activityTab));
     expect(navigateMock).toHaveBeenCalledWith(
       '/ns/test-ns/applications/test-application/components/human-resources/activity',
+    );
+  });
+
+  it('should not show the dependency updates tab when mintmaker is disabled', () => {
+    useIsOnFeatureFlagMock.mockReturnValue(false);
+    renderWithQueryClientAndRouter(<ComponentDetailsViewWrapper />);
+    expect(screen.queryByTestId('app-details__tabItem dependencyupdates')).not.toBeInTheDocument();
+  });
+
+  it('should show the dependency updates tab when mintmaker is enabled', async () => {
+    useIsOnFeatureFlagMock.mockReturnValue(true);
+    renderWithQueryClientAndRouter(<ComponentDetailsViewWrapper />);
+    const dependencyTab = screen.getByTestId('app-details__tabItem dependencyupdates');
+    expect(dependencyTab).toBeInTheDocument();
+
+    await act(() => fireEvent.click(dependencyTab));
+    expect(navigateMock).toHaveBeenCalledWith(
+      '/ns/test-ns/applications/test-application/components/human-resources/dep-updates',
     );
   });
 });
