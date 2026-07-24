@@ -28,7 +28,6 @@ import {
 } from '@patternfly/react-log-viewer';
 import classNames from 'classnames';
 import { saveAs } from 'file-saver';
-import { debounce } from 'lodash-es';
 import { v4 as uuidv4 } from 'uuid';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { logger } from '~/monitoring/logger';
@@ -45,6 +44,7 @@ import {
   normalizeSection,
   useLineNumberNavigation,
 } from '~/shared/components/virtualized-log-viewer';
+import { useContainerHeight } from '~/shared/hooks';
 import { useFullscreen } from '~/shared/hooks/fullscreen';
 import { TaskRunKind } from '~/types';
 import { prepareLogViewerContent } from './log-viewer-content';
@@ -150,40 +150,7 @@ const LogViewer: React.FC<Props> = ({
   };
 
   // Use containerRef to measure actual height for VirtualizedLogViewer
-  const containerRef = React.useRef<HTMLDivElement>(null);
-  const [viewerHeight, setViewerHeight] = React.useState<number | undefined>(undefined);
-
-  React.useEffect(() => {
-    const updateHeight = (immediate = false) => {
-      if (containerRef.current) {
-        const measured = containerRef.current.clientHeight;
-        if (measured > 0) {
-          if (immediate) {
-            // Immediate update for fullscreen toggle and initial mount
-            setViewerHeight(measured);
-          } else {
-            // Use requestAnimationFrame for resize events to avoid ResizeObserver warnings
-            requestAnimationFrame(() => {
-              setViewerHeight(measured);
-            });
-          }
-        }
-      }
-    };
-
-    // Update immediately on mount and fullscreen changes
-    updateHeight(true);
-
-    // Debounced resize handler for better performance (150ms delay)
-    const debouncedUpdateHeight = debounce(() => updateHeight(false), 150);
-
-    // Update on window resize
-    window.addEventListener('resize', debouncedUpdateHeight);
-    return () => {
-      window.removeEventListener('resize', debouncedUpdateHeight);
-      debouncedUpdateHeight.cancel();
-    };
-  }, [isFullscreen]);
+  const { containerRef, viewerHeight } = useContainerHeight({ isFullscreen });
 
   return (
     <LogViewerContext.Provider value={logViewerContextValue}>
