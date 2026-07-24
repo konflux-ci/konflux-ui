@@ -184,12 +184,14 @@ export class DetailsTab {
   }
 
   static verifyLogs(logText: string | RegExp) {
-    // Completed steps start folded; expand only until the target text is in the DOM.
-    LogViewerHelper.expandUntilLogTextFound(logText);
-    cy.get(pipelinerunsTabPO.logText)
-      .contains(logText, { timeout: 80000 })
-      .scrollIntoView()
-      .should('be.visible');
+    // Completed steps start folded; search expands + scrolls to the match in the virtualized list.
+    LogViewerHelper.revealLogText(logText, 80000);
+    if (typeof logText !== 'string') {
+      cy.get(pipelinerunsTabPO.logText)
+        .contains(logText, { timeout: 80000 })
+        .scrollIntoView()
+        .should('be.visible');
+    }
   }
 
   static closeDrawerPanel() {

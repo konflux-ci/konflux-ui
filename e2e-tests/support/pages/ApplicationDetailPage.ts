@@ -24,14 +24,13 @@ export class ApplicationDetailPage {
       .scrollIntoView()
       .should('be.visible')
       .click();
-    LogViewerHelper.expandUntilLogTextFound(textToVerify);
-    cy.get(buildLogModalContentPO.logText).should('contain.text', textToVerify);
+    // Search expands the folded step and scrolls the match into the virtualized viewport.
+    LogViewerHelper.searchAndReveal(textToVerify);
   }
 
   checkPodLog(podName: string, textToVerify: string) {
     cy.get(buildLogModalContentPO.podLogNavList).contains('a', podName).click();
-    LogViewerHelper.expandUntilLogTextFound(textToVerify);
-    cy.get(buildLogModalContentPO.logText).should('contain.text', textToVerify);
+    LogViewerHelper.searchAndReveal(textToVerify);
   }
 
   openBuildLog(componentName: string) {
