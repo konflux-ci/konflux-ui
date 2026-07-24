@@ -1,12 +1,18 @@
 import React, { useMemo, useState } from 'react';
 import { Form } from '@patternfly/react-core';
 import { useField, useFormikContext } from 'formik';
-import { FIELD_SECRET_FOR_COMPONENT_OPTION, SecretLinkOptionLabels } from '~/consts/secrets';
+import {
+  FIELD_SECRET_FOR_COMPONENT_OPTION,
+  SecretLinkOptionLabels,
+  DEFAULT_OPAQUE_KEY_VALUES,
+  DEFAULT_OPAQUE_LABELS,
+} from '~/consts/secrets';
+import { InputField } from '~/shared/components/formik-base';
 import KeyValueInputField from '~/shared/components/formik-fields/key-value-input-field/KeyValueInputField';
 import {
   supportedPartnerTasksSecrets,
-  getSupportedPartnerTaskKeyValuePairs,
   isPartnerTask,
+  isUsingExistingClusterSecret,
   SecretForComponentOption,
 } from '~/utils/secrets/secret-utils';
 import { DropdownItemObject } from '../../shared/components/dropdown';
@@ -21,6 +27,7 @@ import {
   CurrentComponentRef,
 } from '../../types';
 import { RawComponentProps } from '../modal/createModalLauncher';
+import { useOpaqueSecretSync } from './hooks/useOpaqueSecretSync';
 import { ImagePullSecretForm } from './SecretsForm/ImagePullSecretForm';
 import { SecretLinkOptions } from './SecretsForm/SecretLinkOption';
 import { SourceSecretForm } from './SecretsForm/SourceSecretForm';
@@ -29,22 +36,28 @@ import SecretTypeSelector from './SecretTypeSelector';
 type SecretFormProps = RawComponentProps & {
   existingSecrets: BuildTimeSecret[];
   currentComponent?: null | CurrentComponentRef;
+  isEdit?: boolean;
 };
 
 const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({
   existingSecrets,
   currentComponent,
+  isEdit = false,
 }) => {
   const { values, setFieldValue } = useFormikContext<SecretFormValues>();
   const [currentType, setCurrentType] = useState(values.type);
 
-  const defaultKeyValues = [{ key: '', value: '', readOnlyKey: false }];
-  const defaultImageKeyValues = [{ key: '.dockerconfigjson', value: '', readOnlyKey: true }];
   const [{ value: secretForComponentOption }, , { setValue }] = useField<SecretForComponentOption>(
     FIELD_SECRET_FOR_COMPONENT_OPTION,
   );
 
-  let options = useMemo(() => {
+  const { clearReadOnlyKeys, resetOpaqueFields, resetKeyValues, populateFromExistingOpaqueSecret } =
+    useOpaqueSecretSync({
+      currentType,
+      existingSecrets,
+    });
+
+  const options = useMemo(() => {
     return existingSecrets
       .filter((secret) => secret.type === K8sSecretType[currentType])
       .concat(
@@ -54,14 +67,14 @@ const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({
           : [],
       )
       .filter((secret) => secret.type !== K8sSecretType[SecretTypeDropdownLabel.image])
-      .map((secret) => ({ value: secret.name, lable: secret.name }));
+      .map((secret) => ({ value: secret.name }));
   }, [currentType, existingSecrets]);
 
-  const optionsValues = useMemo(() => {
+  const optionsValues = useMemo((): Record<string, BuildTimeSecret> => {
     return existingSecrets
       .filter((secret) => secret.type === K8sSecretType[currentType])
       .filter((secret) => secret.type !== K8sSecretType[SecretTypeDropdownLabel.image])
-      .reduce(
+      .reduce<Record<string, BuildTimeSecret>>(
         (dictOfSecrets, secret) => {
           dictOfSecrets[secret.name] = secret;
           return dictOfSecrets;
@@ -70,18 +83,14 @@ const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({
       );
   }, [currentType, existingSecrets]);
 
-  const clearKeyValues = () => {
-    const newKeyValues = values.opaque.keyValues.filter((kv) => !kv.readOnlyKey);
-    void setFieldValue('keyValues', [...(newKeyValues.length ? newKeyValues : defaultKeyValues)]);
-  };
+  const isUsingExisting = isUsingExistingClusterSecret(
+    values.secretName,
+    currentType,
+    existingSecrets,
+  );
 
-  const resetKeyValues = () => {
-    options = [];
-    const newKeyValues = values.opaque.keyValues.filter(
-      (kv) => !kv.readOnlyKey && (!!kv.key || !!kv.value),
-    );
-    void setFieldValue('keyValues', [...newKeyValues, ...defaultImageKeyValues]);
-  };
+  const isOpaqueNameSelection =
+    isPartnerTask(values.secretName, supportedPartnerTasksSecrets) || isUsingExisting;
 
   const dropdownItems: DropdownItemObject[] = Object.entries(SecretTypeDropdownLabel).reduce(
     (acc, [key, value]) => {
@@ -92,14 +101,25 @@ const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({
   );
 
   const shouldShowSecretLinkOptions =
-    (values?.source?.authType === SourceSecretType.basic &&
+    !isUsingExisting &&
+    ((values?.source?.authType === SourceSecretType.basic &&
       currentType === SecretTypeDropdownLabel.source) ||
-    currentType === SecretTypeDropdownLabel.image;
+      currentType === SecretTypeDropdownLabel.image);
+
+  const isIdentityLocked = isEdit && isUsingExisting;
+
+  const secretNameHelperText = isIdentityLocked
+    ? 'You cannot edit the existing secret name'
+    : isUsingExisting
+      ? 'Reusing an existing cluster secret.'
+      : 'Unique name of the new secret.';
 
   return (
     <Form data-test="secret-form">
       <SecretTypeSelector
         dropdownItems={dropdownItems}
+        isDisabled={isIdentityLocked}
+        isEditMode={isIdentityLocked}
         onChange={(type) => {
           setCurrentType(type);
           void setValue(SecretForComponentOption.none);
@@ -115,39 +135,50 @@ const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({
               isPartnerTask(values.secretName) &&
               void setFieldValue('secretName', '');
           } else {
-            clearKeyValues();
+            clearReadOnlyKeys();
           }
         }}
       />
-      <SelectInputField
-        required
-        key={values.type}
-        name="secretName"
-        label="Select or enter secret name"
-        helpText="Unique name of the new secret."
-        isCreatable
-        hasOnCreateOption
-        options={options}
-        variant="typeahead"
-        toggleId="secret-name-toggle"
-        toggleAriaLabel="secret-name-dropdown"
-        onClear={() => {
-          if (currentType !== values.type || isPartnerTask(values.secretName, optionsValues)) {
-            clearKeyValues();
-          }
-        }}
-        onSelect={(_, value: string) => {
-          if (isPartnerTask(value, optionsValues)) {
-            void setFieldValue('opaque.keyValues', [
-              ...values.opaque.keyValues.filter(
-                (kv) => !kv.readOnlyKey && (!!kv.key || !!kv.value),
-              ),
-              ...getSupportedPartnerTaskKeyValuePairs(value, optionsValues),
-            ]);
-          }
-          void setFieldValue('secretName', value);
-        }}
-      />
+      {currentType === SecretTypeDropdownLabel.opaque ? (
+        <SelectInputField
+          required
+          key={values.type}
+          name="secretName"
+          label="Select or enter secret name"
+          helpText={secretNameHelperText}
+          isCreatable
+          hasOnCreateOption
+          isDisabled={isIdentityLocked}
+          options={options}
+          variant="typeahead"
+          toggleId="secret-name-toggle"
+          toggleAriaLabel="secret-name-dropdown"
+          onClear={() => {
+            if (currentType !== values.type || isOpaqueNameSelection) {
+              resetOpaqueFields();
+            }
+          }}
+          onSelect={(_, value: string) => {
+            if (
+              isPartnerTask(value, supportedPartnerTasksSecrets) ||
+              isUsingExistingClusterSecret(value, currentType, existingSecrets)
+            ) {
+              populateFromExistingOpaqueSecret(value);
+            }
+            void setFieldValue('secretName', value);
+          }}
+        />
+      ) : (
+        <InputField
+          name="secretName"
+          data-test="secret-name"
+          label="Secret name"
+          helperText={secretNameHelperText}
+          placeholder="Enter name"
+          isDisabled={isIdentityLocked}
+          isRequired
+        />
+      )}
       {shouldShowSecretLinkOptions && (
         <SecretLinkOptions
           currentComponent={currentComponent}
@@ -156,21 +187,26 @@ const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({
           radioLabels={SecretLinkOptionLabels.default}
         />
       )}
-      {currentType === SecretTypeDropdownLabel.source && <SourceSecretForm />}
+      {currentType === SecretTypeDropdownLabel.source && (
+        <SourceSecretForm isEditMode={isIdentityLocked} />
+      )}
       {currentType === SecretTypeDropdownLabel.image && <ImagePullSecretForm />}
       {currentType === SecretTypeDropdownLabel.opaque && (
         <KeyValueFileInputField
-          required
+          required={!isUsingExisting}
           name={'opaque.keyValues'}
-          entries={defaultKeyValues}
-          disableRemoveAction={values.opaque.keyValues.length === 1}
+          entries={DEFAULT_OPAQUE_KEY_VALUES}
+          disableRemoveAction={(values.opaque?.keyValues?.length ?? 1) === 1 || isUsingExisting}
+          disableAddAction={isUsingExisting}
+          disableValueFields={isUsingExisting}
         />
       )}
 
       <KeyValueInputField
         name="labels"
         label="Labels"
-        entries={[{ key: '', value: '' }]}
+        entries={values.labels?.length ? values.labels : DEFAULT_OPAQUE_LABELS}
+        readOnly={isUsingExisting}
         description="You can add labels to provide more context or tag your secret."
       />
     </Form>
