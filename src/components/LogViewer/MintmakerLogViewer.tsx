@@ -74,7 +74,7 @@ export const MintmakerLogViewer: FC<PropsWithChildren<MintmakerLogViewerProps>> 
       return <LogsWrapperComponent resource={resource} taskRun={activeTaskRun} />;
     }
 
-    if (pipelineRunIsRunning && !activeTaskRun) {
+    if (pipelineRunIsRunning && (!activeTaskRun || !resource)) {
       return (
         <Bullseye>
           <Flex direction={{ default: 'column' }} alignItems={{ default: 'alignItemsCenter' }}>
