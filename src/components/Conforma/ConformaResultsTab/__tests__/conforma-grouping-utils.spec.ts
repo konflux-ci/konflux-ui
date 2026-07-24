@@ -411,6 +411,78 @@ describe('conforma-grouping-utils', () => {
       expect(result).toHaveLength(1);
       expect(result[0].images).toEqual(['img@sha256:aaa', 'img@sha256:bbb']);
     });
+
+    it('keeps the first non-empty pipelineRunName when merging arch-duplicate rows', () => {
+      const rows = [
+        mockRow({
+          title: 'CVE rule',
+          msg: 'CVE-2024-001',
+          component: 'api',
+          images: ['img@sha256:aaa'],
+          pipelineRunName: 'pr-1',
+        }),
+        mockRow({
+          title: 'CVE rule',
+          msg: 'CVE-2024-001',
+          component: 'api',
+          images: ['img@sha256:bbb'],
+          pipelineRunName: undefined,
+        }),
+      ];
+
+      const result = collapseArchDuplicates(rows);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].pipelineRunName).toBe('pr-1');
+    });
+
+    it('keeps the non-empty pipelineRunName when the first row is missing it', () => {
+      const rows = [
+        mockRow({
+          title: 'CVE rule',
+          msg: 'CVE-2024-001',
+          component: 'api',
+          images: ['img@sha256:aaa'],
+          pipelineRunName: undefined,
+        }),
+        mockRow({
+          title: 'CVE rule',
+          msg: 'CVE-2024-001',
+          component: 'api',
+          images: ['img@sha256:bbb'],
+          pipelineRunName: 'pr-1',
+        }),
+      ];
+
+      const result = collapseArchDuplicates(rows);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].pipelineRunName).toBe('pr-1');
+    });
+
+    it('keeps pipelineRunName when both rows share the same value', () => {
+      const rows = [
+        mockRow({
+          title: 'CVE rule',
+          msg: 'CVE-2024-001',
+          component: 'api',
+          images: ['img@sha256:aaa'],
+          pipelineRunName: 'pr-1',
+        }),
+        mockRow({
+          title: 'CVE rule',
+          msg: 'CVE-2024-001',
+          component: 'api',
+          images: ['img@sha256:bbb'],
+          pipelineRunName: 'pr-1',
+        }),
+      ];
+
+      const result = collapseArchDuplicates(rows);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].pipelineRunName).toBe('pr-1');
+    });
   });
 
   describe('getCommonImageName', () => {
