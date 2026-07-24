@@ -114,11 +114,11 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
   });
 
   React.useEffect(() => {
-    if (!isMultiSection || !expandSearchTargetRow || expandSearchTargetRow <= 0) return;
+    if (!expandSearchTargetRow || expandSearchTargetRow <= 0) return;
     const sectionIndex = searchLineToSectionIndexRef.current.get(expandSearchTargetRow - 1);
     if (sectionIndex === undefined) return;
     expandSection(sectionIndex);
-  }, [isMultiSection, expandSearchTargetRow, expandSection]);
+  }, [expandSearchTargetRow, expandSection]);
 
   const measureCallbackRef = React.useCallback((node: HTMLDivElement | null) => {
     if (node) {
@@ -176,15 +176,16 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
   });
 
   React.useEffect(() => {
-    if (!isMultiSection || !highlightedLines) return;
+    if (!highlightedLines) return;
 
-    const sectionsToExpand = new Set<number>();
+    const expanded = new Set<number>();
     for (let line = highlightedLines.start; line <= highlightedLines.end; line++) {
       const sectionIndex = lineNumberToSectionIndexRef.current.get(line);
-      if (sectionIndex !== undefined) sectionsToExpand.add(sectionIndex);
+      if (sectionIndex === undefined || expanded.has(sectionIndex)) continue;
+      expanded.add(sectionIndex);
+      expandSection(sectionIndex);
     }
-    sectionsToExpand.forEach((sectionIndex) => expandSection(sectionIndex));
-  }, [isMultiSection, highlightedLines, expandSection]);
+  }, [highlightedLines, expandSection]);
 
   const highlightScrollTargetIndex = React.useMemo((): number | null => {
     if (!highlightedLines || rowCount === 0) return null;
@@ -217,7 +218,6 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
 
     const sectionIndex = lineNumberToSectionIndexRef.current.get(highlightedLines.start);
     const awaitingExpand =
-      isMultiSection &&
       displayIdx === undefined &&
       sectionIndex !== undefined &&
       !expandedSections.has(sectionIndex);
@@ -254,7 +254,6 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
     lineNumberToDisplayRow,
     virtualizer,
     clearScrollTracking,
-    isMultiSection,
     expandedSections,
   ]);
 

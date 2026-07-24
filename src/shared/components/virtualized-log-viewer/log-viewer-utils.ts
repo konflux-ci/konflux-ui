@@ -21,7 +21,7 @@ export function normalizeSection(section: LogSection): NormalizedLogSection {
 export function singleLogSection(
   data: string,
   containerName = 'log',
-  isCompleted = true,
+  isCompleted = false,
 ): LogSection {
   return { containerName, data, isCompleted };
 }

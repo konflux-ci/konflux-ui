@@ -9,7 +9,7 @@ import {
 } from '../../../../../k8s/k8s-utils';
 import { TaskRunKind } from '../../../../../types';
 import { ContainerStatus, PodKind, ContainerSpec } from '../../../types';
-import { containerToLogSourceStatus } from '../../utils';
+import { containerToLogSourceStatus, isContainerStepCompleted } from '../../utils';
 import Logs from '../Logs';
 
 const mockLogViewer = jest.fn();
@@ -59,6 +59,7 @@ jest.mock('~/shared/providers/Namespace');
 
 jest.mock('../../utils', () => ({
   containerToLogSourceStatus: jest.fn(),
+  isContainerStepCompleted: jest.fn(),
   LOG_SOURCE_TERMINATED: 'terminated',
   LOG_SOURCE_RUNNING: 'running',
   LOG_SOURCE_WAITING: 'waiting',
@@ -128,6 +129,9 @@ describe('Logs', () => {
     (getK8sResourceURL as jest.Mock).mockReturnValue('http://test-url');
     (getWebsocketSubProtocolAndPathPrefix as jest.Mock).mockReturnValue({});
     (containerToLogSourceStatus as jest.Mock).mockReturnValue('running');
+    (isContainerStepCompleted as jest.Mock).mockImplementation(
+      (container?: ContainerStatus) => containerToLogSourceStatus(container) === 'terminated',
+    );
   });
 
   describe('rendering', () => {
@@ -282,7 +286,7 @@ describe('Logs', () => {
       expect(lastCall.sections[1].containerName).toBe('CONTAINER1');
     });
 
-    it('should skip containers without log sources', async () => {
+    it('should include containers with empty fetched logs so folding can evaluate them', async () => {
       const terminatedContainer1: ContainerStatus = {
         name: 'container1',
         state: { terminated: { exitCode: 0 } },
@@ -323,11 +327,19 @@ describe('Logs', () => {
         await Promise.resolve();
       });
 
-      // Containers without logs are omitted from sections
+      // Empty fetched logs still create a section (e.g. 404 / no output) so fold state is consistent.
       const lastCall = mockLogViewer.mock.calls[mockLogViewer.mock.calls.length - 1][0];
-      expect(lastCall.sections).toHaveLength(1);
-      expect(lastCall.sections[0].containerName).toBe('CONTAINER1');
-      expect(lastCall.sections[0].data).toBe('has logs');
+      expect(lastCall.sections).toHaveLength(2);
+      expect(lastCall.sections[0]).toEqual({
+        containerName: 'CONTAINER1',
+        data: 'has logs',
+        isCompleted: true,
+      });
+      expect(lastCall.sections[1]).toEqual({
+        containerName: 'CONTAINER2',
+        data: '',
+        isCompleted: true,
+      });
     });
 
     it('should pass empty sections when no containers have logs', () => {
