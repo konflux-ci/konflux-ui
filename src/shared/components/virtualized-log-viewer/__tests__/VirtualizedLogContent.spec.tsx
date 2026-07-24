@@ -10,22 +10,6 @@ import { VirtualizedLogContent } from '../VirtualizedLogContent';
 // Register the log language
 registerLogSyntax(Prism);
 
-// Spy to capture scrollToIndex calls from the virtualizer.
-let scrollToIndexSpy: jest.Mock | null = null;
-jest.mock('@tanstack/react-virtual', () => {
-  const actual = jest.requireActual('@tanstack/react-virtual');
-  return {
-    ...actual,
-    useVirtualizer: (options: unknown) => {
-      const virtualizer = actual.useVirtualizer(options);
-      if (scrollToIndexSpy) {
-        return { ...virtualizer, scrollToIndex: scrollToIndexSpy };
-      }
-      return virtualizer;
-    },
-  };
-});
-
 // Mock lodash-es debounce to make tests synchronous
 jest.mock('lodash-es', () => ({
   ...jest.requireActual('lodash-es'),
@@ -38,10 +22,18 @@ jest.mock('lodash-es', () => ({
 
 describe('VirtualizedLogContent Integration Tests', () => {
   const mockData = 'line 1\nline 2\nline 3';
+  const mockLineNumberNavigation = {
+    highlightedLines: null,
+    firstSelectedLine: null,
+    handleLineClick: jest.fn(),
+    isLineHighlighted: jest.fn().mockReturnValue(false),
+  };
+
   const defaultProps = {
     sections: [singleLogSection(mockData)],
     height: 600,
     width: '100%',
+    lineNumberNavigationProps: mockLineNumberNavigation,
   };
 
   beforeEach(() => {
@@ -579,35 +571,18 @@ Another short line`;
     });
   });
 
-  describe('Hash Navigation and Auto-scroll', () => {
-    beforeEach(() => {
-      window.location.hash = '';
-    });
+  describe('Line Highlighting via Props', () => {
+    it('should highlight a single line when highlightedLines is provided', () => {
+      const navProps = {
+        ...mockLineNumberNavigation,
+        highlightedLines: { start: 2, end: 2 },
+        isLineHighlighted: jest.fn((n: number) => n === 2),
+      };
 
-    afterEach(() => {
-      window.location.hash = '';
-    });
+      renderWithQueryClientAndRouter(
+        <VirtualizedLogContent {...defaultProps} lineNumberNavigationProps={navProps} />,
+      );
 
-    it('should highlight and scroll to single line from URL hash', () => {
-      window.location.hash = '#L2';
-
-      renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
-
-      // Should highlight gutter cell
-      const highlightedCells = document.querySelectorAll('.log-content__gutter--highlighted');
-      expect(highlightedCells.length).toBeGreaterThan(0);
-
-      // Should highlight line content
-      const highlightedLines = document.querySelectorAll('.log-content__line--highlighted');
-      expect(highlightedLines.length).toBeGreaterThan(0);
-    });
-
-    it('should highlight and scroll to range of lines from URL hash', () => {
-      window.location.hash = '#L1-L3';
-
-      renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
-
-      // Range should be highlighted
       const highlightedCells = document.querySelectorAll('.log-content__gutter--highlighted');
       expect(highlightedCells.length).toBeGreaterThan(0);
 
@@ -615,204 +590,44 @@ Another short line`;
       expect(highlightedLines.length).toBeGreaterThan(0);
     });
 
-    it('should scroll to bottom when hash line number exceeds log length', () => {
-      window.location.hash = '#L100';
-      const shortData = Array.from({ length: 10 }, (_, i) => `line ${i + 1}`).join('\n');
+    it('should highlight a range of lines when highlightedLines is provided', () => {
+      const navProps = {
+        ...mockLineNumberNavigation,
+        highlightedLines: { start: 1, end: 3 },
+        isLineHighlighted: jest.fn((n: number) => n >= 1 && n <= 3),
+      };
 
       renderWithQueryClientAndRouter(
-        <VirtualizedLogContent {...defaultProps} sections={[singleLogSection(shortData)]} />,
+        <VirtualizedLogContent {...defaultProps} lineNumberNavigationProps={navProps} />,
       );
 
-      // Component should render without errors
-      const listElement = document.querySelector('.log-content__list');
-      expect(listElement).toBeInTheDocument();
+      const highlightedCells = document.querySelectorAll('.log-content__gutter--highlighted');
+      expect(highlightedCells.length).toBeGreaterThan(0);
 
-      // Should not crash and should handle gracefully
-      expect(listElement).toBeInTheDocument();
-    });
-
-    it('should scroll to bottom when hash range exceeds log length', () => {
-      window.location.hash = '#L50-L100';
-      const shortData = Array.from({ length: 10 }, (_, i) => `line ${i + 1}`).join('\n');
-
-      renderWithQueryClientAndRouter(
-        <VirtualizedLogContent {...defaultProps} sections={[singleLogSection(shortData)]} />,
-      );
-
-      // Component should render without errors even with out-of-range hash
-      const listElement = document.querySelector('.log-content__list');
-      expect(listElement).toBeInTheDocument();
-    });
-
-    it('should wait for data to load before scrolling to hash', () => {
-      window.location.hash = '#L5';
-
-      // Start with empty data
-      const { rerender } = renderWithQueryClientAndRouter(
-        <VirtualizedLogContent {...defaultProps} sections={[]} />,
-      );
-
-      let listElement = document.querySelector('.log-content__list');
-      expect(listElement).toBeInTheDocument();
-
-      // Update with actual data
-      const dataWithLines = Array.from({ length: 10 }, (_, i) => `line ${i + 1}`).join('\n');
-      rerender(
-        <VirtualizedLogContent {...defaultProps} sections={[singleLogSection(dataWithLines)]} />,
-      );
-
-      // Should now have content and handle the hash
-      listElement = document.querySelector('.log-content__list');
-      expect(listElement).toBeInTheDocument();
-
-      // Should highlight the line from hash
       const highlightedLines = document.querySelectorAll('.log-content__line--highlighted');
       expect(highlightedLines.length).toBeGreaterThan(0);
     });
 
-    it('should not highlight the hash line while readyToNavigate is false, and should once it becomes true', () => {
-      window.location.hash = '#L2';
-      const dataWithLines = Array.from({ length: 10 }, (_, i) => `line ${i + 1}`).join('\n');
-
-      const { rerender } = renderWithQueryClientAndRouter(
-        <VirtualizedLogContent
-          {...defaultProps}
-          sections={[singleLogSection(dataWithLines)]}
-          readyToNavigate={false}
-        />,
-      );
-
-      expect(document.querySelectorAll('.log-content__line--highlighted').length).toBe(0);
-
-      rerender(
-        <VirtualizedLogContent
-          {...defaultProps}
-          sections={[singleLogSection(dataWithLines)]}
-          readyToNavigate
-        />,
-      );
-
-      expect(document.querySelectorAll('.log-content__line--highlighted').length).toBeGreaterThan(
-        0,
-      );
-    });
-
-    it('should handle hash navigation with very long logs', () => {
-      window.location.hash = '#L500';
-      const longData = Array.from({ length: 1000 }, (_, i) => `line ${i + 1}`).join('\n');
-
-      renderWithQueryClientAndRouter(
-        <VirtualizedLogContent {...defaultProps} sections={[singleLogSection(longData)]} />,
-      );
-
-      // Should render without performance issues
-      const listElement = document.querySelector('.log-content__list');
-      expect(listElement).toBeInTheDocument();
-
-      // Should only render visible items due to virtualization
-      const items = document.querySelectorAll('.pf-v6-c-log-viewer__list-item');
-      expect(items.length).toBeLessThan(1000);
-    });
-
-    it('should not scroll when hash is invalid', () => {
-      window.location.hash = '#invalid';
-
+    it('should not show highlights when highlightedLines is null', () => {
       renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
 
-      // Should render normally without errors
-      const listElement = document.querySelector('.log-content__list');
-      expect(listElement).toBeInTheDocument();
-    });
-
-    it('should not scroll when hash is empty', () => {
-      window.location.hash = '';
-
-      renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
-
-      // Should render normally
-      const listElement = document.querySelector('.log-content__list');
-      expect(listElement).toBeInTheDocument();
-    });
-
-    it('should highlight gutter cell and row when a line number link is clicked', () => {
-      renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
-
-      // No highlights initially
       expect(document.querySelectorAll('.log-content__gutter--highlighted').length).toBe(0);
       expect(document.querySelectorAll('.log-content__line--highlighted').length).toBe(0);
+    });
 
-      // Click the link for content line 2 (first content row; section header occupies line 1)
+    it('should call handleLineClick when a line number link is clicked', () => {
+      const handleLineClick = jest.fn();
+      const navProps = { ...mockLineNumberNavigation, handleLineClick };
+
+      renderWithQueryClientAndRouter(
+        <VirtualizedLogContent {...defaultProps} lineNumberNavigationProps={navProps} />,
+      );
+
       const link = document.querySelector('[href="#L2"]');
       expect(link).not.toBeNull();
       fireEvent.click(link);
 
-      // Gutter cell for that line should be highlighted
-      const highlightedGutters = document.querySelectorAll('.log-content__gutter--highlighted');
-      expect(highlightedGutters.length).toBeGreaterThan(0);
-
-      // Row content for that line should be highlighted
-      const highlightedLines = document.querySelectorAll('.log-content__line--highlighted');
-      expect(highlightedLines.length).toBeGreaterThan(0);
-    });
-
-    it('should create a range highlight when shift-clicking a second line number', () => {
-      renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
-
-      // Click first line (content row 1 = globalLineNumber 2)
-      const firstLink = document.querySelector('[href="#L2"]');
-      fireEvent.click(firstLink);
-
-      // Shift-click line 4 (content row 3 = globalLineNumber 4)
-      const secondLink = document.querySelector('[href="#L4"]');
-      fireEvent.click(secondLink, { shiftKey: true });
-
-      // All lines in the range [2..4] should be highlighted
-      const highlightedLines = document.querySelectorAll('.log-content__line--highlighted');
-      expect(highlightedLines.length).toBeGreaterThanOrEqual(3);
-    });
-
-    it('should call scrollToIndex when a line number is clicked', () => {
-      const originalRAF = window.requestAnimationFrame;
-      window.requestAnimationFrame = (cb: FrameRequestCallback) => {
-        cb(0);
-        return 0;
-      };
-      scrollToIndexSpy = jest.fn();
-
-      renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
-      scrollToIndexSpy.mockClear();
-
-      const link = document.querySelector('[href="#L2"]');
-      fireEvent.click(link);
-
-      expect(scrollToIndexSpy).toHaveBeenCalled();
-
-      scrollToIndexSpy = null;
-      window.requestAnimationFrame = originalRAF;
-    });
-
-    it('should use instant scroll (behavior: auto) for hash navigation', () => {
-      window.location.hash = '#L2';
-
-      // Make RAF synchronous so the double-RAF in the scroll effect executes immediately
-      const originalRAF = window.requestAnimationFrame;
-      window.requestAnimationFrame = (cb: FrameRequestCallback) => {
-        cb(0);
-        return 0;
-      };
-
-      // Enable the module-level scrollToIndex spy
-      scrollToIndexSpy = jest.fn();
-
-      renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
-
-      expect(scrollToIndexSpy).toHaveBeenCalled();
-      const lastCall = scrollToIndexSpy.mock.calls[scrollToIndexSpy.mock.calls.length - 1];
-      expect(lastCall[1]).toEqual(expect.objectContaining({ behavior: 'auto' }));
-
-      // Cleanup
-      scrollToIndexSpy = null;
-      window.requestAnimationFrame = originalRAF;
+      expect(handleLineClick).toHaveBeenCalledWith(2, expect.any(Object));
     });
   });
 
@@ -877,22 +692,38 @@ Another short line`;
       expect(screen.getByText('link')).toBeInTheDocument();
     });
 
-    it('should expand a folded section when URL hash targets a line inside it', () => {
-      window.location.hash = '#L2';
+    it('should expand a folded section when highlightedLines targets a line inside it', () => {
+      const navProps = {
+        ...mockLineNumberNavigation,
+        highlightedLines: { start: 2, end: 2 },
+        isLineHighlighted: jest.fn((n: number) => n === 2),
+      };
 
       renderWithQueryClientAndRouter(
-        <VirtualizedLogContent {...defaultProps} sections={multiSections} />,
+        <VirtualizedLogContent
+          {...defaultProps}
+          sections={multiSections}
+          lineNumberNavigationProps={navProps}
+        />,
       );
 
       expect(screen.getByText('compile')).toBeInTheDocument();
       expect(screen.getByText('link')).toBeInTheDocument();
     });
 
-    it('should allow folding a section after URL hash navigation expanded it', () => {
-      window.location.hash = '#L2';
+    it('should allow folding a section after highlight navigation expanded it', () => {
+      const navProps = {
+        ...mockLineNumberNavigation,
+        highlightedLines: { start: 2, end: 2 },
+        isLineHighlighted: jest.fn((n: number) => n === 2),
+      };
 
       renderWithQueryClientAndRouter(
-        <VirtualizedLogContent {...defaultProps} sections={multiSections} />,
+        <VirtualizedLogContent
+          {...defaultProps}
+          sections={multiSections}
+          lineNumberNavigationProps={navProps}
+        />,
       );
 
       expect(screen.getByText('compile')).toBeInTheDocument();

@@ -100,16 +100,12 @@ const LogViewer: React.FC<Props> = ({
     [normalizedSections],
   );
 
-  // Tracks the line currently targeted via URL hash navigation (e.g. `#L20000`). Computed here
-  // (rather than read from VirtualizedLogContent) so it's available in the very same render —
-  // no round-trip delay through child effects/callbacks — and used to pause auto-scroll-to-bottom
-  // so it doesn't keep fighting the scroll-to-that-line navigation as new log lines stream in.
-  const { highlightedLines: activeLineTarget } = useLineNumberNavigation();
+  const lineNumberNavigationProps = useLineNumberNavigation();
 
   const { autoScroll, showResumeStreamButton, handleScroll, handleResumeClick } =
     useAutoScrollWithResume({
       allowAutoScroll,
-      activeLineTarget,
+      activeLineTarget: lineNumberNavigationProps.highlightedLines,
       onScroll: onScrollProp,
     });
 
@@ -343,7 +339,15 @@ const LogViewer: React.FC<Props> = ({
                 height={viewerHeight}
                 scrollToRow={scrolledRow}
                 onScroll={handleScroll}
-                readyToNavigate={!isLoading}
+                lineNumberNavigationProps={
+                  isLoading
+                    ? {
+                        ...lineNumberNavigationProps,
+                        highlightedLines: null,
+                        isLineHighlighted: () => false,
+                      }
+                    : lineNumberNavigationProps
+                }
               />
             )}
           </div>

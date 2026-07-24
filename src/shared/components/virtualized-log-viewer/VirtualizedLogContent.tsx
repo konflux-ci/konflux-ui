@@ -7,7 +7,7 @@ import { StickySectionHeaderBar } from './SectionLogUI';
 import { computeStickySectionHeader } from './sticky-section-header';
 import type { LogSection, NormalizedLogSection, SearchedWord } from './types';
 import { useKeyboardNavigation } from './useKeyboardNavigation';
-import { useLineNumberNavigation } from './useLineNumberNavigation';
+import { UseLineNumberNavigationResult } from './useLineNumberNavigation';
 import { useLineRenderer } from './useLineRenderer';
 import { useResizeObserverFix } from './useResizeObserverFix';
 import { useSearchRegex } from './useSearchRegex';
@@ -41,12 +41,7 @@ export interface VirtualizedLogContentProps {
   }) => void;
   searchText?: string;
   currentSearchMatch?: SearchedWord;
-  /**
-   * When false, URL hash line navigation (`#L123`) is deferred until logs are fully fetched,
-   * so we don't highlight/scroll to a line before the log content has stabilized. Defaults to
-   * true.
-   */
-  readyToNavigate?: boolean;
+  lineNumberNavigationProps: UseLineNumberNavigationResult;
 }
 
 export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
@@ -59,7 +54,7 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
   onScroll,
   searchText = '',
   currentSearchMatch,
-  readyToNavigate = true,
+  lineNumberNavigationProps,
 }) => {
   const scrollRef = React.useRef<HTMLDivElement | null>(null);
   const [itemSize, setItemSize] = React.useState(VIRTUALIZATION_CONFIG.FALLBACK_LINE_HEIGHT);
@@ -171,9 +166,7 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
     onScroll,
   });
 
-  const { highlightedLines, handleLineClick, isLineHighlighted } = useLineNumberNavigation({
-    readyToNavigate,
-  });
+  const { highlightedLines, handleLineClick, isLineHighlighted } = lineNumberNavigationProps;
 
   React.useEffect(() => {
     if (!isMultiSection || !highlightedLines) return;

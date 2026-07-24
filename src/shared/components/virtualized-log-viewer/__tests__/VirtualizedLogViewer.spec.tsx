@@ -17,9 +17,17 @@ jest.mock('lodash-es', () => ({
 
 describe('VirtualizedLogViewer Integration Tests', () => {
   const mockData = 'line 1\nline 2\nline 3';
+  const mockLineNumberNavigation = {
+    highlightedLines: null,
+    firstSelectedLine: null,
+    handleLineClick: jest.fn(),
+    isLineHighlighted: jest.fn().mockReturnValue(false),
+  };
+
   const defaultProps = {
     sections: [singleLogSection(mockData)],
     height: 600,
+    lineNumberNavigationProps: mockLineNumberNavigation,
   };
 
   beforeEach(() => {
