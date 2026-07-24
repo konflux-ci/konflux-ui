@@ -135,7 +135,7 @@ const SnapshotOverviewTab: React.FC = () => {
           </FlexItem>
         </Flex>
       </Flex>
-      <div id="snapshot-components" className="pf-vf-u-mt-lg">
+      <div id="snapshot-components" className="pf-v6-u-mt-lg">
         <FilterContextProvider filterParams={['name']}>
           <SnapshotComponentsList
             components={componentsTableData}

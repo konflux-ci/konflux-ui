@@ -1,22 +1,23 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { Bullseye, Spinner, Content, ContentVariants } from '@patternfly/react-core';
+import { useApplicationBreadcrumbs } from '~/components/Applications/breadcrumbs/breadcrumb-utils';
+import { useCommitStatus } from '~/components/Commits/commit-status';
+import { CommitIcon } from '~/components/Commits/CommitIcon';
+import { DetailsPage } from '~/components/DetailsPage';
+import SidePanelHost from '~/components/SidePanel/SidePanelHost';
+import { StatusIconWithTextLabel } from '~/components/topology/StatusIcon';
+import { PipelineRunType } from '~/consts/pipelinerun';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { usePipelineRunsForCommitV2 } from '~/hooks/usePipelineRunsForCommitV2';
+import { useStatusOnFavicon } from '~/hooks/useStatusOnFavicon';
 import { HttpError } from '~/k8s/error';
+import { ACTIVITY_PATH_LATEST_COMMIT, COMMIT_DETAILS_PATH } from '~/routes/paths';
+import { RouterParams } from '~/routes/utils';
+import ErrorEmptyState from '~/shared/components/empty-state/ErrorEmptyState';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
-import { PipelineRunType } from '../../../consts/pipelinerun';
-import { ACTIVITY_PATH_LATEST_COMMIT, COMMIT_DETAILS_PATH } from '../../../routes/paths';
-import { RouterParams } from '../../../routes/utils';
-import ErrorEmptyState from '../../../shared/components/empty-state/ErrorEmptyState';
-import { createCommitObjectFromPLR, getCommitShortName } from '../../../utils/commits-utils';
-import { useApplicationBreadcrumbs } from '../../Applications/breadcrumbs/breadcrumb-utils';
-import { DetailsPage } from '../../DetailsPage';
-import SidePanelHost from '../../SidePanel/SidePanelHost';
-import { StatusIconWithTextLabel } from '../../topology/StatusIcon';
-import { useCommitStatus } from '../commit-status';
-import { CommitIcon } from '../CommitIcon';
+import { createCommitObjectFromPLR, getCommitShortName } from '~/utils/commits-utils';
 
 import './CommitDetailsView.scss';
 
@@ -41,7 +42,9 @@ const CommitDetailsView: React.FC = () => {
     [loaded, pipelineruns],
   );
 
-  const [commitStatus] = useCommitStatus(applicationName, commitName);
+  const [commitStatus, commitLoaded, statusError] = useCommitStatus(applicationName, commitName);
+  const faviconStatus = commitLoaded && !statusError ? commitStatus : null;
+  useStatusOnFavicon(faviconStatus);
 
   const commitDisplayName = getCommitShortName(commitName);
 

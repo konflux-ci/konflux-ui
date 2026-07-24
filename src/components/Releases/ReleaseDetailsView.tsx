@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Bullseye, Spinner, Content, ContentVariants } from '@patternfly/react-core';
+import { useStatusOnFavicon } from '~/hooks/useStatusOnFavicon';
 import { ReleaseModel } from '~/models';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { TrackEvents, useTrackEvent } from '~/utils/analytics';
@@ -8,6 +9,7 @@ import { downloadYamlAction } from '~/utils/common-utils';
 import { useAccessReviewForModel } from '~/utils/rbac';
 import { useAuth } from '../../auth/useAuth';
 import { useRelease } from '../../hooks/useReleases';
+import { getReleaseStatus } from '../../hooks/useReleaseStatus';
 import {
   APPLICATION_RELEASE_DETAILS_PATH,
   APPLICATION_RELEASE_LIST_PATH,
@@ -32,6 +34,12 @@ const ReleaseDetailsView: React.FC = () => {
   const {
     user: { email },
   } = useAuth();
+
+  const releaseStatus = React.useMemo(
+    () => (loaded && release && !error ? getReleaseStatus(release) : null),
+    [loaded, release, error],
+  );
+  useStatusOnFavicon(releaseStatus);
 
   if (!loaded) {
     return (
