@@ -190,14 +190,18 @@ describe('resolveConformaResultFromTaskRun', () => {
     expect(result).toEqual(mockConformaResult);
   });
 
-  it('throws when flag is ON and kubearchive fails — tekton-results is never called', async () => {
+  it('falls back to tekton-results when flag is ON and kubearchive fails', async () => {
     jest.mocked(commonFetchJSON).mockRejectedValue(new Error('kubearchive down'));
 
-    await expect(
-      resolveConformaResultFromTaskRun(NAMESPACE, createTaskRun('tr-1', 'pod-1'), true),
-    ).rejects.toThrow('kubearchive down');
+    const result = await resolveConformaResultFromTaskRun(
+      NAMESPACE,
+      createTaskRun('tr-1', 'pod-1'),
+      true,
+    );
 
-    expect(getTaskRunLog).not.toHaveBeenCalled();
+    expect(commonFetchJSON).toHaveBeenCalled();
+    expect(getTaskRunLog).toHaveBeenCalled();
+    expect(result).toEqual(mockConformaResult);
   });
 
   it('delegates to tekton-results when flag is OFF', async () => {
@@ -212,14 +216,56 @@ describe('resolveConformaResultFromTaskRun', () => {
     expect(result).toEqual(mockConformaResult);
   });
 
-  it('throws when flag is OFF and tekton-results fails — kubearchive is never called', async () => {
+  it('falls back to kubearchive when flag is OFF and tekton-results fails', async () => {
     jest.mocked(getTaskRunLog).mockRejectedValue(new Error('tekton-results down'));
+
+    const result = await resolveConformaResultFromTaskRun(
+      NAMESPACE,
+      createTaskRun('tr-1', 'pod-1'),
+      false,
+    );
+
+    expect(getTaskRunLog).toHaveBeenCalled();
+    expect(commonFetchJSON).toHaveBeenCalled();
+    expect(result).toEqual(mockConformaResult);
+  });
+
+  it('throws primary (kubearchive) error when flag is ON and both sources fail', async () => {
+    jest.mocked(commonFetchJSON).mockRejectedValue(new Error('kubearchive down'));
+    jest.mocked(getTaskRunLog).mockRejectedValue(new Error('tekton-results down'));
+
+    await expect(
+      resolveConformaResultFromTaskRun(NAMESPACE, createTaskRun('tr-1', 'pod-1'), true),
+    ).rejects.toThrow('kubearchive down');
+  });
+
+  it('throws primary (tekton-results) error when flag is OFF and both sources fail', async () => {
+    jest.mocked(getTaskRunLog).mockRejectedValue(new Error('tekton-results down'));
+    jest.mocked(commonFetchJSON).mockRejectedValue(new Error('kubearchive down'));
 
     await expect(
       resolveConformaResultFromTaskRun(NAMESPACE, createTaskRun('tr-1', 'pod-1'), false),
     ).rejects.toThrow('tekton-results down');
+  });
+
+  it('falls back to tekton-results when flag is ON and TaskRun has no podName', async () => {
+    const result = await resolveConformaResultFromTaskRun(
+      NAMESPACE,
+      createTaskRun('tr-1'),
+      true,
+    );
 
     expect(commonFetchJSON).not.toHaveBeenCalled();
+    expect(getTaskRunLog).toHaveBeenCalled();
+    expect(result).toEqual(mockConformaResult);
+  });
+
+  it('throws primary (tekton-results) error when flag is OFF, tekton fails, and TaskRun has no podName', async () => {
+    jest.mocked(getTaskRunLog).mockRejectedValue(new Error('tekton-results down'));
+
+    await expect(
+      resolveConformaResultFromTaskRun(NAMESPACE, createTaskRun('tr-1'), false),
+    ).rejects.toThrow('tekton-results down');
   });
 });
 

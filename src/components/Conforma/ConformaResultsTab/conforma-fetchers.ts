@@ -89,10 +89,19 @@ export async function resolveConformaResultFromTaskRun(
   taskRun: TaskRunKind,
   isKubearchiveLogsEnabled: boolean,
 ): Promise<ConformaResult | undefined> {
-  if (isKubearchiveLogsEnabled) {
-    return fetchConformaLogFromKubearchive(namespace, taskRun);
+  const [primary, fallback] = isKubearchiveLogsEnabled
+    ? [fetchConformaLogFromKubearchive, fetchConformaLogFromTektonResults]
+    : [fetchConformaLogFromTektonResults, fetchConformaLogFromKubearchive];
+
+  try {
+    return await primary(namespace, taskRun);
+  } catch (primaryError) {
+    try {
+      return await fallback(namespace, taskRun);
+    } catch {
+      throw primaryError;
+    }
   }
-  return fetchConformaLogFromTektonResults(namespace, taskRun);
 }
 
 /**

@@ -259,13 +259,25 @@ describe('useConformaResult', () => {
     expect(ecResult.findIndex((ec) => ec.name === 'devfile-sample-1jik')).toEqual(-1);
   });
 
-  it('should return handle api errors', async () => {
+  it('should fall back to kubearchive when tekton-results fails', async () => {
     mockGetTaskRunLogs.mockRejectedValue(new Error('Api error'));
 
     const { result, waitForNextUpdate } = renderHookWithQueryClient('dummy-abcd');
     await waitForNextUpdate();
     const [ecResult, loaded] = result.current;
     expect(mockGetTaskRunLogs).toHaveBeenCalled();
+    expect(mockCommmonFetchJSON).toHaveBeenCalled();
+    expect(loaded).toBe(true);
+    expect(ecResult).toBeDefined();
+  });
+
+  it('should return undefined when both tekton-results and kubearchive fail', async () => {
+    mockGetTaskRunLogs.mockRejectedValue(new Error('Api error'));
+    mockCommmonFetchJSON.mockRejectedValue(new Error('KubeArchive error'));
+
+    const { result, waitForNextUpdate } = renderHookWithQueryClient('dummy-abcd');
+    await waitForNextUpdate();
+    const [ecResult, loaded] = result.current;
     expect(loaded).toBe(true);
     expect(ecResult).toBeUndefined();
   });
@@ -342,15 +354,28 @@ describe('useConformaResult', () => {
     expect(ecResult[0].violations.length).toEqual(1);
   });
 
-  it('should show empty state when kubearchive fetch fails', async () => {
+  it('should fall back to tekton-results when kubearchive fetch fails', async () => {
     mockUseIsOnFeatureFlag.mockReturnValue(true);
     mockCommmonFetchJSON.mockRejectedValue(new Error('KubeArchive error'));
 
     const { result, waitForNextUpdate } = renderHookWithQueryClient('dummy-abcd');
     await waitForNextUpdate();
 
-    expect(mockCommmonFetchJSON).toHaveBeenCalledTimes(1);
-    expect(mockGetTaskRunLogs).not.toHaveBeenCalled();
+    expect(mockCommmonFetchJSON).toHaveBeenCalled();
+    expect(mockGetTaskRunLogs).toHaveBeenCalled();
+
+    const [ecResult, loaded] = result.current;
+    expect(loaded).toBe(true);
+    expect(ecResult).toBeDefined();
+  });
+
+  it('should return undefined when kubearchive is enabled and both sources fail', async () => {
+    mockUseIsOnFeatureFlag.mockReturnValue(true);
+    mockCommmonFetchJSON.mockRejectedValue(new Error('KubeArchive error'));
+    mockGetTaskRunLogs.mockRejectedValue(new Error('Tekton error'));
+
+    const { result, waitForNextUpdate } = renderHookWithQueryClient('dummy-abcd');
+    await waitForNextUpdate();
 
     const [ecResult, loaded] = result.current;
     expect(loaded).toBe(true);
