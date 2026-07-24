@@ -132,4 +132,48 @@ describe('TableHeader', () => {
     const columnHeaders = within(thead).getAllByRole('columnheader');
     expect(columnHeaders).toHaveLength(2);
   });
+
+  it('renders an empty Th with screen reader text when enableRowSelection is true', () => {
+    const table = createMockTable(defaultHeaders);
+    renderTableHeader(
+      <TableHeader table={table as never} columnWidths={defaultWidths} enableRowSelection />,
+    );
+
+    const thead = screen.getByTestId('table-header');
+    const columnHeaders = within(thead).getAllByRole('columnheader');
+    // selection placeholder + 2 data headers = 3
+    expect(columnHeaders).toHaveLength(3);
+  });
+
+  it('does not render selection placeholder when enableRowSelection is false', () => {
+    const table = createMockTable(defaultHeaders);
+    renderTableHeader(
+      <TableHeader
+        table={table as never}
+        columnWidths={defaultWidths}
+        enableRowSelection={false}
+      />,
+    );
+
+    const thead = screen.getByTestId('table-header');
+    const columnHeaders = within(thead).getAllByRole('columnheader');
+    expect(columnHeaders).toHaveLength(2);
+  });
+
+  it('renders both selection and expansion placeholders when both enabled', () => {
+    const table = createMockTable(defaultHeaders);
+    renderTableHeader(
+      <TableHeader
+        table={table as never}
+        columnWidths={defaultWidths}
+        enableExpansion
+        enableRowSelection
+      />,
+    );
+
+    const thead = screen.getByTestId('table-header');
+    const columnHeaders = within(thead).getAllByRole('columnheader');
+    // selection + expansion + 2 data headers = 4
+    expect(columnHeaders).toHaveLength(4);
+  });
 });

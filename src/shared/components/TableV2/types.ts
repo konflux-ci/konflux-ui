@@ -202,11 +202,11 @@ export interface TableProps<TData> {
   /** Custom function to derive the group key for a row. Reserved for future use. */
   groupByFn?: (row: TData) => string;
 
-  /** Enables row selection checkboxes. Reserved for future use. */
+  /** Enables row selection checkboxes. */
   enableRowSelection?: boolean;
 
-  /** Callback fired when row selection changes. Reserved for future use. */
-  onRowSelectionChange?: (selection: Record<string, boolean>) => void;
+  /** Callback fired when row selection changes with the selected row data. */
+  onRowSelectionChange?: (selectedRows: TData[]) => void;
 
   /**
    * Whether more data is available for infinite scroll. When `true` and the
