@@ -120,23 +120,14 @@ jobs:
         if: |
           steps.parity.outputs.is_release_week == 'true' &&
           steps.decide.outputs.should_release == 'false'
-        env:
-          RELEASE_DATE: ${{ steps.shas.outputs.release_date }}
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-        run: |
-          curl -sf -X POST "$SLACK_WEBHOOK_URL" \
-            -H 'Content-Type: application/json' \
-            -d "$(jq -n --arg date "$RELEASE_DATE" '{
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": ("*Release check — " + $date + "*\nNo new changes between staging and production. Skipping release.")
-                  }
-                }
-              ]
-            }')" || echo "::warning::Failed to send Slack notification"
+        continue-on-error: true
+        uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c # v3.0.3
+        with:
+          method: chat.postMessage
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          payload: |
+            channel: ${{ vars.SLACK_CHANNEL_ID }}
+            text: ":information_source: *Release check — ${{ steps.shas.outputs.release_date }}*\nNo new changes between staging and production. Skipping release."
 
   # -------------------------------------------------------------------
   # Release: infra PR, tracking issue, notifications
@@ -289,38 +280,25 @@ jobs:
 
       # --- Slack notification ---
       - name: Notify Slack — release cut
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-          INFRA_PR_URL: ${{ steps.infra_pr.outputs.pr_url }}
-          TRACKING_ISSUE_URL: ${{ steps.tracking.outputs.issue_url }}
-        run: |
-          SHORT_SHA="${NEW_SHA:0:7}"
-
-          curl -sf -X POST "$SLACK_WEBHOOK_URL" \
-            -H 'Content-Type: application/json' \
-            -d "$(jq -n \
-              --arg date "$RELEASE_DATE" \
-              --arg sha "$SHORT_SHA" \
-              --arg infra_url "$INFRA_PR_URL" \
-              --arg issue_url "$TRACKING_ISSUE_URL" \
-              '{
-                "blocks": [
-                  {
-                    "type": "header",
-                    "text": { "type": "plain_text", "text": ("Release cut — " + $date) }
-                  },
-                  {
-                    "type": "section",
-                    "text": {
-                      "type": "mrkdwn",
-                      "text": ("*Deploying:* `" + $sha + "`\n\n<" + $infra_url + "|Infra-deployments PR>\n<" + $issue_url + "|Tracking issue>")
-                    }
-                  },
-                  {
-                    "type": "context",
-                    "elements": [
-                      { "type": "mrkdwn", "text": "Review and merge the infra-deployments PR to deploy to production." }
-                    ]
-                  }
-                ]
-              }')" || echo "::warning::Failed to send Slack notification"
+        continue-on-error: true
+        uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c # v3.0.3
+        with:
+          method: chat.postMessage
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          payload: |
+            channel: ${{ vars.SLACK_CHANNEL_ID }}
+            blocks:
+              - type: header
+                text:
+                  type: plain_text
+                  text: ":rocket: Release cut — ${{ needs.preflight.outputs.release_date }}"
+                  emoji: true
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: "<!subteam^${{ vars.SLACK_KONFLUX_UI_GROUP_ID }}> A new release has been cut!\n\n:package: *Deploying:* `${{ needs.preflight.outputs.new_sha }}`\n:link: <${{ steps.infra_pr.outputs.pr_url }}|Infra-deployments PR>\n:memo: <${{ steps.tracking.outputs.issue_url }}|Tracking issue>"
+              - type: context
+                elements:
+                  - type: mrkdwn
+                    text: ":point_right: Review and merge the infra-deployments PR to deploy to production. The tracking issue will auto-close once the PR is merged."
+            text: "Release cut — ${{ needs.preflight.outputs.release_date }}: deploying ${{ needs.preflight.outputs.new_sha }}"
