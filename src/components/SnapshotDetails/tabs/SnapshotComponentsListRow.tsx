@@ -4,6 +4,7 @@ import { ClipboardCopy, Skeleton } from '@patternfly/react-core';
 import GitRepoLink from '~/components/GitLink/GitRepoLink';
 import { useImageProxy } from '~/hooks/useImageProxy';
 import { useImageRepository } from '~/hooks/useImageRepository';
+import { useIsImageControllerEnabled } from '~/image-controller/conditional-checks';
 import { COMMIT_DETAILS_PATH, COMPONENT_DETAILS_PATH } from '~/routes/paths';
 import { RowFunctionArgs, TableData } from '~/shared/components/table';
 import { useNamespace } from '~/shared/providers/Namespace';
@@ -23,6 +24,7 @@ const SnapshotComponentsListRow: React.FC<
   React.PropsWithChildren<RowFunctionArgs<SnapshotComponentTableData>>
 > = ({ obj }) => {
   const namespace = useNamespace();
+  const { isImageControllerEnabled } = useIsImageControllerEnabled();
   const [urlInfo, proxyLoaded, proxyError] = useImageProxy();
 
   // Fetch ImageRepository to get visibility setting
@@ -34,14 +36,19 @@ const SnapshotComponentsListRow: React.FC<
   );
 
   // Get the appropriate image URL based on visibility
+  // When image controller is disabled, skip proxy logic and use original URL
   // When proxy has error or urlInfo is null, fallback to original URL
-  const displayImageUrl = getImageUrlForVisibility(
-    obj.containerImage,
-    imageRepository?.spec?.image?.visibility ?? null,
-    proxyError || !urlInfo ? null : urlInfo.hostname,
-  );
+  const displayImageUrl = isImageControllerEnabled
+    ? getImageUrlForVisibility(
+        obj.containerImage,
+        imageRepository?.spec?.image?.visibility ?? null,
+        proxyError || !urlInfo ? null : urlInfo.hostname,
+      )
+    : obj.containerImage;
 
-  const isPrivate = imageRepository?.spec?.image?.visibility === ImageRepositoryVisibility.private;
+  const isPrivate =
+    isImageControllerEnabled &&
+    imageRepository?.spec?.image?.visibility === ImageRepositoryVisibility.private;
 
   return (
     <>
@@ -57,7 +64,8 @@ const SnapshotComponentsListRow: React.FC<
         </Link>
       </TableData>
       <TableData className={commitsTableColumnClasses.image}>
-        {(!imageRepoLoaded && !imageRepoError) || (isPrivate && !proxyLoaded && !proxyError) ? (
+        {isImageControllerEnabled &&
+        ((!imageRepoLoaded && !imageRepoError) || (isPrivate && !proxyLoaded && !proxyError)) ? (
           <Skeleton aria-label="Loading image URL" />
         ) : (
           <ClipboardCopy isReadOnly hoverTip="Copy" clickTip="Copied">

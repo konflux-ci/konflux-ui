@@ -32,6 +32,7 @@ jest.mock('~/feature-flags/hooks', () => ({
   useIsOnFeatureFlag: jest.fn(() => false),
   // Provide flags map for FeatureFlagIndicator which uses useFeatureFlags()
   useFeatureFlags: jest.fn(() => [{ 'pipelineruns-kubearchive': false }, jest.fn()]),
+  createConditionsHook: jest.fn(() => jest.fn(() => ({}))),
   IfFeature: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
 }));
 jest.mock(
