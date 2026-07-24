@@ -43,6 +43,7 @@ const DetailSubTable: React.FC<{ rows: ConformaResultRow[] }> = ({ rows }) => (
                 <Content component="p">
                   <strong>{row.title ?? '-'}</strong>
                 </Content>
+                {row.code && <Content component="small">{row.code}</Content>}
                 {row.description && <Content component="small">{row.description}</Content>}
               </Content>
             </Td>
