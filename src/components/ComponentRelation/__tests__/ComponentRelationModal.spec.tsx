@@ -159,12 +159,12 @@ describe('ComponentRelationModal', () => {
     );
     expect(screen.queryByText('Component relationships')).toBeInTheDocument();
     fireEvent.click(screen.getByTestId('nudged-by-0'));
-    const saveButton = screen.getByText('Save relationships');
+    const saveButton = screen.getByRole('button', { name: 'Save relationships' });
     await waitFor(() => expect(saveButton).not.toBeDisabled());
     fireEvent.click(saveButton);
-    expect(saveButton.getAttribute('class')).toContain('pf-m-in-progress');
+    expect(saveButton).toHaveClass('pf-m-in-progress');
     await waitFor(() => {
-      expect(saveButton.getAttribute('class')).toContain('pf-m-in-progress');
+      expect(saveButton).toHaveClass('pf-m-in-progress');
     });
 
     rerender(<ComponentRelationModal modalProps={{ isOpen, onClose }} application="apps" />);
@@ -186,7 +186,7 @@ describe('ComponentRelationModal', () => {
     render(<ComponentRelationModal modalProps={{ isOpen, onClose }} application="apps" />);
     expect(screen.queryByText('Component relationships')).toBeInTheDocument();
     fireEvent.click(screen.getByTestId('nudged-by-0'));
-    const saveButton = screen.getByText('Save relationships');
+    const saveButton = screen.getByRole('button', { name: 'Save relationships' });
     await waitFor(() => expect(saveButton).not.toBeDisabled());
     fireEvent.click(saveButton);
     expect(await screen.findByText('error')).toBeInTheDocument();
@@ -204,7 +204,7 @@ describe('ComponentRelationModal', () => {
       .mockRejectedValueOnce(new Error('save failed'));
     render(<ComponentRelationModal modalProps={{ isOpen: true }} application="apps" />);
     fireEvent.click(screen.getByTestId('nudged-by-0'));
-    const saveButton = screen.getByText('Save relationships');
+    const saveButton = screen.getByRole('button', { name: 'Save relationships' });
     await waitFor(() => expect(saveButton).not.toBeDisabled());
     fireEvent.click(saveButton);
     expect(await screen.findByText('save failed')).toBeInTheDocument();
@@ -220,7 +220,7 @@ describe('ComponentRelationModal', () => {
     updateNudgeDependenciesMock.mockRejectedValue('plain error');
     render(<ComponentRelationModal modalProps={{ isOpen: true }} application="apps" />);
     fireEvent.click(screen.getByTestId('nudged-by-0'));
-    const saveButton = screen.getByText('Save relationships');
+    const saveButton = screen.getByRole('button', { name: 'Save relationships' });
     await waitFor(() => expect(saveButton).not.toBeDisabled());
     fireEvent.click(saveButton);
     expect(await screen.findByText('plain error')).toBeInTheDocument();

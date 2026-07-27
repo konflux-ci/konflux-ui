@@ -24,7 +24,7 @@ import { PlusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/plus-circ
 import { FieldArray, useFormikContext } from 'formik';
 import { isEmpty } from 'lodash-es';
 import { LEARN_MORE_ABOUT_NUDGING } from '~/consts/documentation';
-import { FormFooter } from '../../shared';
+import { FormFooter } from '../../shared/components/form-components';
 import ExternalLink from '../../shared/components/links/ExternalLink';
 import { RawComponentProps } from '../modal/createModalLauncher';
 import { ComponentRelation } from './ComponentRelationForm';

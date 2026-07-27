@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Button, Flex, FlexItem, Tooltip } from '@patternfly/react-core';
+import { ToggleGroup, ToggleGroupItem, Tooltip } from '@patternfly/react-core';
 
 export type SegmentedToggleOption<T extends string> = {
   value: T;
@@ -13,8 +13,39 @@ export type SegmentedToggleProps<T extends string> = {
   value: T;
   onChange: (value: T) => void;
   'aria-label': string;
-  name?: string;
   className?: string;
+};
+
+type SegmentedToggleItemProps<T extends string> = {
+  option: SegmentedToggleOption<T>;
+  isSelected: boolean;
+  onChange: (value: T) => void;
+};
+
+const SegmentedToggleItem = <T extends string>({
+  option,
+  isSelected,
+  onChange,
+}: SegmentedToggleItemProps<T>) => {
+  const [buttonEl, setButtonEl] = React.useState<HTMLElement | null>(null);
+
+  React.useLayoutEffect(() => {
+    setButtonEl(option.id ? document.getElementById(option.id) : null);
+  }, [option.id]);
+
+  return (
+    <>
+      {option.tooltip && buttonEl ? (
+        <Tooltip content={option.tooltip} triggerRef={() => buttonEl} />
+      ) : null}
+      <ToggleGroupItem
+        text={option.label}
+        buttonId={option.id}
+        isSelected={isSelected}
+        onChange={() => onChange(option.value)}
+      />
+    </>
+  );
 };
 
 export const SegmentedToggle = <T extends string>({
@@ -22,32 +53,18 @@ export const SegmentedToggle = <T extends string>({
   value,
   onChange,
   'aria-label': ariaLabel,
-  name,
   className,
 }: SegmentedToggleProps<T>) => {
   return (
-    <Flex gap={{ default: 'gapNone' }} role="group" aria-label={ariaLabel} className={className}>
-      {options.map((option) => {
-        const isSelected = option.value === value;
-        const button = (
-          <Button
-            id={option.id}
-            type="button"
-            name={name}
-            variant={isSelected ? 'primary' : 'control'}
-            aria-pressed={isSelected}
-            onClick={() => onChange(option.value)}
-          >
-            {option.label}
-          </Button>
-        );
-
-        return (
-          <FlexItem key={option.value}>
-            {option.tooltip ? <Tooltip content={option.tooltip}>{button}</Tooltip> : button}
-          </FlexItem>
-        );
-      })}
-    </Flex>
+    <ToggleGroup aria-label={ariaLabel} className={className}>
+      {options.map((option) => (
+        <SegmentedToggleItem
+          key={option.value}
+          option={option}
+          isSelected={option.value === value}
+          onChange={onChange}
+        />
+      ))}
+    </ToggleGroup>
   );
 };

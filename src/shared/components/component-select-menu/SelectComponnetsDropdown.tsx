@@ -59,7 +59,6 @@ const SelectComponentsDropdown: React.FC<SelectComponentsDropdownProps> = ({
             ref={menuRef}
             id="component-menu"
             isScrollable
-            style={{ width: '90%' }}
             onSelect={(_, itemId) => {
               onSelect(itemId as string);
               if (closeOnSelect) {

@@ -87,7 +87,6 @@ export const ComponentRelation: React.FC<ComponentRelationProps> = ({
           <FlexItem>
             <SegmentedToggle
               aria-label="Nudge relationship type"
-              name={nudgeName}
               value={nudgeValue}
               onChange={(value) => void setNudgeValue(value)}
               options={getNudgeToggleOptions(index)}
@@ -130,7 +129,7 @@ export const ComponentRelation: React.FC<ComponentRelationProps> = ({
                 ))}
                 {hiddenTargetCount > 0 ? (
                   <Label
-                    isOverflowLabel
+                    variant="overflow"
                     onClick={handleShowMoreTargets}
                     aria-label={`Show ${hiddenTargetCount} more selected components`}
                   >

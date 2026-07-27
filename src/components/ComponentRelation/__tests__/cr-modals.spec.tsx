@@ -89,7 +89,7 @@ describe('cr-modals', () => {
     expect(screen.getByText('component-c')).toBeInTheDocument();
     expect(screen.getAllByTestId('remove-relation-0')).toHaveLength(1);
     expect(screen.getAllByTestId('remove-relation-1')).toHaveLength(1);
-    expect(document.querySelectorAll('.pf-v5-c-divider')).toHaveLength(1);
+    expect(document.querySelectorAll('.pf-v6-c-divider')).toHaveLength(1);
   });
 
   it('should render confirmation modal after successful submission', () => {

@@ -98,17 +98,20 @@ describe('ComponentSelectMenu', () => {
     );
 
     fireEvent.click(screen.getByText('Select components'));
-    fireEvent.click(screen.getByText('Item 1'));
-    fireEvent.click(screen.getByText('Item 2'));
+    const checkboxes = screen.getAllByRole('checkbox');
+    fireEvent.click(checkboxes[0]);
+    fireEvent.click(checkboxes[1]);
 
     await waitFor(() => {
-      expect(screen.getByText('2')).toBeInTheDocument();
+      const badge = document.querySelector('.pf-v6-c-badge');
+      expect(badge).toHaveTextContent('2');
     });
 
-    fireEvent.click(screen.getByText('Item 1'));
+    fireEvent.click(checkboxes[0]);
 
     await waitFor(() => {
-      expect(screen.getByText('1')).toBeInTheDocument();
+      const badge = document.querySelector('.pf-v6-c-badge');
+      expect(badge).toHaveTextContent('1');
     });
   });
 
