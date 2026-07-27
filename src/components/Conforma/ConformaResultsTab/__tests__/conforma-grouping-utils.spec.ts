@@ -525,5 +525,24 @@ describe('conforma-grouping-utils', () => {
     it('returns empty array for empty input', () => {
       expect(filterResults([], 'test', [])).toHaveLength(0);
     });
+
+    it('filters by search text matching code even when title has no matching punctuation', () => {
+      const rows = [
+        mockRow({
+          code: 'trusted.task_trusted_rule',
+          title: 'Trusted Task Check',
+          component: 'build-service',
+        }),
+        ...sampleRows,
+      ];
+
+      const underscoreResults = filterResults(rows, 'trusted_', []);
+      expect(underscoreResults).toHaveLength(1);
+      expect(underscoreResults[0].code).toBe('trusted.task_trusted_rule');
+
+      const dotResults = filterResults(rows, 'trusted.', []);
+      expect(dotResults).toHaveLength(1);
+      expect(dotResults[0].code).toBe('trusted.task_trusted_rule');
+    });
   });
 });
