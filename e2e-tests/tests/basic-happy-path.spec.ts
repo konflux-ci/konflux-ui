@@ -222,7 +222,11 @@ describe('Basic Happy Path', () => {
       applicationDetailPage.openBuildLog(componentName);
       applicationDetailPage.verifyBuildLogTaskslist(piplinerunlogsTasks); //TO DO : Fetch the piplinerunlogsTasks from cluster using api At runtime.
       applicationDetailPage.verifyFailedLogTasksNotExists();
-      applicationDetailPage.checkBuildLog(pipelineConfig.logCheckTask, 'Using token for quay.io');
+      applicationDetailPage.checkBuildLog(
+        pipelineConfig.logCheckTask,
+        'Using token for quay.io',
+        'STEP-PUSH',
+      );
       applicationDetailPage.closeBuildLog();
 
       cy.log('Verify deployed image exists');
