@@ -1,4 +1,5 @@
 import { Common } from '../../utils/Common';
+import { LogViewerHelper } from '../../utils/LogViewerHelper';
 import { pageTitles } from '../constants/PageTitle';
 import {
   addComponentPagePO,
@@ -16,19 +17,27 @@ export class ApplicationDetailPage {
     cy.testA11y(`${pageTitles.deploymentSettings} page`);
   }
 
-  checkBuildLog(tasklistItem: string, textToVerify: string, taskTimeout: number = 20000) {
-    cy.wait(10000);
+  checkBuildLog(
+    tasklistItem: string,
+    textToVerify: string,
+    foldStep: string,
+    taskTimeout: number = 20000,
+  ) {
     cy.get('span[class="pipeline-run-logs__namespan"]')
       .contains(tasklistItem, { timeout: taskTimeout })
       .scrollIntoView()
       .should('be.visible')
       .click();
-    cy.get(buildLogModalContentPO.logText).should('contain.text', textToVerify);
+    LogViewerHelper.revealLogText(textToVerify, { foldStep });
   }
 
-  checkPodLog(podName: string, textToVerify: string) {
-    cy.get(buildLogModalContentPO.podLogNavList).contains('a', podName).click();
-    cy.get(buildLogModalContentPO.logText).should('contain.text', textToVerify);
+  checkPodLog(podName: string, textToVerify: string, foldStep: string) {
+    cy.get(buildLogModalContentPO.podLogNavList)
+      .contains('a', podName)
+      .scrollIntoView()
+      .should('be.visible')
+      .click();
+    LogViewerHelper.revealLogText(textToVerify, { foldStep });
   }
 
   openBuildLog(componentName: string) {
@@ -47,7 +56,7 @@ export class ApplicationDetailPage {
   }
 
   closeBuildLog() {
-    cy.get(buildLogModalContentPO.closeButton).click();
+    cy.get(buildLogModalContentPO.closeButton).click({ force: true });
     cy.get(buildLogModalContentPO.modal).should('not.exist');
   }
 
