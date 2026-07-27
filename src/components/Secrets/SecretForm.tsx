@@ -128,8 +128,7 @@ const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({
             values.secretName &&
               isPartnerTask(values.secretName, optionsValues) &&
               void setFieldValue('secretName', '');
-          }
-          if (type === SecretTypeDropdownLabel.source) {
+          } else if (type === SecretTypeDropdownLabel.source) {
             resetKeyValues();
             values.secretName &&
               isPartnerTask(values.secretName) &&
