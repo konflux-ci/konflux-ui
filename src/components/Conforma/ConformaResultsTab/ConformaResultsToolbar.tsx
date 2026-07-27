@@ -14,9 +14,16 @@ import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { MultiSelect } from '~/components/Filter/generic/MultiSelect';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 import { createFilterObj } from '~/components/Filter/utils/filter-utils';
-import { HelpTooltipIcon, useDeepCompareMemoize } from '~/shared';
-import { CONFORMA_RESULT_STATUS, type ConformaResultRow } from '~/types/conforma';
+import { HelpTooltipIcon } from '~/shared';
+import {
+  CONFORMA_RESULT_STATUS,
+  type ConformaRefreshState,
+  type ConformaResultRow,
+} from '~/types/conforma';
 import type { GroupByMode } from './conforma-grouping-utils';
+import { ConformaRefreshIndicator } from './ConformaRefreshIndicator';
+import { useConformaFilters } from './useConformaFilters';
+import './ConformaResultsToolbar.scss';
 
 type ConformaResultsToolbarProps = {
   allResults: ConformaResultRow[];
@@ -26,6 +33,7 @@ type ConformaResultsToolbarProps = {
   onToggleExpandAll: () => void;
   showDuplicates: boolean;
   onShowDuplicatesChange: (checked: boolean) => void;
+  refresh: ConformaRefreshState;
 };
 
 const statuses = [
@@ -50,12 +58,10 @@ export const ConformaResultsToolbar: React.FC<ConformaResultsToolbarProps> = ({
   onToggleExpandAll,
   showDuplicates,
   onShowDuplicatesChange,
+  refresh,
 }) => {
-  const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
-  const filters = useDeepCompareMemoize({
-    name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
-    status: unparsedFilters.status ? (unparsedFilters.status as string[]) : [],
-  });
+  const { setFilters, onClearFilters } = React.useContext(FilterContext);
+  const filters = useConformaFilters();
   const { name: nameFilter, status: statusFilter } = filters;
 
   const [isGroupByOpen, setIsGroupByOpen] = React.useState(false);
@@ -125,6 +131,7 @@ export const ConformaResultsToolbar: React.FC<ConformaResultsToolbarProps> = ({
           <HelpTooltipIcon content={SHOW_DUPLICATES_HELP_TEXT} />
         </FlexItem>
       </Flex>
+      <ConformaRefreshIndicator refresh={refresh} />
     </BaseTextFilterToolbar>
   );
 };

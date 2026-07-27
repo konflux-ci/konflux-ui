@@ -47,18 +47,6 @@ spec:
     - name: build-credentials-secret
       type: string
       default: build-credentials
-    - name: skip-provision
-      description: 'Skip provisioning Kind cluster (use existing cluster instead)'
-      default: 'false'
-      type: string
-    - name: skip-deploy
-      description: 'Skip deploying Konflux (use existing deployment for debugging)'
-      default: 'false'
-      type: string
-    - name: skip-deprovision
-      description: 'Skip deprovisioning Kind cluster (keep cluster for debugging)'
-      default: 'false'
-      type: string
     - name: spec-file
       description: 'Cypress test spec file to run (for debugging, run single test)'
       default: 'tests/basic-happy-path.spec.ts'
@@ -87,16 +75,11 @@ spec:
       params:
         - name: SNAPSHOT
           value: $(params.SNAPSHOT)
-        - name: test-name
-          value: $(context.pipelineRun.name)
-          
+
     - name: provision-kind-cluster
       runAfter:
         - test-metadata
       when:
-        - input: '$(params.skip-provision)'
-          operator: in
-          values: ['false']
         - input: '$(params.job-type)'
           operator: notin
           values: ['periodic-stage']
@@ -112,16 +95,12 @@ spec:
       params:
         - name: secret-aws-credentials
           value: $(params.konflux-test-infra-secret)
-        - name: cluster-access-secret-name
-          value: kfg-$(context.pipelineRun.name)
         - name: id
           value: $(context.pipelineRun.name)
+        - name: cluster-access-secret-name
+          value: kfg-$(context.pipelineRun.name)
         - name: tags
           value: 'owner=konflux-ui@redhat.com,project=Konflux,created-by=integration-pipeline,component=konflux-ui'
-        - name: debug
-          value: 'false'
-        - name: ownerKind
-          value: PipelineRun
         - name: ownerName
           value: $(context.pipelineRun.name)
         - name: ownerUid
@@ -136,15 +115,12 @@ spec:
           value: '16'
 
     - name: deploy-konflux
+      runAfter:
+        - provision-kind-cluster
       when:
-        - input: '$(params.skip-deploy)'
-          operator: in
-          values: ['false']
         - input: '$(params.job-type)'
           operator: notin
           values: ['periodic-stage']
-      runAfter:
-        - provision-kind-cluster
       taskRef:
         resolver: git
         params:
@@ -173,12 +149,12 @@ spec:
           value: $(params.build-credentials-secret)
 
     - name: monitor-webhook-logs
+      runAfter:
+        - deploy-konflux
       when:
         - input: '$(params.job-type)'
           operator: notin
           values: ['periodic-stage']
-      runAfter:
-        - deploy-konflux
       taskRef:
         resolver: git
         params:
@@ -205,7 +181,7 @@ spec:
           - name: pathInRepo
             value: .tekton/tasks/run-e2e-konflux-ui.yaml
       params:
-          # says if it is PR check or periodic job
+        # says if it is PR check or periodic job
         - name: job-type
           value: '$(params.job-type)'
           # oci for storing artefacts
@@ -226,12 +202,6 @@ spec:
   finally:
     - name: deprovision-kind-cluster
       when:
-        - input: '$(params.skip-deprovision)'
-          operator: in
-          values: ['false']
-        - input: '$(params.skip-provision)'
-          operator: in
-          values: ['false']
         - input: '$(params.job-type)'
           operator: notin
           values: ['periodic-stage']
@@ -255,9 +225,11 @@ spec:
           value: $(params.oci-container-repo):$(context.pipelineRun.name)
         - name: oci-credentials
           value: $(params.oci-credentials-secret)
+        - name: pipeline-aggregate-status
+          value: '$(tasks.status)'
 
     - name: pull-request-status-message
-      when: 
+      when:
         - input: '$(params.job-type)'
           operator: notin
           values: ['periodic-stage']
@@ -281,16 +253,10 @@ spec:
           value: '$(tasks.status)'
         - name: junit-report-name
           value: e2e-report.xml
-        - name: e2e-log-name
-          value: e2e-tests.log
-        - name: cluster-provision-log-name
-          value: cluster-provision.log
         - name: enable-test-results-analysis
           value: 'true'
         - name: artifact-browser-url
           value: '$(params.artifact-browser-url)'
-        - name: konflux-test-infra-secret
-          value: $(params.konflux-test-infra-secret)
 
     - name: send-slack-notification
       taskRef:
@@ -309,7 +275,5 @@ spec:
           value: '$(context.pipelineRun.name)'
         - name: job-type
           value: '$(params.job-type)'
-        - name: suite
-          value: 'basic'
         - name: slack-credentials-secret
           value: $(params.slack-credentials-secret)

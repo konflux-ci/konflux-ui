@@ -7,17 +7,17 @@ import {
   type ComponentConformaResult,
   CONFORMA_RESULT_STATUS,
   type ConformaResult,
+  type ConformaResultRow,
   type ConformaRule,
-  type UIConformaData,
 } from '~/types/conforma';
 import { getPipelineRunFromTaskRunOwnerRef } from '~/utils/common-utils';
 import { getTaskRunLog } from '~/utils/tekton-results';
 
-const mapToUIConformaData = (
+const mapToConformaResultRow = (
   v: ConformaRule,
   compResult: ComponentConformaResult,
   status: CONFORMA_RESULT_STATUS,
-): UIConformaData => ({
+): ConformaResultRow => ({
   title: v.metadata?.title,
   description: v.metadata?.description,
   status,
@@ -32,19 +32,19 @@ const mapToUIConformaData = (
 
 export const mapConformaResultData = (
   conformaResult: ComponentConformaResult[],
-): UIConformaData[] => {
+): ConformaResultRow[] => {
   return conformaResult.reduce((acc, compResult) => {
     compResult?.violations?.forEach((v) => {
-      acc.push(mapToUIConformaData(v, compResult, CONFORMA_RESULT_STATUS.violations));
+      acc.push(mapToConformaResultRow(v, compResult, CONFORMA_RESULT_STATUS.violations));
     });
     compResult?.warnings?.forEach((v) => {
-      acc.push(mapToUIConformaData(v, compResult, CONFORMA_RESULT_STATUS.warnings));
+      acc.push(mapToConformaResultRow(v, compResult, CONFORMA_RESULT_STATUS.warnings));
     });
     compResult?.successes?.forEach((v) => {
-      acc.push(mapToUIConformaData(v, compResult, CONFORMA_RESULT_STATUS.successes));
+      acc.push(mapToConformaResultRow(v, compResult, CONFORMA_RESULT_STATUS.successes));
     });
     return acc;
-  }, [] as UIConformaData[]);
+  }, [] as ConformaResultRow[]);
 };
 
 export async function fetchConformaLogFromKubearchive(
@@ -60,7 +60,7 @@ export async function fetchConformaLogFromKubearchive(
     ns: namespace,
     name: podName,
     path: 'log',
-    queryParams: { container: 'step-report-json', follow: 'true' },
+    queryParams: { container: 'step-report-json' },
   };
 
   return commonFetchJSON<ConformaResult>(getK8sResourceURL(PodModel, undefined, podLogOpts), {
