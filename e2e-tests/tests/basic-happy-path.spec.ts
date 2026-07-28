@@ -177,7 +177,7 @@ describe('Basic Happy Path', () => {
         });
     });
 
-    it('Verify on-push pipeline and EC', () => {
+    it('Verify on-pull pipeline and EC', () => {
       cy.log('Verify that on-pull pipeline was cancelled');
       Applications.clickBreadcrumbLink('Pipeline runs');
       Applications.checkPipelineIsCancelled(componentName);
