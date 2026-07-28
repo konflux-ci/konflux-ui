@@ -130,6 +130,17 @@ const InternalFLAGS = {
     defaultEnabled: true,
     status: 'wip',
   },
+  'ai-chat': {
+    key: 'ai-chat',
+    description: 'Enable experimental Konflux AI chat UI',
+    defaultEnabled: false,
+    status: 'wip',
+    guard: {
+      allOf: ['isStagingCluster', 'isLightspeedAvailable'],
+      failureReason: 'Requires staging environment with Konflux AI available',
+      visibleInFeatureFlagPanel: false,
+    },
+  },
   'pipeline-runs-page': {
     key: 'pipeline-runs-page',
     description:
