@@ -155,7 +155,14 @@ export const ConformaGroupedTable: React.FC<ConformaGroupedTableProps> = ({
 
       // Find which row toggled by comparing old and new state
       const oldKeys = new Set(expandedGroups);
-      const newKeys = new Set(Object.keys(newExpanded).filter((key) => newExpanded[key]));
+      // Handle ExpandedState: can be true (all expanded) or Record<string, boolean>
+      const newExpandedRecord: Record<string, boolean> =
+        newExpanded === true
+          ? groups.reduce((acc, group) => ({ ...acc, [group.groupKey]: true }), {})
+          : newExpanded;
+      const newKeys = new Set(
+        Object.keys(newExpandedRecord).filter((key) => newExpandedRecord[key]),
+      );
 
       // Find the difference
       oldKeys.forEach((key) => {
@@ -169,7 +176,7 @@ export const ConformaGroupedTable: React.FC<ConformaGroupedTableProps> = ({
         }
       });
     },
-    [expanded, expandedGroups, onToggleGroup],
+    [expanded, expandedGroups, groups, onToggleGroup],
   );
 
   const columns = React.useMemo<ColumnDefinition<GroupedConformaRow>[]>(
