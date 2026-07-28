@@ -45,23 +45,27 @@ The main orchestrator. Composes hooks and sub-components into a full-featured ta
 
 #### Props (`TableProps<TData>`)
 
-| Prop                  | Type                           | Required | Description                                                      |
-| --------------------- | ------------------------------ | -------- | ---------------------------------------------------------------- |
-| `data`                | `TData[]`                      | Yes      | Array of row data to display                                     |
-| `columns`             | `ColumnDefinition<TData>[]`    | Yes      | Column definitions                                               |
-| `getRowId`            | `(row: TData) => string`       | Yes      | Stable unique row ID                                             |
-| `aria-label`          | `string`                       | Yes      | Accessible label for the table element                           |
-| `meta`                | `Record<string, unknown>`      | No       | Arbitrary metadata passed to TanStack's `table.options.meta`     |
-| `enableSorting`       | `boolean`                      | No       | Enable client-side column sorting                                |
-| `enableExpansion`     | `boolean`                      | No       | Enable expandable rows                                           |
-| `expandedContent`     | `(row: TData) => ReactNode`    | No       | Render function for expanded row content                         |
-| `hasNextPage`         | `boolean`                      | No       | Whether more data is available for infinite scroll               |
-| `isFetchingNextPage`  | `boolean`                      | No       | Whether next page is currently loading                           |
-| `fetchNextPage`       | `() => void`                   | No       | Callback to fetch the next page                                  |
-| `columnStateKey`      | `string`                       | No       | localStorage key for persisting column state                     |
-| `columnState`         | `ColumnState`                  | No       | Externally managed column state (overrides internal state)       |
-| `onColumnStateChange` | `(state: ColumnState) => void` | No       | Callback when column state changes (required with `columnState`) |
-| `scrollElement`       | `HTMLElement \| null`          | No       | External scroll container for virtualization                     |
+| Prop                  | Type                                                  | Required | Description                                                         |
+| --------------------- | ----------------------------------------------------- | -------- | ------------------------------------------------------------------- |
+| `data`                | `TData[]`                                             | Yes      | Array of row data to display                                        |
+| `columns`             | `ColumnDefinition<TData>[]`                           | Yes      | Column definitions                                                  |
+| `getRowId`            | `(row: TData) => string`                              | Yes      | Stable unique row ID                                                |
+| `aria-label`          | `string`                                              | Yes      | Accessible label for the table element                              |
+| `meta`                | `Record<string, unknown>`                             | No       | Arbitrary metadata passed to TanStack's `table.options.meta`        |
+| `enableSorting`       | `boolean`                                             | No       | Enable client-side column sorting                                   |
+| `enableExpansion`     | `boolean`                                             | No       | Enable expandable rows                                              |
+| `expandedContent`     | `(row: TData) => ReactNode`                           | No       | Render function for expanded row content                            |
+| `expanded`            | `ExpandedState`                                       | No       | External expansion state for controlled row expansion               |
+| `onExpandedChange`    | `OnChangeFn<ExpandedState>`                           | No       | Callback when expansion state changes (for controlled expansion)    |
+| `getSubRows`          | `(originalRow: TData, index: number) => TData[] \| undefined` | No       | Function to get sub-rows for hierarchical data structures           |
+| `hasNextPage`         | `boolean`                                             | No       | Whether more data is available for infinite scroll                  |
+| `isFetchingNextPage`  | `boolean`                                             | No       | Whether next page is currently loading                              |
+| `fetchNextPage`       | `() => void`                                          | No       | Callback to fetch the next page                                     |
+| `columnStateKey`      | `string`                                              | No       | localStorage key for persisting column state                        |
+| `columnState`         | `ColumnState`                                         | No       | Externally managed column state (overrides internal state)          |
+| `onColumnStateChange` | `(state: ColumnState) => void`                        | No       | Callback when column state changes (required with `columnState`)    |
+| `scrollElement`       | `HTMLElement \| null`                                 | No       | External scroll container for virtualization                        |
+| `data-test`           | `string`                                              | No       | Custom data-test attribute for the table root element (default: `table-v2`) |
 
 ### `TableContainer`
 
@@ -588,6 +592,76 @@ const MyListView = () => {
   },
 }
 ```
+
+### 4. Controlled Row Expansion
+
+For tables that need to control row expansion from a parent component (e.g., grouped tables with custom group headers):
+
+```tsx
+import { useState } from 'react';
+import { Table, type ColumnDefinition } from '~/shared/components/TableV2';
+import { type ExpandedState } from '@tanstack/react-table';
+
+interface MyGroupedData {
+  groupId: string;
+  groupName: string;
+  items: MyItem[];
+}
+
+const MyGroupedTable = () => {
+  // Track which groups are expanded
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+
+  // Convert Set to TanStack ExpandedState (Record<string, boolean>)
+  const expandedState: ExpandedState = Object.fromEntries(
+    Array.from(expandedGroups).map((id) => [id, true])
+  );
+
+  const handleToggleGroup = (groupId: string) => {
+    setExpandedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(groupId)) {
+        next.delete(groupId);
+      } else {
+        next.add(groupId);
+      }
+      return next;
+    });
+  };
+
+  // Example: render each group with a custom header + expandable detail table
+  return (
+    <>
+      {groupedData.map((group) => (
+        <div key={group.groupId}>
+          {/* Custom group header */}
+          <button onClick={() => handleToggleGroup(group.groupId)}>
+            {expandedGroups.has(group.groupId) ? '▼' : '▶'} {group.groupName}
+          </button>
+
+          {/* Detail table shown when group is expanded */}
+          {expandedGroups.has(group.groupId) && (
+            <Table
+              data={group.items}
+              columns={detailColumns}
+              getRowId={(row) => row.id}
+              aria-label={`${group.groupName} details`}
+              data-test={`detail-table-${group.groupId}`}
+            />
+          )}
+        </div>
+      ))}
+    </>
+  );
+};
+```
+
+**Key points:**
+
+- Use `expanded` prop to externally control which rows are expanded (TanStack `ExpandedState` = `Record<string, boolean>`)
+- Use `onExpandedChange` to receive expansion state updates from the table
+- Use `getSubRows` when your data has a hierarchical structure (nested children)
+- Use `data-test` to provide custom test identifiers for table instances
 
 ## Migration from Legacy Table
 

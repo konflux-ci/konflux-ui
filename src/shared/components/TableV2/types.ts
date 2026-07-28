@@ -4,6 +4,7 @@ import {
   type SortingFn,
   type FilterFn,
   type ExpandedState,
+  type OnChangeFn,
 } from '@tanstack/react-table';
 
 /**
@@ -201,7 +202,7 @@ export interface TableProps<TData> {
   expanded?: ExpandedState;
 
   /** Callback when expansion state changes. */
-  onExpandedChange?: (expanded: ExpandedState) => void;
+  onExpandedChange?: OnChangeFn<ExpandedState>;
 
   /** Function to get sub-rows from a row (for hierarchical data). */
   getSubRows?: (originalRow: TData, index: number) => TData[] | undefined;
