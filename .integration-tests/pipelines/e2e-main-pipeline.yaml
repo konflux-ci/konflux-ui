@@ -163,7 +163,7 @@ spec:
           - name: revision
             value: main
           - name: pathInRepo
-            value: .tekton/tasks/monitor-webhook-logs.yaml
+            value: .integration-tests/tasks/monitor-webhook-logs.yaml
       params:
         - name: monitoring-duration
           value: '5m'
@@ -179,7 +179,7 @@ spec:
           - name: revision
             value: main
           - name: pathInRepo
-            value: .tekton/tasks/run-e2e-konflux-ui.yaml
+            value: .integration-tests/tasks/run-e2e-konflux-ui.yaml
       params:
         # says if it is PR check or periodic job
         - name: job-type
@@ -267,7 +267,7 @@ spec:
           - name: revision
             value: main
           - name: pathInRepo
-            value: .tekton/tasks/send-slack-notification.yaml
+            value: .integration-tests/tasks/send-slack-notification.yaml
       params:
         - name: pipeline-aggregate-status
           value: '$(tasks.status)'
