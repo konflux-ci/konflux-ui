@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { CONFORMA_RESULT_STATUS } from '~/types/conforma';
 import type { ConformaResultRow } from '~/types/conforma';
+import { setupVirtualizerMock } from '~/unit-test-utils';
 import { createUseParamsMock, routerRenderer } from '~/unit-test-utils/mock-react-router';
 import type { GroupedConformaRow } from '../conforma-grouping-utils';
 import { ConformaGroupedTable } from '../ConformaGroupedTable';
@@ -10,6 +11,10 @@ import '@testing-library/jest-dom';
 
 jest.mock('~/shared/providers/Namespace', () => ({
   useNamespace: jest.fn(),
+}));
+
+jest.mock('@tanstack/react-virtual', () => ({
+  useVirtualizer: jest.fn(),
 }));
 
 const mockUseNamespace = useNamespace as jest.Mock;
@@ -71,6 +76,7 @@ describe('ConformaGroupedTable', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    setupVirtualizerMock();
     mockUseNamespace.mockReturnValue('test-ns');
     useParamsMock.mockReturnValue({ applicationName: 'test-app' });
   });

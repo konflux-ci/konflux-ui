@@ -1,16 +1,19 @@
 import * as React from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Content, Tooltip, Truncate as PfTruncate } from '@patternfly/react-core';
-import { ExpandableRowContent, Table, Tbody, Td, Th, Thead, Tr } from '@patternfly/react-table';
+import { Table as PfTable, Tbody, Td, Th, Thead, Tr } from '@patternfly/react-table';
+import { type ExpandedState } from '@tanstack/react-table';
 import { PIPELINE_RUNS_SECURITY_PATH } from '@routes/paths';
 import { getRuleStatus } from '~/components/Conforma/utils';
+import { Table } from '~/shared/components/TableV2/Table';
+import { type ColumnDefinition } from '~/shared/components/TableV2/types';
 import { Truncate } from '~/shared/components/truncate-text/Truncate';
 import { useNamespace } from '~/shared/providers/Namespace';
+import { CONFORMA_RESULT_STATUS } from '~/types/conforma';
 import type { ConformaResultRow } from '~/types/conforma';
 import type { GroupByMode, GroupedConformaRow } from './conforma-grouping-utils';
 import { getCommonImageName } from './conforma-grouping-utils';
-import { getConformaGroupedColumns } from './ConformaGroupedTableHeader';
-import { ConformaResultsListRow } from './ConformaResultsListRow';
+import { ConformaCountBadge } from './ConformaCountBadge';
 import './ConformaResultsTab.scss';
 
 type ConformaGroupedTableProps = {
@@ -24,7 +27,7 @@ const DetailSubTable: React.FC<{ rows: ConformaResultRow[] }> = ({ rows }) => {
   const namespace = useNamespace();
   const { applicationName } = useParams();
   return (
-    <Table
+    <PfTable
       aria-label="Conforma detail rows"
       variant="compact"
       borders={false}
@@ -122,7 +125,7 @@ const DetailSubTable: React.FC<{ rows: ConformaResultRow[] }> = ({ rows }) => {
           );
         })}
       </Tbody>
-    </Table>
+    </PfTable>
   );
 };
 
@@ -133,48 +136,102 @@ export const ConformaGroupedTable: React.FC<ConformaGroupedTableProps> = ({
   onToggleGroup,
 }) => {
   const groupLabel = groupBy === 'rule' ? 'Rule' : 'Component';
-  const headerColumns = React.useMemo(() => getConformaGroupedColumns(groupLabel), [groupLabel]);
+
+  // Convert Set<string> to ExpandedState (Record<string, boolean>)
+  const expanded = React.useMemo<ExpandedState>(() => {
+    const state: Record<string, boolean> = {};
+    expandedGroups.forEach((key) => {
+      state[key] = true;
+    });
+    return state;
+  }, [expandedGroups]);
+
+  // Handle expansion changes from TableV2
+  const handleExpandedChange = React.useCallback(
+    (updaterOrValue: ExpandedState | ((old: ExpandedState) => ExpandedState)) => {
+      // Resolve the new state (handle both updater function and direct value)
+      const newExpanded =
+        typeof updaterOrValue === 'function' ? updaterOrValue(expanded) : updaterOrValue;
+
+      // Find which row toggled by comparing old and new state
+      const oldKeys = new Set(expandedGroups);
+      const newKeys = new Set(Object.keys(newExpanded).filter((key) => newExpanded[key]));
+
+      // Find the difference
+      oldKeys.forEach((key) => {
+        if (!newKeys.has(key)) {
+          onToggleGroup(key);
+        }
+      });
+      newKeys.forEach((key) => {
+        if (!oldKeys.has(key)) {
+          onToggleGroup(key);
+        }
+      });
+    },
+    [expanded, expandedGroups, onToggleGroup],
+  );
+
+  const columns = React.useMemo<ColumnDefinition<GroupedConformaRow>[]>(
+    () => [
+      {
+        id: 'group',
+        header: groupLabel,
+        accessorFn: (row) => row.groupKey,
+        cell: (info) => <strong>{info.getValue() as string}</strong>,
+        size: 3,
+      },
+      {
+        id: 'violations',
+        header: 'Violations',
+        accessorFn: (row) => row.violations,
+        cell: (info) => (
+          <ConformaCountBadge
+            count={info.getValue() as number}
+            type={CONFORMA_RESULT_STATUS.violations}
+          />
+        ),
+        size: 1,
+      },
+      {
+        id: 'warnings',
+        header: 'Warnings',
+        accessorFn: (row) => row.warnings,
+        cell: (info) => (
+          <ConformaCountBadge
+            count={info.getValue() as number}
+            type={CONFORMA_RESULT_STATUS.warnings}
+          />
+        ),
+        size: 1,
+      },
+      {
+        id: 'successes',
+        header: 'Successes',
+        accessorFn: (row) => row.successes,
+        cell: (info) => (
+          <ConformaCountBadge
+            count={info.getValue() as number}
+            type={CONFORMA_RESULT_STATUS.successes}
+          />
+        ),
+        size: 1,
+      },
+    ],
+    [groupLabel],
+  );
 
   return (
-    <Table aria-label="Conforma results grouped table" data-test="conforma-grouped-table">
-      <Thead>
-        <Tr>
-          <Th screenReaderText="Expand" />
-          {headerColumns.map((col) => (
-            <Th key={String(col.title)} {...col.props}>
-              {col.title}
-            </Th>
-          ))}
-        </Tr>
-      </Thead>
-      {groups.map((group, groupIdx) => {
-        const isExpanded = expandedGroups.has(group.groupKey);
-        const rowId = `conforma-group-${groupIdx}`;
-
-        return (
-          <Tbody key={group.groupKey} isExpanded={isExpanded}>
-            <Tr>
-              <Td
-                expand={{
-                  rowIndex: groupIdx,
-                  isExpanded,
-                  onToggle: () => onToggleGroup(group.groupKey),
-                  expandId: `${rowId}-expand`,
-                }}
-              />
-              {/* Reuse the shared Row fragment for the main summary cells */}
-              <ConformaResultsListRow obj={group} />
-            </Tr>
-            <Tr isExpanded={isExpanded}>
-              <Td colSpan={headerColumns.length + 1} noPadding={false}>
-                <ExpandableRowContent>
-                  {isExpanded && <DetailSubTable rows={group.rows} />}
-                </ExpandableRowContent>
-              </Td>
-            </Tr>
-          </Tbody>
-        );
-      })}
-    </Table>
+    <Table
+      data={groups}
+      columns={columns}
+      getRowId={(row) => row.groupKey}
+      aria-label="Conforma results grouped table"
+      data-test="conforma-grouped-table"
+      enableExpansion
+      expanded={expanded}
+      onExpandedChange={handleExpandedChange}
+      expandedContent={(row) => <DetailSubTable rows={row.rows} />}
+    />
   );
 };
