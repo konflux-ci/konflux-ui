@@ -702,6 +702,31 @@ describe('useApplicationConformaResults', () => {
     expect(result.current.allResults).toEqual([]);
   });
 
+  it('associates each row with the pipelineRunName of its own component, not another component', async () => {
+    const components = [createComponent('comp-a'), createComponent('comp-b')];
+    const taskRuns = [
+      createSecurityTaskRun('tr-1', 'comp-a', 'pod-1', '2026-01-01T00:00:00Z', 'pr-1'),
+      createSecurityTaskRun('tr-2', 'comp-b', 'pod-2', '2026-01-01T00:00:00Z', 'pr-2'),
+    ];
+    mockUseComponents.mockReturnValue([components, true, undefined]);
+    mockUseTaskRunsV2.mockReturnValue(createTaskRunsV2Return(taskRuns));
+    mockResolveConforma.mockResolvedValue(mockConformaResult);
+
+    const { result } = renderHook(() => useApplicationConformaResults('test-app'), {
+      wrapper: createWrapper(),
+    });
+
+    await flushEffects();
+
+    const compARows = result.current.allResults.filter((r) => r.component === 'comp-a');
+    const compBRows = result.current.allResults.filter((r) => r.component === 'comp-b');
+
+    expect(compARows.length).toBeGreaterThan(0);
+    expect(compBRows.length).toBeGreaterThan(0);
+    expect(compARows.every((r) => r.pipelineRunName === 'pr-1')).toBe(true);
+    expect(compBRows.every((r) => r.pipelineRunName === 'pr-2')).toBe(true);
+  });
+
   it('passes the Conforma security selector to useTaskRunsV2', () => {
     renderHook(() => useApplicationConformaResults('test-app'), {
       wrapper: createWrapper(),
@@ -828,5 +853,18 @@ describe('useApplicationConformaResults', () => {
     await flushEffects();
 
     expect(result.current.componentStatuses[0].pipelineRunName).toBe('pr-1');
+  });
+
+  it('sets pipelineRunName on allResults rows from TaskRun labels', async () => {
+    setupTaskRunPipeline();
+    mockResolveConforma.mockResolvedValue(mockConformaResult);
+
+    const { result } = renderHook(() => useApplicationConformaResults('test-app'), {
+      wrapper: createWrapper(),
+    });
+
+    await flushEffects();
+
+    expect(result.current.allResults[0].pipelineRunName).toBe('pr-1');
   });
 });

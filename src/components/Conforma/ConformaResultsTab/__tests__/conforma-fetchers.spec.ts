@@ -292,6 +292,17 @@ describe('mapConformaResultData', () => {
     const result = mapConformaResultData([componentWithoutCode]);
     expect(result[0].code).toBeUndefined();
   });
+
+  it('sets pipelineRunName on every mapped row when passed as second arg', () => {
+    const result = mapConformaResultData([baseComponent], 'pr-1');
+    expect(result.length).toBeGreaterThan(0);
+    expect(result.every((r) => r.pipelineRunName === 'pr-1')).toBe(true);
+  });
+
+  it('leaves pipelineRunName undefined when not passed', () => {
+    const result = mapConformaResultData([baseComponent]);
+    expect(result.every((r) => r.pipelineRunName === undefined)).toBe(true);
+  });
 });
 
 describe('filterInvalidImageConformaRows', () => {
