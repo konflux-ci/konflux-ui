@@ -5,6 +5,7 @@ import { useDeepCompareMemoize } from '~/shared';
 export type ConformaFilters = {
   name: string;
   status: string[];
+  component: string[];
 };
 
 export const useConformaFilters = (): ConformaFilters => {
@@ -12,5 +13,6 @@ export const useConformaFilters = (): ConformaFilters => {
   return useDeepCompareMemoize({
     name: filters.name ? (filters.name as string) : '',
     status: filters.status ? (filters.status as string[]) : [],
+    component: filters.component ? (filters.component as string[]) : [],
   });
 };

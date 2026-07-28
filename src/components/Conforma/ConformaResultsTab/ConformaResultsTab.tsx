@@ -46,7 +46,11 @@ const ConformaResultsTabContent: React.FC = () => {
     refresh,
   } = useApplicationConformaResults(applicationName);
 
-  const { name: nameFilter, status: statusFilter } = useConformaFilters();
+  const {
+    name: nameFilter,
+    status: statusFilter,
+    component: componentFilter,
+  } = useConformaFilters();
 
   const [groupBy, setGroupBy] = React.useState<GroupByMode>('rule');
   const [expandedGroups, setExpandedGroups] = React.useState<Set<string>>(new Set());
@@ -70,8 +74,8 @@ const ConformaResultsTabContent: React.FC = () => {
   const rawCounts = React.useMemo(() => countResultsByStatus(allResults), [allResults]);
 
   const filteredResults = React.useMemo(
-    () => filterResults(displayResults, nameFilter, statusFilter),
-    [displayResults, nameFilter, statusFilter],
+    () => filterResults(displayResults, nameFilter, statusFilter, componentFilter),
+    [displayResults, nameFilter, statusFilter, componentFilter],
   );
 
   const allComponentNames = React.useMemo(
@@ -79,12 +83,20 @@ const ConformaResultsTabContent: React.FC = () => {
     [componentStatuses],
   );
 
+  const visibleComponentNames = React.useMemo(
+    () =>
+      componentFilter.length > 0
+        ? allComponentNames.filter((name) => componentFilter.includes(name))
+        : allComponentNames,
+    [allComponentNames, componentFilter],
+  );
+
   const groups = React.useMemo(
     () =>
       groupBy === 'rule'
         ? groupByRule(filteredResults)
-        : groupByComponent(filteredResults, allComponentNames),
-    [groupBy, filteredResults, allComponentNames],
+        : groupByComponent(filteredResults, visibleComponentNames),
+    [groupBy, filteredResults, visibleComponentNames],
   );
 
   const handleToggleGroup = React.useCallback((groupKey: string) => {
@@ -204,7 +216,7 @@ const ConformaResultsTabContent: React.FC = () => {
  * same pattern used by CommitsListViewV2 and PipelineRunsListViewV2.
  */
 export const ConformaResultsTab: React.FC = () => (
-  <FilterContextProvider filterParams={['name', 'status']}>
+  <FilterContextProvider filterParams={['name', 'status', 'component']}>
     <ConformaResultsTabContent />
   </FilterContextProvider>
 );
