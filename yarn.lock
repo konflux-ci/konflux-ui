@@ -14142,7 +14142,7 @@ __metadata:
     swc-loader: "npm:^0.2.6"
     type-fest: "npm:^4.22.0"
     typescript: "npm:5.5.4"
-    web-vitals: "npm:^4.2.4"
+    web-vitals: "npm:^6.0.0"
     webpack: "npm:^5.93.0"
     webpack-bundle-analyzer: "npm:^4.10.2"
     webpack-cli: "npm:^5.1.4"
@@ -20156,10 +20156,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"web-vitals@npm:^4.2.4":
-  version: 4.2.4
-  resolution: "web-vitals@npm:4.2.4"
-  checksum: 10/68cd1c2625a04b26e7eab67110623396afc6c9ef8c3a76f4e780aefe5b7d4ca1691737a0b99119e1d1ca9a463c4d468c0f0090b1875b6d784589d3a4a8503313
+"web-vitals@npm:^6.0.0":
+  version: 6.0.0
+  resolution: "web-vitals@npm:6.0.0"
+  checksum: 10/94d9eda6b5c481ec272a7f9fc2dba2c3dccb1652554fb3b92c8a3c3791f7c5c02b4ee889b9ab1b907675418f06b416a0c03c38cce31473ec45f2f1b505bc8be5
   languageName: node
   linkType: hard
 
