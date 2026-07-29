@@ -1,9 +1,5 @@
 import React from 'react';
-<<<<<<< HEAD
 import { capitalize, Flex } from '@patternfly/react-core';
-=======
-import { Flex } from '@patternfly/react-core';
->>>>>>> 7fc8b195 (fix: resolve review comments)
 import { MINTMAKER_NAMESPACE } from '~/consts/constants';
 import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { useComponent } from '~/hooks/useComponents';
