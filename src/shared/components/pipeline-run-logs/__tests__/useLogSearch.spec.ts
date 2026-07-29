@@ -10,7 +10,7 @@ describe('useLogSearch', () => {
     'INFO Build succeeded',
   ];
 
-  it('returns no matches for empty search text', () => {
+  it('should return no matches for empty search text', () => {
     const { result } = renderHook(() => useLogSearch({ lines }));
 
     expect(result.current.matchCount).toBe(0);
@@ -95,7 +95,7 @@ describe('useLogSearch', () => {
     expect(result.current.currentMatchIndex).toBe(2);
   });
 
-  it('returns correct 1-indexed scrollToRow', () => {
+  it('should return correct 1-indexed scrollToRow', () => {
     const { result } = renderHook(() => useLogSearch({ lines }));
 
     act(() => result.current.setSearchText('ERROR'));
@@ -118,7 +118,7 @@ describe('useLogSearch', () => {
     expect(result.current.matchCount).toBe(1);
   });
 
-  it('returns no matches when search text does not match any line', () => {
+  it('should return no matches when search text does not match any line', () => {
     const { result } = renderHook(() => useLogSearch({ lines }));
 
     act(() => result.current.setSearchText('NONEXISTENT'));

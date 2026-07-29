@@ -34,7 +34,7 @@ export const useLogSearch = ({ lines }: Props): UseLogSearchResult => {
       while (pos !== -1) {
         result.push({ rowIndex, matchIndex });
         matchIndex++;
-        pos = lineLower.indexOf(searchLower, pos + 1);
+        pos = lineLower.indexOf(searchLower, pos + searchLower.length);
       }
     });
     return result;
@@ -47,7 +47,8 @@ export const useLogSearch = ({ lines }: Props): UseLogSearchResult => {
     setCurrentMatchIndex(0);
   }, [deferredSearchText]);
 
-  const currentMatch = matches[currentMatchIndex];
+  const safeMatchIndex = matchCount > 0 ? Math.min(currentMatchIndex, matchCount - 1) : 0;
+  const currentMatch = matches[safeMatchIndex];
 
   const nextMatch = useCallback(() => {
     setCurrentMatchIndex((prev) => (matchCount > 0 ? (prev + 1) % matchCount : 0));

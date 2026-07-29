@@ -225,6 +225,7 @@ const LogViewer: React.FC<Props> = ({
                     onClear={() => setSearchText('')}
                     placeholder="Search"
                     name="logViewerSearchInput"
+                    aria-label="Search logs"
                   />
                 </ToolbarItem>
               </ToolbarGroup>
