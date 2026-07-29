@@ -191,8 +191,7 @@ export function useTable<TData>(options: UseTableOptions<TData>): UseTableResult
           getExpandedRowModel: getExpandedRowModel(),
           getRowCanExpand: (row) => {
             if (getSubRows) {
-              const subRows = getSubRows(row.original, row.index);
-              return !!subRows && subRows.length > 0;
+              return row.subRows.length > 0;
             }
             return true;
           },

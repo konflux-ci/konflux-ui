@@ -598,7 +598,7 @@ const MyListView = () => {
 For tables that need to control row expansion from a parent component (e.g., grouped tables with custom group headers):
 
 ```tsx
-import { useState } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { Table, type ColumnDefinition } from '~/shared/components/TableV2';
 import { type ExpandedState } from '@tanstack/react-table';
 
@@ -608,16 +608,17 @@ interface MyGroupedData {
   items: MyItem[];
 }
 
-const MyGroupedTable = () => {
+const MyGroupedTable = ({ groupedData }: { groupedData: MyGroupedData[] }) => {
   // Track which groups are expanded
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
   // Convert Set to TanStack ExpandedState (Record<string, boolean>)
-  const expandedState: ExpandedState = Object.fromEntries(
-    Array.from(expandedGroups).map((id) => [id, true])
+  const expandedState: ExpandedState = useMemo(
+    () => Object.fromEntries(Array.from(expandedGroups).map((id) => [id, true])),
+    [expandedGroups]
   );
 
-  const handleToggleGroup = (groupId: string) => {
+  const handleToggleGroup = useCallback((groupId: string) => {
     setExpandedGroups((prev) => {
       const next = new Set(prev);
       if (next.has(groupId)) {
@@ -627,31 +628,72 @@ const MyGroupedTable = () => {
       }
       return next;
     });
-  };
+  }, []);
 
-  // Example: render each group with a custom header + expandable detail table
+  // Handle expansion changes from TableV2
+  const handleExpandedChange = useCallback(
+    (updaterOrValue: ExpandedState | ((old: ExpandedState) => ExpandedState)) => {
+      const newExpanded =
+        typeof updaterOrValue === 'function' ? updaterOrValue(expandedState) : updaterOrValue;
+
+      // Find which row toggled by comparing old and new state
+      const oldKeys = new Set(expandedGroups);
+      const newExpandedRecord: Record<string, boolean> =
+        newExpanded === true
+          ? Object.fromEntries(groupedData.map((group) => [group.groupId, true]))
+          : newExpanded;
+      const newKeys = new Set(
+        Object.keys(newExpandedRecord).filter((key) => newExpandedRecord[key]),
+      );
+
+      // Find the difference and toggle
+      oldKeys.forEach((key) => {
+        if (!newKeys.has(key)) handleToggleGroup(key);
+      });
+      newKeys.forEach((key) => {
+        if (!oldKeys.has(key)) handleToggleGroup(key);
+      });
+    },
+    [expandedState, expandedGroups, groupedData, handleToggleGroup],
+  );
+
+  const columns: ColumnDefinition<MyGroupedData>[] = [
+    {
+      id: 'groupName',
+      header: 'Group',
+      cell: ({ row }) => row.original.groupName,
+    },
+    {
+      id: 'itemCount',
+      header: 'Item Count',
+      cell: ({ row }) => row.original.items.length,
+    },
+  ];
+
+  const detailColumns: ColumnDefinition<MyItem>[] = [
+    { id: 'name', header: 'Name', cell: ({ row }) => row.original.name },
+    { id: 'value', header: 'Value', cell: ({ row }) => row.original.value },
+  ];
+
   return (
-    <>
-      {groupedData.map((group) => (
-        <div key={group.groupId}>
-          {/* Custom group header */}
-          <button onClick={() => handleToggleGroup(group.groupId)}>
-            {expandedGroups.has(group.groupId) ? '▼' : '▶'} {group.groupName}
-          </button>
-
-          {/* Detail table shown when group is expanded */}
-          {expandedGroups.has(group.groupId) && (
-            <Table
-              data={group.items}
-              columns={detailColumns}
-              getRowId={(row) => row.id}
-              aria-label={`${group.groupName} details`}
-              data-test={`detail-table-${group.groupId}`}
-            />
-          )}
-        </div>
-      ))}
-    </>
+    <Table
+      data={groupedData}
+      columns={columns}
+      getRowId={(row) => row.groupId}
+      aria-label="Grouped data table"
+      enableExpansion
+      expanded={expandedState}
+      onExpandedChange={handleExpandedChange}
+      expandedContent={(group) => (
+        <Table
+          data={group.items}
+          columns={detailColumns}
+          getRowId={(row) => row.id}
+          aria-label={`${group.groupName} details`}
+          data-test={`detail-table-${group.groupId}`}
+        />
+      )}
+    />
   );
 };
 ```

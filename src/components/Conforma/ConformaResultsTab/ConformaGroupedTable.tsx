@@ -158,7 +158,7 @@ export const ConformaGroupedTable: React.FC<ConformaGroupedTableProps> = ({
       // Handle ExpandedState: can be true (all expanded) or Record<string, boolean>
       const newExpandedRecord: Record<string, boolean> =
         newExpanded === true
-          ? groups.reduce((acc, group) => ({ ...acc, [group.groupKey]: true }), {})
+          ? Object.fromEntries(groups.map((group) => [group.groupKey, true]))
           : newExpanded;
       const newKeys = new Set(
         Object.keys(newExpandedRecord).filter((key) => newExpandedRecord[key]),
