@@ -6,7 +6,6 @@ import {
   AlertGroup,
   Button,
   PageSection,
-  PageSectionVariants,
 } from '@patternfly/react-core';
 import classNames from 'classnames';
 import { useFormikContext } from 'formik';
@@ -30,8 +29,8 @@ const GitImportActions: React.FunctionComponent = () => {
 
   return (
     <PageSection
+      hasBodyWrapper={false}
       className={classNames({ 'git-import-actions__sticky': showComponent })}
-      variant={PageSectionVariants.light}
       hasShadowTop={showComponent}
       component="footer"
     >

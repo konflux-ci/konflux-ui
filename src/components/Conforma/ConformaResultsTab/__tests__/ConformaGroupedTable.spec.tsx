@@ -1,10 +1,18 @@
-import { fireEvent, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { useNamespace } from '~/shared/providers/Namespace';
 import { CONFORMA_RESULT_STATUS } from '~/types/conforma';
 import type { ConformaResultRow } from '~/types/conforma';
-import { routerRenderer } from '~/unit-test-utils/mock-react-router';
+import { createUseParamsMock, routerRenderer } from '~/unit-test-utils/mock-react-router';
 import type { GroupedConformaRow } from '../conforma-grouping-utils';
 import { ConformaGroupedTable } from '../ConformaGroupedTable';
 import '@testing-library/jest-dom';
+
+jest.mock('~/shared/providers/Namespace', () => ({
+  useNamespace: jest.fn(),
+}));
+
+const mockUseNamespace = useNamespace as jest.Mock;
 
 const createRow = (overrides: Partial<ConformaResultRow> = {}): ConformaResultRow => ({
   title: 'Test rule',
@@ -12,6 +20,7 @@ const createRow = (overrides: Partial<ConformaResultRow> = {}): ConformaResultRo
   status: CONFORMA_RESULT_STATUS.violations,
   component: 'test-component',
   msg: 'Test message',
+  images: [],
   ...overrides,
 });
 
@@ -58,9 +67,12 @@ describe('ConformaGroupedTable', () => {
     expandedGroups: new Set<string>(),
     onToggleGroup: jest.fn(),
   };
+  const useParamsMock = createUseParamsMock();
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockUseNamespace.mockReturnValue('test-ns');
+    useParamsMock.mockReturnValue({ applicationName: 'test-app' });
   });
 
   it('renders group rows with correct labels', () => {
@@ -93,21 +105,20 @@ describe('ConformaGroupedTable', () => {
     expect(screen.getAllByText('Component').length).toBeGreaterThanOrEqual(1);
   });
 
-  it('calls onToggleGroup when expand button is clicked', () => {
+  it('calls onToggleGroup when expand button is clicked', async () => {
+    const user = userEvent.setup();
     const onToggle = jest.fn();
     routerRenderer(<ConformaGroupedTable {...defaultProps} onToggleGroup={onToggle} />);
 
     const toggleButtons = screen.getAllByRole('button');
-    fireEvent.click(toggleButtons[0]);
+    await user.click(toggleButtons[0]);
 
     expect(onToggle).toHaveBeenCalledWith('Missing CVE scan');
   });
 
   it('shows detail sub-table when a group is expanded', () => {
     const expandedGroups = new Set(['Missing CVE scan']);
-    routerRenderer(
-      <ConformaGroupedTable {...defaultProps} expandedGroups={expandedGroups} />,
-    );
+    routerRenderer(<ConformaGroupedTable {...defaultProps} expandedGroups={expandedGroups} />);
 
     expect(screen.getAllByText('api-gateway').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText('auth-service').length).toBeGreaterThanOrEqual(1);
@@ -121,13 +132,144 @@ describe('ConformaGroupedTable', () => {
 
   it('renders all column headers in expanded detail sub-table', () => {
     const expandedGroups = new Set(['Missing CVE scan']);
-    routerRenderer(
-      <ConformaGroupedTable {...defaultProps} expandedGroups={expandedGroups} />,
-    );
+    routerRenderer(<ConformaGroupedTable {...defaultProps} expandedGroups={expandedGroups} />);
 
     expect(screen.getAllByText('Image').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText('Status').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText('Message').length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('shows common image name and arch variant count when row has multiple images', () => {
+    const groupsWithMultipleImages: GroupedConformaRow[] = [
+      {
+        groupKey: 'Multi-arch rule',
+        violations: 1,
+        warnings: 0,
+        successes: 0,
+        rows: [
+          createRow({
+            images: [
+              'quay.io/test/img@sha256:aaa',
+              'quay.io/test/img@sha256:bbb',
+              'quay.io/test/img@sha256:ccc',
+            ],
+          }),
+        ],
+      },
+    ];
+    const expandedGroups = new Set(['Multi-arch rule']);
+    routerRenderer(
+      <ConformaGroupedTable
+        {...defaultProps}
+        groups={groupsWithMultipleImages}
+        expandedGroups={expandedGroups}
+      />,
+    );
+
+    expect(screen.getByText('quay.io/test/img')).toBeInTheDocument();
+    expect(screen.getByText('3 arch variants')).toBeInTheDocument();
+  });
+
+  it('falls back to "Affects N images" when images have different repo names', () => {
+    const groupsWithDifferentImages: GroupedConformaRow[] = [
+      {
+        groupKey: 'Mixed images rule',
+        violations: 1,
+        warnings: 0,
+        successes: 0,
+        rows: [
+          createRow({
+            images: ['quay.io/test/img-a@sha256:aaa', 'quay.io/test/img-b@sha256:bbb'],
+          }),
+        ],
+      },
+    ];
+    const expandedGroups = new Set(['Mixed images rule']);
+    routerRenderer(
+      <ConformaGroupedTable
+        {...defaultProps}
+        groups={groupsWithDifferentImages}
+        expandedGroups={expandedGroups}
+      />,
+    );
+
+    expect(screen.getByText('Affects 2 images')).toBeInTheDocument();
+  });
+
+  it('shows truncated image when row has a single image', () => {
+    const groupsWithSingleImage: GroupedConformaRow[] = [
+      {
+        groupKey: 'Single-image rule',
+        violations: 1,
+        warnings: 0,
+        successes: 0,
+        rows: [createRow({ images: ['quay.io/test/img@sha256:only'] })],
+      },
+    ];
+    const expandedGroups = new Set(['Single-image rule']);
+    routerRenderer(
+      <ConformaGroupedTable
+        {...defaultProps}
+        groups={groupsWithSingleImage}
+        expandedGroups={expandedGroups}
+      />,
+    );
+
+    expect(screen.queryByText(/affects.*images/i)).not.toBeInTheDocument();
+  });
+
+  it('renders multi-image tooltip content', () => {
+    const groupsWithMultipleImages: GroupedConformaRow[] = [
+      {
+        groupKey: 'Multi-arch rule',
+        violations: 1,
+        warnings: 0,
+        successes: 0,
+        rows: [
+          createRow({
+            images: ['quay.io/test/img@sha256:aaa', 'quay.io/test/img@sha256:bbb'],
+          }),
+        ],
+      },
+    ];
+    const expandedGroups = new Set(['Multi-arch rule']);
+    routerRenderer(
+      <ConformaGroupedTable
+        {...defaultProps}
+        groups={groupsWithMultipleImages}
+        expandedGroups={expandedGroups}
+      />,
+    );
+
+    expect(screen.getByText('quay.io/test/img')).toBeInTheDocument();
+    expect(screen.getByText('2 arch variants')).toBeInTheDocument();
+  });
+
+  it('renders single collapsed image via images[0] without a tooltip', () => {
+    const groupsWithSingleCollapsedImage: GroupedConformaRow[] = [
+      {
+        groupKey: 'Single-collapsed rule',
+        violations: 1,
+        warnings: 0,
+        successes: 0,
+        rows: [
+          createRow({
+            images: ['quay.io/test/img@sha256:only'],
+          }),
+        ],
+      },
+    ];
+    const expandedGroups = new Set(['Single-collapsed rule']);
+    routerRenderer(
+      <ConformaGroupedTable
+        {...defaultProps}
+        groups={groupsWithSingleCollapsedImage}
+        expandedGroups={expandedGroups}
+      />,
+    );
+
+    expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/Affects 1 images/)).not.toBeInTheDocument();
   });
 
   it('shows dash when row has no image', () => {
@@ -137,10 +279,7 @@ describe('ConformaGroupedTable', () => {
         violations: 1,
         warnings: 0,
         successes: 0,
-        rows: [
-          createRow({ image: 'quay.io/test/img@sha256:abc' }),
-          createRow({ image: undefined }),
-        ],
+        rows: [createRow({ images: ['quay.io/test/img@sha256:abc'] }), createRow({ images: [] })],
       },
     ];
     const expandedGroups = new Set(['Has image rule']);
@@ -153,5 +292,157 @@ describe('ConformaGroupedTable', () => {
     );
 
     expect(screen.getAllByText('-').length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('renders row code in the detail sub-table when present', () => {
+    const groupsWithCode: GroupedConformaRow[] = [
+      {
+        groupKey: 'Trusted task rule',
+        violations: 1,
+        warnings: 0,
+        successes: 0,
+        rows: [createRow({ code: 'trusted_task.trusted' })],
+      },
+    ];
+    const expandedGroups = new Set(['Trusted task rule']);
+
+    routerRenderer(
+      <ConformaGroupedTable
+        {...defaultProps}
+        groups={groupsWithCode}
+        expandedGroups={expandedGroups}
+      />,
+    );
+
+    expect(screen.getByText('trusted_task.trusted')).toBeInTheDocument();
+  });
+
+  it('renders empty string msg instead of falling back to dash', () => {
+    const groupsWithEmptyMsg: GroupedConformaRow[] = [
+      {
+        groupKey: 'Empty message rule',
+        violations: 1,
+        warnings: 0,
+        successes: 0,
+        rows: [createRow({ msg: '' })],
+      },
+    ];
+    const expandedGroups = new Set(['Empty message rule']);
+
+    routerRenderer(
+      <ConformaGroupedTable
+        {...defaultProps}
+        groups={groupsWithEmptyMsg}
+        expandedGroups={expandedGroups}
+      />,
+    );
+
+    expect(screen.getByTestId('conforma-violation-msg')).toHaveTextContent('');
+  });
+
+  it('renders dash when row has no msg', () => {
+    const groupsWithNoMsg: GroupedConformaRow[] = [
+      {
+        groupKey: 'No message rule',
+        violations: 1,
+        warnings: 0,
+        successes: 0,
+        rows: [createRow({ msg: undefined })],
+      },
+    ];
+    const expandedGroups = new Set(['No message rule']);
+
+    routerRenderer(
+      <ConformaGroupedTable
+        {...defaultProps}
+        groups={groupsWithNoMsg}
+        expandedGroups={expandedGroups}
+      />,
+    );
+
+    expect(screen.queryByTestId('conforma-violation-msg')).not.toBeInTheDocument();
+    expect(screen.getAllByText('-').length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('renders truncated message with expand/collapse toggle for long msg', async () => {
+    const user = userEvent.setup();
+    const longMsg =
+      'This violation message is intentionally very long and exceeds eighty characters so that truncation kicks in and the user must click more to read the rest';
+    const groupsWithLongMsg: GroupedConformaRow[] = [
+      {
+        groupKey: 'Long message rule',
+        violations: 1,
+        warnings: 0,
+        successes: 0,
+        rows: [createRow({ msg: longMsg })],
+      },
+    ];
+    const expandedGroups = new Set(['Long message rule']);
+
+    routerRenderer(
+      <ConformaGroupedTable
+        {...defaultProps}
+        groups={groupsWithLongMsg}
+        expandedGroups={expandedGroups}
+      />,
+    );
+
+    expect(screen.getByText(`${longMsg.slice(0, 80)}...`)).toBeInTheDocument();
+    const moreButton = screen.getByRole('button', { name: 'more' });
+    expect(moreButton).toBeInTheDocument();
+
+    await user.click(moreButton);
+
+    expect(screen.getByText(longMsg)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'less' })).toBeInTheDocument();
+  });
+
+  it('renders a pipeline run link with /security in href when pipelineRunName is present', () => {
+    const groupsWithPipelineRun: GroupedConformaRow[] = [
+      {
+        groupKey: 'Has pipeline run',
+        violations: 1,
+        warnings: 0,
+        successes: 0,
+        rows: [createRow({ pipelineRunName: 'my-pipelinerun' })],
+      },
+    ];
+    const expandedGroups = new Set(['Has pipeline run']);
+    routerRenderer(
+      <ConformaGroupedTable
+        {...defaultProps}
+        groups={groupsWithPipelineRun}
+        expandedGroups={expandedGroups}
+      />,
+    );
+
+    const link = screen.getByTestId('conforma-pipeline-run-link');
+    expect(link).toHaveTextContent('my-pipelinerun');
+    expect(link).toHaveAttribute(
+      'href',
+      '/ns/test-ns/applications/test-app/pipelineruns/my-pipelinerun/security',
+    );
+  });
+
+  it('renders dash when pipelineRunName is absent', () => {
+    const groupsWithoutPipelineRun: GroupedConformaRow[] = [
+      {
+        groupKey: 'No pipeline run',
+        violations: 1,
+        warnings: 0,
+        successes: 0,
+        rows: [createRow({ pipelineRunName: undefined })],
+      },
+    ];
+    const expandedGroups = new Set(['No pipeline run']);
+    routerRenderer(
+      <ConformaGroupedTable
+        {...defaultProps}
+        groups={groupsWithoutPipelineRun}
+        expandedGroups={expandedGroups}
+      />,
+    );
+
+    expect(screen.queryByTestId('conforma-pipeline-run-link')).not.toBeInTheDocument();
   });
 });

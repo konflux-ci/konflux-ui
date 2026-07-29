@@ -5,8 +5,6 @@ import {
   EmptyState,
   EmptyStateBody,
   EmptyStateFooter,
-  EmptyStateHeader,
-  EmptyStateIcon,
   EmptyStateVariant,
 } from '@patternfly/react-core';
 import { css } from '@patternfly/react-styles';
@@ -17,17 +15,13 @@ export const NotFoundEmptyState: React.FC<React.PropsWithChildren<{ className?: 
 }) => {
   const navigate = useNavigate();
   return (
-    <EmptyState className={css('app-empty-state', className)} variant={EmptyStateVariant.full}>
-      <EmptyStateHeader
-        titleText="404: Page not found"
-        icon={
-          <EmptyStateIcon
-            className={css('app-empty-state__icon m-is-error')}
-            icon={() => <EmptySearchImgUrl className="app-empty-state__icon m-is-xl" role="img" />}
-          />
-        }
-        headingLevel="h2"
-      />
+    <EmptyState
+      headingLevel="h2"
+      icon={() => <EmptySearchImgUrl className="app-empty-state__icon m-is-xl" role="img" />}
+      titleText="404: Page not found"
+      className={css('app-empty-state', className)}
+      variant={EmptyStateVariant.full}
+    >
       <EmptyStateBody>
         {`Looks like that page doesn't exist. Let's get you back to your applications list.`}
       </EmptyStateBody>

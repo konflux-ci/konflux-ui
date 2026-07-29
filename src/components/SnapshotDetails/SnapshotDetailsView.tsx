@@ -1,6 +1,6 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
-import { Bullseye, Spinner, Text, TextVariants } from '@patternfly/react-core';
+import { Bullseye, Spinner, Content, ContentVariants } from '@patternfly/react-core';
 import { usePipelineRunV2 } from '~/hooks/usePipelineRunsV2';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { downloadYamlAction } from '~/utils/common-utils';
@@ -86,12 +86,12 @@ const SnapshotDetailsView: React.FC = () => {
         ]}
         title={
           <>
-            <Text component={TextVariants.h2} data-test="snapshot-name">
+            <Content component={ContentVariants.h2} data-test="snapshot-name">
               {snapshotName}
-            </Text>
+            </Content>
             {plrLoaded && !plrLoadError && commit?.sha && (
               <>
-                <Text component={TextVariants.p} data-test="snapshot-header-details">
+                <Content component={ContentVariants.p} data-test="snapshot-header-details">
                   Triggered by {commit.shaTitle}{' '}
                   <CommitLabel
                     gitProvider={commit.gitProvider}
@@ -103,7 +103,7 @@ const SnapshotDetailsView: React.FC = () => {
                     timestamp={snapshot.metadata.creationTimestamp}
                     className="pf-u-display-inline"
                   />
-                </Text>
+                </Content>
               </>
             )}
           </>

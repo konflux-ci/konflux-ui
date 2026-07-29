@@ -2,9 +2,8 @@ import * as React from 'react';
 import {
   Stack,
   StackItem,
-  Text,
-  TextContent,
-  TextVariants,
+  Content,
+  ContentVariants,
   List,
   ListItem,
   ModalVariant,
@@ -33,32 +32,32 @@ const AboutModal: React.FC = () => {
   return (
     <Stack hasGutter>
       <StackItem>
-        <TextContent>
-          <Text component={TextVariants.p}>
+        <Content>
+          <Content component={ContentVariants.p}>
             Konflux is a comprehensive platform for modern application development and deployment.
             It provides developers with the tools and infrastructure needed to build, test and
             deploy applications efficiently in cloud-native environments.
-          </Text>
-        </TextContent>
+          </Content>
+        </Content>
       </StackItem>
 
       <StackItem>
-        <TextContent>
-          <Text component={TextVariants.h3}>Key Features</Text>
-        </TextContent>
+        <Content>
+          <Content component={ContentVariants.h3}>Key Features</Content>
+        </Content>
         <List>
           {KEY_FEATURES_LIST_ITEMS.map((item) => (
             <ListItem key={item}>
-              <Text component={TextVariants.p}>{item}</Text>
+              <Content component={ContentVariants.p}>{item}</Content>
             </ListItem>
           ))}
         </List>
       </StackItem>
 
       <StackItem>
-        <TextContent>
-          <Text component={TextVariants.h3}>Resources</Text>
-        </TextContent>
+        <Content>
+          <Content component={ContentVariants.h3}>Resources</Content>
+        </Content>
         <List>
           {resourcesListItems.map((item) => (
             <ListItem key={item.text}>
@@ -69,9 +68,11 @@ const AboutModal: React.FC = () => {
       </StackItem>
 
       <StackItem>
-        <TextContent>
-          <Text component={TextVariants.small}>Konflux UI - Built with React and Patternfly</Text>
-        </TextContent>
+        <Content>
+          <Content component={ContentVariants.small}>
+            Konflux UI - Built with React and Patternfly
+          </Content>
+        </Content>
       </StackItem>
     </Stack>
   );

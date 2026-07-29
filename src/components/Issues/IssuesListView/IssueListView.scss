@@ -3,18 +3,18 @@
     &.getting-started-card__img {
       width: 9ch;
       min-width: unset !important;
-      padding-top: var(--pf-v5-global--spacer--xl);
-      padding-left: var(--pf-v5-global--spacer--xl);
+      padding-top: var(--pf-t--global--spacer--xl);
+      padding-left: var(--pf-t--global--spacer--xl);
     }
   }
   &__meta {
     display: flex;
     flex-direction: column;
-    gap: var(--pf-v5-global--spacer--sm);
+    gap: var(--pf-t--global--spacer--sm);
     &--time {
       align-items: center;
       display: flex;
-      gap: var(--pf-v5-global--spacer--xs);
+      gap: var(--pf-t--global--spacer--xs);
     }
   }
   &__actions {
@@ -25,6 +25,6 @@
     justify-content: flex-end;
   }
   &__expanded-row {
-    padding: var(--pf-v5-global--spacer--md);
+    padding: var(--pf-t--global--spacer--md);
   }
 }

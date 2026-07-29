@@ -11,6 +11,11 @@ interface UseVirtualizedScrollParams {
   }) => void;
 }
 
+interface UseVirtualizedScrollResult {
+  /** Clears programmatic-scroll tracking so the next scroll event is treated as user-initiated. */
+  clearScrollTracking: () => void;
+}
+
 // Duration for smooth scroll animation to settle (ms)
 const SCROLL_ANIMATION_DURATION_MS = 300;
 
@@ -27,9 +32,13 @@ export const useVirtualizedScroll = ({
   virtualizer,
   scrollToRow,
   onScroll,
-}: UseVirtualizedScrollParams) => {
+}: UseVirtualizedScrollParams): UseVirtualizedScrollResult => {
   const prevScrollOffset = React.useRef<number>(0);
   const scrollToIndexRef = React.useRef<number | undefined>(undefined);
+
+  const clearScrollTracking = React.useCallback(() => {
+    scrollToIndexRef.current = undefined;
+  }, []);
 
   // Track scroll offset changes and trigger onScroll callback
   const scrollOffset = virtualizer.scrollOffset ?? 0;
@@ -73,4 +82,6 @@ export const useVirtualizedScroll = ({
     // Clear the flag immediately when scrollToRow becomes undefined/0
     scrollToIndexRef.current = undefined;
   }, [scrollToRow, virtualizer]);
+
+  return { clearScrollTracking };
 };

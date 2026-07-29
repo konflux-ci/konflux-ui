@@ -6,14 +6,13 @@ import {
   InputGroup,
   Stack,
   StackItem,
-  Text,
-  TextContent,
-  TextVariants,
+  Content,
+  ContentVariants,
 } from '@patternfly/react-core';
 import { MinusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/minus-circle-icon';
 import { PlusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/plus-circle-icon';
 import { FieldArray, useField } from 'formik';
-import { InputField } from 'formik-pf';
+import { InputField } from '~/shared/components/formik-base';
 import { CVEComponentDropDown } from './CVEComponentDropDown';
 
 type ComponentFieldProps = {
@@ -34,9 +33,9 @@ const ComponentField: React.FC<React.PropsWithChildren<ComponentFieldProps>> = (
       render={(arrayHelpers) => {
         return (
           <FormGroup label="Components and packages" data-test="component-field">
-            <TextContent>
-              <Text component={TextVariants.p}>Which component affects this CVE?</Text>
-            </TextContent>
+            <Content>
+              <Content component={ContentVariants.p}>Which component affects this CVE?</Content>
+            </Content>
             <Stack>
               {Array.isArray(components) &&
                 components.length > 0 &&
@@ -44,20 +43,19 @@ const ComponentField: React.FC<React.PropsWithChildren<ComponentFieldProps>> = (
                   return (
                     <StackItem key={`${name}[${i}]`}>
                       <InputGroup
-                        className="pf-v5-u-mb-sm"
+                        className="pf-v6-u-mb-sm"
                         label="Which components affect this CVE?"
                         data-test={`component-${i}`}
                       >
                         <CVEComponentDropDown name={`${name}[${i}].name`} />
 
                         <Button
+                          icon={<MinusCircleIcon />}
                           variant={ButtonVariant.plain}
                           onClick={() => arrayHelpers.remove(i)}
                           data-test={`remove-component-${i}`}
                           isDisabled={components.length === 1}
-                        >
-                          <MinusCircleIcon />
-                        </Button>
+                        />
                       </InputGroup>
 
                       <FieldArray
@@ -71,7 +69,7 @@ const ComponentField: React.FC<React.PropsWithChildren<ComponentFieldProps>> = (
                                 packages.map((__, j) => (
                                   <StackItem key={`component-${i}-package-${j}`}>
                                     <InputGroup
-                                      className="pf-v5-u-mb-sm pf-v5-u-ml-md"
+                                      className="pf-v6-u-mb-sm pf-v6-u-ml-md"
                                       label="Package"
                                     >
                                       <InputField
@@ -79,12 +77,11 @@ const ComponentField: React.FC<React.PropsWithChildren<ComponentFieldProps>> = (
                                         name={`${name}[${i}].packages[${j}]`}
                                       />
                                       <Button
+                                        icon={<MinusCircleIcon />}
                                         variant={ButtonVariant.plain}
                                         onClick={() => packageArrayHelper.remove(j)}
                                         data-test={`remove-cmp-${i}-pac-${j}`}
-                                      >
-                                        <MinusCircleIcon />
-                                      </Button>
+                                      />
                                     </InputGroup>
                                   </StackItem>
                                 ))}

@@ -13,6 +13,8 @@ import {
   type ShortcutEntry,
 } from '~/shared/components/keyboard-shortcut-hint/KeyboardShortcutHint';
 
+import './CodeEditor.scss';
+
 loader.config({ monaco: monacoConfig });
 
 const CODE_EDITOR_SHORTCUTS: ShortcutEntry[] = [

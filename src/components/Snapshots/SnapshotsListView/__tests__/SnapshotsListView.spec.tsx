@@ -39,7 +39,6 @@ jest.mock('react-router-dom', () => {
   };
 });
 
-
 const useMockSnapshots = useK8sAndKarchResources as jest.Mock;
 
 const createWrappedComponent = () => <SnapshotsListView applicationName="test-app" />;

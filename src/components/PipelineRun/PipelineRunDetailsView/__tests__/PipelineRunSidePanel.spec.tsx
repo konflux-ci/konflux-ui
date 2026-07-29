@@ -5,10 +5,14 @@ import SidePanelContext from '../../../SidePanel/SidePanelContext';
 import PipelineRunSidePanel from '../PipelineRunSidePanel';
 import { PipelineRunNodeType } from '../visualization/types';
 
-jest.mock('@patternfly/react-topology', () => ({
-  useVisualizationController: jest.fn(() => ({ getElementById: jest.fn() })),
-  useVisualizationState: jest.fn(() => [[], jest.fn()]),
-}));
+jest.mock('@patternfly/react-topology', () => {
+  const originalModule = jest.requireActual('@patternfly/react-topology');
+  return {
+    ...originalModule,
+    useVisualizationController: jest.fn(() => ({ getElementById: jest.fn() })),
+    useVisualizationState: jest.fn(() => [[], jest.fn()]),
+  };
+});
 
 const useVisualizationControllerMock = useVisualizationController as jest.Mock;
 const useVisualizationStateMock = useVisualizationState as jest.Mock;

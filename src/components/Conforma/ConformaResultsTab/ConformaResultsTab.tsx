@@ -1,23 +1,31 @@
 import * as React from 'react';
 import { useParams } from 'react-router-dom';
 import {
+  Alert,
+  AlertVariant,
   Bullseye,
   PageSection,
-  PageSectionVariants,
+  Content,
+  ContentVariants,
   Spinner,
-  Text,
-  TextContent,
   Title,
 } from '@patternfly/react-core';
-import { FilterContext, FilterContextProvider } from '~/components/Filter/generic/FilterContext';
-import { useDeepCompareMemoize } from '~/shared';
+import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
+import { RouterParams } from '~/routes/utils';
 import { getErrorState } from '~/shared/utils/error-utils';
 import type { GroupByMode } from './conforma-grouping-utils';
-import { filterResults, groupByComponent, groupByRule } from './conforma-grouping-utils';
+import {
+  collapseArchDuplicates,
+  countResultsByStatus,
+  filterResults,
+  groupByComponent,
+  groupByRule,
+} from './conforma-grouping-utils';
 import { ConformaGroupedTable } from './ConformaGroupedTable';
 import { ConformaResultsToolbar } from './ConformaResultsToolbar';
 import { ConformaSummaryBar } from './ConformaSummaryBar';
 import { useApplicationConformaResults } from './useApplicationConformaResults';
+import { useConformaFilters } from './useConformaFilters';
 import './ConformaResultsTab.scss';
 
 /**
@@ -26,40 +34,48 @@ import './ConformaResultsTab.scss';
  * ConformaResultsTab provides.
  */
 const ConformaResultsTabContent: React.FC = () => {
-  const { applicationName } = useParams();
+  const { applicationName } = useParams<RouterParams>();
   const {
     allResults,
     componentStatuses,
     totalComponents,
     totalFailed,
-    totalViolations,
-    totalWarnings,
-    totalSuccesses,
     loaded,
     error,
+    partialLogError,
+    refresh,
   } = useApplicationConformaResults(applicationName);
 
-  const { filters: unparsedFilters } = React.useContext(FilterContext);
-  const filters = useDeepCompareMemoize({
-    name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
-    status: unparsedFilters.status ? (unparsedFilters.status as string[]) : [],
-  });
-  const { name: nameFilter, status: statusFilter } = filters;
+  const {
+    name: nameFilter,
+    status: statusFilter,
+    component: componentFilter,
+  } = useConformaFilters();
 
   const [groupBy, setGroupBy] = React.useState<GroupByMode>('rule');
   const [expandedGroups, setExpandedGroups] = React.useState<Set<string>>(new Set());
+  const [showDuplicates, setShowDuplicates] = React.useState(false);
 
-  const handleGroupByChange = React.useCallback(
-    (mode: GroupByMode) => {
-      setGroupBy(mode);
-      setExpandedGroups(new Set());
-    },
-    [],
+  const handleGroupByChange = React.useCallback((mode: GroupByMode) => {
+    setGroupBy(mode);
+    setExpandedGroups(new Set());
+  }, []);
+
+  const displayResults = React.useMemo(
+    () => (showDuplicates ? allResults : collapseArchDuplicates(allResults)),
+    [allResults, showDuplicates],
   );
 
+  // Display counts drive the primary numbers shown (they match what the
+  // table renders). Raw counts (always uncollapsed) are surfaced alongside
+  // them so the summary bar never silently hides real violations/warnings/
+  // successes that were merged away for display purposes.
+  const displayCounts = React.useMemo(() => countResultsByStatus(displayResults), [displayResults]);
+  const rawCounts = React.useMemo(() => countResultsByStatus(allResults), [allResults]);
+
   const filteredResults = React.useMemo(
-    () => filterResults(allResults, nameFilter, statusFilter),
-    [allResults, nameFilter, statusFilter],
+    () => filterResults(displayResults, nameFilter, statusFilter, componentFilter),
+    [displayResults, nameFilter, statusFilter, componentFilter],
   );
 
   const allComponentNames = React.useMemo(
@@ -67,12 +83,20 @@ const ConformaResultsTabContent: React.FC = () => {
     [componentStatuses],
   );
 
+  const visibleComponentNames = React.useMemo(
+    () =>
+      componentFilter.length > 0
+        ? allComponentNames.filter((name) => componentFilter.includes(name))
+        : allComponentNames,
+    [allComponentNames, componentFilter],
+  );
+
   const groups = React.useMemo(
     () =>
       groupBy === 'rule'
         ? groupByRule(filteredResults)
-        : groupByComponent(filteredResults, allComponentNames),
-    [groupBy, filteredResults, allComponentNames],
+        : groupByComponent(filteredResults, visibleComponentNames),
+    [groupBy, filteredResults, visibleComponentNames],
   );
 
   const handleToggleGroup = React.useCallback((groupKey: string) => {
@@ -87,16 +111,12 @@ const ConformaResultsTabContent: React.FC = () => {
     });
   }, []);
 
-  const allExpanded =
-    groups.length > 0 && groups.every((g) => expandedGroups.has(g.groupKey));
+  const allExpanded = groups.length > 0 && groups.every((g) => expandedGroups.has(g.groupKey));
 
   const handleToggleExpandAll = React.useCallback(() => {
     setExpandedGroups((prev) => {
-      const isAllExpanded =
-        groups.length > 0 && groups.every((g) => prev.has(g.groupKey));
-      return isAllExpanded
-        ? new Set<string>()
-        : new Set(groups.map((g) => g.groupKey));
+      const isAllExpanded = groups.length > 0 && groups.every((g) => prev.has(g.groupKey));
+      return isAllExpanded ? new Set<string>() : new Set(groups.map((g) => g.groupKey));
     });
   }, [groups]);
 
@@ -117,23 +137,26 @@ const ConformaResultsTabContent: React.FC = () => {
 
   return (
     <>
-      <PageSection variant={PageSectionVariants.light} padding={{ default: 'noPadding' }}>
-        <TextContent>
-          <Title headingLevel="h3" className="pf-v5-c-title pf-v5-u-mt-lg pf-v5-u-mb-sm" size="lg">
+      <PageSection padding={{ default: 'noPadding' }}>
+        <Content>
+          <Title headingLevel="h3" className="pf-v6-c-title pf-v6-u-mt-lg pf-v6-u-mb-sm" size="lg">
             Conforma results summary
           </Title>
-          <Text component="p">
+          <Content component={ContentVariants.p}>
             Conforma is a set of tools for verifying the provenance of application snapshots and
             validating them against a clearly defined policy.
-          </Text>
-        </TextContent>
+          </Content>
+        </Content>
         <div className="conforma-results-tab__summary-wrapper">
           <ConformaSummaryBar
             totalComponents={totalComponents}
             totalFailed={totalFailed}
-            totalViolations={totalViolations}
-            totalWarnings={totalWarnings}
-            totalSuccesses={totalSuccesses}
+            totalViolations={displayCounts.totalViolations}
+            totalWarnings={displayCounts.totalWarnings}
+            totalSuccesses={displayCounts.totalSuccesses}
+            totalViolationsRaw={rawCounts.totalViolations}
+            totalWarningsRaw={rawCounts.totalWarnings}
+            totalSuccessesRaw={rawCounts.totalSuccesses}
           />
         </div>
       </PageSection>
@@ -145,15 +168,34 @@ const ConformaResultsTabContent: React.FC = () => {
           onGroupByChange={handleGroupByChange}
           allExpanded={allExpanded}
           onToggleExpandAll={handleToggleExpandAll}
+          showDuplicates={showDuplicates}
+          onShowDuplicatesChange={setShowDuplicates}
+          refresh={refresh}
         />
+
+        {partialLogError ? (
+          <Alert
+            data-test="conforma-partial-log-error"
+            className="pf-v6-u-mt-md pf-v6-u-mx-lg"
+            variant={AlertVariant.warning}
+            isInline
+            title="Some Conforma results could not be loaded"
+          >
+            {partialLogError instanceof Error && partialLogError.message
+              ? partialLogError.message
+              : 'One or more component log fetches failed. Results shown may be incomplete.'}
+          </Alert>
+        ) : null}
 
         {isEmpty ? (
           <Bullseye>
-            <Text>No Conforma results available for this application.</Text>
+            <Content component={ContentVariants.p}>
+              No Conforma results available for this application.
+            </Content>
           </Bullseye>
         ) : groups.length === 0 ? (
           <Bullseye>
-            <Text>No results match the current filters.</Text>
+            <Content component={ContentVariants.p}>No results match the current filters.</Content>
           </Bullseye>
         ) : (
           <ConformaGroupedTable
@@ -174,7 +216,7 @@ const ConformaResultsTabContent: React.FC = () => {
  * same pattern used by CommitsListViewV2 and PipelineRunsListViewV2.
  */
 export const ConformaResultsTab: React.FC = () => (
-  <FilterContextProvider filterParams={['name', 'status']}>
+  <FilterContextProvider filterParams={['name', 'status', 'component']}>
     <ConformaResultsTabContent />
   </FilterContextProvider>
 );

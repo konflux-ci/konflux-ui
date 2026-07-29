@@ -38,7 +38,7 @@ export const TableHeader = <TData,>({
             const widthProps: Partial<ThProps> = {};
 
             if (colWidth?.type === 'flex') {
-              widthProps.width = colWidth.widthPercent as ThProps['width'];
+              widthProps.style = { width: `${colWidth.widthPercent}%` };
             } else if (colWidth?.type === 'fixed') {
               widthProps.style = { width: colWidth.fixedWidth };
             }

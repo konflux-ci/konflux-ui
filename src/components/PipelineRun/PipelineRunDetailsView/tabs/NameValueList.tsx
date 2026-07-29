@@ -10,7 +10,7 @@ import {
   EmptyStateVariant,
 } from '@patternfly/react-core';
 import { css } from '@patternfly/react-styles';
-import { Table /* data-codemods */, Thead, Tbody, Th, Td, Tr } from '@patternfly/react-table';
+import { Table, Thead, Tbody, Th, Td, Tr } from '@patternfly/react-table';
 import { handleURLs } from '../../../../shared/utils/render-utils';
 
 import './NameValueList.scss';

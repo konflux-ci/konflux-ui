@@ -29,7 +29,7 @@ export class CreateApplicationPage extends AbstractWizardPage {
   clickCreateApplication() {
     cy.get('body').then((body) => {
       if (body.find("h4:contains('No applications')").length > 0) {
-        cy.get('.pf-v5-c-empty-state__content')
+        cy.get('.pf-v6-c-empty-state__content')
           .contains(createApplicationPagePO.createApplication)
           .click({ force: true });
       } else {

@@ -1,13 +1,18 @@
 import React from 'react';
+import { Content } from '@patternfly/react-core';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { LineNumberGutter } from './LineNumberGutter';
-import { normalizeLineEndings, stripAnsiCodes } from './log-viewer-utils';
-import type { SearchedWord, LogSection } from './types';
+import { normalizeSection } from './log-viewer-utils';
+import { SectionedVirtualRow } from './SectionedVirtualRow';
+import { StickySectionHeaderBar } from './SectionLogUI';
+import { computeStickySectionHeader } from './sticky-section-header';
+import type { LogSection, NormalizedLogSection, SearchedWord } from './types';
 import { useKeyboardNavigation } from './useKeyboardNavigation';
 import { useLineNumberNavigation } from './useLineNumberNavigation';
 import { useLineRenderer } from './useLineRenderer';
 import { useResizeObserverFix } from './useResizeObserverFix';
 import { useSearchRegex } from './useSearchRegex';
+import { useSectionFold } from './useSectionFold';
+import { useSectionRows } from './useSectionRows';
 import { useTokenization } from './useTokenization';
 import { useVirtualizedScroll } from './useVirtualizedScroll';
 import {
@@ -22,9 +27,13 @@ import './VirtualizedLogContent.scss';
 
 export interface VirtualizedLogContentProps {
   sections: LogSection[];
+  /** Pre-normalized sections. When provided by the parent, internal normalization is skipped. */
+  normalizedSections?: NormalizedLogSection[];
   height: number;
   width: string | number;
   scrollToRow?: number;
+  /** Set when user navigates search matches (prev/next); expands folded step for that match only */
+  expandSearchTargetRow?: number;
   onScroll?: (props: {
     scrollDirection: 'forward' | 'backward';
     scrollOffset: number;
@@ -32,208 +41,259 @@ export interface VirtualizedLogContentProps {
   }) => void;
   searchText?: string;
   currentSearchMatch?: SearchedWord;
+  /**
+   * When false, URL hash line navigation (`#L123`) is deferred until logs are fully fetched,
+   * so we don't highlight/scroll to a line before the log content has stabilized. Defaults to
+   * true.
+   */
+  readyToNavigate?: boolean;
 }
 
 export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
   sections,
+  normalizedSections: normalizedSectionsProp,
   height,
   width,
   scrollToRow,
+  expandSearchTargetRow,
   onScroll,
   searchText = '',
   currentSearchMatch,
+  readyToNavigate = true,
 }) => {
-  const parentRef = React.useRef<HTMLDivElement | null>(null);
+  const scrollRef = React.useRef<HTMLDivElement | null>(null);
   const [itemSize, setItemSize] = React.useState(VIRTUALIZATION_CONFIG.FALLBACK_LINE_HEIGHT);
-  // Fallback values for when DOM measurement is unavailable (SSR, Canvas API failure, etc.)
-  const avgCharWidthRef = React.useRef(VIRTUALIZATION_CONFIG.FALLBACK_CHAR_WIDTH);
   const charsPerLineRef = React.useRef(VIRTUALIZATION_CONFIG.FALLBACK_CHARS_PER_LINE);
 
-  const { lines, headerIndices } = React.useMemo(() => {
-    const result: string[] = [];
-    const headers = new Set<number>();
-    for (const section of sections) {
-      if (section.containerName) {
-        headers.add(result.length);
-        result.push(section.containerName);
-      }
-      if (section.data) {
-        const cleaned = stripAnsiCodes(normalizeLineEndings(section.data));
-        result.push(...cleaned.split('\n'));
-      }
-    }
-    return { lines: result, headerIndices: headers };
-  }, [sections]);
+  const isMultiSection = sections.length > 1;
+  const { expandedSections, toggleSection, expandSection } = useSectionFold(sections);
 
-  // Suppress harmless ResizeObserver errors from virtualizer
+  const internalNormalizedSections = React.useMemo(
+    () => (normalizedSectionsProp ? null : sections.map(normalizeSection)),
+    [normalizedSectionsProp, sections],
+  );
+  const effectiveNormalizedSections = normalizedSectionsProp ?? internalNormalizedSections ?? [];
+
+  const {
+    displayRows,
+    allLines,
+    searchLineToDisplayRow,
+    searchLineToFlatLineIndex,
+    searchLineToSectionIndex,
+    lineNumberToDisplayRow,
+    lineNumberToSectionIndex,
+  } = useSectionRows(effectiveNormalizedSections, expandedSections);
+
+  const rowCount = displayRows.length;
+
+  // Keep a ref so the expand-on-search effect always reads the latest map
+  // without listing it as a dep (which would re-trigger on every fold/unfold).
+  const searchLineToSectionIndexRef = React.useRef(searchLineToSectionIndex);
+  searchLineToSectionIndexRef.current = searchLineToSectionIndex;
+
+  const lineNumberToSectionIndexRef = React.useRef(lineNumberToSectionIndex);
+  lineNumberToSectionIndexRef.current = lineNumberToSectionIndex;
+
   useResizeObserverFix();
 
-  // keep search smooth input
   const deferredSearchText = React.useDeferredValue(searchText);
   const searchRegex = useSearchRegex(deferredSearchText);
+  const { tokenizeLine } = useTokenization(allLines);
 
-  // Use tokenization hook for lazy tokenization with caching
-  const { tokenizeLine } = useTokenization(lines);
+  const contentSearchMatch = React.useMemo((): SearchedWord | undefined => {
+    if (!currentSearchMatch || currentSearchMatch.rowIndex < 0) return undefined;
+    const flatLineIndex = searchLineToFlatLineIndex.get(currentSearchMatch.rowIndex);
+    if (flatLineIndex === undefined) return undefined;
+    return { rowIndex: flatLineIndex, matchIndex: currentSearchMatch.matchIndex };
+  }, [currentSearchMatch, searchLineToFlatLineIndex]);
 
-  // Use line renderer hook for rendering individual lines
   const renderLine = useLineRenderer({
     tokenizeLine,
     searchRegex,
-    currentSearchMatch,
+    currentSearchMatch: contentSearchMatch,
   });
+
+  React.useEffect(() => {
+    if (!isMultiSection || !expandSearchTargetRow || expandSearchTargetRow <= 0) return;
+    const sectionIndex = searchLineToSectionIndexRef.current.get(expandSearchTargetRow - 1);
+    if (sectionIndex === undefined) return;
+    expandSection(sectionIndex);
+  }, [isMultiSection, expandSearchTargetRow, expandSection]);
 
   const measureCallbackRef = React.useCallback((node: HTMLDivElement | null) => {
     if (node) {
       const measured = node.offsetHeight;
-      if (measured > 0) {
-        setItemSize(measured);
-      }
+      if (measured > 0) setItemSize(measured);
     }
   }, []);
 
-  // Measure average character width once on mount
-  // Uses Canvas API to get accurate font metrics for height estimation
   React.useEffect(() => {
-    if (!parentRef.current) return;
-
-    const container = parentRef.current;
-
-    // Use RAF to ensure DOM elements are fully rendered
+    if (!scrollRef.current) return;
+    const container = scrollRef.current;
     const rafId = requestAnimationFrame(() => {
       const style = getComputedStyle(container);
       const font = style.font || `${style.fontSize} ${style.fontFamily}`;
-
-      // Measure average character width
-      avgCharWidthRef.current = measureAverageCharWidth(font);
-
-      // Calculate how many characters fit per line
-      charsPerLineRef.current = calculateCharsPerLine(container, avgCharWidthRef.current);
+      charsPerLineRef.current = calculateCharsPerLine(container, measureAverageCharWidth(font));
     });
-
     return () => cancelAnimationFrame(rafId);
   }, []);
 
-  // Conservative height estimation function
-  // Uses text length to estimate wrapped lines, with safety margin
-  // This is called by virtualizer for each row to estimate its height before rendering
   const estimateRowHeight = React.useCallback(
     (index: number): number => {
       if (itemSize === 0) return VIRTUALIZATION_CONFIG.FALLBACK_LINE_HEIGHT;
 
-      const text = lines[index] || '';
-
-      // Use dynamically calculated charsPerLine based on actual font metrics
-      const charsPerLine = charsPerLineRef.current;
-      const estimatedLines = Math.max(1, Math.ceil(text.length / charsPerLine));
-
-      // Apply dynamic safety margin based on log size
-      const safetyMultiplier = getSafetyMargin(lines.length);
-
-      return Math.ceil(itemSize * estimatedLines * safetyMultiplier);
+      const row = displayRows[index];
+      if (!row || row.kind !== 'content') return itemSize;
+      const text = allLines[row.flatLineIndex] || '';
+      const estimatedLines = Math.max(1, Math.ceil(text.length / charsPerLineRef.current));
+      return Math.ceil(itemSize * estimatedLines * getSafetyMargin(rowCount));
     },
-    [itemSize, lines],
+    [displayRows, allLines, itemSize, rowCount],
   );
 
-  // Calculate overscan based on log size
-  // Larger overscan = more items pre-rendered = more accurate measurements
-  const overscanCount = React.useMemo(() => getOverscanCount(lines.length), [lines.length]);
-
-  // Initialize virtualizer
   const virtualizer = useVirtualizer<HTMLDivElement, Element>({
-    count: lines.length,
-    getScrollElement: () => parentRef.current,
+    count: rowCount,
+    getScrollElement: () => scrollRef.current,
     estimateSize: estimateRowHeight,
-    overscan: overscanCount,
+    overscan: getOverscanCount(rowCount),
+    useFlushSync: false,
   });
 
-  // Handle scroll behavior (direction, programmatic scroll, scrollToRow)
-  useVirtualizedScroll({
+  const effectiveScrollToRow = React.useMemo(() => {
+    if (!scrollToRow || scrollToRow <= 0) return undefined;
+    const displayIdx = searchLineToDisplayRow.get(scrollToRow - 1);
+    return displayIdx !== undefined ? displayIdx + 1 : undefined;
+  }, [scrollToRow, searchLineToDisplayRow]);
+
+  const { clearScrollTracking } = useVirtualizedScroll({
     virtualizer,
-    scrollToRow,
+    scrollToRow: effectiveScrollToRow,
     onScroll,
   });
 
-  // Use line number navigation hook
-  const { highlightedLines, handleLineClick, isLineHighlighted } = useLineNumberNavigation();
+  const { highlightedLines, handleLineClick, isLineHighlighted } = useLineNumberNavigation({
+    readyToNavigate,
+  });
 
-  // Enable keyboard navigation (PageUp, PageDown, Home, End)
+  React.useEffect(() => {
+    if (!isMultiSection || !highlightedLines) return;
+
+    const sectionsToExpand = new Set<number>();
+    for (let line = highlightedLines.start; line <= highlightedLines.end; line++) {
+      const sectionIndex = lineNumberToSectionIndexRef.current.get(line);
+      if (sectionIndex !== undefined) sectionsToExpand.add(sectionIndex);
+    }
+    sectionsToExpand.forEach((sectionIndex) => expandSection(sectionIndex));
+  }, [isMultiSection, highlightedLines, expandSection]);
+
+  const highlightScrollTargetIndex = React.useMemo((): number | null => {
+    if (!highlightedLines || rowCount === 0) return null;
+    const displayIdx = lineNumberToDisplayRow.get(highlightedLines.start);
+    // Exact line found — scroll to it; if the requested line is beyond the available
+    // log (e.g. stale URL hash or log still streaming), fall back to the last row.
+    return displayIdx ?? rowCount - 1;
+  }, [highlightedLines, rowCount, lineNumberToDisplayRow]);
+
+  const lastScrolledHighlightRef = React.useRef<{
+    start: number;
+    end: number;
+    targetIndex: number;
+  } | null>(null);
+
+  React.useEffect(() => {
+    if (!highlightedLines || highlightScrollTargetIndex === null) return;
+
+    const displayIdx = lineNumberToDisplayRow.get(highlightedLines.start);
+    const targetIndex = displayIdx ?? highlightScrollTargetIndex;
+    const prev = lastScrolledHighlightRef.current;
+
+    const isNewHighlight =
+      prev?.start !== highlightedLines.start || prev?.end !== highlightedLines.end;
+    const targetImproved =
+      !isNewHighlight &&
+      displayIdx !== undefined &&
+      prev?.targetIndex !== targetIndex &&
+      lineNumberToDisplayRow.has(highlightedLines.start);
+
+    const sectionIndex = lineNumberToSectionIndexRef.current.get(highlightedLines.start);
+    const awaitingExpand =
+      isMultiSection &&
+      displayIdx === undefined &&
+      sectionIndex !== undefined &&
+      !expandedSections.has(sectionIndex);
+
+    if (awaitingExpand) return;
+    if (!isNewHighlight && !targetImproved) return;
+
+    lastScrolledHighlightRef.current = {
+      start: highlightedLines.start,
+      end: highlightedLines.end,
+      targetIndex,
+    };
+
+    clearScrollTracking();
+
+    let isMounted = true;
+    let rafId2: number | undefined;
+    if (typeof window === 'undefined' || !window.requestAnimationFrame) return;
+    const rafId1 = requestAnimationFrame(() => {
+      if (!isMounted) return;
+      rafId2 = requestAnimationFrame(() => {
+        if (!isMounted) return;
+        virtualizer.scrollToIndex(targetIndex, { align: 'center', behavior: 'auto' });
+      });
+    });
+    return () => {
+      isMounted = false;
+      cancelAnimationFrame(rafId1);
+      if (rafId2 !== undefined) cancelAnimationFrame(rafId2);
+    };
+  }, [
+    highlightedLines,
+    highlightScrollTargetIndex,
+    lineNumberToDisplayRow,
+    virtualizer,
+    clearScrollTracking,
+    isMultiSection,
+    expandedSections,
+  ]);
+
   const navRef = useKeyboardNavigation({
-    scrollElementRef: parentRef,
+    scrollElementRef: scrollRef,
     lineHeight: itemSize,
     enabled: true,
   });
 
   const scrollContainerRef = React.useCallback(
     (node: HTMLDivElement | null) => {
-      parentRef.current = node;
-      if (navRef && 'current' in navRef) {
-        (navRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
-      }
+      scrollRef.current = node;
+      navRef(node);
     },
     [navRef],
   );
 
-  // Scroll to highlighted lines when hash changes or on initial load
-  React.useEffect(() => {
-    if (highlightedLines && highlightedLines.start > 0 && lines.length > 0) {
-      // Scroll to the start of the highlighted range
-      // Convert 1-based line number to 0-based index
-      const targetIndex = highlightedLines.start - 1;
-
-      // If target line is out of range, scroll to the last line instead
-      // This provides better UX by showing the user where the log ends
-      const scrollIndex = targetIndex < lines.length ? targetIndex : lines.length - 1;
-
-      // Track if component is still mounted to prevent RAF calls after unmount
-      let isMounted = true;
-      let rafId2: number | undefined;
-
-      // Check if window is available (handles SSR and edge cases)
-      if (typeof window === 'undefined' || !window.requestAnimationFrame) {
-        return;
-      }
-
-      // Wait for next frame to ensure virtualizer is ready after state updates
-      const rafId1 = requestAnimationFrame(() => {
-        if (!isMounted) return;
-        rafId2 = requestAnimationFrame(() => {
-          if (!isMounted) return;
-          virtualizer.scrollToIndex(scrollIndex, {
-            align: 'center',
-            behavior: 'auto',
-          });
-        });
-      });
-
-      // Cleanup: cancel pending animation frames on unmount or dependency change
-      return () => {
-        isMounted = false;
-        cancelAnimationFrame(rafId1);
-        if (rafId2 !== undefined) cancelAnimationFrame(rafId2);
-      };
-    }
-    // Depend on both highlightedLines and lines.length to handle initial data load
-    // virtualizer reference is stable from useVirtualizer
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [highlightedLines, lines.length]);
-
   const virtualItems = virtualizer.getVirtualItems();
-
-  // Cache total size to prevent layout shifts during scroll
-  const totalSize = virtualizer.getTotalSize();
+  const scrollTop = isMultiSection ? (virtualizer.scrollOffset ?? 0) : 0;
+  const { stickyRow, pushUpOffset } = computeStickySectionHeader({
+    enabled: isMultiSection,
+    scrollTop,
+    displayRows,
+    virtualItems,
+    itemSize,
+  });
 
   return (
-    <>
-      {/* Hidden element to measure actual line height */}
+    <div className="log-content__container">
       <div
         ref={measureCallbackRef}
-        className="pf-v5-c-log-viewer__list-item"
+        className="pf-v6-c-log-viewer__list-item"
         style={{ position: 'absolute', visibility: 'hidden', pointerEvents: 'none' }}
       >
-        <span className="pf-v5-c-log-viewer__text">M</span>
+        <Content component="small" className="pf-v6-c-log-viewer__text">
+          M
+        </Content>
       </div>
 
-      {/* Scrollable container with gutter */}
       <div
         ref={scrollContainerRef}
         className="log-content__list log-content__with-gutter"
@@ -243,55 +303,44 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
           width: typeof width === 'number' ? `${width}px` : width,
           overflow: 'auto',
         }}
-        onClick={() => {
-          parentRef.current?.focus();
-        }}
+        onClick={() => scrollRef.current?.focus({ preventScroll: true })}
       >
-        {/* Total height container */}
         <div
           style={{
-            height: `${totalSize}px`,
+            height: `${virtualizer.getTotalSize()}px`,
             width: '100%',
             position: 'relative',
-            display: 'flex',
           }}
         >
-          {/* Line number gutter */}
-          <LineNumberGutter
-            virtualItems={virtualItems}
-            itemSize={itemSize}
-            onLineClick={handleLineClick}
-            isLineHighlighted={isLineHighlighted}
-          />
-
-          {/* Log content */}
-          <div className="log-content__content-column">
-            {virtualItems.map((virtualItem) => {
-              const lineNumber: number = virtualItem.index + 1;
-              const isHighlighted = isLineHighlighted(lineNumber);
-              const isHeader = headerIndices.has(virtualItem.index);
-              const hasHeaders = headerIndices.size > 0;
-              return (
-                <div
-                  key={virtualItem.key}
-                  data-index={virtualItem.index}
-                  ref={virtualizer.measureElement}
-                  className={`pf-v5-c-log-viewer__list-item ${isHighlighted ? 'log-content__line--highlighted' : ''} ${hasHeaders && !isHeader ? 'log-content__line--indented' : ''}`}
-                  style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '100%',
-                    transform: `translateY(${virtualItem.start}px)`,
-                  }}
-                >
-                  {renderLine(virtualItem.index)}
-                </div>
-              );
-            })}
-          </div>
+          {virtualItems.map((virtualItem) => {
+            const row = displayRows[virtualItem.index];
+            if (!row) return null;
+            return (
+              <SectionedVirtualRow
+                key={virtualItem.key}
+                virtualIndex={virtualItem.index}
+                start={virtualItem.start}
+                row={row}
+                measureElement={virtualizer.measureElement}
+                isLineHighlighted={isLineHighlighted}
+                onToggleSection={toggleSection}
+                renderLogLine={renderLine}
+                onLineClick={handleLineClick}
+              />
+            );
+          })}
         </div>
       </div>
-    </>
+
+      {stickyRow && (
+        <StickySectionHeaderBar
+          row={stickyRow}
+          pushUpOffset={pushUpOffset}
+          itemSize={itemSize}
+          onToggle={() => toggleSection(stickyRow.sectionIndex)}
+          onLineClick={handleLineClick}
+        />
+      )}
+    </div>
   );
 };

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Flex, FlexItem, Label, pluralize } from '@patternfly/react-core';
+import { Flex, FlexItem, Label, PageSection, pluralize } from '@patternfly/react-core';
 import { SortByDirection } from '@patternfly/react-table';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { MENU_DIVIDER } from '~/components/Filter/generic/MultiSelect';
@@ -285,9 +285,18 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
     }
     const nsKeys = namespaces.map((ns) => ns.metadata.name);
 
+    // When namespace count exceeds threshold and no namespaces are selected,
+    // the table shows an empty state — filter options should also be empty
+    // to avoid displaying stale counts alongside an empty table.
+    const shouldShowEmptyOptions =
+      namespaces.length > NAMESPACE_THRESHOLD &&
+      selectedNamespaces.length === 0 &&
+      releases.length > 0;
+
     // Filter releases to only include those from selected namespaces
-    const releasesFromSelectedNamespaces =
-      selectedNamespaces.length > 0
+    const releasesFromSelectedNamespaces = shouldShowEmptyOptions
+      ? []
+      : selectedNamespaces.length > 0
         ? releases.filter((mr) => selectedNamespaces.includes(mr.metadata.namespace))
         : releases;
 
@@ -480,75 +489,77 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
       title="Release Monitor"
       description="The dashboard to monitor the releases you care about"
     >
-      {/* Fetch Releases and ReleasePlans from origin namespaces */}
-      {loaded &&
-        namespacesToFetch.map((nsName) => (
-          <React.Fragment key={`origin-${nsName}`}>
-            <ReleasesInNamespace
-              namespace={nsName}
-              onReleasesLoaded={handleReleasesLoaded}
-              onError={handleError}
-            />
-            <ReleasePlansInNamespace
-              namespace={nsName}
-              onReleasePlansLoaded={handleReleasePlansLoaded}
-              onError={handleError}
-            />
-          </React.Fragment>
-        ))}
-      {/* Fetch ReleasePlanAdmissions from target namespaces only */}
-      {targetNamespaces.map((targetNs) => (
-        <ReleasePlanAdmissionsInNamespace
-          key={`rpa-${targetNs}`}
-          namespace={targetNs}
-          onReleasePlanAdmissionsLoaded={handleReleasePlanAdmissionsLoaded}
-          onError={handleError}
-        />
-      ))}
-      {(isFiltered ||
-        releases.length > 0 ||
-        namespacesToFetch.length > 0 ||
-        (loaded && namespaces.length > NAMESPACE_THRESHOLD)) && (
-        <>
-          <MonitoredReleasesFilterToolbar
-            filters={filters}
-            setFilters={handleSetFilters}
-            onClearFilters={onClearFilters}
-            statusOptions={filterOptions.statusOptions}
-            applicationOptions={filterOptions.applicationOptions}
-            releasePlanOptions={filterOptions.releasePlanOptions}
-            namespaceOptions={filterOptions.namespaceOptions}
-            componentOptions={filterOptions.componentOptions}
-            productOptions={filterOptions.productOptions}
-            productVersionOptions={filterOptions.productVersionOptions}
+      <PageSection isFilled={false}>
+        {/* Fetch Releases and ReleasePlans from origin namespaces */}
+        {loaded &&
+          namespacesToFetch.map((nsName) => (
+            <React.Fragment key={`origin-${nsName}`}>
+              <ReleasesInNamespace
+                namespace={nsName}
+                onReleasesLoaded={handleReleasesLoaded}
+                onError={handleError}
+              />
+              <ReleasePlansInNamespace
+                namespace={nsName}
+                onReleasePlansLoaded={handleReleasePlansLoaded}
+                onError={handleError}
+              />
+            </React.Fragment>
+          ))}
+        {/* Fetch ReleasePlanAdmissions from target namespaces only */}
+        {targetNamespaces.map((targetNs) => (
+          <ReleasePlanAdmissionsInNamespace
+            key={`rpa-${targetNs}`}
+            namespace={targetNs}
+            onReleasePlanAdmissionsLoaded={handleReleasePlanAdmissionsLoaded}
+            onError={handleError}
           />
-          <Flex justifyContent={{ default: 'justifyContentFlexEnd' }} className="pf-v5-u-mr-xl">
-            <FlexItem>
-              <Label
-                color="blue"
-                className="pf-v5-u-font-weight-bold"
-                data-test="release-count-label"
-              >
-                {pluralize(displayData.length, 'release')}
-              </Label>
-            </FlexItem>
-          </Flex>
-        </>
-      )}
+        ))}
+        {(isFiltered ||
+          releases.length > 0 ||
+          namespacesToFetch.length > 0 ||
+          (loaded && namespaces.length > NAMESPACE_THRESHOLD)) && (
+          <>
+            <MonitoredReleasesFilterToolbar
+              filters={filters}
+              setFilters={handleSetFilters}
+              onClearFilters={onClearFilters}
+              statusOptions={filterOptions.statusOptions}
+              applicationOptions={filterOptions.applicationOptions}
+              releasePlanOptions={filterOptions.releasePlanOptions}
+              namespaceOptions={filterOptions.namespaceOptions}
+              componentOptions={filterOptions.componentOptions}
+              productOptions={filterOptions.productOptions}
+              productVersionOptions={filterOptions.productVersionOptions}
+            />
+            <Flex justifyContent={{ default: 'justifyContentFlexEnd' }} className="pf-v6-u-mr-xl">
+              <FlexItem>
+                <Label
+                  color="blue"
+                  className="pf-v6-u-font-weight-bold"
+                  data-test="release-count-label"
+                >
+                  {pluralize(displayData.length, 'release')}
+                </Label>
+              </FlexItem>
+            </Flex>
+          </>
+        )}
 
-      <Table
-        virtualize
-        data={displayData}
-        unfilteredData={unfilteredDisplayData}
-        EmptyMsg={EmptyMsg}
-        NoDataEmptyMsg={
-          shouldShowNamespaceSelector ? SelectNamespaceEmptyState : MonitoredReleaseEmptyState
-        }
-        aria-label="Release List"
-        Header={ReleasesListHeader}
-        Row={ReleaseListRow}
-        loaded={!loading || releases.length > 0}
-      />
+        <Table
+          virtualize
+          data={displayData}
+          unfilteredData={unfilteredDisplayData}
+          EmptyMsg={EmptyMsg}
+          NoDataEmptyMsg={
+            shouldShowNamespaceSelector ? SelectNamespaceEmptyState : MonitoredReleaseEmptyState
+          }
+          aria-label="Release List"
+          Header={ReleasesListHeader}
+          Row={ReleaseListRow}
+          loaded={!loading || releases.length > 0}
+        />
+      </PageSection>
     </PageLayout>
   );
 };

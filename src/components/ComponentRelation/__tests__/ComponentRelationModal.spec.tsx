@@ -125,7 +125,7 @@ describe('ComponentRelationModal', () => {
     );
     expect(screen.queryByText('Component relationships')).toBeInTheDocument();
     fireEvent.click(screen.getByTestId('nudged-by-0'));
-    const saveButton = screen.getByText('Save relationships');
+    const saveButton = screen.getByText('Save relationships').closest('button');
     expect(saveButton.getAttribute('class')).not.toContain('pf-m-disabled');
     fireEvent.click(saveButton);
     expect(saveButton.getAttribute('class')).toContain('pf-m-in-progress');

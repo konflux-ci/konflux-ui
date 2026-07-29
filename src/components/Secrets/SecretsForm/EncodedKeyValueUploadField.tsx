@@ -8,8 +8,8 @@ import {
 import { MinusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/minus-circle-icon';
 import { PlusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/plus-circle-icon';
 import { FieldArray, useField } from 'formik';
-import { InputField } from 'formik-pf';
 import { uniqueId } from 'lodash-es';
+import { InputField } from '~/shared/components/formik-base';
 import { FieldProps } from '../../../shared/components/formik-fields/field-types';
 import { KeyValueEntry } from '../../../types';
 import EncodedFileUploadField from './EncodedFileUploadField';
@@ -77,7 +77,7 @@ const EncodedKeyValueFileInputField: React.FC<
             </FormFieldGroupExpandable>
           ))}
           <Button
-            className="pf-v5-u-text-align-left"
+            className="pf-v6-u-text-align-left"
             onClick={() => arrayHelpers.push({ key: '', value: '' })}
             type="button"
             data-test="add-key-value-button"

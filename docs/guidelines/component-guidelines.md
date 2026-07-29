@@ -126,7 +126,7 @@ Use co-located SCSS files with BEM naming. The only acceptable inline styles are
 
 ```tsx
 // Acceptable inline style (PF token)
-<Flex style={{ marginTop: 'var(--pf-v5-global--spacer--md)' }}>
+<Flex style={{ marginTop: 'var(--pf-t--global--spacer--md)' }}>
 
 // Not acceptable -- use SCSS instead
 <div style={{ display: 'flex', gap: '8px', color: '#333' }}>

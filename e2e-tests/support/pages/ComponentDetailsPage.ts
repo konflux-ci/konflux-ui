@@ -46,7 +46,7 @@ export class ComponentDetailsPage {
   }
 
   static checkSBOM() {
-    cy.contains('.pf-v5-c-description-list__group', 'SBOM')
+    cy.contains('.pf-v6-c-description-list__group', 'SBOM')
       .find('input')
       .should('contain.value', `cosign download sbom quay.io/`)
       .and('be.visible');

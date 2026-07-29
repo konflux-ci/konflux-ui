@@ -51,7 +51,7 @@ const IntegrationTestOverviewTab: React.FC<React.PropsWithChildren> = () => {
 
   return (
     <>
-      <Title headingLevel="h4" className="pf-v5-c-title pf-v5-u-mt-lg pf-v5-u-mb-lg" size="lg">
+      <Title headingLevel="h4" className="pf-v6-c-title pf-v6-u-mt-lg pf-v6-u-mb-lg" size="lg">
         Integration test details
       </Title>
       <Flex>
@@ -158,7 +158,7 @@ const IntegrationTestOverviewTab: React.FC<React.PropsWithChildren> = () => {
                       {' '}
                       <Button
                         variant={ButtonVariant.link}
-                        className="pf-v5-u-pl-0"
+                        className="pf-v6-u-pl-0"
                         onClick={() =>
                           showModal(
                             createEditContextsModal({
@@ -188,7 +188,7 @@ const IntegrationTestOverviewTab: React.FC<React.PropsWithChildren> = () => {
                       {' '}
                       <Button
                         variant={ButtonVariant.link}
-                        className="pf-v5-u-pl-0"
+                        className="pf-v6-u-pl-0"
                         onClick={() =>
                           showModal(
                             createEditParamsModal({

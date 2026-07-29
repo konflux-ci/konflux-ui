@@ -74,7 +74,7 @@ const TaskRunDetailsTab: React.FC = () => {
 
   return (
     <>
-      <Title headingLevel="h4" className="pf-v5-c-title pf-v5-u-mt-lg pf-v5-u-mb-lg" size="lg">
+      <Title headingLevel="h4" className="pf-v6-c-title pf-v6-u-mt-lg pf-v6-u-mb-lg" size="lg">
         Task run details
       </Title>
       {!error && (
@@ -256,13 +256,13 @@ const TaskRunDetailsTab: React.FC = () => {
           </Flex>
           {results ? (
             <>
-              <Divider style={{ padding: 'var(--pf-v5-global--spacer--lg) 0' }} />
+              <Divider style={{ padding: 'var(--pf-t--global--spacer--lg)' }} />
               <RunResultsList results={results} status={status} />
             </>
           ) : null}
 
           {specParams?.length && (
-            <div style={{ marginTop: 'var(--pf-v5-global--spacer--lg)' }}>
+            <div style={{ marginTop: 'var(--pf-t--global--spacer--lg)' }}>
               <RunParamsList params={specParams} />
             </div>
           )}

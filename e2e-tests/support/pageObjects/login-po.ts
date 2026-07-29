@@ -3,6 +3,10 @@ export const stageLoginPO = {
   password: '#password',
   loginButton: '#submit',
   dex: `button[type="submit"]`,
+  approveButton: 'input[name="approve"]',
+  grantAccessClass: `.dex-btn-text`,
+  grantAccessText: 'Grant Access',
+  idpRedHatSsoButton: 'a[title="Log in with redhat-sso"]',
 };
 
 export const localKonfluxLoginPO = {

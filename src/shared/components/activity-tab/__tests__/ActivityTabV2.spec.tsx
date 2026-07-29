@@ -83,7 +83,7 @@ describe('ActivityTabV2', () => {
     const activitiesPage = renderWithProviders(<ActivityTabV2 />);
     const tabs = activitiesPage.getByTestId('activities-tabs-id');
     const activeTab = tabs.querySelector(
-      '.pf-v5-c-tabs__item.pf-m-current .pf-v5-c-tabs__item-text',
+      '.pf-v6-c-tabs__item.pf-m-current .pf-v6-c-tabs__item-text',
     );
     expect(activeTab).toHaveTextContent('Pipeline runs');
   });

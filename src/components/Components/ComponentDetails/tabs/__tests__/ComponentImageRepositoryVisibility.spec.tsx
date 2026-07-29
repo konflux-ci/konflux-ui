@@ -54,7 +54,7 @@ describe('ComponentImageRepositoryVisibility', () => {
       renderWithQueryClientAndRouter(
         <ComponentImageRepositoryVisibility component={mockComponent} />,
       );
-      const skeleton = screen.getByText('', { selector: '.pf-v5-c-skeleton' });
+      const skeleton = screen.getByText('', { selector: '.pf-v6-c-skeleton' });
       expect(skeleton).toBeInTheDocument();
     });
 

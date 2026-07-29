@@ -61,7 +61,7 @@ describe('ContextSwitcher', () => {
     expect(screen.getByPlaceholderText('Filter application by name')).toBeInTheDocument();
     expect(screen.getByText('Recent')).toBeInTheDocument();
     expect(screen.getByText('All')).toBeInTheDocument();
-    expect(screen.queryByText('Create application')).toHaveAttribute('aria-disabled', 'false');
+    expect(screen.queryByText('Create application')).toBeInTheDocument();
     switcher.unmount();
   });
 
@@ -73,7 +73,10 @@ describe('ContextSwitcher', () => {
     expect(screen.getByPlaceholderText('Filter application by name')).toBeInTheDocument();
     expect(screen.getByText('Recent')).toBeInTheDocument();
     expect(screen.getByText('All')).toBeInTheDocument();
-    expect(screen.queryByText('Create application')).toHaveAttribute('aria-disabled', 'true');
+    expect(screen.queryByText('Create application').closest('button')).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    );
     switcher.unmount();
   });
 

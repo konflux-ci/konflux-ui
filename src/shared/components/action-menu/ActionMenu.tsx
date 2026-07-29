@@ -23,7 +23,6 @@ type MenuRendererProps = {
 
 const MenuRenderer: React.FC<React.PropsWithChildren<MenuRendererProps>> = ({
   isOpen,
-  containerRef,
   menuRef,
   toggleRef,
   ...restProps
@@ -38,15 +37,7 @@ const MenuRenderer: React.FC<React.PropsWithChildren<MenuRendererProps>> = ({
     </Menu>
   );
 
-  return (
-    <Popper
-      triggerRef={toggleRef}
-      popper={menu}
-      placement="bottom-end"
-      isVisible={isOpen}
-      appendTo={containerRef.current}
-    />
-  );
+  return <Popper triggerRef={toggleRef} popper={menu} placement="bottom-end" isVisible={isOpen} />;
 };
 
 const ActionMenu: React.FC<React.PropsWithChildren<ActionMenuProps>> = ({

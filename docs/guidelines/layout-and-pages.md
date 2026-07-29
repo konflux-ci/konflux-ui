@@ -84,12 +84,12 @@ import DetailsPage from '~/components/DetailsPage/DetailsPage';
     },
   ]}
   tabs={[
-    { key: '', label: 'Overview', isFilled: true },         // index route
+    { key: '', label: 'Overview', isFilled: true }, // index route
     { key: 'pipelineruns', label: 'Pipeline runs', isFilled: true },
-    { key: 'activity', label: 'Activity', partial: true },  // matches /activity/*
+    { key: 'activity', label: 'Activity', partial: true }, // matches /activity/*
   ]}
   baseURL={baseURL}
-/>
+/>;
 ```
 
 **Action type for DetailsPage:**
@@ -99,11 +99,11 @@ type Action = {
   key: string;
   label: React.ReactNode;
   onClick?: () => void;
-  component?: React.ReactElement;         // For Link-based actions
+  component?: React.ReactElement; // For Link-based actions
   isDisabled?: boolean;
   disabledTooltip?: React.ReactNode;
-  type?: 'separator' | 'section-label';   // Structural items
-  hidden?: boolean;                       // Conditionally hide
+  type?: 'separator' | 'section-label'; // Structural items
+  hidden?: boolean; // Conditionally hide
 };
 ```
 
@@ -111,10 +111,10 @@ type Action = {
 
 ```ts
 type DetailsPageTabProps = {
-  key: string;      // Route path segment ('' for index)
-  label: string;    // Tab display text
-  isFilled?: boolean;   // Tab content fills remaining height
-  partial?: boolean;    // Match any path starting with key
+  key: string; // Route path segment ('' for index)
+  label: string; // Tab display text
+  isFilled?: boolean; // Tab content fills remaining height
+  partial?: boolean; // Match any path starting with key
   featureFlag?: string; // Show flag indicator badge
 };
 ```
@@ -162,6 +162,7 @@ FilterContextProvider filterParams={['name', 'status']}
 ```
 
 Key behaviors:
+
 - Filter state lives in URL via `useSearchParamBatch`.
 - `FilterContextProvider` declares which params are tracked.
 - Primary action button uses `ButtonWithAccessTooltip` for RBAC gating.
@@ -188,7 +189,7 @@ MyFeatureDetailsView (parent route element)
 ```tsx
 const MyFeatureOverviewTab: React.FC = () => (
   <>
-    <Title headingLevel="h4" size="lg" className="pf-v5-u-mt-lg pf-v5-u-mb-lg">
+    <Title headingLevel="h4" size="lg" className="pf-v6-u-mt-lg pf-v6-u-mb-lg">
       Resource details
     </Title>
     <Flex>
@@ -201,9 +202,7 @@ const MyFeatureOverviewTab: React.FC = () => (
           {/* More fields... */}
         </DescriptionList>
       </Flex>
-      <Flex flex={{ default: 'flex_3' }}>
-        {/* Second column */}
-      </Flex>
+      <Flex flex={{ default: 'flex_3' }}>{/* Second column */}</Flex>
     </Flex>
   </>
 );
@@ -228,6 +227,7 @@ MyFeatureView (Formik wrapper)
 ```
 
 The View-Form separation:
+
 - **View component** -- owns Formik context, initial values, validation schema, submit handler
 - **Form component** -- reads `useFormikContext()`, renders fields, passes `FormFooter` as layout footer
 
@@ -297,10 +297,18 @@ const MyConfirmModal: React.FC<{ obj: MyKind; modalProps: ModalProps }> = ({ obj
   <Stack hasGutter>
     <StackItem>Are you sure you want to process {obj.metadata.name}?</StackItem>
     <StackItem>
-      <Button variant="primary" onClick={() => { doAction(); modalProps.onClose(); }}>
+      <Button
+        variant="primary"
+        onClick={() => {
+          doAction();
+          modalProps.onClose();
+        }}
+      >
         Confirm
       </Button>
-      <Button variant="link" onClick={modalProps.onClose}>Cancel</Button>
+      <Button variant="link" onClick={modalProps.onClose}>
+        Cancel
+      </Button>
     </StackItem>
   </Stack>
 );
@@ -319,6 +327,8 @@ const handleAction = () => {
   showModal(myConfirmModalLauncher({ obj: myResource }));
 };
 ```
+
+For modals that need custom headers, descriptions, or footers, use `createRawModalLauncher` instead. See [patternfly-guidelines.md](./patternfly-guidelines.md#when-to-use-which) for the full modal API reference.
 
 ## Routing
 
@@ -374,9 +384,9 @@ Breadcrumbs are built as an array of `{ name: string, path: string }` objects or
 
 ```tsx
 const breadcrumbs = [
-  ...useApplicationBreadcrumbs(),  // "Applications" link + app name + switcher
+  ...useApplicationBreadcrumbs(), // "Applications" link + app name + switcher
   { path: MY_FEATURE_LIST_PATH.createPath({ workspaceName: namespace }), name: 'My Features' },
-  { path: '#', name: resource.metadata.name },  // Current page (non-navigable)
+  { path: '#', name: resource.metadata.name }, // Current page (non-navigable)
 ];
 ```
 
@@ -449,6 +459,7 @@ if (error) {
 ```
 
 `ErrorEmptyState` handles:
+
 - 403 -> "Access Denied" message
 - 404 -> Redirects to `NotFoundEmptyState`
 - Other errors -> Generic error with the message

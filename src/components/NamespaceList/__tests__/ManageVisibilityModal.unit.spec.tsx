@@ -377,7 +377,6 @@ describe('ManageVisibilityModal Unit Tests', () => {
       // Save button should be disabled and show loading state during submission
       await waitFor(() => {
         expect(saveButton).toBeDisabled();
-        expect(saveButton).toHaveAttribute('aria-disabled', 'true');
       });
 
       // Cancel button should also be disabled during submission
@@ -411,7 +410,7 @@ describe('ManageVisibilityModal Unit Tests', () => {
 
       // Button should show loading state
       await waitFor(() => {
-        expect(saveButton).toHaveAttribute('aria-disabled', 'true');
+        expect(saveButton).toBeDisabled();
       });
     });
 

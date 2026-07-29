@@ -16,30 +16,35 @@
     cursor: pointer;
   }
   &__namespan {
-    margin-left: var(--pf-v5-global--spacer--sm);
+    margin-left: var(--pf-t--global--spacer--sm);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
   &__log {
     height: 100%;
-    padding-top: var(--pf-v5-global--spacer--lg);
+    padding-top: var(--pf-t--global--spacer--lg);
   }
   &__logtext {
     position: relative;
-    background: var(--pf-v5-global--palette--black-1000); // pod log background color
-    color: var(--pf-v5-global--palette--white);
+    background: var(--pf-t--global--background--color--primary--default); // pod log background color
+    color: var(--pf-t--global--text--color--on-brand--default);
     height: 100%;
-    padding: var(--pf-v5-global--spacer--sm) var(--pf-v5-global--spacer--md);
+    padding: var(--pf-t--global--spacer--sm) var(--pf-t--global--spacer--md);
   }
   &__logsnippet {
-    margin-top: var(--pf-v5-global--spacer--sm);
+    margin-top: var(--pf-t--global--spacer--sm);
   }
   &__tasklist {
     max-width: 30%;
     min-width: 208px;
-    margin-top: var(--pf-v5-global--spacer--lg);
+    margin-top: var(--pf-t--global--spacer--lg);
     overflow-y: auto;
+
+    .pf-v6-c-nav__link.pf-m-current {
+      --pf-v6-c-nav__link--m-current--BackgroundColor: var(--pf-t--global--background--color--primary--clicked);
+      border-inline-start: 3px solid var(--pf-t--global--color--brand--default);
+    }
   }
   &__container {
     flex: 1;

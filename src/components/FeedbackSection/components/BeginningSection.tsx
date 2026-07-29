@@ -1,8 +1,7 @@
 import * as React from 'react';
 import {
-  Text,
-  TextContent,
-  TextVariants,
+  Content,
+  ContentVariants,
   Card,
   CardTitle,
   CardBody,
@@ -27,14 +26,14 @@ const BeginningSection: React.FC<BeginningSectionProps> = ({ onSectionChange, on
     <>
       <PanelHeader className="feedback-modal__panel-header">
         <FlexItem>
-          <TextContent>
-            <Text component={TextVariants.h1}>Tell us how we&apos;re doing?</Text>
-          </TextContent>
+          <Content>
+            <Content component={ContentVariants.h1}>Tell us how we&apos;re doing?</Content>
+          </Content>
         </FlexItem>
         <FlexItem>
-          <TextContent>
-            <Text component={TextVariants.small}>Help us make Konflux the bees knees</Text>
-          </TextContent>
+          <Content>
+            <Content component={ContentVariants.small}>Help us make Konflux the bees knees</Content>
+          </Content>
         </FlexItem>
       </PanelHeader>
       <PanelMain className="feedback-modal__content-main">
@@ -47,16 +46,16 @@ const BeginningSection: React.FC<BeginningSectionProps> = ({ onSectionChange, on
               onClick={() => onSectionChange(FeedbackSections.FeedbackSection)}
             >
               <CardTitle>
-                <TextContent>
-                  <Text component={TextVariants.p}>Share feedback</Text>
-                </TextContent>
+                <Content>
+                  <Content component={ContentVariants.p}>Share feedback</Content>
+                </Content>
               </CardTitle>
               <CardBody>
-                <TextContent>
-                  <Text component={TextVariants.small}>
+                <Content>
+                  <Content component={ContentVariants.small}>
                     Please share your experience using Konflux to the product team
-                  </Text>
-                </TextContent>
+                  </Content>
+                </Content>
               </CardBody>
             </Card>
           </IfFeature>
@@ -67,17 +66,17 @@ const BeginningSection: React.FC<BeginningSectionProps> = ({ onSectionChange, on
             onClick={() => onSectionChange(FeedbackSections.BugSection)}
           >
             <CardTitle>
-              <TextContent>
-                <Text component={TextVariants.p}>Report a bug</Text>
-              </TextContent>
+              <Content>
+                <Content component={ContentVariants.p}>Report a bug</Content>
+              </Content>
             </CardTitle>
             <CardBody>
-              <TextContent>
-                <Text component={TextVariants.small}>
+              <Content>
+                <Content component={ContentVariants.small}>
                   Describe the bug you encountered. For urgent issues, use #konflux-user-forum
                   instead.
-                </Text>
-              </TextContent>
+                </Content>
+              </Content>
             </CardBody>
           </Card>
 
@@ -88,16 +87,16 @@ const BeginningSection: React.FC<BeginningSectionProps> = ({ onSectionChange, on
             onClick={() => onSectionChange(FeedbackSections.FeatureSection)}
           >
             <CardTitle>
-              <TextContent>
-                <Text component={TextVariants.p}>Request a new feature</Text>
-              </TextContent>
+              <Content>
+                <Content component={ContentVariants.p}>Request a new feature</Content>
+              </Content>
             </CardTitle>
             <CardBody>
-              <TextContent>
-                <Text component={TextVariants.small}>
+              <Content>
+                <Content component={ContentVariants.small}>
                   Share your ideas for new feature to make Konflux even better for all users.
-                </Text>
-              </TextContent>
+                </Content>
+              </Content>
             </CardBody>
           </Card>
         </PanelMainBody>

@@ -1,6 +1,12 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
-import { Bullseye, EmptyStateBody, Spinner, Text, TextVariants } from '@patternfly/react-core';
+import {
+  Bullseye,
+  EmptyStateBody,
+  Spinner,
+  Content,
+  ContentVariants,
+} from '@patternfly/react-core';
 import emptyStateImgUrl from '~/assets/Components.svg';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { FLAGS } from '~/feature-flags/flags';
@@ -57,9 +63,9 @@ const ComponentVersionDetailsView: React.FC = () => {
         data-test="version-details-test-id"
         headTitle={versionRevision}
         title={
-          <Text component={TextVariants.h2}>
+          <Content component={ContentVariants.h2}>
             {component.metadata.name} <FeatureFlagIndicator flags={['components-page']} fullLabel />
-          </Text>
+          </Content>
         }
         breadcrumbs={[
           {

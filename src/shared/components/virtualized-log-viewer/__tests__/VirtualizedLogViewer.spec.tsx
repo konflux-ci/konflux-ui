@@ -1,6 +1,8 @@
 import { LogViewerToolbarContext } from '@patternfly/react-log-viewer';
+import { screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { renderWithQueryClientAndRouter } from '~/unit-test-utils/rendering-utils';
+import { singleLogSection } from '../log-viewer-utils';
 import { VirtualizedLogViewer } from '../VirtualizedLogViewer';
 
 // Mock lodash-es debounce to make tests synchronous
@@ -16,7 +18,7 @@ jest.mock('lodash-es', () => ({
 describe('VirtualizedLogViewer Integration Tests', () => {
   const mockData = 'line 1\nline 2\nline 3';
   const defaultProps = {
-    sections: [{ containerName: '', data: mockData }],
+    sections: [singleLogSection(mockData)],
     height: 600,
   };
 
@@ -40,7 +42,7 @@ describe('VirtualizedLogViewer Integration Tests', () => {
         <VirtualizedLogViewer {...defaultProps} />,
       );
 
-      const mainElement = container.querySelector('.pf-v5-c-log-viewer__main');
+      const mainElement = container.querySelector('.pf-v6-c-log-viewer__main');
       expect(mainElement).toBeInTheDocument();
 
       const scrollContainer = container.querySelector('.log-content__list');
@@ -56,7 +58,7 @@ describe('VirtualizedLogViewer Integration Tests', () => {
       expect(logList).toBeInTheDocument();
 
       // Should render actual log items through VirtualizedLogContent
-      const logItems = container.querySelectorAll('.pf-v5-c-log-viewer__list-item');
+      const logItems = container.querySelectorAll('.pf-v6-c-log-viewer__list-item');
       expect(logItems.length).toBeGreaterThan(0);
     });
 
@@ -75,10 +77,7 @@ describe('VirtualizedLogViewer Integration Tests', () => {
   describe('Data Handling and Integration', () => {
     it('should render custom data through VirtualizedLogContent', () => {
       const { container } = renderWithQueryClientAndRouter(
-        <VirtualizedLogViewer
-          {...defaultProps}
-          sections={[{ containerName: '', data: 'test data' }]}
-        />,
+        <VirtualizedLogViewer {...defaultProps} sections={[singleLogSection('test data')]} />,
       );
 
       expect(container.textContent).toContain('test data');
@@ -86,7 +85,7 @@ describe('VirtualizedLogViewer Integration Tests', () => {
 
     it('should handle empty data gracefully', () => {
       const { container } = renderWithQueryClientAndRouter(
-        <VirtualizedLogViewer {...defaultProps} sections={[{ containerName: '', data: '' }]} />,
+        <VirtualizedLogViewer {...defaultProps} sections={[]} />,
       );
 
       const logList = container.querySelector('.log-content__list');
@@ -96,10 +95,7 @@ describe('VirtualizedLogViewer Integration Tests', () => {
     it('should render multiline data correctly', () => {
       const multilineData = 'line 1\nline 2\nline 3\nline 4';
       const { container } = renderWithQueryClientAndRouter(
-        <VirtualizedLogViewer
-          {...defaultProps}
-          sections={[{ containerName: '', data: multilineData }]}
-        />,
+        <VirtualizedLogViewer {...defaultProps} sections={[singleLogSection(multilineData)]} />,
       );
 
       expect(container.textContent).toContain('line 1');
@@ -191,7 +187,7 @@ describe('VirtualizedLogViewer Integration Tests', () => {
       );
 
       // Should render search highlights through VirtualizedLogContent
-      const marks = container.querySelectorAll('mark.pf-v5-c-log-viewer__string.pf-m-match');
+      const marks = container.querySelectorAll('mark.pf-v6-c-log-viewer__string.pf-m-match');
       expect(marks.length).toBeGreaterThan(0);
     });
 
@@ -233,33 +229,74 @@ describe('VirtualizedLogViewer Integration Tests', () => {
       const currentMark = container.querySelector('mark.pf-m-current');
       expect(currentMark).toBeInTheDocument();
     });
+
+    it('should expand the folded section containing the first match on a new search', () => {
+      const multiSections = [
+        { containerName: 'BUILD', data: 'compile\nlink', isCompleted: true },
+        { containerName: 'TEST', data: 'running tests', isCompleted: false },
+      ];
+
+      const mockToolbarContext = {
+        searchedInput: '',
+        currentSearchedItemCount: 0,
+        searchedWordIndexes: [],
+        scrollToRow: jest.fn(),
+        setSearchedInput: jest.fn(),
+        setCurrentSearchedItemCount: jest.fn(),
+        setRowInFocus: jest.fn(),
+        setSearchedWordIndexes: jest.fn(),
+        itemCount: 4,
+        rowInFocus: { rowIndex: -1, matchIndex: -1 },
+      };
+
+      const { rerender } = renderWithQueryClientAndRouter(
+        <LogViewerToolbarContext.Provider value={mockToolbarContext}>
+          <VirtualizedLogViewer {...defaultProps} sections={multiSections} />
+        </LogViewerToolbarContext.Provider>,
+      );
+
+      // BUILD is completed, so it starts folded
+      expect(screen.queryByText('compile')).not.toBeInTheDocument();
+
+      // Simulate a new search whose first (and only) match is inside BUILD's folded content
+      // ("compile" is the second search line: 0 = BUILD header, 1 = "compile")
+      rerender(
+        <LogViewerToolbarContext.Provider
+          value={{
+            ...mockToolbarContext,
+            searchedInput: 'compile',
+            currentSearchedItemCount: 1,
+            searchedWordIndexes: [{ rowIndex: 1, matchIndex: 1 }],
+            rowInFocus: { rowIndex: 1, matchIndex: 1 },
+          }}
+        >
+          <VirtualizedLogViewer {...defaultProps} sections={multiSections} />
+        </LogViewerToolbarContext.Provider>,
+      );
+
+      expect(screen.getByText('compile')).toBeInTheDocument();
+    });
   });
 
   describe('Edge Cases', () => {
     it('should handle very long data efficiently with virtualization', () => {
       const longData = Array.from({ length: 1000 }, (_, i) => `line ${i + 1}`).join('\n');
       const { container } = renderWithQueryClientAndRouter(
-        <VirtualizedLogViewer
-          {...defaultProps}
-          sections={[{ containerName: '', data: longData }]}
-        />,
+        <VirtualizedLogViewer {...defaultProps} sections={[singleLogSection(longData)]} />,
       );
 
       const logList = container.querySelector('.log-content__list');
       expect(logList).toBeInTheDocument();
 
       // Virtualization should only render visible items
-      const visibleItems = container.querySelectorAll('.pf-v5-c-log-viewer__list-item');
+      const visibleItems = container.querySelectorAll('.pf-v6-c-log-viewer__list-item');
       expect(visibleItems.length).toBeLessThan(1000);
     });
 
     it('should handle data with special characters', () => {
       const specialData = 'line with <html> tags\nline with & ampersand\nline with "quotes"';
       const { container } = renderWithQueryClientAndRouter(
-        <VirtualizedLogViewer
-          {...defaultProps}
-          sections={[{ containerName: '', data: specialData }]}
-        />,
+        <VirtualizedLogViewer {...defaultProps} sections={[singleLogSection(specialData)]} />,
       );
 
       expect(container.textContent).toContain('<html>');

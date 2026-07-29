@@ -149,9 +149,7 @@ describe('SecretForm SourceSecret', () => {
       expect(screen.getByTestId('secret-source-username').getAttribute('value')).toBe(
         'username-test',
       );
-      expect(screen.getByTestId('secret-source-password').getAttribute('value')).toBe(
-        'password-test',
-      );
+      expect(screen.getByLabelText('Password')).toHaveValue('password-test');
     });
   });
 
@@ -165,11 +163,11 @@ describe('SecretForm SourceSecret', () => {
     await waitFor(() => {
       expect(screen.getByTestId('secret-form')).toBeInTheDocument();
       expect(screen.getByTestId('secret-source-username')).toBeInTheDocument();
-      expect(screen.getByTestId('secret-source-password')).toBeInTheDocument();
+      expect(screen.getByLabelText('Password')).toBeInTheDocument();
     });
 
     const usernameInput = screen.getByTestId('secret-source-username');
-    const passwordInput = screen.getByTestId('secret-source-password');
+    const passwordInput = screen.getByLabelText('Password');
     await user.clear(usernameInput);
     await user.type(usernameInput, 'username-changed');
     await user.clear(passwordInput);
@@ -180,9 +178,7 @@ describe('SecretForm SourceSecret', () => {
       expect(screen.getByTestId('secret-source-username').getAttribute('value')).toBe(
         'username-changed',
       );
-      expect(screen.getByTestId('secret-source-password').getAttribute('value')).toBe(
-        'password-changed',
-      );
+      expect(screen.getByLabelText('Password')).toHaveValue('password-changed');
     });
   });
 });

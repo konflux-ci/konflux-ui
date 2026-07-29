@@ -32,11 +32,11 @@ const ComponentBuildSettings: React.FC<React.PropsWithChildren<ComponentBuildSet
       <ExpandableSection
         isExpanded={expanded}
         toggleContent="Show related components"
-        className="component-nudges__exandablesection pf-v5-u-mt-md"
+        className="component-nudges__exandablesection pf-v6-u-mt-md"
         data-test="component-nudges-toggle"
         onToggle={() => setExpanded((x) => !x)}
       >
-        <div className="pf-v5-u-pl-md pf-v5-u-mt-md">
+        <div className="pf-v6-u-pl-md pf-v6-u-mt-md">
           <Radio
             isChecked={radioChecked === NudgeRadios.NUDGES}
             name="radio-nudges"

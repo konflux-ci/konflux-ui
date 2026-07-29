@@ -9,7 +9,7 @@ import {
   Tooltip,
 } from '@patternfly/react-core';
 import { MinusCircleIcon, GripVerticalIcon } from '@patternfly/react-icons/dist/esm/icons';
-import { InputField } from 'formik-pf';
+import { InputField } from '~/shared/components/formik-base';
 import {
   TextColumnItemProps,
   TextColumnFieldChildParameterProps,
@@ -70,6 +70,7 @@ const TextColumnItemContent: React.FC<TextColumntItemContentProps> = ({
   const removeButton = (
     <Tooltip content={tooltip || 'Remove'}>
       <Button
+        icon={<MinusCircleIcon />}
         data-test={`${name}-${idx}-remove-button`}
         aria-label={tooltip || 'Remove'}
         variant={ButtonVariant.plain}
@@ -84,9 +85,7 @@ const TextColumnItemContent: React.FC<TextColumntItemContentProps> = ({
             onChange(values);
           }
         }}
-      >
-        <MinusCircleIcon />
-      </Button>
+      />
     </Tooltip>
   );
 
@@ -94,7 +93,7 @@ const TextColumnItemContent: React.FC<TextColumntItemContentProps> = ({
     <div ref={previewDropRef} style={{ opacity }}>
       <Flex
         alignItems={{ default: 'alignItemsFlexStart' }}
-        style={{ marginBottom: 'var(--pf-v5-global--spacer--sm)' }}
+        style={{ marginBottom: 'var(--pf-t--global--spacer--sm)' }}
       >
         {dndEnabled && (
           <FlexItem style={{ cursor: 'move' }}>
@@ -110,7 +109,7 @@ const TextColumnItemContent: React.FC<TextColumntItemContentProps> = ({
           )}
         </FlexItem>
         {
-          <FlexItem style={{ minWidth: 'var(--pf-v5-global--spacer--2xl)' }}>
+          <FlexItem style={{ minWidth: 'var(--pf-t--global--spacer--2xl)' }}>
             {!isReadOnly && removeButton}
           </FlexItem>
         }

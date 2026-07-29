@@ -1,15 +1,5 @@
 import * as React from 'react';
-import {
-  EmptyStateBody,
-  PageSectionVariants,
-  PageSection,
-  Title,
-  TextContent,
-  Text,
-  TextVariants,
-  Flex,
-  FlexItem,
-} from '@patternfly/react-core';
+import { EmptyStateBody } from '@patternfly/react-core';
 import emptySnapshotImgUrl from '~/assets/Snapshots.svg';
 import ColumnManagement from '~/components/ColumnManagement/ColumnManagement';
 import { LEARN_MORE_SNAPSHOTS } from '~/consts/documentation';
@@ -20,6 +10,7 @@ import { ExternalLink } from '~/shared';
 import AppEmptyState from '~/shared/components/empty-state/AppEmptyState';
 import FilteredEmptyState from '~/shared/components/empty-state/FilteredEmptyState';
 import { useFilterState, useFilteredData, FilterToolbar } from '~/shared/components/Filter';
+import ListLayout from '~/shared/components/list-layout/ListLayout';
 import { Table, TableContainer } from '~/shared/components/TableV2';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
@@ -109,25 +100,15 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
   }
 
   return (
-    <PageSection padding={{ default: 'noPadding' }} variant={PageSectionVariants.light} isFilled>
-      <Flex
-        justifyContent={{ default: 'justifyContentSpaceBetween' }}
-        alignItems={{ default: 'alignItemsCenter' }}
-      >
-        <FlexItem>
-          <Title size="lg" headingLevel="h3" className="pf-v5-c-title pf-v5-u-mt-lg pf-v5-u-mb-sm">
-            Snapshots
-          </Title>
-        </FlexItem>
-      </Flex>
-
-      <TextContent>
-        <Text component={TextVariants.p}>
+    <ListLayout
+      title="Snapshots"
+      description={
+        <>
           A snapshot is a point-in-time, immutable record of an application&apos;s container images.{' '}
           <ExternalLink href={LEARN_MORE_SNAPSHOTS}>Learn more</ExternalLink>
-        </Text>
-      </TextContent>
-
+        </>
+      }
+    >
       <TableContainer
         data={finalFilteredSnapshots}
         unfilteredData={snapshots ?? []}
@@ -171,7 +152,7 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
           meta={meta}
         />
       </TableContainer>
-    </PageSection>
+    </ListLayout>
   );
 };
 

@@ -1,10 +1,17 @@
 {
   "version": 1,
   "hooks": {
+    "sessionStart": [
+      {
+        "command": ".cursor/hooks/session-baseline.sh",
+        "timeout": 10
+      }
+    ],
     "stop": [
       {
         "command": ".cursor/hooks/post-edit-checks.sh",
-        "timeout": 120
+        "timeout": 120,
+        "loop_limit": 4
       }
     ]
   }

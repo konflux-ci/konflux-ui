@@ -67,7 +67,7 @@ const SnapshotOverviewTab: React.FC = () => {
 
   return (
     <>
-      <Title headingLevel="h4" className="pf-v5-c-title pf-v5-u-mt-lg pf-v5-u-mb-lg" size="lg">
+      <Title headingLevel="h4" className="pf-v6-c-title pf-v6-u-mt-lg pf-v6-u-mb-lg" size="lg">
         Snapshot details
       </Title>
       <Flex>
@@ -135,7 +135,7 @@ const SnapshotOverviewTab: React.FC = () => {
           </FlexItem>
         </Flex>
       </Flex>
-      <div id="snapshot-components" className="pf-vf-u-mt-lg">
+      <div id="snapshot-components" className="pf-v6-u-mt-lg">
         <FilterContextProvider filterParams={['name']}>
           <SnapshotComponentsList
             components={componentsTableData}

@@ -95,7 +95,7 @@ describe('LinkedSecretsListView', () => {
     renderComponent();
     expect(screen.getByTestId('linked-secrets-list-toolbar')).toBeInTheDocument();
     const nameSearchInput = screen.getByTestId('name-input-filter');
-    const searchInput = nameSearchInput.querySelector('.pf-v5-c-text-input-group__text-input');
+    const searchInput = nameSearchInput.querySelector('.pf-v6-c-text-input-group__text-input');
     fireEvent.change(searchInput, { target: { value: 'pipeline' } });
     const linkedSecretsList = screen.getByLabelText('Linked Secrets List');
     const linkedSecretsListItems = within(linkedSecretsList).getAllByTestId(
@@ -109,7 +109,7 @@ describe('LinkedSecretsListView', () => {
     expect(screen.getAllByTestId('linked-secrets-list-item')).toHaveLength(2);
 
     const nameSearchInput = screen.getByTestId('name-input-filter');
-    const textFilterInput = nameSearchInput.querySelector('.pf-v5-c-text-input-group__text-input');
+    const textFilterInput = nameSearchInput.querySelector('.pf-v6-c-text-input-group__text-input');
     await act(() => fireEvent.change(textFilterInput, { target: { value: 'no match' } }));
 
     view.rerender(

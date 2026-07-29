@@ -1,11 +1,16 @@
 import React from 'react';
 import { Alert, HelperText, HelperTextItem, Title, TitleSizes } from '@patternfly/react-core';
-import { useField } from 'formik';
+import { useField, useFormikContext } from 'formik';
 import { Base64 } from 'js-base64';
-import DropdownField from '../../../shared/components/formik-fields/DropdownField';
-import { ImagePullSecretType } from '../../../types';
+import DropdownField from '~/shared/components/formik-fields/DropdownField';
+import { ImagePullSecretType } from '~/types';
 import EncodedFileUploadField from './EncodedFileUploadField';
 import { MultiImageCredentialForm } from './MultiImageCredentialForm';
+import {
+  useAreSecretSensitiveFieldsHidden,
+  useOptionalSecretEditSensitive,
+} from './SecretEditSensitiveContext';
+import { SensitiveValuesRevealBanner } from './SensitiveValuesRevealBanner';
 
 type RegistryValidation = {
   registry: string;
@@ -26,6 +31,9 @@ export const ImagePullSecretForm: React.FC<React.PropsWithChildren<{ isEditMode?
   isEditMode = false,
 }) => {
   const [{ value: type }] = useField<ImagePullSecretType>('image.authType');
+  const { setFieldValue } = useFormikContext();
+  const sensitive = useOptionalSecretEditSensitive();
+  const sensitiveFieldsHidden = useAreSecretSensitiveFieldsHidden();
   const [registryValidations, setRegistryValidations] = React.useState<RegistryValidation[]>([]);
   const [fileTypeError, setFileTypeError] = React.useState<string>();
 
@@ -73,6 +81,17 @@ export const ImagePullSecretForm: React.FC<React.PropsWithChildren<{ isEditMode?
     }
   }, []);
 
+  const revealDockerConfig = React.useCallback(async () => {
+    if (!sensitive) {
+      return;
+    }
+    const s = await sensitive.requestFullSecret();
+    const raw = s?.data?.['.dockerconfigjson'] ?? s?.data?.['.dockercfg'];
+    if (raw) {
+      void setFieldValue('image.dockerconfig', raw);
+    }
+  }, [sensitive, setFieldValue]);
+
   return (
     <>
       <DropdownField
@@ -106,14 +125,17 @@ export const ImagePullSecretForm: React.FC<React.PropsWithChildren<{ isEditMode?
         </>
       ) : (
         <>
-          <EncodedFileUploadField
-            name="image.dockerconfig"
-            id="text-file-docker-config"
-            label="Upload a .dockercfg or .docker/config.json file"
-            helpText="This file contains configuration details and credentials to connect to a secure image registry. An uploaded .dockercfg file will be normalized and saved as .dockerconfigjson format"
-            required
-            onValidate={validateDockerConfig}
-          />
+          <SensitiveValuesRevealBanner onReveal={revealDockerConfig} />
+          {!sensitiveFieldsHidden ? (
+            <EncodedFileUploadField
+              name="image.dockerconfig"
+              id="text-file-docker-config"
+              label="Upload a .dockercfg or .docker/config.json file"
+              helpText="This file contains configuration details and credentials to connect to a secure image registry. An uploaded .dockercfg file will be normalized and saved as .dockerconfigjson format"
+              required
+              onValidate={validateDockerConfig}
+            />
+          ) : null}
           {fileTypeError && (
             <Alert variant="danger" isInline title={fileTypeError} style={{ marginTop: '1rem' }} />
           )}

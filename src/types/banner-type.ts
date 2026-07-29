@@ -18,6 +18,6 @@ export enum RepeatType {
 }
 export enum BannerVariant {
   BLUE = 'blue',
-  GOLD = 'gold',
+  GOLD = 'yellow',
   RED = 'red',
 }

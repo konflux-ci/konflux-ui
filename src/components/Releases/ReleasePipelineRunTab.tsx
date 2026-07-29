@@ -141,7 +141,7 @@ const ReleasePipelineRunTab: React.FC = () => {
 
   return (
     <>
-      <Title headingLevel="h3" className="pf-v5-c-title pf-v5-u-mt-lg pf-v5-u-pl-lg">
+      <Title headingLevel="h3" className="pf-v6-c-title pf-v6-u-mt-lg pf-v6-u-pl-lg">
         Pipeline runs
       </Title>
       <Table

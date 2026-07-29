@@ -43,6 +43,10 @@ export enum SecretLabels {
   HOST_LABEL = 'appstudio.redhat.com/scm.host',
   REPO_ANNOTATION = 'appstudio.redhat.com/scm.repository',
   COMMON_SECRET_LABEL = 'build.appstudio.openshift.io/common-secret',
+  /** Stores `Secret.type` (e.g. kubernetes.io/dockerconfigjson) for legacy secrets without `type` on metadata-only views. */
+  K8S_TYPE_LABEL = 'appstudio.redhat.com/kubernetes-secret-type',
+  /** When type is source: `basic` | `ssh` (disambiguates basic-auth vs ssh-auth without `data`). */
+  SOURCE_AUTH_KIND_LABEL = 'appstudio.redhat.com/scm-auth-kind',
 }
 
 export enum TargetDropdownDefaults {

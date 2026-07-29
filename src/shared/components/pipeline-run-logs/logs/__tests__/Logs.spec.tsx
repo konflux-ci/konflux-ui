@@ -21,7 +21,7 @@ const getLastSectionsData = (): string => {
 
 jest.mock('../LogViewer', () => {
   return function MockLogViewer(props: {
-    sections: Array<{ containerName: string; data: string }>;
+    sections: Array<{ containerName: string; data: string; isCompleted?: boolean }>;
     allowAutoScroll: boolean;
     isLoading?: boolean;
     onScroll?: () => void;
@@ -229,8 +229,8 @@ describe('Logs', () => {
       expect(mockLogViewer).toHaveBeenLastCalledWith(
         expect.objectContaining({
           sections: expect.arrayContaining([
-            { containerName: 'CONTAINER1', data: 'log line 1\nlog line 2' },
-            { containerName: 'CONTAINER2', data: 'log line 3\nlog line 4' },
+            { containerName: 'CONTAINER1', data: 'log line 1\nlog line 2', isCompleted: true },
+            { containerName: 'CONTAINER2', data: 'log line 3\nlog line 4', isCompleted: true },
           ]),
         }),
       );
@@ -323,10 +323,11 @@ describe('Logs', () => {
         await Promise.resolve();
       });
 
-      // container2 has empty logs, so it should be filtered out by the sections memo
+      // Containers without logs are omitted from sections
       const lastCall = mockLogViewer.mock.calls[mockLogViewer.mock.calls.length - 1][0];
       expect(lastCall.sections).toHaveLength(1);
       expect(lastCall.sections[0].containerName).toBe('CONTAINER1');
+      expect(lastCall.sections[0].data).toBe('has logs');
     });
 
     it('should pass empty sections when no containers have logs', () => {
@@ -869,8 +870,15 @@ describe('Logs', () => {
     );
   });
 
-  describe('loading indicator while processing logs', () => {
-    it('should not add processingLogs to isLoading', () => {
+  describe('loading indicator while fetching logs', () => {
+    it('should show loading while terminated container logs are being fetched', async () => {
+      let resolveFetch: ((value: string) => void) | undefined;
+      const fetchPromise = new Promise<string>((resolve) => {
+        resolveFetch = resolve;
+      });
+      (commonFetchText as jest.Mock).mockReturnValue(fetchPromise);
+      (containerToLogSourceStatus as jest.Mock).mockReturnValue('terminated');
+
       const terminatedContainer: ContainerStatus = {
         name: 'container1',
         state: { terminated: { exitCode: 0 } },
@@ -888,9 +896,6 @@ describe('Logs', () => {
         },
       };
 
-      (containerToLogSourceStatus as jest.Mock).mockReturnValue('terminated');
-      (commonFetchText as jest.Mock).mockResolvedValue('some log output');
-
       render(
         <Logs
           {...defaultProps}
@@ -899,15 +904,27 @@ describe('Logs', () => {
         />,
       );
 
-      // isLoading should only reflect the prop, not internal processing
       expect(mockLogViewer).toHaveBeenCalledWith(
         expect.objectContaining({
-          isLoading: false,
+          isLoading: true,
         }),
       );
+
+      await act(async () => {
+        resolveFetch?.('some log output');
+        await fetchPromise;
+      });
+
+      await waitFor(() => {
+        expect(mockLogViewer).toHaveBeenLastCalledWith(
+          expect.objectContaining({
+            isLoading: false,
+          }),
+        );
+      });
     });
 
-    it('should not show loading when there are no log sources', () => {
+    it('should not show loading when there are no containers to fetch', () => {
       render(<Logs {...defaultProps} containers={[]} />);
 
       expect(mockLogViewer).toHaveBeenCalledWith(

@@ -127,8 +127,8 @@ describe('CodeEditor', () => {
       <CodeEditor code="test" onEditorDidMount={mockOnEditorDidMount} />,
     );
 
-    expect(container.querySelector('.pf-v5-l-flex')).toBeInTheDocument();
-    const flexElement = container.querySelector('.pf-v5-l-flex');
+    expect(container.querySelector('.pf-v6-l-flex')).toBeInTheDocument();
+    const flexElement = container.querySelector('.pf-v6-l-flex');
     expect(flexElement).toBeInTheDocument();
     expect(flexElement?.children.length).toBeGreaterThan(0);
   });

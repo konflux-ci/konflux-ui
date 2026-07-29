@@ -3,11 +3,9 @@ import {
   Button,
   EmptyState,
   EmptyStateBody,
-  EmptyStateIcon,
   EmptyStateProps,
   EmptyStateVariant,
   EmptyStateActions,
-  EmptyStateHeader,
   EmptyStateFooter,
 } from '@patternfly/react-core';
 import EmptySearchImgUrl from '../../assets/Not-found.svg';
@@ -21,12 +19,14 @@ const FilteredEmptyState: React.FC<
     Omit<EmptyStateProps, 'children'> & { variant?: string; onClearFilters: () => void }
   >
 > = ({ variant = EmptyStateVariant.full, onClearFilters, ...props }) => (
-  <EmptyState className="app-empty-state" variant={variant} {...props}>
-    <EmptyStateHeader
-      titleText="No results found"
-      icon={<EmptyStateIcon icon={EmptyStateImg} />}
-      headingLevel="h2"
-    />
+  <EmptyState
+    headingLevel="h2"
+    icon={EmptyStateImg}
+    titleText="No results found"
+    className="app-empty-state"
+    variant={variant}
+    {...props}
+  >
     <EmptyStateBody>
       No results match this filter criteria. Clear all filters and try again.
     </EmptyStateBody>

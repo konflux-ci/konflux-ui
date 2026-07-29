@@ -90,13 +90,13 @@ describe('TableHeader', () => {
     expect(columnHeaders[1]).not.toHaveAttribute('aria-sort');
   });
 
-  it('applies width class for flex columns', () => {
+  it('applies inline style for flex columns', () => {
     const table = createMockTable(defaultHeaders);
     renderTableHeader(<TableHeader table={table as never} columnWidths={defaultWidths} />);
 
     const thead = screen.getByTestId('table-header');
     const columnHeaders = within(thead).getAllByRole('columnheader');
-    expect(columnHeaders[0]).toHaveClass('pf-m-width-60');
+    expect(columnHeaders[0]).toHaveStyle({ width: '60%' });
   });
 
   it('applies inline style for fixed-width columns', () => {

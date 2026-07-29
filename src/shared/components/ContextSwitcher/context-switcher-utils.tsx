@@ -35,7 +35,7 @@ export const ContextMenuListItem: React.FC<React.PropsWithChildren<{ item: Conte
         <Flex alignItems={{ default: 'alignItemsCenter' }}>
           <Icon
             data-test={`context-switcher-icon-${item.key}`}
-            style={{ marginRight: 'var(--pf-v5-global--spacer--sm)' }}
+            style={{ marginRight: 'var(--pf-t--global--spacer--sm)' }}
           />
           {item.name}
         </Flex>

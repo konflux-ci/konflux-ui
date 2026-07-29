@@ -6,13 +6,12 @@ import {
   Form,
   Stack,
   StackItem,
-  Text,
-  TextContent,
-  TextVariants,
+  Content,
+  ContentVariants,
 } from '@patternfly/react-core';
 import { useFormikContext } from 'formik';
-import { InputField } from 'formik-pf';
 import { isEmpty } from 'lodash-es';
+import { InputField } from '~/shared/components/formik-base';
 import StatusDropdown from './StatusDropdown';
 import UploadDate from './UploadDate';
 
@@ -33,11 +32,11 @@ const BugFormContent: React.FC<BugFormContentProps> = ({ modalToggle }) => {
     <Form>
       <Stack hasGutter>
         <StackItem>
-          <TextContent>
-            <Text component={TextVariants.p}>
+          <Content>
+            <Content component={ContentVariants.p}>
               Provide information about a bug that has already been resolved.
-            </Text>
-          </TextContent>
+            </Content>
+          </Content>
         </StackItem>
         <StackItem>
           <InputField data-test="bug-issue-id" label="Bug issue key" name="id" isRequired />
@@ -68,9 +67,9 @@ const BugFormContent: React.FC<BugFormContentProps> = ({ modalToggle }) => {
           <Button
             data-test="close-bug-modal"
             variant={ButtonVariant.link}
-            className="pf-v5-u-ml-sm"
+            className="pf-v6-u-ml-sm"
             onClick={(e) => {
-              e.preventDefault(), modalToggle();
+              (e.preventDefault(), modalToggle());
             }}
           >
             Close

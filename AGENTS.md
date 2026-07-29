@@ -21,10 +21,12 @@ One-command setup: `yarn setup` or `./setup.sh` (checks Node.js >= 24, enables C
 ## Key Conventions
 
 - `~/` -> `src/`, `@routes/` -> `src/routes/` -- use absolute imports, never `../../../`
+- PatternFly v6 CSS classes must use the `pf-v6-` prefix (e.g., `pf-v6-u-ml-sm`), never `pf-v5-`. The `pf-v5-` prefix is incompatible with PatternFly v6.
 - `@patternfly/react-icons` -> use `@patternfly/react-icons/dist/esm/icons/<kebab-case-name>`
 - `lodash` -> use `lodash-es/<funcName>` (jest maps `lodash-es` to `lodash` automatically)
 - No `console.*` -> use `logger` from `~/monitoring/logger`
 - No snapshot tests; test ID attribute is `data-test` (not `data-testid`)
+- Before writing any test file, read `docs/guidelines/unit-testing.md`. Use `userEvent.setup()` for user interactions (`fireEvent` only for simple synchronous events per Pattern 7), and use shared render utilities from `~/unit-test-utils/` (e.g., `renderWithQueryClientAndRouter`) instead of custom wrappers.
 - New list/table views **must** use `TableV2` from `~/shared/components/TableV2` (see `docs/guidelines/table-v2.md`). Do not inline PatternFly table primitives (`Table`, `Thead`, `Tbody`, `Tr`, `Td`) directly. If TableV2 lacks a needed capability (e.g., row selection), extend it rather than building a bespoke table.
 - Prefer shared utilities over inline reimplementations -- e.g., use `textMatch` / `filterByText` from `~/utils/text-filter-utils` for case-insensitive string filtering instead of hand-rolling `.toLowerCase().includes()`.
 - `noUnusedLocals` and `noUnusedParameters` enforced -- prefix unused params with `_`
@@ -36,6 +38,7 @@ Conventional Commits enforced by commitlint: `feat:`, `fix:`, `chore:`, etc. Hus
 
 ## PR Conventions
 
+- PR titles must follow the format `type(ticket-id): summary` where `ticket-id` is a Jira ticket (e.g., `KFLUXUI-123`, `KONFLUX-456`) or GitHub issue (e.g., `#123`). Allowed types: `feat`, `fix`, `chore`, `refactor`, `docs`, `test`, `ci`, `build`, `perf`, `style`, `revert`. This is enforced by the `pr-title-check` CI workflow. Note: this differs from the commit message format, which does not require a ticket scope.
 - Read `docs/pr-review-guidelines.md` before reviewing or creating PRs.
 - Fill every section of `.github/PULL_REQUEST_TEMPLATE.md` when creating a PR.
 

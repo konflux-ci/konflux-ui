@@ -6,7 +6,7 @@
 .commits-component-list {
   display: flex;
   flex-direction: column;
-  gap: var(--pf-v5-global--spacer--sm);
+  gap: var(--pf-t--global--spacer--sm);
 }
 
 .commits-list__branch {
@@ -15,7 +15,7 @@
 
 .commits-popover-stack {
   > * {
-    margin-bottom: var(--pf-v5-global--spacer--xs);
+    margin-bottom: var(--pf-t--global--spacer--xs);
 
     &:last-child {
       margin-bottom: 0;

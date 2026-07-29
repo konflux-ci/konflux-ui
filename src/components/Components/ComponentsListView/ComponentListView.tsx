@@ -10,9 +10,8 @@ import {
   Flex,
   FlexItem,
   pluralize,
-  Text,
-  TextContent,
-  TextVariants,
+  Content,
+  ContentVariants,
   Title,
 } from '@patternfly/react-core';
 import { capitalize } from 'lodash-es';
@@ -176,7 +175,7 @@ const ComponentListView: React.FC<React.PropsWithChildren<ComponentListViewProps
         title="Upgrade build pipeline plans for your components."
         imgSrc={pipelineImg}
         imgAlt="build pipeline plans"
-        isLight
+        hasHorizontalPadding={false}
       >
         <Flex
           justifyContent={{ default: 'justifyContentSpaceBetween' }}
@@ -221,7 +220,7 @@ const ComponentListView: React.FC<React.PropsWithChildren<ComponentListViewProps
         options={statusFilterObj}
       />
       <ButtonWithAccessTooltip
-        variant="secondary"
+        variant="primary"
         component={(p) => (
           <Link
             {...p}
@@ -248,18 +247,18 @@ const ComponentListView: React.FC<React.PropsWithChildren<ComponentListViewProps
 
   return (
     <>
-      <Title headingLevel="h3" className="pf-v5-u-mt-lg pf-v5-u-mb-sm">
+      <Title headingLevel="h3" className="pf-v6-u-mt-lg pf-v6-u-mb-sm">
         Components
       </Title>
-      <TextContent>
-        <Text component={TextVariants.p}>
+      <Content>
+        <Content component={ContentVariants.p}>
           A component is an image built from source code in a repository. One or more components
           that run together form an application.
-        </Text>
-      </TextContent>
+        </Content>
+      </Content>
       {pipelineRunsLoaded && pipelineRunsError ? (
         <Alert
-          className="pf-v5-u-mt-md"
+          className="pf-v6-u-mt-md"
           variant={AlertVariant.warning}
           isInline
           title="Error while fetching pipeline runs"
@@ -270,7 +269,7 @@ const ComponentListView: React.FC<React.PropsWithChildren<ComponentListViewProps
       {gettingStartedCard}
       {componentsLoaded && pipelineRunsLoaded && pendingCount > 0 && !mergeAlertHidden ? (
         <Alert
-          className="pf-v5-u-mt-md"
+          className="pf-v6-u-my-md"
           variant={AlertVariant.warning}
           isInline
           title={`${pluralize(

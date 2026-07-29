@@ -11,12 +11,12 @@
     text-align: center;
 
     .cos-error-title {
-      color: var(--pf-v5-global--palette--red-100);
+      color: var(--pf-t--global--color--status--danger--default);
     }
   }
 
   &__detail {
-    font-size: var(--pf-v5-global--FontSize--md);
+    font-size: var(--pf-t--global--font--size--md);
     max-width: 500px;
     margin: 0 auto;
   }
@@ -26,7 +26,7 @@
   }
 
   &__loading-message {
-    margin-top: var(--pf-v5-global--spacer--sm);
+    margin-top: var(--pf-t--global--spacer--sm);
   }
 }
 

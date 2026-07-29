@@ -33,10 +33,10 @@ export default {
             options: {
               typescript: true,
               replaceAttrValues: {
-                '#FC783D': 'var(--konflux-primary-color)',
-                '#fc783d': 'var(--konflux-primary-color)',
-                '#D36634': 'var(--konflux-primary-hover-color)',
-                '#d36634': 'var(--konflux-primary-hover-color)',
+                '#FC783D': 'var(--konflux-brand-primary)',
+                '#fc783d': 'var(--konflux-brand-primary)',
+                '#D36634': 'var(--konflux-brand-primary-hover)',
+                '#d36634': 'var(--konflux-brand-primary-hover)',
               },
               svgoConfig: {
                 plugins: [

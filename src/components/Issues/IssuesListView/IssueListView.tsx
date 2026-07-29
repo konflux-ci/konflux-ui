@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { EmptyStateBody, Text, TextContent, TextVariants, Title } from '@patternfly/react-core';
+import { EmptyStateBody, Content, ContentVariants, Title } from '@patternfly/react-core';
 import { SortByDirection } from '@patternfly/react-table';
 import emptyStateImgUrl from '~/assets/success.svg';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
@@ -140,12 +140,12 @@ const IssueListView = () => {
 
   return (
     <>
-      <Title headingLevel="h3" className="pf-v5-u-mt-lg pf-v5-u-mb-sm">
+      <Title headingLevel="h3" className="pf-v6-u-mt-lg pf-v6-u-mb-sm">
         Issues list
       </Title>
-      <TextContent>
-        <Text component={TextVariants.p}>This list shows current Konflux issues.</Text>
-      </TextContent>
+      <Content>
+        <Content component={ContentVariants.p}>This list shows current Konflux issues.</Content>
+      </Content>
       <div data-test="issues-list">
         <Table
           virtualize

@@ -2,8 +2,8 @@ import { Base64 } from 'js-base64';
 import { pick } from 'lodash-es';
 import { SECRET_LIST_PATH } from '@routes/paths';
 import { IMAGE_PULL_SECRET_TYPES } from '~/consts/secrets';
-import { K8sQueryCreateResource, K8sQueryPatchResource } from '../../k8s';
-import { SecretModel } from '../../models';
+import { K8sGetResource, K8sQueryCreateResource, K8sQueryPatchResource } from '~/k8s';
+import { SecretModel } from '~/models';
 import {
   AddSecretFormValues,
   BuildTimeSecret,
@@ -23,14 +23,42 @@ import {
   SourceSecretType,
   Source,
   KeyValueEntry,
-} from '../../types';
-import type { Patch } from '../../types/k8s';
+} from '~/types';
+import type { Patch } from '~/types/k8s';
 
 export { SecretForComponentOption };
 
 export const isImagePullSecret = (secret: SecretKind): boolean => {
-  return IMAGE_PULL_SECRET_TYPES.includes(secret.type as (typeof IMAGE_PULL_SECRET_TYPES)[number]);
+  const t = secret.type ?? secret.metadata?.labels?.[SecretLabels.K8S_TYPE_LABEL];
+  return IMAGE_PULL_SECRET_TYPES.includes(t as (typeof IMAGE_PULL_SECRET_TYPES)[number]);
 };
+
+/** Resolves Kubernetes `Secret.type` when the object is metadata-only (no `type` field). */
+export const getResolvedKubernetesSecretType = (secret: SecretKind): SecretType => {
+  if (secret.type) {
+    return secret.type as SecretType;
+  }
+  const fromLabel = secret.metadata?.labels?.[SecretLabels.K8S_TYPE_LABEL] as
+    | SecretType
+    | undefined;
+  if (fromLabel) {
+    return fromLabel;
+  }
+  if (secret.metadata?.labels?.[SecretLabels.HOST_LABEL]) {
+    const authKind = secret.metadata.labels[SecretLabels.SOURCE_AUTH_KIND_LABEL];
+    if (authKind === 'ssh') {
+      return SecretType.sshAuth;
+    }
+    return SecretType.basicAuth;
+  }
+  return SecretType.opaque;
+};
+
+export const fetchFullSecret = (namespace: string, name: string): Promise<SecretKind> =>
+  K8sGetResource<SecretKind>({
+    model: SecretModel,
+    queryOptions: { ns: namespace, name },
+  });
 
 export type PartnerTask = {
   type: SecretType;
@@ -209,6 +237,7 @@ export const getSecretFormData = (values: AddSecretFormValues, namespace: string
       data[SSH_KEY] = values.source[SSH_KEY];
     }
   }
+
   const secretResource: SecretKind = {
     apiVersion: SecretModel.apiVersion,
     kind: SecretModel.kind,
@@ -326,10 +355,12 @@ export const createK8sSecretResource = (
     metadata: {
       ...secretResource.metadata,
       labels: {
-        ...labels,
+        ...secretResource.metadata.labels,
+        ...(labels || {}),
       },
       annotations: {
-        ...annotations,
+        ...secretResource.metadata.annotations,
+        ...(annotations || {}),
       },
     },
   };
@@ -365,7 +396,8 @@ export const getSecretTypetoLabel = (obj: SecretKind) => {
   if (!obj) {
     return;
   }
-  const type = typeToLabel(obj.type);
+  const rawType = obj.type ?? obj.metadata?.labels?.[SecretLabels.K8S_TYPE_LABEL];
+  const type = typeToLabel(rawType);
 
   const secretType =
     type === SecretTypeDisplayLabel.keyValue && obj.data

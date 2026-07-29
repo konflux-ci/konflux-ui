@@ -12,9 +12,8 @@ import {
   HelperTextItem,
   List,
   ListItem,
-  Text,
-  TextContent,
-  TextVariants,
+  Content,
+  ContentVariants,
 } from '@patternfly/react-core';
 import { ArrowRightIcon } from '@patternfly/react-icons/dist/esm/icons/arrow-right-icon';
 import {
@@ -80,32 +79,35 @@ export const LatestIssuesCard: React.FC = () => {
                   direction={{ default: 'column' }}
                   alignItems={{ default: 'alignItemsFlexStart' }}
                 >
-                  <TextContent style={{ marginBlockEnd: 0 }}>
-                    <Text component={TextVariants.h6}>{issue.title}</Text>
-                  </TextContent>
+                  <Content style={{ marginBlockEnd: 0 }}>
+                    <Content component={ContentVariants.h6}>{issue.title}</Content>
+                  </Content>
                   <HelperText>
                     <HelperTextItem variant="default">{issue.description}</HelperTextItem>
                   </HelperText>
-                  <Text component={TextVariants.small}>
+                  <Content component={ContentVariants.small}>
                     <Timestamp timestamp={issue.detectedAt} />
-                  </Text>
+                  </Content>
                 </Flex>
               </ListItem>
             ))}
           </List>
         ) : (
-          <Text component={TextVariants.p}>No active issues found for this namespace.</Text>
+          <Content component={ContentVariants.p}>
+            No active issues found for this namespace.
+          </Content>
         )}
       </CardBody>
       <CardFooter>
         <Button
+          icon={<ArrowRightIcon />}
           variant="link"
           isInline
           component={(props) => (
             <Link {...props} to={ISSUES_LIST_PATH.createPath({ workspaceName: namespace })} />
           )}
         >
-          View all issues <ArrowRightIcon />
+          View all issues
         </Button>
       </CardFooter>
     </Card>

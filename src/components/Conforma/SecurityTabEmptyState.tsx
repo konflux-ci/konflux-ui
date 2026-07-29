@@ -5,11 +5,9 @@ import {
   ButtonVariant,
   EmptyState,
   EmptyStateBody,
-  EmptyStateIcon,
   EmptyStateProps,
   EmptyStateVariant,
   EmptyStateActions,
-  EmptyStateHeader,
   EmptyStateFooter,
 } from '@patternfly/react-core';
 import { PIPELINERUN_DETAILS_PATH } from '@routes/paths';
@@ -27,16 +25,14 @@ const SecurityTabEmptyState: React.FC<
   const { applicationName, pipelineRunName, workspaceName } = useParams<RouterParams>();
   return (
     <EmptyState
+      headingLevel="h2"
+      icon={EmptyStateImg}
+      titleText="Security information unavailable"
       className="app-empty-state"
       data-test="security-tab-empty-state"
       variant={EmptyStateVariant.full}
       {...props}
     >
-      <EmptyStateHeader
-        titleText="Security information unavailable"
-        icon={<EmptyStateIcon icon={EmptyStateImg} />}
-        headingLevel="h2"
-      />
       <EmptyStateBody>We don&apos;t have any logs to show right now.</EmptyStateBody>
       <EmptyStateFooter>
         <EmptyStateActions>

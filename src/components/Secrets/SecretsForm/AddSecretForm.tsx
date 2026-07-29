@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Form, PageSection, PageSectionVariants } from '@patternfly/react-core';
+import { Form, PageSection } from '@patternfly/react-core';
 import { Formik } from 'formik';
 import { isEmpty } from 'lodash-es';
 import PageLayout from '~/components/PageLayout/PageLayout';
@@ -83,7 +83,7 @@ const AddSecretForm: React.FC = () => {
             />
           }
         >
-          <PageSection variant={PageSectionVariants.light} isFilled isWidthLimited>
+          <PageSection hasBodyWrapper isFilled isWidthLimited>
             <Form style={{ maxWidth: '70%' }}>
               <SecretTypeSubForm />
             </Form>

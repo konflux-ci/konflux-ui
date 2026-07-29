@@ -77,11 +77,11 @@ describe('SecretTypeSubForm', () => {
     formikRenderer(<SecretTypeSubForm />, initialValues);
 
     const secretNameLabel = screen.getByText('Secret name');
-    expect(secretNameLabel.closest('.pf-v5-c-form__group')).toBeInTheDocument();
+    expect(secretNameLabel.closest('.pf-v6-c-form__group')).toBeInTheDocument();
     // isRequired renders an asterisk span within the label
     const requiredIndicator = secretNameLabel
-      .closest('.pf-v5-c-form__label')
-      ?.querySelector('.pf-v5-c-form__label-required');
+      .closest('.pf-v6-c-form__label')
+      ?.querySelector('.pf-v6-c-form__label-required');
     expect(requiredIndicator).toBeInTheDocument();
   });
 });

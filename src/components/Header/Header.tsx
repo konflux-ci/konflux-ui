@@ -26,17 +26,16 @@ export const Header: React.FC<HeaderProps> = ({ isDrawerExpanded, toggleDrawer }
   return (
     <Toolbar isFullHeight>
       <ToolbarContent>
-        <ToolbarGroup align={{ default: 'alignRight' }}>
+        <ToolbarGroup align={{ default: 'alignEnd' }}>
           <ToolbarItem>
             <Tooltip content="Experimental Features">
               <Button
+                icon={<FlaskIcon />}
                 variant="plain"
                 onClick={() => showModal(createFeatureFlagPanelModal())}
                 aria-label="Experimental Features"
                 data-test="experimental-features-icon"
-              >
-                <FlaskIcon />
-              </Button>
+              />
             </Tooltip>
           </ToolbarItem>
           <IfFeature flag="system-notifications">

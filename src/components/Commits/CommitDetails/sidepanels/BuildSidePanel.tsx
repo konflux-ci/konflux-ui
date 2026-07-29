@@ -73,116 +73,114 @@ const BuildSidePanel: React.FC<React.PropsWithChildren<PipelineSidePanelBodyProp
 
   return (
     <>
-      <div className="commit-side-panel__head">
-        <DrawerHead data-test="build-side-panel-head">
-          <span className="commit-side-panel__head-title">
-            <Link
-              to={PIPELINE_RUNS_DETAILS_PATH.createPath({
-                workspaceName: namespace,
-                applicationName: workflowData.application,
-                pipelineRunName: pipelineRun.metadata.name,
-              })}
-            >
-              {pipelineRun.metadata.name}
-            </Link>
-            <StatusIconWithTextLabel status={workflowNode.getData().status} />
-          </span>
-          <span className="pf-v5-u-mt-xs commit-side-panel__subtext">
-            <PipelineIcon role="img" aria-label="Pipeline run" /> Pipeline run{' '}
-            <FeatureFlagIndicator flags={['taskruns-kubearchive']} />
-          </span>
-          <DrawerActions>
-            <DrawerCloseButton onClick={onClose} />
-          </DrawerActions>
-        </DrawerHead>
-        <DrawerPanelBody data-test="build-side-panel-body">
-          <DescriptionList
-            data-test="pipeline-run-details"
-            columnModifier={{
-              default: '2Col',
-            }}
+      <DrawerHead data-test="build-side-panel-head">
+        <span className="commit-side-panel__head-title">
+          <Link
+            to={PIPELINE_RUNS_DETAILS_PATH.createPath({
+              workspaceName: namespace,
+              applicationName: workflowData.application,
+              pipelineRunName: pipelineRun.metadata.name,
+            })}
           >
-            <DescriptionListGroup>
-              <DescriptionListTerm>Created at</DescriptionListTerm>
-              <DescriptionListDescription>
-                <Timestamp timestamp={pipelineRun.metadata?.creationTimestamp ?? '-'} />
-              </DescriptionListDescription>
-            </DescriptionListGroup>
-            <DescriptionListGroup>
-              <DescriptionListTerm>Duration</DescriptionListTerm>
-              <DescriptionListDescription>{duration ?? '-'}</DescriptionListDescription>
-            </DescriptionListGroup>
-            <DescriptionListGroup>
-              <DescriptionListTerm>Type</DescriptionListTerm>
-              <DescriptionListDescription>Build</DescriptionListDescription>
-            </DescriptionListGroup>
-            <DescriptionListGroup>
-              <DescriptionListTerm>Pipeline</DescriptionListTerm>
-              <DescriptionListDescription>
-                {pipelineRun.metadata?.labels[PipelineRunLabel.PIPELINE_NAME] ?? '-'}
-              </DescriptionListDescription>
-            </DescriptionListGroup>
-          </DescriptionList>
-          <DescriptionList
-            className="pf-v5-u-mt-lg"
-            data-test="pipeline-run-details"
-            columnModifier={{
-              default: '1Col',
-            }}
-          >
-            <DescriptionListGroup>
-              <DescriptionListTerm>Component</DescriptionListTerm>
-              <DescriptionListDescription>
-                {pipelineRun.metadata?.labels?.[PipelineRunLabel.COMPONENT] ? (
-                  pipelineRun.metadata?.labels?.[PipelineRunLabel.APPLICATION] ? (
-                    <Link
-                      to={COMPONENT_DETAILS_PATH.createPath({
-                        workspaceName: namespace,
-                        applicationName: pipelineRun.metadata.labels[PipelineRunLabel.APPLICATION],
-                        componentName: pipelineRun.metadata.labels[PipelineRunLabel.COMPONENT],
-                      })}
-                    >
-                      {pipelineRun.metadata.labels[PipelineRunLabel.COMPONENT]}
-                    </Link>
-                  ) : (
-                    pipelineRun.metadata.labels[PipelineRunLabel.COMPONENT]
-                  )
+            {pipelineRun.metadata.name}
+          </Link>
+          <StatusIconWithTextLabel status={workflowNode.getData().status} />
+        </span>
+        <span className="pf-v6-u-mt-xs commit-side-panel__subtext">
+          <PipelineIcon role="img" aria-label="Pipeline run" /> Pipeline run{' '}
+          <FeatureFlagIndicator flags={['taskruns-kubearchive']} />
+        </span>
+        <DrawerActions>
+          <DrawerCloseButton onClick={onClose} />
+        </DrawerActions>
+      </DrawerHead>
+      <DrawerPanelBody data-test="build-side-panel-body">
+        <DescriptionList
+          data-test="pipeline-run-details"
+          columnModifier={{
+            default: '2Col',
+          }}
+        >
+          <DescriptionListGroup>
+            <DescriptionListTerm>Created at</DescriptionListTerm>
+            <DescriptionListDescription>
+              <Timestamp timestamp={pipelineRun.metadata?.creationTimestamp ?? '-'} />
+            </DescriptionListDescription>
+          </DescriptionListGroup>
+          <DescriptionListGroup>
+            <DescriptionListTerm>Duration</DescriptionListTerm>
+            <DescriptionListDescription>{duration ?? '-'}</DescriptionListDescription>
+          </DescriptionListGroup>
+          <DescriptionListGroup>
+            <DescriptionListTerm>Type</DescriptionListTerm>
+            <DescriptionListDescription>Build</DescriptionListDescription>
+          </DescriptionListGroup>
+          <DescriptionListGroup>
+            <DescriptionListTerm>Pipeline</DescriptionListTerm>
+            <DescriptionListDescription>
+              {pipelineRun.metadata?.labels[PipelineRunLabel.PIPELINE_NAME] ?? '-'}
+            </DescriptionListDescription>
+          </DescriptionListGroup>
+        </DescriptionList>
+        <DescriptionList
+          className="pf-v6-u-mt-lg"
+          data-test="pipeline-run-details"
+          columnModifier={{
+            default: '1Col',
+          }}
+        >
+          <DescriptionListGroup>
+            <DescriptionListTerm>Component</DescriptionListTerm>
+            <DescriptionListDescription>
+              {pipelineRun.metadata?.labels?.[PipelineRunLabel.COMPONENT] ? (
+                pipelineRun.metadata?.labels?.[PipelineRunLabel.APPLICATION] ? (
+                  <Link
+                    to={COMPONENT_DETAILS_PATH.createPath({
+                      workspaceName: namespace,
+                      applicationName: pipelineRun.metadata.labels[PipelineRunLabel.APPLICATION],
+                      componentName: pipelineRun.metadata.labels[PipelineRunLabel.COMPONENT],
+                    })}
+                  >
+                    {pipelineRun.metadata.labels[PipelineRunLabel.COMPONENT]}
+                  </Link>
                 ) : (
-                  '-'
-                )}
-              </DescriptionListDescription>
-            </DescriptionListGroup>
-            {taskRunsLoaded && !taskRunsError && (
-              <ScanDescriptionListGroup taskRuns={taskRuns} hideIfNotFound />
-            )}
-            <DescriptionListGroup>
-              <DescriptionListDescription>
-                <Link
-                  to={PIPELINE_RUNS_LOG_PATH.createPath({
-                    workspaceName: namespace,
-                    applicationName: workflowData.application,
-                    pipelineRunName: pipelineRun.metadata.name,
-                  })}
-                >
-                  View logs
-                </Link>
-              </DescriptionListDescription>
-            </DescriptionListGroup>
-          </DescriptionList>
-          {results ? (
-            <div className="pf-v5-u-mt-lg">
-              <RunResultsList results={results} status={pipelineStatus} compressed />
-            </div>
-          ) : null}
-
-          {specParams?.length && (
-            <>
-              <Divider style={{ padding: 'var(--pf-v5-global--spacer--lg) 0' }} />
-              <RunParamsList params={specParams} compressed />
-            </>
+                  pipelineRun.metadata.labels[PipelineRunLabel.COMPONENT]
+                )
+              ) : (
+                '-'
+              )}
+            </DescriptionListDescription>
+          </DescriptionListGroup>
+          {taskRunsLoaded && !taskRunsError && (
+            <ScanDescriptionListGroup taskRuns={taskRuns} hideIfNotFound />
           )}
-        </DrawerPanelBody>
-      </div>
+          <DescriptionListGroup>
+            <DescriptionListDescription>
+              <Link
+                to={PIPELINE_RUNS_LOG_PATH.createPath({
+                  workspaceName: namespace,
+                  applicationName: workflowData.application,
+                  pipelineRunName: pipelineRun.metadata.name,
+                })}
+              >
+                View logs
+              </Link>
+            </DescriptionListDescription>
+          </DescriptionListGroup>
+        </DescriptionList>
+        {results ? (
+          <div className="pf-v6-u-mt-lg">
+            <RunResultsList results={results} status={pipelineStatus} compressed />
+          </div>
+        ) : null}
+
+        {specParams?.length && (
+          <>
+            <Divider style={{ padding: 'var(--pf-t--global--spacer--lg)' }} />
+            <RunParamsList params={specParams} compressed />
+          </>
+        )}
+      </DrawerPanelBody>
     </>
   );
 };

@@ -77,7 +77,7 @@ const App = () => {
           }
         />
       </NuqsAdapter>
-      <ReactQueryDevtools initialIsOpen={false} position="bottom" />
+      <ReactQueryDevtools initialIsOpen={false} position="bottom" buttonPosition="bottom-left" />
     </>
   );
 };

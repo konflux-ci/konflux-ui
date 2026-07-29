@@ -1,16 +1,15 @@
 import React from 'react';
 import {
-  Modal,
-  Stack,
-  StackItem,
-  TextContent,
-  Text,
+  Content,
   Alert,
   AlertVariant,
   Button,
   ButtonType,
   ButtonVariant,
-  ModalVariant,
+  Modal,
+  ModalBody,
+  ModalFooter,
+  ModalHeader,
 } from '@patternfly/react-core';
 import { K8sQueryDeleteResource } from '../../k8s';
 import { RoleBindingModel } from '../../models';
@@ -33,8 +32,6 @@ export const RevokeAccessModal: React.FC<React.PropsWithChildren<Props>> = ({
   const handleSubmit = React.useCallback(
     async (e) => {
       e.preventDefault();
-      // We need to set submitting as true, this ensure the 'Revoke' button cannot be
-      // reclicked during the resource is deleting.
       setSubmitting(true);
       setError(null);
       try {
@@ -53,42 +50,49 @@ export const RevokeAccessModal: React.FC<React.PropsWithChildren<Props>> = ({
     [onClose, rb],
   );
 
+  const { isOpen, variant, title, ...rest } = modalProps || {};
+
   return (
-    <Modal {...modalProps} variant={ModalVariant.small}>
-      <Stack hasGutter>
-        <StackItem>
-          <TextContent>
-            <Text data-test="description">
-              The user <strong>{username}</strong> will lose access to this namespace and all of its
-              applications, environments, and any other dependent items.
-            </Text>
-            <Text>You can always grant the user access later.</Text>
-          </TextContent>
-        </StackItem>
-        <StackItem>
-          {error && (
-            <Alert isInline variant={AlertVariant.danger} title="An error occurred">
-              {error}
-            </Alert>
-          )}
-          <Button
-            type={ButtonType.submit}
-            variant={ButtonVariant.danger}
-            isLoading={submitting}
-            onClick={handleSubmit}
-            isDisabled={submitting}
-            data-test="revoke-access"
-          >
-            Revoke
-          </Button>
-          <Button
-            variant={ButtonVariant.link}
-            onClick={() => onClose(null, { submitClicked: false })}
-          >
-            Cancel
-          </Button>
-        </StackItem>
-      </Stack>
+    <Modal
+      {...rest}
+      variant={variant}
+      isOpen={isOpen}
+      onClose={onClose}
+      data-test="revoke-access-modal"
+    >
+      <ModalHeader title={title} />
+      <ModalBody>
+        <Content>
+          <Content component="p" data-test="description">
+            The user <strong>{username}</strong> will lose access to this namespace and all of its
+            applications, environments, and any other dependent items.
+          </Content>
+          <Content component="p">You can always grant the user access later.</Content>
+        </Content>
+        {error && (
+          <Alert isInline variant={AlertVariant.danger} title="An error occurred">
+            {error}
+          </Alert>
+        )}
+      </ModalBody>
+      <ModalFooter>
+        <Button
+          type={ButtonType.submit}
+          variant={ButtonVariant.danger}
+          isLoading={submitting}
+          onClick={handleSubmit}
+          isDisabled={submitting}
+          data-test="revoke-access"
+        >
+          Revoke
+        </Button>
+        <Button
+          variant={ButtonVariant.link}
+          onClick={() => onClose?.(null, { submitClicked: false })}
+        >
+          Cancel
+        </Button>
+      </ModalFooter>
     </Modal>
   );
 };

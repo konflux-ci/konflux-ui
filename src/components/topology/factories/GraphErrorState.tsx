@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Alert, AlertActionCloseButton, Bullseye, Icon } from '@patternfly/react-core';
 import { OutlinedEyeSlashIcon } from '@patternfly/react-icons/dist/esm/icons/outlined-eye-slash-icon';
-import { global_palette_black_600 as grayColor } from '@patternfly/react-tokens/dist/js/global_palette_black_600';
+import { t_global_text_color_subtle as grayColor } from '@patternfly/react-tokens/dist/js/t_global_text_color_subtle';
 import cx from 'classnames';
 
 import './GraphErrorState.scss';

@@ -2,14 +2,14 @@ export const addComponentPagePO = {
   samples: 'Start with a sample.',
   addComponent: '[data-test="add-component"] > a',
   enterSource: '[id="form-input-source-git-url-field"]',
-  verifiedSource: '[class="pf-v5-c-form-control pf-m-success"]',
+  verifiedSource: '[class="pf-v6-c-form-control pf-m-success"]',
   gitOptions: 'Git options',
   gitReference: '[data-test="git-reference"]',
   hideAdvancedGitOptions: 'Hide advanced Git options',
   contextDir: '[data-test="context-dir"]',
   next: 'button[type=submit]',
   cancel: 'button[type=reset]',
-  componentCard: '[data-ouia-component-type="PF5/Card"]',
+  componentCard: '[data-ouia-component-type="PF6/Card"]',
   toggleButton: '[id^="toggle"]',
   username: '[data-test="auth-username"]',
   token: '[data-test="auth-token"]',
@@ -56,9 +56,9 @@ export const ComponentsPagePO = {
   loading: '[data-test="loading-indicator"]',
   saveButton: '[data-test="submit-button"]',
   editNameInput: '[data-test="editable-label-input"]',
-  customBuildPipelineRadioBtn: '[for*="defaultBuildPipeline"] .pf-v5-c-switch__toggle',
+  customBuildPipelineRadioBtn: '[for*="defaultBuildPipeline"] .pf-v6-c-switch__toggle',
   customBuildRequestedState: '[data-test="requested-state"]',
-  label: '[class="pf-v5-c-label__content"]',
+  label: '[class="pf-v6-c-label__content"]',
   customBuildPipelineModalCloseBtn: '[data-test="close-button custom-pipeline-modal"]',
   dockerfileInput: '[id="form-input-source-git-dockerfileUrl-field"]',
 };
@@ -75,16 +75,16 @@ export const applicationDetailPagePO = {
 };
 
 export const componentsListPagePO = {
-  addComponent: '[pf-v5-c-button pf-m-primary]',
-  applicationName: 'pf-v5-c-title pf-m-4xl hacDev-page__heading',
-  items: '[pf-v5-c-data-list__item]',
+  addComponent: '[pf-v6-c-button pf-m-primary]',
+  applicationName: 'pf-v6-c-title pf-m-4xl hacDev-page__heading',
+  items: '[pf-v6-c-data-list__item]',
 };
 
 export const buildLogModalContentPO = {
-  modal: 'div[data-ouia-component-type="PF5/ModalContent"]',
+  modal: 'div[data-ouia-component-type="PF6/ModalContent"]',
   closeButton: '[aria-label="Close"]',
-  logText: '.pf-v5-c-log-viewer__text',
+  logText: '.pf-v6-c-log-viewer__text',
   logsTasklist: 'div[data-test="logs-tasklist"]',
   failedPipelineRunLogs: 'div[class="pipeline-run-logs"] [class*="pf-m-danger"]',
-  podLogNavList: '[data-ouia-component-type="PF5/Nav"]',
+  podLogNavList: '[data-ouia-component-type="PF6/Nav"]',
 };

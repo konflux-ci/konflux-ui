@@ -21,11 +21,12 @@ describe('EnvironmentProvisionErrorAlert', () => {
         errorStatus={getEnvironmentProvisionError(MockSnapshots[1])}
       />,
     );
+    expect(screen.getByTestId('error-expandable-section')).toBeInTheDocument();
     expect(
       screen
         .getByTestId('error-expandable-section')
-        .children[0].children[0].children[0].getAttribute('aria-hidden'),
-    ).toBe('true');
+        .querySelector('.pf-v6-c-expandable-section__content'),
+    ).not.toBeVisible();
   });
 
   it('should show relevant Error Details Alert', () => {

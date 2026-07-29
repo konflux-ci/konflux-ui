@@ -1,19 +1,17 @@
 import * as React from 'react';
-import { useQueries } from '@tanstack/react-query';
-import { PipelineRunLabel, PipelineRunType } from '~/consts/pipelinerun';
-import { CONFORMA_TASK, EC_TASK } from '~/consts/security';
+import { useQueries, type UseQueryResult } from '@tanstack/react-query';
+import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useComponents } from '~/hooks/useComponents';
 import { useTaskRunsV2 } from '~/hooks/useTaskRunsV2';
+import { logger } from '~/monitoring/logger';
 import { useNamespace } from '~/shared/providers/Namespace';
 import type { TaskRunKind } from '~/types';
-import {
-  ComponentConformaResult,
-  CONFORMA_RESULT_STATUS,
-} from '~/types/conforma';
+import { ComponentConformaResult } from '~/types/conforma';
 import type {
   ApplicationConformaResults,
   ComponentConformaStatus,
+  ConformaRefreshState,
   ConformaResultRow,
 } from '~/types/conforma';
 import { TektonResourceLabel } from '~/types/coreTekton';
@@ -22,18 +20,23 @@ import {
   mapConformaResultData,
   resolveConformaResultFromTaskRun,
 } from './conforma-fetchers';
+import { buildConformaSecurityTaskRunWatchOptions } from './conforma-taskrun-query';
+
+const NO_OP_REFRESH: ConformaRefreshState = {
+  lastFetchedAt: 0,
+  isRefreshing: false,
+  onRefresh: () => undefined,
+};
 
 const EMPTY_RESULTS: ApplicationConformaResults = {
   componentStatuses: [],
   allResults: [],
   totalComponents: 0,
   totalFailed: 0,
-  totalViolations: 0,
-  totalWarnings: 0,
-  totalSuccesses: 0,
   loaded: false,
-  settling: false,
   error: undefined,
+  partialLogError: undefined,
+  refresh: NO_OP_REFRESH,
 };
 
 function aggregateCounts(components: ComponentConformaResult[]) {
@@ -72,26 +75,35 @@ export const useApplicationConformaResults = (
     applicationName,
   );
 
-  const selector = React.useMemo(
-    () => ({
-      matchLabels: {
-        [PipelineRunLabel.APPLICATION]: applicationName,
-        [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.TEST,
-      },
-      matchExpressions: [
-        {
-          key: TektonResourceLabel.pipelineTask,
-          operator: 'In' as const,
-          values: [EC_TASK, CONFORMA_TASK],
-        },
-      ],
-    }),
-    [applicationName],
+  // Conforma security TaskRun selector — passed to useTaskRunsV2 so list data
+  // comes from the shared TaskRun data source (cluster watch + Tekton Results / KubeArchive).
+  const watchOptions = React.useMemo(
+    () =>
+      namespace?.length
+        ? buildConformaSecurityTaskRunWatchOptions(namespace, applicationName)
+        : null,
+    [namespace, applicationName],
   );
 
-  const [securityTaskRuns, taskRunsLoaded, taskRunsError] = useTaskRunsV2(
-    namespace?.length ? namespace : null,
-    { selector },
+  // Infinity staleTime: WS keeps data live; refresh button covers explicit refetch (vs global 30s).
+  const [securityTaskRuns, taskRunsLoaded, taskRunsError, , , taskRunWatchMeta] = useTaskRunsV2(
+    namespace,
+    watchOptions ? { selector: watchOptions.selector } : undefined,
+    { staleTime: Infinity },
+  );
+
+  const { refetch: refetchTaskRuns } = taskRunWatchMeta;
+  const onRefresh = React.useCallback(() => {
+    void refetchTaskRuns();
+  }, [refetchTaskRuns]);
+
+  const refresh = React.useMemo(
+    (): ConformaRefreshState => ({
+      lastFetchedAt: taskRunWatchMeta.dataUpdatedAt,
+      isRefreshing: taskRunWatchMeta.isFetching,
+      onRefresh,
+    }),
+    [taskRunWatchMeta.dataUpdatedAt, taskRunWatchMeta.isFetching, onRefresh],
   );
 
   const latestPerComponent = React.useMemo((): Map<string, TaskRunKind> => {
@@ -123,27 +135,38 @@ export const useApplicationConformaResults = (
     [latestPerComponent],
   );
 
-  const { logData, allSettled, aggregatedLogError } = useQueries({
+  const combineConformaLogResults = React.useCallback(
+    (
+      results: UseQueryResult<Awaited<ReturnType<typeof resolveConformaResultFromTaskRun>>>[],
+    ) => ({
+      logData: results.map((q) => q.data),
+      aggregatedLogError:
+        results.length > 0 && results.some((q) => q.isError)
+          ? results.find((q) => q.isError)?.error
+          : undefined,
+    }),
+    [],
+  );
+
+  const { logData, aggregatedLogError } = useQueries({
     queries: latestTaskRuns.map((tr) => ({
       queryKey: ['conforma-log', namespace, tr.metadata?.uid, isKubearchiveLogsEnabled] as const,
       queryFn: () => resolveConformaResultFromTaskRun(namespace, tr, isKubearchiveLogsEnabled),
       staleTime: Infinity,
       enabled: !!namespace && !!tr.metadata?.uid,
     })),
-    combine: (results) => ({
-      logData: results.map((q) => q.data),
-      allSettled: results.every((q) => !q.isLoading),
-      aggregatedLogError:
-        results.length > 0 && results.every((q) => q.isError) ? results[0].error : undefined,
-    }),
+    combine: combineConformaLogResults,
   });
 
-  const loaded = Boolean(
-    namespace?.length && componentsLoaded && taskRunsLoaded,
-  );
-  const settling = !allSettled;
+  const loaded = Boolean(namespace?.length && componentsLoaded && taskRunsLoaded);
 
-  const aggregateError = componentsError ?? taskRunsError ?? aggregatedLogError;
+  const fatalError = componentsError ?? taskRunsError;
+
+  React.useEffect(() => {
+    if (aggregatedLogError) {
+      logger.warn('Partial Conforma log fetch failure', { error: aggregatedLogError });
+    }
+  }, [aggregatedLogError]);
 
   return React.useMemo((): ApplicationConformaResults => {
     if (!namespace?.length) {
@@ -157,10 +180,7 @@ export const useApplicationConformaResults = (
 
       const data = logData[idx];
       if (data) {
-        conformaByComponent.set(
-          comp,
-          filterInvalidImageConformaRows(data.components ?? []),
-        );
+        conformaByComponent.set(comp, filterInvalidImageConformaRows(data.components ?? []));
       }
     });
 
@@ -178,8 +198,7 @@ export const useApplicationConformaResults = (
 
       const components = conformaByComponent.get(name);
       const taskRun = latestPerComponent.get(name);
-      const pipelineRunName =
-        taskRun?.metadata?.labels?.[TektonResourceLabel.pipelinerun];
+      const pipelineRunName = taskRun?.metadata?.labels?.[TektonResourceLabel.pipelinerun];
 
       if (!components) {
         return {
@@ -205,22 +224,24 @@ export const useApplicationConformaResults = (
       };
     });
 
-    const mergedConformaRows: ComponentConformaResult[] = [];
-    for (const components of conformaByComponent.values()) {
-      mergedConformaRows.push(...components);
+    const allResults: ConformaResultRow[] = [];
+    for (const [realComponentName, components] of conformaByComponent.entries()) {
+      const pipelineRunName =
+        latestPerComponent.get(realComponentName)?.metadata?.labels?.[
+          TektonResourceLabel.pipelinerun
+        ];
+      const rows = mapConformaResultData(components, pipelineRunName);
+      // The EC/Conforma report assigns its own per-image `name` to each
+      // components[] entry (see ComponentConformaResult), which is NOT the
+      // real K8s component name and can differ across architecture images
+      // of the same logical component. Overwrite it with the authoritative
+      // name so rows stay associated with the correct component regardless
+      // of how many arch-specific images were evaluated for it.
+      rows.forEach((row) => {
+        row.component = realComponentName;
+      });
+      allResults.push(...rows);
     }
-
-    const allResults: ConformaResultRow[] = mapConformaResultData(mergedConformaRows);
-
-    const { totalViolations, totalWarnings, totalSuccesses } = allResults.reduce(
-      (acc, r) => {
-        if (r.status === CONFORMA_RESULT_STATUS.violations) acc.totalViolations++;
-        else if (r.status === CONFORMA_RESULT_STATUS.warnings) acc.totalWarnings++;
-        else if (r.status === CONFORMA_RESULT_STATUS.successes) acc.totalSuccesses++;
-        return acc;
-      },
-      { totalViolations: 0, totalWarnings: 0, totalSuccesses: 0 },
-    );
 
     const totalComponents = componentStatuses.length;
     const totalFailed = componentStatuses.filter((c) => c.status === 'fail').length;
@@ -230,21 +251,20 @@ export const useApplicationConformaResults = (
       allResults,
       totalComponents,
       totalFailed,
-      totalViolations,
-      totalWarnings,
-      totalSuccesses,
       loaded,
-      settling,
-      error: aggregateError,
+      error: fatalError,
+      partialLogError: aggregatedLogError,
+      refresh,
     };
   }, [
-    aggregateError,
+    aggregatedLogError,
     appComponents,
+    fatalError,
     latestPerComponent,
     latestTaskRuns,
     loaded,
-    settling,
     logData,
     namespace?.length,
+    refresh,
   ]);
 };

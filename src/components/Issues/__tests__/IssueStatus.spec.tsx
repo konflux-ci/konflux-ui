@@ -7,7 +7,7 @@ describe('LockedIcon', () => {
 
     const icon = container.querySelector('svg');
     expect(icon).toBeInTheDocument();
-    expect(icon).toHaveAttribute('color', '#a30000');
+    expect(icon).toHaveAttribute('color', '#b1380b');
 
     const title = container.querySelector('title');
     expect(title).toHaveTextContent('Resolved');
@@ -20,7 +20,7 @@ describe('UnlockedIcon', () => {
 
     const icon = container.querySelector('svg');
     expect(icon).toBeInTheDocument();
-    expect(icon).toHaveAttribute('color', '#5ba352');
+    expect(icon).toHaveAttribute('color', '#3d7317');
 
     const title = container.querySelector('title');
     expect(title).toHaveTextContent('Active');
@@ -140,14 +140,14 @@ describe('IssueStatus', () => {
       const { container } = render(<IssueStatus locked={true} />);
 
       const icon = container.querySelector('svg');
-      expect(icon).toHaveAttribute('color', '#a30000');
+      expect(icon).toHaveAttribute('color', '#b1380b');
     });
 
     it('should use green color for unlocked status', () => {
       const { container } = render(<IssueStatus locked={false} />);
 
       const icon = container.querySelector('svg');
-      expect(icon).toHaveAttribute('color', '#5ba352');
+      expect(icon).toHaveAttribute('color', '#3d7317');
     });
   });
 });

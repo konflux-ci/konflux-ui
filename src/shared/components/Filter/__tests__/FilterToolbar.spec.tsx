@@ -140,13 +140,13 @@ describe('FilterToolbar', () => {
     };
 
     renderToolbar([searchConfig, groupedBoolean], undefined, undefined, {
-      toggles: { variant: 'icon-button-group' },
+      toggles: { variant: 'action-group-plain' },
     });
 
     const defaultGroup = screen.getByTestId('filter-group-default');
     expect(defaultGroup).toHaveClass('pf-m-filter-group');
 
     const togglesGroup = screen.getByTestId('filter-group-toggles');
-    expect(togglesGroup).toHaveClass('pf-m-icon-button-group');
+    expect(togglesGroup).toHaveClass('pf-m-action-group-plain');
   });
 });

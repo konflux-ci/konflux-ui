@@ -1,39 +1,69 @@
 .log-content__list {
+  position: relative;
+  z-index: 1;
   overflow-x: hidden !important;
   width: 100% !important;
 
   &.log-content__with-gutter {
-    display: flex;
-    padding-top: var(--pf-v5-global--spacer--xs);
-    padding-bottom: var(--pf-v5-global--spacer--xs);
-    box-sizing: border-box;
+    padding-bottom: var(--pf-t--global--spacer--xs);
 
     // Enable keyboard navigation
     &:focus {
-      outline: 2px solid var(--pf-v5-global--primary-color--100);
+      outline: 2px solid var(--pf-t--global--color--brand--default);
       outline-offset: -2px;
     }
     // Remove focus outline in dark mode (use border instead for better contrast)
     .pf-m-dark &:focus {
-      outline-color: var(--pf-v5-global--primary-color--200);
+      outline-color: var(--pf-t--global--color--brand--hover);
     }
   }
 }
 
-.log-content__content-column {
-  flex: 1;
-  min-width: 0;
-  position: relative;
+// Per-row gutter cell — sticky left column rendered inline within each virtual row.
+.log-content__gutter {
+  position: sticky;
+  left: 0;
+  flex-shrink: 0;
+  width: var(--pf-t--global--spacer--3xl);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: var(--pf-t--global--spacer--sm);
+  background-color: var(--pf-t--global--background--color--secondary--default);
+  border-right: var(--pf-t--global--border--width--box--default) solid
+    var(--pf-t--global--border--color--default);
+  user-select: none;
+  overflow: hidden;
+
+  &--highlighted {
+    background-color: var(--pf-t--global--color--status--warning--100);
+  }
+
+  .pf-m-dark & {
+    background-color: var(--pf-t--global--background--color--primary--default);
+    border-right-color: var(--pf-t--global--border--color--default);
+  }
+
+  .pf-m-dark &--highlighted {
+    background-color: var(--pf-t--global--color--status--warning--200);
+  }
 }
 
-.log-content__line--indented {
-  padding-left: var(--pf-v5-global--spacer--md);
+// Content cell within each virtual row (flex sibling of .log-content__gutter)
+.log-content__row-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.log-content__container {
+  position: relative;
+  isolation: isolate;
 }
 
 .log-content__line--highlighted {
-  background-color: var(--pf-v5-global--palette--gold-50);
+  background-color: var(--pf-t--global--color--status--warning--default);
 
   .pf-m-dark & {
-    background-color: var(--pf-v5-global--palette--gold-700);
+    background-color: var(--pf-t--global--color--nonstatus--yellow--hover);
   }
 }
