@@ -1,4 +1,3 @@
-import { mockConsole, MockConsole } from '~/unit-test-utils';
 import type { MonitoringConfig } from '../../types';
 import { SentryProvider } from '../SentryProvider';
 
@@ -7,51 +6,56 @@ jest.mock('@sentry/react', () => ({
   captureException: jest.fn().mockReturnValue('exception-event-id'),
   captureMessage: jest.fn().mockReturnValue('message-event-id'),
   setUser: jest.fn(),
-  browserTracingIntegration: jest.fn().mockReturnValue({ name: 'BrowserTracing' }),
+  reactRouterBrowserTracingIntegration: jest
+    .fn()
+    .mockReturnValue({ name: 'ReactRouterBrowserTracing' }),
 }));
 
 describe('SentryProvider', () => {
   let provider: SentryProvider;
-  let consoleMock: MockConsole;
   let Sentry: typeof import('@sentry/react');
 
   beforeEach(() => {
     provider = new SentryProvider();
-    consoleMock = mockConsole();
     Sentry = jest.requireMock('@sentry/react');
     jest.clearAllMocks();
   });
 
-  afterEach(() => {
-    consoleMock.restore();
-  });
-
-  it('should initialize Sentry with merged config and log success', async () => {
+  it('should initialize Sentry with React Router browser tracing integration', () => {
     const config: MonitoringConfig & { dsn: string } = {
       enabled: true,
       provider: 'sentry',
       dsn: 'https://test@sentry.io/123',
       environment: 'production',
       cluster: 'prod-cluster',
-      sampleRates: { errors: 0.5 },
+      sampleRates: { errors: 0.5, traces: 0.3 },
     };
 
-    await provider.init(config);
+    provider.init(config);
 
+    expect(Sentry.reactRouterBrowserTracingIntegration).toHaveBeenCalledWith(
+      expect.objectContaining({
+        useEffect: expect.any(Function),
+        useLocation: expect.any(Function),
+        useNavigationType: expect.any(Function),
+        createRoutesFromChildren: expect.any(Function),
+        matchRoutes: expect.any(Function),
+      }),
+    );
     expect(Sentry.init).toHaveBeenCalledWith(
       expect.objectContaining({
         dsn: 'https://test@sentry.io/123',
         environment: 'production',
         sampleRate: 0.5,
         sendDefaultPii: true,
-        tracesSampleRate: 0.2,
+        tracesSampleRate: 0.3,
+        tracePropagationTargets: ['localhost', /^\//],
         initialScope: { tags: { cluster: 'prod-cluster' } },
       }),
     );
-    expect(consoleMock.info).toHaveBeenCalledWith('Sentry initialized', expect.any(Object));
   });
 
-  it('should use default values when config fields are missing', async () => {
+  it('should use default values when config fields are missing', () => {
     const config: MonitoringConfig & { dsn: string } = {
       enabled: true,
       provider: 'sentry',
@@ -59,17 +63,18 @@ describe('SentryProvider', () => {
       environment: 'production',
     };
 
-    await provider.init(config);
+    provider.init(config);
 
     expect(Sentry.init).toHaveBeenCalledWith(
       expect.objectContaining({
         sampleRate: 1.0,
+        tracesSampleRate: 0.2,
         initialScope: { tags: { cluster: 'unknown' } },
       }),
     );
   });
 
-  it('should use default sample rate when sampleRates.errors is undefined', async () => {
+  it('should use default sample rate when sampleRates.errors is undefined', () => {
     const config: MonitoringConfig & { dsn: string } = {
       enabled: true,
       provider: 'sentry',
@@ -78,7 +83,7 @@ describe('SentryProvider', () => {
       sampleRates: {},
     };
 
-    await provider.init(config);
+    provider.init(config);
 
     expect(Sentry.init).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -87,7 +92,7 @@ describe('SentryProvider', () => {
     );
   });
 
-  it('should use "unknown" cluster when cluster is empty string', async () => {
+  it('should use "unknown" cluster when cluster is empty string', () => {
     const config: MonitoringConfig & { dsn: string; cluster: string } = {
       enabled: true,
       provider: 'sentry',
@@ -96,7 +101,7 @@ describe('SentryProvider', () => {
       cluster: '',
     };
 
-    await provider.init(config);
+    provider.init(config);
 
     expect(Sentry.init).toHaveBeenCalledWith(
       expect.objectContaining({

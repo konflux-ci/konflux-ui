@@ -1,3 +1,7 @@
+// Sentry must be initialized before any other imports that trigger createBrowserRouter.
+// This side-effect import calls initMonitoring() synchronously.
+import './instrument';
+
 import React from 'react';
 import { RouterProvider } from 'react-router-dom';
 import { Bullseye, Spinner } from '@patternfly/react-core';
@@ -9,7 +13,6 @@ import { initAnalytics } from '~/analytics';
 import { analyticsService, consumeLoginSignal } from '~/analytics/AnalyticsService';
 import { obfuscate } from '~/analytics/obfuscate';
 import { useKonfluxPublicInfo } from '~/hooks/useKonfluxPublicInfo';
-import { initMonitoring } from '~/monitoring';
 import { AuthProvider } from './auth/AuthContext';
 import { useAuth } from './auth/useAuth';
 import { useAuthAnalytics } from './auth/useAuthAnalytics';
@@ -83,19 +86,9 @@ const App = () => {
 };
 
 void (() => {
-  const initializers = [
-    { name: 'monitoring', context: 'initMonitoring', init: initMonitoring },
-    { name: 'analytics', context: 'initAnalytics', init: initAnalytics },
-  ] as const;
-
-  void Promise.allSettled(initializers.map(({ init }) => init())).then((results) => {
-    results.forEach((result, i) => {
-      if (result.status === 'rejected') {
-        const { name, context } = initializers[i];
-        // eslint-disable-next-line no-console
-        console.error(`Failed to initialize ${name} ${context}`, result.reason);
-      }
-    });
+  void initAnalytics().catch((reason) => {
+    // eslint-disable-next-line no-console
+    console.error('Failed to initialize analytics', reason);
   });
 
   ReactDOM.createRoot(document.getElementById('root')).render(
