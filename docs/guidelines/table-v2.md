@@ -608,6 +608,12 @@ interface MyGroupedData {
   items: MyItem[];
 }
 
+interface MyItem {
+  id: string;
+  name: string;
+  value: string;
+}
+
 const MyGroupedTable = ({ groupedData }: { groupedData: MyGroupedData[] }) => {
   // Track which groups are expanded
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
@@ -700,8 +706,9 @@ const MyGroupedTable = ({ groupedData }: { groupedData: MyGroupedData[] }) => {
 
 **Key points:**
 
-- Use `expanded` prop to externally control which rows are expanded (TanStack `ExpandedState` = `Record<string, boolean>`)
+- Use `expanded` prop to externally control which rows are expanded (TanStack `ExpandedState` = `true | Record<string, boolean>`)
 - Use `onExpandedChange` to receive expansion state updates from the table
+- Use `expandedContent` to render custom content when a row is expanded (e.g., nested tables, detail panels)
 - Use `getSubRows` when your data has a hierarchical structure (nested children)
 - Use `data-test` to provide custom test identifiers for table instances
 
