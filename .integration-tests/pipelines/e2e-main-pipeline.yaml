@@ -55,10 +55,10 @@ spec:
       description: 'Type of job (pr-check, periodic-local, periodic-stage)'
       default: 'pr-check'
       type: string
-    - name: dry-run
-      description: 'If true, skip sending the Slack notification'
-      default: false
-      type: boolean
+    - name: skip-slack-notification
+      description: 'Skip sending the Slack notification'
+      default: 'false'
+      type: string
     - name: test-image-tag
       description: >-
         Tag for the E2E test image (quay.io/konflux_ui_qe/konflux-ui-tests:<tag>).
@@ -264,7 +264,7 @@ spec:
 
     - name: send-slack-notification
       when:
-        - input: '$(params.dry-run)'
+        - input: '$(params.skip-slack-notification)'
           operator: notin
           values: ['true']
       taskRef:
