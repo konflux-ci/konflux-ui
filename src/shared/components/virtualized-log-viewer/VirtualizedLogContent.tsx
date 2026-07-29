@@ -32,8 +32,6 @@ export interface VirtualizedLogContentProps {
   height: number;
   width: string | number;
   scrollToRow?: number;
-  /** Set when user navigates search matches (prev/next); expands folded step for that match only */
-  expandSearchTargetRow?: number;
   onScroll?: (props: {
     scrollDirection: 'forward' | 'backward';
     scrollOffset: number;
@@ -55,7 +53,6 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
   height,
   width,
   scrollToRow,
-  expandSearchTargetRow,
   onScroll,
   searchText = '',
   currentSearchMatch,
@@ -65,32 +62,26 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
   const [itemSize, setItemSize] = React.useState(VIRTUALIZATION_CONFIG.FALLBACK_LINE_HEIGHT);
   const charsPerLineRef = React.useRef(VIRTUALIZATION_CONFIG.FALLBACK_CHARS_PER_LINE);
 
-  const isMultiSection = sections.length > 1;
   const { expandedSections, toggleSection, expandSection } = useSectionFold(sections);
 
   const internalNormalizedSections = React.useMemo(
     () => (normalizedSectionsProp ? null : sections.map(normalizeSection)),
     [normalizedSectionsProp, sections],
   );
-  const effectiveNormalizedSections = normalizedSectionsProp ?? internalNormalizedSections ?? [];
+  const effectiveNormalizedSections = React.useMemo(
+    () => normalizedSectionsProp ?? internalNormalizedSections ?? [],
+    [normalizedSectionsProp, internalNormalizedSections],
+  );
 
-  const {
-    displayRows,
-    allLines,
-    searchLineToDisplayRow,
-    searchLineToFlatLineIndex,
-    searchLineToSectionIndex,
-    lineNumberToDisplayRow,
-    lineNumberToSectionIndex,
-  } = useSectionRows(effectiveNormalizedSections, expandedSections);
+  const isMultiSection = effectiveNormalizedSections.length > 1;
+
+  const { displayRows, allLines, lineNumberToDisplayRow, lineNumberToSectionIndex } =
+    useSectionRows(effectiveNormalizedSections, expandedSections);
 
   const rowCount = displayRows.length;
 
   // Keep a ref so the expand-on-search effect always reads the latest map
   // without listing it as a dep (which would re-trigger on every fold/unfold).
-  const searchLineToSectionIndexRef = React.useRef(searchLineToSectionIndex);
-  searchLineToSectionIndexRef.current = searchLineToSectionIndex;
-
   const lineNumberToSectionIndexRef = React.useRef(lineNumberToSectionIndex);
   lineNumberToSectionIndexRef.current = lineNumberToSectionIndex;
 
@@ -100,25 +91,25 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
   const searchRegex = useSearchRegex(deferredSearchText);
   const { tokenizeLine } = useTokenization(allLines);
 
-  const contentSearchMatch = React.useMemo((): SearchedWord | undefined => {
-    if (!currentSearchMatch || currentSearchMatch.rowIndex < 0) return undefined;
-    const flatLineIndex = searchLineToFlatLineIndex.get(currentSearchMatch.rowIndex);
-    if (flatLineIndex === undefined) return undefined;
-    return { rowIndex: flatLineIndex, matchIndex: currentSearchMatch.matchIndex };
-  }, [currentSearchMatch, searchLineToFlatLineIndex]);
-
   const renderLine = useLineRenderer({
     tokenizeLine,
     searchRegex,
-    currentSearchMatch: contentSearchMatch,
+    currentSearchMatch,
   });
 
   React.useEffect(() => {
-    if (!expandSearchTargetRow || expandSearchTargetRow <= 0) return;
-    const sectionIndex = searchLineToSectionIndexRef.current.get(expandSearchTargetRow - 1);
-    if (sectionIndex === undefined) return;
-    expandSection(sectionIndex);
-  }, [expandSearchTargetRow, expandSection]);
+    if (!isMultiSection || !currentSearchMatch || currentSearchMatch.rowIndex < 0) return;
+    const flatIndex = currentSearchMatch.rowIndex;
+    let offset = 0;
+    for (let i = 0; i < effectiveNormalizedSections.length; i++) {
+      const sectionLineCount = effectiveNormalizedSections[i].lines.length;
+      if (flatIndex < offset + sectionLineCount) {
+        expandSection(i);
+        return;
+      }
+      offset += sectionLineCount;
+    }
+  }, [isMultiSection, currentSearchMatch, expandSection, effectiveNormalizedSections]);
 
   const measureCallbackRef = React.useCallback((node: HTMLDivElement | null) => {
     if (node) {
@@ -161,9 +152,13 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
 
   const effectiveScrollToRow = React.useMemo(() => {
     if (!scrollToRow || scrollToRow <= 0) return undefined;
-    const displayIdx = searchLineToDisplayRow.get(scrollToRow - 1);
-    return displayIdx !== undefined ? displayIdx + 1 : undefined;
-  }, [scrollToRow, searchLineToDisplayRow]);
+    const flatIndex = scrollToRow - 1;
+    const displayIdx = displayRows.findIndex(
+      (row) => row.kind === 'content' && row.flatLineIndex === flatIndex,
+    );
+    // If exact content row found, scroll to it; otherwise scroll to last row (auto-scroll to bottom)
+    return displayIdx >= 0 ? displayIdx + 1 : displayRows.length;
+  }, [scrollToRow, displayRows]);
 
   const { clearScrollTracking } = useVirtualizedScroll({
     virtualizer,
