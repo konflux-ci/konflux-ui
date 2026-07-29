@@ -94,7 +94,10 @@ describe('loadMonitoringConfig', () => {
       environment: 'production',
       cluster: 'prod-cluster',
     });
-    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('MONITORING_DSN is empty'));
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('MONITORING_DSN is empty'),
+      expect.anything(),
+    );
 
     warnSpy.mockRestore();
   });

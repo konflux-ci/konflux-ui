@@ -1,12 +1,13 @@
-import { captureException } from '@sentry/react';
 import { render, screen } from '@testing-library/react';
 import { HttpError } from '../../k8s/error';
 import { createReactRouterMock, routerRenderer } from '../../utils/test-utils';
 import { RouteErrorBoundry } from '../RouteErrorBoundary';
 
-jest.mock('@sentry/react', () => ({
-  ...jest.requireActual('@sentry/react'),
-  captureException: jest.fn(),
+const mockCaptureException = jest.fn();
+jest.mock('~/monitoring', () => ({
+  monitoringService: {
+    captureException: (...args: unknown[]) => mockCaptureException(...args),
+  },
 }));
 
 describe('RouteErrorBoundary', () => {
@@ -16,11 +17,11 @@ describe('RouteErrorBoundary', () => {
     jest.clearAllMocks();
   });
 
-  it('should report error to Sentry via captureException', () => {
+  it('should report error to monitoring service via captureException', () => {
     const testError = { status: 403 };
     mockUseRouteError.mockReturnValue(testError);
     routerRenderer(<RouteErrorBoundry />);
-    expect(captureException).toHaveBeenCalledWith(testError);
+    expect(mockCaptureException).toHaveBeenCalledWith(testError);
   });
 
   it('should render NoAccessState for 403 errors', () => {

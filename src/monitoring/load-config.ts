@@ -1,4 +1,5 @@
 import { parseBoolean, parseNumber } from '~/utils/common-utils';
+import { logger } from './logger';
 import type { MonitoringConfig } from './types';
 
 /**
@@ -37,10 +38,7 @@ export function loadMonitoringConfig(): MonitoringConfig {
 
   // Validate DSN before init — empty DSN causes Sentry to silently fail
   if (!runtime.MONITORING_DSN) {
-    // eslint-disable-next-line no-console
-    console.warn(
-      '[monitoring] MONITORING_ENABLED is true but MONITORING_DSN is empty — falling back to noop',
-    );
+    logger.warn('MONITORING_ENABLED is true but MONITORING_DSN is empty — falling back to noop');
     return {
       ...DEFAULT_MONITORING_CONFIG,
       environment: runtime.MONITORING_ENVIRONMENT || DEFAULT_MONITORING_CONFIG.environment,
