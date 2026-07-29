@@ -712,7 +712,7 @@ describe('LogViewer Integration Tests', () => {
     });
   });
 
-  describe('Context providers integration', () => {
+  describe('Search integration', () => {
     it('should provide LogViewerContext to children', () => {
       render(<LogViewer {...defaultProps} />);
 

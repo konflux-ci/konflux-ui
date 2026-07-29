@@ -18,7 +18,7 @@ describe('useLogSearch', () => {
     expect(result.current.scrollToRow).toBe(0);
   });
 
-  it('finds matches across multiple lines', () => {
+  it('should find matches across multiple lines', () => {
     const { result } = renderHook(() => useLogSearch({ lines }));
 
     act(() => result.current.setSearchText('INFO'));
@@ -28,7 +28,7 @@ describe('useLogSearch', () => {
     expect(result.current.currentMatch).toEqual({ rowIndex: 0, matchIndex: 1 });
   });
 
-  it('searches case-insensitively', () => {
+  it('should search case-insensitively', () => {
     const { result } = renderHook(() => useLogSearch({ lines }));
 
     act(() => result.current.setSearchText('info'));
@@ -36,7 +36,7 @@ describe('useLogSearch', () => {
     expect(result.current.matchCount).toBe(3);
   });
 
-  it('finds multiple matches within a single line', () => {
+  it('should find multiple matches within a single line', () => {
     const repeatingLines = ['foo bar foo baz foo'];
     const { result } = renderHook(() => useLogSearch({ lines: repeatingLines }));
 
@@ -46,7 +46,7 @@ describe('useLogSearch', () => {
     expect(result.current.currentMatch).toEqual({ rowIndex: 0, matchIndex: 1 });
   });
 
-  it('navigates forward through matches with nextMatch', () => {
+  it('should navigate forward through matches with nextMatch', () => {
     const { result } = renderHook(() => useLogSearch({ lines }));
 
     act(() => result.current.setSearchText('INFO'));
@@ -60,7 +60,7 @@ describe('useLogSearch', () => {
     expect(result.current.currentMatchIndex).toBe(2);
   });
 
-  it('wraps around from last to first with nextMatch', () => {
+  it('should wrap around from last to first with nextMatch', () => {
     const { result } = renderHook(() => useLogSearch({ lines }));
 
     act(() => result.current.setSearchText('INFO'));
@@ -73,7 +73,7 @@ describe('useLogSearch', () => {
     expect(result.current.currentMatchIndex).toBe(0);
   });
 
-  it('navigates backward through matches with prevMatch', () => {
+  it('should navigate backward through matches with prevMatch', () => {
     const { result } = renderHook(() => useLogSearch({ lines }));
 
     act(() => result.current.setSearchText('INFO'));
@@ -86,7 +86,7 @@ describe('useLogSearch', () => {
     expect(result.current.currentMatchIndex).toBe(1);
   });
 
-  it('wraps around from first to last with prevMatch', () => {
+  it('should wrap around from first to last with prevMatch', () => {
     const { result } = renderHook(() => useLogSearch({ lines }));
 
     act(() => result.current.setSearchText('INFO'));
@@ -105,7 +105,7 @@ describe('useLogSearch', () => {
     expect(result.current.scrollToRow).toBe(3);
   });
 
-  it('resets currentMatchIndex when search text changes', () => {
+  it('should reset currentMatchIndex when search text changes', () => {
     const { result } = renderHook(() => useLogSearch({ lines }));
 
     act(() => result.current.setSearchText('INFO'));
@@ -118,6 +118,22 @@ describe('useLogSearch', () => {
     expect(result.current.matchCount).toBe(1);
   });
 
+  it('should keep currentMatch valid when lines shrink', () => {
+    const { result, rerender } = renderHook(({ l }) => useLogSearch({ lines: l }), {
+      initialProps: { l: lines },
+    });
+
+    act(() => result.current.setSearchText('INFO'));
+    act(() => result.current.nextMatch());
+    act(() => result.current.nextMatch());
+
+    rerender({ l: [lines[0]] });
+
+    expect(result.current.matchCount).toBe(1);
+    expect(result.current.currentMatch).toEqual({ rowIndex: 0, matchIndex: 1 });
+    expect(result.current.currentMatchIndex).toBe(0);
+  });
+
   it('should return no matches when search text does not match any line', () => {
     const { result } = renderHook(() => useLogSearch({ lines }));
 
@@ -128,7 +144,7 @@ describe('useLogSearch', () => {
     expect(result.current.scrollToRow).toBe(0);
   });
 
-  it('handles empty lines array', () => {
+  it('should handle empty lines array', () => {
     const { result } = renderHook(() => useLogSearch({ lines: [] }));
 
     act(() => result.current.setSearchText('test'));
