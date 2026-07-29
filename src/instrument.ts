@@ -11,4 +11,9 @@
  */
 import { initMonitoring } from '~/monitoring';
 
-initMonitoring();
+try {
+  initMonitoring();
+} catch (e) {
+  // eslint-disable-next-line no-console
+  console.error('[monitoring] Failed to initialize monitoring', e);
+}

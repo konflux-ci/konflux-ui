@@ -13,6 +13,7 @@ import { initAnalytics } from '~/analytics';
 import { analyticsService, consumeLoginSignal } from '~/analytics/AnalyticsService';
 import { obfuscate } from '~/analytics/obfuscate';
 import { useKonfluxPublicInfo } from '~/hooks/useKonfluxPublicInfo';
+import { logger } from '~/monitoring/logger';
 import { AuthProvider } from './auth/AuthContext';
 import { useAuth } from './auth/useAuth';
 import { useAuthAnalytics } from './auth/useAuthAnalytics';
@@ -87,8 +88,7 @@ const App = () => {
 
 void (() => {
   void initAnalytics().catch((reason) => {
-    // eslint-disable-next-line no-console
-    console.error('Failed to initialize analytics', reason);
+    logger.error('Failed to initialize analytics', reason as Error);
   });
 
   ReactDOM.createRoot(document.getElementById('root')).render(
