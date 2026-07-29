@@ -5,8 +5,7 @@ import { Table as PfTable, Tbody, Td, Th, Thead, Tr } from '@patternfly/react-ta
 import { type ExpandedState } from '@tanstack/react-table';
 import { PIPELINE_RUNS_SECURITY_PATH } from '@routes/paths';
 import { getRuleStatus } from '~/components/Conforma/utils';
-import { Table } from '~/shared/components/TableV2/Table';
-import { type ColumnDefinition } from '~/shared/components/TableV2/types';
+import { Table, type ColumnDefinition } from '~/shared/components/TableV2';
 import { Truncate } from '~/shared/components/truncate-text/Truncate';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { CONFORMA_RESULT_STATUS } from '~/types/conforma';
