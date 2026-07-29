@@ -1,5 +1,5 @@
 import React from 'react';
-import { Flex } from '@patternfly/react-core';
+import { capitalize, Flex } from '@patternfly/react-core';
 import { MINTMAKER_NAMESPACE } from '~/consts/constants';
 import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { useComponent } from '~/hooks/useComponents';
@@ -10,7 +10,6 @@ import { FilterOption } from '~/shared/components/Filter/types';
 import { Table, TableContainer } from '~/shared/components/TableV2';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
-import { PipelineRunKind } from '~/types';
 import { statuses } from '~/utils/commits-utils';
 import {
   DEPENDENCY_RUNS_COLUMN_STATE_KEY,
@@ -55,10 +54,7 @@ export const DependencyRunsListView = ({ componentName }: DependencyRunsListView
     ),
   );
 
-  const dependencyRunsList = React.useMemo(
-    (): PipelineRunKind[] => dependencyRuns ?? [],
-    [dependencyRuns],
-  );
+  const dependencyRunsList = dependencyRuns ?? [];
 
   const { filteredData } = useFilteredData(
     dependencyRunsFilterConfig,
@@ -67,7 +63,7 @@ export const DependencyRunsListView = ({ componentName }: DependencyRunsListView
   );
 
   const statusOptions: FilterOption[] = React.useMemo(
-    () => statuses.map((s) => ({ label: s.charAt(0).toUpperCase() + s.slice(1), value: s })),
+    () => statuses.map((s) => ({ label: capitalize(s), value: s })),
     [],
   );
 
