@@ -183,8 +183,8 @@ export class DetailsTab {
     cy.get(pipelinerunsTabPO.drawerPanel).contains('button', 'Logs').click();
   }
 
-  static verifyLogs(logText: string | RegExp, foldStep: string) {
-    LogViewerHelper.revealLogText(logText, { foldStep, assertInitiallyFolded: true });
+  static verifyLogs(logText: string | RegExp) {
+    LogViewerHelper.revealLogText(logText, { assertInitiallyFolded: true });
   }
 
   static closeDrawerPanel() {
