@@ -6,6 +6,7 @@ import {
   getComponentBuildStatus,
   getConfigurationTime,
   getPACProvision,
+  PAC_STATE_DONE_MESSAGE,
   SAMPLE_ANNOTATION,
 } from '~/utils/component-utils';
 import { PUSH_BUILD_EVENT_TYPES, PipelineRunLabel, PipelineRunType } from '../consts/pipelinerun';
@@ -14,8 +15,6 @@ import { useApplicationPipelineGitHubApp } from './useApplicationPipelineGitHubA
 import { useApplication } from './useApplications';
 import { PACState } from './usePACState';
 import { usePipelineRunsV2 } from './usePipelineRunsV2';
-
-export const PAC_STATE_DONE_MESSAGE = 'done';
 
 export type PacStatesForComponents = {
   [componentName: string]: PACState;

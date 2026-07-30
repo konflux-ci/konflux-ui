@@ -4,9 +4,11 @@ import { ComponentKind } from '../types';
 import {
   SAMPLE_ANNOTATION,
   getPACProvision,
+  getComponentBuildStatus,
   ComponentBuildState,
   BUILD_REQUEST_ANNOTATION,
   BuildRequest,
+  PAC_STATE_DONE_MESSAGE,
   useConfigurationTime,
 } from '../utils/component-utils';
 import { useApplicationPipelineGitHubApp } from './useApplicationPipelineGitHubApp';
@@ -74,9 +76,15 @@ const usePACState = (component: ComponentKind) => {
     [configurationTime, pipelineBuildRuns, pipelineBuildRunsLoaded, pipelineBuildRunsError],
   );
 
+  const buildStatus = getComponentBuildStatus(component);
   const prMerged = runsForComponent.find(
     (r) => !r.metadata?.annotations?.[PipelineRunLabel.COMMIT_USER_LABEL]?.includes(prBotName),
   );
+
+  const isDone =
+    prMerged ||
+    (buildStatus?.message === PAC_STATE_DONE_MESSAGE &&
+      buildStatus?.pac?.state === ComponentBuildState.enabled);
 
   return isSample
     ? PACState.sample
@@ -87,7 +95,7 @@ const usePACState = (component: ComponentKind) => {
         : pacProvision === ComponentBuildState.enabled
           ? !pipelineBuildRunsLoaded
             ? PACState.loading
-            : prMerged
+            : isDone
               ? PACState.ready
               : PACState.pending
           : !pacProvision || pacProvision === ComponentBuildState.disabled
