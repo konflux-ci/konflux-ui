@@ -72,41 +72,38 @@ describe('Basic Happy Path', () => {
     }
   });
 
-  it('Create an Application with a component', () => {
-    Applications.createApplication(applicationName);
-    Applications.createComponent(publicRepo, componentName, pipeline);
-    Applications.checkComponentInListView(
-      componentName,
-      applicationName,
-      /Build not started|Build running/,
-    );
-  });
-
-  it('Check default Integration Test', () => {
-    Applications.goToIntegrationTestsTab();
-    integrationTestsTab.hasIntegrationTest(`${applicationName}-enterprise-contract`);
-  });
-
-  describe('Check different ways to add a component', () => {
-    afterEach(() => {
-      Applications.clickBreadcrumbLink(applicationName);
-      cy.url().should('include', `${applicationName}`);
+  describe('Create an Application with a component', () => {
+    it('Create an Application with a component', () => {
+      Applications.createApplication(applicationName);
+      Applications.createComponent(publicRepo, componentName, pipeline);
+      Applications.checkComponentInListView(
+        componentName,
+        applicationName,
+        /Build not started|Build running/,
+      );
     });
 
-    it("Use 'Components' tabs to start adding a new component", () => {
+    it('Check different ways to add a component', () => {
+      cy.log("Use 'Components' tabs to start adding a new component");
       Applications.goToOverviewTab().addComponent();
       cy.url().should('include', `/import?application=${applicationName}`);
-    });
 
-    it("Use HACBS 'Components' tabs to start adding a new component", () => {
+      cy.log("Use HACBS 'Components' tabs to start adding a new component");
+      Applications.clickBreadcrumbLink(applicationName);
       Applications.goToComponentsTab();
       ComponentsTabPage.clickAddComponent();
       cy.url().should('include', `/import?application=${applicationName}`);
-    });
 
-    it("Click 'Actions' dropdown to add a component", () => {
+      cy.log("Click 'Actions' dropdown to add a new component");
+      Applications.clickBreadcrumbLink(applicationName);
       Applications.clickActionsDropdown('Add component');
       cy.url().should('include', `/import?application=${applicationName}`);
+    });
+
+    it('Check default Integration Test', () => {
+      Applications.clickBreadcrumbLink(applicationName);
+      Applications.goToIntegrationTestsTab();
+      integrationTestsTab.hasIntegrationTest(`${applicationName}-enterprise-contract`);
     });
   });
 
@@ -180,12 +177,12 @@ describe('Basic Happy Path', () => {
         });
     });
 
-    it('Verify that on-pull pipeline was cancelled', () => {
+    it('Verify on-pull pipeline and EC', () => {
+      cy.log('Verify that on-pull pipeline was cancelled');
       Applications.clickBreadcrumbLink('Pipeline runs');
       Applications.checkPipelineIsCancelled(componentName);
-    });
 
-    it('Verify Enterprise contract Test pipeline run Details', () => {
+      cy.log('Verify Enterprise contract Test pipeline run Details');
       UIhelper.clickRowCellInTable('Pipeline run List', 'Test', `${applicationName}-`);
       // We encountered problems with EC checks on a local deployment,
       // so we only check for Succeeded status on the stage job
@@ -196,52 +193,40 @@ describe('Basic Happy Path', () => {
       }
     });
 
-    it('Verify vulnerabilities column exists in Pipeline runs table', () => {
+    it('Verify vulnerabilities', () => {
+      cy.log('Verifying vulnerabilities column exists in Pipeline runs table');
       Applications.clickBreadcrumbLink('Pipeline runs');
       PipelinerunsTabPage.verifyVulnerabilityColumn();
-    });
 
-    it('Verify vulnerability indicators are displayed for on-push pipeline run', () => {
+      cy.log('Verifying vulnerability indicators are displayed for on-push pipeline run');
       PipelinerunsTabPage.verifyVulnerabilityIndicators(
         `${componentName}-on-push`,
         /(-|N\/A|Critical\d+High\d+Medium\d+Low\d+Unknown\d+)/,
       );
-    });
 
-    it('Verify vulnerability indicators for on-pull-request pipeline run', () => {
+      cy.log('Verifying vulnerability indicators for on-pull-request pipeline run');
       // Test passed for a page that was not fully loaded, test this functionality to prove it works as expected
       PipelinerunsTabPage.verifyVulnerabilityCellVisibility(`${componentName}-on-pull-request`);
-    });
 
-    it('Verify vulnerability scan details when available', () => {
+      cy.log('Verifying vulnerability scan details for on-push pipeline run');
       PipelinerunsTabPage.verifyVulnerabilityScanDetails(`${componentName}-on-push`);
     });
   });
 
-  describe('Check Component in Components tab', () => {
-    before(() => {
+  describe('Check Component', () => {
+    it('Check component build status and logs', () => {
       Applications.goToComponentsTab();
-    });
-
-    it('Check component build status', () => {
       Applications.checkComponentStatus(componentName, 'Build completed');
-    });
 
-    it('Validate Build Logs are successful', () => {
+      cy.log('Validate Build Logs are successful');
       applicationDetailPage.openBuildLog(componentName);
       applicationDetailPage.verifyBuildLogTaskslist(piplinerunlogsTasks); //TO DO : Fetch the piplinerunlogsTasks from cluster using api At runtime.
       applicationDetailPage.verifyFailedLogTasksNotExists();
       applicationDetailPage.checkBuildLog(pipelineConfig.logCheckTask, 'Using token for quay.io');
       applicationDetailPage.closeBuildLog();
-    });
-  });
 
-  describe('Check Component Details', () => {
-    before(() => {
+      cy.log('Verify deployed image exists');
       ComponentsTabPage.openComponent(componentName);
-    });
-
-    it('Verify deployed image exists', () => {
       ComponentDetailsPage.checkBuildImage();
     });
   });
