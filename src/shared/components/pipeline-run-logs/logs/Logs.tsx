@@ -12,7 +12,7 @@ import { WebSocketFactory } from '../../../../k8s/web-socket/WebSocketFactory';
 import { PodModel } from '../../../../models/pod';
 import { TaskRunKind } from '../../../../types';
 import { PodKind, ContainerSpec, ContainerStatus } from '../../types';
-import { containerToLogSourceStatus, LOG_SOURCE_TERMINATED } from '../utils';
+import { containerToLogSourceStatus, isContainerStepCompleted, LOG_SOURCE_TERMINATED } from '../utils';
 import LogViewer, { type Props as LogViewerProps } from './LogViewer';
 
 type LogSources = { [containerName: string]: string };
@@ -143,8 +143,9 @@ const Logs: React.FC<LogsProps> = ({
               // Gracefully handle empty logs (404) from kubearch, similar to how Tekton Results handles 404
               // When logs don't exist, both kubearch and Tekton Results return 404
               if (err?.code === 404) {
-                // Don't append any error message for missing logs - just leave it empty
-                // This matches the behavior of Tekton Results which returns empty logs for 404
+                // Mark the container as fetched with empty content so folding can evaluate
+                // it after load (and so the section still appears in the viewer).
+                appendLog(name, '');
                 return;
               }
 
@@ -211,17 +212,16 @@ const Logs: React.FC<LogsProps> = ({
   }, [containers, resource?.status?.containerStatuses]);
 
   const sections = React.useMemo<LogSection[]>(() => {
-    const allStatuses: ContainerStatus[] = resource?.status?.containerStatuses ?? [];
+    const statusByName = new Map(
+      (resource?.status?.containerStatuses ?? []).map((status) => [status.name, status]),
+    );
     return containers
-      .filter((c) => logSources[c.name])
-      .map((c) => {
-        const status = allStatuses.find((s) => s.name === c.name);
-        return {
-          containerName: c.name.toUpperCase(),
-          data: logSources[c.name],
-          isCompleted: containerToLogSourceStatus(status) === LOG_SOURCE_TERMINATED,
-        };
-      });
+      .filter((c) => c.name in logSources)
+      .map((c) => ({
+        containerName: c.name.toUpperCase(),
+        data: logSources[c.name],
+        isCompleted: isContainerStepCompleted(statusByName.get(c.name)),
+      }));
   }, [logSources, containers, resource?.status?.containerStatuses]);
 
   return (
