@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Table as PfTable } from '@patternfly/react-table';
 import { getParentScrollableElement } from '~/shared/hooks';
 import { computeColumnWidths } from './column-widths';
 import { useColumnState } from './hooks/useColumnState';
 import { useInfiniteScroll } from './hooks/useInfiniteScroll';
 import { useResponsiveColumns } from './hooks/useResponsiveColumns';
+import { useScrollMargin } from './hooks/useScrollMargin';
 import { useTable } from './hooks/useTable';
 import { useVirtualization } from './hooks/useVirtualization';
 import { TableBody } from './TableBody';
@@ -18,6 +19,7 @@ import { type TableProps } from './types';
  * - **Column state** (`useColumnState`) — persisted visibility, order, and sort
  * - **Responsive columns** (`useResponsiveColumns`) — hides columns at breakpoints
  * - **Core table** (`useTable`) — TanStack Table instance with sorting and expansion
+ * - **Scroll margin** (`useScrollMargin`) — offset for content above the table in the scroll container
  * - **Virtualization** (`useVirtualization`) — only renders visible rows for performance
  * - **Infinite scroll** (`useInfiniteScroll`) — triggers data fetching near the bottom
  * - **Column widths** (`computeColumnWidths`) — flex and fixed width calculation
@@ -89,29 +91,7 @@ export const Table = <TData,>({
     }
   }, [scrollElementProp, tableNode]);
 
-  // Tracks how far the table is from the top of the scroll container so the
-  // virtualizer can correctly offset row positions (accounts for toolbars, headers, etc.).
-  const [scrollMargin, setScrollMargin] = useState(0);
-  useLayoutEffect(() => {
-    if (!tableNode || !scrollElement) {
-      setScrollMargin(0);
-      return;
-    }
-
-    const recalculate = () => {
-      const tableRect = tableNode.getBoundingClientRect();
-      const scrollRect = scrollElement.getBoundingClientRect();
-      setScrollMargin(tableRect.top - scrollRect.top + scrollElement.scrollTop);
-    };
-
-    recalculate();
-
-    const observer = new ResizeObserver(recalculate);
-    observer.observe(scrollElement);
-    observer.observe(tableNode);
-
-    return () => observer.disconnect();
-  }, [tableNode, scrollElement]);
+  const scrollMargin = useScrollMargin(tableNode, scrollElement);
 
   const { columnState, setColumnState } = useColumnState(columnStateKey, columns);
   const { columnVisibility } = useResponsiveColumns(columns);
