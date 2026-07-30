@@ -111,7 +111,7 @@ const dataSelectorForScanResults = (data: InfiniteData<TaskRunKind[], unknown>):
 export const useKarchScanResults = (pipelineRunName: string): [ScanResults, boolean, unknown] => {
   const namespace = useNamespace();
 
-  const karchRes = useKubearchiveListResourceQuery(
+  const karchRes = useKubearchiveListResourceQuery<TaskRunKind, ScanResults>(
     {
       groupVersionKind: TaskRunGroupVersionKind,
       isList: true,

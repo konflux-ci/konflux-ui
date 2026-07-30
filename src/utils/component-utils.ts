@@ -31,6 +31,8 @@ export const GIT_PROVIDER_ANNOTATION_VALUE = {
 };
 export const GIT_PROVIDER_URL_ANNOTATION = 'git-provider-url';
 
+export const PAC_STATE_DONE_MESSAGE = 'done';
+
 export enum ComponentBuildState {
   enabled = 'enabled',
   disabled = 'disabled',
@@ -88,6 +90,14 @@ export const getComponentBuildStatus = (component: ComponentKind) => {
     return null;
   }
 };
+
+export const isPACStateReady = (
+  prMerged: boolean,
+  buildStatus: ComponentBuildStatus | null,
+): boolean =>
+  prMerged ||
+  (buildStatus?.message === PAC_STATE_DONE_MESSAGE &&
+    buildStatus?.pac?.state === ComponentBuildState.enabled);
 
 export const getPACProvision = (component: ComponentKind) =>
   getComponentBuildStatus(component)?.pac?.state;
