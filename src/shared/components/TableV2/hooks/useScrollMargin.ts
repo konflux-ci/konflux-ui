@@ -1,4 +1,5 @@
-import { useLayoutEffect, useState } from 'react';
+import { useCallback, useLayoutEffect, useState } from 'react';
+import { useLayoutResizeObserver } from '~/shared/hooks';
 
 /**
  * Measures the distance from the top of the scroll container to the table so
@@ -17,26 +18,22 @@ export const useScrollMargin = (
 ): number => {
   const [scrollMargin, setScrollMargin] = useState(0);
 
-  useLayoutEffect(() => {
+  const recalculate = useCallback(() => {
     if (!tableNode || !scrollElement) {
       setScrollMargin(0);
       return;
     }
-
-    const recalculate = () => {
-      const tableRect = tableNode.getBoundingClientRect();
-      const scrollRect = scrollElement.getBoundingClientRect();
-      setScrollMargin(tableRect.top - scrollRect.top + scrollElement.scrollTop);
-    };
-
-    recalculate();
-
-    const observer = new ResizeObserver(recalculate);
-    observer.observe(scrollElement);
-    observer.observe(tableNode);
-
-    return () => observer.disconnect();
+    const tableRect = tableNode.getBoundingClientRect();
+    const scrollRect = scrollElement.getBoundingClientRect();
+    setScrollMargin(tableRect.top - scrollRect.top + scrollElement.scrollTop);
   }, [tableNode, scrollElement]);
+
+  // Explicit synchronous calculation before paint, since the resize observers
+  // below only recalculate reactively once a resize is actually observed.
+  useLayoutEffect(recalculate, [recalculate]);
+
+  useLayoutResizeObserver(recalculate, tableNode);
+  useLayoutResizeObserver(recalculate, scrollElement);
 
   return scrollMargin;
 };
