@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useQueries, type UseQueryResult } from '@tanstack/react-query';
+import { useQueries, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useComponents } from '~/hooks/useComponents';
@@ -16,11 +16,17 @@ import type {
 } from '~/types/conforma';
 import { TektonResourceLabel } from '~/types/coreTekton';
 import {
+  fetchLatestSecurityTaskRunForComponent,
   filterInvalidImageConformaRows,
   mapConformaResultData,
   resolveConformaResultFromTaskRun,
 } from './conforma-fetchers';
 import { buildConformaSecurityTaskRunWatchOptions } from './conforma-taskrun-query';
+
+/** Multiplier for per-component TaskRun headroom in the bounded batch (arch variants, retries). */
+const BATCH_LIMIT_PER_COMPONENT = 3;
+/** Minimum batch size so the first fetch stays bounded before components finish loading. */
+const BATCH_LIMIT_FLOOR = 10;
 
 const NO_OP_REFRESH: ConformaRefreshState = {
   lastFetchedAt: 0,
@@ -34,6 +40,7 @@ const EMPTY_RESULTS: ApplicationConformaResults = {
   totalComponents: 0,
   totalFailed: 0,
   loaded: false,
+  settling: false,
   error: undefined,
   partialLogError: undefined,
   refresh: NO_OP_REFRESH,
@@ -64,15 +71,38 @@ function statusFromCounts(
   return 'unknown';
 }
 
+function pickNewest(existing: TaskRunKind | undefined, candidate: TaskRunKind): TaskRunKind {
+  if (!existing) return candidate;
+  const candidateTs = candidate.metadata?.creationTimestamp ?? '';
+  const existingTs = existing.metadata?.creationTimestamp ?? '';
+  if (candidateTs !== existingTs) {
+    return candidateTs > existingTs ? candidate : existing;
+  }
+  const candidateName = candidate.metadata?.name ?? '';
+  const existingName = existing.metadata?.name ?? '';
+  return candidateName > existingName ? candidate : existing;
+}
+
 export const useApplicationConformaResults = (
   applicationName: string,
 ): ApplicationConformaResults => {
   const namespace = useNamespace();
   const isKubearchiveLogsEnabled = useIsOnFeatureFlag('kubearchive-logs');
+  const isKubearchiveTaskRunsEnabled = useIsOnFeatureFlag('taskruns-kubearchive');
 
   const [appComponents, componentsLoaded, componentsError] = useComponents(
     namespace,
     applicationName,
+  );
+
+  // Always apply a floor so useTaskRunsV2 never fires an unbounded list while components load.
+  const batchLimit = React.useMemo(
+    () =>
+      Math.max(
+        (componentsLoaded ? appComponents.length : 0) * BATCH_LIMIT_PER_COMPONENT,
+        BATCH_LIMIT_FLOOR,
+      ),
+    [appComponents.length, componentsLoaded],
   );
 
   // Conforma security TaskRun selector — passed to useTaskRunsV2 so list data
@@ -88,14 +118,16 @@ export const useApplicationConformaResults = (
   // Infinity staleTime: WS keeps data live; refresh button covers explicit refetch (vs global 30s).
   const [securityTaskRuns, taskRunsLoaded, taskRunsError, , , taskRunWatchMeta] = useTaskRunsV2(
     namespace,
-    watchOptions ? { selector: watchOptions.selector } : undefined,
+    watchOptions ? { selector: watchOptions.selector, limit: batchLimit } : undefined,
     { staleTime: Infinity },
   );
 
+  const queryClient = useQueryClient();
   const { refetch: refetchTaskRuns } = taskRunWatchMeta;
   const onRefresh = React.useCallback(() => {
+    void queryClient.invalidateQueries({ queryKey: ['conforma-fillin', namespace] });
     void refetchTaskRuns();
-  }, [refetchTaskRuns]);
+  }, [queryClient, namespace, refetchTaskRuns]);
 
   const refresh = React.useMemo(
     (): ConformaRefreshState => ({
@@ -114,25 +146,76 @@ export const useApplicationConformaResults = (
       const trName = tr.metadata?.name;
       if (!comp || !trName) continue;
 
-      const candidateTs = tr.metadata?.creationTimestamp ?? '';
-      const existing = newestByComp.get(comp);
-      const existingTs = existing?.metadata?.creationTimestamp ?? '';
-
-      if (
-        !existing ||
-        candidateTs.localeCompare(existingTs) > 0 ||
-        (candidateTs === existingTs && trName.localeCompare(existing.metadata?.name ?? '') > 0)
-      ) {
-        newestByComp.set(comp, tr);
-      }
+      newestByComp.set(comp, pickNewest(newestByComp.get(comp), tr));
     }
 
     return newestByComp;
   }, [securityTaskRuns]);
 
+  // --- Fill-in: fetch latest TaskRun for components missing from the batch ---
+  const missingComponents = React.useMemo(() => {
+    if (!taskRunsLoaded || !componentsLoaded) return [];
+    return appComponents
+      .map((c) => c.metadata?.name)
+      .filter((name): name is string => !!name && !latestPerComponent.has(name));
+  }, [appComponents, componentsLoaded, taskRunsLoaded, latestPerComponent]);
+
+  const { fillInTaskRuns, fillInSettled, fillInErrorKey } = useQueries({
+    queries: missingComponents.map((componentName) => ({
+      queryKey: [
+        'conforma-fillin',
+        namespace,
+        componentName,
+        applicationName,
+        isKubearchiveTaskRunsEnabled,
+      ] as const,
+      queryFn: () =>
+        fetchLatestSecurityTaskRunForComponent(
+          namespace,
+          applicationName,
+          componentName,
+          isKubearchiveTaskRunsEnabled,
+        ),
+      staleTime: Infinity,
+      enabled: !!namespace && missingComponents.length > 0,
+    })),
+    combine: (results) => {
+      const errors = results
+        .filter((q) => q.isError)
+        .map((q) => q.error)
+        .filter((error): error is Error => error != null);
+      return {
+        fillInTaskRuns: results.map((q) => q.data).filter((tr): tr is TaskRunKind => tr != null),
+        fillInSettled: results.every((q) => !q.isLoading),
+        // Stable key so the logging effect does not re-fire on every combine recompute.
+        fillInErrorKey: errors.map((e) => e.message).join('\0'),
+      };
+    },
+  });
+
+  React.useEffect(() => {
+    if (!fillInErrorKey) return;
+    for (const message of fillInErrorKey.split('\0')) {
+      logger.warn('useApplicationConformaResults: fill-in query failed', { message });
+    }
+  }, [fillInErrorKey]);
+
+  // Merge batch + fill-in into a single latest-per-component map
+  const mergedLatestPerComponent = React.useMemo((): Map<string, TaskRunKind> => {
+    if (fillInTaskRuns.length === 0) return latestPerComponent;
+
+    const merged = new Map(latestPerComponent);
+    for (const tr of fillInTaskRuns) {
+      const comp = tr.metadata?.labels?.[PipelineRunLabel.COMPONENT];
+      if (!comp) continue;
+      merged.set(comp, pickNewest(merged.get(comp), tr));
+    }
+    return merged;
+  }, [latestPerComponent, fillInTaskRuns]);
+
   const latestTaskRuns = React.useMemo(
-    () => Array.from(latestPerComponent.values()),
-    [latestPerComponent],
+    () => Array.from(mergedLatestPerComponent.values()),
+    [mergedLatestPerComponent],
   );
 
   const combineConformaLogResults = React.useCallback(
@@ -140,6 +223,7 @@ export const useApplicationConformaResults = (
       results: UseQueryResult<Awaited<ReturnType<typeof resolveConformaResultFromTaskRun>>>[],
     ) => ({
       logData: results.map((q) => q.data),
+      allSettled: results.every((q) => !q.isLoading),
       aggregatedLogError:
         results.length > 0 && results.some((q) => q.isError)
           ? results.find((q) => q.isError)?.error
@@ -148,7 +232,7 @@ export const useApplicationConformaResults = (
     [],
   );
 
-  const { logData, aggregatedLogError } = useQueries({
+  const { logData, allSettled: logsSettled, aggregatedLogError } = useQueries({
     queries: latestTaskRuns.map((tr) => ({
       queryKey: ['conforma-log', namespace, tr.metadata?.uid, isKubearchiveLogsEnabled] as const,
       queryFn: () => resolveConformaResultFromTaskRun(namespace, tr, isKubearchiveLogsEnabled),
@@ -159,6 +243,7 @@ export const useApplicationConformaResults = (
   });
 
   const loaded = Boolean(namespace?.length && componentsLoaded && taskRunsLoaded);
+  const settling = !fillInSettled || !logsSettled;
 
   const fatalError = componentsError ?? taskRunsError;
 
@@ -197,7 +282,7 @@ export const useApplicationConformaResults = (
       }
 
       const components = conformaByComponent.get(name);
-      const taskRun = latestPerComponent.get(name);
+      const taskRun = mergedLatestPerComponent.get(name);
       const pipelineRunName = taskRun?.metadata?.labels?.[TektonResourceLabel.pipelinerun];
 
       if (!components) {
@@ -227,17 +312,14 @@ export const useApplicationConformaResults = (
     const allResults: ConformaResultRow[] = [];
     for (const [realComponentName, components] of conformaByComponent.entries()) {
       const pipelineRunName =
-        latestPerComponent.get(realComponentName)?.metadata?.labels?.[
+        mergedLatestPerComponent.get(realComponentName)?.metadata?.labels?.[
           TektonResourceLabel.pipelinerun
         ];
       const rows = mapConformaResultData(components, pipelineRunName);
-      // The EC/Conforma report assigns its own per-image `name` to each
-      // components[] entry (see ComponentConformaResult), which is NOT the
-      // real K8s component name and can differ across architecture images
-      // of the same logical component. Overwrite it with the authoritative
-      // name so rows stay associated with the correct component regardless
-      // of how many arch-specific images were evaluated for it.
       rows.forEach((row) => {
+        // The EC/Conforma report assigns its own per-image `name` to each
+        // components[] entry, which is NOT the real K8s component name.
+        // Overwrite with the authoritative name so rows stay associated correctly.
         row.component = realComponentName;
       });
       allResults.push(...rows);
@@ -252,6 +334,7 @@ export const useApplicationConformaResults = (
       totalComponents,
       totalFailed,
       loaded,
+      settling,
       error: fatalError,
       partialLogError: aggregatedLogError,
       refresh,
@@ -260,9 +343,10 @@ export const useApplicationConformaResults = (
     aggregatedLogError,
     appComponents,
     fatalError,
-    latestPerComponent,
+    mergedLatestPerComponent,
     latestTaskRuns,
     loaded,
+    settling,
     logData,
     namespace?.length,
     refresh,
