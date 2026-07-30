@@ -1,12 +1,19 @@
 import * as React from 'react';
-import { Divider, Flex, FlexItem, Content, ContentVariants, Tooltip } from '@patternfly/react-core';
+import {
+  Divider,
+  Flex,
+  FlexItem,
+  Content,
+  ContentVariants,
+} from '@patternfly/react-core';
 import { CheckCircleIcon } from '@patternfly/react-icons/dist/esm/icons/check-circle-icon';
+import { CubesIcon } from '@patternfly/react-icons/dist/esm/icons/cubes-icon';
 import { ExclamationCircleIcon } from '@patternfly/react-icons/dist/esm/icons/exclamation-circle-icon';
 import { ExclamationTriangleIcon } from '@patternfly/react-icons/dist/esm/icons/exclamation-triangle-icon';
-import { UsersIcon } from '@patternfly/react-icons/dist/esm/icons/users-icon';
+import { t_global_color_status_warning_100 as warningColor } from '@patternfly/react-tokens/dist/js/t_global_color_status_warning_100';
 import { t_global_icon_color_status_danger_default as dangerColor } from '@patternfly/react-tokens/dist/js/t_global_icon_color_status_danger_default';
 import { t_global_icon_color_status_success_default as successColor } from '@patternfly/react-tokens/dist/js/t_global_icon_color_status_success_default';
-import { t_global_icon_color_status_warning_default as warningColor } from '@patternfly/react-tokens/dist/js/t_global_icon_color_status_warning_default';
+import { t_global_icon_color_subtle as subtleColor } from '@patternfly/react-tokens/dist/js/t_global_icon_color_subtle';
 
 type ConformaSummaryBarProps = {
   totalComponents: number;
@@ -14,40 +21,10 @@ type ConformaSummaryBarProps = {
   totalViolations: number;
   totalWarnings: number;
   totalSuccesses: number;
-  /**
-   * Raw (non-collapsed) counts. When provided and greater than the
-   * corresponding collapsed count, a "(N incl. multi-arch)" qualifier is
-   * shown so the summary bar never silently under-reports the true number
-   * of violations/warnings/successes when arch-duplicates are collapsed.
-   */
   totalViolationsRaw?: number;
   totalWarningsRaw?: number;
   totalSuccessesRaw?: number;
 };
-
-type SummaryItemDef = {
-  icon: React.ReactNode;
-  count: number;
-  rawCount?: number;
-  label: string;
-  tooltip: string;
-};
-
-const SummaryItem: React.FC<SummaryItemDef> = ({ icon, count, rawCount, label, tooltip }) => (
-  <Tooltip content={tooltip}>
-    <Flex spaceItems={{ default: 'spaceItemsSm' }} alignItems={{ default: 'alignItemsCenter' }}>
-      <FlexItem>{icon}</FlexItem>
-      <FlexItem>
-        <strong>{count}</strong> {label}
-        {rawCount !== undefined && rawCount !== count && (
-          <Content component={ContentVariants.small} className="pf-v6-u-ml-xs pf-v6-u-color-400">
-            ({rawCount} incl. multi-arch)
-          </Content>
-        )}
-      </FlexItem>
-    </Flex>
-  </Tooltip>
-);
 
 export const ConformaSummaryBar: React.FC<ConformaSummaryBarProps> = ({
   totalComponents,
@@ -55,63 +32,67 @@ export const ConformaSummaryBar: React.FC<ConformaSummaryBarProps> = ({
   totalViolations,
   totalWarnings,
   totalSuccesses,
-  totalViolationsRaw,
-  totalWarningsRaw,
-  totalSuccessesRaw,
 }) => {
-  const items: SummaryItemDef[] = [
-    {
-      icon: <UsersIcon />,
-      count: totalComponents,
-      label: 'Components',
-      tooltip: 'Total number of components evaluated by Conforma policies',
-    },
-    {
-      icon: <ExclamationCircleIcon color={dangerColor.value} />,
-      count: totalFailed,
-      label: 'Failed Components',
-      tooltip: 'Components with at least one policy violation',
-    },
-    {
-      icon: <ExclamationCircleIcon color={dangerColor.value} />,
-      count: totalViolations,
-      rawCount: totalViolationsRaw,
-      label: 'Violations',
-      tooltip: 'Total individual policy rule violations across all components',
-    },
-    {
-      icon: <ExclamationTriangleIcon color={warningColor.value} />,
-      count: totalWarnings,
-      rawCount: totalWarningsRaw,
-      label: 'Warnings',
-      tooltip: 'Total individual policy rule warnings across all components',
-    },
-    {
-      icon: <CheckCircleIcon color={successColor.value} />,
-      count: totalSuccesses,
-      rawCount: totalSuccessesRaw,
-      label: 'Successes',
-      tooltip: 'Total individual policy rules that passed across all components',
-    },
-  ];
-
   return (
     <Flex
       spaceItems={{ default: 'spaceItemsLg' }}
-      alignItems={{ default: 'alignItemsCenter' }}
+      alignItems={{ default: 'alignItemsStretch' }}
       flexWrap={{ default: 'wrap' }}
       data-test="conforma-summary-bar"
     >
-      {items.map((item, i) => (
-        <React.Fragment key={item.label}>
-          {i > 0 && (
-            <Divider orientation={{ default: 'vertical' }} data-test="conforma-summary-divider" />
-          )}
+      <FlexItem className="conforma-summary-bar__section" data-test="conforma-summary-components">
+        <Content component={ContentVariants.h4} className="pf-v6-u-mb-sm">
+          Components
+        </Content>
+        <Flex spaceItems={{ default: 'spaceItemsLg' }} alignItems={{ default: 'alignItemsCenter' }}>
           <FlexItem>
-            <SummaryItem {...item} />
+            <CubesIcon color={subtleColor.value} className="pf-v6-u-mr-xs" />
+            {totalComponents} total
           </FlexItem>
-        </React.Fragment>
-      ))}
+          <Divider orientation={{ default: 'vertical' }} />
+          <FlexItem>
+            <ExclamationCircleIcon color={dangerColor.value} className="pf-v6-u-mr-xs" />
+            {totalFailed} failed
+          </FlexItem>
+        </Flex>
+      </FlexItem>
+
+      <FlexItem
+        className="conforma-summary-bar__section"
+        data-test="conforma-summary-upcoming-changes"
+      >
+        <Content component={ContentVariants.h4} className="pf-v6-u-mb-sm">
+          Upcoming changes
+        </Content>
+        <Flex spaceItems={{ default: 'spaceItemsLg' }} alignItems={{ default: 'alignItemsCenter' }}>
+          <FlexItem>
+            <ExclamationTriangleIcon color={warningColor.value} className="pf-v6-u-mr-xs" />
+            {totalWarnings} Pending
+          </FlexItem>
+        </Flex>
+      </FlexItem>
+
+      <FlexItem className="conforma-summary-bar__section" data-test="conforma-summary-results">
+        <Content component={ContentVariants.h4} className="pf-v6-u-mb-sm">
+          Results summary
+        </Content>
+        <Flex spaceItems={{ default: 'spaceItemsLg' }} alignItems={{ default: 'alignItemsCenter' }}>
+          <FlexItem>
+            <ExclamationCircleIcon color={dangerColor.value} className="pf-v6-u-mr-xs" />
+            {totalViolations} violations
+          </FlexItem>
+          <Divider orientation={{ default: 'vertical' }} />
+          <FlexItem>
+            <ExclamationTriangleIcon color={warningColor.value} className="pf-v6-u-mr-xs" />
+            {totalWarnings} warnings
+          </FlexItem>
+          <Divider orientation={{ default: 'vertical' }} />
+          <FlexItem>
+            <CheckCircleIcon color={successColor.value} className="pf-v6-u-mr-xs" />
+            {totalSuccesses} success
+          </FlexItem>
+        </Flex>
+      </FlexItem>
     </Flex>
   );
 };
