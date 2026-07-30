@@ -80,7 +80,7 @@ export const TableBody = <TData,>({
               enableRowSelection={enableRowSelection}
             />
             {enableExpansion && row.getIsExpanded() && expandedContent && (
-              <Tr>
+              <Tr ref={measureElement} data-index={virtualRow.index}>
                 <Td colSpan={visibleColumnCount}>
                   <ExpandableRowContent>{expandedContent(row.original)}</ExpandableRowContent>
                 </Td>
