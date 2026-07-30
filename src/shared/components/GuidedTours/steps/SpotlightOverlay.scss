@@ -1,0 +1,28 @@
+.guided-tours {
+  &__overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: var(--pf-t--global--z-index--lg, 500);
+    pointer-events: none;
+
+    &-backdrop {
+      fill: rgba(0, 0, 0, 0.5);
+    }
+
+    &-cutout {
+      fill: black;
+    }
+  }
+
+  &__click-blocker {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: var(--pf-t--global--z-index--lg, 499);
+  }
+}

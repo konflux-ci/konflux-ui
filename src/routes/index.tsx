@@ -1,4 +1,5 @@
 import { createBrowserRouter } from 'react-router-dom';
+import { TourAutoTrigger, TourProvider, TourRenderer } from '~/shared/components/GuidedTours';
 import { AppRoot } from '../AppRoot/AppRoot';
 import { GithubRedirect, githubRedirectLoader } from '../components/GithubRedirect';
 import { ModalProvider } from '../components/modal/ModalProvider';
@@ -36,7 +37,11 @@ export const router = createBrowserRouter([
     element: (
       <NamespaceProvider>
         <ModalProvider>
-          <AppRoot />
+          <TourProvider>
+            <AppRoot />
+            <TourRenderer />
+            <TourAutoTrigger />
+          </TourProvider>
         </ModalProvider>
       </NamespaceProvider>
     ),

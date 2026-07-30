@@ -1,0 +1,77 @@
+import * as React from 'react';
+import { Popover } from '@patternfly/react-core';
+import { useTargetElement } from '../hooks/useTargetElement';
+import { PopoverPosition } from '../types';
+import { SpotlightOverlay } from './SpotlightOverlay';
+import { StepNavigation } from './StepNavigation';
+
+interface SpotlightStepProps {
+  title: string;
+  content: string;
+  target: string;
+  position?: PopoverPosition;
+  currentStep: number;
+  totalSteps: number;
+  isFirstStep: boolean;
+  isLastStep: boolean;
+  onNext: () => void;
+  onPrev: () => void;
+  onSkip: () => void;
+  onDone: () => void;
+}
+
+const POSITION_MAP: Record<PopoverPosition, 'top' | 'bottom' | 'left' | 'right' | 'auto'> = {
+  top: 'top',
+  bottom: 'bottom',
+  left: 'left',
+  right: 'right',
+  auto: 'auto',
+};
+
+export const SpotlightStep: React.FC<SpotlightStepProps> = ({
+  title,
+  content,
+  target,
+  position = 'auto',
+  currentStep,
+  totalSteps,
+  isFirstStep,
+  isLastStep,
+  onNext,
+  onPrev,
+  onSkip,
+  onDone,
+}) => {
+  const { targetEl, targetRect, triggerRef } = useTargetElement(target);
+
+  if (!targetEl || !targetRect) {
+    return null;
+  }
+
+  return (
+    <>
+      <SpotlightOverlay targetRect={targetRect} />
+      <Popover
+        isVisible
+        shouldClose={onSkip}
+        footerContent={
+          <StepNavigation
+            currentStep={currentStep}
+            totalSteps={totalSteps}
+            isFirstStep={isFirstStep}
+            isLastStep={isLastStep}
+            onNext={onNext}
+            onPrev={onPrev}
+            onDone={onDone}
+          />
+        }
+        position={POSITION_MAP[position]}
+        triggerRef={triggerRef as React.RefObject<HTMLElement>}
+        headerContent={title}
+        bodyContent={content}
+        appendTo={() => document.querySelector('#hacDev-modal-container') ?? document.body}
+        data-test="tour-spotlight-step"
+      />
+    </>
+  );
+};
