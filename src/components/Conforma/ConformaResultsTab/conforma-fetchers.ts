@@ -1,6 +1,8 @@
 import { extractConformaResultsFromTaskRunLogs } from '~/components/Conforma/utils';
-import { commonFetchJSON, getK8sResourceURL } from '~/k8s';
+import { commonFetchJSON, getK8sResourceURL, k8sListResource, K8sResourceListOptions } from '~/k8s';
 import { KUBEARCHIVE_PATH_PREFIX } from '~/kubearchive/const';
+import { convertToKubearchiveQueryParams, withKubearchivePathPrefix } from '~/kubearchive/fetch-utils';
+import { TaskRunGroupVersionKind, TaskRunModel } from '~/models';
 import { PodModel } from '~/models/pod';
 import type { TaskRunKind } from '~/types';
 import {
@@ -11,7 +13,45 @@ import {
   type ConformaRule,
 } from '~/types/conforma';
 import { getPipelineRunFromTaskRunOwnerRef } from '~/utils/common-utils';
-import { getTaskRunLog } from '~/utils/tekton-results';
+import { getTaskRunLog, getTaskRuns } from '~/utils/tekton-results';
+import { buildConformaSecurityTaskRunSelector } from './conforma-taskrun-query';
+
+export async function fetchLatestSecurityTaskRunForComponent(
+  namespace: string,
+  applicationName: string,
+  componentName: string,
+  isKubearchiveTaskRunsEnabled: boolean,
+): Promise<TaskRunKind | null> {
+  const selector = buildConformaSecurityTaskRunSelector(applicationName, componentName);
+
+  if (isKubearchiveTaskRunsEnabled) {
+    const k8sQueryOptions = convertToKubearchiveQueryParams({
+      groupVersionKind: TaskRunGroupVersionKind,
+      namespace,
+      isList: true,
+      selector,
+    });
+    // KubeArchive's list API always orders results by creationTimestamp desc
+    // (then id desc) server-side before applying `limit`, so items[0] is the
+    // newest match — same guarantee as Tekton Results' `create_time desc`.
+    const res = await k8sListResource<TaskRunKind>(
+      withKubearchivePathPrefix<K8sResourceListOptions>({
+        model: TaskRunModel,
+        queryOptions: {
+          ...(k8sQueryOptions || {}),
+          queryParams: {
+            ...(k8sQueryOptions?.queryParams || {}),
+            limit: 1,
+          },
+        },
+      }),
+    );
+    return res?.items?.[0] ?? null;
+  }
+
+  const [results] = await getTaskRuns(namespace, { selector, limit: 1 });
+  return results[0] ?? null;
+}
 
 const mapToConformaResultRow = (
   v: ConformaRule,
