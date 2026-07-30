@@ -98,7 +98,7 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
   });
 
   React.useEffect(() => {
-    if (!isMultiSection || !currentSearchMatch || currentSearchMatch.rowIndex < 0) return;
+    if (!currentSearchMatch || currentSearchMatch.rowIndex < 0) return;
     const flatIndex = currentSearchMatch.rowIndex;
     let offset = 0;
     for (let i = 0; i < effectiveNormalizedSections.length; i++) {
@@ -109,7 +109,7 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
       }
       offset += sectionLineCount;
     }
-  }, [isMultiSection, currentSearchMatch, expandSection, effectiveNormalizedSections]);
+  }, [currentSearchMatch, expandSection, effectiveNormalizedSections]);
 
   const measureCallbackRef = React.useCallback((node: HTMLDivElement | null) => {
     if (node) {
