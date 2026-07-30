@@ -25,7 +25,7 @@ export const mockConformaComponentResults: ComponentConformaResult[] = [
             'The clair-scan task results have not been found in the SLSA Provenance attestation of the build pipeline.',
           collections: ['minimal'],
           code: 'cve.missing_cve_scan_results',
-          effective_on: '2022-01-01T00:00:00Z',
+          ['effective_on']: '2022-01-01T00:00:00Z',
           solution: 'Ensure the clair-scan task is included in the build pipeline.',
         },
         msg: 'CVE scan results not found',
@@ -36,7 +36,7 @@ export const mockConformaComponentResults: ComponentConformaResult[] = [
           description: 'The container image is not signed with a valid signature.',
           collections: ['minimal', 'slsa3'],
           code: 'attestation.signature_check',
-          effective_on: '2023-06-01T00:00:00Z',
+          ['effective_on']: '2023-06-01T00:00:00Z',
           solution: 'Sign the image using cosign or Tekton Chains.',
         },
         msg: 'Image signature verification failed',
@@ -48,7 +48,7 @@ export const mockConformaComponentResults: ComponentConformaResult[] = [
             'The base image used in the build is not from an approved registry.',
           collections: ['slsa3'],
           code: 'base_image.allowed',
-          effective_on: '2023-01-15T00:00:00Z',
+          ['effective_on']: '2023-01-15T00:00:00Z',
           solution:
             'Use a base image from an approved registry such as registry.redhat.io.',
         },
@@ -63,7 +63,7 @@ export const mockConformaComponentResults: ComponentConformaResult[] = [
             'The task uses a deprecated Tekton API version that will be removed in a future release.',
           collections: ['minimal'],
           code: 'tasks.deprecated_api',
-          effective_on: '2026-08-06T00:00:00Z',
+          ['effective_on']: '2026-08-06T00:00:00Z',
           solution: 'Migrate tasks to tekton.dev/v1 API version.',
         },
         msg: 'Task uses tekton.dev/v1beta1 which is deprecated',
@@ -75,7 +75,7 @@ export const mockConformaComponentResults: ComponentConformaResult[] = [
             'A Software Bill of Materials was not found attached to the image attestation.',
           collections: ['slsa3'],
           code: 'sbom.missing',
-          effective_on: '2026-09-15T00:00:00Z',
+          ['effective_on']: '2026-09-15T00:00:00Z',
           solution: 'Ensure the SBOM generation task is part of the build pipeline.',
         },
         msg: 'No SBOM found for the image',
@@ -116,7 +116,7 @@ export const mockConformaComponentResults: ComponentConformaResult[] = [
             'A critical-severity CVE was detected in the image and must be remediated before release.',
           collections: ['minimal', 'slsa3'],
           code: 'cve.critical_cve_found',
-          effective_on: '2023-03-01T00:00:00Z',
+          ['effective_on']: '2023-03-01T00:00:00Z',
           solution:
             'Update the affected package to a version that resolves CVE-2024-12345.',
         },
@@ -129,7 +129,7 @@ export const mockConformaComponentResults: ComponentConformaResult[] = [
             'The build pipeline does not meet the required SLSA provenance level for release.',
           collections: ['slsa3'],
           code: 'attestation.slsa_provenance_level',
-          effective_on: '2023-09-01T00:00:00Z',
+          ['effective_on']: '2023-09-01T00:00:00Z',
           solution:
             'Ensure the pipeline is configured to produce SLSA Level 3 provenance.',
         },
@@ -144,7 +144,7 @@ export const mockConformaComponentResults: ComponentConformaResult[] = [
             'The build process made network calls during execution, which may affect reproducibility.',
           collections: ['slsa3'],
           code: 'hermetic.network_access',
-          effective_on: '2026-08-20T00:00:00Z',
+          ['effective_on']: '2026-08-20T00:00:00Z',
           solution: 'Configure the build to run in a hermetic environment.',
         },
         msg: 'Network access detected during build step',
@@ -432,9 +432,7 @@ const mockComponentStatuses: ComponentConformaStatus[] = mockConformaComponentRe
   };
 });
 
-export const useMockApplicationConformaResults = (
-  _applicationName?: string,
-): ApplicationConformaResults => ({
+export const useMockApplicationConformaResults = (): ApplicationConformaResults => ({
   componentStatuses: mockComponentStatuses,
   allResults: mockConformaUIDataMixed,
   totalComponents: mockComponentStatuses.length,

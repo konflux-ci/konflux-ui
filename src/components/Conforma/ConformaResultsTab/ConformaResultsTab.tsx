@@ -163,9 +163,7 @@ const ConformaResultsTabContent: React.FC = () => {
         </div>
         <ConformaEarlyWarning
           warningCount={displayCounts.totalWarnings}
-          warnings={displayResults.filter(
-            (r) => r.status === CONFORMA_RESULT_STATUS.warnings,
-          )}
+          warnings={displayResults.filter((r) => r.status === CONFORMA_RESULT_STATUS.warnings)}
         />
       </PageSection>
 
