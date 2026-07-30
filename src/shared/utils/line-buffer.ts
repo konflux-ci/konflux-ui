@@ -62,9 +62,9 @@ export class LineBuffer {
     return this._buffer.length;
   }
 
-  /** Accumulate text for display — strips ANSI codes, no truncation. */
+  /** Accumulate text for display — normalizes line endings, strips ANSI codes, no truncation. */
   append(text: string): void {
-    const stripped = text.replace(ANSI_ESCAPE_REGEX, '');
+    const stripped = text.replace(/\r\n?/g, '\n').replace(ANSI_ESCAPE_REGEX, '');
     const lines = stripped.match(LINE_PATTERN);
     if (!lines) return;
 
