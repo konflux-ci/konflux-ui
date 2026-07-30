@@ -1,12 +1,13 @@
 import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { logger } from '~/monitoring/logger';
 import { SectionHeaderButton, FoldIndicatorLine, StickySectionHeaderBar } from '../SectionLogUI';
 import type { SectionHeaderRow } from '../types';
 
 jest.mock('~/monitoring/logger', () => ({
   logger: { warn: jest.fn() },
 }));
+
+const { logger } = jest.requireMock<{ logger: { warn: jest.Mock } }>('~/monitoring/logger');
 
 const makeRow = (overrides?: Partial<SectionHeaderRow>): SectionHeaderRow => ({
   kind: 'section-header',
@@ -119,7 +120,6 @@ describe('SectionHeaderButton', () => {
     });
 
     await waitFor(() => {
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(logger.warn).toHaveBeenCalledWith('Failed to download full logs', {
         error: 'network error',
       });
