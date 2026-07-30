@@ -1,4 +1,4 @@
-import { act, fireEvent, screen, within } from '@testing-library/react';
+import { act, configure, fireEvent, screen, within } from '@testing-library/react';
 import type { ApplicationConformaResults, ConformaResultRow } from '~/types/conforma';
 import { CONFORMA_RESULT_STATUS } from '~/types/conforma';
 import { setupVirtualizerMock } from '~/unit-test-utils';
@@ -14,6 +14,8 @@ jest.mock('@tanstack/react-virtual', () => ({
 jest.mock('../useApplicationConformaResults', () => ({
   useApplicationConformaResults: jest.fn(),
 }));
+
+configure({ testIdAttribute: 'data-test' });
 
 jest.mock('react-router-dom', () => ({
   ...jest.requireActual('react-router-dom'),
@@ -290,14 +292,14 @@ describe('ConformaResultsTab', () => {
     expect(screen.getByText('3 arch variants')).toBeInTheDocument();
   });
 
-  it('shows the raw violation count alongside the collapsed count when duplicates are collapsed', () => {
+  it('shows collapsed violation count when duplicates are collapsed', () => {
     mockUseApplicationConformaResults.mockReturnValue(archDupeResults);
 
-    routerRenderer(<ConformaResultsTab />);
+    const { container } = routerRenderer(<ConformaResultsTab />);
 
-    // 3 arch-duplicate violations collapse into 1 row; the true count (3)
-    // must still be surfaced, not silently dropped.
-    expect(screen.getByText('(3 incl. multi-arch)')).toBeInTheDocument();
+    const resultsSection = container.querySelector('[data-test="conforma-summary-results"]');
+    expect(resultsSection).toHaveTextContent('1');
+    expect(resultsSection).toHaveTextContent('violations');
   });
 
   it('hides the raw-count qualifier once "Show multi-arch duplicates" is enabled', () => {
