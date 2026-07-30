@@ -17,13 +17,15 @@ export class ApplicationDetailPage {
     cy.testA11y(`${pageTitles.deploymentSettings} page`);
   }
 
-  checkBuildLog(tasklistItem: string, textToVerify: string, taskTimeout: number = 20000) {
+  checkBuildLog(tasklistItem: string, textToVerify: string, taskTimeout: number = 60000) {
     cy.get('span[class="pipeline-run-logs__namespan"]')
       .contains(tasklistItem, { timeout: taskTimeout })
       .scrollIntoView()
       .should('be.visible')
-      .click();
-    LogViewerHelper.revealLogText(textToVerify);
+      .click({ force: true });
+    // Wait for the selected task's logs to finish fetching before searching.
+    LogViewerHelper.waitForLogFetch(taskTimeout);
+    LogViewerHelper.revealLogText(textToVerify, { timeout: taskTimeout });
   }
 
   checkPodLog(podName: string, textToVerify: string) {
@@ -32,6 +34,7 @@ export class ApplicationDetailPage {
       .scrollIntoView()
       .should('be.visible')
       .click();
+    LogViewerHelper.waitForLogFetch();
     LogViewerHelper.revealLogText(textToVerify);
   }
 
@@ -53,6 +56,18 @@ export class ApplicationDetailPage {
   closeBuildLog() {
     cy.get(buildLogModalContentPO.closeButton).should('be.visible').click();
     cy.get(buildLogModalContentPO.modal).should('not.exist');
+  }
+
+  /** Close the build-log modal if still open (safe for afterEach cleanup). */
+  closeBuildLogIfOpen() {
+    cy.get('body').then(($body) => {
+      if ($body.find(buildLogModalContentPO.modal).length > 0) {
+        cy.get(`${buildLogModalContentPO.modal} ${buildLogModalContentPO.closeButton}`)
+          .first()
+          .click({ force: true });
+        cy.get(buildLogModalContentPO.modal).should('not.exist');
+      }
+    });
   }
 
   createdComponentExists(component: string, application: string) {

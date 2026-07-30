@@ -16,6 +16,20 @@ export class LogViewerHelper {
   }
 
   /**
+   * Wait for the post-task-selection fetch cycle: spinner appears, then clears.
+   * Call after clicking a task/pod in the log sidebar.
+   */
+  static waitForLogFetch(timeout: number = 20000) {
+    cy.get(logViewerPO.loadingSpinner, { timeout }).should('be.visible');
+    cy.get(logViewerPO.loadingSpinner, { timeout }).should('not.exist');
+  }
+
+  /** Wait until any in-flight log fetch spinner is gone. */
+  static waitForLogsLoaded(timeout: number = 20000) {
+    cy.get(logViewerPO.loadingSpinner, { timeout }).should('not.exist');
+  }
+
+  /**
    * Search for `logText` (which expands the matching folded step) and assert it is visible.
    * When `assertInitiallyFolded`, also checks no section is expanded before searching.
    * Defaults to the Cypress `defaultCommandTimeout` (40s).
@@ -26,6 +40,7 @@ export class LogViewerHelper {
   ) {
     const waitTimeout = options.timeout ?? 40000;
     this.waitForFoldedSteps(waitTimeout);
+    this.waitForLogsLoaded(waitTimeout);
     if (options.assertInitiallyFolded) {
       cy.get(logViewerPO.expandedFoldHeader).should('not.exist');
     }
