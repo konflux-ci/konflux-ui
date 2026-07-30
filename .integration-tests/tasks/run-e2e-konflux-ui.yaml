@@ -65,7 +65,7 @@ spec:
         - input: '$(params.job-type)'
           operator: notin
           values: ['periodic-stage']
-      image: docker.io/bitnami/kubectl@sha256:95de17e6eb92da83a58c90a9df0c4cede634f898d2e6b92ea04f4a6ee6ace08d
+      image: docker.io/bitnami/kubectl@sha256:95de17e6eb92da83a58c90a9df0c4cede634f898d2e6b92ea04f4a6ee6ace08d # kubectl 1.36.3
       volumeMounts:
         - name: kubeconfig-data
           mountPath: /shared
@@ -94,8 +94,10 @@ spec:
         SECRET_NAME="kfg-${PIPELINE_RUN_NAME}"
         echo "Looking for secret: ${SECRET_NAME}"
 
-        # Read kubeconfig from secret
-        kubectl get secret ${SECRET_NAME} -n ${NAMESPACE} -o jsonpath='{.data.kubeconfig}' | base64 -d > /shared/kubeconfig
+        # Extract kubeconfig from the secret (0600 so it is not world-readable)
+        kubectl get secret "${SECRET_NAME}" -n "${NAMESPACE}" -o jsonpath='{.data.kubeconfig}' \
+          | base64 -d \
+          | install -m 0600 /dev/stdin /shared/kubeconfig
 
         # Switch to Kind cluster context
         export KUBECONFIG=/shared/kubeconfig
