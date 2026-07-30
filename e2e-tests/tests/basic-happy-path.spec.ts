@@ -214,6 +214,11 @@ describe('Basic Happy Path', () => {
   });
 
   describe('Check Component', () => {
+    afterEach(() => {
+      // Prevent a failed log assertion from leaving the modal open over later suites.
+      applicationDetailPage.closeBuildLogIfOpen();
+    });
+
     it('Check component build status and logs', () => {
       Applications.goToComponentsTab();
       Applications.checkComponentStatus(componentName, 'Build completed');

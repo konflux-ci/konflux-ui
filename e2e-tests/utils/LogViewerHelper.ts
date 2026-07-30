@@ -5,14 +5,19 @@ import { logViewerPO } from '../support/pageObjects/logViewer-po';
  *
  * Search expands the folded step that contains the first match, so callers only
  * need to type a query — no manual step expansion.
- * PatternFly LogViewerSearch only re-runs on input change — wait until fold headers
- * exist (logs loaded) before typing a query.
+ * PatternFly LogViewerSearch only re-runs on input change — wait until logs have
+ * finished loading before typing, or the query indexes empty/partial content.
  */
 
 export class LogViewerHelper {
   static waitForFoldedSteps(timeout: number = 40000) {
     cy.get(logViewerPO.viewer, { timeout }).should('be.visible');
     cy.get(logViewerPO.foldHeader, { timeout }).should('have.length.at.least', 1);
+  }
+
+  /** Wait until the banner spinner is gone so search runs against full log content. */
+  static waitForLogsLoaded(timeout: number = 20000) {
+    cy.get(logViewerPO.loadingSpinner, { timeout }).should('not.exist');
   }
 
   /**
@@ -26,6 +31,8 @@ export class LogViewerHelper {
   ) {
     const waitTimeout = options.timeout ?? 40000;
     this.waitForFoldedSteps(waitTimeout);
+    this.waitForLogsLoaded(waitTimeout);
+
     if (options.assertInitiallyFolded) {
       cy.get(logViewerPO.expandedFoldHeader).should('not.exist');
     }
@@ -35,7 +42,11 @@ export class LogViewerHelper {
     cy.get(logViewerPO.searchInput).clear();
     cy.get(logViewerPO.searchInput).type(searchTerm);
 
-    cy.contains(logViewerPO.logText, logText, { timeout: waitTimeout }).scrollIntoView();
-    cy.contains(logViewerPO.logText, logText).should('be.visible');
+    // Search expands the step that owns the first match before lines enter the DOM.
+    cy.get(logViewerPO.expandedFoldHeader, { timeout: waitTimeout }).should('exist');
+
+    cy.contains(logViewerPO.logText, logText, { timeout: waitTimeout })
+      .scrollIntoView()
+      .should('be.visible');
   }
 }

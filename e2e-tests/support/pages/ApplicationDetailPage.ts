@@ -55,6 +55,18 @@ export class ApplicationDetailPage {
     cy.get(buildLogModalContentPO.modal).should('not.exist');
   }
 
+  /** Close the build-log modal if still open (safe for afterEach cleanup). */
+  closeBuildLogIfOpen() {
+    cy.get('body').then(($body) => {
+      if ($body.find(buildLogModalContentPO.modal).length > 0) {
+        cy.get(`${buildLogModalContentPO.modal} ${buildLogModalContentPO.closeButton}`)
+          .first()
+          .click({ force: true });
+        cy.get(buildLogModalContentPO.modal).should('not.exist');
+      }
+    });
+  }
+
   createdComponentExists(component: string, application: string) {
     Common.verifyPageTitle(application);
     Common.waitForLoad();
