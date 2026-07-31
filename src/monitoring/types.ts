@@ -28,7 +28,7 @@ export interface UserContext {
 
 export interface IMonitoringProvider<TConfig extends MonitoringConfig> {
   /** Initialize the monitoring provider with the given configuration. */
-  init(config: TConfig): Promise<void>;
+  init(config: TConfig): void;
 
   /** Capture an exception with optional structured context. */
   captureException(error: unknown, context?: Record<string, unknown>): void;

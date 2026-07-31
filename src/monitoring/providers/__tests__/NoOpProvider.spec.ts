@@ -15,14 +15,14 @@ describe('NoOpProvider', () => {
     consoleMock.restore();
   });
 
-  it('should resolve init without error or logging', async () => {
+  it('should complete init without error or logging', () => {
     const config: MonitoringConfig = {
       enabled: false,
       provider: 'noop',
       environment: 'development',
     };
 
-    await expect(provider.init(config)).resolves.toBeUndefined();
+    expect(() => provider.init(config)).not.toThrow();
     expect(consoleMock.info).not.toHaveBeenCalled();
   });
 

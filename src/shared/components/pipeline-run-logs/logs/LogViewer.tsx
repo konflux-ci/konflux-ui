@@ -213,7 +213,12 @@ const LogViewer: React.FC<Props> = ({
                 {showSearch && (
                   <ToolbarGroup>
                     <ToolbarItem>
-                      <LogViewerSearch placeholder="Search" minSearchChars={0} />
+                      <LogViewerSearch
+                        key={lines.length > 0 ? 'logs-ready' : 'logs-empty'}
+                        placeholder="Search"
+                        minSearchChars={0}
+                        name="logViewerSearchInput"
+                      />
                     </ToolbarItem>
                   </ToolbarGroup>
                 )}
