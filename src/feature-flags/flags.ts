@@ -145,7 +145,7 @@ const InternalFLAGS = {
   mintmaker: {
     key: 'mintmaker',
     description: 'Enable MintMaker in the UI',
-    defaultEnabled: false,
+    defaultEnabled: true,
     status: 'wip',
   },
 } satisfies Record<string, FeatureMeta>;
