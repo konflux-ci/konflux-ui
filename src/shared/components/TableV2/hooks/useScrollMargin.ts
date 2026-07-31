@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useLayoutResizeObserver } from '~/shared/hooks';
 
 /**
@@ -28,12 +28,7 @@ export const useScrollMargin = (
     setScrollMargin(tableRect.top - scrollRect.top + scrollElement.scrollTop);
   }, [tableNode, scrollElement]);
 
-  // Explicit synchronous calculation before paint, since the resize observers
-  // below only recalculate reactively once a resize is actually observed.
-  useLayoutEffect(recalculate, [recalculate]);
-
-  useLayoutResizeObserver(recalculate, tableNode);
-  useLayoutResizeObserver(recalculate, scrollElement);
+  useLayoutResizeObserver(recalculate, [tableNode, scrollElement]);
 
   return scrollMargin;
 };
