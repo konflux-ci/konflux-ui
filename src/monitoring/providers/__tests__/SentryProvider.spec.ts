@@ -49,13 +49,13 @@ describe('SentryProvider', () => {
         sampleRate: 0.5,
         sendDefaultPii: true,
         tracesSampleRate: 0.3,
-        tracePropagationTargets: ['localhost', /^\/api\/k8s/, /^\/plugins\//, /^\/oauth2\//],
+        tracePropagationTargets: ['localhost', /^\/api\/k8s/, /^\/oauth2\//],
         initialScope: { tags: { cluster: 'prod-cluster' } },
       }),
     );
   });
 
-  it('should configure narrow tracePropagationTargets for known API paths only', () => {
+  it('should restrict tracePropagationTargets to API and auth path prefixes', () => {
     const config: MonitoringConfig & { dsn: string } = {
       enabled: true,
       provider: 'sentry',
@@ -72,7 +72,7 @@ describe('SentryProvider', () => {
 
     // Known API paths should match
     expect(matchesAny('/api/k8s/apis/v1/namespaces')).toBe(true);
-    expect(matchesAny('/plugins/tekton-results/apis')).toBe(true);
+    expect(matchesAny('/api/k8s/plugins/tekton-results/apis')).toBe(true);
     expect(matchesAny('/oauth2/userinfo')).toBe(true);
 
     // Arbitrary same-origin paths should NOT match
