@@ -40,9 +40,11 @@ describe('TaskRunLogs', () => {
     } as unknown as TaskRunKind;
 
     render(<TaskRunLogs taskRun={failedTaskRun} namespace="test" status={runStatus.Failed} />);
-    expect(
-      screen.getByText('failed to create task run pod "test-pod": error creating container'),
-    ).toBeInTheDocument();
+    const messageElement = screen.getByText(
+      'failed to create task run pod "test-pod": error creating container',
+    );
+    expect(messageElement).toBeInTheDocument();
+    expect(messageElement.closest('.pf-v6-c-code-block')).toBeInTheDocument();
     expect(screen.queryByText('No logs found.')).not.toBeInTheDocument();
   });
 
