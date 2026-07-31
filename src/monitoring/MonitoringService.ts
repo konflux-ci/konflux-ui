@@ -20,9 +20,9 @@ const getProvider = (provider: MonitoringProviderId): IMonitoringProvider<Monito
 export class MonitoringService {
   private provider: IMonitoringProvider<MonitoringConfig>;
 
-  initialize(config: MonitoringConfig): Promise<void> {
+  initialize(config: MonitoringConfig): void {
     this.provider = getProvider(config.provider);
-    return this.provider.init(config);
+    this.provider.init(config);
   }
 
   captureException(error: unknown, context?: Record<string, unknown>): this {
@@ -42,7 +42,7 @@ export class MonitoringService {
 
   static create(config: MonitoringConfig): MonitoringService {
     const service = new MonitoringService();
-    void service.initialize(config);
+    service.initialize(config);
     return service;
   }
 }
