@@ -1,4 +1,5 @@
 import React from 'react';
+import { CodeBlock, CodeBlockCode } from '@patternfly/react-core';
 import { runStatus } from '~/consts/pipelinerun';
 import { PodGroupVersionKind } from '../../models/pod';
 import { ErrorDetailsWithStaticLog } from '../../shared/components/pipeline-run-logs/logs/log-snippet-types';
@@ -22,9 +23,17 @@ const TaskRunLogs: React.FC<React.PropsWithChildren<Props>> = ({ taskRun, namesp
     if (status === runStatus.Idle) {
       return <div>Waiting on task to start.</div>;
     }
-    const logSnippet = getTRLogSnippet(taskRun) as ErrorDetailsWithStaticLog;
-    if (logSnippet?.staticMessage) {
-      return <div data-test="taskrun-logs-nopod">{logSnippet.staticMessage}</div>;
+    if (status === runStatus.Failed) {
+      const logSnippet = getTRLogSnippet(taskRun) as ErrorDetailsWithStaticLog;
+      if (logSnippet?.staticMessage) {
+        return (
+          <div data-test="taskrun-logs-nopod">
+            <CodeBlock>
+              <CodeBlockCode>{logSnippet.staticMessage}</CodeBlockCode>
+            </CodeBlock>
+          </div>
+        );
+      }
     }
     return <div data-test="taskrun-logs-nopod">No logs found.</div>;
   }
