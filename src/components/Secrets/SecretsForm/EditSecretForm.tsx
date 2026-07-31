@@ -1,6 +1,5 @@
 import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bullseye, Form, PageSection, PageSectionVariants, Spinner } from '@patternfly/react-core';
 import { Bullseye, Form, PageSection, Spinner } from '@patternfly/react-core';
 import { Formik } from 'formik';
 import { isEmpty } from 'lodash-es';
