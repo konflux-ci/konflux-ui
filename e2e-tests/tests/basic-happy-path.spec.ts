@@ -214,26 +214,19 @@ describe('Basic Happy Path', () => {
   });
 
   describe('Check Component', () => {
-    before(() => {
+    it('Check component build status and logs', () => {
+      cy.log('Check component build status and logs');
       Applications.goToComponentsTab();
-    });
+      Applications.checkComponentStatus(componentName, 'Build completed');
 
-    describe('Validate Build Logs', () => {
-      afterEach(() => {
-        // Always close so a failed assertion cannot leave the modal over later suites.
-        applicationDetailPage.closeBuildLog();
-      });
+      cy.log('Validate Build Logs are successful');
+      applicationDetailPage.openBuildLog(componentName);
+      applicationDetailPage.verifyBuildLogTaskslist(piplinerunlogsTasks); //TO DO : Fetch the piplinerunlogsTasks from cluster using api At runtime.
+      applicationDetailPage.verifyFailedLogTasksNotExists();
+      applicationDetailPage.checkBuildLog(pipelineConfig.logCheckTask, 'Using token for quay.io');
+      applicationDetailPage.closeBuildLog();
 
-      it('Check component build status and logs', () => {
-        Applications.checkComponentStatus(componentName, 'Build completed');
-        applicationDetailPage.openBuildLog(componentName);
-        applicationDetailPage.verifyBuildLogTaskslist(piplinerunlogsTasks); //TO DO : Fetch the piplinerunlogsTasks from cluster using api At runtime.
-        applicationDetailPage.verifyFailedLogTasksNotExists();
-        applicationDetailPage.checkBuildLog(pipelineConfig.logCheckTask, 'Using token for quay.io');
-      });
-    });
-
-    it('Verify deployed image exists', () => {
+      cy.log('Verify deployed image exists');
       ComponentsTabPage.openComponent(componentName);
       ComponentDetailsPage.checkBuildImage();
     });
