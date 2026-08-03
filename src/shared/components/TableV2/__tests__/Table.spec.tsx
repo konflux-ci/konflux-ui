@@ -10,6 +10,7 @@ import { type ColumnDefinition } from '~/shared/components/TableV2/types';
 
 jest.mock('~/shared/hooks', () => ({
   getParentScrollableElement: jest.fn().mockReturnValue(null),
+  useLayoutResizeObserver: jest.fn(),
 }));
 jest.mock('~/shared/components/TableV2/hooks/useTable');
 jest.mock('~/shared/components/TableV2/hooks/useColumnState');
