@@ -146,7 +146,7 @@ const DetailSubTable: React.FC<{ rows: ConformaResultRow[] }> = ({ rows }) => {
         data={rows}
         columns={detailColumns}
         getRowId={(row) =>
-          `${row.component}-${row.title}-${row.pipelineRunName || ''}-${row.images.join(',')}`
+          `${row.component}-${row.title}-${row.status}-${row.pipelineRunName || ''}-${row.images.join(',')}`
         }
         aria-label="Conforma detail rows"
         data-test="conforma-detail-table"
