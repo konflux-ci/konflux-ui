@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Toolbar, ToolbarContent, ToolbarGroup, ToolbarItem } from '@patternfly/react-core';
 import { useFilterState } from '~/shared/components/Filter/hooks/useFilterState';
-import type { FilterConfig, OptionItem } from '~/shared/components/Filter/types';
+import type { FilterConfig, OptionItems } from '~/shared/components/Filter/types';
 import { BooleanFilter } from './controls/BooleanFilter';
 import { MultiSelectFilter } from './controls/MultiSelectFilter';
 import { SearchFilter } from './controls/SearchFilter';
@@ -23,7 +23,7 @@ type FilterToolbarProps<C extends readonly FilterConfig<unknown>[]> = {
   /** Filter configuration array describing which controls to render. */
   configs: C;
   /** Dropdown options keyed by filter `param`. Required for `multiSelect` and `singleSelect`. */
-  options?: Record<string, OptionItem[]>;
+  options?: Record<string, OptionItems>;
   /** Configuration for named toolbar groups. Keys are group names from filter configs. */
   groups?: Record<string, ToolbarGroupConfig>;
   /** Extra toolbar items rendered after the filter controls (e.g. action buttons). */
@@ -34,7 +34,7 @@ type FilterToolbarProps<C extends readonly FilterConfig<unknown>[]> = {
  * Renders the appropriate filter control component for a given config.
  * @internal
  */
-const renderControl = (config: FilterConfig<unknown>, options: Record<string, OptionItem[]>) => {
+const renderControl = (config: FilterConfig<unknown>, options: Record<string, OptionItems>) => {
   switch (config.type) {
     case 'search':
       return <SearchFilter key={config.param} config={config} />;

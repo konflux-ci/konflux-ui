@@ -3,6 +3,8 @@ export type {
   FilterOption,
   DividerOption,
   OptionItem,
+  GroupedOptions,
+  OptionItems,
   FilterConfigBase,
   SearchFilterConfig,
   MultiSelectFilterConfig,
@@ -16,7 +18,7 @@ export type {
   ClientFilterValues,
 } from './types';
 
-export { defineFilters } from './types';
+export { defineFilters, isGroupedOptions, isFilterOption } from './types';
 
 export { parseAsCommaSeparated } from './parsers';
 
@@ -39,4 +41,9 @@ export { SwitchableSearchFilter } from './controls/SwitchableSearchFilter';
 export { FilterToolbar } from './FilterToolbar';
 export type { ToolbarGroupConfig } from './FilterToolbar';
 
-export { buildOptions, buildOptionsWithFallback, NONE_VALUE } from './utils/buildOptions';
+export {
+  buildOptions,
+  buildOptionsWithFallback,
+  buildGroupedOptions,
+  NONE_VALUE,
+} from './utils/buildOptions';
