@@ -1,4 +1,4 @@
-import { FilterOption, OptionItem } from '~/shared/components/Filter/types';
+import { FilterOption, GroupedOptions, OptionItem } from '~/shared/components/Filter/types';
 
 /**
  * Sentinel value used to represent items whose key extractor returns
@@ -84,4 +84,56 @@ export const buildOptionsWithFallback = <T>(
   }
   result.push({ label: undefinedLabel, value: NONE_VALUE });
   return result;
+};
+
+type BuildGroupedOptionsConfig = {
+  /** Custom formatter for option labels. Defaults to capitalizing the first letter. */
+  labelFormatter?: (value: string) => string;
+  /** Custom formatter for group labels. Defaults to identity. */
+  groupLabelFormatter?: (group: string) => string;
+};
+
+/**
+ * Groups data items into `GroupedOptions[]` for use in grouped dropdowns.
+ *
+ * @typeParam T - The data-item type.
+ * @param data - Source data array.
+ * @param groupExtractor - Determines which group an item belongs to.
+ * @param keyExtractor - Extracts the option value from an item. Items returning `undefined` are skipped.
+ * @param opts - Optional formatters for labels and group names.
+ * @returns Sorted array of `GroupedOptions`, with options sorted and deduplicated within each group.
+ */
+export const buildGroupedOptions = <T>(
+  data: T[],
+  groupExtractor: (item: T) => string,
+  keyExtractor: (item: T) => string | undefined,
+  opts?: BuildGroupedOptionsConfig,
+): GroupedOptions[] => {
+  if (data.length === 0) return [];
+
+  const formatter = opts?.labelFormatter ?? defaultLabelFormatter;
+  const groupFormatter = opts?.groupLabelFormatter ?? ((g: string) => g);
+
+  const groupMap = new Map<string, Set<string>>();
+
+  for (const item of data) {
+    const key = keyExtractor(item);
+    if (key === undefined) continue;
+    const group = groupExtractor(item);
+    const existing = groupMap.get(group);
+    if (existing) {
+      existing.add(key);
+    } else {
+      groupMap.set(group, new Set([key]));
+    }
+  }
+
+  return [...groupMap.entries()]
+    .map(([group, keys]) => ({
+      group: groupFormatter(group),
+      options: [...keys]
+        .map((value) => ({ label: formatter(value), value }))
+        .sort((a, b) => a.label.localeCompare(b.label)),
+    }))
+    .sort((a, b) => a.group.localeCompare(b.group));
 };
