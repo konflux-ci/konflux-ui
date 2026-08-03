@@ -4541,10 +4541,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@standard-schema/spec@npm:1.0.0":
-  version: 1.0.0
-  resolution: "@standard-schema/spec@npm:1.0.0"
-  checksum: 10/aee780cc1431888ca4b9aba9b24ffc8f3073fc083acc105e3951481478a2f4dc957796931b2da9e2d8329584cf211e4542275f188296c1cdff3ed44fd93a8bc8
+"@standard-schema/spec@npm:1.1.0":
+  version: 1.1.0
+  resolution: "@standard-schema/spec@npm:1.1.0"
+  checksum: 10/a209615c9e8b2ea535d7db0a5f6aa0f962fd4ab73ee86a46c100fb78116964af1f55a27c1794d4801e534a196794223daa25ff5135021e03c7828aa3d95e1763
   languageName: node
   linkType: hard
 
@@ -15256,10 +15256,10 @@ __metadata:
   linkType: hard
 
 "nuqs@npm:^2.8.9":
-  version: 2.9.0
-  resolution: "nuqs@npm:2.9.0"
+  version: 2.9.2
+  resolution: "nuqs@npm:2.9.2"
   dependencies:
-    "@standard-schema/spec": "npm:1.0.0"
+    "@standard-schema/spec": "npm:1.1.0"
   peerDependencies:
     "@remix-run/react": ">=2"
     "@tanstack/react-router": ^1
@@ -15278,7 +15278,7 @@ __metadata:
       optional: true
     react-router-dom:
       optional: true
-  checksum: 10/4a48aa2814da53227f450a04cc25175b8827b0ac00910119e96718276a8340b0c5df6819a1c23d8207b29e1729ac30c7e02849c1c53aff3f07748218235b7b36
+  checksum: 10/6f93b7b498a769d022e674e1873e206fc61bf9c3e4b70fe0250031fff87c170dfa528470fcd5769cbd12cf80f366940b5a39b61376b8f4818d124fca05725cf6
   languageName: node
   linkType: hard
 
