@@ -215,6 +215,7 @@ describe('Basic Happy Path', () => {
 
   describe('Check Component', () => {
     it('Check component build status and logs', () => {
+      cy.log('Check component build status and logs');
       Applications.goToComponentsTab();
       Applications.checkComponentStatus(componentName, 'Build completed');
 
