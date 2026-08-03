@@ -7,7 +7,6 @@ import {
   Flex,
   FlexItem,
 } from '@patternfly/react-core';
-import yamlParser from 'js-yaml';
 import GitRepoLink from '~/components/GitLink/GitRepoLink';
 import HelpPopover from '~/components/HelpPopover';
 import { useLatestPushBuildPipelineRunForComponentV2 } from '~/hooks/useLatestPushBuildPipeline';
@@ -41,22 +40,6 @@ const ComponentDetails: React.FC<React.PropsWithChildren<ComponentDetailsProps>>
 
   // Check if image controller is enabled for this cluster
   const { isImageControllerEnabled } = useIsImageControllerEnabled();
-
-  const runTime = React.useMemo(() => {
-    try {
-      const loadedYaml = yamlParser?.load(component.status?.devfile) as {
-        metadata: { projectType: string; displayName: string; name: string };
-      };
-      return (
-        loadedYaml?.metadata.projectType ||
-        loadedYaml?.metadata.displayName ||
-        loadedYaml?.metadata.name ||
-        'N/A'
-      );
-    } catch {
-      return 'N/A';
-    }
-  }, [component]);
 
   return (
     <Flex direction={{ default: 'row' }}>
@@ -144,19 +127,6 @@ const ComponentDetails: React.FC<React.PropsWithChildren<ComponentDetailsProps>>
           </DescriptionList>
         </FlexItem>
       )}
-      <FlexItem flex={{ default: 'flex_1' }}>
-        <DescriptionList
-          data-test="component-details-2"
-          columnModifier={{
-            default: '1Col',
-          }}
-        >
-          <DescriptionListGroup>
-            <DescriptionListTerm>Runtime</DescriptionListTerm>
-            <DescriptionListDescription>{runTime}</DescriptionListDescription>
-          </DescriptionListGroup>
-        </DescriptionList>
-      </FlexItem>
     </Flex>
   );
 };
