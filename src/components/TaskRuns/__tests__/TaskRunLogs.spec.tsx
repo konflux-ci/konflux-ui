@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom';
 import { render, screen } from '@testing-library/react';
 import { runStatus } from '~/consts/pipelinerun';
-import { TaskRunKind } from '../../../types';
+import { TaskRunKind } from '~/types';
 import TaskRunLogs from '../TaskRunLogs';
 
 describe('TaskRunLogs', () => {
