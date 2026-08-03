@@ -22,17 +22,15 @@ const TaskRunLogs: React.FC<React.PropsWithChildren<Props>> = ({ taskRun, namesp
     if (status === runStatus.Idle) {
       return <div>Waiting on task to start.</div>;
     }
-    if (status === runStatus.Failed) {
-      const logSnippet = getTRLogSnippet(taskRun);
-      if (logSnippet && 'staticMessage' in logSnippet) {
-        return (
-          <div data-test="taskrun-logs-nopod">
-            <CodeBlock>
-              <CodeBlockCode>{logSnippet.staticMessage}</CodeBlockCode>
-            </CodeBlock>
-          </div>
-        );
-      }
+    const logSnippet = getTRLogSnippet(taskRun);
+    if (logSnippet && 'staticMessage' in logSnippet) {
+      return (
+        <div data-test="taskrun-logs-nopod">
+          <CodeBlock>
+            <CodeBlockCode>{logSnippet.staticMessage}</CodeBlockCode>
+          </CodeBlock>
+        </div>
+      );
     }
     return <div data-test="taskrun-logs-nopod">No logs found.</div>;
   }
