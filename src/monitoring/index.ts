@@ -1,11 +1,10 @@
 import { loadMonitoringConfig } from './load-config';
-import type { MonitoringService as MonitoringServiceType } from './MonitoringService';
+import { MonitoringService } from './MonitoringService';
 
-export let monitoringService: MonitoringServiceType | null = null;
+export let monitoringService: MonitoringService | null = null;
 
-export async function initMonitoring(): Promise<MonitoringServiceType> {
+export function initMonitoring(): MonitoringService {
   const config = loadMonitoringConfig();
-  const MonitoringService = (await import('./MonitoringService' /* webpackChunkName: "monitoring-service" */)).MonitoringService;
   monitoringService = MonitoringService.create(config);
   return monitoringService;
 }
