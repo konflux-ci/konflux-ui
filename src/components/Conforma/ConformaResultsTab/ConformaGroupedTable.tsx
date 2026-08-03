@@ -30,6 +30,7 @@ const DetailSubTable: React.FC<{ rows: ConformaResultRow[] }> = ({ rows }) => {
       {
         id: 'rule',
         header: 'Rule',
+        accessorFn: (row) => row.title,
         cell: ({ row }) => (
           <Content>
             <Content component="p">
@@ -45,11 +46,13 @@ const DetailSubTable: React.FC<{ rows: ConformaResultRow[] }> = ({ rows }) => {
       {
         id: 'component',
         header: 'Component',
+        accessorFn: (row) => row.component,
         cell: ({ row }) => row.original.component,
       },
       {
         id: 'image',
         header: 'Image',
+        accessorFn: (row) => row.images[0] || '',
         cell: ({ row }) => {
           const { images } = row.original;
           const commonName = images.length > 1 ? getCommonImageName(images) : undefined;
@@ -87,11 +90,13 @@ const DetailSubTable: React.FC<{ rows: ConformaResultRow[] }> = ({ rows }) => {
       {
         id: 'status',
         header: 'Status',
+        accessorFn: (row) => row.status,
         cell: ({ row }) => getRuleStatus(row.original.status),
       },
       {
         id: 'message',
         header: 'Message',
+        accessorFn: (row) => row.msg || '',
         cell: ({ row }) => (
           <Content>
             <Content component="p">
@@ -114,6 +119,7 @@ const DetailSubTable: React.FC<{ rows: ConformaResultRow[] }> = ({ rows }) => {
       {
         id: 'pipelineRun',
         header: 'Pipeline run',
+        accessorFn: (row) => row.pipelineRunName || '',
         cell: ({ row }) =>
           row.original.pipelineRunName ? (
             <Link
@@ -139,7 +145,9 @@ const DetailSubTable: React.FC<{ rows: ConformaResultRow[] }> = ({ rows }) => {
       <Table
         data={rows}
         columns={detailColumns}
-        getRowId={(row) => `${row.component}-${row.title}-${row.images[0] || ''}`}
+        getRowId={(row) =>
+          `${row.component}-${row.title}-${row.pipelineRunName || ''}-${row.images.join(',')}`
+        }
         aria-label="Conforma detail rows"
         data-test="conforma-detail-table"
       />
