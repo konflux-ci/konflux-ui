@@ -49,10 +49,35 @@ describe('SentryProvider', () => {
         sampleRate: 0.5,
         sendDefaultPii: true,
         tracesSampleRate: 0.3,
-        tracePropagationTargets: ['localhost', /^\//],
+        tracePropagationTargets: ['localhost', /^\/api\/k8s/, /^\/oauth2\//],
         initialScope: { tags: { cluster: 'prod-cluster' } },
       }),
     );
+  });
+
+  it('should restrict tracePropagationTargets to API and auth path prefixes', () => {
+    const config: MonitoringConfig & { dsn: string } = {
+      enabled: true,
+      provider: 'sentry',
+      dsn: 'https://test@sentry.io/123',
+      environment: 'production',
+    };
+
+    provider.init(config);
+
+    const initCall = (Sentry.init as jest.Mock).mock.calls[0][0];
+    const targets: (string | RegExp)[] = initCall.tracePropagationTargets;
+    const matchesAny = (path: string) =>
+      targets.some((t) => (typeof t === 'string' ? path.includes(t) : t.test(path)));
+
+    // Known API paths should match
+    expect(matchesAny('/api/k8s/apis/v1/namespaces')).toBe(true);
+    expect(matchesAny('/api/k8s/plugins/tekton-results/apis')).toBe(true);
+    expect(matchesAny('/oauth2/userinfo')).toBe(true);
+
+    // Arbitrary same-origin paths should NOT match
+    expect(matchesAny('/some-random-path')).toBe(false);
+    expect(matchesAny('/assets/main.js')).toBe(false);
   });
 
   it('should use default values when config fields are missing', () => {

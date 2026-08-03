@@ -5,7 +5,6 @@ import { DetailsPage } from '../DetailsPage';
 const Issues: React.FunctionComponent = () => {
   return (
     <DetailsPage
-      data-test="issues-data-test"
       title={
         <>
           <Title headingLevel="h1" size="2xl">

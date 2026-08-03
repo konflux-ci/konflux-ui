@@ -44,7 +44,7 @@ export class SentryProvider implements IMonitoringProvider<SentryConfig> {
       ],
       tracesSampleRate: mergedConfig.sampleRates?.traces ?? 0.2,
       sampleRate: mergedConfig.sampleRates?.errors ?? 1.0,
-      tracePropagationTargets: ['localhost', /^\//],
+      tracePropagationTargets: ['localhost', /^\/api\/k8s/, /^\/oauth2\//],
       initialScope: {
         tags: {
           cluster: mergedConfig.cluster || 'unknown',
