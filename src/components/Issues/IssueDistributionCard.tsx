@@ -9,15 +9,15 @@ import {
   Flex,
   FlexItem,
   Skeleton,
-  Text,
+  Content,
   Title,
 } from '@patternfly/react-core';
-import { global_palette_gold_200 as gold200 } from '@patternfly/react-tokens/dist/js/global_palette_gold_200';
-import { global_palette_gold_300 as gold300 } from '@patternfly/react-tokens/dist/js/global_palette_gold_300';
-import { global_palette_gold_400 as gold400 } from '@patternfly/react-tokens/dist/js/global_palette_gold_400';
-import { global_palette_gold_500 as gold500 } from '@patternfly/react-tokens/dist/js/global_palette_gold_500';
-import { global_palette_gold_600 as gold600 } from '@patternfly/react-tokens/dist/js/global_palette_gold_600';
-import { global_palette_gold_700 as gold700 } from '@patternfly/react-tokens/dist/js/global_palette_gold_700';
+import { chart_color_orange_100 as chartOrange100 } from '@patternfly/react-tokens/dist/js/chart_color_orange_100';
+import { chart_color_yellow_100 as chartYellow100 } from '@patternfly/react-tokens/dist/js/chart_color_yellow_100';
+import { chart_color_yellow_200 as chartYellow200 } from '@patternfly/react-tokens/dist/js/chart_color_yellow_200';
+import { chart_color_yellow_300 as chartYellow300 } from '@patternfly/react-tokens/dist/js/chart_color_yellow_300';
+import { chart_color_yellow_400 as chartYellow400 } from '@patternfly/react-tokens/dist/js/chart_color_yellow_400';
+import { chart_color_yellow_500 as chartYellow500 } from '@patternfly/react-tokens/dist/js/chart_color_yellow_500';
 import { capitalize } from 'lodash-es';
 import { IssueSeverity } from '~/kite/issue-type';
 import { useIssueCountsBySeverity, useIssueCountsByType } from '~/kite/kite-hooks';
@@ -35,12 +35,12 @@ const CHART_DIMENSIONS = {
 } as const;
 
 const LEGEND_COLORS = [
-  gold500.value,
-  gold200.value,
-  gold400.value,
-  gold600.value,
-  gold300.value,
-  gold700.value,
+  chartYellow300.value,
+  chartYellow100.value,
+  chartYellow200.value,
+  chartYellow400.value,
+  chartYellow500.value,
+  chartOrange100.value,
 ];
 
 const SEVERITY_ORDER = [
@@ -90,9 +90,9 @@ const SeverityDistributionSection: React.FC<{ namespace: string }> = ({ namespac
                       className="issue-distribution-card__severity-count"
                     />
                   )}
-                  <Text className="issue-distribution-card__severity-label">
+                  <Content component="p" className="issue-distribution-card__severity-label">
                     {capitalize(severity)}
-                  </Text>
+                  </Content>
                 </Flex>
               </FlexItem>
             ))}
@@ -147,7 +147,7 @@ const TypeDistributionSection: React.FC<{ namespace: string }> = ({ namespace })
                       justifyContent={{ default: 'justifyContentCenter' }}
                       alignItems={{ default: 'alignItemsCenter' }}
                     >
-                      <Text>No issues found</Text>
+                      <Content component="p">No issues found</Content>
                     </Flex>
                   )
                 ) : (
@@ -178,13 +178,13 @@ const TypeDistributionSection: React.FC<{ namespace: string }> = ({ namespace })
                           style={{ backgroundColor: LEGEND_COLORS[index] }}
                           aria-hidden="true"
                         />
-                        <Text>
+                        <Content component="p">
                           {capitalize(item.x)}: {item.y}
-                        </Text>
+                        </Content>
                       </Flex>
                     ))
                   ) : (
-                    <Text>No data to display</Text>
+                    <Content component="p">No data to display</Content>
                   )
                 ) : (
                   Array.from({ length: 5 }).map((_, index) => (

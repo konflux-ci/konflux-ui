@@ -33,45 +33,43 @@ const ReleaseSidePanel: React.FC<React.PropsWithChildren<ReleaseSidePanelBodyPro
 
   return (
     <>
-      <div className="commit-side-panel__head">
-        <DrawerHead data-test="release-side-panel-head">
-          <span className="commit-side-panel__head-title">
-            {release ? workflowNode.getLabel() : 'Release'}
-            {release ? <StatusIconWithTextLabel status={workflowNode.getData().status} /> : null}
-          </span>
-          <span className="pf-v5-u-mt-xs commit-side-panel__subtext">
-            <PipelineIcon role="img" aria-label="Pipeline run" /> Release
-          </span>
-          <DrawerActions>
-            <DrawerCloseButton onClick={onClose} />
-          </DrawerActions>
-        </DrawerHead>
-        <DrawerPanelBody data-test="release-side-panel-body">
-          <DescriptionList
-            data-test="pipeline-run-details"
-            columnModifier={{
-              default: '1Col',
-            }}
-          >
-            <DescriptionListGroup>
-              {!release ? <DescriptionListTerm>No releases set</DescriptionListTerm> : null}
-              <DescriptionListDescription>{RELEASE_DESC}</DescriptionListDescription>
-            </DescriptionListGroup>
-            <DescriptionListGroup>
-              <DescriptionListDescription>
-                <Link
-                  to={PIPELINE_RUNS_LIST_PATH.createPath({
-                    workspaceName: namespace,
-                    applicationName: workflowData.application,
-                  })}
-                >
-                  View pipeline runs
-                </Link>
-              </DescriptionListDescription>
-            </DescriptionListGroup>
-          </DescriptionList>
-        </DrawerPanelBody>
-      </div>
+      <DrawerHead data-test="release-side-panel-head">
+        <span className="commit-side-panel__head-title">
+          {release ? workflowNode.getLabel() : 'Release'}
+          {release ? <StatusIconWithTextLabel status={workflowNode.getData().status} /> : null}
+        </span>
+        <span className="pf-v6-u-mt-xs commit-side-panel__subtext">
+          <PipelineIcon role="img" aria-label="Pipeline run" /> Release
+        </span>
+        <DrawerActions>
+          <DrawerCloseButton onClick={onClose} />
+        </DrawerActions>
+      </DrawerHead>
+      <DrawerPanelBody data-test="release-side-panel-body">
+        <DescriptionList
+          data-test="pipeline-run-details"
+          columnModifier={{
+            default: '1Col',
+          }}
+        >
+          <DescriptionListGroup>
+            {!release ? <DescriptionListTerm>No releases set</DescriptionListTerm> : null}
+            <DescriptionListDescription>{RELEASE_DESC}</DescriptionListDescription>
+          </DescriptionListGroup>
+          <DescriptionListGroup>
+            <DescriptionListDescription>
+              <Link
+                to={PIPELINE_RUNS_LIST_PATH.createPath({
+                  workspaceName: namespace,
+                  applicationName: workflowData.application,
+                })}
+              >
+                View pipeline runs
+              </Link>
+            </DescriptionListDescription>
+          </DescriptionListGroup>
+        </DescriptionList>
+      </DrawerPanelBody>
     </>
   );
 };

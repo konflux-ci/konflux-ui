@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { ExpandableSection, FormSection, List, ListItem } from '@patternfly/react-core';
 import { useField } from 'formik';
-import { InputField, RadioGroupField, TextAreaField } from 'formik-pf';
+import { InputField, RadioGroupField, TextAreaField } from '~/shared/components/formik-base';
 import HelpPopover from '../../../../components/HelpPopover';
 import { useNamespace } from '../../../../shared/providers/Namespace';
 import FormikParamsField from '../../../IntegrationTests/FormikParamsField';
@@ -71,7 +71,7 @@ export const RunReleasePipelineSection: React.FC = () => {
             name="serviceAccount"
             label="Service account"
             helperText="Which service account do you want to use to run your release pipeline?"
-            labelIcon={
+            labelHelp={
               <HelpPopover
                 headerContent="Service account"
                 bodyContent="Which service account do you want to use to run your release pipeline?"
@@ -112,7 +112,7 @@ export const RunReleasePipelineSection: React.FC = () => {
             name="target"
             label="Target namespace"
             helperText="Type the namespace name that you would like the selected application to be released to."
-            labelIcon={
+            labelHelp={
               <HelpPopover
                 headerContent="Target namespace"
                 bodyContent="Your application will be released to the environments in this namespace."

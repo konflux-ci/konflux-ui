@@ -45,7 +45,7 @@ test('should have validation error given input field is touched and error exists
   });
 
   const validationErrors = await screen.findByText(`Required`);
-  expect(validationErrors.innerHTML).toBe('Required');
+  expect(validationErrors).toHaveTextContent('Required');
 });
 
 test('should have remove key value pair button if there are more than one key value entries', async () => {

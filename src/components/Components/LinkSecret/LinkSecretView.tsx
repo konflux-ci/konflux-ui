@@ -6,7 +6,7 @@ export const LinkSecretView = () => {
   const showModal = useModalLauncher();
   return (
     <>
-      <Button variant="secondary" onClick={() => showModal(createLinkSecretModalLauncher()())}>
+      <Button variant="primary" onClick={() => showModal(createLinkSecretModalLauncher()())}>
         Link Secrets
       </Button>
     </>

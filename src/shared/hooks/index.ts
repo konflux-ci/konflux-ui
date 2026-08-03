@@ -6,3 +6,4 @@ export * from './useScrollShadows';
 export * from './useDeepCompareMemoize';
 export * from './useMutationObserver';
 export * from './useLazyActionMenu';
+export * from './useFaviconStatusBadge';

@@ -21,13 +21,14 @@ export const releasesTableColumnClasses = {
   created: 'pf-m-width-20  pf-m-width-10-on-xl',
   duration: 'pf-m-width-20  pf-m-width-10-on-xl',
   status: 'pf-m-width-20  pf-m-width-10-on-xl',
-  releasePlan: 'pf-m-width-20  pf-m-width-10-on-xl',
+  component: 'pf-m-width-20  pf-m-width-10-on-xl',
+  releasePlan: 'pf-m-hidden    pf-m-width-10-on-xl pf-m-visible-on-xl',
   releaseSnapshot: 'pf-m-hidden    pf-m-width-10-on-xl pf-m-visible-on-xl',
   tenantCollectorPipelineRun: 'pf-m-hidden    pf-m-width-10-on-xl pf-m-visible-on-xl',
   managedPipelineRun: 'pf-m-hidden    pf-m-width-10-on-xl pf-m-visible-on-xl',
   tenantPipelineRun: 'pf-m-hidden    pf-m-width-10-on-xl pf-m-visible-on-xl',
   finalPipelineRun: 'pf-m-hidden    pf-m-width-10-on-xl pf-m-visible-on-xl',
-  kebab: 'pf-v5-c-table__action',
+  kebab: 'pf-v6-c-table__action',
 };
 
 const releaseColumns = RELEASE_COLUMNS_DEFINITIONS.map((col) => ({

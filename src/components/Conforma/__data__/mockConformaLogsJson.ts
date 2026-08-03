@@ -189,7 +189,7 @@ export const mockConformaUIData = [
     msg: 'CVE scan results not found',
     solution: 'solution for failure',
     collection: ['minimal'],
-    image: MOCK_CONTAINER_IMAGE,
+    images: [MOCK_CONTAINER_IMAGE],
     code: 'cve.missing_cve_scan_results',
   },
   {
@@ -202,7 +202,7 @@ export const mockConformaUIData = [
     msg: 'Pass',
     collection: ['minimal'],
     solution: undefined,
-    image: MOCK_CONTAINER_IMAGE,
+    images: [MOCK_CONTAINER_IMAGE],
     code: 'tasks.tasks_missing',
   },
 ];

@@ -259,7 +259,10 @@ describe('CustomizePipeline', () => {
         modalProps={{ isOpen: true, title: 'test' }}
       />,
     );
-    expect(screen.getByText('org/test')).toHaveAttribute('href', 'https://github.com/org/test');
+    expect(screen.getByText('org/test').closest('a')).toHaveAttribute(
+      'href',
+      'https://github.com/org/test',
+    );
   });
 
   it('should show container image url when available in component', () => {

@@ -51,9 +51,11 @@ const RowMemo = React.memo<
     return (
       <>
         <TableData data-test="virtual-body-expand-row">
-          <Button variant="plain" onClick={() => onToggle?.(index)}>
-            {isExpanded ? <AngleDownIcon /> : <AngleRightIcon />}
-          </Button>
+          <Button
+            icon={isExpanded ? <AngleDownIcon /> : <AngleRightIcon />}
+            variant="plain"
+            onClick={() => onToggle?.(index)}
+          />
         </TableData>
         <Row {...props} index={index} />
       </>
@@ -205,7 +207,7 @@ export const VirtualBody: React.FC<React.PropsWithChildren<VirtualBodyProps>> = 
     <VirtualTableBody
       ref={listRef}
       autoHeight
-      className="pf-v5-c-table pf-m-compact pf-m-border-rows pf-v5-c-window-scroller"
+      className="pf-v6-c-table pf-m-compact pf-m-border-rows pf-v6-c-window-scroller"
       deferredMeasurementCache={cellMeasurementCache}
       rowHeight={cellMeasurementCache.rowHeight}
       height={height || 0}

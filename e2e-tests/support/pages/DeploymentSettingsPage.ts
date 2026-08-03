@@ -24,7 +24,7 @@ export class DeploymentSettingsPage {
   }
 
   private static checkValue(label: string, value: number, unit?: string) {
-    cy.contains('.pf-v5-c-form__helper-text', label)
+    cy.contains('.pf-v6-c-form__helper-text', label)
       .parent()
       .within(() => {
         cy.get('input[type="number"]').should('have.value', value);

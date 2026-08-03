@@ -32,7 +32,7 @@ export const KonfluxBanner: React.FC = () => {
   if (!banner) return null;
 
   return (
-    <Banner isSticky variant={bannerTypeToVariant[banner.type]} id="konflux-banner">
+    <Banner isSticky color={bannerTypeToVariant[banner.type]} id="konflux-banner">
       <BannerContent type={banner.type} summary={banner.summary} />
     </Banner>
   );

@@ -20,6 +20,7 @@ FilterToolbar          UI rendering (controls generated from config)
 ```
 
 **Key principles:**
+
 - **Config-driven:** A single config array defines the URL params, filter types, predicates, and UI controls
 - **URL-first:** All filter state lives in URL search parameters via [nuqs v2](https://nuqs.47ng.com/), making filters shareable and bookmarkable
 - **Separation of concerns:** URL reading (`useFilterState`) is decoupled from data filtering (`useFilteredData`), allowing API-side filters to bypass client filtering
@@ -53,7 +54,7 @@ import { NuqsTestingAdapter } from 'nuqs/adapters/testing';
 render(
   <NuqsTestingAdapter searchParams="?name=foo&status=%5B%22active%22%5D">
     <MyFilteredComponent />
-  </NuqsTestingAdapter>
+  </NuqsTestingAdapter>,
 );
 ```
 
@@ -198,12 +199,12 @@ const { filterValues, clientFilterValues, isFiltered, clearAll } = useFilterStat
 
 **Returns:**
 
-| Property | Type | Description |
-|---|---|---|
-| `filterValues` | `FilterValues<C>` | All filter values including boolean and API-mode |
+| Property             | Type                    | Description                                                           |
+| -------------------- | ----------------------- | --------------------------------------------------------------------- |
+| `filterValues`       | `FilterValues<C>`       | All filter values including boolean and API-mode                      |
 | `clientFilterValues` | `ClientFilterValues<C>` | Subset for client-side filtering (excludes boolean and `mode: 'api'`) |
-| `isFiltered` | `boolean` | `true` when any filter has a non-default value |
-| `clearAll` | `() => void` | Resets every filter parameter to `null`, removing them from the URL |
+| `isFiltered`         | `boolean`               | `true` when any filter has a non-default value                        |
+| `clearAll`           | `() => void`            | Resets every filter parameter to `null`, removing them from the URL   |
 
 ### `useFilteredData(configs, data, clientFilterValues)`
 
@@ -216,6 +217,7 @@ const { filteredData } = useFilteredData(filterConfigs, allItems, clientFilterVa
 ```
 
 **Behavior:**
+
 - Skips `boolean` and `mode: 'api'` configs
 - For `search` without a `filterFn`, falls back to `textMatch(item.metadata.name, value)`
 - All active predicates are combined with **AND logic** — an item must pass every active filter
@@ -225,10 +227,10 @@ const { filteredData } = useFilteredData(filterConfigs, allItems, clientFilterVa
 
 Each filter config supports a `mode` property:
 
-| Mode | Default | Behavior |
-|---|---|---|
-| `'client'` | Yes | Filter applied by `useFilteredData` in the browser |
-| `'api'` | No | Value available in `filterValues` but excluded from `clientFilterValues` and `useFilteredData` |
+| Mode       | Default | Behavior                                                                                       |
+| ---------- | ------- | ---------------------------------------------------------------------------------------------- |
+| `'client'` | Yes     | Filter applied by `useFilteredData` in the browser                                             |
+| `'api'`    | No      | Value available in `filterValues` but excluded from `clientFilterValues` and `useFilteredData` |
 
 Use `mode: 'api'` when the filter value should be sent to a server-side query:
 
@@ -274,16 +276,16 @@ import { FilterToolbar } from '~/shared/components/Filter';
 
 <FilterToolbar configs={filterConfigs} options={{ status: statusOptions }}>
   <Button>Create</Button>
-</FilterToolbar>
+</FilterToolbar>;
 ```
 
 ### Props
 
-| Prop | Type | Required | Description |
-|---|---|---|---|
-| `configs` | `readonly FilterConfig<T>[]` | Yes | Filter configuration array |
-| `options` | `Record<string, OptionItem[]>` | No | Dropdown options keyed by filter `param`. Required for `multiSelect` and `singleSelect`. |
-| `children` | `ReactNode` | No | Extra toolbar items rendered after filter controls (e.g., action buttons) |
+| Prop       | Type                           | Required | Description                                                                              |
+| ---------- | ------------------------------ | -------- | ---------------------------------------------------------------------------------------- |
+| `configs`  | `readonly FilterConfig<T>[]`   | Yes      | Filter configuration array                                                               |
+| `options`  | `Record<string, OptionItem[]>` | No       | Dropdown options keyed by filter `param`. Required for `multiSelect` and `singleSelect`. |
+| `children` | `ReactNode`                    | No       | Extra toolbar items rendered after filter controls (e.g., action buttons)                |
 
 The `options` prop is a map from filter `param` to an array of `OptionItem` values. Use the `buildOptions` or `buildOptionsWithFallback` utilities to generate these from your data.
 
@@ -301,6 +303,7 @@ const statusOptions = buildOptions(pipelineRuns, (r) => r.status.phase);
 ```
 
 **Options:**
+
 - `validKeys?: string[]` — Restrict output to only these values
 - `labelFormatter?: (value: string) => string` — Custom label formatting (default: capitalize first letter)
 
@@ -469,8 +472,12 @@ const filterConfigs = defineFilters<Snapshot>()([
     param: 'searchField',
     label: 'Search',
     fields: [
-      { label: 'Name', value: 'name', param: 'name',
-        filterFn: (item, v) => textMatch(item.metadata.name, v) },
+      {
+        label: 'Name',
+        value: 'name',
+        param: 'name',
+        filterFn: (item, v) => textMatch(item.metadata.name, v),
+      },
     ],
   },
   {
@@ -491,10 +498,11 @@ const MyListView = () => {
 
   // Additional manual filtering for other boolean filters
   const finalData = React.useMemo(
-    () => filteredData.filter((item) => {
-      if (filterValues.showMergedOnly && item.eventType === 'pull') return false;
-      return true;
-    }),
+    () =>
+      filteredData.filter((item) => {
+        if (filterValues.showMergedOnly && item.eventType === 'pull') return false;
+        return true;
+      }),
     [filteredData, filterValues.showMergedOnly],
   );
 };
@@ -513,7 +521,7 @@ it('filters by name', () => {
   render(
     <NuqsTestingAdapter searchParams="?name=my-item">
       <MyFilteredList />
-    </NuqsTestingAdapter>
+    </NuqsTestingAdapter>,
   );
 
   expect(screen.getByText('my-item')).toBeInTheDocument();
@@ -528,8 +536,12 @@ import { useFilterState } from '~/shared/components/Filter/hooks/useFilterState'
 
 const configs = defineFilters<MyItem>()([
   { type: 'search', param: 'name', label: 'Name' },
-  { type: 'multiSelect', param: 'status', label: 'Status',
-    filterFn: (item, values) => values.includes(item.status) },
+  {
+    type: 'multiSelect',
+    param: 'status',
+    label: 'Status',
+    filterFn: (item, values) => values.includes(item.status),
+  },
 ] as const);
 
 const TestHarness = () => {
@@ -538,7 +550,9 @@ const TestHarness = () => {
     <div>
       <span data-test="name">{filterValues.name}</span>
       <span data-test="isFiltered">{String(isFiltered)}</span>
-      <button data-test="clear" onClick={clearAll}>Clear</button>
+      <button data-test="clear" onClick={clearAll}>
+        Clear
+      </button>
     </div>
   );
 };
@@ -547,7 +561,7 @@ it('reads URL params', () => {
   render(
     <NuqsTestingAdapter searchParams="?name=foo">
       <TestHarness />
-    </NuqsTestingAdapter>
+    </NuqsTestingAdapter>,
   );
   expect(screen.getByTestId('name')).toHaveTextContent('foo');
   expect(screen.getByTestId('isFiltered')).toHaveTextContent('true');
@@ -579,18 +593,19 @@ useFilteredData() ----> filteredData
 ```
 
 **Key points:**
+
 - `TableContainer` uses `unfilteredData` to distinguish "no data at all" from "no filter matches"
 - Pass `clearAll` to your empty state's clear action
 - Conditionally render the toolbar only when there's data or active filters
 
 ## DO / DON'T
 
-| DO | DON'T |
-|---|---|
-| Use `as const` with `defineFilters` | Omit `as const` (loses type inference for `filterValues`) |
-| Wrap with `NuqsAdapter` at the route/tab level | Wrap individual filter components |
-| Use `NuqsTestingAdapter` in tests | Use `NuqsAdapter` in tests (requires a real router) |
-| Pass `clientFilterValues` to `useFilteredData` | Pass `filterValues` to `useFilteredData` (includes booleans) |
-| Handle boolean filters manually | Expect boolean filters to appear in `clientFilterValues` |
-| Use `buildOptions` to generate dropdown options | Hardcode option arrays (they go stale) |
-| Provide `options` prop to `FilterToolbar` for select filters | Forget options (renders empty dropdowns) |
+| DO                                                           | DON'T                                                        |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+| Use `as const` with `defineFilters`                          | Omit `as const` (loses type inference for `filterValues`)    |
+| Wrap with `NuqsAdapter` at the route/tab level               | Wrap individual filter components                            |
+| Use `NuqsTestingAdapter` in tests                            | Use `NuqsAdapter` in tests (requires a real router)          |
+| Pass `clientFilterValues` to `useFilteredData`               | Pass `filterValues` to `useFilteredData` (includes booleans) |
+| Handle boolean filters manually                              | Expect boolean filters to appear in `clientFilterValues`     |
+| Use `buildOptions` to generate dropdown options              | Hardcode option arrays (they go stale)                       |
+| Provide `options` prop to `FilterToolbar` for select filters | Forget options (renders empty dropdowns)                     |

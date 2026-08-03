@@ -1,5 +1,6 @@
 import { hacAPIEndpoints } from '../../../utils/APIEndpoints';
 import { APIHelper } from '../../../utils/APIHelper';
+import { LogViewerHelper } from '../../../utils/LogViewerHelper';
 import { UIhelper } from '../../../utils/UIhelper';
 import { pipelinerunsTabPO } from '../../pageObjects/pages-po';
 
@@ -151,7 +152,7 @@ export class DetailsTab {
   }
 
   static checkNodeDrawerPanelResult(section: string, value: string) {
-    cy.contains(pipelinerunsTabPO.PF5TableRow, section)
+    cy.contains(pipelinerunsTabPO.PF6TableRow, section)
       .contains(value)
       .scrollIntoView()
       .should('be.visible');
@@ -183,10 +184,7 @@ export class DetailsTab {
   }
 
   static verifyLogs(logText: string | RegExp) {
-    cy.get(pipelinerunsTabPO.logText)
-      .contains(logText, { timeout: 80000 })
-      .scrollIntoView()
-      .should('be.visible');
+    LogViewerHelper.revealLogText(logText, { assertInitiallyFolded: true });
   }
 
   static closeDrawerPanel() {

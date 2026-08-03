@@ -5,10 +5,8 @@ import {
   ButtonVariant,
   EmptyState,
   EmptyStateBody,
-  EmptyStateIcon,
   EmptyStateProps,
   EmptyStateVariant,
-  EmptyStateHeader,
   EmptyStateFooter,
 } from '@patternfly/react-core';
 import { LockIcon } from '@patternfly/react-icons/dist/esm/icons/lock-icon';
@@ -42,16 +40,14 @@ const NoAccessState: React.FC<React.PropsWithChildren<NoAccessStateProps>> = ({
 
   return (
     <EmptyState
+      headingLevel="h2"
+      icon={LockIcon}
+      titleText={<>{title || `Let's get you access`}</>}
       className={css('app-empty-state', className)}
       variant={EmptyStateVariant.full}
       {...props}
       data-test="no-access-state"
     >
-      <EmptyStateHeader
-        titleText={<>{title || `Let's get you access`}</>}
-        icon={<EmptyStateIcon className={css('app-empty-state__icon ')} icon={LockIcon} />}
-        headingLevel="h2"
-      />
       <EmptyStateBody>
         {body ||
           (accessedNamespace

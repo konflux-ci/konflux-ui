@@ -21,7 +21,7 @@ describe('severityIcon', () => {
       const { container } = render(<>{icon}</>);
 
       const svg = container.querySelector('svg');
-      expect(svg).toHaveAttribute('color', '#a30000');
+      expect(svg).toHaveAttribute('color', '#b1380b');
     });
   });
 
@@ -43,7 +43,7 @@ describe('severityIcon', () => {
       const { container } = render(<>{icon}</>);
 
       const svg = container.querySelector('svg');
-      expect(svg).toHaveAttribute('color', '#ec7a08');
+      expect(svg).toHaveAttribute('color', '#ca6c0f');
     });
   });
 
@@ -65,7 +65,7 @@ describe('severityIcon', () => {
       const { container } = render(<>{icon}</>);
 
       const svg = container.querySelector('svg');
-      expect(svg).toHaveAttribute('color', '#f0ab00');
+      expect(svg).toHaveAttribute('color', '#dca614');
     });
   });
 
@@ -87,7 +87,7 @@ describe('severityIcon', () => {
       const { container } = render(<>{icon}</>);
 
       const svg = container.querySelector('svg');
-      expect(svg).toHaveAttribute('color', '#2b9af3');
+      expect(svg).toHaveAttribute('color', '#707070');
     });
   });
 
@@ -109,7 +109,7 @@ describe('severityIcon', () => {
       const { container } = render(<>{icon}</>);
 
       const svg = container.querySelector('svg');
-      expect(svg).toHaveAttribute('color', '#b8bbbe');
+      expect(svg).toHaveAttribute('color', '#c7c7c7');
     });
   });
 

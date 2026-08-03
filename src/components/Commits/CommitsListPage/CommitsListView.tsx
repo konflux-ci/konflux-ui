@@ -334,8 +334,8 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
       {isFetchingNextPage && sortedCommits.length > 0 ? (
         <div
           style={{
-            marginTop: 'var(--pf-v5-global--spacer--2xl)',
-            marginBottom: 'var(--pf-v5-global--spacer--2xl)',
+            marginTop: 'var(--pf-t--global--spacer--2xl)',
+            marginBottom: 'var(--pf-t--global--spacer--2xl)',
           }}
         >
           <Bullseye>

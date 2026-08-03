@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { PageSection, PageSectionVariants } from '@patternfly/react-core';
+import { PageSection } from '@patternfly/react-core';
 import { LEARN_MORE_ABOUT_CREATING_APPLICATIONS } from '../../consts/documentation';
 import ExternalLink from '../../shared/components/links/ExternalLink';
 import { useApplicationBreadcrumbs } from '../Applications/breadcrumbs/breadcrumb-utils';
@@ -22,7 +22,7 @@ const ImportForm: React.FC = () => {
       }
     >
       <PageSection
-        variant={PageSectionVariants.light}
+        hasBodyWrapper={false}
         padding={{ default: 'noPadding' }}
         data-test="import-form-page-section"
       >

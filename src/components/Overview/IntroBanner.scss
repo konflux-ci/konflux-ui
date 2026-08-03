@@ -1,5 +1,9 @@
 .intro-banner {
   background: linear-gradient(90deg, var(--banner-gradient, white) 0%, var(--banner-gradient, white) 40%, var(--banner-gradient-end, #D1D1D1) 100%);
+  border-width: var(--pf-t--global--border--width--box--default);
+  border-color: var(--pf-t--global--border--color--subtle);
+  border-style: solid;
+  border-radius: var(--pf-t--global--border--radius--medium);
 
   &__content {
     background-color: transparent;
@@ -8,8 +12,8 @@
 
 
   &__cta {
-    margin-top: var(--pf-v5-global--spacer--sm);
-    margin-right: var(--pf-v5-global--spacer--md);
+    margin-top: var(--pf-t--global--spacer--sm);
+    margin-right: var(--pf-t--global--spacer--md);
 
     & + &__cta {
       margin-right: none;
@@ -19,14 +23,14 @@
 
 
 :root {
-  --banner-gradient: var(--pf-v5-global--BackgroundColor--100);
+  --banner-gradient: var(--pf-t--global--background--color--primary--default);
   --banner-gradient-end: #D1D1D1;
 }
 
-html.pf-v5-theme-dark {
+html.pf-v6-theme-dark {
   --banner-gradient-end: #404040;
 
   .intro-banner path  {
-    stroke: var(--pf-v5-global--icon--Color--dark);
+    stroke: var(--pf-t--global--icon--color--regular);
   }
 }

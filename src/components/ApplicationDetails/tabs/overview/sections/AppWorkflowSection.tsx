@@ -2,9 +2,8 @@ import React from 'react';
 import {
   Grid,
   GridItem,
-  Text,
-  TextContent,
-  TextVariants,
+  Content,
+  ContentVariants,
   Button,
   Bullseye,
   Spinner,
@@ -38,14 +37,14 @@ const AppWorkflowSection: React.FC<React.PropsWithChildren<AppWorkflowSectionPro
     <React.Fragment>
       <Grid hasGutter className="app-workflow">
         <GridItem>
-          <TextContent>
-            <Text component={TextVariants.h3}>Lifecycle</Text>
+          <Content>
+            <Content component={ContentVariants.h3}>Lifecycle</Content>
             <Flex justifyContent={{ default: 'justifyContentSpaceBetween' }}>
               <FlexItem>
-                <Text component={TextVariants.p}>
+                <Content component={ContentVariants.p}>
                   This is a visualization of your application pipeline, from source code through
                   release.
-                </Text>
+                </Content>
               </FlexItem>
               {loaded && errors.length === 0 && (
                 <FlexItem>
@@ -55,7 +54,7 @@ const AppWorkflowSection: React.FC<React.PropsWithChildren<AppWorkflowSectionPro
                 </FlexItem>
               )}
             </Flex>
-          </TextContent>
+          </Content>
         </GridItem>
         {!loaded ? (
           <Bullseye>

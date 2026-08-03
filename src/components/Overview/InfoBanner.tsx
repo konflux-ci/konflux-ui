@@ -6,9 +6,9 @@ import {
   FlexItem,
   CardTitle,
   Bullseye,
-  TextVariants,
+  ContentVariants,
   Divider,
-  Text,
+  Content,
 } from '@patternfly/react-core';
 import OverviewInfo1Icon from '../../assets/overview/overview-info1.svg';
 import OverviewInfo2Icon from '../../assets/overview/overview-info2.svg';
@@ -37,7 +37,9 @@ const InfoBanner: React.FC = () => (
             </CardTitle>
             <CardBody>
               <Bullseye>
-                <Text component={TextVariants.p}>Build artifacts of all kinds from source</Text>
+                <Content component={ContentVariants.p}>
+                  Build artifacts of all kinds from source
+                </Content>
               </Bullseye>
             </CardBody>
           </Card>

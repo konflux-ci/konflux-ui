@@ -1,5 +1,5 @@
 import React from 'react';
-import { Form, FormSection, PageSection, PageSectionVariants } from '@patternfly/react-core';
+import { Form, FormSection, PageSection } from '@patternfly/react-core';
 import { useFormikContext } from 'formik';
 import isEmpty from 'lodash/isEmpty';
 import { INTEGRATION_TEST_LIST_PATH } from '@routes/paths';
@@ -61,7 +61,7 @@ const IntegrationTestForm: React.FunctionComponent<
       description={description}
       footer={footer}
     >
-      <PageSection isFilled variant={PageSectionVariants.light}>
+      <PageSection hasBodyWrapper={false} isFilled>
         <Form onSubmit={handleSubmit}>
           <FormSection className="integration-test-form">
             <IntegrationTestSection isInPage edit={edit} />

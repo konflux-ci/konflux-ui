@@ -44,7 +44,10 @@ export const ensureConditionIsOn = (keys: ConditionKey[]) => () => {
  * Compose helpers for data-router loaders/lazy to guard routes by conditions.
  * These are non-hook utilities and safe to call in loaders.
  */
-export const ensureConditionOnLoader = async (keys: ConditionKey[], options?: EnsureConditionOnLoaderOptions): Promise<void> => {
+export const ensureConditionOnLoader = async (
+  keys: ConditionKey[],
+  options?: EnsureConditionOnLoaderOptions,
+): Promise<void> => {
   await FeatureFlagsStore.ensureConditions(keys);
   const isConditionOn = ensureConditionIsOn(keys);
   if (!isConditionOn()) {

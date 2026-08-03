@@ -38,7 +38,7 @@ describe('PipelineRunTestResultCell', () => {
       DataState.STATUS_WITH_TEST_OUTPUT_SUCCESS
     ] as unknown as PipelineRunKind;
     const { container } = renderCell(plr, 'test-ns');
-    expect(container.querySelector('.pf-v5-c-skeleton')).toBeInTheDocument();
+    expect(container.querySelector('.pf-v6-c-skeleton')).toBeInTheDocument();
   });
 
   it('renders "-" when there is no test result', () => {

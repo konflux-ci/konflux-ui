@@ -22,7 +22,7 @@ describe('ConformaCountBadge', () => {
     expect(badge).toHaveTextContent('5');
   });
 
-  it('renders non-zero warning count as a gold Label', () => {
+  it('renders non-zero warning count as a yellow Label', () => {
     routerRenderer(<ConformaCountBadge count={3} type={CONFORMA_RESULT_STATUS.warnings} />);
 
     const badge = screen.getByTestId(`conforma-count-badge-${CONFORMA_RESULT_STATUS.warnings}`);

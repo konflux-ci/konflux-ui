@@ -11,7 +11,7 @@ import {
   SelectList,
   SelectOption,
   Spinner,
-  Text,
+  Content,
 } from '@patternfly/react-core';
 import { FilterIcon } from '@patternfly/react-icons/dist/esm/icons/filter-icon';
 import { Table, TableGridBreakpoint, Tbody, Thead } from '@patternfly/react-table';
@@ -312,9 +312,9 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
           dataTest="user-access-list-toolbar"
           noLeftPadding
         >
-          <Text data-test="user-access-selected-count" component="small">
+          <Content data-test="user-access-selected-count" component="small">
             {selectedCount} user{selectedCount !== 1 ? 's' : ''} selected
-          </Text>
+          </Content>
           <ButtonWithAccessTooltip
             variant="secondary"
             type="button"

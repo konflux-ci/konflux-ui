@@ -119,7 +119,7 @@ describe('TableBody', () => {
 
     // Each skeleton row should have one skeleton per visible column
     skeletonRows.forEach((row) => {
-      const skeletons = row.querySelectorAll('.pf-v5-c-skeleton');
+      const skeletons = row.querySelectorAll('.pf-v6-c-skeleton');
       expect(skeletons).toHaveLength(4);
     });
   });

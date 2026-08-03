@@ -20,7 +20,7 @@ type GettingStartedCardProps = {
   title: string;
   imgSrc?: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   imgAlt?: string;
-  isLight?: boolean;
+  hasHorizontalPadding?: boolean;
 };
 
 const LOCAL_STORAGE_KEY = 'getting-started-card';
@@ -31,8 +31,8 @@ export const GettingStartedCard: React.FC<React.PropsWithChildren<GettingStarted
   title,
   imgSrc,
   imgAlt,
-  isLight,
   children,
+  hasHorizontalPadding = true,
 }) => {
   const [storageKeys, setStorageKeys] = useLocalStorage<{ [key: string]: boolean }>(
     LOCAL_STORAGE_KEY,
@@ -44,12 +44,15 @@ export const GettingStartedCard: React.FC<React.PropsWithChildren<GettingStarted
 
   return (
     !isDismissed && (
-      <PageSection variant={isLight ? 'light' : 'default'}>
+      <PageSection
+        hasBodyWrapper={false}
+        className={`pf-v6-u-py-xl ${hasHorizontalPadding ? '' : 'pf-v6-u-px-0'}`}
+      >
         <Card>
           <Split>
             {imgSrc && (
               <SplitItem
-                className={classnames('pf-v5-u-min-width getting-started-card__img', imgClassName)}
+                className={classnames('pf-v6-u-min-width getting-started-card__img', imgClassName)}
               >
                 <SvgIcon aria-label={imgAlt} role="img" />
               </SplitItem>
@@ -60,12 +63,11 @@ export const GettingStartedCard: React.FC<React.PropsWithChildren<GettingStarted
                   actions: (
                     <>
                       <Button
+                        icon={<CloseIcon />}
                         variant="plain"
                         aria-label="Hide card"
                         onClick={() => setStorageKeys({ ...keys, [localStorageKey]: true })}
-                      >
-                        <CloseIcon />
-                      </Button>
+                      />
                     </>
                   ),
                   hasNoOffset: false,

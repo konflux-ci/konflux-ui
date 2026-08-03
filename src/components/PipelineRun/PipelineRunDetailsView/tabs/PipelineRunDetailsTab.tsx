@@ -199,11 +199,11 @@ const PipelineRunDetailsTab: React.FC = () => {
 
   return (
     <>
-      <Title headingLevel="h4" className="pf-v5-c-title pf-v5-u-mt-lg pf-v5-u-mb-lg" size="lg">
+      <Title headingLevel="h4" className="pf-v6-c-title pf-v6-u-mt-lg pf-v6-u-mb-lg" size="lg">
         Pipeline run details
       </Title>
       {taskRunError ? (
-        <div className="pf-v5-u-pb-lg">
+        <div className="pf-v6-u-pb-lg">
           {getErrorState(taskRunError, taskRunsLoaded, 'task runs', true)}
         </div>
       ) : (
@@ -464,13 +464,13 @@ const PipelineRunDetailsTab: React.FC = () => {
 
           {patchedResultsForProxy?.length ? (
             <>
-              <Divider style={{ padding: 'var(--pf-v5-global--spacer--lg) 0' }} />
+              <Divider style={{ padding: 'var(--pf-t--global--spacer--lg)' }} />
               <RunResultsList results={patchedResultsForProxy} status={pipelineStatus} />
             </>
           ) : null}
 
           {patchedSpecParamsForProxy?.length && (
-            <div style={{ marginTop: 'var(--pf-v5-global--spacer--lg)' }}>
+            <div style={{ marginTop: 'var(--pf-t--global--spacer--lg)' }}>
               <RunParamsList params={patchedSpecParamsForProxy} />
             </div>
           )}

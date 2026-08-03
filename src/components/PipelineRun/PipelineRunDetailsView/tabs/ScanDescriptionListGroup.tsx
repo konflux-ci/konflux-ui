@@ -53,7 +53,7 @@ const ScanDescriptionListGroup: React.FC<React.PropsWithChildren<Props>> = ({
             applicationName,
             taskRunName,
           })}
-          className="pf-v5-u-font-weight-normal"
+          className="pf-v6-u-font-weight-normal"
         >
           View logs
         </Link>
@@ -83,7 +83,7 @@ const ScanDescriptionListGroup: React.FC<React.PropsWithChildren<Props>> = ({
                     applicationName: scanTaskRun.metadata.labels[PipelineRunLabel.APPLICATION],
                     taskRunName: scanTaskRun.metadata.name,
                   })}
-                  className="pf-v5-u-font-weight-normal scan-description-list__tooltip-link"
+                  className="pf-v6-u-font-weight-normal scan-description-list__tooltip-link"
                 >
                   <span
                     data-test={`${
@@ -101,7 +101,7 @@ const ScanDescriptionListGroup: React.FC<React.PropsWithChildren<Props>> = ({
       >
         <Button
           variant={ButtonVariant.link}
-          className="pf-v5-u-px-0"
+          className="pf-v6-u-px-0"
           data-test="view-logs-popover-trigger-test-id"
         >
           View logs

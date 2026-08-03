@@ -44,18 +44,22 @@ export class Login {
   ) {
     cy.visit(Cypress.env('KONFLUX_BASE_URL'));
     // Wait for either the login form (not authenticated) or the app sidebar (already authenticated)
-    cy.get(`${openshiftLoginPO.username}, ${openshiftLoginPO.sidebar}`, { timeout: 30000 }).should('exist');
+    cy.get(`${openshiftLoginPO.username}, ${openshiftLoginPO.sidebar}`, { timeout: 30000 }).should(
+      'exist',
+    );
     cy.get('body').then(($body) => {
       if ($body.find(openshiftLoginPO.username).length > 0) {
         cy.get(openshiftLoginPO.username).type(username);
         cy.get(openshiftLoginPO.password).type(password, { log: false });
         cy.get(openshiftLoginPO.loginButton).should('be.enabled').click();
         // Click through OAuth consent page if it appears
-        cy.get(`${openshiftLoginPO.approveButton}, ${openshiftLoginPO.sidebar}`, { timeout: 60000 }).first().then(($el) => {
-          if ($el.is(openshiftLoginPO.approveButton)) {
-            cy.wrap($el).click();
-          }
-        });
+        cy.get(`${openshiftLoginPO.approveButton}, ${openshiftLoginPO.sidebar}`, { timeout: 60000 })
+          .first()
+          .then(($el) => {
+            if ($el.is(openshiftLoginPO.approveButton)) {
+              cy.wrap($el).click();
+            }
+          });
         cy.get(openshiftLoginPO.sidebar, { timeout: 60000 }).should('exist');
       }
     });
@@ -69,18 +73,37 @@ export class Login {
     console.log('Logging in to stage Konflux...');
     cy.visit(Cypress.env('KONFLUX_BASE_URL'));
     cy.get(stageLoginPO.dex).should('be.visible').click();
+
+    // Click through IDP selection page if it appears
+    cy.get('body').then(($body) => {
+      if ($body.find(stageLoginPO.idpRedHatSsoButton).length > 0) {
+        cy.get(stageLoginPO.idpRedHatSsoButton).click();
+      }
+    });
+
     cy.get(stageLoginPO.username).type(username);
     cy.get(stageLoginPO.password).type(password, { log: false });
     cy.get(stageLoginPO.loginButton).click();
 
+    // Click through OAuth consent page if it appears
+    cy.get('body', { timeout: 30000 }).then(($body) => {
+      if ($body.find(stageLoginPO.approveButton).length > 0) {
+        cy.get(stageLoginPO.approveButton).click();
+      }
+    });
+
+    // Grant Access is always required
+    cy.contains(stageLoginPO.grantAccessClass, stageLoginPO.grantAccessText).click();
+
     // ----- Workaround -----
     // Sometimes page doesn't go to homepage but shows
     // "Something went wrong - Invalid token" message.
-    cy.contains('You have successfully logged into Red Hat Internal SSO', {
-      timeout: 10000,
-    }).should('be.visible');
-    cy.wait(2000);
-    cy.visit(Cypress.env('KONFLUX_BASE_URL'));
+    cy.get('body', { timeout: 10000 }).then(($body) => {
+      if ($body.text().includes('You have successfully logged into Red Hat Internal SSO')) {
+        cy.wait(2000);
+        cy.visit(Cypress.env('KONFLUX_BASE_URL'));
+      }
+    });
     // ----- end of workaround -----
 
     this.waitForApps();

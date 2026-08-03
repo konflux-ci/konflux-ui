@@ -20,7 +20,7 @@ const CVETableRow: React.FC<Props> = ({ arrayHelper, cve, index }) => {
 
       <>
         <Td className={cveTableColumnClass.component}>
-          {cve.component ? <span className="pf-v5-u-mr-sm">{cve.component}</span> : '-'}
+          {cve.component ? <span className="pf-v6-u-mr-sm">{cve.component}</span> : '-'}
         </Td>
         <Td className={cveTableColumnClass.packages}>
           {cve.packages?.length > 0 ? cve.packages.join(', ') : '-'}

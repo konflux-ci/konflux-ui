@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
-import { Button, Text } from '@patternfly/react-core';
+import { Button, Content } from '@patternfly/react-core';
 import { ExternalLinkAltIcon } from '@patternfly/react-icons/dist/esm/icons/external-link-alt-icon';
 import { css } from '@patternfly/react-styles';
 import { useAllComponents } from '../../../hooks/useComponents';
@@ -57,9 +57,9 @@ const ComponentNudgesSVG: React.FC<ComponentNudgesSVGprops> = ({
         radioChecked === NudgeRadios.NUDGED_BY && 'component-nudge__nudged-by-arrow',
       )}
     >
-      <Text style={{ marginTop: 'var(--pf-v5-global--spacer--lg)' }}>
+      <Content component="p" style={{ marginTop: 'var(--pf-t--global--spacer--lg)' }}>
         <b>{component.metadata.name}</b>
-      </Text>
+      </Content>
       <ul>
         {relatedComponents.map((comp, i) => (
           <li key={i} data-test="nudges-connector">

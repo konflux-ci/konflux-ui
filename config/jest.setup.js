@@ -23,6 +23,17 @@ jest.mock('react-router-dom', () => ({
   ...jest.requireActual('react-router-dom'),
 }));
 
+jest.mock('@sentry/react', () => ({
+  __esModule: true,
+  ...jest.requireActual('@sentry/react'),
+  init: jest.fn(),
+  captureException: jest.fn().mockReturnValue('event-id'),
+  captureMessage: jest.fn().mockReturnValue('event-id'),
+  setUser: jest.fn(),
+  reactRouterBrowserTracingIntegration: jest.fn(),
+  wrapCreateBrowserRouter: jest.fn((fn) => fn),
+}));
+
 jest.mock('../src/shared/providers/Namespace/useNamespaceInfo', () => ({
   __esModule: true,
   ...jest.requireActual('../src/shared/providers/Namespace/useNamespaceInfo'),

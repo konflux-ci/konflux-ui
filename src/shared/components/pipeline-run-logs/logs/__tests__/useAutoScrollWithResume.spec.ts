@@ -45,6 +45,103 @@ describe('useAutoScrollWithResume', () => {
       rerender({ allowAutoScroll: false });
       expect(result.current.autoScroll).toBe(false);
     });
+
+    it('should not auto-scroll on mount when an active line target is present, even if allowAutoScroll is true', () => {
+      const { result } = renderHook(() =>
+        useAutoScrollWithResume({
+          allowAutoScroll: true,
+          activeLineTarget: { start: 20000, end: 20000 },
+        }),
+      );
+
+      expect(result.current.autoScroll).toBe(false);
+    });
+
+    it('should not clobber autoScroll when the same active line target is passed across renders', () => {
+      const { result, rerender } = renderHook(
+        ({ allowAutoScroll }) =>
+          useAutoScrollWithResume({
+            allowAutoScroll,
+            activeLineTarget: { start: 20000, end: 20000 },
+          }),
+        { initialProps: { allowAutoScroll: true } },
+      );
+
+      expect(result.current.autoScroll).toBe(false);
+
+      rerender({ allowAutoScroll: true });
+
+      expect(result.current.autoScroll).toBe(false);
+    });
+
+    it('should pause auto-scroll when the active line target changes to a new line (e.g. hash navigation while already streaming)', () => {
+      const { result, rerender } = renderHook(
+        ({ activeLineTarget }: { activeLineTarget: { start: number; end: number } | null }) =>
+          useAutoScrollWithResume({ allowAutoScroll: true, activeLineTarget }),
+        { initialProps: { activeLineTarget: null } },
+      );
+
+      expect(result.current.autoScroll).toBe(true);
+
+      // Simulate the user navigating to a specific line while logs keep streaming
+      rerender({ activeLineTarget: { start: 20000, end: 20000 } });
+
+      expect(result.current.autoScroll).toBe(false);
+    });
+
+    it('should not re-pause auto-scroll for the same line target after a resume click', () => {
+      const { result, rerender } = renderHook(
+        ({ activeLineTarget }: { activeLineTarget: { start: number; end: number } | null }) =>
+          useAutoScrollWithResume({ allowAutoScroll: true, activeLineTarget }),
+        { initialProps: { activeLineTarget: { start: 20000, end: 20000 } } },
+      );
+
+      expect(result.current.autoScroll).toBe(false);
+
+      act(() => {
+        result.current.handleResumeClick();
+      });
+      expect(result.current.autoScroll).toBe(true);
+
+      // Re-rendering with the same (unchanged) line target should not undo the resume
+      rerender({ activeLineTarget: { start: 20000, end: 20000 } });
+
+      expect(result.current.autoScroll).toBe(true);
+    });
+
+    it('should still respect a real allowAutoScroll change while an active line target is set', () => {
+      const { result, rerender } = renderHook(
+        ({ allowAutoScroll }) =>
+          useAutoScrollWithResume({
+            allowAutoScroll,
+            activeLineTarget: { start: 20000, end: 20000 },
+          }),
+        { initialProps: { allowAutoScroll: false } },
+      );
+
+      expect(result.current.autoScroll).toBe(false);
+
+      rerender({ allowAutoScroll: true });
+
+      expect(result.current.autoScroll).toBe(true);
+    });
+
+    it('should allow resuming auto-scroll via handleResumeClick even when initially paused by a line target', () => {
+      const { result } = renderHook(() =>
+        useAutoScrollWithResume({
+          allowAutoScroll: true,
+          activeLineTarget: { start: 20000, end: 20000 },
+        }),
+      );
+
+      expect(result.current.autoScroll).toBe(false);
+
+      act(() => {
+        result.current.handleResumeClick();
+      });
+
+      expect(result.current.autoScroll).toBe(true);
+    });
   });
 
   describe('Scroll Direction Tracking', () => {

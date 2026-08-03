@@ -35,7 +35,7 @@ export function renderTokenString(
     pieces.push(
       <mark
         key={`mark-${startInToken}`}
-        className={`pf-v5-c-log-viewer__string pf-m-match ${isCurrent ? 'pf-m-current' : ''}`}
+        className={`pf-v6-c-log-viewer__string pf-m-match ${isCurrent ? 'pf-m-current' : ''}`}
       >
         {tokenStr.slice(startInToken, endInToken)}
       </mark>,

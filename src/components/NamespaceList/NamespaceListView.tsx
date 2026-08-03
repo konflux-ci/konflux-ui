@@ -4,7 +4,6 @@ import {
   EmptyStateBody,
   Flex,
   PageSection,
-  PageSectionVariants,
   Spinner,
   Tooltip,
 } from '@patternfly/react-core';
@@ -38,7 +37,7 @@ const NamespaceCreateButton = React.memo(() => {
 
   return (
     <Tooltip content={<>Contact your platform engineer to create a new namespace.</>}>
-      <Flex className="pf-v5-u-mt-sm" data-test="namespace-create-tooltip">
+      <Flex className="pf-v6-u-mt-sm" data-test="namespace-create-tooltip">
         <QuestionCircleIcon />
       </Flex>
     </Tooltip>
@@ -71,14 +70,10 @@ const NamespaceListView: React.FC<React.PropsWithChildren<unknown>> = () => {
   return (
     <>
       <PageLayout title="Namespaces" description="A namespace contains 1 or more applications">
-        <PageSection
-          padding={{ default: 'noPadding' }}
-          variant={PageSectionVariants.light}
-          isFilled
-        >
+        <PageSection hasBodyWrapper={false} isFilled>
           {!namespaces || namespaces.length === 0 ? (
             <AppEmptyState
-              className="pf-v5-u-mx-lg"
+              className="pf-v6-u-mx-lg"
               isXl
               emptyStateImg={emptyStateImgUrl}
               title="No namespaces found"

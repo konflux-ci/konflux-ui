@@ -38,7 +38,7 @@ describe('SecretsListPage', () => {
   it('should render the external link with correct href', () => {
     routerRenderer(<SecretsListPage />);
 
-    const link = screen.getByText('Learn more');
+    const link = screen.getByText('Learn more').closest('a');
     expect(link).toHaveAttribute('href', LEARN_MORE_ABOUT_SECRETS_CREATION);
   });
 

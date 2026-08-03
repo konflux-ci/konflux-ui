@@ -105,7 +105,7 @@ export const GitImportForm: React.FC<{ applicationName: string }> = ({ applicati
       {(formikProps) => {
         return (
           <Form onSubmit={formikProps.handleSubmit} onReset={formikProps.handleReset}>
-            <PageSection className="git-import-form">
+            <PageSection hasBodyWrapper={false} className="git-import-form">
               <ApplicationSection />
               {formikProps.values.showComponent ? (
                 <>
@@ -120,7 +120,7 @@ export const GitImportForm: React.FC<{ applicationName: string }> = ({ applicati
                     }
                   />
                   <Alert
-                    className="pf-v5-u-mt-md"
+                    className="pf-v6-u-mt-md"
                     variant={AlertVariant.info}
                     isInline
                     title="Onboarding components to Konflux"

@@ -70,6 +70,6 @@ describe('UserAccessTableBodyRow', () => {
 
     const { container } = renderRow(mockRow(mockRoleBinding));
 
-    expect(container.querySelector('.pf-v5-c-skeleton')).toBeInTheDocument();
+    expect(container.querySelector('.pf-v6-c-skeleton')).toBeInTheDocument();
   });
 });

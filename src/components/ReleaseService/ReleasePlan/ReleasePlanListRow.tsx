@@ -1,8 +1,6 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { Label, capitalize } from '@patternfly/react-core';
-import { CheckCircleIcon } from '@patternfly/react-icons/dist/esm/icons/check-circle-icon';
-import { ExclamationCircleIcon } from '@patternfly/react-icons/dist/esm/icons/exclamation-circle-icon';
 import { ApplicationKind } from '~/types';
 import { getApplicationDisplayName } from '~/utils/common-utils';
 import { ReleasePlanColumnKeys } from '../../../consts/release';
@@ -82,11 +80,11 @@ const ReleasePlanListRow: React.FC<React.PropsWithChildren<ReleasePlanListRowPro
       {(!visibleColumns || visibleColumns.has('status')) && (
         <TableData className={columnClasses.status}>
           {matched ? (
-            <Label variant="outline" color="green" icon={<CheckCircleIcon />}>
+            <Label variant="outline" status="success">
               Matched
             </Label>
           ) : (
-            <Label variant="outline" color="red" icon={<ExclamationCircleIcon />}>
+            <Label variant="outline" status="danger">
               Not Matched
             </Label>
           )}

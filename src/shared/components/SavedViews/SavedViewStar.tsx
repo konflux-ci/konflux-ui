@@ -146,7 +146,10 @@ export const SavedViewStar: React.FC<SavedViewStarProps> = ({
   };
 
   const icon = activeSavedView ? (
-    <StarIcon data-test="saved-view-star-filled" color="var(--pf-v5-global--primary-color--100)" />
+    <StarIcon
+      data-test="saved-view-star-filled"
+      color="var(--pf-t--global--color--brand--default)"
+    />
   ) : (
     <OutlinedStarIcon data-test="saved-view-star-outline" />
   );

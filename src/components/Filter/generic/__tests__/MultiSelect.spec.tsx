@@ -143,7 +143,7 @@ describe('MultiSelect', () => {
       setValues,
     });
 
-    await user.click(screen.getByRole('button', { name: 'Close chip group Version' }));
+    await user.click(screen.getByRole('button', { name: 'Close label group Version' }));
 
     expect(setValues).toHaveBeenCalledWith([]);
   });

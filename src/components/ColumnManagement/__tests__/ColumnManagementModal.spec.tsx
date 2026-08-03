@@ -87,16 +87,16 @@ describe('ColumnManagementModal', () => {
     expect(actionsCheckbox).toBeDisabled();
   });
 
-  it('should render drag buttons for each column', () => {
+  it('should render drag buttons for unpinned columns', () => {
     renderModal();
-    expect(screen.getAllByRole('button', { name: /reorder/i })).toHaveLength(columns.length);
+    const unpinnedCount = columns.filter((c) => !c.pinned).length;
+    expect(screen.getAllByRole('button', { name: /drag button/i })).toHaveLength(unpinnedCount);
   });
 
-  it('should disable drag button for pinned columns', () => {
+  it('should not render drag button for pinned columns', () => {
     renderModal();
     const actionsRow = screen.getByTestId('column-row-actions');
-    const dragButton = within(actionsRow).getByRole('button', { name: /reorder/i });
-    expect(dragButton).toBeDisabled();
+    expect(within(actionsRow).queryByRole('button', { name: /drag button/i })).toBeNull();
   });
 
   it('should reset to default column state when reset is clicked', async () => {

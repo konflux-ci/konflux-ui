@@ -13,8 +13,8 @@ $drag-column-width: 83px;
 .pairs-list__elements {
   display: flex;
   flex-direction: column;
-  gap: var(--pf-v5-global--spacer--md);
-  margin-bottom: var(--pf-v5-global--spacer--md);
+  gap: var(--pf-t--global--spacer--md);
+  margin-bottom: var(--pf-t--global--spacer--md);
 }
 .pairs-list__row {
   display: grid;
@@ -22,32 +22,32 @@ $drag-column-width: 83px;
   grid-template-areas:
     "name remove"
     "value .";
-  gap: var(--pf-v5-global--spacer--md);
-  padding-bottom: var(--pf-v5-global--spacer--md);
-  border-bottom: 1px solid var(--pf-v5-global--BorderColor--100);
+  gap: var(--pf-t--global--spacer--md);
+  padding-bottom: var(--pf-t--global--spacer--md);
+  border-bottom: 1px solid var(--pf-t--global--border--color--default);
   &--name {
     align-items: center;
     display: flex;
-    gap: var(--pf-v5-global--spacer--sm);
+    gap: var(--pf-t--global--spacer--sm);
     grid-area: name;
   }
   &--value {
     align-items: center;
     display: flex;
-    gap: var(--pf-v5-global--spacer--sm);
+    gap: var(--pf-t--global--spacer--sm);
     grid-area: value;
   }
   &--remove {
     grid-area: remove;
-    .pf-v5-c-button {
-      margin-left: calc(-1 * var(--pf-v5-global--spacer--md));
+    .pf-v6-c-button {
+      margin-left: calc(-1 * var(--pf-t--global--spacer--md));
     }
   }
 }
 
 .pairs-list__side-btn {
   cursor: pointer;
-  margin-right: var(--pf-v5-global--spacer--xs);
+  margin-right: var(--pf-t--global--spacer--xs);
 }
 
 .pairs-list__add-icon {

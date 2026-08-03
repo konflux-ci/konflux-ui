@@ -7,6 +7,7 @@ import { useTheme } from '~/shared/theme';
 import { mockConsole, MockConsole } from '~/unit-test-utils';
 import { renderWithQueryClientAndRouter as render } from '~/unit-test-utils/rendering-utils';
 import LogViewer from '../LogViewer';
+import { useAutoScrollWithResume } from '../useAutoScrollWithResume';
 import { useLogViewerTheme } from '../useLogViewerTheme';
 
 // Mock only external dependencies and browser APIs
@@ -31,6 +32,18 @@ jest.mock('../useLogViewerTheme', () => ({
   useLogViewerTheme: jest.fn(() => ['dark', jest.fn()]),
 }));
 
+// Spy on the real implementation so we can assert on the args LogViewer passes it,
+// while keeping its actual behavior intact for other tests in this file.
+jest.mock('../useAutoScrollWithResume', () => {
+  const actual: typeof import('../useAutoScrollWithResume') = jest.requireActual(
+    '../useAutoScrollWithResume',
+  );
+  return {
+    ...actual,
+    useAutoScrollWithResume: jest.fn(actual.useAutoScrollWithResume),
+  };
+});
+
 // Mock lodash-es debounce to make tests synchronous
 jest.mock('lodash-es', () => ({
   ...jest.requireActual('lodash-es'),
@@ -45,6 +58,7 @@ const mockSaveAs = jest.requireMock('file-saver').saveAs as jest.Mock;
 const mockUseFullscreen = useFullscreen as jest.Mock;
 const mockUseTheme = useTheme as jest.Mock;
 const mockUseLogViewerTheme = useLogViewerTheme as jest.Mock;
+const mockUseAutoScrollWithResume = useAutoScrollWithResume as jest.Mock;
 
 describe('LogViewer Integration Tests', () => {
   let consoleMock: MockConsole;
@@ -122,19 +136,19 @@ describe('LogViewer Integration Tests', () => {
       expect(logViewerContainer).toBeInTheDocument();
 
       // Check PatternFly log viewer class
-      const pfLogViewer = container.querySelector('.pf-v5-c-log-viewer');
+      const pfLogViewer = container.querySelector('.pf-v6-c-log-viewer');
       expect(pfLogViewer).toBeInTheDocument();
 
       // Check header section
-      const header = container.querySelector('.pf-v5-c-log-viewer__header');
+      const header = container.querySelector('.pf-v6-c-log-viewer__header');
       expect(header).toBeInTheDocument();
 
       // Check toolbar
-      const toolbar = container.querySelector('.pf-v5-c-toolbar');
+      const toolbar = container.querySelector('.pf-v6-c-toolbar');
       expect(toolbar).toBeInTheDocument();
 
       // Check main content area
-      const main = container.querySelector('.pf-v5-c-log-viewer__main');
+      const main = container.querySelector('.pf-v6-c-log-viewer__main');
       expect(main).toBeInTheDocument();
 
       const scrollContainer = container.querySelector('.log-content__list');
@@ -155,7 +169,7 @@ describe('LogViewer Integration Tests', () => {
       const logList = container.querySelector('.log-content__list');
       expect(logList).toBeInTheDocument();
 
-      const listItems = container.querySelectorAll('.pf-v5-c-log-viewer__list-item');
+      const listItems = container.querySelectorAll('.pf-v6-c-log-viewer__list-item');
       expect(listItems.length).toBeGreaterThan(0);
     });
 
@@ -221,7 +235,7 @@ describe('LogViewer Integration Tests', () => {
       expect(scrollContainer).toBeInTheDocument();
 
       // Should render all log lines with virtualization
-      const logItems = container.querySelectorAll('.pf-v5-c-log-viewer__list-item');
+      const logItems = container.querySelectorAll('.pf-v6-c-log-viewer__list-item');
       expect(logItems.length).toBeGreaterThan(0);
     });
 
@@ -259,7 +273,7 @@ describe('LogViewer Integration Tests', () => {
       const { container } = render(<ThemeToggleTestWrapper />);
 
       const themeCheckbox = screen.getByLabelText('Dark theme');
-      const logViewer = container.querySelector('.pf-v5-c-log-viewer');
+      const logViewer = container.querySelector('.pf-v6-c-log-viewer');
 
       // Initially dark theme
       expect(themeCheckbox).toBeChecked();
@@ -294,7 +308,7 @@ describe('LogViewer Integration Tests', () => {
 
       const { container } = render(<LogViewer {...defaultProps} />);
 
-      const logViewer = container.querySelector('.pf-v5-c-log-viewer');
+      const logViewer = container.querySelector('.pf-v6-c-log-viewer');
       expect(logViewer).toHaveClass('log-viewer--light');
       expect(logViewer).not.toHaveClass('pf-m-dark');
     });
@@ -449,7 +463,7 @@ describe('LogViewer Integration Tests', () => {
       const errorMessage = 'Failed to fetch logs from KubeArchive';
       const { container } = render(<LogViewer {...defaultProps} errorMessage={errorMessage} />);
 
-      const alert = container.querySelector('.pf-v5-c-alert.pf-m-danger');
+      const alert = container.querySelector('.pf-v6-c-alert.pf-m-danger');
       expect(alert).toBeInTheDocument();
       expect(screen.getByText(errorMessage)).toBeInTheDocument();
     });
@@ -460,7 +474,7 @@ describe('LogViewer Integration Tests', () => {
       );
 
       expect(screen.getByRole('progressbar')).toBeInTheDocument();
-      const alert = container.querySelector('.pf-v5-c-alert.pf-m-danger');
+      const alert = container.querySelector('.pf-v6-c-alert.pf-m-danger');
       expect(alert).toBeInTheDocument();
     });
   });
@@ -481,7 +495,7 @@ describe('LogViewer Integration Tests', () => {
       const { container } = render(<LogViewer {...defaultProps} allowAutoScroll={true} />);
 
       // Component should render successfully with auto-scroll enabled
-      const logViewer = container.querySelector('.pf-v5-c-log-viewer');
+      const logViewer = container.querySelector('.pf-v6-c-log-viewer');
       expect(logViewer).toBeInTheDocument();
 
       // The resume button wrapper should be conditionally rendered based on hook state
@@ -493,12 +507,12 @@ describe('LogViewer Integration Tests', () => {
         <LogViewer {...defaultProps} allowAutoScroll={false} />,
       );
 
-      let logViewer = container.querySelector('.pf-v5-c-log-viewer');
+      let logViewer = container.querySelector('.pf-v6-c-log-viewer');
       expect(logViewer).toBeInTheDocument();
 
       // Should handle prop change without crashing
       rerender(<LogViewer {...defaultProps} allowAutoScroll={true} />);
-      logViewer = container.querySelector('.pf-v5-c-log-viewer');
+      logViewer = container.querySelector('.pf-v6-c-log-viewer');
       expect(logViewer).toBeInTheDocument();
     });
 
@@ -517,8 +531,30 @@ describe('LogViewer Integration Tests', () => {
       const { container } = render(<LogViewer {...defaultProps} allowAutoScroll={true} />);
 
       // Verify component structure is correct (button will appear based on scroll state)
-      const logViewer = container.querySelector('.pf-v5-c-log-viewer');
+      const logViewer = container.querySelector('.pf-v6-c-log-viewer');
       expect(logViewer).toBeInTheDocument();
+    });
+
+    it('should pass the URL hash line target to useAutoScrollWithResume so it can pause auto-scroll', () => {
+      window.location.hash = '#L3';
+
+      try {
+        render(<LogViewer {...defaultProps} allowAutoScroll={true} />);
+
+        expect(mockUseAutoScrollWithResume).toHaveBeenCalledWith(
+          expect.objectContaining({ activeLineTarget: { start: 3, end: 3 } }),
+        );
+      } finally {
+        window.location.hash = '';
+      }
+    });
+
+    it('should pass a null line target to useAutoScrollWithResume when there is no line hash', () => {
+      render(<LogViewer {...defaultProps} allowAutoScroll={true} />);
+
+      expect(mockUseAutoScrollWithResume).toHaveBeenCalledWith(
+        expect.objectContaining({ activeLineTarget: null }),
+      );
     });
   });
 
@@ -556,7 +592,7 @@ describe('LogViewer Integration Tests', () => {
       expect(logList).toBeInTheDocument();
 
       // Should use virtualization (only render visible items)
-      const visibleItems = container.querySelectorAll('.pf-v5-c-log-viewer__list-item');
+      const visibleItems = container.querySelectorAll('.pf-v6-c-log-viewer__list-item');
       expect(visibleItems.length).toBeLessThan(1000);
     });
   });
@@ -618,7 +654,7 @@ describe('LogViewer Integration Tests', () => {
 
       const { container } = render(<LogViewer {...defaultProps} taskRun={taskRunWithLongName} />);
 
-      const truncateElement = container.querySelector('.pf-v5-c-truncate');
+      const truncateElement = container.querySelector('.pf-v6-c-truncate');
       expect(truncateElement).toBeInTheDocument();
       expect(truncateElement).toHaveTextContent(longTaskName);
     });
@@ -637,7 +673,7 @@ describe('LogViewer Integration Tests', () => {
     it('should not show task name section when no task information is available', () => {
       const { container } = render(<LogViewer {...defaultProps} taskRun={null} />);
 
-      const truncateElement = container.querySelector('.pf-v5-c-truncate');
+      const truncateElement = container.querySelector('.pf-v6-c-truncate');
       expect(truncateElement).not.toBeInTheDocument();
     });
 
@@ -649,7 +685,7 @@ describe('LogViewer Integration Tests', () => {
       };
       const { container } = render(<LogViewer {...defaultProps} taskRun={taskRunEmptyName} />);
 
-      const truncateElement = container.querySelector('.pf-v5-c-truncate');
+      const truncateElement = container.querySelector('.pf-v6-c-truncate');
       expect(truncateElement).not.toBeInTheDocument();
     });
 
@@ -657,7 +693,7 @@ describe('LogViewer Integration Tests', () => {
       const taskRunNoNames = { ...mockTaskRun, spec: {}, metadata: {} };
       const { container } = render(<LogViewer {...defaultProps} taskRun={taskRunNoNames} />);
 
-      const truncateElement = container.querySelector('.pf-v5-c-truncate');
+      const truncateElement = container.querySelector('.pf-v6-c-truncate');
       expect(truncateElement).not.toBeInTheDocument();
     });
   });

@@ -1,3 +1,7 @@
 .highlightable-link {
   user-select: text; /* Enables text selection */
 }
+
+.external-link__icon {
+  margin-inline-start: var(--pf-t--global--spacer--xs);
+}

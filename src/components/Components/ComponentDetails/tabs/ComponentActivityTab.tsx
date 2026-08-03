@@ -76,7 +76,7 @@ export const ComponentActivityTab: React.FC = () => {
         <Tabs
           style={{
             width: 'fit-content',
-            marginBottom: 'var(--pf-v5-global--spacer--md)',
+            marginBottom: 'var(--pf-t--global--spacer--md)',
           }}
           activeKey={currentTab}
           onSelect={(_, k: string) => {

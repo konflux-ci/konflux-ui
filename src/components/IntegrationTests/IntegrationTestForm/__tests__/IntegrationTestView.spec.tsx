@@ -196,7 +196,7 @@ describe('IntegrationTestView', () => {
       </IntegrationTestViewWrapper>,
     );
 
-    expect((wrapper.getByText(/Save changes/) as HTMLButtonElement).disabled).toBe(true);
+    expect(wrapper.getByText(/Save changes/).closest('button')).toBeDisabled();
     wrapper.getByLabelText(/Integration test name/).setAttribute('value', 'new value');
   });
 });

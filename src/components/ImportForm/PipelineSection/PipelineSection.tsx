@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Text, TextContent, TextVariants } from '@patternfly/react-core';
+import { Content, ContentVariants } from '@patternfly/react-core';
 import { useFormikContext } from 'formik';
 import { useBuildPipelineConfig } from '../../../hooks/useBuildPipelineConfig';
 import DropdownField from '../../../shared/components/formik-fields/DropdownField';
@@ -48,11 +48,11 @@ export const PipelineSection: React.FunctionComponent = () => {
         validateOnChange
       />
       {selectedPipelineDetail && (
-        <TextContent>
-          <Text component={TextVariants.small} className="pf-v5-u-color-200 pf-v5-u-mt-sm">
+        <Content>
+          <Content component={ContentVariants.small} className="pf-v6-u-color-200 pf-v6-u-mt-sm">
             {selectedPipelineDetail}
-          </Text>
-        </TextContent>
+          </Content>
+        </Content>
       )}
     </>
   );

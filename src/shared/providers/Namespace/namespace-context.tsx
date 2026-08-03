@@ -87,7 +87,7 @@ export const NamespaceProvider: React.FC<React.PropsWithChildren> = ({ children 
       value={{
         namespace: activeNamespaceName,
         namespaceResource,
-        namespaces: namespacesError ? [] : namespaces ?? [],
+        namespaces: namespacesError ? [] : (namespaces ?? []),
         namespacesLoaded: !(namespaceLoading && activeNamespaceLoading),
         lastUsedNamespace: getLastUsedNamespace(),
       }}

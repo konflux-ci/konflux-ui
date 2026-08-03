@@ -16,11 +16,11 @@ export const AdditionalArtifactsList: React.FC<Props> = ({ artifacts }) => {
   if (Object.keys(entries).length === 0) return null;
 
   return (
-    <div style={{ marginTop: 'var(--pf-v5-global--spacer--2xl)' }}>
+    <div style={{ marginTop: 'var(--pf-t--global--spacer--2xl)' }}>
       <Title headingLevel="h5" size="md">
         Additional release artifacts
       </Title>
-      <div style={{ marginTop: 'var(--pf-v5-global--spacer--lg)' }}>
+      <div style={{ marginTop: 'var(--pf-t--global--spacer--lg)' }}>
         {renderKeyValueList(entries)}
       </div>
     </div>

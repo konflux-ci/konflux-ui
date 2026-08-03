@@ -1,25 +1,37 @@
 import { extractConformaResultsFromTaskRunLogs } from '~/components/Conforma/utils';
-import { commonFetchJSON, getK8sResourceURL } from '~/k8s';
+import { commonFetchJSON, getK8sResourceURL, k8sListResource } from '~/k8s';
 import { KUBEARCHIVE_PATH_PREFIX } from '~/kubearchive/const';
+import { convertToKubearchiveQueryParams, withKubearchivePathPrefix } from '~/kubearchive/fetch-utils';
 import { PodModel } from '~/models/pod';
 import type { TaskRunKind } from '~/types';
-import { CONFORMA_RESULT_STATUS, type ComponentConformaResult, type ConformaResult } from '~/types/conforma';
+import {
+  CONFORMA_RESULT_STATUS,
+  type ComponentConformaResult,
+  type ConformaResult,
+} from '~/types/conforma';
 import { getPipelineRunFromTaskRunOwnerRef } from '~/utils/common-utils';
-import { getTaskRunLog } from '~/utils/tekton-results';
+import { getTaskRunLog, getTaskRuns } from '~/utils/tekton-results';
 import {
   fetchConformaLogFromKubearchive,
   fetchConformaLogFromTektonResults,
+  fetchLatestSecurityTaskRunForComponent,
   filterInvalidImageConformaRows,
   mapConformaResultData,
   resolveConformaResultFromTaskRun,
 } from '../conforma-fetchers';
+import { buildConformaSecurityTaskRunSelector } from '../conforma-taskrun-query';
 import '@testing-library/jest-dom';
 
 jest.mock('~/k8s', () => ({
   commonFetchJSON: jest.fn(),
   getK8sResourceURL: jest.fn(() => '/fake-url'),
+  k8sListResource: jest.fn(),
 }));
-jest.mock('~/utils/tekton-results', () => ({ getTaskRunLog: jest.fn() }));
+jest.mock('~/utils/tekton-results', () => ({ getTaskRunLog: jest.fn(), getTaskRuns: jest.fn() }));
+jest.mock('~/kubearchive/fetch-utils', () => ({
+  convertToKubearchiveQueryParams: jest.fn(),
+  withKubearchivePathPrefix: jest.fn((opts: unknown) => opts),
+}));
 jest.mock('~/components/Conforma/utils', () => ({
   extractConformaResultsFromTaskRunLogs: jest.fn(),
 }));
@@ -27,7 +39,7 @@ jest.mock('~/utils/common-utils', () => ({
   getPipelineRunFromTaskRunOwnerRef: jest.fn(),
 }));
 
-const createTaskRun = (name: string, podName?: string): TaskRunKind =>
+const createTaskRun = (name: string, podName?: string, creationTimestamp?: string): TaskRunKind =>
   ({
     apiVersion: 'tekton.dev/v1',
     kind: 'TaskRun',
@@ -36,6 +48,7 @@ const createTaskRun = (name: string, podName?: string): TaskRunKind =>
       namespace: 'test-ns',
       uid: `uid-${name}`,
       ownerReferences: [{ kind: 'PipelineRun', uid: 'pr-uid-1' }],
+      ...(creationTimestamp ? { creationTimestamp } : {}),
     },
     status: podName ? { podName } : {},
   }) as unknown as TaskRunKind;
@@ -65,6 +78,129 @@ const mockConformaResult: ConformaResult = {
 
 const NAMESPACE = 'test-ns';
 
+describe('buildConformaSecurityTaskRunSelector', () => {
+  it('builds application-wide selector without component label', () => {
+    expect(buildConformaSecurityTaskRunSelector('test-app')).toEqual({
+      matchLabels: {
+        'appstudio.openshift.io/application': 'test-app',
+        'pipelines.appstudio.openshift.io/type': 'test',
+      },
+      matchExpressions: [
+        {
+          key: 'tekton.dev/pipelineTask',
+          operator: 'In',
+          values: ['verify', 'verify-conforma'],
+        },
+      ],
+    });
+  });
+
+  it('adds component label when componentName is provided', () => {
+    expect(buildConformaSecurityTaskRunSelector('test-app', 'comp-a')).toEqual(
+      expect.objectContaining({
+        matchLabels: expect.objectContaining({
+          'appstudio.openshift.io/application': 'test-app',
+          'appstudio.openshift.io/component': 'comp-a',
+        }),
+      }),
+    );
+  });
+});
+
+describe('fetchLatestSecurityTaskRunForComponent', () => {
+  const taskRun = createTaskRun('tr-1', 'pod-1');
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    jest.mocked(convertToKubearchiveQueryParams).mockReturnValue({
+      ns: NAMESPACE,
+      queryParams: { labelSelector: buildConformaSecurityTaskRunSelector('test-app', 'comp-a') },
+    });
+  });
+
+  it('fetches via Tekton Results when kubearchive taskruns flag is OFF', async () => {
+    jest.mocked(getTaskRuns).mockResolvedValue([[taskRun], { nextPageToken: null, records: [] }]);
+
+    const result = await fetchLatestSecurityTaskRunForComponent(
+      NAMESPACE,
+      'test-app',
+      'comp-a',
+      false,
+    );
+
+    expect(getTaskRuns).toHaveBeenCalledWith(
+      NAMESPACE,
+      expect.objectContaining({
+        selector: buildConformaSecurityTaskRunSelector('test-app', 'comp-a'),
+        limit: 1,
+      }),
+    );
+    expect(k8sListResource).not.toHaveBeenCalled();
+    expect(result).toBe(taskRun);
+  });
+
+  it('fetches via KubeArchive requesting limit: 1 (server orders by creationTimestamp desc) when kubearchive taskruns flag is ON', async () => {
+    jest.mocked(k8sListResource).mockResolvedValue({ items: [taskRun] } as never);
+
+    const result = await fetchLatestSecurityTaskRunForComponent(
+      NAMESPACE,
+      'test-app',
+      'comp-a',
+      true,
+    );
+
+    expect(convertToKubearchiveQueryParams).toHaveBeenCalledWith(
+      expect.objectContaining({
+        namespace: NAMESPACE,
+        selector: buildConformaSecurityTaskRunSelector('test-app', 'comp-a'),
+      }),
+    );
+    expect(withKubearchivePathPrefix).toHaveBeenCalledWith(
+      expect.objectContaining({
+        queryOptions: expect.objectContaining({
+          queryParams: expect.objectContaining({ limit: 1 }),
+        }),
+      }),
+    );
+    expect(k8sListResource).toHaveBeenCalled();
+    expect(getTaskRuns).not.toHaveBeenCalled();
+    expect(result).toBe(taskRun);
+  });
+
+  it('returns items[0] from KubeArchive without client-side re-sorting', async () => {
+    const serverFirst = createTaskRun('tr-1', 'pod-1', '2024-01-01T00:00:00Z');
+    const newerInTimeButSecondInArray = createTaskRun('tr-2', 'pod-2', '2024-03-01T00:00:00Z');
+    jest.mocked(k8sListResource).mockResolvedValue({
+      items: [serverFirst, newerInTimeButSecondInArray],
+    } as never);
+
+    const result = await fetchLatestSecurityTaskRunForComponent(
+      NAMESPACE,
+      'test-app',
+      'comp-a',
+      true,
+    );
+
+    expect(result).toBe(serverFirst);
+  });
+
+  it('returns null when no TaskRun is found', async () => {
+    jest.mocked(getTaskRuns).mockResolvedValue([[], { nextPageToken: null, records: [] }]);
+
+    await expect(
+      fetchLatestSecurityTaskRunForComponent(NAMESPACE, 'test-app', 'comp-a', false),
+    ).resolves.toBeNull();
+  });
+
+  it('returns null when KubeArchive returns no TaskRuns', async () => {
+    jest.mocked(k8sListResource).mockResolvedValue({ items: [] } as never);
+
+    await expect(
+      fetchLatestSecurityTaskRunForComponent(NAMESPACE, 'test-app', 'comp-a', true),
+    ).resolves.toBeNull();
+  });
+});
+
 describe('fetchConformaLogFromKubearchive', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -74,10 +210,7 @@ describe('fetchConformaLogFromKubearchive', () => {
   it('fetches pod log via kubearchive pathPrefix', async () => {
     jest.mocked(commonFetchJSON).mockResolvedValue(mockConformaResult);
 
-    const result = await fetchConformaLogFromKubearchive(
-      NAMESPACE,
-      createTaskRun('tr-1', 'pod-1'),
-    );
+    const result = await fetchConformaLogFromKubearchive(NAMESPACE, createTaskRun('tr-1', 'pod-1'));
 
     expect(getK8sResourceURL).toHaveBeenCalledWith(
       PodModel,
@@ -86,7 +219,7 @@ describe('fetchConformaLogFromKubearchive', () => {
         ns: NAMESPACE,
         name: 'pod-1',
         path: 'log',
-        queryParams: { container: 'step-report-json', follow: 'true' },
+        queryParams: { container: 'step-report-json' },
       }),
     );
     expect(commonFetchJSON).toHaveBeenCalledWith('/fake-url', {
@@ -96,9 +229,9 @@ describe('fetchConformaLogFromKubearchive', () => {
   });
 
   it('throws when TaskRun has no podName', async () => {
-    await expect(
-      fetchConformaLogFromKubearchive(NAMESPACE, createTaskRun('tr-1')),
-    ).rejects.toThrow('TaskRun has no podName');
+    await expect(fetchConformaLogFromKubearchive(NAMESPACE, createTaskRun('tr-1'))).rejects.toThrow(
+      'TaskRun has no podName',
+    );
 
     expect(commonFetchJSON).not.toHaveBeenCalled();
   });
@@ -141,9 +274,9 @@ describe('fetchConformaLogFromTektonResults', () => {
     } as unknown as TaskRunKind;
     jest.mocked(getPipelineRunFromTaskRunOwnerRef).mockReturnValue(undefined);
 
-    await expect(
-      fetchConformaLogFromTektonResults(NAMESPACE, bareboneTaskRun),
-    ).rejects.toThrow('TaskRun missing uid/namespace or PipelineRun ownerRef');
+    await expect(fetchConformaLogFromTektonResults(NAMESPACE, bareboneTaskRun)).rejects.toThrow(
+      'TaskRun missing uid/namespace or PipelineRun ownerRef',
+    );
 
     expect(getTaskRunLog).not.toHaveBeenCalled();
   });
@@ -290,6 +423,17 @@ describe('mapConformaResultData', () => {
     };
     const result = mapConformaResultData([componentWithoutCode]);
     expect(result[0].code).toBeUndefined();
+  });
+
+  it('sets pipelineRunName on every mapped row when passed as second arg', () => {
+    const result = mapConformaResultData([baseComponent], 'pr-1');
+    expect(result.length).toBeGreaterThan(0);
+    expect(result.every((r) => r.pipelineRunName === 'pr-1')).toBe(true);
+  });
+
+  it('leaves pipelineRunName undefined when not passed', () => {
+    const result = mapConformaResultData([baseComponent]);
+    expect(result.every((r) => r.pipelineRunName === undefined)).toBe(true);
   });
 });
 

@@ -3,11 +3,9 @@ import { useParams } from 'react-router-dom';
 import {
   Bullseye,
   PageSection,
-  PageSectionVariants,
   Spinner,
-  Text,
-  TextContent,
-  TextVariants,
+  Content,
+  ContentVariants,
   EmptyStateBody,
   Button,
 } from '@patternfly/react-core';
@@ -115,7 +113,7 @@ export const LinkedSecretsListView: React.FC = () => {
       <Button
         variant="primary"
         onClick={() => showModal(createLinkSecretModalLauncher()())}
-        style={{ marginTop: 'var(--pf-v5-global--spacer--md)' }}
+        style={{ marginTop: 'var(--pf-t--global--spacer--md)' }}
       >
         Link secrets
       </Button>
@@ -154,10 +152,10 @@ export const LinkedSecretsListView: React.FC = () => {
           },
         ]}
       >
-        <PageSection variant={PageSectionVariants.light} isFilled>
-          <TextContent>
-            <Text component={TextVariants.p}>Linked secrets</Text>
-          </TextContent>
+        <PageSection hasBodyWrapper={false} isFilled>
+          <Content>
+            <Content component={ContentVariants.p}>Linked secrets</Content>
+          </Content>
 
           <Table
             virtualize={false}

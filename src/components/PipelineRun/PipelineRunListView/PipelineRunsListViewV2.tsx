@@ -183,7 +183,7 @@ const PipelineRunsListViewV2: React.FC<React.PropsWithChildren<PipelineRunsListV
         }}
       />
       {isFetchingNextPage ? (
-        <Stack style={{ marginTop: 'var(--pf-v5-global--spacer--md)' }} hasGutter>
+        <Stack style={{ marginTop: 'var(--pf-t--global--spacer--md)' }} hasGutter>
           <Bullseye>
             <Spinner size="lg" aria-label="Loading more pipeline runs" />
           </Bullseye>

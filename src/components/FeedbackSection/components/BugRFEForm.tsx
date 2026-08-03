@@ -7,10 +7,9 @@ import {
   FormHelperText,
   FormGroup,
   PanelFooter,
-  Text,
+  Content,
   TextInput,
-  TextContent,
-  TextVariants,
+  ContentVariants,
   Tooltip,
   HelperTextItem,
   HelperText,
@@ -51,12 +50,12 @@ const BugRFESection: React.FC<BugRFESectionProps> = ({
   return (
     <>
       <div className="feedback-modal__panel-header" data-test="bug-rfe-form">
-        <TextContent>
-          <Text component={TextVariants.h1}>{heading}</Text>
-        </TextContent>
-        <TextContent className="feedback-modal__spacer-bottom">
-          <Text component={TextVariants.small}>{sectionDescription}</Text>
-        </TextContent>
+        <Content>
+          <Content component={ContentVariants.h1}>{heading}</Content>
+        </Content>
+        <Content className="feedback-modal__spacer-bottom">
+          <Content component={ContentVariants.small}>{sectionDescription}</Content>
+        </Content>
       </div>
       <Form
         className="feedback-modal__form"

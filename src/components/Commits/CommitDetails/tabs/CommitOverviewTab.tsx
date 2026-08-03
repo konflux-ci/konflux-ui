@@ -9,7 +9,7 @@ import {
   Flex,
   FlexItem,
   Spinner,
-  Text,
+  Content,
 } from '@patternfly/react-core';
 import { usePipelineRunsForCommitV2 } from '~/hooks/usePipelineRunsForCommitV2';
 import { getErrorState } from '~/shared/utils/error-utils';
@@ -62,9 +62,11 @@ const CommitOverviewTab: React.FC = () => {
 
   return (
     <>
-      <Text className="pf-v5-u-my-lg">Events progression triggered by the commit.</Text>
+      <Content component="p" className="pf-v6-u-my-lg">
+        Events progression triggered by the commit.
+      </Content>
       <CommitVisualization commit={commit} />
-      <Flex className="pf-v5-u-py-lg">
+      <Flex className="pf-v6-u-py-lg">
         <FlexItem flex={{ default: 'flex_3' }}>
           <DescriptionList
             data-test="commit-details"

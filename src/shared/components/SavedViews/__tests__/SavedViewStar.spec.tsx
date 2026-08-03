@@ -60,7 +60,7 @@ describe('SavedViewStar', () => {
   it('shows OutlinedStarIcon when no active view', () => {
     render(<SavedViewStar {...defaultProps} isFiltered={true} />);
     const button = screen.getByRole('button', { name: /save/i });
-    // The outlined star icon should have class pf-v5-svg or similar, check via data-test
+    // The outlined star icon should have class pf-v6-svg or similar, check via data-test
     expect(button.querySelector('[data-test="saved-view-star-outline"]')).toBeInTheDocument();
   });
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Divider, PageSection, PageSectionVariants } from '@patternfly/react-core';
+import { Divider, PageSection } from '@patternfly/react-core';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import PageLayout from '~/components/PageLayout/PageLayout';
 import { LEARN_MORE_ABOUT_SECRETS_CREATION } from '~/consts/documentation';
@@ -22,9 +22,9 @@ const SecretsListPage: React.FC = () => {
         </>
       }
     >
-      <Divider style={{ paddingTop: 'var(--pf-v5-global--spacer--md)' }} />
+      <Divider style={{ paddingTop: 'var(--pf-t--global--spacer--md)' }} />
 
-      <PageSection variant={PageSectionVariants.light} isFilled>
+      <PageSection hasBodyWrapper={false} isFilled>
         <FilterContextProvider filterParams={['name']}>
           <SecretsListView />
         </FilterContextProvider>

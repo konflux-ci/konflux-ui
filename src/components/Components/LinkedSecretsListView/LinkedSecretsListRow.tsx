@@ -1,4 +1,4 @@
-import { Label, Text, TextVariants } from '@patternfly/react-core';
+import { Label, Content, ContentVariants } from '@patternfly/react-core';
 import UnlinkSecretView from '~/components/Components/UnlinkSecret/UnlinkSecretView';
 import { RowFunctionArgs, TableData } from '../../../shared';
 import { SecretKind } from '../../../types';
@@ -12,11 +12,11 @@ export const LinkedSecretsListRow: React.FC<RowFunctionArgs<SecretKind>> = ({ ob
         className={linkedSecretsTableColumnClasses.secretName}
         data-test="linked-secrets-list-item"
       >
-        <Text component={TextVariants.p}>{secret.metadata.name}</Text>
+        <Content component={ContentVariants.p}>{secret.metadata.name}</Content>
       </TableData>
 
       <TableData className={linkedSecretsTableColumnClasses.type}>
-        <Text component={TextVariants.p}>{secret.type}</Text>
+        <Content component={ContentVariants.p}>{secret.type}</Content>
       </TableData>
 
       <TableData className={linkedSecretsTableColumnClasses.labels}>
@@ -28,7 +28,7 @@ export const LinkedSecretsListRow: React.FC<RowFunctionArgs<SecretKind>> = ({ ob
             >{`${key}=${secret.metadata.labels[key]}`}</Label>
           ))
         ) : (
-          <Text component={TextVariants.p}> - </Text>
+          <Content component={ContentVariants.p}> - </Content>
         )}
       </TableData>
 

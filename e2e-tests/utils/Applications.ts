@@ -140,7 +140,7 @@ export class Applications {
 
   static clickActionsDropdown(dropdownItem: string) {
     cy.get(actionsDropdown.dropdown).click();
-    cy.contains(dropdownItem).click();
+    cy.contains(dropdownItem).click({ force: true });
   }
 
   static clickBreadcrumbLink(link: string) {

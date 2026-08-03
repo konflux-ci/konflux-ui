@@ -12,7 +12,7 @@ import { WebSocketFactory } from '../../../../k8s/web-socket/WebSocketFactory';
 import { PodModel } from '../../../../models/pod';
 import { TaskRunKind } from '../../../../types';
 import { PodKind, ContainerSpec, ContainerStatus } from '../../types';
-import { containerToLogSourceStatus, LOG_SOURCE_TERMINATED } from '../utils';
+import { containerToLogSourceStatus, isContainerStepCompleted, LOG_SOURCE_TERMINATED } from '../utils';
 import LogViewer, { type Props as LogViewerProps } from './LogViewer';
 
 type LogSources = { [containerName: string]: string };
@@ -75,6 +75,8 @@ const Logs: React.FC<LogsProps> = ({
   // state to hold the logs for each container individually
   const [logSources, setLogSources] = React.useState<LogSources>({});
   const [error, setError] = React.useState<boolean>(false);
+  const pendingFetchesRef = React.useRef(0);
+  const [isFetchingLogs, setIsFetchingLogs] = React.useState(false);
   // to track which containers already started fetching
   const connectionManagerRef = React.useRef(new Map<string, () => void>());
 
@@ -88,6 +90,20 @@ const Logs: React.FC<LogsProps> = ({
   // loops through the containers and initiates fetching for each one
   React.useEffect(() => {
     const activeConnections = connectionManagerRef.current;
+
+    const markFetchStarted = () => {
+      pendingFetchesRef.current += 1;
+      if (pendingFetchesRef.current === 1) {
+        setIsFetchingLogs(true);
+      }
+    };
+
+    const markFetchFinished = () => {
+      pendingFetchesRef.current = Math.max(0, pendingFetchesRef.current - 1);
+      if (pendingFetchesRef.current === 0) {
+        setIsFetchingLogs(false);
+      }
+    };
 
     containers.forEach((container) => {
       if (activeConnections.has(container.name)) {
@@ -114,6 +130,7 @@ const Logs: React.FC<LogsProps> = ({
         const controller = new AbortController();
         const { signal } = controller;
 
+        markFetchStarted();
         commonFetchText(watchURL, {
           signal,
           ...(isKubearchiveEnabled && source === ResourceSource.Archive
@@ -126,8 +143,9 @@ const Logs: React.FC<LogsProps> = ({
               // Gracefully handle empty logs (404) from kubearch, similar to how Tekton Results handles 404
               // When logs don't exist, both kubearch and Tekton Results return 404
               if (err?.code === 404) {
-                // Don't append any error message for missing logs - just leave it empty
-                // This matches the behavior of Tekton Results which returns empty logs for 404
+                // Mark the container as fetched with empty content so folding can evaluate
+                // it after load (and so the section still appears in the viewer).
+                appendLog(name, '');
                 return;
               }
 
@@ -136,7 +154,8 @@ const Logs: React.FC<LogsProps> = ({
                 `\x1b[1;31mLOG FETCH ERROR${err instanceof Error ? `:\n${err.message}` : ''}\x1b[0m\n`,
               );
             }
-          });
+          })
+          .finally(markFetchFinished);
 
         activeConnections.set(name, () => controller.abort());
       } else {
@@ -193,13 +212,17 @@ const Logs: React.FC<LogsProps> = ({
   }, [containers, resource?.status?.containerStatuses]);
 
   const sections = React.useMemo<LogSection[]>(() => {
+    const statusByName = new Map(
+      (resource?.status?.containerStatuses ?? []).map((status) => [status.name, status]),
+    );
     return containers
-      .filter((c) => logSources[c.name])
+      .filter((c) => c.name in logSources)
       .map((c) => ({
         containerName: c.name.toUpperCase(),
         data: logSources[c.name],
+        isCompleted: isContainerStepCompleted(statusByName.get(c.name)),
       }));
-  }, [logSources, containers]);
+  }, [logSources, containers, resource?.status?.containerStatuses]);
 
   return (
     <LogViewer
@@ -209,7 +232,7 @@ const Logs: React.FC<LogsProps> = ({
       downloadAllLabel={downloadAllLabel}
       onDownloadAll={onDownloadAll}
       taskRun={taskRun}
-      isLoading={isLoading}
+      isLoading={isLoading || isFetchingLogs}
       errorMessage={error ? t('An error occurred while retrieving the requested logs.') : null}
     />
   );

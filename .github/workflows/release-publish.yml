@@ -82,7 +82,7 @@ jobs:
 
       # --- Checkout and create tag ---
       - name: Checkout konflux-ui
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 

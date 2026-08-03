@@ -5,17 +5,13 @@ import { getAppStartedPagePO, getNamespacesPagePo } from '../pageObjects/pages-p
 export class GetStartedPage {
   static waitForLoad() {
     Common.verifyPageTitle(pageTitles.getStartedPage);
-    cy.get(getNamespacesPagePo.goToNamespacesLink)
-      .should('be.visible')
-      .and('have.attr', 'aria-disabled', 'false');
+    cy.get(getNamespacesPagePo.goToNamespacesLink).should('be.visible').and('not.be.disabled');
   }
 }
 
 export class GetAppStartedPage {
   static waitForLoad() {
     Common.verifyPageTitle(pageTitles.applications);
-    cy.get(getAppStartedPagePO.createAppButton)
-      .should('be.visible')
-      .and('have.attr', 'aria-disabled', 'false');
+    cy.get(getAppStartedPagePO.createAppButton).should('be.visible').and('not.be.disabled');
   }
 }

@@ -10,6 +10,7 @@ export const LinkedSecretsToolbar: React.FC = () => {
       data-test="linked-secrets-list-toolbar"
       clearFiltersButtonText="Clear filters"
       clearAllFilters={() => setNameFilter('')}
+      className="pf-v6-u-py-md"
     >
       <ToolbarContent>
         <ToolbarItem>

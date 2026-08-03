@@ -1,4 +1,4 @@
-import { K8sQueryListResourceItems } from '../../k8s';
+import { K8sQuerySecretListTableItems } from '~/utils/secrets/secret-table-query';
 import { SecretModel } from '../../models';
 import { RouterParams } from '../../routes/utils';
 import { createLoaderWithAccessCheck } from '../../utils/rbac';
@@ -6,10 +6,7 @@ import { createLoaderWithAccessCheck } from '../../utils/rbac';
 export const secretListViewLoader = createLoaderWithAccessCheck(
   async ({ params }) => {
     const ns = params[RouterParams.workspaceName];
-    return await K8sQueryListResourceItems({
-      model: SecretModel,
-      queryOptions: { ns },
-    });
+    return await K8sQuerySecretListTableItems(ns);
   },
   { model: SecretModel, verb: 'list' },
 );
