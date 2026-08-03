@@ -188,6 +188,41 @@ describe('getSecretTypetoLabel', () => {
   it('should return correct label for key', () => {
     expect(getSecretTypetoLabel(sampleOpaqueSecret)).toEqual('Key/value');
   });
+
+  it('should return Source label for basic-auth secret', () => {
+    expect(
+      getSecretTypetoLabel({
+        apiVersion: 'v1',
+        kind: 'Secret',
+        metadata: { name: 'src-basic' },
+        type: SecretType.basicAuth,
+      }),
+    ).toEqual('Source');
+  });
+
+  it('should return Source label for ssh-auth secret', () => {
+    expect(
+      getSecretTypetoLabel({
+        apiVersion: 'v1',
+        kind: 'Secret',
+        metadata: { name: 'src-ssh' },
+        type: SecretType.sshAuth,
+      }),
+    ).toEqual('Source');
+  });
+
+  it('should return Source label for metadata-only secret with HOST_LABEL', () => {
+    expect(
+      getSecretTypetoLabel({
+        apiVersion: 'v1',
+        kind: 'Secret',
+        metadata: {
+          name: 'src-meta',
+          labels: { [SecretLabels.HOST_LABEL]: 'github.com' },
+        },
+      }),
+    ).toEqual('Source');
+  });
 });
 
 describe('typeToLabel', () => {
@@ -200,9 +235,12 @@ describe('typeToLabel', () => {
     expect(typeToLabel(SecretType.dockercfg)).toBe('Image pull');
   });
 
-  it('should return key/value type for an basic type', () => {
-    expect(typeToLabel(SecretType.basicAuth)).toBe('Key/value');
-    expect(typeToLabel(SecretType.sshAuth)).toBe('Key/value');
+  it('should return source type for basic-auth and ssh-auth types', () => {
+    expect(typeToLabel(SecretType.basicAuth)).toBe('Source');
+    expect(typeToLabel(SecretType.sshAuth)).toBe('Source');
+  });
+
+  it('should return key/value type for opaque type', () => {
     expect(typeToLabel(SecretType.opaque)).toBe('Key/value');
   });
 });
