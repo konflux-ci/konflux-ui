@@ -43,6 +43,9 @@ export enum PipelineRunLabel {
   CHAINS_SIGNED_ANNOTATION = 'chains.tekton.dev/signed',
   BUILD_IMAGE_ANNOTATION = 'build.appstudio.openshift.io/image',
   BUILD_SERVICE_REPO_ANNOTATION = 'build.appstudio.openshift.io/repo',
+
+  MINTMAKER_COMPONENT_LABEL = 'mintmaker.appstudio.redhat.com/component',
+  MINTMAKER_NAMESPACE_LABEL = 'mintmaker.appstudio.redhat.com/namespace',
 }
 
 export enum PipelineRunType {
