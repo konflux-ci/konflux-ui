@@ -229,7 +229,9 @@ export const getSecretFormData = (values: AddSecretFormValues, namespace: string
     if (values.source.authType === SourceSecretType.basic) {
       const authObj = pick(values.source, ['username', 'password']);
       data = Object.entries(authObj).reduce((acc, [key, value]) => {
-        acc[key] = Base64.encode(value);
+        if (value) {
+          acc[key] = Base64.encode(value);
+        }
         return acc;
       }, {});
     } else {

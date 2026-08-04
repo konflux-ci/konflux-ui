@@ -448,6 +448,29 @@ describe('getSecretFormData', () => {
       }),
     );
   });
+
+  it('should omit empty username from basic-auth source secret data', () => {
+    const passwordOnlySourceValues: AddSecretFormValues = {
+      ...formValues,
+      type: SecretTypeDropdownLabel.source,
+      source: {
+        ...formValues.source,
+        authType: SourceSecretType.basic,
+        username: '',
+        password: 'token-value',
+      },
+    };
+
+    expect(getSecretFormData(passwordOnlySourceValues, 'test-ns')).toEqual(
+      expect.objectContaining({
+        type: 'kubernetes.io/basic-auth',
+        data: { password: Base64.encode('token-value') },
+      }),
+    );
+    expect(getSecretFormData(passwordOnlySourceValues, 'test-ns').data).not.toHaveProperty(
+      'username',
+    );
+  });
 });
 
 describe('getTargetLabelsForRemoteSecret', () => {
