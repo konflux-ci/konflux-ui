@@ -1,9 +1,7 @@
 import React from 'react';
+import type { NormalizedLogSection } from './types';
 
-interface FoldableSection {
-  containerName: string;
-  isCompleted?: boolean;
-}
+type FoldableSection = Pick<NormalizedLogSection, 'containerName' | 'isCompleted'>;
 
 const EMPTY_EXPANDED_SECTIONS = new Set<number>();
 const EMPTY_OVERRIDES: ReadonlyMap<number, boolean> = new Map();
