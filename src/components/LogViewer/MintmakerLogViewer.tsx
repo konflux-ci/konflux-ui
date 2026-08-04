@@ -17,7 +17,6 @@ import { useModalLauncher } from '~/components/modal/ModalProvider';
 import { MINTMAKER_NAMESPACE } from '~/consts/constants';
 import { PipelineRunLabel, runStatus } from '~/consts/pipelinerun';
 import { useFeatureFlags, useIsOnFeatureFlag } from '~/feature-flags/hooks';
-import { isFeatureFlagOn } from '~/feature-flags/utils';
 import { useTaskRunsForPipelineRuns } from '~/hooks/useTaskRunsV2';
 import { PodGroupVersionKind } from '~/models/pod';
 import { Timestamp } from '~/shared';
