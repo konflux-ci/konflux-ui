@@ -17,7 +17,7 @@ spec:
       description: 'How long to monitor (e.g., 5m, 10m, 30m)'
   steps:
     - name: setup-monitoring
-      image: registry.k8s.io/kubectl:v1.36.1@sha256:d08f476d04d0e30f426f06bc6ff6c38913aaa4591943046b77e2f74a72d3611c #1.36.1
+      image: docker.io/bitnami/kubectl@sha256:95de17e6eb92da83a58c90a9df0c4cede634f898d2e6b92ea04f4a6ee6ace08d # kubectl 1.36.3
       env:
         - name: TEKTON_PIPELINE_RUN
           valueFrom:

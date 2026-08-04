@@ -5,6 +5,7 @@ import { computeColumnWidths } from './column-widths';
 import { useColumnState } from './hooks/useColumnState';
 import { useInfiniteScroll } from './hooks/useInfiniteScroll';
 import { useResponsiveColumns } from './hooks/useResponsiveColumns';
+import { useScrollMargin } from './hooks/useScrollMargin';
 import { useTable } from './hooks/useTable';
 import { useVirtualization } from './hooks/useVirtualization';
 import { TableBody } from './TableBody';
@@ -18,6 +19,7 @@ import { type TableProps } from './types';
  * - **Column state** (`useColumnState`) — persisted visibility, order, and sort
  * - **Responsive columns** (`useResponsiveColumns`) — hides columns at breakpoints
  * - **Core table** (`useTable`) — TanStack Table instance with sorting and expansion
+ * - **Scroll margin** (`useScrollMargin`) — offset for content above the table in the scroll container
  * - **Virtualization** (`useVirtualization`) — only renders visible rows for performance
  * - **Infinite scroll** (`useInfiniteScroll`) — triggers data fetching near the bottom
  * - **Column widths** (`computeColumnWidths`) — flex and fixed width calculation
@@ -89,6 +91,8 @@ export const Table = <TData,>({
     }
   }, [scrollElementProp, tableNode]);
 
+  const scrollMargin = useScrollMargin(tableNode, scrollElement);
+
   const { columnState, setColumnState } = useColumnState(columnStateKey, columns);
   const { columnVisibility } = useResponsiveColumns(columns);
 
@@ -107,6 +111,7 @@ export const Table = <TData,>({
   const { virtualizer, virtualRows } = useVirtualization({
     count: rows.length,
     scrollElement,
+    scrollMargin,
   });
 
   useInfiniteScroll({
@@ -135,6 +140,7 @@ export const Table = <TData,>({
           expandedContent={expandedContent}
           visibleColumnCount={visibleColumnCount}
           isFetchingNextPage={isFetchingNextPage}
+          scrollMargin={scrollMargin}
         />
       </PfTable>
     </div>

@@ -25,6 +25,8 @@ interface TableBodyProps<TData> {
   visibleColumnCount: number;
   /** Whether the next page is being fetched. Shows skeleton rows when `true`. */
   isFetchingNextPage?: boolean;
+  /** Scroll margin from the virtualizer, subtracted from spacer calculations. */
+  scrollMargin?: number;
 }
 
 /**
@@ -48,17 +50,18 @@ export const TableBody = <TData,>({
   expandedContent,
   visibleColumnCount,
   isFetchingNextPage,
+  scrollMargin = 0,
 }: TableBodyProps<TData>) => {
   const lastVirtualRow = virtualRows[virtualRows.length - 1];
   const bottomSpacerHeight = lastVirtualRow
     ? totalSize - (lastVirtualRow.start + lastVirtualRow.size)
     : 0;
 
+  const topSpacerHeight = virtualRows.length > 0 ? virtualRows[0].start - scrollMargin : 0;
+
   return (
     <Tbody data-test="table-body" style={{ overflowAnchor: 'none' }}>
-      {virtualRows.length > 0 && virtualRows[0].start > 0 && (
-        <Tr style={{ height: virtualRows[0].start }} />
-      )}
+      {topSpacerHeight > 0 && <Tr style={{ height: topSpacerHeight }} />}
       {virtualRows.map((virtualRow) => {
         const row = rows[virtualRow.index];
         if (!row) return null;
