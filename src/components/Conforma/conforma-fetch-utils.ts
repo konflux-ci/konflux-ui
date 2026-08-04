@@ -1,3 +1,7 @@
+import {
+  filterInvalidImageConformaRows,
+  resolveConformaResultFromTaskRun,
+} from '~/components/Conforma/ConformaResultsTab/conforma-fetchers';
 import { CONFORMA_TASK, EC_TASK } from '~/consts/security';
 import { k8sListResource } from '~/k8s';
 import { TaskRunModel } from '~/models/taskruns';
@@ -6,10 +10,6 @@ import { ComponentConformaResult } from '~/types/conforma';
 import { TektonResourceLabel } from '~/types/coreTekton';
 import { isResourceEnterpriseContract } from '~/utils/conforma-utils';
 import { isTaskRunInPipelineRun, sortTaskRunsByTime } from '~/utils/pipeline-utils';
-import {
-  filterInvalidImageConformaRows,
-  resolveConformaResultFromTaskRun,
-} from './ConformaResultsTab/conforma-fetchers';
 
 export type SecurityTaskName = typeof EC_TASK | typeof CONFORMA_TASK;
 
