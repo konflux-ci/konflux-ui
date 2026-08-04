@@ -1350,6 +1350,7 @@ describe('Logs', () => {
       });
 
       (commonFetchText as jest.Mock).mockClear();
+      (saveAs as jest.Mock).mockClear();
 
       const onDownloadFullLogs = getLastOnDownloadFullLogs();
       await act(async () => {
