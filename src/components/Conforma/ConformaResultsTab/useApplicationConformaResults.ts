@@ -15,6 +15,7 @@ import type {
   ConformaResultRow,
 } from '~/types/conforma';
 import { TektonResourceLabel } from '~/types/coreTekton';
+import { aggregateCounts } from '../conforma-fetch-utils';
 import {
   fetchLatestSecurityTaskRunForComponent,
   filterInvalidImageConformaRows,
@@ -45,18 +46,6 @@ const EMPTY_RESULTS: ApplicationConformaResults = {
   partialLogError: undefined,
   refresh: NO_OP_REFRESH,
 };
-
-function aggregateCounts(components: ComponentConformaResult[]) {
-  return components.reduce(
-    (acc, c) => {
-      acc.violationCount += c.violations?.length ?? 0;
-      acc.warningCount += c.warnings?.length ?? 0;
-      acc.successCount += c.successes?.length ?? 0;
-      return acc;
-    },
-    { violationCount: 0, warningCount: 0, successCount: 0 },
-  );
-}
 
 function statusFromCounts(
   violationCount: number,
