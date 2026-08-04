@@ -3,6 +3,22 @@ import { Login } from '../../utils/Login';
 
 const addContext = require('mochawesome/addContext');
 
+// Cypress 15.18.1+ scrolls elements to their "top, leftmost point" before
+// interacting, which shifts .pf-v6-c-drawer__main horizontally.
+// Listen for scroll events on the AUT and reset horizontal drift.
+Cypress.on('window:load', (win) => {
+  win.document.addEventListener(
+    'scroll',
+    () => {
+      const drawer = win.document.querySelector('.pf-v6-c-drawer__main');
+      if (drawer && drawer.scrollLeft !== 0) {
+        drawer.scrollLeft = 0;
+      }
+    },
+    true, // capture phase to catch scrolls on nested elements
+  );
+});
+
 before(() => {
   //Clear namespace before running the tests
   Common.cleanNamespace();
