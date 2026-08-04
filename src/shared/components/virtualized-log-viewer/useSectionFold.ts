@@ -48,10 +48,7 @@ const withOverride = (
 
 export const useSectionFold = (sections: readonly FoldableSection[]) => {
   const sectionsRef = React.useRef(sections);
-
-  React.useEffect(() => {
-    sectionsRef.current = sections;
-  }, [sections]);
+  sectionsRef.current = sections;
 
   const [overrides, setOverrides] = React.useState<ReadonlyMap<number, boolean>>(EMPTY_OVERRIDES);
 
