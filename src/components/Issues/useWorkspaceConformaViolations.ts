@@ -1,5 +1,10 @@
 import * as React from 'react';
 import { useQueries } from '@tanstack/react-query';
+import {
+  aggregateCounts,
+  fetchConformaForPipeline,
+  securityTaskForPipeline,
+} from '~/components/Conforma/conforma-fetch-utils';
 import { PipelineRunLabel, PipelineRunType } from '~/consts/pipelinerun';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useApplications } from '~/hooks/useApplications';
@@ -7,11 +12,6 @@ import { usePipelineRunsV2 } from '~/hooks/usePipelineRunsV2';
 import { logger } from '~/monitoring/logger';
 import { useNamespace } from '~/shared/providers/Namespace';
 import type { PipelineRunKind } from '~/types';
-import {
-  aggregateCounts,
-  fetchConformaForPipeline,
-  securityTaskForPipeline,
-} from '../Conforma/conforma-fetch-utils';
 
 export type AppViolationSummary = {
   applicationName: string;
@@ -86,7 +86,7 @@ export const useWorkspaceConformaViolations = (): WorkspaceConformaViolations =>
     [pipelineRuns, prsLoaded],
   );
 
-  const { conformaData, allSettled, aggregatedLogError } = useQueries({
+  const { conformaData, allSettled, conformaAllError, conformaPartialError } = useQueries({
     queries: targets.map((t) => ({
       queryKey: [
         'workspace-conforma',
@@ -103,25 +103,28 @@ export const useWorkspaceConformaViolations = (): WorkspaceConformaViolations =>
       staleTime: 5 * 60 * 1000,
       enabled: !!namespace && !!t.securityTask,
     })),
-    combine: (queryResults) => ({
-      conformaData: queryResults.map((q) => q.data),
-      allSettled: queryResults.every((q) => !q.isLoading),
-      aggregatedLogError:
-        queryResults.length > 0 && queryResults.some((q) => q.isError)
-          ? queryResults.find((q) => q.isError)?.error
-          : undefined,
-    }),
+    combine: (queryResults) => {
+      const errorQueries = queryResults.filter((q) => q.isError);
+      const allFailed = queryResults.length > 0 && errorQueries.length === queryResults.length;
+      const someFailed = errorQueries.length > 0 && !allFailed;
+      return {
+        conformaData: queryResults.map((q) => q.data),
+        allSettled: queryResults.every((q) => !q.isLoading),
+        conformaAllError: allFailed ? errorQueries[0]?.error : undefined,
+        conformaPartialError: someFailed ? errorQueries[0]?.error : undefined,
+      };
+    },
   });
 
   React.useEffect(() => {
-    if (aggregatedLogError) {
-      logger.warn('Partial workspace Conforma log fetch failure', { error: aggregatedLogError });
+    if (conformaPartialError) {
+      logger.warn('Partial workspace Conforma log fetch failure', { error: conformaPartialError });
     }
-  }, [aggregatedLogError]);
+  }, [conformaPartialError]);
 
   return React.useMemo((): WorkspaceConformaViolations => {
     const loaded = appsLoaded && prsLoaded;
-    const error = appsError ?? prsError;
+    const error = appsError ?? prsError ?? conformaAllError;
 
     if (!loaded || !allSettled) {
       return {
@@ -156,6 +159,6 @@ export const useWorkspaceConformaViolations = (): WorkspaceConformaViolations =>
     const totalViolations = applications.reduce((s, a) => s + a.violationCount, 0);
     const totalWarnings = applications.reduce((s, a) => s + a.warningCount, 0);
 
-    return { totalViolations, totalWarnings, applications, loaded: true, error, partialError: aggregatedLogError };
-  }, [appsLoaded, appsError, prsLoaded, prsError, conformaData, allSettled, aggregatedLogError, targets]);
+    return { totalViolations, totalWarnings, applications, loaded: true, error, partialError: conformaPartialError };
+  }, [appsLoaded, appsError, prsLoaded, prsError, conformaData, allSettled, conformaAllError, conformaPartialError, targets]);
 };
