@@ -1,5 +1,7 @@
 import { FC, PropsWithChildren, useCallback, useMemo } from 'react';
 import {
+  Alert,
+  AlertActionLink,
   Bullseye,
   DescriptionList,
   DescriptionListDescription,
@@ -14,6 +16,8 @@ import { ComponentProps, createModalLauncher } from '~/components/modal/createMo
 import { useModalLauncher } from '~/components/modal/ModalProvider';
 import { MINTMAKER_NAMESPACE } from '~/consts/constants';
 import { PipelineRunLabel, runStatus } from '~/consts/pipelinerun';
+import { useFeatureFlags, useIsOnFeatureFlag } from '~/feature-flags/hooks';
+import { isFeatureFlagOn } from '~/feature-flags/utils';
 import { useTaskRunsForPipelineRuns } from '~/hooks/useTaskRunsV2';
 import { PodGroupVersionKind } from '~/models/pod';
 import { Timestamp } from '~/shared';
@@ -35,6 +39,8 @@ type MintmakerLogViewerProps = ComponentProps & {
 export const MintmakerLogViewer: FC<PropsWithChildren<MintmakerLogViewerProps>> = ({
   dependencyRun,
 }) => {
+  const [, setFlag] = useFeatureFlags();
+  const isKubeArchiveLogsOn = useIsOnFeatureFlag('kubearchive-logs');
   const runName = dependencyRun.metadata?.name;
   const plrStatus = pipelineRunStatus(dependencyRun);
   const pipelineRunIsRunning = plrStatus === runStatus.Running;
@@ -62,6 +68,25 @@ export const MintmakerLogViewer: FC<PropsWithChildren<MintmakerLogViewerProps>> 
   );
 
   const renderLogs = () => {
+    if (!isKubeArchiveLogsOn) {
+      return (
+        <Bullseye>
+          <Alert
+            variant="warning"
+            data-test="mintmaker-logs-alert"
+            title="You must turn on the 'Use KubeArchive to fetch logs instead of Tekton' feature
+          flag to view MintMaker logs."
+            isInline
+            actionLinks={
+              <AlertActionLink onClick={() => setFlag('kubearchive-logs', true)}>
+                Turn on KubeArchive logs
+              </AlertActionLink>
+            }
+          />
+        </Bullseye>
+      );
+    }
+
     if (taskRunsError) {
       return getErrorState(taskRunsError, taskRunsLoaded, 'logs');
     }

@@ -1,6 +1,8 @@
 import { renderHook, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { useModalLauncher } from '~/components/modal/ModalProvider';
 import { PipelineRunLabel } from '~/consts/pipelinerun';
+import { useFeatureFlags, useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useTaskRunsForPipelineRuns } from '~/hooks/useTaskRunsV2';
 import { PipelineRunKind, PipelineRunStatus } from '~/types';
 import { TaskRunKind, TaskRunStatus } from '~/types/task-run';
@@ -8,6 +10,12 @@ import { MintmakerLogViewer, useMintmakerLogViewerModal } from '../MintmakerLogV
 
 jest.mock('~/hooks/useTaskRunsV2', () => ({
   useTaskRunsForPipelineRuns: jest.fn(),
+}));
+
+jest.mock('~/feature-flags/hooks', () => ({
+  ...jest.requireActual('~/feature-flags/hooks'),
+  useIsOnFeatureFlag: jest.fn(),
+  useFeatureFlags: jest.fn(),
 }));
 
 jest.mock('~/components/modal/ModalProvider', () => ({
@@ -25,6 +33,8 @@ jest.mock('~/shared/components/status-box/StatusBox', () => ({
 
 const useTaskRunsMock = useTaskRunsForPipelineRuns as jest.Mock;
 const useModalLauncherMock = useModalLauncher as jest.Mock;
+const useIsOnFeatureFlagMock = useIsOnFeatureFlag as jest.Mock;
+const useFeatureFlagsMock = useFeatureFlags as jest.Mock;
 
 const noNextPage = { isFetchingNextPage: false, hasNextPage: false };
 
@@ -77,6 +87,8 @@ describe('MintmakerLogViewer', () => {
   beforeEach(() => {
     useTaskRunsMock.mockReturnValue([[], true, undefined, jest.fn(), noNextPage]);
     useModalLauncherMock.mockReturnValue(jest.fn());
+    useIsOnFeatureFlagMock.mockReturnValue(true);
+    useFeatureFlagsMock.mockReturnValue([{}, jest.fn()]);
   });
 
   afterEach(() => {
@@ -114,6 +126,34 @@ describe('MintmakerLogViewer', () => {
     it('calls useTaskRunsForPipelineRuns with the mintmaker namespace, run name, and build task', () => {
       render(<MintmakerLogViewer dependencyRun={makePipelineRun()} />);
       expect(useTaskRunsMock).toHaveBeenCalledWith('mintmaker', 'mintmaker-run-1', 'build');
+    });
+  });
+
+  describe('KubeArchive logs feature flag off', () => {
+    beforeEach(() => {
+      useIsOnFeatureFlagMock.mockReturnValue(false);
+    });
+
+    it('renders a warning alert instead of logs when the KubeArchive logs flag is off', () => {
+      render(<MintmakerLogViewer dependencyRun={makePipelineRun()} />);
+      expect(screen.getByTestId('mintmaker-logs-alert')).toBeInTheDocument();
+    });
+
+    it('does not render the logs wrapper when the KubeArchive logs flag is off', () => {
+      useTaskRunsMock.mockReturnValue([[makeTaskRun()], true, undefined, jest.fn(), noNextPage]);
+      render(<MintmakerLogViewer dependencyRun={makePipelineRun()} />);
+      expect(screen.queryByTestId('logs-wrapper-component')).not.toBeInTheDocument();
+    });
+
+    it('turns on the KubeArchive logs flag when the action link is clicked', async () => {
+      const setFlag = jest.fn();
+      useFeatureFlagsMock.mockReturnValue([{}, setFlag]);
+      const user = userEvent.setup();
+
+      render(<MintmakerLogViewer dependencyRun={makePipelineRun()} />);
+      await user.click(screen.getByRole('button', { name: 'Turn on KubeArchive logs' }));
+
+      expect(setFlag).toHaveBeenCalledWith('kubearchive-logs', true);
     });
   });
 
