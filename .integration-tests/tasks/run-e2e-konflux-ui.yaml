@@ -60,6 +60,65 @@ spec:
       - name: test-artifacts
         mountPath: /artifacts
   steps:
+    - name: setup-base-url
+      when:
+        - input: '$(params.job-type)'
+          operator: notin
+          values: ['periodic-stage']
+      image: docker.io/bitnami/kubectl@sha256:95de17e6eb92da83a58c90a9df0c4cede634f898d2e6b92ea04f4a6ee6ace08d # kubectl 1.36.3
+      volumeMounts:
+        - name: kubeconfig-data
+          mountPath: /shared
+      env:
+        - name: TEKTON_PIPELINE_RUN
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.labels['tekton.dev/pipelineRun']
+        - name: TEKTON_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+      script: |
+        #!/usr/bin/env bash
+        set -euo pipefail
+
+        echo "=== Getting PipelineRun name and kubeconfig ==="
+
+        # Get PipelineRun name and namespace from environment variables set by Tekton
+        PIPELINE_RUN_NAME="${TEKTON_PIPELINE_RUN}"
+        NAMESPACE="${TEKTON_NAMESPACE}"
+        echo "PipelineRun name: ${PIPELINE_RUN_NAME}"
+        echo "Namespace: ${NAMESPACE}"
+
+        # Construct the secret name
+        SECRET_NAME="kfg-${PIPELINE_RUN_NAME}"
+        echo "Looking for secret: ${SECRET_NAME}"
+
+        # Extract kubeconfig from the secret (0600 so it is not world-readable)
+        kubectl get secret "${SECRET_NAME}" -n "${NAMESPACE}" -o jsonpath='{.data.kubeconfig}' \
+          | base64 -d \
+          | install -m 0600 /dev/stdin /shared/kubeconfig
+
+        # Switch to Kind cluster context
+        export KUBECONFIG=/shared/kubeconfig
+
+        echo "=== Extracting Konflux base URL from kubeconfig ==="
+
+        KUBE_SERVER=$(kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}')
+        echo "Kubernetes API server: ${KUBE_SERVER}"
+
+        # Extract IP address (remove https:// prefix and :6443 port)
+        KUBE_IP=$(echo "${KUBE_SERVER}" | sed -E 's|https?://([^:]+):.*|\1|')
+        echo "Extracted IP: ${KUBE_IP}"
+
+        CYPRESS_KONFLUX_BASE_URL="https://${KUBE_IP}:9443"
+        echo "Konflux base URL: ${CYPRESS_KONFLUX_BASE_URL}"
+
+        # Save to shared volume for next step
+        echo "${CYPRESS_KONFLUX_BASE_URL}" > /shared/base-url
+
+        echo "Setup complete. Ready for E2E tests."
+
     - name: run-e2e-test
       image: quay.io/konflux_ui_qe/konflux-ui-tests:$(params.test-image-tag)
       onError: continue
@@ -120,6 +179,11 @@ spec:
           export CYPRESS_LOCAL_CLUSTER=false
           export CYPRESS_PERIODIC_RUN_STAGE=true
         else
+          if [ ! -s /shared/base-url ]; then
+            echo "ERROR: /shared/base-url is missing or empty (setup-base-url step failed?)"
+            ls -la /shared/ || true
+            exit 1
+          fi
           export CYPRESS_KONFLUX_BASE_URL=$(cat /shared/base-url)
           export CYPRESS_LOCAL_CLUSTER=true
         fi
@@ -127,9 +191,9 @@ spec:
 
         echo "=== Running E2E tests ==="
         SPEC_FILE="$(params.spec-file)"
-        
+
         echo "Running test spec: ${SPEC_FILE}"
-   
+
         # Run tests and capture exit code (don't exit on failure)
         set +e
         yarn run cy:run --spec "${SPEC_FILE}"
