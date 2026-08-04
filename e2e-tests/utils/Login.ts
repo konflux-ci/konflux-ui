@@ -35,6 +35,17 @@ export class Login {
     cy.get(localKonfluxLoginPO.username).type(username);
     cy.get(localKonfluxLoginPO.password).type(password, { log: false });
     cy.get(localKonfluxLoginPO.loginButton).click();
+
+    // Grant Access appears on some deploys
+    cy.get('body', { timeout: 30000 }).then(($body) => {
+      if ($body.find(localKonfluxLoginPO.grantAccessClass).length > 0) {
+        cy.contains(
+          localKonfluxLoginPO.grantAccessClass,
+          localKonfluxLoginPO.grantAccessText,
+        ).click();
+      }
+    });
+
     this.waitForApps();
   }
 
