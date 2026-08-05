@@ -17,7 +17,9 @@ describe('isContainerStepCompleted', () => {
 
   it('should return true for any terminated step', () => {
     expect(
-      isContainerStepCompleted(containerStatus({ terminated: { exitCode: 0, reason: 'Completed' } })),
+      isContainerStepCompleted(
+        containerStatus({ terminated: { exitCode: 0, reason: 'Completed' } }),
+      ),
     ).toBe(true);
     expect(isContainerStepCompleted(containerStatus({ terminated: { exitCode: 1 } }))).toBe(true);
   });

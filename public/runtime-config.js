@@ -18,6 +18,9 @@ if (window.KONFLUX_RUNTIME.MONITORING_CLUSTER === undefined) {
 if (window.KONFLUX_RUNTIME.MONITORING_SAMPLE_RATE_ERRORS === undefined) {
   window.KONFLUX_RUNTIME.MONITORING_SAMPLE_RATE_ERRORS = '0.2';
 }
+if (window.KONFLUX_RUNTIME.MONITORING_SAMPLE_RATE_TRACES === undefined) {
+  window.KONFLUX_RUNTIME.MONITORING_SAMPLE_RATE_TRACES = '0';
+}
 
 // Analytics defaults (disabled for local development)
 if (window.KONFLUX_RUNTIME.ANALYTICS_ENABLED === undefined) {

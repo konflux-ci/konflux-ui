@@ -208,9 +208,7 @@ const ConformaResultsTabContent: React.FC = () => {
         ) : groups.length === 0 ? (
           settling ? null : (
             <Bullseye>
-              <Content component={ContentVariants.p}>
-                No results match the current filters.
-              </Content>
+              <Content component={ContentVariants.p}>No results match the current filters.</Content>
             </Bullseye>
           )
         ) : (
