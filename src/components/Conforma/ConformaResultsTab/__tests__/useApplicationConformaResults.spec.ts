@@ -638,12 +638,10 @@ describe('useApplicationConformaResults', () => {
     const refetch = jest.fn();
     setupTaskRunPipeline();
     mockUseTaskRunsV2.mockReturnValue(
-      createTaskRunsV2Return(
-        [createSecurityTaskRun('tr-1', 'comp-a', 'pod-1')],
-        true,
-        undefined,
-        { ...DEFAULT_WATCH_META, refetch },
-      ),
+      createTaskRunsV2Return([createSecurityTaskRun('tr-1', 'comp-a', 'pod-1')], true, undefined, {
+        ...DEFAULT_WATCH_META,
+        refetch,
+      }),
     );
     mockResolveConforma.mockResolvedValue(mockConformaResult);
 
@@ -664,12 +662,10 @@ describe('useApplicationConformaResults', () => {
     const refetch = jest.fn();
     setupTaskRunPipeline();
     mockUseTaskRunsV2.mockReturnValue(
-      createTaskRunsV2Return(
-        [createSecurityTaskRun('tr-1', 'comp-a', 'pod-1')],
-        true,
-        undefined,
-        { ...DEFAULT_WATCH_META, refetch },
-      ),
+      createTaskRunsV2Return([createSecurityTaskRun('tr-1', 'comp-a', 'pod-1')], true, undefined, {
+        ...DEFAULT_WATCH_META,
+        refetch,
+      }),
     );
     mockResolveConforma.mockResolvedValue(mockConformaResult);
 
@@ -997,7 +993,13 @@ describe('useApplicationConformaResults', () => {
     mockUseComponents.mockReturnValue([components, true, undefined]);
     mockUseTaskRunsV2.mockReturnValue(createTaskRunsV2Return(taskRuns));
 
-    const fillInTr = createSecurityTaskRun('tr-fillin', 'comp-b', 'pod-fillin', '2025-06-01T00:00:00Z', 'pr-fillin');
+    const fillInTr = createSecurityTaskRun(
+      'tr-fillin',
+      'comp-b',
+      'pod-fillin',
+      '2025-06-01T00:00:00Z',
+      'pr-fillin',
+    );
     mockGetTaskRuns.mockResolvedValue([[fillInTr], { nextPageToken: null, records: [] }]);
     mockResolveConforma.mockResolvedValue(mockConformaResult);
 
@@ -1034,7 +1036,13 @@ describe('useApplicationConformaResults', () => {
     mockUseComponents.mockReturnValue([components, true, undefined]);
     mockUseTaskRunsV2.mockReturnValue(createTaskRunsV2Return(taskRuns));
 
-    const fillInTr = createSecurityTaskRun('tr-fillin', 'comp-b', 'pod-fillin', '2025-06-01T00:00:00Z', 'pr-fillin');
+    const fillInTr = createSecurityTaskRun(
+      'tr-fillin',
+      'comp-b',
+      'pod-fillin',
+      '2025-06-01T00:00:00Z',
+      'pr-fillin',
+    );
     mockK8sListResource.mockResolvedValue({ items: [fillInTr] });
     mockResolveConforma.mockResolvedValue(mockConformaResult);
 
