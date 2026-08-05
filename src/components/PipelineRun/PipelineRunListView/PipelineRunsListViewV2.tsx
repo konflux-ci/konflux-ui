@@ -10,6 +10,8 @@ import {
 import { SESSION_STORAGE_KEYS, TEXT_SEARCH_TYPES } from '~/consts/constants';
 import { useComponent } from '~/hooks/useComponents';
 import { useVisibleColumns } from '~/hooks/useVisibleColumns';
+import { useLoadingThreshold, useRenderTiming } from '~/monitoring/hooks';
+import { THRESHOLDS } from '~/monitoring/thresholds';
 import { getErrorState } from '~/shared/utils/error-utils';
 import {
   PIPELINE_RUN_COLUMNS_DEFINITIONS,
@@ -84,6 +86,27 @@ const PipelineRunsListViewV2: React.FC<React.PropsWithChildren<PipelineRunsListV
         [component?.metadata?.creationTimestamp, componentName, nameFilter, versionName],
       ),
     );
+
+  useRenderTiming({
+    name: 'pipelineruns.list.render',
+    isReady: plrLoaded,
+    thresholds: THRESHOLDS.PIPELINERUNS_LIST_RENDER,
+    attributes: { route: 'pipelineruns-list' },
+  });
+
+  useLoadingThreshold({
+    name: 'pipelineruns.list.loading',
+    isLoading: !plrLoaded,
+    thresholds: THRESHOLDS.LOADING_INDICATOR,
+    attributes: { route: 'pipelineruns-list' },
+  });
+
+  useLoadingThreshold({
+    name: 'pipelineruns.list.pagination',
+    isLoading: isFetchingNextPage,
+    thresholds: THRESHOLDS.PAGINATION,
+    attributes: { route: 'pipelineruns-list' },
+  });
 
   const sortedPipelineRuns = React.useMemo((): PipelineRunKind[] => {
     if (!pipelineRuns) return [];
