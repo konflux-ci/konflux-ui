@@ -2,7 +2,7 @@ import type { ApplicationConformaResults, ComponentConformaStatus } from '~/type
 import {
   ComponentConformaResult,
   CONFORMA_RESULT_STATUS,
-  UIConformaData,
+  ConformaResultRow,
 } from '~/types/conforma';
 
 const CONTAINER_IMAGE_A =
@@ -44,13 +44,11 @@ export const mockConformaComponentResults: ComponentConformaResult[] = [
       {
         metadata: {
           title: 'Disallowed base image',
-          description:
-            'The base image used in the build is not from an approved registry.',
+          description: 'The base image used in the build is not from an approved registry.',
           collections: ['slsa3'],
           code: 'base_image.allowed',
           ['effective_on']: '2023-01-15T00:00:00Z',
-          solution:
-            'Use a base image from an approved registry such as registry.redhat.io.',
+          solution: 'Use a base image from an approved registry such as registry.redhat.io.',
         },
         msg: 'Base image registry.example.com/untrusted/base:latest is not allowed',
       },
@@ -117,8 +115,7 @@ export const mockConformaComponentResults: ComponentConformaResult[] = [
           collections: ['minimal', 'slsa3'],
           code: 'cve.critical_cve_found',
           ['effective_on']: '2023-03-01T00:00:00Z',
-          solution:
-            'Update the affected package to a version that resolves CVE-2024-12345.',
+          solution: 'Update the affected package to a version that resolves CVE-2024-12345.',
         },
         msg: 'Critical CVE-2024-12345 found in openssl-3.0.2',
       },
@@ -130,8 +127,7 @@ export const mockConformaComponentResults: ComponentConformaResult[] = [
           collections: ['slsa3'],
           code: 'attestation.slsa_provenance_level',
           ['effective_on']: '2023-09-01T00:00:00Z',
-          solution:
-            'Ensure the pipeline is configured to produce SLSA Level 3 provenance.',
+          solution: 'Ensure the pipeline is configured to produce SLSA Level 3 provenance.',
         },
         msg: 'Expected SLSA Level 3 provenance but found Level 1',
       },
@@ -154,8 +150,7 @@ export const mockConformaComponentResults: ComponentConformaResult[] = [
       {
         metadata: {
           title: 'Image labels present',
-          description:
-            'The container image includes all required OCI labels for traceability.',
+          description: 'The container image includes all required OCI labels for traceability.',
           collections: ['minimal'],
           code: 'labels.required_labels',
         },
@@ -164,8 +159,7 @@ export const mockConformaComponentResults: ComponentConformaResult[] = [
       {
         metadata: {
           title: 'Allowed task bundles',
-          description:
-            'All tasks in the pipeline are from approved task bundle references.',
+          description: 'All tasks in the pipeline are from approved task bundle references.',
           collections: ['minimal', 'slsa3'],
           code: 'tasks.allowed_task_bundles',
         },
@@ -212,7 +206,7 @@ export const mockConformaComponentResults: ComponentConformaResult[] = [
   },
 ];
 
-export const mockConformaUIDataMixed: UIConformaData[] = [
+export const mockConformaUIDataMixed: ConformaResultRow[] = [
   // 5 violations
   {
     title: 'Missing CVE scan results',
@@ -241,8 +235,7 @@ export const mockConformaUIDataMixed: UIConformaData[] = [
   },
   {
     title: 'Disallowed base image',
-    description:
-      'The base image used in the build is not from an approved registry.',
+    description: 'The base image used in the build is not from an approved registry.',
     status: CONFORMA_RESULT_STATUS.violations,
     timestamp: '2023-01-15T00:00:00Z',
     component: 'frontend-service',
@@ -267,8 +260,7 @@ export const mockConformaUIDataMixed: UIConformaData[] = [
   },
   {
     title: 'SLSA provenance not met',
-    description:
-      'The build pipeline does not meet the required SLSA provenance level for release.',
+    description: 'The build pipeline does not meet the required SLSA provenance level for release.',
     status: CONFORMA_RESULT_STATUS.violations,
     timestamp: '2023-09-01T00:00:00Z',
     component: 'backend-api',
@@ -294,8 +286,7 @@ export const mockConformaUIDataMixed: UIConformaData[] = [
   },
   {
     title: 'Missing SBOM',
-    description:
-      'A Software Bill of Materials was not found attached to the image attestation.',
+    description: 'A Software Bill of Materials was not found attached to the image attestation.',
     status: CONFORMA_RESULT_STATUS.warnings,
     timestamp: '2026-09-15T00:00:00Z',
     component: 'frontend-service',
@@ -334,8 +325,7 @@ export const mockConformaUIDataMixed: UIConformaData[] = [
   },
   {
     title: 'Provenance materials present',
-    description:
-      'The SLSA Provenance attestation includes the expected list of build materials.',
+    description: 'The SLSA Provenance attestation includes the expected list of build materials.',
     status: CONFORMA_RESULT_STATUS.successes,
     timestamp: undefined,
     component: 'frontend-service',
@@ -347,8 +337,7 @@ export const mockConformaUIDataMixed: UIConformaData[] = [
   },
   {
     title: 'Image labels present',
-    description:
-      'The container image includes all required OCI labels for traceability.',
+    description: 'The container image includes all required OCI labels for traceability.',
     status: CONFORMA_RESULT_STATUS.successes,
     timestamp: undefined,
     component: 'backend-api',
@@ -360,8 +349,7 @@ export const mockConformaUIDataMixed: UIConformaData[] = [
   },
   {
     title: 'Allowed task bundles',
-    description:
-      'All tasks in the pipeline are from approved task bundle references.',
+    description: 'All tasks in the pipeline are from approved task bundle references.',
     status: CONFORMA_RESULT_STATUS.successes,
     timestamp: undefined,
     component: 'backend-api',
@@ -373,8 +361,7 @@ export const mockConformaUIDataMixed: UIConformaData[] = [
   },
   {
     title: 'Test results found',
-    description:
-      'Test results from the build pipeline were found and evaluated successfully.',
+    description: 'Test results from the build pipeline were found and evaluated successfully.',
     status: CONFORMA_RESULT_STATUS.successes,
     timestamp: undefined,
     component: 'backend-api',
@@ -399,8 +386,7 @@ export const mockConformaUIDataMixed: UIConformaData[] = [
   },
   {
     title: 'Provenance materials present',
-    description:
-      'The SLSA Provenance attestation includes the expected list of build materials.',
+    description: 'The SLSA Provenance attestation includes the expected list of build materials.',
     status: CONFORMA_RESULT_STATUS.successes,
     timestamp: undefined,
     component: 'database-migration',
@@ -432,7 +418,9 @@ const mockComponentStatuses: ComponentConformaStatus[] = mockConformaComponentRe
   };
 });
 
-export const useMockApplicationConformaResults = (): ApplicationConformaResults => ({
+export const useMockApplicationConformaResults = (
+  _applicationName: string,
+): ApplicationConformaResults => ({
   componentStatuses: mockComponentStatuses,
   allResults: mockConformaUIDataMixed,
   totalComponents: mockComponentStatuses.length,
@@ -440,4 +428,9 @@ export const useMockApplicationConformaResults = (): ApplicationConformaResults 
   loaded: true,
   settling: false,
   error: undefined,
+  refresh: {
+    lastFetchedAt: 0,
+    isRefreshing: false,
+    onRefresh: () => {},
+  },
 });

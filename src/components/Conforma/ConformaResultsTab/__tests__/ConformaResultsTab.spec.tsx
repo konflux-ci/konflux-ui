@@ -286,13 +286,13 @@ describe('ConformaResultsTab', () => {
     expect(screen.getByText('3 arch variants')).toBeInTheDocument();
   });
 
-  it('shows collapsed violation count when duplicates are collapsed', () => {
+  it('shows raw violation count in summary bar even when duplicates are collapsed', () => {
     mockUseApplicationConformaResults.mockReturnValue(archDupeResults);
 
     const { container } = routerRenderer(<ConformaResultsTab />);
 
     const resultsSection = container.querySelector('[data-test="conforma-summary-results"]');
-    expect(resultsSection).toHaveTextContent('1');
+    expect(resultsSection).toHaveTextContent('3');
     expect(resultsSection).toHaveTextContent('violations');
   });
 
