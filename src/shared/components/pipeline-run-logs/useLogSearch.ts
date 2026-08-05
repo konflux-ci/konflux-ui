@@ -1,5 +1,4 @@
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react';
-import { useDebounceCallback } from '~/shared/hooks/useDebounceCallback';
 import { SearchedWord } from '../virtualized-log-viewer/types';
 
 type UseLogSearchResult = {
@@ -16,9 +15,6 @@ type UseLogSearchResult = {
 export const useLogSearch = (lines: string[]): UseLogSearchResult => {
   const [searchText, setSearchText] = useState<string>('');
   const [currentMatchIndex, setCurrentMatchIndex] = useState<number>(0);
-  const debouncedSetSearchText = useDebounceCallback((value: string) => {
-    setSearchText(value);
-  }, 600);
 
   const deferredSearchText = useDeferredValue(searchText);
 
@@ -29,7 +25,6 @@ export const useLogSearch = (lines: string[]): UseLogSearchResult => {
     lines.forEach((line, rowIndex) => {
       const lineLower = line.toLowerCase();
       let matchIndex = 1;
-      // find all occurrences within the line
       let pos = lineLower.indexOf(searchLower);
       while (pos !== -1) {
         result.push({ rowIndex, matchIndex });
@@ -42,7 +37,6 @@ export const useLogSearch = (lines: string[]): UseLogSearchResult => {
 
   const matchCount = matches.length;
 
-  // reset current match when search text changes, not when lines update
   useEffect(() => {
     setCurrentMatchIndex(0);
   }, [deferredSearchText]);
@@ -58,12 +52,11 @@ export const useLogSearch = (lines: string[]): UseLogSearchResult => {
     setCurrentMatchIndex((prev) => (matchCount > 0 ? (prev - 1 + matchCount) % matchCount : 0));
   }, [matchCount]);
 
-  // scrollToRow is 1-indexed (VirtualizedLogContent convention)
   const scrollToRow = currentMatch ? currentMatch.rowIndex + 1 : 0;
 
   return {
     searchText,
-    setSearchText: debouncedSetSearchText,
+    setSearchText,
     currentMatch,
     currentMatchIndex: safeMatchIndex,
     matchCount,
