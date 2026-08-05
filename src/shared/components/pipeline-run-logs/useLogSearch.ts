@@ -1,4 +1,5 @@
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react';
+import { useDebounceCallback } from '~/shared/hooks/useDebounceCallback';
 import { SearchedWord } from '../virtualized-log-viewer/types';
 
 type UseLogSearchResult = {
@@ -15,6 +16,9 @@ type UseLogSearchResult = {
 export const useLogSearch = (lines: string[]): UseLogSearchResult => {
   const [searchText, setSearchText] = useState<string>('');
   const [currentMatchIndex, setCurrentMatchIndex] = useState<number>(0);
+  const debouncedSetSearchText = useDebounceCallback((value: string) => {
+    setSearchText(value);
+  }, 600);
 
   const deferredSearchText = useDeferredValue(searchText);
 
@@ -59,7 +63,7 @@ export const useLogSearch = (lines: string[]): UseLogSearchResult => {
 
   return {
     searchText,
-    setSearchText,
+    setSearchText: debouncedSetSearchText,
     currentMatch,
     currentMatchIndex: safeMatchIndex,
     matchCount,

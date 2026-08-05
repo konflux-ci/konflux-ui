@@ -6,6 +6,7 @@ export interface SectionRowsResult {
   allLines: string[];
   lineNumberToSectionIndex: Map<number, number>;
   lineNumberToDisplayRow: Map<number, number>;
+  flatLineIndexToDisplayRow: Map<number, number>;
 }
 
 const EMPTY_MAP = new Map<number, number>();
@@ -14,6 +15,7 @@ const EMPTY_SECTION_ROWS: SectionRowsResult = {
   allLines: [],
   lineNumberToSectionIndex: EMPTY_MAP,
   lineNumberToDisplayRow: EMPTY_MAP,
+  flatLineIndexToDisplayRow: EMPTY_MAP,
 };
 
 export const useSectionRows = (
@@ -27,6 +29,7 @@ export const useSectionRows = (
     const rows: LogDisplayRow[] = [];
     const lineNumToSection = new Map<number, number>();
     const lineNumToDisplay = new Map<number, number>();
+    const flatIdxToDisplay = new Map<number, number>();
 
     let globalLineNumber = 1;
     let flatLineIndex = 0;
@@ -62,6 +65,7 @@ export const useSectionRows = (
             sectionIndex: i,
           });
           lineNumToDisplay.set(globalLineNumber + j, contentDisplayIdx);
+          flatIdxToDisplay.set(flatLineIndex + j, contentDisplayIdx);
         }
       } else {
         rows.push({ kind: 'fold-indicator', sectionIndex: i, lineCount: sectionLines.length });
@@ -76,6 +80,7 @@ export const useSectionRows = (
       allLines,
       lineNumberToSectionIndex: lineNumToSection,
       lineNumberToDisplayRow: lineNumToDisplay,
+      flatLineIndexToDisplayRow: flatIdxToDisplay,
     };
   }, [sections, allLines, expandedSections]);
 };

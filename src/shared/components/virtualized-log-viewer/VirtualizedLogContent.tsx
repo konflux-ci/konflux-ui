@@ -75,8 +75,13 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
 
   const isMultiSection = effectiveNormalizedSections.length > 1;
 
-  const { displayRows, allLines, lineNumberToDisplayRow, lineNumberToSectionIndex } =
-    useSectionRows(effectiveNormalizedSections, expandedSections);
+  const {
+    displayRows,
+    allLines,
+    lineNumberToDisplayRow,
+    lineNumberToSectionIndex,
+    flatLineIndexToDisplayRow,
+  } = useSectionRows(effectiveNormalizedSections, expandedSections);
 
   const rowCount = displayRows.length;
 
@@ -157,12 +162,9 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
   const effectiveScrollToRow = React.useMemo(() => {
     if (!scrollToRow || scrollToRow <= 0) return undefined;
     const flatIndex = scrollToRow - 1;
-    const displayIdx = displayRows.findIndex(
-      (row) => row.kind === 'content' && row.flatLineIndex === flatIndex,
-    );
-    // If exact content row found, scroll to it; otherwise scroll to last row (auto-scroll to bottom)
-    return displayIdx >= 0 ? displayIdx + 1 : displayRows.length;
-  }, [scrollToRow, displayRows]);
+    const displayIdx = flatLineIndexToDisplayRow.get(flatIndex);
+    return displayIdx !== undefined ? displayIdx + 1 : displayRows.length;
+  }, [scrollToRow, flatLineIndexToDisplayRow, displayRows.length]);
 
   const { clearScrollTracking } = useVirtualizedScroll({
     virtualizer,
