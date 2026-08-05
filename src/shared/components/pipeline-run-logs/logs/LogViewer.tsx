@@ -76,6 +76,7 @@ export type Props = {
     scrollOffset: number;
     scrollUpdateWasRequested: boolean;
   }) => void;
+  enableLineNavigation?: boolean;
 };
 
 const LogViewer: React.FC<Props> = ({
@@ -88,6 +89,7 @@ const LogViewer: React.FC<Props> = ({
   isLoading,
   errorMessage,
   onScroll: onScrollProp,
+  enableLineNavigation = true,
 }) => {
   const taskName = taskRun?.spec.taskRef?.name ?? taskRun?.metadata.name;
   const [logTheme, setLogTheme] = useLogViewerTheme();
@@ -345,13 +347,15 @@ const LogViewer: React.FC<Props> = ({
                 scrollToRow={scrolledRow}
                 onScroll={handleScroll}
                 lineNumberNavigationProps={
-                  isLoading
-                    ? {
-                        ...lineNumberNavigationProps,
-                        highlightedLines: null,
-                        isLineHighlighted: () => false,
-                      }
-                    : lineNumberNavigationProps
+                  enableLineNavigation
+                    ? isLoading
+                      ? {
+                          ...lineNumberNavigationProps,
+                          highlightedLines: null,
+                          isLineHighlighted: () => false,
+                        }
+                      : lineNumberNavigationProps
+                    : undefined
                 }
               />
             )}
