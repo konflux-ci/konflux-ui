@@ -7,6 +7,17 @@ import { useLocalStorage } from '~/shared/hooks/useLocalStorage';
 jest.mock('~/shared/hooks/useLocalStorage');
 const mockUseLocalStorage = jest.mocked(useLocalStorage);
 
+jest.mock('@patternfly/react-icons/dist/esm/icons/sort-alpha-down-icon', () => ({
+  SortAlphaDownIcon: (props: Record<string, unknown>) => (
+    <span data-test="sort-alpha-down-icon" {...props} />
+  ),
+}));
+jest.mock('@patternfly/react-icons/dist/esm/icons/sort-alpha-up-icon', () => ({
+  SortAlphaUpIcon: (props: Record<string, unknown>) => (
+    <span data-test="sort-alpha-up-icon" {...props} />
+  ),
+}));
+
 interface TestRow {
   name: string;
   status: string;
@@ -118,5 +129,46 @@ describe('SortDropdown', () => {
     renderSortDropdown();
 
     expect(screen.getByRole('button')).toBeInTheDocument();
+  });
+
+  it('shows descending icon when sort direction is desc', () => {
+    mockUseLocalStorage.mockReturnValue([
+      {
+        visibleColumns: ['name', 'status', 'id'],
+        columnOrder: ['name', 'status', 'id'],
+        sortColumn: 'name',
+        sortDirection: 'desc',
+      },
+      mockSetValue,
+      jest.fn(),
+    ]);
+    renderSortDropdown();
+
+    expect(screen.getByTestId('sort-alpha-down-icon')).toBeInTheDocument();
+    expect(screen.queryByTestId('sort-alpha-up-icon')).not.toBeInTheDocument();
+  });
+
+  it('shows ascending icon when sort direction is asc', () => {
+    mockUseLocalStorage.mockReturnValue([
+      {
+        visibleColumns: ['name', 'status', 'id'],
+        columnOrder: ['name', 'status', 'id'],
+        sortColumn: 'name',
+        sortDirection: 'asc',
+      },
+      mockSetValue,
+      jest.fn(),
+    ]);
+    renderSortDropdown();
+
+    expect(screen.getByTestId('sort-alpha-up-icon')).toBeInTheDocument();
+    expect(screen.queryByTestId('sort-alpha-down-icon')).not.toBeInTheDocument();
+  });
+
+  it('shows descending icon by default when no sort direction is set', () => {
+    renderSortDropdown();
+
+    expect(screen.getByTestId('sort-alpha-down-icon')).toBeInTheDocument();
+    expect(screen.queryByTestId('sort-alpha-up-icon')).not.toBeInTheDocument();
   });
 });
