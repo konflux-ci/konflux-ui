@@ -1,4 +1,5 @@
 import React from 'react';
+import { useEventListener } from '~/shared/hooks/useEventListener';
 
 export interface HighlightedLineRange {
   start: number;
@@ -66,28 +67,13 @@ export const useLineNumberNavigation = (): UseLineNumberNavigationResult => {
   // Track the last hash to detect changes (including when hash is cleared)
   const lastHashRef = React.useRef(window.location.hash);
 
-  // Separate effect for hashchange event listener (browser back/forward)
-  // Only active when URL hash navigation is enabled
-  React.useEffect(() => {
-    const handleHashChange = () => {
-      // Only handle hashchange if we're on a page that supports URL hash navigation
-      if (!shouldEnableUrlHash()) {
-        return;
-      }
+  useEventListener('hashchange', () => {
+    if (!shouldEnableUrlHash()) return;
 
-      const newHash = window.location.hash;
-      lastHashRef.current = newHash;
-
-      const newHighlight = getHighlightedLines();
-      setHighlightedLines(newHighlight);
-
-      // Always reset firstSelectedLine on hashchange event (external navigation)
-      setFirstSelectedLine(null);
-    };
-
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
-  }, [shouldEnableUrlHash]);
+    lastHashRef.current = window.location.hash;
+    setHighlightedLines(getHighlightedLines());
+    setFirstSelectedLine(null);
+  });
 
   // Handle line number click for hash navigation
   const handleLineClick = React.useCallback(

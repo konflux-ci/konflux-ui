@@ -347,7 +347,11 @@ const LogViewer: React.FC<Props> = ({
                 scrollToRow={scrolledRow}
                 onScroll={handleScroll}
                 lineNumberNavigationProps={
-                  enableLineNavigation ? lineNumberNavigationProps : undefined
+                  enableLineNavigation
+                    ? isLoading
+                      ? { ...lineNumberNavigationProps, highlightedLines: null }
+                      : lineNumberNavigationProps
+                    : undefined
                 }
               />
             )}
