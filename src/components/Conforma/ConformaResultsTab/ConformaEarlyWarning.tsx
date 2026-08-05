@@ -19,6 +19,7 @@ type ConformaEarlyWarningProps = {
 const getDaysUntil = (dateStr?: string): number | null => {
   if (!dateStr) return null;
   const target = new Date(dateStr);
+  if (Number.isNaN(target.getTime())) return null;
   const now = new Date();
   const diffMs = target.getTime() - now.getTime();
   return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
@@ -42,6 +43,7 @@ export const ConformaEarlyWarning: React.FC<ConformaEarlyWarningProps> = ({
       customIcon={<ExclamationTriangleIcon />}
       data-test="conforma-early-warning"
       className="pf-v6-u-mt-md"
+      style={{ maxHeight: 500, overflowY: 'scroll' }}
     >
       <ExpandableSection
         toggleText={isExpanded ? 'Hide details' : 'Show details'}
