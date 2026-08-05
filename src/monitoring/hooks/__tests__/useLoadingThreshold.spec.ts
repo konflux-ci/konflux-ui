@@ -2,12 +2,13 @@ import { renderHook } from '@testing-library/react';
 import { useLoadingThreshold } from '../useLoadingThreshold';
 
 const mockCaptureMessage = jest.fn();
-const mockReportMetric = jest.fn();
+const mockEnd = jest.fn();
+const mockStartInactiveSpan = jest.fn(() => ({ end: mockEnd, setAttribute: jest.fn() }));
 
 jest.mock('~/monitoring', () => ({
   monitoringService: {
     captureMessage: (...args: unknown[]) => mockCaptureMessage(...args),
-    reportMetric: (...args: unknown[]) => mockReportMetric(...args),
+    startInactiveSpan: (...args: unknown[]) => mockStartInactiveSpan(...args),
   },
 }));
 
@@ -17,14 +18,10 @@ const defaultOptions = {
   thresholds: { warn: 3000, critical: 8000 },
 };
 
-let performanceNowValue = 0;
-
 describe('useLoadingThreshold', () => {
   beforeEach(() => {
     jest.useFakeTimers();
     jest.clearAllMocks();
-    performanceNowValue = 0;
-    jest.spyOn(performance, 'now').mockImplementation(() => performanceNowValue);
   });
 
   afterEach(() => {
@@ -32,9 +29,14 @@ describe('useLoadingThreshold', () => {
     jest.restoreAllMocks();
   });
 
-  it('sets up timers when isLoading becomes true and fires at thresholds', () => {
+  it('starts a span and sets up timers when isLoading becomes true', () => {
     renderHook(() => useLoadingThreshold({ ...defaultOptions, isLoading: true }));
 
+    expect(mockStartInactiveSpan).toHaveBeenCalledWith({
+      name: 'test.loading',
+      op: 'ui.loading',
+      attributes: undefined,
+    });
     expect(mockCaptureMessage).not.toHaveBeenCalled();
 
     // Advance to warn threshold
@@ -56,21 +58,15 @@ describe('useLoadingThreshold', () => {
     );
   });
 
-  it('reports metric when loading completes', () => {
-    performanceNowValue = 1000;
+  it('ends span when loading completes', () => {
     const { rerender } = renderHook(
       ({ isLoading }) => useLoadingThreshold({ ...defaultOptions, isLoading }),
       { initialProps: { isLoading: true } },
     );
 
-    performanceNowValue = 3500;
     rerender({ isLoading: false });
 
-    expect(mockReportMetric).toHaveBeenCalledTimes(1);
-    expect(mockReportMetric).toHaveBeenCalledWith('test.loading', 2500, {
-      unit: 'millisecond',
-      attributes: undefined,
-    });
+    expect(mockEnd).toHaveBeenCalledTimes(1);
   });
 
   it('clears timers when loading completes before thresholds', () => {
@@ -89,21 +85,20 @@ describe('useLoadingThreshold', () => {
   });
 
   it('handles re-entry (loading -> not loading -> loading)', () => {
-    performanceNowValue = 0;
     const { rerender } = renderHook(
       ({ isLoading }) => useLoadingThreshold({ ...defaultOptions, isLoading }),
       { initialProps: { isLoading: true } },
     );
 
     // Stop loading before thresholds
-    performanceNowValue = 1000;
     rerender({ isLoading: false });
+    expect(mockEnd).toHaveBeenCalledTimes(1);
 
     jest.clearAllMocks();
 
-    // Start loading again
-    performanceNowValue = 2000;
+    // Start loading again — new span should be created
     rerender({ isLoading: true });
+    expect(mockStartInactiveSpan).toHaveBeenCalledTimes(1);
 
     // Advance to warn threshold — new timers should fire
     jest.advanceTimersByTime(3000);
@@ -115,7 +110,7 @@ describe('useLoadingThreshold', () => {
     );
   });
 
-  it('cleans up timers on unmount', () => {
+  it('cleans up span and timers on unmount', () => {
     const { unmount } = renderHook(() =>
       useLoadingThreshold({ ...defaultOptions, isLoading: true }),
     );
@@ -125,10 +120,10 @@ describe('useLoadingThreshold', () => {
     jest.advanceTimersByTime(10000);
 
     expect(mockCaptureMessage).not.toHaveBeenCalled();
+    expect(mockEnd).toHaveBeenCalledTimes(1);
   });
 
   it('works when monitoringService is null', () => {
-    // Override the mock to return null for this test
     const monitoringModule: { monitoringService: unknown } = jest.requireMock('~/monitoring');
     const originalService = monitoringModule.monitoringService;
     monitoringModule.monitoringService = null;
@@ -142,39 +137,30 @@ describe('useLoadingThreshold', () => {
       // Advance past thresholds — should not throw
       jest.advanceTimersByTime(10000);
 
-      performanceNowValue = 5000;
       rerender({ isLoading: false });
 
-      // No errors thrown
       expect(mockCaptureMessage).not.toHaveBeenCalled();
-      expect(mockReportMetric).not.toHaveBeenCalled();
     } finally {
       monitoringModule.monitoringService = originalService;
     }
   });
 
-  it('passes attributes to captureMessage and reportMetric', () => {
+  it('passes attributes to span and captureMessage', () => {
     const attributes = { view: 'list', count: 42 };
-    performanceNowValue = 0;
 
-    const { rerender } = renderHook(
-      ({ isLoading }) => useLoadingThreshold({ ...defaultOptions, isLoading, attributes }),
-      { initialProps: { isLoading: true } },
-    );
+    renderHook(() => useLoadingThreshold({ ...defaultOptions, isLoading: true, attributes }));
+
+    expect(mockStartInactiveSpan).toHaveBeenCalledWith({
+      name: 'test.loading',
+      op: 'ui.loading',
+      attributes: { view: 'list', count: 42 },
+    });
 
     jest.advanceTimersByTime(3000);
     expect(mockCaptureMessage).toHaveBeenCalledWith(expect.any(String), 'warn', {
       threshold: 3000,
       view: 'list',
       count: 42,
-    });
-
-    performanceNowValue = 2000;
-    rerender({ isLoading: false });
-
-    expect(mockReportMetric).toHaveBeenCalledWith('test.loading', 2000, {
-      unit: 'millisecond',
-      attributes: { view: 'list', count: 42 },
     });
   });
 });

@@ -49,15 +49,9 @@ export function useRenderTiming({
 
     const duration = performance.now() - startTimeRef.current;
 
-    // End the span
+    // End the span — duration is captured automatically by Sentry
     spanRef.current?.setAttribute('duration_ms', Math.round(duration));
     spanRef.current?.end();
-
-    // Report metric
-    monitoringService?.reportMetric(name, duration, {
-      unit: 'millisecond',
-      attributes,
-    });
 
     // Check thresholds
     if (duration > thresholds.critical) {

@@ -5,16 +5,13 @@ import { useRenderTiming } from '../useRenderTiming';
 const mockEnd = jest.fn();
 const mockSetAttribute = jest.fn();
 const mockStartInactiveSpan = jest.fn(() => ({ end: mockEnd, setAttribute: mockSetAttribute }));
-const mockReportMetric = jest.fn();
 const mockCaptureMessage = jest.fn();
 
 let monitoringServiceOverride: {
   startInactiveSpan: jest.Mock;
-  reportMetric: jest.Mock;
   captureMessage: jest.Mock;
 } | null = {
   startInactiveSpan: mockStartInactiveSpan,
-  reportMetric: mockReportMetric,
   captureMessage: mockCaptureMessage,
 };
 
@@ -35,7 +32,6 @@ describe('useRenderTiming', () => {
     jest.spyOn(performance, 'now').mockImplementation(() => performanceNowValue);
     monitoringServiceOverride = {
       startInactiveSpan: mockStartInactiveSpan,
-      reportMetric: mockReportMetric,
       captureMessage: mockCaptureMessage,
     };
   });
@@ -44,7 +40,7 @@ describe('useRenderTiming', () => {
     jest.restoreAllMocks();
   });
 
-  it('reports metric and ends span when isReady becomes true', () => {
+  it('ends span when isReady becomes true', () => {
     const attributes = { view: 'list' };
 
     const { rerender } = renderHook(
@@ -63,17 +59,12 @@ describe('useRenderTiming', () => {
       op: 'ui.render',
       attributes,
     });
-    expect(mockReportMetric).not.toHaveBeenCalled();
 
     performanceNowValue = 1500;
     rerender({ isReady: true });
 
     expect(mockSetAttribute).toHaveBeenCalledWith('duration_ms', 1500);
     expect(mockEnd).toHaveBeenCalled();
-    expect(mockReportMetric).toHaveBeenCalledWith('test.render', 1500, {
-      unit: 'millisecond',
-      attributes,
-    });
   });
 
   it('does not report more than once', () => {
@@ -90,7 +81,7 @@ describe('useRenderTiming', () => {
     rerender({ isReady: false });
     rerender({ isReady: true });
 
-    expect(mockReportMetric).toHaveBeenCalledTimes(1);
+    expect(mockEnd).toHaveBeenCalledTimes(1);
   });
 
   it('captures warning message when duration exceeds warn threshold', () => {
@@ -170,7 +161,6 @@ describe('useRenderTiming', () => {
     unmount();
 
     expect(mockEnd).toHaveBeenCalled();
-    expect(mockReportMetric).not.toHaveBeenCalled();
   });
 
   it('works when monitoringService is null', () => {
