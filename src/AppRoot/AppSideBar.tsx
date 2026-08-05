@@ -14,6 +14,7 @@ import {
   SECRET_LIST_PATH,
   USER_ACCESS_LIST_PAGE,
 } from '@routes/paths';
+import IssuesNavItemContent from '~/components/Issues/IssuesNavItemContent';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { IfFeature } from '~/feature-flags/hooks';
 import { SavedViewNavItems, SavedViewsConfig } from '~/shared/components/SavedViews';
@@ -63,7 +64,12 @@ export const AppSideBar: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
                     namespace ? COMPONENTS_PATH.createPath({ workspaceName: namespace }) : undefined
                   }
                 >
-                  Components <FeatureFlagIndicator flags={['components-page']} />
+                  Components{' '}
+                  <FeatureFlagIndicator
+                    flags={['components-page']}
+                    hasNoPadding
+                    popOverTriggerAction="hover"
+                  />
                 </Link>
               </NavItem>
             </IfFeature>
@@ -83,7 +89,7 @@ export const AppSideBar: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
               <Link
                 to={namespace ? ISSUES_PATH.createPath({ workspaceName: namespace }) : undefined}
               >
-                Issues
+                Issues {namespace ? <IssuesNavItemContent namespace={namespace} /> : null}
               </Link>
             </NavItem>
 
@@ -115,7 +121,12 @@ export const AppSideBar: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
                       : undefined
                   }
                 >
-                  Pipeline Runs <FeatureFlagIndicator flags={['pipeline-runs-page']} />
+                  Pipeline Runs{' '}
+                  <FeatureFlagIndicator
+                    flags={['pipeline-runs-page']}
+                    hasNoPadding
+                    popOverTriggerAction="hover"
+                  />
                 </Link>
               </NavItem>
             </IfFeature>

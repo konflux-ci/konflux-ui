@@ -88,6 +88,7 @@ describe('ReleasesListView', () => {
     expect(screen.getByRole('columnheader', { name: 'Name' })).toBeVisible();
     expect(screen.getByRole('columnheader', { name: 'Created' })).toBeVisible();
     expect(screen.getByRole('columnheader', { name: 'Status' })).toBeVisible();
+    expect(screen.getByRole('columnheader', { name: 'Component' })).toBeVisible();
     expect(screen.getByRole('columnheader', { name: 'Release Plan' })).toBeVisible();
     expect(screen.getByRole('columnheader', { name: 'Release Snapshot' })).toBeVisible();
   });
@@ -169,7 +170,7 @@ describe('ReleasesListView', () => {
     fireEvent.input(screen.getByRole('textbox'), { target: { value: 'test-plan-2' } });
     const rows = screen.getAllByRole('row');
     expect(rows.length).toBe(2);
-    expect(rows[1].children[4]).toHaveTextContent('test-plan-2');
+    expect(rows[1].children[5]).toHaveTextContent('test-plan-2');
   });
 
   it('should allow filtering by release snapshot', () => {
@@ -180,6 +181,6 @@ describe('ReleasesListView', () => {
     fireEvent.input(screen.getByRole('textbox'), { target: { value: 'test-snapshot-2' } });
     const rows = screen.getAllByRole('row');
     expect(rows.length).toBe(2);
-    expect(rows[1].children[5]).toHaveTextContent('test-snapshot-2');
+    expect(rows[1].children[6]).toHaveTextContent('test-snapshot-2');
   });
 });

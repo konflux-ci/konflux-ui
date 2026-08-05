@@ -9,6 +9,7 @@ import {
   ContentVariants,
 } from '@patternfly/react-core';
 import ServiceUnavailablePage from '~/components/ServiceUnavailable/ServiceUnavailablePage';
+import { monitoringService } from '~/monitoring';
 import NoAccessState from '../components/PageAccess/NoAccessState';
 import PageLayout from '../components/PageLayout/PageLayout';
 import { HttpError } from '../k8s/error';
@@ -74,6 +75,10 @@ export const ErrorBoundaryFallback: React.FC<
 
 export const RouteErrorBoundry: React.FC<React.PropsWithChildren> = () => {
   const error = useRouteError() as ErrorResponse;
+
+  React.useEffect(() => {
+    monitoringService?.captureException(error);
+  }, [error]);
   if (error.status === 403) {
     return <NoAccessState />;
   }

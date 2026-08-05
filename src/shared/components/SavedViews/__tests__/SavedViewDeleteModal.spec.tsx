@@ -4,6 +4,9 @@ import { SavedViewDeleteModal } from '../SavedViewDeleteModal';
 describe('SavedViewDeleteModal', () => {
   const mockOnClose = jest.fn();
   const mockOnDelete = jest.fn();
+  const modalProps = { isOpen: true } as React.ComponentProps<
+    typeof SavedViewDeleteModal
+  >['modalProps'];
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -11,7 +14,12 @@ describe('SavedViewDeleteModal', () => {
 
   it('renders view label in confirmation text', () => {
     render(
-      <SavedViewDeleteModal onClose={mockOnClose} onDelete={mockOnDelete} viewLabel="My View" />,
+      <SavedViewDeleteModal
+        onClose={mockOnClose}
+        onDelete={mockOnDelete}
+        viewLabel="My View"
+        modalProps={modalProps}
+      />,
     );
 
     expect(screen.getByText('My View')).toBeInTheDocument();
@@ -21,7 +29,12 @@ describe('SavedViewDeleteModal', () => {
 
   it('calls onDelete on Delete click', () => {
     render(
-      <SavedViewDeleteModal onClose={mockOnClose} onDelete={mockOnDelete} viewLabel="My View" />,
+      <SavedViewDeleteModal
+        onClose={mockOnClose}
+        onDelete={mockOnDelete}
+        viewLabel="My View"
+        modalProps={modalProps}
+      />,
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
@@ -32,7 +45,12 @@ describe('SavedViewDeleteModal', () => {
 
   it('closes without calling onDelete on Cancel', () => {
     render(
-      <SavedViewDeleteModal onClose={mockOnClose} onDelete={mockOnDelete} viewLabel="My View" />,
+      <SavedViewDeleteModal
+        onClose={mockOnClose}
+        onDelete={mockOnDelete}
+        viewLabel="My View"
+        modalProps={modalProps}
+      />,
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));

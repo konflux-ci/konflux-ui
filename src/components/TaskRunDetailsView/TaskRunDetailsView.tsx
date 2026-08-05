@@ -2,27 +2,28 @@ import * as React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Bullseye, Spinner } from '@patternfly/react-core';
 import { RouterParams } from '@routes/utils';
+import { useApplicationBreadcrumbs } from '~/components/Applications/breadcrumbs/breadcrumb-utils';
+import { DetailsPage } from '~/components/DetailsPage';
+import { createDetailsPageAction } from '~/components/DetailsPage/utils';
+import { StatusIconWithTextLabel } from '~/components/topology/StatusIcon';
 import { PipelineRunLabel, runStatus } from '~/consts/pipelinerun';
 import { CONFORMA_TASK } from '~/consts/security';
+import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { usePipelineRunV2 } from '~/hooks/usePipelineRunsV2';
-import { getErrorState } from '~/shared/utils/error-utils';
-import { TektonResourceLabel } from '~/types';
-import { downloadYamlAction } from '~/utils/common-utils';
-import { isResourceEnterpriseContract } from '~/utils/conforma-utils';
-import { getDisplayNameFromChildReferences, taskRunStatus } from '~/utils/pipeline-utils';
-import { FeatureFlagIndicator } from '../../feature-flags/FeatureFlagIndicator';
-import { useTaskRunV2 } from '../../hooks/useTaskRunsV2';
+import { useStatusOnFavicon } from '~/hooks/useStatusOnFavicon';
+import { useTaskRunV2 } from '~/hooks/useTaskRunsV2';
 import {
   PIPELINERUN_DETAILS_PATH,
   PIPELINERUN_LIST_PATH,
   PIPELINERUN_TASK_LIST,
   TASKRUN_DETAILS_PATH,
-} from '../../routes/paths';
-import { useNamespace } from '../../shared/providers/Namespace';
-import { useApplicationBreadcrumbs } from '../Applications/breadcrumbs/breadcrumb-utils';
-import { DetailsPage } from '../DetailsPage';
-import { createDetailsPageAction } from '../DetailsPage/utils';
-import { StatusIconWithTextLabel } from '../topology/StatusIcon';
+} from '~/routes/paths';
+import { useNamespace } from '~/shared/providers/Namespace';
+import { getErrorState } from '~/shared/utils/error-utils';
+import { TektonResourceLabel } from '~/types';
+import { downloadYamlAction } from '~/utils/common-utils';
+import { isResourceEnterpriseContract } from '~/utils/conforma-utils';
+import { getDisplayNameFromChildReferences, taskRunStatus } from '~/utils/pipeline-utils';
 
 export const TaskRunDetailsView: React.FC = () => {
   const { taskRunName } = useParams<RouterParams>();
@@ -33,9 +34,12 @@ export const TaskRunDetailsView: React.FC = () => {
   const [taskRun, loaded, error] = useTaskRunV2(namespace, taskRunName);
 
   const trStatus = React.useMemo(
-    () => loaded && taskRun && taskRunStatus(taskRun),
-    [loaded, taskRun],
+    () => (loaded && taskRun && !error ? taskRunStatus(taskRun) : null),
+    [loaded, taskRun, error],
   );
+
+  useStatusOnFavicon(trStatus);
+
   const applicationName = taskRun?.metadata?.labels?.[PipelineRunLabel.APPLICATION];
   const baseURL = TASKRUN_DETAILS_PATH.createPath({
     applicationName,

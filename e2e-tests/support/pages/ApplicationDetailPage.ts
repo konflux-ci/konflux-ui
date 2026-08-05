@@ -1,4 +1,5 @@
 import { Common } from '../../utils/Common';
+import { LogViewerHelper } from '../../utils/LogViewerHelper';
 import { pageTitles } from '../constants/PageTitle';
 import {
   addComponentPagePO,
@@ -16,19 +17,25 @@ export class ApplicationDetailPage {
     cy.testA11y(`${pageTitles.deploymentSettings} page`);
   }
 
-  checkBuildLog(tasklistItem: string, textToVerify: string, taskTimeout: number = 20000) {
-    cy.wait(10000);
+  checkBuildLog(tasklistItem: string, textToVerify: string, taskTimeout: number = 60000) {
     cy.get('span[class="pipeline-run-logs__namespan"]')
       .contains(tasklistItem, { timeout: taskTimeout })
       .scrollIntoView()
       .should('be.visible')
-      .click();
-    cy.get(buildLogModalContentPO.logText).should('contain.text', textToVerify);
+      .click({ force: true });
+    // Wait for the selected task's logs to finish fetching before searching.
+    LogViewerHelper.waitForLogFetch(taskTimeout);
+    LogViewerHelper.revealLogText(textToVerify, { timeout: taskTimeout });
   }
 
   checkPodLog(podName: string, textToVerify: string) {
-    cy.get(buildLogModalContentPO.podLogNavList).contains('a', podName).click();
-    cy.get(buildLogModalContentPO.logText).should('contain.text', textToVerify);
+    cy.get(buildLogModalContentPO.podLogNavList)
+      .contains('a', podName)
+      .scrollIntoView()
+      .should('be.visible')
+      .click();
+    LogViewerHelper.waitForLogFetch();
+    LogViewerHelper.revealLogText(textToVerify);
   }
 
   openBuildLog(componentName: string) {
@@ -47,7 +54,7 @@ export class ApplicationDetailPage {
   }
 
   closeBuildLog() {
-    cy.get(buildLogModalContentPO.closeButton).click();
+    cy.get(buildLogModalContentPO.closeButton).should('be.visible').click();
     cy.get(buildLogModalContentPO.modal).should('not.exist');
   }
 
