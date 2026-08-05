@@ -69,6 +69,7 @@ export type Props = {
   downloadAllLabel?: string;
   onDownloadAll?: () => Promise<Error>;
   onDownloadFullLogs?: (sectionIndex: number) => Promise<void>;
+  onViewFullLogs?: (sectionIndex: number) => void;
   taskRun: TaskRunKind | null;
   isLoading: boolean;
   errorMessage: string | null;
@@ -87,6 +88,7 @@ const LogViewer: React.FC<Props> = ({
   downloadAllLabel,
   onDownloadAll,
   onDownloadFullLogs,
+  onViewFullLogs,
   taskRun,
   isLoading,
   errorMessage,
@@ -358,6 +360,7 @@ const LogViewer: React.FC<Props> = ({
                 onScroll={handleScroll}
                 readyToNavigate={!isLoading}
                 onDownloadFullLogs={onDownloadFullLogs}
+                onViewFullLogs={onViewFullLogs}
               />
             )}
           </div>

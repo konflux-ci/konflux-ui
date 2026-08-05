@@ -29,6 +29,7 @@ type SectionedVirtualRowProps = {
   isLineHighlighted: (lineNumber: number) => boolean;
   onToggleSection: (sectionIndex: number) => void;
   onDownloadFullLogs?: (sectionIndex: number) => Promise<void>;
+  onViewFullLogs?: (sectionIndex: number) => void;
   renderLogLine: (flatLineIndex: number) => React.ReactNode;
   onLineClick: (lineNumber: number, event: React.MouseEvent) => void;
 };
@@ -41,6 +42,7 @@ export const SectionedVirtualRow: React.FC<SectionedVirtualRowProps> = ({
   isLineHighlighted,
   onToggleSection,
   onDownloadFullLogs,
+  onViewFullLogs,
   renderLogLine,
   onLineClick,
 }) => {
@@ -93,6 +95,9 @@ export const SectionedVirtualRow: React.FC<SectionedVirtualRowProps> = ({
               row.isTailed && onDownloadFullLogs
                 ? () => onDownloadFullLogs(row.sectionIndex)
                 : undefined
+            }
+            onViewFullLogs={
+              row.isTailed && onViewFullLogs ? () => onViewFullLogs(row.sectionIndex) : undefined
             }
           />
         </div>

@@ -48,6 +48,7 @@ export interface VirtualizedLogContentProps {
    */
   readyToNavigate?: boolean;
   onDownloadFullLogs?: (sectionIndex: number) => Promise<void>;
+  onViewFullLogs?: (sectionIndex: number) => void;
 }
 
 export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
@@ -62,6 +63,7 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
   currentSearchMatch,
   readyToNavigate = true,
   onDownloadFullLogs,
+  onViewFullLogs,
 }) => {
   const scrollRef = React.useRef<HTMLDivElement | null>(null);
   const [itemSize, setItemSize] = React.useState(VIRTUALIZATION_CONFIG.FALLBACK_LINE_HEIGHT);
@@ -326,6 +328,7 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
                 isLineHighlighted={isLineHighlighted}
                 onToggleSection={toggleSection}
                 onDownloadFullLogs={onDownloadFullLogs}
+                onViewFullLogs={onViewFullLogs}
                 renderLogLine={renderLine}
                 onLineClick={handleLineClick}
               />
@@ -344,6 +347,11 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
           onDownloadFullLogs={
             stickyRow.isTailed && onDownloadFullLogs
               ? () => onDownloadFullLogs(stickyRow.sectionIndex)
+              : undefined
+          }
+          onViewFullLogs={
+            stickyRow.isTailed && onViewFullLogs
+              ? () => onViewFullLogs(stickyRow.sectionIndex)
               : undefined
           }
         />

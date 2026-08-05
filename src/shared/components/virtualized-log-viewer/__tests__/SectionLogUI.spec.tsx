@@ -148,6 +148,40 @@ describe('SectionHeaderButton', () => {
 
     expect(onDownload).toHaveBeenCalledTimes(1);
   });
+
+  it('should show view full logs button when isTailed and onViewFullLogs provided', () => {
+    render(
+      <SectionHeaderButton
+        row={makeRow({ isTailed: true })}
+        onToggle={jest.fn()}
+        onViewFullLogs={jest.fn()}
+      />,
+    );
+
+    expect(screen.getByText('View full logs')).toBeInTheDocument();
+    expect(screen.getByTestId('view-full-logs-BUILD')).toBeInTheDocument();
+  });
+
+  it('should not show view full logs button when onViewFullLogs is not provided', () => {
+    render(<SectionHeaderButton row={makeRow({ isTailed: true })} onToggle={jest.fn()} />);
+
+    expect(screen.queryByText('View full logs')).not.toBeInTheDocument();
+  });
+
+  it('should call onViewFullLogs on click', () => {
+    const onView = jest.fn();
+
+    render(
+      <SectionHeaderButton
+        row={makeRow({ isTailed: true })}
+        onToggle={jest.fn()}
+        onViewFullLogs={onView}
+      />,
+    );
+
+    fireEvent.click(screen.getByTestId('view-full-logs-BUILD'));
+    expect(onView).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe('FoldIndicatorLine', () => {
@@ -197,6 +231,21 @@ describe('StickySectionHeaderBar', () => {
     );
 
     expect(screen.getByText('Download full logs')).toBeInTheDocument();
+  });
+
+  it('should pass onViewFullLogs to SectionHeaderButton', () => {
+    render(
+      <StickySectionHeaderBar
+        row={makeRow({ isTailed: true })}
+        pushUpOffset={0}
+        itemSize={20}
+        onToggle={jest.fn()}
+        onLineClick={jest.fn()}
+        onViewFullLogs={jest.fn()}
+      />,
+    );
+
+    expect(screen.getByText('View full logs')).toBeInTheDocument();
   });
 
   it('should apply transform and height styles', () => {
