@@ -11,7 +11,7 @@ describe('useLogSearch', () => {
   ];
 
   it('should return no matches for empty search text', () => {
-    const { result } = renderHook(() => useLogSearch({ lines }));
+    const { result } = renderHook(() => useLogSearch(lines));
 
     expect(result.current.matchCount).toBe(0);
     expect(result.current.currentMatch).toBeUndefined();
@@ -19,7 +19,7 @@ describe('useLogSearch', () => {
   });
 
   it('should find matches across multiple lines', () => {
-    const { result } = renderHook(() => useLogSearch({ lines }));
+    const { result } = renderHook(() => useLogSearch(lines));
 
     act(() => result.current.setSearchText('INFO'));
 
@@ -29,7 +29,7 @@ describe('useLogSearch', () => {
   });
 
   it('should search case-insensitively', () => {
-    const { result } = renderHook(() => useLogSearch({ lines }));
+    const { result } = renderHook(() => useLogSearch(lines));
 
     act(() => result.current.setSearchText('info'));
 
@@ -38,7 +38,7 @@ describe('useLogSearch', () => {
 
   it('should find multiple matches within a single line', () => {
     const repeatingLines = ['foo bar foo baz foo'];
-    const { result } = renderHook(() => useLogSearch({ lines: repeatingLines }));
+    const { result } = renderHook(() => useLogSearch(repeatingLines));
 
     act(() => result.current.setSearchText('foo'));
 
@@ -47,7 +47,7 @@ describe('useLogSearch', () => {
   });
 
   it('should navigate forward through matches with nextMatch', () => {
-    const { result } = renderHook(() => useLogSearch({ lines }));
+    const { result } = renderHook(() => useLogSearch(lines));
 
     act(() => result.current.setSearchText('INFO'));
 
@@ -61,7 +61,7 @@ describe('useLogSearch', () => {
   });
 
   it('should wrap around from last to first with nextMatch', () => {
-    const { result } = renderHook(() => useLogSearch({ lines }));
+    const { result } = renderHook(() => useLogSearch(lines));
 
     act(() => result.current.setSearchText('INFO'));
 
@@ -74,7 +74,7 @@ describe('useLogSearch', () => {
   });
 
   it('should navigate backward through matches with prevMatch', () => {
-    const { result } = renderHook(() => useLogSearch({ lines }));
+    const { result } = renderHook(() => useLogSearch(lines));
 
     act(() => result.current.setSearchText('INFO'));
 
@@ -87,7 +87,7 @@ describe('useLogSearch', () => {
   });
 
   it('should wrap around from first to last with prevMatch', () => {
-    const { result } = renderHook(() => useLogSearch({ lines }));
+    const { result } = renderHook(() => useLogSearch(lines));
 
     act(() => result.current.setSearchText('INFO'));
 
@@ -96,7 +96,7 @@ describe('useLogSearch', () => {
   });
 
   it('should return correct 1-indexed scrollToRow', () => {
-    const { result } = renderHook(() => useLogSearch({ lines }));
+    const { result } = renderHook(() => useLogSearch(lines));
 
     act(() => result.current.setSearchText('ERROR'));
 
@@ -106,7 +106,7 @@ describe('useLogSearch', () => {
   });
 
   it('should reset currentMatchIndex when search text changes', () => {
-    const { result } = renderHook(() => useLogSearch({ lines }));
+    const { result } = renderHook(() => useLogSearch(lines));
 
     act(() => result.current.setSearchText('INFO'));
     act(() => result.current.nextMatch());
@@ -119,7 +119,7 @@ describe('useLogSearch', () => {
   });
 
   it('should keep currentMatch valid when lines shrink', () => {
-    const { result, rerender } = renderHook(({ l }) => useLogSearch({ lines: l }), {
+    const { result, rerender } = renderHook(({ l }) => useLogSearch(l), {
       initialProps: { l: lines },
     });
 
@@ -135,7 +135,7 @@ describe('useLogSearch', () => {
   });
 
   it('should return no matches when search text does not match any line', () => {
-    const { result } = renderHook(() => useLogSearch({ lines }));
+    const { result } = renderHook(() => useLogSearch(lines));
 
     act(() => result.current.setSearchText('NONEXISTENT'));
 
@@ -145,7 +145,7 @@ describe('useLogSearch', () => {
   });
 
   it('should handle empty lines array', () => {
-    const { result } = renderHook(() => useLogSearch({ lines: [] }));
+    const { result } = renderHook(() => useLogSearch([]));
 
     act(() => result.current.setSearchText('test'));
 

@@ -183,7 +183,7 @@ const LogViewer: React.FC<Props> = ({
     currentMatchIndex,
     nextMatch,
     prevMatch,
-  } = useLogSearch({ lines: allLines });
+  } = useLogSearch(allLines);
 
   const scrollToRow = searchScrollToRow || (autoScroll ? allLines.length : 0);
 

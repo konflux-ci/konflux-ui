@@ -1,10 +1,6 @@
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react';
 import { SearchedWord } from '../virtualized-log-viewer/types';
 
-type UseLogSearchParams = {
-  lines: string[];
-};
-
 type UseLogSearchResult = {
   searchText: string;
   setSearchText: (value: string) => void;
@@ -16,7 +12,7 @@ type UseLogSearchResult = {
   scrollToRow: number;
 };
 
-export const useLogSearch = ({ lines }: UseLogSearchParams): UseLogSearchResult => {
+export const useLogSearch = (lines: string[]): UseLogSearchResult => {
   const [searchText, setSearchText] = useState<string>('');
   const [currentMatchIndex, setCurrentMatchIndex] = useState<number>(0);
 
