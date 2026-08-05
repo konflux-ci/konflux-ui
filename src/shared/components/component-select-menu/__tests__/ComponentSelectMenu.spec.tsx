@@ -13,6 +13,15 @@ const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return <FormikProvider value={formikBag}>{children}</FormikProvider>;
 };
 
+const SingleSelectTestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const formikBag = useFormik({
+    initialValues: { components: '' },
+    onSubmit: () => {},
+  });
+
+  return <FormikProvider value={formikBag}>{children}</FormikProvider>;
+};
+
 describe('ComponentSelectMenu', () => {
   const options = ['Item 1', 'Item 2', 'Item 3'];
   const groupedOptions = {
@@ -81,6 +90,31 @@ describe('ComponentSelectMenu', () => {
     });
   });
 
+  it('deselects an item when clicking it again in multi-select mode', async () => {
+    render(
+      <TestWrapper>
+        <ComponentSelectMenu name="components" options={options} isMulti />
+      </TestWrapper>,
+    );
+
+    fireEvent.click(screen.getByText('Select components'));
+    const checkboxes = screen.getAllByRole('checkbox');
+    fireEvent.click(checkboxes[0]);
+    fireEvent.click(checkboxes[1]);
+
+    await waitFor(() => {
+      const badge = document.querySelector('.pf-v6-c-badge');
+      expect(badge).toHaveTextContent('2');
+    });
+
+    fireEvent.click(checkboxes[0]);
+
+    await waitFor(() => {
+      const badge = document.querySelector('.pf-v6-c-badge');
+      expect(badge).toHaveTextContent('1');
+    });
+  });
+
   it('handles "Select all" functionality', async () => {
     render(
       <TestWrapper>
@@ -93,6 +127,11 @@ describe('ComponentSelectMenu', () => {
     await waitFor(() => {
       const badge = document.querySelector('.pf-v6-c-badge');
       expect(badge).toHaveTextContent('3');
+    });
+
+    fireEvent.click(screen.getByText('Select all'));
+    await waitFor(() => {
+      expect(screen.getByText('Select components')).toBeInTheDocument();
     });
   });
 
@@ -115,6 +154,28 @@ describe('ComponentSelectMenu', () => {
     fireEvent.click(screen.getByRole('button', { name: 'toggle component menu' }));
     const checkbox = screen.getByRole('checkbox', { name: /Item 1/i });
     expect(checkbox).toBeChecked();
+  });
+
+  it('renders with defaultSelected in single-select mode', async () => {
+    const defaultSelected = [
+      { componentName: 'Item 1', applicationName: 'Group1' },
+    ] as CurrentComponentRef[];
+
+    render(
+      <SingleSelectTestWrapper>
+        <ComponentSelectMenu
+          name="components"
+          options={options}
+          defaultSelected={defaultSelected}
+        />
+      </SingleSelectTestWrapper>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'toggle component menu' }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('menuitem', { name: 'Item 1' })).toHaveClass('pf-m-selected');
+    });
   });
 
   it('renders with disableItem', () => {
