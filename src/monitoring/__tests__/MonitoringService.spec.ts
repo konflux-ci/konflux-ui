@@ -8,6 +8,8 @@ jest.mock('@sentry/react', () => ({
   captureMessage: jest.fn().mockReturnValue('event-id'),
   setUser: jest.fn(),
   browserTracingIntegration: jest.fn(),
+  startInactiveSpan: jest.fn(),
+  metrics: { distribution: jest.fn() },
 }));
 
 describe('MonitoringService', () => {
@@ -63,11 +65,9 @@ describe('MonitoringService', () => {
 
     const result = service.captureException(new Error('test'), { key: 'value' });
 
-    expect(consoleMock.error).toHaveBeenCalledWith(
-      'captureException',
-      expect.any(Error),
-      { key: 'value' },
-    );
+    expect(consoleMock.error).toHaveBeenCalledWith('captureException', expect.any(Error), {
+      key: 'value',
+    });
     expect(result).toBe(service);
   });
 
@@ -101,6 +101,44 @@ describe('MonitoringService', () => {
 
     expect(consoleMock.info).toHaveBeenCalledWith('setUser', { id: '123', username: 'testuser' });
     expect(result).toBe(service);
+  });
+
+  it('should delegate startInactiveSpan to provider', async () => {
+    const config: MonitoringConfig = {
+      enabled: false,
+      provider: 'noop',
+      environment: 'development',
+    };
+
+    const service = new MonitoringService();
+    await service.initialize(config);
+
+    const span = service.startInactiveSpan({ name: 'test-span', op: 'ui.render' });
+
+    expect(span).toBeDefined();
+    expect(span).toHaveProperty('end');
+    expect(span).toHaveProperty('setAttribute');
+  });
+
+  it('should delegate reportMetric to provider', async () => {
+    const config: MonitoringConfig = {
+      enabled: false,
+      provider: 'noop',
+      environment: 'development',
+    };
+
+    const service = new MonitoringService();
+    await service.initialize(config);
+
+    service.reportMetric('render.duration', 1500, { unit: 'millisecond' });
+
+    expect(consoleMock.debug).toHaveBeenCalledWith(
+      '[noop-metric]',
+      'render.duration',
+      1500,
+      'millisecond',
+      undefined,
+    );
   });
 
   it('should create and initialize service via static create method', () => {
