@@ -219,9 +219,7 @@ export const useApplicationConformaResults = (
   );
 
   const combineConformaLogResults = React.useCallback(
-    (
-      results: UseQueryResult<Awaited<ReturnType<typeof resolveConformaResultFromTaskRun>>>[],
-    ) => ({
+    (results: UseQueryResult<Awaited<ReturnType<typeof resolveConformaResultFromTaskRun>>>[]) => ({
       logData: results.map((q) => q.data),
       allSettled: results.every((q) => !q.isLoading),
       aggregatedLogError:
@@ -232,7 +230,11 @@ export const useApplicationConformaResults = (
     [],
   );
 
-  const { logData, allSettled: logsSettled, aggregatedLogError } = useQueries({
+  const {
+    logData,
+    allSettled: logsSettled,
+    aggregatedLogError,
+  } = useQueries({
     queries: latestTaskRuns.map((tr) => ({
       queryKey: ['conforma-log', namespace, tr.metadata?.uid, isKubearchiveLogsEnabled] as const,
       queryFn: () => resolveConformaResultFromTaskRun(namespace, tr, isKubearchiveLogsEnabled),
