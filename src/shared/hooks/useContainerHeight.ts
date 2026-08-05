@@ -1,13 +1,13 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useResizeObserver } from './useResizeObserver';
 
 type UseContainerHeightReturn = {
-  containerRef: React.RefObject<HTMLDivElement>;
+  containerRef: React.RefCallback<HTMLDivElement>;
   viewerHeight: number | undefined;
 };
 
 export const useContainerHeight = (): UseContainerHeightReturn => {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [container, setContainer] = useState<HTMLDivElement | null>(null);
   const [viewerHeight, setViewerHeight] = useState<number | undefined>(undefined);
 
   const handleResize = useCallback<ResizeObserverCallback>((entries) => {
@@ -17,7 +17,7 @@ export const useContainerHeight = (): UseContainerHeightReturn => {
     }
   }, []);
 
-  useResizeObserver(handleResize, containerRef.current);
+  useResizeObserver(handleResize, container);
 
-  return useMemo(() => ({ containerRef, viewerHeight }), [viewerHeight]);
+  return useMemo(() => ({ containerRef: setContainer, viewerHeight }), [viewerHeight]);
 };
