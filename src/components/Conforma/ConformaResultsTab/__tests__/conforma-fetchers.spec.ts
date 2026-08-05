@@ -398,20 +398,20 @@ describe('mapConformaResultData', () => {
     ],
   };
 
-  it('threads code from violations through to UIConformaData', () => {
+  it('threads code from violations through to ConformaResultRow', () => {
     const result = mapConformaResultData([baseComponent]);
     const violation = result.find((r) => r.status === CONFORMA_RESULT_STATUS.violations);
     expect(violation?.code).toBe('cve_scan.missing');
     expect(violation?.title).toBe('Missing CVE scan');
   });
 
-  it('threads code from warnings through to UIConformaData', () => {
+  it('threads code from warnings through to ConformaResultRow', () => {
     const result = mapConformaResultData([baseComponent]);
     const warning = result.find((r) => r.status === CONFORMA_RESULT_STATUS.warnings);
     expect(warning?.code).toBe('api.deprecated');
   });
 
-  it('threads code from successes through to UIConformaData', () => {
+  it('threads code from successes through to ConformaResultRow', () => {
     const result = mapConformaResultData([baseComponent]);
     const success = result.find((r) => r.status === CONFORMA_RESULT_STATUS.successes);
     expect(success?.code).toBe('base_image.allowed');

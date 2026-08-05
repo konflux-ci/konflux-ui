@@ -28,9 +28,10 @@ import { ConformaGroupedTable } from './ConformaGroupedTable';
 import { ConformaResultsToolbar } from './ConformaResultsToolbar';
 import { ConformaSettlingAnnouncement } from './ConformaSettlingAnnouncement';
 import { ConformaSummaryBar } from './ConformaSummaryBar';
-import { useApplicationConformaResults } from './useApplicationConformaResults';
+// import { useApplicationConformaResults } from './useApplicationConformaResults';
 import { useConformaFilters } from './useConformaFilters';
 import './ConformaResultsTab.scss';
+import { useMockApplicationConformaResults as useApplicationConformaResults } from '../__data__/mockConformaResults';
 
 /**
  * Inner content component that reads filter state from FilterContext.
