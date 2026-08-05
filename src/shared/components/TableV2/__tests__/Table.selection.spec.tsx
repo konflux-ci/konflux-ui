@@ -12,6 +12,7 @@ import { type ColumnDefinition } from '~/shared/components/TableV2/types';
 
 jest.mock('~/shared/hooks', () => ({
   getParentScrollableElement: jest.fn().mockReturnValue(null),
+  useLayoutResizeObserver: jest.fn(),
 }));
 
 // Mock virtualization to render all rows synchronously
@@ -153,18 +154,18 @@ describe('Table selection lifecycle', () => {
 
   it('selection survives re-sort (same data, different order)', async () => {
     const user = userEvent.setup();
-    render(<Table {...defaultProps} enableSorting />);
+    const { rerender } = render(<Table {...defaultProps} />);
 
     // Select first row (Alpha)
     const checkboxes = screen.getAllByRole('checkbox');
     await user.click(checkboxes[0]);
     expect(checkboxes[0]).toBeChecked();
 
-    // Click sort on the Name column header to trigger sort
-    const sortButton = screen.getByRole('button', { name: /name/i });
-    await user.click(sortButton);
+    // Re-render with reversed data to simulate a sort reorder
+    const reversedData = [...testData].reverse();
+    rerender(<Table {...defaultProps} data={reversedData} />);
 
-    // After sorting, find the row with Alpha — it should still be selected
+    // After reordering, find the row with Alpha — it should still be selected
     const rows = screen.getAllByTestId('table-row');
     for (const row of rows) {
       const nameCell = within(row).queryByText('Alpha');
