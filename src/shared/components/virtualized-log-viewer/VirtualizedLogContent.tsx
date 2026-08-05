@@ -97,19 +97,23 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
     currentSearchMatch,
   });
 
+  const normalizedSectionsRef = React.useRef(effectiveNormalizedSections);
+  normalizedSectionsRef.current = effectiveNormalizedSections;
+
   React.useEffect(() => {
     if (!currentSearchMatch || currentSearchMatch.rowIndex < 0) return;
     const flatIndex = currentSearchMatch.rowIndex;
+    const currentSections = normalizedSectionsRef.current;
     let offset = 0;
-    for (let i = 0; i < effectiveNormalizedSections.length; i++) {
-      const sectionLineCount = effectiveNormalizedSections[i].lines.length;
+    for (let i = 0; i < currentSections.length; i++) {
+      const sectionLineCount = currentSections[i].lines.length;
       if (flatIndex < offset + sectionLineCount) {
         expandSection(i);
         return;
       }
       offset += sectionLineCount;
     }
-  }, [currentSearchMatch, expandSection, effectiveNormalizedSections]);
+  }, [currentSearchMatch, expandSection]);
 
   const measureCallbackRef = React.useCallback((node: HTMLDivElement | null) => {
     if (node) {
