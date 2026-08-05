@@ -163,8 +163,10 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
     if (!scrollToRow || scrollToRow <= 0) return undefined;
     const flatIndex = scrollToRow - 1;
     const displayIdx = flatLineIndexToDisplayRow.get(flatIndex);
-    return displayIdx !== undefined ? displayIdx + 1 : displayRows.length;
-  }, [scrollToRow, flatLineIndexToDisplayRow, displayRows.length]);
+    if (displayIdx !== undefined) return displayIdx + 1;
+    // auto-scroll-to-bottom: scrollToRow >= total lines means "follo the tail"
+    return scrollToRow >= allLines.length ? displayRows.length : undefined;
+  }, [scrollToRow, flatLineIndexToDisplayRow, displayRows.length, allLines.length]);
 
   const { clearScrollTracking } = useVirtualizedScroll({
     virtualizer,
