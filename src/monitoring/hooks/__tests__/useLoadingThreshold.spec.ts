@@ -5,10 +5,14 @@ const mockCaptureMessage = jest.fn();
 const mockEnd = jest.fn();
 const mockStartInactiveSpan = jest.fn(() => ({ end: mockEnd, setAttribute: jest.fn() }));
 
+let monitoringServiceOverride: Record<string, jest.Mock> | null = {
+  captureMessage: mockCaptureMessage,
+  startInactiveSpan: mockStartInactiveSpan,
+};
+
 jest.mock('~/monitoring', () => ({
-  monitoringService: {
-    captureMessage: (...args: unknown[]) => mockCaptureMessage(...args),
-    startInactiveSpan: (...args: unknown[]) => mockStartInactiveSpan(...args),
+  get monitoringService() {
+    return monitoringServiceOverride;
   },
 }));
 
@@ -22,6 +26,10 @@ describe('useLoadingThreshold', () => {
   beforeEach(() => {
     jest.useFakeTimers();
     jest.clearAllMocks();
+    monitoringServiceOverride = {
+      captureMessage: mockCaptureMessage,
+      startInactiveSpan: mockStartInactiveSpan,
+    };
   });
 
   afterEach(() => {
@@ -124,25 +132,19 @@ describe('useLoadingThreshold', () => {
   });
 
   it('works when monitoringService is null', () => {
-    const monitoringModule: { monitoringService: unknown } = jest.requireMock('~/monitoring');
-    const originalService = monitoringModule.monitoringService;
-    monitoringModule.monitoringService = null;
+    monitoringServiceOverride = null;
 
-    try {
-      const { rerender } = renderHook(
-        ({ isLoading }) => useLoadingThreshold({ ...defaultOptions, isLoading }),
-        { initialProps: { isLoading: true } },
-      );
+    const { rerender } = renderHook(
+      ({ isLoading }) => useLoadingThreshold({ ...defaultOptions, isLoading }),
+      { initialProps: { isLoading: true } },
+    );
 
-      // Advance past thresholds — should not throw
-      jest.advanceTimersByTime(10000);
+    // Advance past thresholds — should not throw
+    jest.advanceTimersByTime(10000);
 
-      rerender({ isLoading: false });
+    rerender({ isLoading: false });
 
-      expect(mockCaptureMessage).not.toHaveBeenCalled();
-    } finally {
-      monitoringModule.monitoringService = originalService;
-    }
+    expect(mockCaptureMessage).not.toHaveBeenCalled();
   });
 
   it('passes attributes to span and captureMessage', () => {
