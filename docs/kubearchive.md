@@ -270,6 +270,7 @@ When viewing logs from KubeArchive, only the **last 500 lines** per container ar
 
 - Tailed sections show a **"showing last N lines"** label in the section header.
 - Each tailed section has a **"Download full logs"** button that fetches the complete log (without the tail limit) and saves it as a file.
+- Each tailed section also has a **"View full logs"** button (with an external link icon) that opens the complete log in a new browser tab via the KubeArchive API.
 - This only applies to **archive source** logs. Cluster logs (live or terminated) are fetched in full.
 - The tail limit is configured via `KUBEARCHIVE_TAIL_LINES` in `src/kubearchive/const.ts`.
 

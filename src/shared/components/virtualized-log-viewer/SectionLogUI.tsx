@@ -3,6 +3,7 @@ import { Button, Flex, FlexItem, Content, Label } from '@patternfly/react-core';
 import { AngleDownIcon } from '@patternfly/react-icons/dist/esm/icons/angle-down-icon';
 import { AngleRightIcon } from '@patternfly/react-icons/dist/esm/icons/angle-right-icon';
 import { DownloadIcon } from '@patternfly/react-icons/dist/esm/icons/download-icon';
+import { ExternalLinkAltIcon } from '@patternfly/react-icons/dist/esm/icons/external-link-alt-icon';
 import { logger } from '~/monitoring/logger';
 import type { SectionHeaderRow } from './types';
 
@@ -13,7 +14,8 @@ export const SectionHeaderButton: React.FC<{
   row: SectionHeaderRow;
   onToggle: () => void;
   onDownloadFullLogs?: () => Promise<void>;
-}> = ({ row, onToggle, onDownloadFullLogs }) => {
+  onViewFullLogs?: () => void;
+}> = ({ row, onToggle, onDownloadFullLogs, onViewFullLogs }) => {
   const [isDownloading, setIsDownloading] = React.useState(false);
 
   const handleDownload = (e: React.MouseEvent) => {
@@ -54,11 +56,11 @@ export const SectionHeaderButton: React.FC<{
       </FlexItem>
       {row.isTailed && (
         <>
-          <FlexItem>
+          <FlexItem className="pf-v6-u-ml-md">
             <Label isCompact>showing last {row.lineCount} lines</Label>
           </FlexItem>
           {onDownloadFullLogs && (
-            <FlexItem>
+            <FlexItem className="pf-v6-u-ml-md">
               <Button
                 variant="link"
                 isInline
@@ -69,6 +71,19 @@ export const SectionHeaderButton: React.FC<{
               >
                 {!isDownloading && <DownloadIcon className="pf-v6-u-mr-xs" />}
                 Download full logs
+              </Button>
+            </FlexItem>
+          )}
+          {onViewFullLogs && (
+            <FlexItem className="pf-v6-u-ml-md">
+              <Button
+                variant="link"
+                isInline
+                onClick={onViewFullLogs}
+                data-test={`view-full-logs-${row.sectionName}`}
+              >
+                {!isDownloading && <ExternalLinkAltIcon className="pf-v6-u-mr-xs" />}
+                View full logs
               </Button>
             </FlexItem>
           )}
@@ -91,7 +106,16 @@ export const StickySectionHeaderBar: React.FC<{
   onToggle: () => void;
   onLineClick: (lineNumber: number, event: React.MouseEvent) => void;
   onDownloadFullLogs?: () => Promise<void>;
-}> = ({ row, pushUpOffset, itemSize, onToggle, onLineClick, onDownloadFullLogs }) => (
+  onViewFullLogs?: () => void;
+}> = ({
+  row,
+  pushUpOffset,
+  itemSize,
+  onToggle,
+  onLineClick,
+  onDownloadFullLogs,
+  onViewFullLogs,
+}) => (
   <div
     className="log-content__sticky-header"
     style={{
@@ -121,7 +145,12 @@ export const StickySectionHeaderBar: React.FC<{
       className="log-content__row-content log-content__sticky-header-content pf-v6-c-log-viewer__list-item"
       style={{ height: `${itemSize}px` }}
     >
-      <SectionHeaderButton row={row} onToggle={onToggle} onDownloadFullLogs={onDownloadFullLogs} />
+      <SectionHeaderButton
+        row={row}
+        onToggle={onToggle}
+        onDownloadFullLogs={onDownloadFullLogs}
+        onViewFullLogs={onViewFullLogs}
+      />
     </div>
   </div>
 );

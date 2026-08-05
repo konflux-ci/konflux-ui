@@ -261,15 +261,15 @@ const Logs: React.FC<LogsProps> = ({
 
   const isArchiveSource = isKubearchiveEnabled && source === ResourceSource.Archive;
 
-  const handleDownloadFullLogs = React.useCallback(
-    async (sectionIndex: number) => {
+  const getFullLogUrl = React.useCallback(
+    (sectionIndex: number) => {
       const section = sections[sectionIndex];
-      if (!section) return;
+      if (!section) return null;
 
       const containerName = containers.find(
         (c) => c.name.toUpperCase() === section.containerName,
       )?.name;
-      if (!containerName) return;
+      if (!containerName) return null;
 
       const urlOpts = {
         ns: resNamespace,
@@ -277,13 +277,31 @@ const Logs: React.FC<LogsProps> = ({
         path: 'log',
         queryParams: { container: containerName, follow: 'false' },
       };
-      const url = getK8sResourceURL(PodModel, undefined, urlOpts);
-
-      const text = await commonFetchText(url, { pathPrefix: KUBEARCHIVE_PATH_PREFIX });
-      const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
-      saveAs(blob, `${containerName}.log`);
+      return { url: getK8sResourceURL(PodModel, undefined, urlOpts), containerName };
     },
     [sections, containers, resNamespace, resName],
+  );
+
+  const handleDownloadFullLogs = React.useCallback(
+    async (sectionIndex: number) => {
+      const result = getFullLogUrl(sectionIndex);
+      if (!result) return;
+
+      const text = await commonFetchText(result.url, { pathPrefix: KUBEARCHIVE_PATH_PREFIX });
+      const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+      saveAs(blob, `${result.containerName}.log`);
+    },
+    [getFullLogUrl],
+  );
+
+  const handleViewFullLogs = React.useCallback(
+    (sectionIndex: number) => {
+      const result = getFullLogUrl(sectionIndex);
+      if (!result) return;
+
+      window.open(`/api/k8s/${KUBEARCHIVE_PATH_PREFIX}${result.url}`, '_blank');
+    },
+    [getFullLogUrl],
   );
 
   return (
@@ -294,6 +312,7 @@ const Logs: React.FC<LogsProps> = ({
       downloadAllLabel={downloadAllLabel}
       onDownloadAll={onDownloadAll}
       onDownloadFullLogs={isArchiveSource ? handleDownloadFullLogs : undefined}
+      onViewFullLogs={isArchiveSource ? handleViewFullLogs : undefined}
       taskRun={taskRun}
       isLoading={isLoading || isFetchingLogs}
       errorMessage={error ? t('An error occurred while retrieving the requested logs.') : null}
