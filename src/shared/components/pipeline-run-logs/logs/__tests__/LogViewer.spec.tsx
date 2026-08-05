@@ -10,6 +10,13 @@ import LogViewer from '../LogViewer';
 import { useAutoScrollWithResume } from '../useAutoScrollWithResume';
 import { useLogViewerTheme } from '../useLogViewerTheme';
 
+jest.mock('~/shared/hooks/useContainerHeight', () => ({
+  useContainerHeight: () => ({
+    containerRef: { current: document.createElement('div') },
+    viewerHeight: 600,
+  }),
+}));
+
 // Mock only external dependencies and browser APIs
 jest.mock('file-saver', () => ({
   saveAs: jest.fn(),
