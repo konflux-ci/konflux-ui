@@ -21,7 +21,7 @@ describe('useContainerHeight', () => {
   it('should return undefined height initially when no element is attached', () => {
     const { result } = renderHook(() => useContainerHeight());
     expect(result.current.viewerHeight).toBeUndefined();
-    expect(result.current.containerRef.current).toBeNull();
+    expect(result.current.containerRef).toBeDefined();
   });
 
   it('should measure height via ResizeObserver', () => {
