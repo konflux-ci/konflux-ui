@@ -1,32 +1,23 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import { useResizeObserver } from './useResizeObserver';
 
 type UseContainerHeightReturn = {
   containerRef: React.RefObject<HTMLDivElement>;
   viewerHeight: number | undefined;
 };
 
-type Props = {
-  isFullscreen: boolean;
-};
-
-export const useContainerHeight = ({ isFullscreen }: Props): UseContainerHeightReturn => {
+export const useContainerHeight = (): UseContainerHeightReturn => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [viewerHeight, setViewerHeight] = useState<number | undefined>(undefined);
 
-  useEffect(() => {
-    const element = containerRef.current;
-    if (!element) return;
+  const handleResize = useCallback<ResizeObserverCallback>((entries) => {
+    const height = entries[0]?.contentRect.height;
+    if (height > 0) {
+      setViewerHeight(height);
+    }
+  }, []);
 
-    const observer = new ResizeObserver((entries) => {
-      const height = entries[0]?.contentRect.height;
-      if (height > 0) {
-        setViewerHeight(height);
-      }
-    });
-
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, [isFullscreen]);
+  useResizeObserver(handleResize, containerRef.current);
 
   return useMemo(() => ({ containerRef, viewerHeight }), [viewerHeight]);
 };
