@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Flex, FlexItem } from '@patternfly/react-core';
-import { LockIcon, LockOpenIcon } from '@patternfly/react-icons/dist/esm/icons';
+import { LockIcon } from '@patternfly/react-icons/dist/esm/icons/lock-icon';
+import { LockOpenIcon } from '@patternfly/react-icons/dist/esm/icons/lock-open-icon';
 import { t_global_icon_color_status_danger_default as redColor } from '@patternfly/react-tokens/dist/js/t_global_icon_color_status_danger_default';
 import { t_global_icon_color_status_success_default as greenColor } from '@patternfly/react-tokens/dist/js/t_global_icon_color_status_success_default';
 

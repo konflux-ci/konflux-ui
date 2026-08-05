@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Label } from '@patternfly/react-core';
-import { ExclamationTriangleIcon } from '@patternfly/react-icons/dist/esm/icons';
+import { ExclamationTriangleIcon } from '@patternfly/react-icons/dist/esm/icons/exclamation-triangle-icon';
 import { css } from '@patternfly/react-styles';
 import {
   getRunStatusModifier,
