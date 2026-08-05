@@ -218,9 +218,7 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
 
     const sectionIndex = lineNumberToSectionIndexRef.current.get(highlightedLines.start);
     const awaitingExpand =
-      displayIdx === undefined &&
-      sectionIndex !== undefined &&
-      !expandedSections.has(sectionIndex);
+      displayIdx === undefined && sectionIndex !== undefined && !expandedSections.has(sectionIndex);
 
     if (awaitingExpand) return;
     if (!isNewHighlight && !targetImproved) return;

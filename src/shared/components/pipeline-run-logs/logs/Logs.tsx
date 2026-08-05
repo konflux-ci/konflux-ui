@@ -12,7 +12,11 @@ import { WebSocketFactory } from '../../../../k8s/web-socket/WebSocketFactory';
 import { PodModel } from '../../../../models/pod';
 import { TaskRunKind } from '../../../../types';
 import { PodKind, ContainerSpec, ContainerStatus } from '../../types';
-import { containerToLogSourceStatus, isContainerStepCompleted, LOG_SOURCE_TERMINATED } from '../utils';
+import {
+  containerToLogSourceStatus,
+  isContainerStepCompleted,
+  LOG_SOURCE_TERMINATED,
+} from '../utils';
 import LogViewer, { type Props as LogViewerProps } from './LogViewer';
 
 type LogSources = { [containerName: string]: string };

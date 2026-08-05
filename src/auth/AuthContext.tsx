@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Bullseye, Spinner } from '@patternfly/react-core';
 import { LOGGED_IN_QUERY_PARAM } from '~/analytics/AnalyticsService';
+import { monitoringService } from '~/monitoring';
 import { AuthContextType } from './type';
 import { useAuthAnalytics } from './useAuthAnalytics';
 import { setUserDataToLocalStorage } from './utils';
@@ -37,6 +38,12 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = React.memo(({ chi
             preferredUsername: data.preferredUsername,
           });
           setIsAuthenticated(true);
+
+          monitoringService?.setUser({
+            id: data.preferredUsername ?? undefined,
+            username: data.preferredUsername ?? undefined,
+            email: data.email ?? undefined,
+          });
         }
       } catch (err) {
         // eslint-disable-next-line no-console
