@@ -82,7 +82,7 @@ export const SectionHeaderButton: React.FC<{
                 onClick={onViewFullLogs}
                 data-test={`view-full-logs-${row.sectionName}`}
               >
-                {!isDownloading && <ExternalLinkAltIcon className="pf-v6-u-mr-xs" />}
+                <ExternalLinkAltIcon className="pf-v6-u-mr-xs" />
                 View full logs
               </Button>
             </FlexItem>
