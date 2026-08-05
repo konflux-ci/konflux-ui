@@ -65,6 +65,8 @@ export const Table = <TData,>({
   meta,
   enableSorting,
   enableExpansion,
+  enableRowSelection,
+  onRowSelectionChange,
   expandedContent,
   hasNextPage,
   isFetchingNextPage,
@@ -105,6 +107,8 @@ export const Table = <TData,>({
     responsiveColumnVisibility: columnVisibility,
     enableSorting,
     enableExpansion,
+    enableRowSelection,
+    onRowSelectionChange,
     meta,
   });
 
@@ -124,12 +128,19 @@ export const Table = <TData,>({
   });
 
   const columnWidths = computeColumnWidths(columns, columnState.visibleColumns);
-  const visibleColumnCount = table.getVisibleLeafColumns().length;
+  let visibleColumnCount = table.getVisibleLeafColumns().length;
+  if (enableExpansion) visibleColumnCount += 1;
+  if (enableRowSelection) visibleColumnCount += 1;
 
   return (
     <div data-test="table-v2" ref={tableRef}>
       <PfTable aria-label={ariaLabel} variant="compact" isExpandable={enableExpansion}>
-        <TableHeader table={table} columnWidths={columnWidths} enableExpansion={enableExpansion} />
+        <TableHeader
+          table={table}
+          columnWidths={columnWidths}
+          enableExpansion={enableExpansion}
+          enableRowSelection={enableRowSelection}
+        />
         <TableBody
           rows={rows}
           virtualRows={virtualRows}
@@ -137,6 +148,7 @@ export const Table = <TData,>({
           measureElement={virtualizer.measureElement}
           getRowId={getRowId}
           enableExpansion={enableExpansion}
+          enableRowSelection={enableRowSelection}
           expandedContent={expandedContent}
           visibleColumnCount={visibleColumnCount}
           isFetchingNextPage={isFetchingNextPage}
