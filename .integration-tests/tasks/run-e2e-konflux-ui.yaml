@@ -9,6 +9,8 @@ metadata:
 spec:
   description: >-
     Runs E2E tests for Konflux UI and pushes test artifacts to OCI repository.
+    For pr-check, decide-e2e-overlay diffs e2e-tests and may put PR files on a
+    shared emptyDir volume. Periodic jobs skip decide and run the Quay image as-is.
   params:
     - name: job-type
       type: string
@@ -38,6 +40,19 @@ spec:
       type: string
       default: 'quay-secret'
       description: 'Secret name for OCI registry authentication'
+    # From test-metadata (SNAPSHOT). Only used by decide-e2e-overlay on pr-check.
+    - name: git-revision
+      type: string
+      default: ''
+      description: 'PR commit SHA. Empty → no overlay decide.'
+    - name: source-repo-url
+      type: string
+      default: ''
+      description: 'PR source repo URL (fork or upstream).'
+    - name: target-repo-branch
+      type: string
+      default: 'main'
+      description: 'Branch to diff against (usually main).'
   volumes:
     # Enlarge /dev/shm for Cypress/Chrome; default container shm (~64MB) causes flaky browser crashes
     - name: dshm
@@ -47,6 +62,9 @@ spec:
     - name: kubeconfig-data
       emptyDir: {}
     - name: test-artifacts
+      emptyDir: {}
+    # Shared between decide-e2e-overlay and run-e2e-test (flags + optional files).
+    - name: e2e-overlay
       emptyDir: {}
     - name: oci-credentials
       secret:
@@ -116,8 +134,146 @@ spec:
 
         # Save to shared volume for next step
         echo "${CYPRESS_KONFLUX_BASE_URL}" > /shared/base-url
-
         echo "Setup complete. Ready for E2E tests."
+
+    # Decide (pr-check only): diff e2e-tests, write flags + optional files to /e2e-overlay.
+    - name: decide-e2e-overlay
+      when:
+        - input: '$(params.job-type)'
+          operator: in
+          values: ['pr-check']
+      image: quay.io/konflux-qe-incubator/konflux-qe-tools:latest
+      volumeMounts:
+        - name: e2e-overlay
+          mountPath: /e2e-overlay
+      env:
+        - name: GIT_REVISION
+          value: $(params.git-revision)
+        - name: SOURCE_REPO_URL
+          value: $(params.source-repo-url)
+        - name: TARGET_BRANCH
+          value: $(params.target-repo-branch)
+        - name: GITHUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: $(params.github-credentials-secret)
+              key: token
+              optional: true
+      script: |
+        #!/usr/bin/env bash
+        set -euo pipefail
+
+        FLAGS=/e2e-overlay/flags
+        mkdir -p /e2e-overlay
+
+        OVERLAY_E2E=false
+        USE_PR_ENTRYPOINT=false
+        CONTAINERFILE_CHANGED=false
+
+        write_flags() {
+          {
+            echo "OVERLAY_E2E=${OVERLAY_E2E}"
+            echo "USE_PR_ENTRYPOINT=${USE_PR_ENTRYPOINT}"
+            echo "CONTAINERFILE_CHANGED=${CONTAINERFILE_CHANGED}"
+          } > "${FLAGS}"
+          echo ""
+          echo "=== Flags written to ${FLAGS} ==="
+          cat "${FLAGS}"
+        }
+
+        echo "=== decide-e2e-overlay ==="
+        echo "git-revision:      ${GIT_REVISION:-<empty>}"
+        echo "source-repo-url:   ${SOURCE_REPO_URL:-<empty>}"
+        echo "target-branch:     ${TARGET_BRANCH:-main}"
+
+        if [[ -z "${GIT_REVISION}" ]]; then
+          echo "No git-revision → nothing to diff. Using image as-is."
+          write_flags
+          exit 0
+        fi
+
+        UPSTREAM="https://github.com/konflux-ci/konflux-ui.git"
+        SOURCE_REPO_URL="${SOURCE_REPO_URL:-${UPSTREAM}}"
+        TARGET_BRANCH="${TARGET_BRANCH:-main}"
+
+        # Optional token for private forks / rate limits (public clones work without it)
+        clone_url="${SOURCE_REPO_URL}"
+        upstream_url="${UPSTREAM}"
+        if [[ -n "${GITHUB_TOKEN:-}" ]]; then
+          clone_url="$(echo "${SOURCE_REPO_URL}" | sed -E "s#https://#https://x-access-token:${GITHUB_TOKEN}@#")"
+          upstream_url="$(echo "${UPSTREAM}" | sed -E "s#https://#https://x-access-token:${GITHUB_TOKEN}@#")"
+        fi
+
+        echo ""
+        echo "=== Cloning PR at ${GIT_REVISION} ==="
+        rm -rf /e2e-overlay/src
+        git -c advice.detachedHead=false clone -q --filter=blob:none --no-checkout "${clone_url}" /e2e-overlay/src
+        cd /e2e-overlay/src
+        # Deep enough for merge-base with upstream/main (three-dot PR diff)
+        git fetch -q --depth=100 origin "${GIT_REVISION}"
+        git -c advice.detachedHead=false checkout -q --force "${GIT_REVISION}"
+
+        echo "=== Fetching diff base upstream/${TARGET_BRANCH} ==="
+        git remote add upstream "${upstream_url}" 2>/dev/null || git remote set-url upstream "${upstream_url}"
+        git fetch -q --depth=100 upstream "${TARGET_BRANCH}"
+        BASE="upstream/${TARGET_BRANCH}"
+
+        # Prefer three-dot (merge-base...HEAD) = files this PR introduced.
+        # Two-dot vs main tip falsely flags e2e files when the branch is behind main.
+        if MERGE_BASE="$(git merge-base HEAD "${BASE}" 2>/dev/null)"; then
+          DIFF_FROM="${MERGE_BASE}"
+          echo "Diff range: ${MERGE_BASE}...HEAD (three-dot / PR changes)"
+        else
+          DIFF_FROM="${BASE}"
+          echo "WARNING: no merge-base (shallow history); falling back to ${BASE}...HEAD (two-dot)"
+        fi
+
+        changed_containerfile=0
+        changed_entrypoint=0
+        changed_e2e=0
+        changed_other=0
+        git diff --quiet "${DIFF_FROM}" HEAD -- e2e-tests/Containerfile || changed_containerfile=1
+        git diff --quiet "${DIFF_FROM}" HEAD -- e2e-tests/entrypoint.sh || changed_entrypoint=1
+        git diff --quiet "${DIFF_FROM}" HEAD -- e2e-tests || changed_e2e=1
+        git diff --quiet "${DIFF_FROM}" HEAD -- e2e-tests ':(exclude)e2e-tests/entrypoint.sh' || changed_other=1
+
+        echo ""
+        echo "=== Diff vs ${DIFF_FROM} ==="
+        echo "Containerfile changed:     ${changed_containerfile}"
+        echo "entrypoint.sh changed:     ${changed_entrypoint}"
+        echo "any e2e-tests changed:     ${changed_e2e}"
+        echo "e2e-tests excl entrypoint: ${changed_other}"
+
+        if [[ "${changed_containerfile}" -eq 1 ]]; then
+          CONTAINERFILE_CHANGED=true
+          echo ""
+          echo "WARNING: e2e-tests/Containerfile changed."
+          echo "We do NOT rebuild/push the test image in this pipeline yet."
+          echo "OS-level layers still come from quay.io/konflux_ui_qe/konflux-ui-tests."
+        fi
+
+        if [[ "${changed_entrypoint}" -eq 1 && "${changed_other}" -eq 0 ]]; then
+          USE_PR_ENTRYPOINT=true
+          echo ""
+          echo "Only entrypoint.sh changed → USE_PR_ENTRYPOINT=true"
+          cp -a e2e-tests/entrypoint.sh /e2e-overlay/entrypoint.sh
+          chmod a+rwx /e2e-overlay/entrypoint.sh
+
+        elif [[ "${changed_e2e}" -eq 1 ]]; then
+          OVERLAY_E2E=true
+          echo ""
+          echo "e2e-tests source changed → OVERLAY_E2E=true"
+          cp -a e2e-tests /e2e-overlay/e2e-tests
+          # decide step often runs as root; test image runs as node — yarn must be able to write
+          chmod -R a+rwX /e2e-overlay/e2e-tests
+
+        else
+          echo ""
+          echo "No e2e-tests changes → use Quay image as-is"
+        fi
+
+        rm -rf /e2e-overlay/src
+        write_flags
 
     - name: run-e2e-test
       image: quay.io/konflux_ui_qe/konflux-ui-tests:$(params.test-image-tag)
@@ -140,6 +296,8 @@ spec:
         - name: kubeconfig-data
           mountPath: /shared
           readOnly: true
+        - name: e2e-overlay
+          mountPath: /e2e-overlay
       env:
         - name: CYPRESS_USERNAME
           valueFrom:
@@ -171,7 +329,7 @@ spec:
         # Note: NOT using 'set -e' so script continues after test failure
         set -uo pipefail
 
-        echo "=== Loading configuration from setup step ==="
+        echo "=== Loading configuration ==="
 
         # Read base URL from shared volume
         if [ "$(params.job-type)" = "periodic-stage" ]; then
@@ -186,60 +344,103 @@ spec:
           fi
           export CYPRESS_KONFLUX_BASE_URL=$(cat /shared/base-url)
           export CYPRESS_LOCAL_CLUSTER=true
+          export CYPRESS_PERIODIC_RUN_STAGE=false
         fi
         echo "Konflux base URL: ${CYPRESS_KONFLUX_BASE_URL}"
 
         echo "=== Running E2E tests ==="
         SPEC_FILE="$(params.spec-file)"
-
         echo "Running test spec: ${SPEC_FILE}"
 
-        # Run tests and capture exit code (don't exit on failure)
+        # Flags from decide-e2e-overlay (missing on periodic → image as-is)
+        OVERLAY_E2E=false
+        USE_PR_ENTRYPOINT=false
+        CONTAINERFILE_CHANGED=false
+        if [ -f /e2e-overlay/flags ]; then
+          # shellcheck disable=SC1091
+          source /e2e-overlay/flags
+        fi
+        echo ""
+        echo "=== Overlay flags ==="
+        echo "OVERLAY_E2E=${OVERLAY_E2E}"
+        echo "USE_PR_ENTRYPOINT=${USE_PR_ENTRYPOINT}"
+        echo "CONTAINERFILE_CHANGED=${CONTAINERFILE_CHANGED}"
+
+        # Entrypoint writes to /tmp/artifacts — point that at our Tekton volume
+        rm -rf /tmp/artifacts
+        ln -s /artifacts /tmp/artifacts
+        mkdir -p /artifacts
+
+        echo ""
+        echo "=== Running E2E tests ==="
         set +e
-        yarn run cy:run --spec "${SPEC_FILE}"
-        TEST_RESULT=$?
+
+        # Run the tests based on the overlay flags
+
+        # Overlay mode: e2e-tests source changed, use them
+        if [ "${OVERLAY_E2E}" = "true" ]; then
+          echo "Mode: OVERLAY — running from /e2e-overlay/e2e-tests"
+          cd /e2e-overlay/e2e-tests
+          yarn install
+          yarn cypress install
+          yarn cypress run -b chrome --spec "${SPEC_FILE}"
+          TEST_RESULT=$?
+
+          echo "=== Collecting test artifacts ==="
+          cp -a cypress/* /artifacts/ 2>/dev/null || true
+          if [ -d .nyc_output ]; then
+            cp -a .nyc_output /artifacts/ || true
+          fi
+
+        # PR entrypoint mode: entrypoint.sh changed, use it
+        elif [ "${USE_PR_ENTRYPOINT}" = "true" ]; then
+          echo "Mode: PR ENTRYPOINT — /e2e-overlay/entrypoint.sh (tests from image /tmp/e2e)"
+          chmod +x /e2e-overlay/entrypoint.sh
+          bash /e2e-overlay/entrypoint.sh --spec "${SPEC_FILE}"
+          TEST_RESULT=$?
+
+        # No changes, proceed with the image entrypoint (runs tests, collects artifacts)
+        else
+          echo "Mode: IMAGE — yarn cy:run from /tmp/e2e"
+          yarn run cy:run --spec "${SPEC_FILE}"
+          TEST_RESULT=$?
+
+          echo "=== Collecting test artifacts ==="
+          if [ -d cypress/videos ]; then
+            cp -r cypress/videos /artifacts/ || true
+          fi
+          if [ -d cypress/screenshots ]; then
+            cp -r cypress/screenshots /artifacts/ || true
+          fi
+          for f in cypress/junit-*.xml; do
+            if [ -f "$f" ]; then
+              cp "$f" /artifacts/ || true
+            fi
+          done
+        fi
         set -e
 
         echo ""
         echo "=========================================="
         echo "Test completed with exit code: ${TEST_RESULT}"
         echo "=========================================="
-        echo ""
-
-        echo "=== Collecting test artifacts ==="
-        mkdir -p /artifacts
-
-        # Copy Cypress artifacts if they exist
-        if [ -d "cypress/videos" ]; then
-          echo "Copying videos..."
-          cp -r cypress/videos /artifacts/ || true
-        fi
-
-        if [ -d "cypress/screenshots" ]; then
-          echo "Copying screenshots..."
-          cp -r cypress/screenshots /artifacts/ || true
-        fi
-
-        # Copy test reports
-        for f in cypress/junit-*.xml; do
-          if [ -f "$f" ]; then
-            echo "Copying JUnit report: $f"
-            cp "$f" /artifacts/ || true
-          fi
-        done
 
         # Create a simple test log
-        echo "Test execution completed with exit code: ${TEST_RESULT}" > /artifacts/e2e-tests.log
-        echo "Timestamp: $(date)" >> /artifacts/e2e-tests.log
-        echo "Base URL: ${CYPRESS_KONFLUX_BASE_URL}" >> /artifacts/e2e-tests.log
+        {
+          echo "Test execution completed with exit code: ${TEST_RESULT}"
+          echo "Timestamp: $(date)"
+          echo "Base URL: ${CYPRESS_KONFLUX_BASE_URL}"
+          echo "OVERLAY_E2E=${OVERLAY_E2E}"
+          echo "USE_PR_ENTRYPOINT=${USE_PR_ENTRYPOINT}"
+          echo "CONTAINERFILE_CHANGED=${CONTAINERFILE_CHANGED}"
+        } > /artifacts/e2e-tests.log
 
         # Save test result for later steps
         echo "${TEST_RESULT}" > /artifacts/test-exit-code
 
         # List collected artifacts
         echo "Artifacts collected:"
-        ls -lah /artifacts/
-
+        ls -lah /artifacts/ || true
 
         # Now exit with the test result
         echo ""

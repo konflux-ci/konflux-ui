@@ -203,6 +203,13 @@ spec:
           value: $(params.cypress-credentials-secret)
         - name: cypress-cloud-secret
           value: $(params.cypress-cloud-secret)
+        # PR identity from SNAPSHOT (used by decide-e2e-overlay step on pr-check only)
+        - name: git-revision
+          value: $(tasks.test-metadata.results.git-revision)
+        - name: source-repo-url
+          value: $(tasks.test-metadata.results.source-repo-url)
+        - name: target-repo-branch
+          value: $(tasks.test-metadata.results.target-repo-branch)
   finally:
     - name: deprovision-kind-cluster
       when:
