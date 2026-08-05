@@ -35,6 +35,17 @@ export class Login {
     cy.get(localKonfluxLoginPO.username).type(username);
     cy.get(localKonfluxLoginPO.password).type(password, { log: false });
     cy.get(localKonfluxLoginPO.loginButton).click();
+
+    // Grant Access appears on some deploys
+    cy.get('body', { timeout: 30000 }).then(($body) => {
+      if ($body.find(localKonfluxLoginPO.grantAccessClass).length > 0) {
+        cy.contains(
+          localKonfluxLoginPO.grantAccessClass,
+          localKonfluxLoginPO.grantAccessText,
+        ).click();
+      }
+    });
+
     this.waitForApps();
   }
 
@@ -73,6 +84,14 @@ export class Login {
     console.log('Logging in to stage Konflux...');
     cy.visit(Cypress.env('KONFLUX_BASE_URL'));
     cy.get(stageLoginPO.dex).should('be.visible').click();
+
+    // Click through IDP selection page if it appears
+    cy.get('body').then(($body) => {
+      if ($body.find(stageLoginPO.idpRedHatSsoButton).length > 0) {
+        cy.get(stageLoginPO.idpRedHatSsoButton).click();
+      }
+    });
+
     cy.get(stageLoginPO.username).type(username);
     cy.get(stageLoginPO.password).type(password, { log: false });
     cy.get(stageLoginPO.loginButton).click();
@@ -83,6 +102,7 @@ export class Login {
         cy.get(stageLoginPO.approveButton).click();
       }
     });
+
     // Grant Access is always required
     cy.contains(stageLoginPO.grantAccessClass, stageLoginPO.grantAccessText).click();
 

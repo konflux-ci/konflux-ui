@@ -34,12 +34,17 @@ jest.mock('~/feature-flags/hooks', () => ({
   useIsOnFeatureFlag: jest.fn(),
 }));
 
+jest.mock('~/monitoring/logger', () => ({
+  logger: { warn: jest.fn(), error: jest.fn(), info: jest.fn(), debug: jest.fn() },
+}));
+
+const { logger }: { logger: Record<string, jest.Mock> } = jest.requireMock('~/monitoring/logger');
+
 const mockGetTaskRunLogs = getTaskRunLog as jest.Mock;
 const mockCommmonFetchJSON = createK8sUtilMock('commonFetchJSON');
 const mockUseTaskRunsForPipelineRuns = useTaskRunsForPipelineRuns as jest.Mock;
 const mockUsePipelineRunV2 = usePipelineRunV2 as jest.Mock;
 const mockUseIsOnFeatureFlag = useIsOnFeatureFlag as jest.Mock;
-
 const mockPipelineRunOwnerRef = [
   {
     kind: 'PipelineRun',
@@ -260,14 +265,86 @@ describe('useConformaResult', () => {
   });
 
   it('should return handle api errors', async () => {
-    mockGetTaskRunLogs.mockRejectedValue(new Error('Api error'));
+    const apiError = new Error('Api error');
+    mockGetTaskRunLogs.mockRejectedValue(apiError);
 
     const { result, waitForNextUpdate } = renderHookWithQueryClient('dummy-abcd');
     await waitForNextUpdate();
     const [ecResult, loaded] = result.current;
     expect(mockGetTaskRunLogs).toHaveBeenCalled();
+    expect(logger.warn).toHaveBeenCalledWith(
+      'Failed to resolve Conforma result from TaskRun',
+      { error: 'Api error' },
+    );
     expect(loaded).toBe(true);
     expect(ecResult).toBeUndefined();
+  });
+
+  it('should reset stale data when taskRunId changes', async () => {
+    const firstTaskRun = {
+      metadata: {
+        namespace: 'test-ns',
+        name: 'test-taskrun',
+        uid: 'first-uid',
+        ownerReferences: mockPipelineRunOwnerRef,
+      },
+      status: { podName: 'pod-first' },
+    };
+    const secondTaskRun = {
+      metadata: {
+        namespace: 'test-ns',
+        name: 'test-taskrun-2',
+        uid: 'second-uid',
+        ownerReferences: mockPipelineRunOwnerRef,
+      },
+      status: { podName: 'pod-second' },
+    };
+
+    mockUseTaskRunsForPipelineRuns.mockImplementation(
+      (_namespace: string, _pipelineRunName: string, taskName?: string) => {
+        if (taskName === EC_TASK) {
+          return [
+            [firstTaskRun],
+            true,
+            undefined,
+            jest.fn(),
+            { hasNextPage: false, isFetchingNextPage: false },
+          ];
+        }
+        return [[], true, undefined, jest.fn(), { hasNextPage: false, isFetchingNextPage: false }];
+      },
+    );
+
+    const { result, waitForNextUpdate, rerender } = renderHookWithQueryClient('dummy-abcd');
+    await waitForNextUpdate();
+    expect(result.current[0]).toBeDefined();
+    expect(result.current[1]).toBe(true);
+
+    mockUseTaskRunsForPipelineRuns.mockImplementation(
+      (_namespace: string, _pipelineRunName: string, taskName?: string) => {
+        if (taskName === EC_TASK) {
+          return [
+            [secondTaskRun],
+            true,
+            undefined,
+            jest.fn(),
+            { hasNextPage: false, isFetchingNextPage: false },
+          ];
+        }
+        return [[], true, undefined, jest.fn(), { hasNextPage: false, isFetchingNextPage: false }];
+      },
+    );
+    mockGetTaskRunLogs.mockResolvedValue(
+      `step-report-json :-\n{"success":true,"components":[]}\nstep-end :-`,
+    );
+
+    rerender();
+    expect(result.current[0]).toBeUndefined();
+    expect(result.current[1]).toBe(false);
+
+    await waitForNextUpdate();
+    expect(result.current[0]).toEqual([]);
+    expect(result.current[1]).toBe(true);
   });
 
   it('should use verify-conforma when verify task run does not exist', async () => {

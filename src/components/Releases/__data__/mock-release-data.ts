@@ -7,6 +7,7 @@ export const mockReleases = [
       creationTimestamp: '2023-02-01T10:30:00Z',
       labels: {
         'appstudio.openshift.io/application': 'test-app',
+        'appstudio.openshift.io/component': 'test-component',
       },
     },
     spec: {

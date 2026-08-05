@@ -17,6 +17,12 @@ import { TaskRunKind, TektonResourceLabel } from '../types';
 import { createKubearchiveWatchResource } from '../utils/kubearchive-filter-transform';
 import { GetNextPage, NextPageProps, useTRTaskRuns } from './useTektonResults';
 
+export type TaskRunWatchMeta = {
+  dataUpdatedAt: number;
+  isFetching: boolean;
+  refetch: () => Promise<unknown>;
+};
+
 /**
  * Hook for fetching TaskRuns with feature flag controlled data source switching.
  *
@@ -30,7 +36,7 @@ export const useTaskRunsV2 = (
   namespace: string | null,
   options?: Partial<Pick<WatchK8sResource, 'watch' | 'limit' | 'selector' | 'fieldSelector'>>,
   queryOptions?: TQueryInfiniteOptions<TaskRunKind[], Error, InfiniteData<TaskRunKind[], unknown>>,
-): [TaskRunKind[], boolean, unknown, GetNextPage, NextPageProps] => {
+): [TaskRunKind[], boolean, unknown, GetNextPage, NextPageProps, TaskRunWatchMeta] => {
   const enableKubearchive = useIsOnFeatureFlag('taskruns-kubearchive');
   const etcdRunsRef = React.useRef<TaskRunKind[]>([]);
 
@@ -56,7 +62,14 @@ export const useTaskRunsV2 = (
     data: clusterResources,
     isLoading: clusterLoading,
     error: clusterError,
-  } = useK8sWatchResource<TaskRunKind[]>(watchOptions, TaskRunModel, { retry: false });
+    dataUpdatedAt,
+    isFetching,
+    refetch,
+  } = useK8sWatchResource<TaskRunKind[]>(watchOptions, TaskRunModel, {
+    retry: false,
+    // Some callers pass a function staleTime for infinite queries; only numbers apply here.
+    ...(typeof queryOptions?.staleTime === 'number' ? { staleTime: queryOptions.staleTime } : {}),
+  });
 
   const etcdRuns = React.useMemo((): TaskRunKind[] => {
     if (clusterLoading || clusterError || !clusterResources) {
@@ -108,8 +121,14 @@ export const useTaskRunsV2 = (
     enableKubearchive && !!namespace && needsMoreData && (queryOptions?.enabled ?? true);
 
   // tekton historical data - only when we need more data
-  const [tektonTaskRuns, tektonLoaded, tektonError, tektonGetNextPage, tektonNextPageProps] =
-    useTRTaskRuns(
+  const [
+    tektonTaskRuns,
+    tektonLoaded,
+    tektonError,
+    tektonGetNextPage,
+    tektonNextPageProps,
+    tektonRefetch,
+  ] = useTRTaskRuns(
       shouldQueryTekton ? namespace : null,
       {
         selector: options?.selector,
@@ -131,6 +150,16 @@ export const useTaskRunsV2 = (
       enabled: shouldQueryKubearchive,
     },
   );
+
+  const kubearchiveRefetch = kubearchiveQuery.refetch;
+
+  const composedRefetch = React.useCallback(async () => {
+    const results = await Promise.all([
+      refetch(),
+      enableKubearchive ? kubearchiveRefetch() : tektonRefetch(),
+    ]);
+    return results[0];
+  }, [refetch, enableKubearchive, kubearchiveRefetch, tektonRefetch]);
 
   // Combine and return data based on feature flag
   return React.useMemo(() => {
@@ -186,7 +215,13 @@ export const useTaskRunsV2 = (
           isFetchingNextPage: kubearchiveQuery.isFetchingNextPage || false,
         };
 
-    return [combinedData, loaded, error, getNextPage, nextPageProps];
+    const watchMeta: TaskRunWatchMeta = {
+      dataUpdatedAt,
+      isFetching,
+      refetch: composedRefetch,
+    };
+
+    return [combinedData, loaded, error, getNextPage, nextPageProps, watchMeta];
   }, [
     enableKubearchive,
     kubearchiveQuery.data?.pages,
@@ -200,6 +235,9 @@ export const useTaskRunsV2 = (
     namespace,
     clusterLoading,
     clusterError,
+    dataUpdatedAt,
+    isFetching,
+    composedRefetch,
     tektonTaskRuns,
     shouldQueryTekton,
     tektonLoaded,

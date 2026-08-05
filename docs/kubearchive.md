@@ -56,6 +56,8 @@ src/
 
 > Archive resources only get added if their ID doesn't exist in cluster data.
 
+**Stale PipelineRun ghosts:** KubeArchive list responses are filtered in `hooks.ts` via `filterOutDeletedAndStaleRunningResources`. Deleted archive PipelineRuns with no `completionTime` and a `Succeeded` condition stuck at `Unknown` with reasons `Running`, `ResolvingTaskRef`, `ResolvingPipelineRef`, or `PipelineRunPending` are dropped so Activity does not show perpetual Running rows after live delete.
+
 ---
 
 ## 3. Fetching resources with archive support

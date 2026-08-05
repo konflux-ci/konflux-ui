@@ -6,6 +6,7 @@ export const stageLoginPO = {
   approveButton: 'input[name="approve"]',
   grantAccessClass: `.dex-btn-text`,
   grantAccessText: 'Grant Access',
+  idpRedHatSsoButton: 'a[title="Log in with redhat-sso"]',
 };
 
 export const localKonfluxLoginPO = {
@@ -13,6 +14,8 @@ export const localKonfluxLoginPO = {
   password: '#password',
   loginButton: '#submit-login',
   dex: `button[type="submit"]`,
+  grantAccessClass: `.dex-btn-text`,
+  grantAccessText: 'Grant Access',
 };
 
 export const openshiftLoginPO = {
