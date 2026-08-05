@@ -10,7 +10,7 @@ import type {
 
 export class NoOpProvider implements IMonitoringProvider<MonitoringConfig> {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async init(_: MonitoringConfig): Promise<void> {
+  init(_: MonitoringConfig): void {
     // Intentionally no-op
   }
 

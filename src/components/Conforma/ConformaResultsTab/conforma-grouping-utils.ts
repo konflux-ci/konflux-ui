@@ -23,6 +23,17 @@ export const countResultsByStatus = (results: ConformaResultRow[]) =>
     { totalViolations: 0, totalWarnings: 0, totalSuccesses: 0 },
   );
 
+const countByStatus = (rows: ConformaResultRow[]) =>
+  rows.reduce(
+    (acc, r) => {
+      if (r.status === CONFORMA_RESULT_STATUS.violations) acc.violations++;
+      else if (r.status === CONFORMA_RESULT_STATUS.warnings) acc.warnings++;
+      else if (r.status === CONFORMA_RESULT_STATUS.successes) acc.successes++;
+      return acc;
+    },
+    { violations: 0, warnings: 0, successes: 0 },
+  );
+
 export const groupByRule = (results: ConformaResultRow[]): GroupedConformaRow[] => {
   const map = new Map<string, ConformaResultRow[]>();
 
@@ -36,18 +47,11 @@ export const groupByRule = (results: ConformaResultRow[]): GroupedConformaRow[] 
     }
   }
 
-  return Array.from(map.entries()).map(([groupKey, rows]) => {
-    const counts = rows.reduce(
-      (acc, r) => {
-        if (r.status === CONFORMA_RESULT_STATUS.violations) acc.violations++;
-        else if (r.status === CONFORMA_RESULT_STATUS.warnings) acc.warnings++;
-        else if (r.status === CONFORMA_RESULT_STATUS.successes) acc.successes++;
-        return acc;
-      },
-      { violations: 0, warnings: 0, successes: 0 },
-    );
-    return { groupKey, ...counts, rows };
-  });
+  return Array.from(map.entries()).map(([groupKey, rows]) => ({
+    groupKey,
+    ...countByStatus(rows),
+    rows,
+  }));
 };
 
 export const groupByComponent = (
@@ -74,31 +78,34 @@ export const groupByComponent = (
     }
   }
 
-  return Array.from(map.entries()).map(([groupKey, rows]) => {
-    const counts = rows.reduce(
-      (acc, r) => {
-        if (r.status === CONFORMA_RESULT_STATUS.violations) acc.violations++;
-        else if (r.status === CONFORMA_RESULT_STATUS.warnings) acc.warnings++;
-        else if (r.status === CONFORMA_RESULT_STATUS.successes) acc.successes++;
-        return acc;
-      },
-      { violations: 0, warnings: 0, successes: 0 },
-    );
-    return { groupKey, ...counts, rows };
-  });
+  return Array.from(map.entries()).map(([groupKey, rows]) => ({
+    groupKey,
+    ...countByStatus(rows),
+    rows,
+  }));
 };
 
 export const filterResults = (
   results: ConformaResultRow[],
   searchText: string,
   statusFilters: string[],
+  componentFilters: string[] = [],
 ): ConformaResultRow[] =>
   results.filter((row) => {
-    if (searchText && !textMatch(row.title, searchText) && !textMatch(row.component, searchText)) {
+    if (
+      searchText &&
+      !textMatch(row.title, searchText) &&
+      !textMatch(row.component, searchText) &&
+      !textMatch(row.code, searchText)
+    ) {
       return false;
     }
 
     if (statusFilters.length > 0 && !statusFilters.includes(row.status)) {
+      return false;
+    }
+
+    if (componentFilters.length > 0 && !componentFilters.includes(row.component)) {
       return false;
     }
 
@@ -175,6 +182,7 @@ export const collapseArchDuplicates = (rows: ConformaResultRow[]): ConformaResul
           existing.images = [...existing.images, image];
         }
       }
+      existing.pipelineRunName = existing.pipelineRunName || row.pipelineRunName;
     } else {
       map.set(key, { ...row, images: [...row.images] });
     }

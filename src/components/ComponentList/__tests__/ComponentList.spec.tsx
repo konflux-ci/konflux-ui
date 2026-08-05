@@ -47,7 +47,7 @@ describe('ComponentList', () => {
 
   it('should render title and description', () => {
     renderComponentList();
-    expect(screen.getByRole('heading', { level: 3, name: /Components/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: /Components/i })).toBeInTheDocument();
     expect(
       screen.getAllByText(/A component is an image built from source code in a repository/).length,
     ).toBeGreaterThanOrEqual(1);
@@ -100,9 +100,8 @@ describe('ComponentList', () => {
     useAllComponentsMock.mockReturnValue([components, true, undefined]);
     const setFiltersMock = jest.fn();
     const onClearFiltersMock = jest.fn();
-    const { FilterContext: FilterContextObj } = await import(
-      '~/components/Filter/generic/FilterContext'
-    );
+    const { FilterContext: FilterContextObj } =
+      await import('~/components/Filter/generic/FilterContext');
     renderWithQueryClientAndRouter(
       <FilterContextObj.Provider
         value={{

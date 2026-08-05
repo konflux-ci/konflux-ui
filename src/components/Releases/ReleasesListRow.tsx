@@ -1,27 +1,29 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
-import { ReleaseColumnKeys, RELEASE_COLUMN_ORDER } from '../../consts/release';
-import { useReleaseStatus } from '../../hooks/useReleaseStatus';
 import {
   APPLICATION_RELEASE_DETAILS_PATH,
   APPLICATION_RELEASE_LIST_PATH,
+  COMPONENT_DETAILS_PATH,
   PIPELINERUN_DETAILS_PATH,
   SNAPSHOT_DETAILS_PATH,
-} from '../../routes/paths';
-import ActionMenu from '../../shared/components/action-menu/ActionMenu';
-import { RowFunctionArgs, TableData } from '../../shared/components/table';
-import { Timestamp } from '../../shared/components/timestamp/Timestamp';
-import { useNamespace } from '../../shared/providers/Namespace';
-import { ReleaseKind } from '../../types';
-import { calculateDuration } from '../../utils/pipeline-utils';
+} from '@routes/paths';
+import { StatusIconWithText } from '~/components/StatusIcon/StatusIcon';
+import { PipelineRunLabel } from '~/consts/pipelinerun';
+import { ReleaseColumnKeys, RELEASE_COLUMN_ORDER } from '~/consts/release';
+import { useReleaseStatus } from '~/hooks/useReleaseStatus';
+import ActionMenu from '~/shared/components/action-menu/ActionMenu';
+import { RowFunctionArgs, TableData } from '~/shared/components/table';
+import { Timestamp } from '~/shared/components/timestamp/Timestamp';
+import { useNamespace } from '~/shared/providers/Namespace';
+import { ReleaseKind } from '~/types';
+import { calculateDuration } from '~/utils/pipeline-utils';
 import {
   getNamespaceAndPRName,
   getTenantCollectorPipelineRunFromRelease,
   getManagedPipelineRunFromRelease,
   getTenantPipelineRunFromRelease,
   getFinalPipelineRunFromRelease,
-} from '../../utils/release-utils';
-import { StatusIconWithText } from '../StatusIcon/StatusIcon';
+} from '~/utils/release-utils';
 import { useReleaseActions } from './release-actions';
 import { releasesTableColumnClasses, getDynamicReleaseColumnClasses } from './ReleasesListHeader';
 
@@ -105,6 +107,26 @@ const ReleasesListRow: React.FC<React.PropsWithChildren<ReleasesListRowProps>> =
         <StatusIconWithText dataTestAttribute="release-status" status={status} />
       </TableData>
     ),
+    component: (() => {
+      const componentName = obj.metadata?.labels?.[PipelineRunLabel.COMPONENT];
+      return (
+        <TableData key="component" className={columnClasses.component}>
+          {componentName ? (
+            <Link
+              to={COMPONENT_DETAILS_PATH.createPath({
+                workspaceName: namespace,
+                applicationName,
+                componentName,
+              })}
+            >
+              {componentName}
+            </Link>
+          ) : (
+            '-'
+          )}
+        </TableData>
+      );
+    })(),
     releasePlan: (
       <TableData key="releasePlan" className={columnClasses.releasePlan}>
         {obj.spec.releasePlan}
