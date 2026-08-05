@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
+import { STALE_ARCHIVE_SUCCEEDED_REASONS } from '~/consts/pipelinerun';
 import { PipelineRunModel, ReleaseModel } from '~/models';
 import { PipelineRunKind, ReleaseCondition } from '~/types';
 import type { ReleaseKind } from '~/types/release';
@@ -296,6 +297,65 @@ describe('useKubearchiveListResourceQuery', () => {
       expect(result.current.data?.pages[0][0].metadata?.name).toBe('running-pipeline-run');
       expect(result.current.data?.pages[0][1].metadata?.name).toBe('completed-pipeline-run');
     });
+
+    it.each([...STALE_ARCHIVE_SUCCEEDED_REASONS])(
+      'should filter out deleted incomplete PipelineRuns with %s reason from archive data',
+      async (reason) => {
+        const ghostPipelineRun: PipelineRunKind = {
+          apiVersion: 'tekton.dev/v1',
+          kind: 'PipelineRun',
+          metadata: {
+            name: 'ghost-pipeline-run',
+            namespace: 'test-namespace',
+            uid: 'ghost-uid',
+            creationTimestamp: '2024-01-04T00:00:00Z',
+            deletionTimestamp: '2024-01-05T00:00:00Z',
+          },
+          spec: {},
+          status: {
+            conditions: [{ type: 'Succeeded', status: 'Unknown', reason }],
+            pipelineSpec: { tasks: [] },
+          },
+        };
+
+        const completedPipelineRun: PipelineRunKind = {
+          apiVersion: 'tekton.dev/v1',
+          kind: 'PipelineRun',
+          metadata: {
+            name: 'completed-pipeline-run',
+            namespace: 'test-namespace',
+            uid: 'completed-uid',
+            creationTimestamp: '2024-01-03T00:00:00Z',
+            deletionTimestamp: '2024-01-05T00:00:00Z',
+          },
+          spec: {},
+          status: {
+            completionTime: '2024-01-04T12:00:00Z',
+            conditions: [{ type: 'Succeeded', status: 'True', reason: 'Succeeded' }],
+            pipelineSpec: { tasks: [] },
+          },
+        };
+
+        mockK8sListResource.mockResolvedValue({
+          apiVersion: 'tekton.dev/v1',
+          kind: 'PipelineRunList',
+          metadata: {},
+          items: [ghostPipelineRun, completedPipelineRun],
+        });
+
+        const { result } = renderHook(
+          () => useKubearchiveListResourceQuery(pipelineRunResourceInit, PipelineRunModel),
+          { wrapper: createWrapper() },
+        );
+
+        await waitFor(() => {
+          expect(result.current.isSuccess).toBe(true);
+        });
+
+        expect(result.current.data?.pages[0]).toHaveLength(1);
+        expect(result.current.data?.pages[0][0].metadata?.name).toBe('completed-pipeline-run');
+      },
+    );
 
     it('should keep PipelineRuns with no conditions', async () => {
       const pipelineRunNoConditions: PipelineRunKind = {

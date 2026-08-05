@@ -314,6 +314,26 @@ export const mockSourceSecretBasicAuthForEdit: SecretKind = {
   },
 };
 
+/** Basic-auth source secret with password only (username key omitted). */
+export const mockSourceSecretBasicAuthPasswordOnlyForEdit: SecretKind = {
+  apiVersion: 'v1',
+  kind: 'Secret',
+  metadata: {
+    name: 'source-secret-basic-password-only',
+    namespace: 'test-ns',
+    labels: {
+      [SecretLabels.HOST_LABEL]: 'github.com',
+    },
+    annotations: {
+      [SecretLabels.REPO_ANNOTATION]: 'org/repo',
+    },
+  },
+  type: SecretType.basicAuth,
+  data: {
+    password: Base64.encode('token-pass'),
+  },
+};
+
 export const mockSourceSecretSSHForEdit: SecretKind = {
   apiVersion: 'v1',
   kind: 'Secret',

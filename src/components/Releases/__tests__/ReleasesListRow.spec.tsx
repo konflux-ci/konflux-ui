@@ -12,6 +12,9 @@ const mockRelease = {
   metadata: {
     name: 'test-release',
     creationTimestamp: '2023-01-20T14:13:29Z',
+    labels: {
+      'appstudio.openshift.io/component': 'test-component',
+    },
   },
   spec: {
     releasePlan: 'test-plan',
@@ -61,11 +64,30 @@ describe('ReleasesListRow', () => {
 
     expect(cells[0].children[0].innerHTML).toBe(mockRelease.metadata.name);
     expect(cells[2].innerHTML).toBe('1 hour 30 minutes');
-    expect(cells[4].innerHTML).toBe('test-plan');
-    expect(cells[5].innerHTML).toBe(
+    expect(cells[4].innerHTML).toBe(
+      '<a href="/ns//applications/test-app/components/test-component">test-component</a>',
+    );
+    expect(cells[5].innerHTML).toBe('test-plan');
+    expect(cells[6].innerHTML).toBe(
       '<a href="/ns//applications/test-app/snapshots/test-snapshot">test-snapshot</a>',
     );
     expect(status[0].innerHTML).toBe('Succeeded');
+  });
+
+  it('should show dash when component label is missing', () => {
+    const wrapper = render(
+      <ReleasesListRow
+        obj={mockPendingRelease}
+        columns={[]}
+        customData={{ applicationName: 'test-app' }}
+      />,
+      {
+        container: document.createElement('tr'),
+      },
+    );
+    const cells = wrapper.container.getElementsByTagName('td');
+    // Component column should show '-' when no labels are present
+    expect(cells[4].innerHTML).toBe('-');
   });
 
   it('should present pending releases appropriately', () => {
