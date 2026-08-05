@@ -17,6 +17,7 @@
 .log-content__gutter--sticky,
 .log-content__section-header-btn {
   pointer-events: auto;
+  color: var(--pf-v6-c-log-viewer__text--Color);
 }
 
 .log-content__sticky-header-content {
@@ -26,5 +27,9 @@
 
 .log-content__fold-indicator {
   font-style: italic;
-  color: var(--pf-t--global--text--color--disabled);
+  color: var(--pf-v6-c-log-viewer__index--Color);
+
+  .pf-m-dark & {
+    color: var(--pf-t--color--white);
+  }
 }
