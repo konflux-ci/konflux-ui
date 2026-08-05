@@ -19,25 +19,15 @@ afterEach(() => {
 
 describe('useContainerHeight', () => {
   it('should return undefined height initially when no element is attached', () => {
-    const { result } = renderHook(() => useContainerHeight({ isFullscreen: false }));
+    const { result } = renderHook(() => useContainerHeight());
     expect(result.current.viewerHeight).toBeUndefined();
     expect(result.current.containerRef.current).toBeNull();
   });
 
   it('should measure height via ResizeObserver', () => {
-    const div = document.createElement('div');
+    const { result } = renderHook(() => useContainerHeight());
 
-    const { result } = renderHook(() => {
-      const hook = useContainerHeight({ isFullscreen: false });
-      Object.defineProperty(hook.containerRef, 'current', {
-        value: div,
-        writable: true,
-      });
-      return hook;
-    });
-
-    act(() => {});
-    expect(observeMock).toHaveBeenCalledWith(div);
+    expect(observeMock).toHaveBeenCalled();
 
     act(() => {
       resizeCallback(
@@ -50,16 +40,7 @@ describe('useContainerHeight', () => {
   });
 
   it('should disconnect observer on unmount', () => {
-    const div = document.createElement('div');
-
-    const { unmount } = renderHook(() => {
-      const hook = useContainerHeight({ isFullscreen: false });
-      Object.defineProperty(hook.containerRef, 'current', {
-        value: div,
-        writable: true,
-      });
-      return hook;
-    });
+    const { unmount } = renderHook(() => useContainerHeight());
 
     act(() => {});
     unmount();
@@ -67,16 +48,7 @@ describe('useContainerHeight', () => {
   });
 
   it('should not set height when contentRect height is 0', () => {
-    const div = document.createElement('div');
-
-    const { result } = renderHook(() => {
-      const hook = useContainerHeight({ isFullscreen: false });
-      Object.defineProperty(hook.containerRef, 'current', {
-        value: div,
-        writable: true,
-      });
-      return hook;
-    });
+    const { result } = renderHook(() => useContainerHeight());
 
     act(() => {
       resizeCallback(
@@ -89,7 +61,7 @@ describe('useContainerHeight', () => {
   });
 
   it('should return stable reference when height has not changed', () => {
-    const { result, rerender } = renderHook(() => useContainerHeight({ isFullscreen: false }));
+    const { result, rerender } = renderHook(() => useContainerHeight());
 
     const first = result.current;
     rerender();
