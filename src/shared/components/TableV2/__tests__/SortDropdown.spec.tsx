@@ -7,17 +7,6 @@ import { useLocalStorage } from '~/shared/hooks/useLocalStorage';
 jest.mock('~/shared/hooks/useLocalStorage');
 const mockUseLocalStorage = jest.mocked(useLocalStorage);
 
-jest.mock('@patternfly/react-icons/dist/esm/icons/sort-alpha-down-icon', () => ({
-  SortAlphaDownIcon: (props: Record<string, unknown>) => (
-    <span data-test="sort-alpha-down-icon" {...props} />
-  ),
-}));
-jest.mock('@patternfly/react-icons/dist/esm/icons/sort-alpha-up-icon', () => ({
-  SortAlphaUpIcon: (props: Record<string, unknown>) => (
-    <span data-test="sort-alpha-up-icon" {...props} />
-  ),
-}));
-
 interface TestRow {
   name: string;
   status: string;

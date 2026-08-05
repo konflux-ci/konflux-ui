@@ -71,10 +71,12 @@ export const SortDropdown = <TData,>({ columns, columnStateKey }: SortDropdownPr
   };
 
   const SortIcon = columnState.sortDirection === 'asc' ? SortAlphaUpIcon : SortAlphaDownIcon;
+  const sortIconTestId =
+    columnState.sortDirection === 'asc' ? 'sort-alpha-up-icon' : 'sort-alpha-down-icon';
 
   return (
     <SelectDropdown
-      toggleText={<SortIcon />}
+      toggleText={<SortIcon data-test={sortIconTestId} />}
       toggleVariant="plain"
       options={groups}
       selected={selected}
