@@ -713,18 +713,16 @@ describe('LogViewer Integration Tests', () => {
   });
 
   describe('Search integration', () => {
-    it('should provide LogViewerContext to children', () => {
+    it('should render search input by default', () => {
       render(<LogViewer {...defaultProps} />);
 
-      // LogViewerContext is used by search functionality
       const searchInput = screen.queryByPlaceholderText('Search');
       expect(searchInput).toBeInTheDocument();
     });
 
-    it('should provide LogViewerToolbarContext to children', () => {
+    it('should render search input when showSearch is true', () => {
       render(<LogViewer {...defaultProps} showSearch={true} />);
 
-      // Search component should be able to access toolbar context
       const searchInput = screen.getByPlaceholderText('Search');
       expect(searchInput).toBeInTheDocument();
     });
