@@ -107,7 +107,7 @@ const LogViewer: React.FC<Props> = ({
   const { autoScroll, showResumeStreamButton, handleScroll, handleResumeClick } =
     useAutoScrollWithResume({
       allowAutoScroll,
-      activeLineTarget: lineNumberNavigationProps.highlightedLines,
+      activeLineTarget: enableLineNavigation ? lineNumberNavigationProps.highlightedLines : null,
       onScroll: onScrollProp,
     });
 

@@ -41,7 +41,7 @@ export interface VirtualizedLogContentProps {
   }) => void;
   searchText?: string;
   currentSearchMatch?: SearchedWord;
-  lineNumberNavigationProps: UseLineNumberNavigationResult;
+  lineNumberNavigationProps?: UseLineNumberNavigationResult;
 }
 
 export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
@@ -166,7 +166,11 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
     onScroll,
   });
 
-  const { highlightedLines, handleLineClick, isLineHighlighted } = lineNumberNavigationProps;
+  const {
+    highlightedLines = null,
+    handleLineClick = () => {},
+    isLineHighlighted = () => false,
+  } = lineNumberNavigationProps ?? {};
 
   React.useEffect(() => {
     if (!highlightedLines) return;

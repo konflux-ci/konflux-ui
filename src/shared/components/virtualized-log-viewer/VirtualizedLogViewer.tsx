@@ -19,7 +19,7 @@ export interface VirtualizedLogViewerProps {
     scrollOffset: number;
     scrollUpdateWasRequested: boolean;
   }) => void;
-  lineNumberNavigationProps: UseLineNumberNavigationResult | undefined;
+  lineNumberNavigationProps?: UseLineNumberNavigationResult;
 }
 
 export const VirtualizedLogViewer: React.FC<VirtualizedLogViewerProps> = ({

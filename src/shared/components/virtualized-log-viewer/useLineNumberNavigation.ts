@@ -58,9 +58,9 @@ export const useLineNumberNavigation = (): UseLineNumberNavigationResult => {
     return null;
   };
 
-  // Lazy initialization — parse hash once on mount.
-  const [highlightedLines, setHighlightedLines] = React.useState<HighlightedLineRange | null>(
-    getHighlightedLines,
+  // Lazy initialization — parse hash once on mount, only on eligible pages.
+  const [highlightedLines, setHighlightedLines] = React.useState<HighlightedLineRange | null>(() =>
+    shouldEnableUrlHash() ? getHighlightedLines() : null,
   );
 
   // Track the last hash to detect changes (including when hash is cleared)
