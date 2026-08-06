@@ -47,6 +47,8 @@ export interface VirtualizedLogContentProps {
    * true.
    */
   readyToNavigate?: boolean;
+  onDownloadFullLogs?: (sectionIndex: number) => Promise<void>;
+  onViewFullLogs?: (sectionIndex: number) => void;
 }
 
 export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
@@ -60,19 +62,23 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
   searchText = '',
   currentSearchMatch,
   readyToNavigate = true,
+  onDownloadFullLogs,
+  onViewFullLogs,
 }) => {
   const scrollRef = React.useRef<HTMLDivElement | null>(null);
   const [itemSize, setItemSize] = React.useState(VIRTUALIZATION_CONFIG.FALLBACK_LINE_HEIGHT);
   const charsPerLineRef = React.useRef(VIRTUALIZATION_CONFIG.FALLBACK_CHARS_PER_LINE);
-
-  const isMultiSection = sections.length > 1;
-  const { expandedSections, toggleSection, expandSection } = useSectionFold(sections);
 
   const internalNormalizedSections = React.useMemo(
     () => (normalizedSectionsProp ? null : sections.map(normalizeSection)),
     [normalizedSectionsProp, sections],
   );
   const effectiveNormalizedSections = normalizedSectionsProp ?? internalNormalizedSections ?? [];
+
+  const isMultiSection = effectiveNormalizedSections.length > 1;
+  const { expandedSections, toggleSection, expandSection } = useSectionFold(
+    effectiveNormalizedSections,
+  );
 
   const {
     displayRows,
@@ -321,6 +327,8 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
                 measureElement={virtualizer.measureElement}
                 isLineHighlighted={isLineHighlighted}
                 onToggleSection={toggleSection}
+                onDownloadFullLogs={onDownloadFullLogs}
+                onViewFullLogs={onViewFullLogs}
                 renderLogLine={renderLine}
                 onLineClick={handleLineClick}
               />
@@ -336,6 +344,16 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
           itemSize={itemSize}
           onToggle={() => toggleSection(stickyRow.sectionIndex)}
           onLineClick={handleLineClick}
+          onDownloadFullLogs={
+            stickyRow.isTailed && onDownloadFullLogs
+              ? () => onDownloadFullLogs(stickyRow.sectionIndex)
+              : undefined
+          }
+          onViewFullLogs={
+            stickyRow.isTailed && onViewFullLogs
+              ? () => onViewFullLogs(stickyRow.sectionIndex)
+              : undefined
+          }
         />
       )}
     </div>

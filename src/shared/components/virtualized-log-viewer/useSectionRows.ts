@@ -56,6 +56,7 @@ export const useSectionRows = (
         lineNumber: globalLineNumber,
         lineCount: sectionLines.length,
         isExpanded,
+        isTailed: sections[i].isTailed ?? false,
       });
       searchToDisplay.set(searchLine, headerDisplayIdx);
       searchToSection.set(searchLine, i);
