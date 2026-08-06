@@ -536,7 +536,17 @@ describe('LogViewer Integration Tests', () => {
     });
 
     it('should pass the URL hash line target to useAutoScrollWithResume so it can pause auto-scroll', () => {
-      window.location.hash = '#L3';
+      const originalPathname = window.location.pathname;
+      const originalSearch = window.location.search;
+      Object.defineProperty(window, 'location', {
+        configurable: true,
+        value: {
+          ...window.location,
+          pathname: '/app/logs',
+          search: '?task=test',
+          hash: '#L3',
+        },
+      });
 
       try {
         render(<LogViewer {...defaultProps} allowAutoScroll={true} />);
@@ -545,7 +555,15 @@ describe('LogViewer Integration Tests', () => {
           expect.objectContaining({ activeLineTarget: { start: 3, end: 3 } }),
         );
       } finally {
-        window.location.hash = '';
+        Object.defineProperty(window, 'location', {
+          configurable: true,
+          value: {
+            ...window.location,
+            pathname: originalPathname,
+            search: originalSearch,
+            hash: '',
+          },
+        });
       }
     });
 
