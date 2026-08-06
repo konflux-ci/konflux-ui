@@ -1,10 +1,12 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
   getSortedRowModel,
   getExpandedRowModel,
   type ColumnDef,
+  type OnChangeFn,
+  type RowSelectionState,
   type SortingState,
   type Table,
   type Row,
@@ -33,6 +35,10 @@ export interface UseTableOptions<TData> {
   enableSorting?: boolean;
   /** Enables expandable rows. */
   enableExpansion?: boolean;
+  /** Enables row selection checkboxes. */
+  enableRowSelection?: boolean;
+  /** Callback fired when row selection changes with the selected row data. */
+  onRowSelectionChange?: (selectedRows: TData[]) => void;
   /** Enables row grouping. Reserved for future use. */
   enableGrouping?: boolean;
   /** Arbitrary metadata passed to TanStack Table's `meta` option. */
@@ -127,6 +133,7 @@ export function useTable<TData>(options: UseTableOptions<TData>): UseTableResult
     responsiveColumnVisibility,
     enableSorting,
     enableExpansion,
+    enableRowSelection,
     meta,
   } = options;
 
@@ -143,6 +150,19 @@ export function useTable<TData>(options: UseTableOptions<TData>): UseTableResult
   );
 
   const columnOrder = columnState.columnOrder;
+
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+
+  const handleRowSelectionChange: OnChangeFn<RowSelectionState> = (updaterOrValue) => {
+    const next =
+      typeof updaterOrValue === 'function' ? updaterOrValue(rowSelection) : updaterOrValue;
+    setRowSelection(next);
+    if (options.onRowSelectionChange) {
+      const selectedIds = Object.keys(next).filter((k) => next[k]);
+      const selectedRows = data.filter((row) => selectedIds.includes(getRowId(row)));
+      options.onRowSelectionChange(selectedRows);
+    }
+  };
 
   const sorting: SortingState | undefined = useMemo(() => {
     if (!enableSorting || !columnState.sortColumn) return undefined;
@@ -161,10 +181,18 @@ export function useTable<TData>(options: UseTableOptions<TData>): UseTableResult
           getRowCanExpand: () => true,
         }
       : {}),
+    enableRowSelection: !!enableRowSelection,
+    ...(enableRowSelection
+      ? {
+          enableMultiRowSelection: true,
+          onRowSelectionChange: handleRowSelectionChange,
+        }
+      : {}),
     state: {
       columnVisibility,
       columnOrder,
       ...(sorting ? { sorting } : {}),
+      ...(enableRowSelection ? { rowSelection } : {}),
     },
     meta,
   });
