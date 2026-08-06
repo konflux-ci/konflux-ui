@@ -12,6 +12,8 @@ interface TableHeaderProps<TData> {
   columnWidths: ColumnWidth[];
   /** Whether to render an empty expand/collapse header cell. */
   enableExpansion?: boolean;
+  /** Whether to render an empty row selection header cell. */
+  enableRowSelection?: boolean;
 }
 
 /**
@@ -28,6 +30,7 @@ export const TableHeader = <TData,>({
   table,
   columnWidths,
   enableExpansion,
+  enableRowSelection,
 }: TableHeaderProps<TData>) => {
   const widthMap = new Map(columnWidths.map((w) => [w.id, w]));
 
@@ -35,6 +38,7 @@ export const TableHeader = <TData,>({
     <Thead data-test="table-header">
       {table.getHeaderGroups().map((headerGroup) => (
         <Tr role="row" key={headerGroup.id}>
+          {enableRowSelection && <Th screenReaderText="Row selection" />}
           {enableExpansion && <Th />}
           {headerGroup.headers.map((header) => {
             const colWidth = widthMap.get(header.column.id);
