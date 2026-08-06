@@ -150,7 +150,7 @@ const LogViewer: React.FC<Props> = ({
   };
 
   // Use containerRef to measure actual height for VirtualizedLogViewer
-  const { containerRef, viewerHeight } = useContainerHeight();
+  const { containerRef, containerHeight } = useContainerHeight();
 
   return (
     <LogViewerContext.Provider value={logViewerContextValue}>
@@ -307,12 +307,12 @@ const LogViewer: React.FC<Props> = ({
 
           {/* Log Viewer */}
           <div ref={containerRef} className="log-viewer__content">
-            {viewerHeight && (
+            {containerHeight && (
               <VirtualizedLogViewer
                 key={taskRun?.metadata?.uid || 'default'}
                 sections={sections}
                 normalizedSections={normalizedSections}
-                height={viewerHeight}
+                height={containerHeight}
                 scrollToRow={scrolledRow}
                 onScroll={handleScroll}
                 readyToNavigate={!isLoading}

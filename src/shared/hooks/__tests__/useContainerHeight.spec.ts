@@ -20,7 +20,7 @@ afterEach(() => {
 describe('useContainerHeight', () => {
   it('should return undefined height initially when no element is attached', () => {
     const { result } = renderHook(() => useContainerHeight());
-    expect(result.current.viewerHeight).toBeUndefined();
+    expect(result.current.containerHeight).toBeUndefined();
     expect(result.current.containerRef).toBeDefined();
   });
 
@@ -41,7 +41,7 @@ describe('useContainerHeight', () => {
       );
     });
 
-    expect(result.current.viewerHeight).toBe(400);
+    expect(result.current.containerHeight).toBe(400);
   });
 
   it('should disconnect observer on unmount', () => {
@@ -67,7 +67,7 @@ describe('useContainerHeight', () => {
       );
     });
 
-    expect(result.current.viewerHeight).toBeUndefined();
+    expect(result.current.containerHeight).toBeUndefined();
   });
 
   it('should return stable reference when height has not changed', () => {
