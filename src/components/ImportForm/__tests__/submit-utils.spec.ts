@@ -19,6 +19,12 @@ jest.mock('../../IntegrationTests/IntegrationTestForm/utils/create-utils', () =>
   createIntegrationTest: jest.fn(),
 }));
 
+// Mock isImageControllerEnabled - default to enabled
+const mockIsImageControllerEnabled = jest.fn().mockReturnValue(true);
+jest.mock('~/image-controller/conditional-checks', () => ({
+  isImageControllerEnabled: () => mockIsImageControllerEnabled(),
+}));
+
 const createApplicationMock = createApplication as jest.Mock;
 const createComponentMock = createComponent as jest.Mock;
 const createIntegrationTestMock = createIntegrationTest as jest.Mock;
@@ -219,7 +225,34 @@ describe('Submit Utils: createResources', () => {
     expect(createSecretWithLinkingComponentsMock).not.toHaveBeenCalled();
   });
 
+  it('should not create image repository when image controller is disabled', async () => {
+    mockIsImageControllerEnabled.mockReturnValue(false);
+    createApplicationMock.mockResolvedValue({ metadata: { name: 'test-app' } });
+    createComponentMock.mockResolvedValue({ metadata: { name: 'test-component' } });
+    await createResourcesWithLinkingComponents(
+      {
+        application: 'test-app',
+        inAppContext: false,
+        showComponent: true,
+        isPrivateRepo: false,
+        source: {
+          git: {
+            url: 'https://github.com/',
+          },
+        },
+        pipeline: 'dbcd',
+        componentName: 'component',
+      },
+      'test-ws-tenant',
+      [],
+    );
+    expect(createApplicationMock).toHaveBeenCalledTimes(2);
+    expect(createComponentMock).toHaveBeenCalledTimes(2);
+    expect(createImageRepositoryMock).toHaveBeenCalledTimes(0);
+  });
+
   afterEach(() => {
     jest.clearAllMocks();
+    mockIsImageControllerEnabled.mockReturnValue(true);
   });
 });

@@ -1,3 +1,4 @@
+import { isImageControllerEnabled } from '~/image-controller/conditional-checks';
 import { ApplicationKind, ImportSecret } from '../../types';
 import { SBOMEventNotification } from '../../types/konflux-public-info';
 import {
@@ -91,16 +92,18 @@ export const createResourcesWithLinkingComponents = async (
       undefined,
       componentAnnotations,
     );
-    await createImageRepository(
-      {
-        application,
-        component: componentName,
-        namespace,
-        isPrivate: isPrivateRepo,
-        notifications,
-      },
-      true,
-    );
+    if (isImageControllerEnabled()) {
+      await createImageRepository(
+        {
+          application,
+          component: componentName,
+          namespace,
+          isPrivate: isPrivateRepo,
+          notifications,
+        },
+        true,
+      );
+    }
   }
 
   if (shouldCreateApplication) {
@@ -128,13 +131,15 @@ export const createResourcesWithLinkingComponents = async (
       componentAnnotations,
     );
 
-    await createImageRepository({
-      application,
-      component: componentName,
-      namespace,
-      isPrivate: isPrivateRepo,
-      notifications,
-    });
+    if (isImageControllerEnabled()) {
+      await createImageRepository({
+        application,
+        component: componentName,
+        namespace,
+        isPrivate: isPrivateRepo,
+        notifications,
+      });
+    }
 
     await createSecretsWithLinkingComponents(secretsToCreate, componentName, namespace, false);
   }
