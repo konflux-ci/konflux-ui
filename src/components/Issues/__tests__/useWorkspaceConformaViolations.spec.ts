@@ -7,13 +7,11 @@ import {
 } from '~/components/Conforma/conforma-fetch-utils';
 import { PipelineRunLabel, PipelineRunType } from '~/consts/pipelinerun';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
-import { useApplications } from '~/hooks/useApplications';
 import { usePipelineRunsV2 } from '~/hooks/usePipelineRunsV2';
 import { useNamespace } from '~/shared/providers/Namespace';
 import type { PipelineRunKind } from '~/types';
 import { useWorkspaceConformaViolations } from '../useWorkspaceConformaViolations';
 
-jest.mock('~/hooks/useApplications', () => ({ useApplications: jest.fn() }));
 jest.mock('~/hooks/usePipelineRunsV2', () => ({ usePipelineRunsV2: jest.fn() }));
 jest.mock('~/shared/providers/Namespace', () => ({ useNamespace: jest.fn() }));
 jest.mock('~/feature-flags/hooks', () => ({ useIsOnFeatureFlag: jest.fn() }));
@@ -26,7 +24,6 @@ jest.mock('~/components/Conforma/conforma-fetch-utils', () => ({
   fetchConformaForPipeline: jest.fn(),
 }));
 
-const mockUseApplications = useApplications as jest.Mock;
 const mockUsePipelineRunsV2 = usePipelineRunsV2 as jest.Mock;
 const mockUseNamespace = useNamespace as jest.Mock;
 const mockUseIsOnFeatureFlag = useIsOnFeatureFlag as jest.Mock;
@@ -90,7 +87,6 @@ describe('useWorkspaceConformaViolations', () => {
 
     mockUseNamespace.mockReturnValue('test-ns');
     mockUseIsOnFeatureFlag.mockReturnValue(false);
-    mockUseApplications.mockReturnValue([[], true, undefined]);
     mockUsePipelineRunsV2.mockReturnValue([[], true, undefined]);
     mockSecurityTask.mockReturnValue('verify-conforma');
     mockFetchConforma.mockResolvedValue([]);
@@ -98,17 +94,6 @@ describe('useWorkspaceConformaViolations', () => {
 
   afterEach(() => {
     queryClient.clear();
-  });
-
-  it('returns loading state while apps are not loaded', () => {
-    mockUseApplications.mockReturnValue([[], false, undefined]);
-
-    const { result } = renderHook(() => useWorkspaceConformaViolations(), {
-      wrapper: createWrapper(),
-    });
-
-    expect(result.current.loaded).toBe(false);
-    expect(result.current.applications).toEqual([]);
   });
 
   it('returns loading state while pipeline runs are not loaded', () => {
@@ -119,20 +104,6 @@ describe('useWorkspaceConformaViolations', () => {
     });
 
     expect(result.current.loaded).toBe(false);
-  });
-
-  it('surfaces apps error via error field', async () => {
-    const appsError = new Error('apps failed');
-    mockUseApplications.mockReturnValue([[], true, appsError]);
-
-    const { result } = renderHook(() => useWorkspaceConformaViolations(), {
-      wrapper: createWrapper(),
-    });
-
-    await flushEffects();
-
-    expect(result.current.loaded).toBe(true);
-    expect(result.current.error).toBe(appsError);
   });
 
   it('surfaces pipeline runs error via error field', async () => {
