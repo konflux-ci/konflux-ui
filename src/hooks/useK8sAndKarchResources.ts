@@ -260,7 +260,7 @@ export function useK8sAndKarchResource<TResource extends K8sResourceCommon>(
   const { data: watchedResource } = useQuery<TResource>(
     shouldWatch
       ? {
-          ...createGetQueryOptions<TResource>(resourceInit),
+          ...createGetQueryOptions<TResource>(resourceInit, memoizedQueryOptions),
           refetchInterval: wsError ? POLLING_INTERVAL : undefined,
         }
       : { queryKey: ['disabled'], enabled: false },
