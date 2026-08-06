@@ -55,7 +55,7 @@ describe('useTokenization', () => {
       expect(firstCall).toBe(secondCall);
     });
 
-    it('should refresh cache when the lines array reference changes', () => {
+    it('should return correct result when lines array reference changes with different content', () => {
       const initialLines = ['Line A'];
       const updatedLines = ['Line B'];
 
@@ -66,14 +66,55 @@ describe('useTokenization', () => {
       const firstResult = result.current.tokenizeLine(0);
       expect(firstResult?.text).toBe('Line A');
 
-      // Re-render with a completely new array reference
       rerender({ lines: updatedLines });
 
       const secondResult = result.current.tokenizeLine(0);
-
       expect(secondResult?.text).toBe('Line B');
-      // The old object should be gone
       expect(firstResult).not.toBe(secondResult);
+    });
+
+    it('should preserve cache when lines array reference changes but content is the same', () => {
+      const initialLines = ['INFO: same line'];
+      const newReferenceLines = ['INFO: same line'];
+
+      const { result, rerender } = renderHook(({ lines }) => useTokenization(lines), {
+        initialProps: { lines: initialLines },
+      });
+
+      const firstResult = result.current.tokenizeLine(0);
+
+      rerender({ lines: newReferenceLines });
+
+      const secondResult = result.current.tokenizeLine(0);
+      expect(secondResult).toBe(firstResult);
+    });
+
+    it('should reuse cached tokens for identical lines at different indexes', () => {
+      const lines = ['duplicate line', 'other line', 'duplicate line'];
+
+      const { result } = renderHook(() => useTokenization(lines));
+
+      const firstCall = result.current.tokenizeLine(0);
+      const thirdCall = result.current.tokenizeLine(2);
+
+      expect(firstCall).toBe(thirdCall);
+    });
+
+    it('should preserve cache across section changes with overlapping content', () => {
+      const section1Lines = ['line A', 'line B'];
+      const section1And2Lines = ['line A', 'line B', 'line C', 'line D'];
+
+      const { result, rerender } = renderHook(({ lines }) => useTokenization(lines), {
+        initialProps: { lines: section1Lines },
+      });
+
+      const lineA = result.current.tokenizeLine(0);
+      const lineB = result.current.tokenizeLine(1);
+
+      rerender({ lines: section1And2Lines });
+
+      expect(result.current.tokenizeLine(0)).toBe(lineA);
+      expect(result.current.tokenizeLine(1)).toBe(lineB);
     });
   });
 
