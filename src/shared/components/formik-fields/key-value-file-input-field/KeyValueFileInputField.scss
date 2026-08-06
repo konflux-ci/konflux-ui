@@ -8,3 +8,14 @@
   margin-top: var(--pf-t--global--spacer--md);
   padding-top: var(--pf-t--global--spacer--sm);
 }
+
+// PatternFly FileUpload passes `disabled` to its TextArea but not `isDisabled`, so the
+// textarea wrapper never receives pf-m-disabled. Mirror disabled form-control styling here.
+.key-value--value-read-only .pf-v6-c-file-upload__file-details .pf-v6-c-form-control.pf-m-textarea {
+  --pf-v6-c-form-control--BackgroundColor: var(--pf-v6-c-form-control--m-disabled--BackgroundColor);
+  --pf-v6-c-form-control--Color: var(--pf-v6-c-form-control--m-disabled--Color);
+  --pf-v6-c-form-control--m-placeholder--Color: var(--pf-v6-c-form-control--m-disabled--Color);
+  --pf-v6-c-form-control--before--BorderStyle: none;
+  --pf-v6-c-form-control--after--BorderStyle: none;
+  cursor: not-allowed;
+}
