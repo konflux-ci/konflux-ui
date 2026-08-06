@@ -319,7 +319,7 @@ useEventListener('hashchange', (e) => { /* ... */ }, window);
 
 **Justified exceptions** where manual `addEventListener` is acceptable:
 
-- **Observer-based APIs** (`ResizeObserver`, `IntersectionObserver`, `MutationObserver`) -- these are not standard DOM events and have their own lifecycle patterns.
+- **Observer-based APIs** (`ResizeObserver`, `IntersectionObserver`, `MutationObserver`) -- these are not standard DOM events and have their own lifecycle patterns. For `ResizeObserver`, prefer the shared hooks `useResizeObserver` or `useLayoutResizeObserver` from `~/shared/hooks/` instead of creating observers manually.
 - **`useSyncExternalStore` subscriptions** -- the subscribe function follows React's external store contract rather than the event listener pattern (e.g., `useLocalStorage`).
 - **Dynamically created or non-React-managed DOM nodes** -- when the target element is obtained via a callback ref or created outside React's tree and its lifecycle does not align with a component mount/unmount cycle (e.g., fullscreen API with ref callbacks).
 - **`MediaQueryList` listeners in non-React contexts** -- when tracking multiple `matchMedia` queries in a single effect with paired setup/teardown (e.g., `useResponsiveColumns`).

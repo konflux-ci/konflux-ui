@@ -313,38 +313,6 @@ const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } = useI
 
 ## Common Hooks Reference
 
-### useEventListener
-
-Use `useEventListener` from `~/shared/hooks/useEventListener` for all browser event listeners instead of manual `addEventListener`/`removeEventListener` in `useEffect`. The hook handles cleanup automatically and stabilizes the callback via `useEvent`.
-
-```ts
-import { useEventListener } from '~/shared/hooks/useEventListener';
-
-// Listen on window (default target)
-useEventListener('hashchange', (e) => {
-  // handle hash change
-});
-
-// Listen on a specific element via ref
-useEventListener('scroll', handleScroll, containerRef);
-
-// Listen on window with options
-useEventListener('keydown', handleKeyDown, window, { capture: true });
-```
-
-**Signature:**
-
-```ts
-useEventListener<T extends HTMLElement | SVGAElement | MediaQueryList>(
-  eventName: string,
-  handler: (event: Event) => void,
-  target?: T | React.RefObject<T> | Window,  // default: window
-  options?: AddEventListenerOptions,
-): void
-```
-
-See `docs/best-practices.md` > "Custom Hooks" for justified exceptions where manual listeners are acceptable.
-
 ### useNamespace / useNamespaceInfo
 
 ```ts
