@@ -239,6 +239,62 @@ describe('useTheme', () => {
     expect(result.current.effectiveContrast).toBe(CONTRAST_HIGH);
   });
 
+  it('should migrate old-format bare string theme preference', () => {
+    mockLocalStorage.getItem.mockImplementation((key: string) => {
+      if (key === THEME_STORAGE_KEY) return 'dark'; // bare string, not JSON
+      return null;
+    });
+
+    const { result } = renderHook(() => useTheme(), { wrapper: TestWrapper });
+
+    expect(result.current.preference).toBe(THEME_DARK);
+    expect(result.current.effectiveTheme).toBe(THEME_DARK);
+    // Verify re-storage in new JSON format
+    expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
+      THEME_STORAGE_KEY,
+      JSON.stringify(THEME_DARK),
+    );
+  });
+
+  it('should migrate old-format bare string contrast preference', () => {
+    mockLocalStorage.getItem.mockImplementation((key: string) => {
+      if (key === CONTRAST_STORAGE_KEY) return 'high-contrast'; // bare string, not JSON
+      return null;
+    });
+
+    const { result } = renderHook(() => useTheme(), { wrapper: TestWrapper });
+
+    expect(result.current.contrastPreference).toBe(CONTRAST_HIGH);
+    expect(result.current.effectiveContrast).toBe(CONTRAST_HIGH);
+    // Verify re-storage in new JSON format
+    expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
+      CONTRAST_STORAGE_KEY,
+      JSON.stringify(CONTRAST_HIGH),
+    );
+  });
+
+  it('should fall back to system for invalid old-format theme values', () => {
+    mockLocalStorage.getItem.mockImplementation((key: string) => {
+      if (key === THEME_STORAGE_KEY) return 'invalid-value';
+      return null;
+    });
+
+    const { result } = renderHook(() => useTheme(), { wrapper: TestWrapper });
+
+    expect(result.current.preference).toBe(THEME_SYSTEM);
+  });
+
+  it('should fall back to system for invalid old-format contrast values', () => {
+    mockLocalStorage.getItem.mockImplementation((key: string) => {
+      if (key === CONTRAST_STORAGE_KEY) return 'invalid-value';
+      return null;
+    });
+
+    const { result } = renderHook(() => useTheme(), { wrapper: TestWrapper });
+
+    expect(result.current.contrastPreference).toBe(CONTRAST_SYSTEM);
+  });
+
   it('should not auto-enable high contrast when contrast is explicitly set to default', () => {
     mockLocalStorage.getItem.mockImplementation((key: string) => {
       if (key === CONTRAST_STORAGE_KEY) return JSON.stringify(CONTRAST_DEFAULT);
