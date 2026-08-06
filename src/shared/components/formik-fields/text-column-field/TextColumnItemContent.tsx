@@ -8,7 +8,8 @@ import {
   ButtonType,
   Tooltip,
 } from '@patternfly/react-core';
-import { MinusCircleIcon, GripVerticalIcon } from '@patternfly/react-icons/dist/esm/icons';
+import { GripVerticalIcon } from '@patternfly/react-icons/dist/esm/icons/grip-vertical-icon';
+import { MinusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/minus-circle-icon';
 import { InputField } from '~/shared/components/formik-base';
 import {
   TextColumnItemProps,
