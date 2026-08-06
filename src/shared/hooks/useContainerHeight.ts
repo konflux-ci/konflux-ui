@@ -11,7 +11,10 @@ export const useContainerHeight = (): UseContainerHeightReturn => {
   const [viewerHeight, setViewerHeight] = useState<number | undefined>(undefined);
 
   const handleResize = useCallback<ResizeObserverCallback>((entries) => {
-    const height = entries[0]?.contentRect.height;
+    const target = entries[0]?.target as HTMLElement | undefined;
+    if (!target) return;
+    const maxHeight = window.innerHeight - target.getBoundingClientRect().top;
+    const height = Math.min(target.clientHeight, maxHeight);
     if (height > 0) {
       setViewerHeight(height);
     }

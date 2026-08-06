@@ -31,7 +31,12 @@ describe('useContainerHeight', () => {
 
     act(() => {
       resizeCallback(
-        [{ contentRect: { height: 400 } }] as unknown as ResizeObserverEntry[],
+        [
+          {
+            contentRect: { height: 400 },
+            target: { clientHeight: 400, getBoundingClientRect: () => ({ top: 0 }) },
+          },
+        ] as unknown as ResizeObserverEntry[],
         {} as ResizeObserver,
       );
     });
@@ -52,7 +57,12 @@ describe('useContainerHeight', () => {
 
     act(() => {
       resizeCallback(
-        [{ contentRect: { height: 0 } }] as unknown as ResizeObserverEntry[],
+        [
+          {
+            contentRect: { height: 0 },
+            target: { clientHeight: 0, getBoundingClientRect: () => ({ top: 0 }) },
+          },
+        ] as unknown as ResizeObserverEntry[],
         {} as ResizeObserver,
       );
     });
