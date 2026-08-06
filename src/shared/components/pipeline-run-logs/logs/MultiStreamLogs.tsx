@@ -36,6 +36,7 @@ export const MultiStreamLogs: React.FC<MultiStreamLogsProps> = ({
 
   return (
     <Logs
+      key={resource?.metadata?.uid}
       resource={resource}
       containers={containers}
       allowAutoScroll
