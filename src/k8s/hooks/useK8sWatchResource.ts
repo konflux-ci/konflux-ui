@@ -12,7 +12,7 @@ import { createGetQueryOptions, createListqueryOptions, createQueryKeys } from '
 import { WebSocketOptions } from '../web-socket/types';
 import { useK8sQueryWatch } from './useK8sQueryWatch';
 
-const POLLING_INTERVAL = 10000;
+export const POLLING_INTERVAL = 10000;
 
 export const useK8sWatchResource = <R extends K8sResourceCommon | K8sResourceCommon[]>(
   resourceInit: WatchK8sResource,
