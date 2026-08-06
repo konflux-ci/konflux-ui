@@ -95,9 +95,7 @@ describe('cr-modals', () => {
   it('should render confirmation modal after successful submission', () => {
     const onClose = jest.fn();
 
-    render(
-      <ConfirmSubmissionComponentRelationModal modalProps={{ isOpen: true, onClose }} />,
-    );
+    render(<ConfirmSubmissionComponentRelationModal modalProps={{ isOpen: true, onClose }} />);
 
     expect(screen.getByText('Relationships updated!')).toBeInTheDocument();
     fireEvent.click(screen.getByText('Done'));

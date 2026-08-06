@@ -21,8 +21,14 @@ describe('SegmentedToggle', () => {
     );
 
     expect(screen.getByRole('group', { name: 'Example toggle' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Option A' })).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByRole('button', { name: 'Option B' })).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByRole('button', { name: 'Option A' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    expect(screen.getByRole('button', { name: 'Option B' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
 
     fireEvent.click(screen.getByRole('button', { name: 'Option B' }));
     expect(onChange).toHaveBeenCalledWith('b');

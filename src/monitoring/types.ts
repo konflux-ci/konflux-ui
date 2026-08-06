@@ -26,6 +26,25 @@ export interface UserContext {
   [key: string]: unknown;
 }
 
+/** Options for starting a span */
+export interface SpanOptions {
+  name: string;
+  op: string;
+  attributes?: Record<string, string | number | boolean>;
+}
+
+/** Options for reporting a metric */
+export interface MetricOptions {
+  unit?: string;
+  attributes?: Record<string, string | number | boolean>;
+}
+
+/** Minimal span interface returned by monitoring providers */
+export interface MonitoringSpan {
+  end(): void;
+  setAttribute(key: string, value: string | number | boolean): void;
+}
+
 export interface IMonitoringProvider<TConfig extends MonitoringConfig> {
   /** Initialize the monitoring provider with the given configuration. */
   init(config: TConfig): void;
@@ -38,4 +57,10 @@ export interface IMonitoringProvider<TConfig extends MonitoringConfig> {
 
   /** Associate user context with future events. */
   setUser(user: UserContext | null): void;
+
+  /** Start an inactive span for timing operations. Returns null if tracing is unavailable. */
+  startInactiveSpan(options: SpanOptions): MonitoringSpan | null;
+
+  /** Report a metric value (distribution). */
+  reportMetric(name: string, value: number, options?: MetricOptions): void;
 }

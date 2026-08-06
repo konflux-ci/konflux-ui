@@ -3,8 +3,11 @@ import { SentryProvider } from './providers/SentryProvider';
 import type {
   IMonitoringProvider,
   LogLevel,
+  MetricOptions,
   MonitoringConfig,
   MonitoringProviderId,
+  MonitoringSpan,
+  SpanOptions,
   UserContext,
 } from './types';
 
@@ -38,6 +41,14 @@ export class MonitoringService {
   setUser(user: UserContext | null): this {
     this.provider.setUser(user);
     return this;
+  }
+
+  startInactiveSpan(options: SpanOptions): MonitoringSpan | null {
+    return this.provider.startInactiveSpan(options);
+  }
+
+  reportMetric(name: string, value: number, options?: MetricOptions): void {
+    this.provider.reportMetric(name, value, options);
   }
 
   static create(config: MonitoringConfig): MonitoringService {

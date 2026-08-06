@@ -39,8 +39,7 @@ export const getResolvedKubernetesSecretType = (secret: SecretKind): SecretType 
     return secret.type as SecretType;
   }
   const fromLabel = secret.metadata?.labels?.[SecretLabels.K8S_TYPE_LABEL] as
-    | SecretType
-    | undefined;
+    SecretType | undefined;
   if (fromLabel) {
     return fromLabel;
   }

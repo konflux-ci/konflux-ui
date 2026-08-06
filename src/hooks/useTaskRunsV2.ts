@@ -129,13 +129,13 @@ export const useTaskRunsV2 = (
     tektonNextPageProps,
     tektonRefetch,
   ] = useTRTaskRuns(
-      shouldQueryTekton ? namespace : null,
-      {
-        selector: options?.selector,
-        limit: options?.limit,
-      } as TektonResultsOptions,
-      { ...(queryOptions ?? {}), enabled: shouldQueryTekton },
-    );
+    shouldQueryTekton ? namespace : null,
+    {
+      selector: options?.selector,
+      limit: options?.limit,
+    } as TektonResultsOptions,
+    { ...(queryOptions ?? {}), enabled: shouldQueryTekton },
+  );
 
   // KubeArchive historical data - only when we need more data
   const kubearchiveQuery = useKubearchiveListResourceQuery<TaskRunKind>(

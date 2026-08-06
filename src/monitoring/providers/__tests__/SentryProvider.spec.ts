@@ -9,6 +9,8 @@ jest.mock('@sentry/react', () => ({
   reactRouterBrowserTracingIntegration: jest
     .fn()
     .mockReturnValue({ name: 'ReactRouterBrowserTracing' }),
+  startInactiveSpan: jest.fn(),
+  metrics: { distribution: jest.fn() },
 }));
 
 describe('SentryProvider', () => {
@@ -161,5 +163,43 @@ describe('SentryProvider', () => {
 
     provider.setUser(null);
     expect(Sentry.setUser).toHaveBeenCalledWith(null);
+  });
+
+  it('should delegate startInactiveSpan to Sentry with correct options', () => {
+    const mockSpan = { end: jest.fn(), setAttribute: jest.fn() };
+    (Sentry.startInactiveSpan as jest.Mock).mockReturnValue(mockSpan);
+
+    const result = provider.startInactiveSpan({
+      name: 'test-span',
+      op: 'ui.render',
+      attributes: { component: 'TestComponent' },
+    });
+
+    expect(Sentry.startInactiveSpan).toHaveBeenCalledWith({
+      name: 'test-span',
+      op: 'ui.render',
+      attributes: { component: 'TestComponent' },
+    });
+    expect(result).toBe(mockSpan);
+  });
+
+  it('should return null from startInactiveSpan when Sentry returns undefined', () => {
+    (Sentry.startInactiveSpan as jest.Mock).mockReturnValue(undefined);
+
+    const result = provider.startInactiveSpan({ name: 'test', op: 'ui.render' });
+
+    expect(result).toBeNull();
+  });
+
+  it('should delegate reportMetric to Sentry.metrics.distribution', () => {
+    provider.reportMetric('render.duration', 1500, {
+      unit: 'millisecond',
+      attributes: { page: 'pipeline-list' },
+    });
+
+    expect(Sentry.metrics.distribution).toHaveBeenCalledWith('render.duration', 1500, {
+      unit: 'millisecond',
+      attributes: { page: 'pipeline-list' },
+    });
   });
 });
