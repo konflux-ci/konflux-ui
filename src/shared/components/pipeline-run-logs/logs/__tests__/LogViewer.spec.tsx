@@ -51,16 +51,6 @@ jest.mock('../useAutoScrollWithResume', () => {
   };
 });
 
-// Mock lodash-es debounce to make tests synchronous
-jest.mock('lodash-es', () => ({
-  ...jest.requireActual('lodash-es'),
-  debounce: (fn: (...args: unknown[]) => unknown) => {
-    const debounced = (...args: unknown[]) => fn(...args);
-    debounced.cancel = jest.fn();
-    return debounced;
-  },
-}));
-
 const mockSaveAs = jest.requireMock('file-saver').saveAs as jest.Mock;
 const mockUseFullscreen = useFullscreen as jest.Mock;
 const mockUseTheme = useTheme as jest.Mock;
