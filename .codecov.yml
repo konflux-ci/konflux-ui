@@ -17,6 +17,13 @@ coverage:
 
 ignore:
   - "**/*__data__*/*.ts"
+  - ".agents/**"
+  - ".claude/**"
+  - ".cursor/**"
+  - "skills/**"
+  - "docs/**"
+  - "*.md"
+  - "*.toml"
 
 comment:
   layout: "reach,diff,flags,files,footer"
