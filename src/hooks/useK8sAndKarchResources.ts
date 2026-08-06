@@ -1,9 +1,11 @@
 import * as React from 'react';
 import { hashKey } from '@tanstack/query-core';
+import { useQuery } from '@tanstack/react-query';
+import { createGetQueryOptions, createQueryKeys, useK8sWatchResource } from '~/k8s';
 import { useK8sQueryWatch } from '~/k8s/hooks/useK8sQueryWatch';
+import { POLLING_INTERVAL } from '~/k8s/hooks/useK8sWatchResource';
 import { WebSocketOptions } from '~/k8s/web-socket/types';
 import { fetchResourceWithK8sAndKubeArchive } from '~/kubearchive/resource-utils';
-import { createQueryKeys, useK8sWatchResource } from '../k8s';
 import { K8sResourceReadOptions } from '../k8s/k8s-fetch';
 import { TQueryOptions } from '../k8s/query/type';
 import { useKubearchiveListResourceQuery } from '../kubearchive/hooks';
@@ -255,8 +257,19 @@ export function useK8sAndKarchResource<TResource extends K8sResourceCommon>(
     watchOptions,
   );
 
+  const { data: watchedResource } = useQuery<TResource>(
+    shouldWatch
+      ? {
+          ...createGetQueryOptions<TResource>(resourceInit, memoizedQueryOptions),
+          refetchInterval: wsError ? POLLING_INTERVAL : undefined,
+        }
+      : { queryKey: ['disabled'], enabled: false },
+  );
+
+  const data = (shouldWatch && watchedResource) || result?.resource;
+
   return {
-    data: result?.resource,
+    data,
     source: result?.source,
     isLoading,
     fetchError,
