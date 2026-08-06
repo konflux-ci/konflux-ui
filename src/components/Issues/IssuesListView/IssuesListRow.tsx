@@ -3,7 +3,9 @@ import { Button, Flex, FlexItem, ModalVariant, capitalize } from '@patternfly/re
 import { createModalLauncher } from '~/components/modal/createModalLauncher';
 import { useModalLauncher } from '~/components/modal/ModalProvider';
 import { Issue, IssueState } from '~/kite/issue-type';
+import { useIssueActions } from '~/kite/kite-hooks';
 import { RowFunctionArgs, TableData, Timestamp } from '~/shared';
+import ActionMenu from '~/shared/components/action-menu/ActionMenu';
 import ExternalLink from '~/shared/components/links/ExternalLink';
 import { Truncate } from '~/shared/components/truncate-text/Truncate';
 import { IssueStatus } from '../IssueStatus';
@@ -12,6 +14,7 @@ import { severityIcon } from './utils/issue-utils';
 
 const IssuesListRow: React.FC<RowFunctionArgs<Issue>> = ({ obj: issue }) => {
   const showModal = useModalLauncher();
+  const actions = useIssueActions(issue);
 
   const LinksModal = () => (
     <Flex direction={{ default: 'column' }}>
@@ -88,6 +91,10 @@ const IssuesListRow: React.FC<RowFunctionArgs<Issue>> = ({ obj: issue }) => {
         ) : (
           '-'
         )}
+      </TableData>
+
+      <TableData className={issuesTableColumnClasses.kebab}>
+        <ActionMenu actions={actions} />
       </TableData>
     </>
   );
