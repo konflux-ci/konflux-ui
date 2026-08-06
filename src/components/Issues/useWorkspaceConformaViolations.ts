@@ -7,7 +7,6 @@ import {
 } from '~/components/Conforma/conforma-fetch-utils';
 import { PipelineRunLabel, PipelineRunType } from '~/consts/pipelinerun';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
-import { useApplications } from '~/hooks/useApplications';
 import { usePipelineRunsV2 } from '~/hooks/usePipelineRunsV2';
 import { logger } from '~/monitoring/logger';
 import { useNamespace } from '~/shared/providers/Namespace';
@@ -75,8 +74,6 @@ export const useWorkspaceConformaViolations = (): WorkspaceConformaViolations =>
   const namespace = useNamespace();
   const isKubearchiveLogsEnabled = useIsOnFeatureFlag('kubearchive-logs');
 
-  const [, appsLoaded, appsError] = useApplications(namespace);
-
   const [pipelineRuns, prsLoaded, prsError] = usePipelineRunsV2(namespace, {
     selector: SELECTOR_TEST_RUNS,
   });
@@ -123,8 +120,8 @@ export const useWorkspaceConformaViolations = (): WorkspaceConformaViolations =>
   }, [conformaPartialError]);
 
   return React.useMemo((): WorkspaceConformaViolations => {
-    const loaded = appsLoaded && prsLoaded;
-    const error = appsError ?? prsError ?? conformaAllError;
+    const loaded = prsLoaded;
+    const error = prsError ?? conformaAllError;
 
     if (!loaded || !allSettled) {
       return {
@@ -160,5 +157,5 @@ export const useWorkspaceConformaViolations = (): WorkspaceConformaViolations =>
     const totalWarnings = applications.reduce((s, a) => s + a.warningCount, 0);
 
     return { totalViolations, totalWarnings, applications, loaded: true, error, partialError: conformaPartialError };
-  }, [appsLoaded, appsError, prsLoaded, prsError, conformaData, allSettled, conformaAllError, conformaPartialError, targets]);
+  }, [prsLoaded, prsError, conformaData, allSettled, conformaAllError, conformaPartialError, targets]);
 };
