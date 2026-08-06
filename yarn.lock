@@ -1950,15 +1950,15 @@ __metadata:
   linkType: hard
 
 "@dotenvx/dotenvx@npm:^2.0.0":
-  version: 2.19.0
-  resolution: "@dotenvx/dotenvx@npm:2.19.0"
+  version: 2.19.1
+  resolution: "@dotenvx/dotenvx@npm:2.19.1"
   dependencies:
     "@dotenvx/primitives": "npm:^2.1.1"
     "@dotenvx/tooling": "npm:^1.0.3"
     yocto-spinner: "npm:^1.2.1"
   bin:
     dotenvx: src/cli/dotenvx.js
-  checksum: 10/ea6005ead5f13c4ae823cf56114f48993cc075e07673072c4410e928aaebdd7a9da31a26e27e5b4cfbae061d09878c05a8d3c86223b2f50aecfb7caa64890e42
+  checksum: 10/ea293fc172c085c09ba06cd65d57f5d234d76e9b0f797c1e170ef7398913a7e71529b402c2f69c08007b109d61e54dd0263103fac9a2898ab72056fbaa690f2d
   languageName: node
   linkType: hard
 
