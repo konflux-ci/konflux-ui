@@ -482,7 +482,7 @@ describe('Logs', () => {
       });
     });
 
-    it('should gracefully handle 404 errors (empty logs) from kubearch', async () => {
+    it('should gracefully handle 404 errors (empty logs) from archive source', async () => {
       const terminatedContainer: ContainerStatus = {
         name: 'container1',
         state: { terminated: { exitCode: 0 } },
@@ -509,14 +509,61 @@ describe('Logs', () => {
           {...defaultProps}
           resource={resourceWithStatus}
           containers={[{ name: 'container1' }]}
+          source={ResourceSource.Archive}
         />,
       );
 
       expect(commonFetchText as jest.Mock).toHaveBeenCalled();
 
-      // Should NOT show error message for 404 (missing logs) - should remain empty
+      // Should NOT show error message for archive 404 (missing logs) - should remain empty
       await waitFor(() => {
         expect(getLastSectionsData()).not.toContain('LOG FETCH ERROR');
+      });
+    });
+
+    it('should display error message for 404 errors from cluster source', async () => {
+      const terminatedContainer: ContainerStatus = {
+        name: 'container1',
+        state: { terminated: { exitCode: 0 } },
+        ready: false,
+        restartCount: 0,
+        image: 'test-image',
+        imageID: 'test-image-id',
+      };
+
+      const resourceWithStatus: PodKind = {
+        ...mockResource,
+        status: {
+          phase: 'Succeeded',
+          containerStatuses: [terminatedContainer],
+        },
+      };
+
+      (containerToLogSourceStatus as jest.Mock).mockReturnValue('terminated');
+      const error404 = Object.assign(
+        new Error('container step-build is waiting to start: ImagePullBackOff'),
+        { code: 404 },
+      );
+      (commonFetchText as jest.Mock).mockRejectedValue(error404);
+
+      render(
+        <Logs
+          {...defaultProps}
+          resource={resourceWithStatus}
+          containers={[{ name: 'container1' }]}
+          source={ResourceSource.Cluster}
+        />,
+      );
+
+      expect(commonFetchText as jest.Mock).toHaveBeenCalled();
+
+      // Cluster-sourced 404s carry meaningful messages that should be shown
+      await waitFor(() => {
+        const sectionsData = getLastSectionsData();
+        expect(sectionsData).toContain('LOG FETCH ERROR');
+        expect(sectionsData).toContain(
+          'container step-build is waiting to start: ImagePullBackOff',
+        );
       });
     });
 
