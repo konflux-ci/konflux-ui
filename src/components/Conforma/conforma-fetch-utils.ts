@@ -2,6 +2,7 @@ import {
   filterInvalidImageConformaRows,
   resolveConformaResultFromTaskRun,
 } from '~/components/Conforma/ConformaResultsTab/conforma-fetchers';
+import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { CONFORMA_TASK, EC_TASK } from '~/consts/security';
 import { k8sListResource } from '~/k8s';
 import { TaskRunModel } from '~/models/taskruns';
@@ -55,6 +56,38 @@ async function listSecurityTaskRuns(
     },
   });
   return res.items ?? [];
+}
+
+export async function fetchConformaForComponent(
+  namespace: string,
+  componentName: string,
+  isKubearchiveLogsEnabled: boolean,
+): Promise<ComponentConformaResult[]> {
+  for (const taskName of [EC_TASK, CONFORMA_TASK] as const) {
+    const res = await k8sListResource<TaskRunKind>({
+      model: TaskRunModel,
+      queryOptions: {
+        ns: namespace,
+        queryParams: {
+          labelSelector: {
+            matchLabels: {
+              [PipelineRunLabel.COMPONENT]: componentName,
+              [TektonResourceLabel.pipelineTask]: taskName,
+            },
+          },
+        },
+      },
+    });
+    const taskRuns = sortTaskRunsByTime(res.items ?? []);
+    if (taskRuns.length === 0) continue;
+    const conformaRaw = await resolveConformaResultFromTaskRun(
+      namespace,
+      taskRuns[0],
+      isKubearchiveLogsEnabled,
+    );
+    return filterInvalidImageConformaRows(conformaRaw?.components ?? []);
+  }
+  return [];
 }
 
 export async function fetchConformaForPipeline(

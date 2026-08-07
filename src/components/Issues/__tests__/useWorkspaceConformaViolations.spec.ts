@@ -1,57 +1,46 @@
 import * as React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, act } from '@testing-library/react-hooks';
-import {
-  fetchConformaForPipeline,
-  securityTaskForPipeline,
-} from '~/components/Conforma/conforma-fetch-utils';
-import { PipelineRunLabel, PipelineRunType } from '~/consts/pipelinerun';
+import { fetchConformaForComponent } from '~/components/Conforma/conforma-fetch-utils';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
-import { usePipelineRunsV2 } from '~/hooks/usePipelineRunsV2';
+import { useAllComponents } from '~/hooks/useComponents';
 import { useNamespace } from '~/shared/providers/Namespace';
-import type { PipelineRunKind } from '~/types';
+import type { ComponentKind } from '~/types';
 import { useWorkspaceConformaViolations } from '../useWorkspaceConformaViolations';
 
-jest.mock('~/hooks/usePipelineRunsV2', () => ({ usePipelineRunsV2: jest.fn() }));
+jest.mock('~/hooks/useComponents', () => ({ useAllComponents: jest.fn() }));
 jest.mock('~/shared/providers/Namespace', () => ({ useNamespace: jest.fn() }));
 jest.mock('~/feature-flags/hooks', () => ({ useIsOnFeatureFlag: jest.fn() }));
 jest.mock('~/monitoring/logger', () => ({
   logger: { warn: jest.fn(), error: jest.fn(), info: jest.fn(), debug: jest.fn() },
 }));
 jest.mock('~/components/Conforma/conforma-fetch-utils', () => ({
-  securityTaskForPipeline: jest.fn(),
   aggregateCounts: jest.requireActual('~/components/Conforma/conforma-fetch-utils').aggregateCounts,
-  fetchConformaForPipeline: jest.fn(),
+  fetchConformaForComponent: jest.fn(),
 }));
 
-const mockUsePipelineRunsV2 = usePipelineRunsV2 as jest.Mock;
+const mockUseAllComponents = useAllComponents as jest.Mock;
 const mockUseNamespace = useNamespace as jest.Mock;
 const mockUseIsOnFeatureFlag = useIsOnFeatureFlag as jest.Mock;
-const mockSecurityTask = securityTaskForPipeline as jest.Mock;
-const mockFetchConforma = fetchConformaForPipeline as jest.Mock;
+const mockFetchConforma = fetchConformaForComponent as jest.Mock;
 
-const createPR = (
+const createComponent = (
   name: string,
   appName: string,
-  compName: string,
-  timestamp = '2026-01-01T00:00:00Z',
-): PipelineRunKind =>
+): ComponentKind =>
   ({
-    apiVersion: 'tekton.dev/v1',
-    kind: 'PipelineRun',
+    apiVersion: 'appstudio.redhat.com/v1alpha1',
+    kind: 'Component',
     metadata: {
       name,
       namespace: 'test-ns',
-      creationTimestamp: timestamp,
-      labels: {
-        [PipelineRunLabel.APPLICATION]: appName,
-        [PipelineRunLabel.COMPONENT]: compName,
-        [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.TEST,
-      },
     },
-    spec: {},
-    status: {},
-  }) as unknown as PipelineRunKind;
+    spec: {
+      application: appName,
+      componentName: name,
+      source: {},
+    },
+  }) as unknown as ComponentKind;
 
 const conformaComponents = [
   {
@@ -87,8 +76,7 @@ describe('useWorkspaceConformaViolations', () => {
 
     mockUseNamespace.mockReturnValue('test-ns');
     mockUseIsOnFeatureFlag.mockReturnValue(false);
-    mockUsePipelineRunsV2.mockReturnValue([[], true, undefined]);
-    mockSecurityTask.mockReturnValue('verify-conforma');
+    mockUseAllComponents.mockReturnValue([[], true, undefined]);
     mockFetchConforma.mockResolvedValue([]);
   });
 
@@ -96,19 +84,20 @@ describe('useWorkspaceConformaViolations', () => {
     queryClient.clear();
   });
 
-  it('returns loading state while pipeline runs are not loaded', () => {
-    mockUsePipelineRunsV2.mockReturnValue([[], false, undefined]);
+  it('returns loading state while components are not loaded', () => {
+    mockUseAllComponents.mockReturnValue([[], false, undefined]);
 
     const { result } = renderHook(() => useWorkspaceConformaViolations(), {
       wrapper: createWrapper(),
     });
 
     expect(result.current.loaded).toBe(false);
+    expect(result.current.applications).toEqual([]);
   });
 
-  it('surfaces pipeline runs error via error field', async () => {
-    const prsError = new Error('prs failed');
-    mockUsePipelineRunsV2.mockReturnValue([[], true, prsError]);
+  it('surfaces components error via error field', async () => {
+    const compError = new Error('components failed');
+    mockUseAllComponents.mockReturnValue([[], true, compError]);
 
     const { result } = renderHook(() => useWorkspaceConformaViolations(), {
       wrapper: createWrapper(),
@@ -117,11 +106,11 @@ describe('useWorkspaceConformaViolations', () => {
     await flushEffects();
 
     expect(result.current.loaded).toBe(true);
-    expect(result.current.error).toBe(prsError);
+    expect(result.current.error).toBe(compError);
   });
 
-  it('returns loaded empty state when there are no pipeline runs', async () => {
-    mockUsePipelineRunsV2.mockReturnValue([[], true, undefined]);
+  it('returns loaded empty state when there are no components', async () => {
+    mockUseAllComponents.mockReturnValue([[], true, undefined]);
 
     const { result } = renderHook(() => useWorkspaceConformaViolations(), {
       wrapper: createWrapper(),
@@ -134,28 +123,24 @@ describe('useWorkspaceConformaViolations', () => {
     expect(result.current.applications).toEqual([]);
   });
 
-  it('returns loaded empty state when no pipeline runs have a security task', async () => {
-    mockSecurityTask.mockReturnValue(undefined);
-    mockUsePipelineRunsV2.mockReturnValue([
-      [createPR('pr-1', 'app-a', 'comp-a')],
+  it('calls fetchConformaForComponent for each component', async () => {
+    mockUseAllComponents.mockReturnValue([
+      [createComponent('comp-a', 'app-a')],
       true,
       undefined,
     ]);
+    mockFetchConforma.mockResolvedValue(conformaComponents);
 
-    const { result } = renderHook(() => useWorkspaceConformaViolations(), {
-      wrapper: createWrapper(),
-    });
+    renderHook(() => useWorkspaceConformaViolations(), { wrapper: createWrapper() });
 
     await flushEffects();
 
-    expect(result.current.loaded).toBe(true);
-    expect(result.current.applications).toEqual([]);
-    expect(mockFetchConforma).not.toHaveBeenCalled();
+    expect(mockFetchConforma).toHaveBeenCalledWith('test-ns', 'comp-a', false);
   });
 
   it('aggregates violations per application', async () => {
-    mockUsePipelineRunsV2.mockReturnValue([
-      [createPR('pr-1', 'app-a', 'comp-a')],
+    mockUseAllComponents.mockReturnValue([
+      [createComponent('comp-a', 'app-a')],
       true,
       undefined,
     ]);
@@ -175,8 +160,8 @@ describe('useWorkspaceConformaViolations', () => {
   });
 
   it('sums violations across multiple components of the same application', async () => {
-    mockUsePipelineRunsV2.mockReturnValue([
-      [createPR('pr-1', 'app-a', 'comp-a'), createPR('pr-2', 'app-a', 'comp-b')],
+    mockUseAllComponents.mockReturnValue([
+      [createComponent('comp-a', 'app-a'), createComponent('comp-b', 'app-a')],
       true,
       undefined,
     ]);
@@ -193,8 +178,8 @@ describe('useWorkspaceConformaViolations', () => {
   });
 
   it('keeps separate per-application summaries for different applications', async () => {
-    mockUsePipelineRunsV2.mockReturnValue([
-      [createPR('pr-1', 'app-a', 'comp-a'), createPR('pr-2', 'app-b', 'comp-b')],
+    mockUseAllComponents.mockReturnValue([
+      [createComponent('comp-a', 'app-a'), createComponent('comp-b', 'app-b')],
       true,
       undefined,
     ]);
@@ -210,25 +195,9 @@ describe('useWorkspaceConformaViolations', () => {
     expect(result.current.totalViolations).toBe(2);
   });
 
-  it('picks only the latest pipeline run per app/component key', async () => {
-    const older = createPR('pr-old', 'app-a', 'comp-a', '2025-01-01T00:00:00Z');
-    const newer = createPR('pr-new', 'app-a', 'comp-a', '2026-06-01T00:00:00Z');
-    mockUsePipelineRunsV2.mockReturnValue([[older, newer], true, undefined]);
-    mockFetchConforma.mockResolvedValue(conformaComponents);
-
-    renderHook(() => useWorkspaceConformaViolations(), {
-      wrapper: createWrapper(),
-    });
-
-    await flushEffects();
-
-    expect(mockFetchConforma).toHaveBeenCalledTimes(1);
-    expect(mockFetchConforma).toHaveBeenCalledWith('test-ns', 'pr-new', 'verify-conforma', false);
-  });
-
   it('surfaces all-query failure as error (not partialError)', async () => {
-    mockUsePipelineRunsV2.mockReturnValue([
-      [createPR('pr-1', 'app-a', 'comp-a')],
+    mockUseAllComponents.mockReturnValue([
+      [createComponent('comp-a', 'app-a')],
       true,
       undefined,
     ]);
@@ -246,8 +215,8 @@ describe('useWorkspaceConformaViolations', () => {
   });
 
   it('surfaces partial failure as partialError (not error) when some queries succeed', async () => {
-    mockUsePipelineRunsV2.mockReturnValue([
-      [createPR('pr-1', 'app-a', 'comp-a'), createPR('pr-2', 'app-b', 'comp-b')],
+    mockUseAllComponents.mockReturnValue([
+      [createComponent('comp-a', 'app-a'), createComponent('comp-b', 'app-b')],
       true,
       undefined,
     ]);

@@ -7,6 +7,7 @@ import { isResourceEnterpriseContract } from '~/utils/conforma-utils';
 import { isTaskRunInPipelineRun, sortTaskRunsByTime } from '~/utils/pipeline-utils';
 import {
   aggregateCounts,
+  fetchConformaForComponent,
   fetchConformaForPipeline,
   securityTaskForPipeline,
 } from '../conforma-fetch-utils';
@@ -191,6 +192,90 @@ describe('fetchConformaForPipeline', () => {
 
     await expect(fetchConformaForPipeline(NS, PR_NAME, EC_TASK, false)).rejects.toThrow(
       'log fetch failed',
+    );
+  });
+});
+
+describe('fetchConformaForComponent', () => {
+  const NS = 'test-ns';
+  const COMP_NAME = 'comp-a';
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockFilterInvalid.mockImplementation((rows: ComponentConformaResult[]) => rows);
+  });
+
+  it('returns empty array when no TaskRuns exist for either EC or Conforma task', async () => {
+    mockK8sListResource.mockResolvedValue({ items: [] });
+    mockSortTaskRuns.mockReturnValue([]);
+
+    const result = await fetchConformaForComponent(NS, COMP_NAME, false);
+
+    expect(result).toEqual([]);
+    expect(mockResolveConforma).not.toHaveBeenCalled();
+    expect(mockK8sListResource).toHaveBeenCalledTimes(2);
+  });
+
+  it('uses EC TaskRun when available (EC takes priority)', async () => {
+    const taskRun = createTaskRun('tr-ec');
+    mockK8sListResource.mockResolvedValue({ items: [taskRun] });
+    mockSortTaskRuns.mockReturnValue([taskRun]);
+    mockResolveConforma.mockResolvedValue({ components: mockComponents });
+    mockFilterInvalid.mockReturnValue(mockComponents);
+
+    const result = await fetchConformaForComponent(NS, COMP_NAME, false);
+
+    expect(mockResolveConforma).toHaveBeenCalledWith(NS, taskRun, false);
+    expect(result).toBe(mockComponents);
+    expect(mockK8sListResource).toHaveBeenCalledTimes(1);
+  });
+
+  it('falls back to CONFORMA_TASK when no EC TaskRuns exist', async () => {
+    const taskRun = createTaskRun('tr-conforma');
+    mockK8sListResource
+      .mockResolvedValueOnce({ items: [] })
+      .mockResolvedValueOnce({ items: [taskRun] });
+    mockSortTaskRuns
+      .mockReturnValueOnce([])
+      .mockReturnValueOnce([taskRun]);
+    mockResolveConforma.mockResolvedValue({ components: mockComponents });
+    mockFilterInvalid.mockReturnValue(mockComponents);
+
+    const result = await fetchConformaForComponent(NS, COMP_NAME, false);
+
+    expect(mockResolveConforma).toHaveBeenCalledWith(NS, taskRun, false);
+    expect(result).toBe(mockComponents);
+    expect(mockK8sListResource).toHaveBeenCalledTimes(2);
+  });
+
+  it('passes isKubearchiveLogsEnabled to resolveConformaResultFromTaskRun', async () => {
+    const taskRun = createTaskRun('tr-1');
+    mockK8sListResource.mockResolvedValue({ items: [taskRun] });
+    mockSortTaskRuns.mockReturnValue([taskRun]);
+    mockResolveConforma.mockResolvedValue({ components: [] });
+
+    await fetchConformaForComponent(NS, COMP_NAME, true);
+
+    expect(mockResolveConforma).toHaveBeenCalledWith(NS, taskRun, true);
+  });
+
+  it('returns empty array when resolveConformaResultFromTaskRun returns undefined', async () => {
+    const taskRun = createTaskRun('tr-1');
+    mockK8sListResource.mockResolvedValue({ items: [taskRun] });
+    mockSortTaskRuns.mockReturnValue([taskRun]);
+    mockResolveConforma.mockResolvedValue(undefined);
+    mockFilterInvalid.mockReturnValue([]);
+
+    const result = await fetchConformaForComponent(NS, COMP_NAME, false);
+
+    expect(result).toEqual([]);
+  });
+
+  it('propagates errors thrown by k8sListResource', async () => {
+    mockK8sListResource.mockRejectedValue(new Error('k8s unavailable'));
+
+    await expect(fetchConformaForComponent(NS, COMP_NAME, false)).rejects.toThrow(
+      'k8s unavailable',
     );
   });
 });

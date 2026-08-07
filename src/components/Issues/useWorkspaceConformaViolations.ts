@@ -2,15 +2,12 @@ import * as React from 'react';
 import { useQueries } from '@tanstack/react-query';
 import {
   aggregateCounts,
-  fetchConformaForPipeline,
-  securityTaskForPipeline,
+  fetchConformaForComponent,
 } from '~/components/Conforma/conforma-fetch-utils';
-import { PipelineRunLabel, PipelineRunType } from '~/consts/pipelinerun';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
-import { usePipelineRunsV2 } from '~/hooks/usePipelineRunsV2';
+import { useAllComponents } from '~/hooks/useComponents';
 import { logger } from '~/monitoring/logger';
 import { useNamespace } from '~/shared/providers/Namespace';
-import type { PipelineRunKind } from '~/types';
 
 export type AppViolationSummary = {
   applicationName: string;
@@ -27,78 +24,25 @@ export type WorkspaceConformaViolations = {
   partialError?: unknown;
 };
 
-const SELECTOR_TEST_RUNS = {
-  matchLabels: {
-    [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.TEST,
-  },
-};
-
-type PipelineTarget = {
-  applicationName: string;
-  componentName: string;
-  pipelineRunName: string;
-  securityTask: ReturnType<typeof securityTaskForPipeline>;
-};
-
-function pickLatestPerComponent(
-  pipelineRuns: PipelineRunKind[],
-): PipelineTarget[] {
-  const latestByKey = new Map<string, { pr: PipelineRunKind; ts: string }>();
-
-  for (const pr of pipelineRuns) {
-    const appName = pr.metadata?.labels?.[PipelineRunLabel.APPLICATION];
-    const compName = pr.metadata?.labels?.[PipelineRunLabel.COMPONENT];
-    const prName = pr.metadata?.name;
-    if (!appName || !compName || !prName) continue;
-
-    const securityTask = securityTaskForPipeline(pr);
-    if (!securityTask) continue;
-
-    const key = `${appName}/${compName}`;
-    const ts = pr.metadata?.creationTimestamp ?? '';
-    const existing = latestByKey.get(key);
-    if (!existing || ts > existing.ts) {
-      latestByKey.set(key, { pr, ts });
-    }
-  }
-
-  return Array.from(latestByKey.entries()).map(([, { pr }]) => ({
-    applicationName: pr.metadata?.labels?.[PipelineRunLabel.APPLICATION] ?? '',
-    componentName: pr.metadata?.labels?.[PipelineRunLabel.COMPONENT] ?? '',
-    pipelineRunName: pr.metadata?.name ?? '',
-    securityTask: securityTaskForPipeline(pr),
-  }));
-}
-
 export const useWorkspaceConformaViolations = (): WorkspaceConformaViolations => {
   const namespace = useNamespace();
   const isKubearchiveLogsEnabled = useIsOnFeatureFlag('kubearchive-logs');
 
-  const [pipelineRuns, prsLoaded, prsError] = usePipelineRunsV2(namespace, {
-    selector: SELECTOR_TEST_RUNS,
-  });
-
-  const targets = React.useMemo(
-    () => (prsLoaded ? pickLatestPerComponent(pipelineRuns) : []),
-    [pipelineRuns, prsLoaded],
-  );
+  const [components, componentsLoaded, componentsError] = useAllComponents(namespace);
 
   const { conformaData, allSettled, conformaAllError, conformaPartialError } = useQueries({
-    queries: targets.map((t) => ({
+    queries: (componentsLoaded ? components : []).map((comp) => ({
       queryKey: [
         'workspace-conforma',
         namespace,
-        t.applicationName,
-        t.componentName,
-        t.pipelineRunName,
+        comp.spec.application,
+        comp.metadata.name,
         isKubearchiveLogsEnabled,
       ] as const,
       queryFn: () =>
-        t.securityTask
-          ? fetchConformaForPipeline(namespace, t.pipelineRunName, t.securityTask, isKubearchiveLogsEnabled)
-          : Promise.resolve([] as Awaited<ReturnType<typeof fetchConformaForPipeline>>),
+        fetchConformaForComponent(namespace, comp.metadata.name, isKubearchiveLogsEnabled),
       staleTime: 5 * 60 * 1000,
-      enabled: !!namespace && !!t.securityTask,
+      enabled: !!namespace && !!comp.metadata.name,
     })),
     combine: (queryResults) => {
       const errorQueries = queryResults.filter((q) => q.isError);
@@ -120,8 +64,8 @@ export const useWorkspaceConformaViolations = (): WorkspaceConformaViolations =>
   }, [conformaPartialError]);
 
   return React.useMemo((): WorkspaceConformaViolations => {
-    const loaded = prsLoaded;
-    const error = prsError ?? conformaAllError;
+    const loaded = componentsLoaded;
+    const error = componentsError ?? conformaAllError;
 
     if (!loaded || !allSettled) {
       return {
@@ -137,7 +81,8 @@ export const useWorkspaceConformaViolations = (): WorkspaceConformaViolations =>
 
     conformaData.forEach((data, idx) => {
       if (!data) return;
-      const { applicationName } = targets[idx];
+      const applicationName = components[idx]?.spec.application ?? '';
+      if (!applicationName) return;
       const { violationCount, warningCount } = aggregateCounts(data);
       const existing = perApp.get(applicationName) ?? { violationCount: 0, warningCount: 0 };
       perApp.set(applicationName, {
@@ -156,6 +101,21 @@ export const useWorkspaceConformaViolations = (): WorkspaceConformaViolations =>
     const totalViolations = applications.reduce((s, a) => s + a.violationCount, 0);
     const totalWarnings = applications.reduce((s, a) => s + a.warningCount, 0);
 
-    return { totalViolations, totalWarnings, applications, loaded: true, error, partialError: conformaPartialError };
-  }, [prsLoaded, prsError, conformaData, allSettled, conformaAllError, conformaPartialError, targets]);
+    return {
+      totalViolations,
+      totalWarnings,
+      applications,
+      loaded: true,
+      error,
+      partialError: conformaPartialError,
+    };
+  }, [
+    componentsLoaded,
+    componentsError,
+    conformaData,
+    allSettled,
+    conformaAllError,
+    conformaPartialError,
+    components,
+  ]);
 };
