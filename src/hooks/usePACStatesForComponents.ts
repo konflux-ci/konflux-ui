@@ -1,14 +1,16 @@
 import * as React from 'react';
-import { PUSH_BUILD_EVENT_TYPES, PipelineRunLabel, PipelineRunType } from '../consts/pipelinerun';
-import { ComponentKind } from '../types';
 import {
   BUILD_REQUEST_ANNOTATION,
   BuildRequest,
   ComponentBuildState,
+  getComponentBuildStatus,
   getConfigurationTime,
   getPACProvision,
+  PAC_STATE_DONE_MESSAGE,
   SAMPLE_ANNOTATION,
-} from '../utils/component-utils';
+} from '~/utils/component-utils';
+import { PUSH_BUILD_EVENT_TYPES, PipelineRunLabel, PipelineRunType } from '../consts/pipelinerun';
+import { ComponentKind } from '../types';
 import { useApplicationPipelineGitHubApp } from './useApplicationPipelineGitHubApp';
 import { useApplication } from './useApplications';
 import { PACState } from './usePACState';
@@ -107,6 +109,7 @@ const usePACStatesForComponents = (components: ComponentKind[]): PacStatesForCom
 
       neededNames.forEach((componentName) => {
         const component = components.find((c) => c.metadata.name === componentName);
+        const buildStatus = getComponentBuildStatus(component);
         const configurationTime: string = getConfigurationTime(component);
 
         const runsForComponent = pipelineBuildRuns?.filter(
@@ -120,7 +123,11 @@ const usePACStatesForComponents = (components: ComponentKind[]): PacStatesForCom
           (r) =>
             !r.metadata?.annotations?.[PipelineRunLabel.COMMIT_USER_LABEL]?.includes(prBotName),
         );
-        if (prMerged) {
+        if (
+          prMerged ||
+          (buildStatus?.message === PAC_STATE_DONE_MESSAGE &&
+            buildStatus?.pac?.state === ComponentBuildState.enabled)
+        ) {
           updates[componentName] = PACState.ready;
           update = true;
         } else if (!getNextPage) {

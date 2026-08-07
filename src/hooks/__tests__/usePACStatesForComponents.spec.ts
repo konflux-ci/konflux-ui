@@ -114,7 +114,7 @@ describe('usePACStatesForComponents', () => {
     expect(results['my-error-component']).toBe(PACState.error);
   });
 
-  it('should identify ready and pending states', () => {
+  it('should identify ready and pending states for enabled components', () => {
     useK8sWatchResourceMock.mockReturnValue([
       [
         {
@@ -127,6 +127,7 @@ describe('usePACStatesForComponents', () => {
       ],
       true,
     ]);
+    useTRPipelineRunsMock.mockReturnValue([[], true, undefined, undefined]);
     const components = [
       createComponent('my-pending-component', ComponentBuildState.enabled),
       createComponent('my-ready-component', ComponentBuildState.enabled),
@@ -137,7 +138,7 @@ describe('usePACStatesForComponents', () => {
     expect(results['my-pending-component']).toBe(PACState.pending);
   });
 
-  it('should identify ready for migrated component and pending states', () => {
+  it('should identify ready for migrated component', () => {
     useK8sWatchResourceMock.mockReturnValue([
       [
         {
@@ -150,8 +151,8 @@ describe('usePACStatesForComponents', () => {
       ],
       true,
     ]);
+    useTRPipelineRunsMock.mockReturnValue([[], true, undefined, undefined]);
     const components = [
-      createComponent('my-pending-component', ComponentBuildState.enabled),
       createComponent(
         'my-ready-component',
         ComponentBuildState.enabled,
@@ -163,23 +164,20 @@ describe('usePACStatesForComponents', () => {
     const results = renderHook(() => usePACStatesForComponents(components)).result.current;
 
     expect(results['my-ready-component']).toBe(PACState.ready);
-    expect(results['my-pending-component']).toBe(PACState.pending);
 
     // Add validation that configuration-time from migration path is used
-    const migratedComponent = components[1];
+    const migratedComponent = components[0];
     const configTime = getConfigurationTime(migratedComponent);
     expect(configTime).toBe('Wed, 21 Jan 2023 19:36:25 UTC');
   });
 
-  it('should look for additional Tekton results via getNextPage', () => {
-    const getNextPageMock = jest.fn();
-    useTRPipelineRunsMock.mockReturnValueOnce([[], true, undefined, getNextPageMock]);
+  it('should set pending state when no pipeline runs exist and no next page', () => {
     useK8sWatchResourceMock.mockReturnValue([[], true]);
+    useTRPipelineRunsMock.mockReturnValue([[], true, undefined, undefined]);
 
     const components = [createComponent('my-pending-component', ComponentBuildState.enabled)];
     const results = renderHook(() => usePACStatesForComponents(components)).result.current;
     expect(results['my-pending-component']).toBe(PACState.pending);
-    expect(getNextPageMock).toHaveBeenCalled();
   });
 
   it('should query push build event types using PUSH_BUILD_EVENT_TYPES', () => {
@@ -255,17 +253,157 @@ describe('usePACStatesForComponents', () => {
     expect(results['my-ready-component']).toBe(PACState.ready);
   });
 
-  it('should identify pending state when PUSH pipeline run has PR label but commit user is bot', () => {
+  it('should set pending state when PUSH pipeline run has PR label but commit user is bot', () => {
     const mockPipelineRun = createMockPipelineRunWithPrLabelAndUser(
       'my-pending-component',
       'test-app[bot]',
     );
 
     useK8sWatchResourceMock.mockReturnValue([[mockPipelineRun], true]);
+    useTRPipelineRunsMock.mockReturnValue([[], true, undefined, undefined]);
 
     const components = [createComponent('my-pending-component', ComponentBuildState.enabled)];
     const results = renderHook(() => usePACStatesForComponents(components)).result.current;
 
     expect(results['my-pending-component']).toBe(PACState.pending);
+  });
+
+  it('should include INCOMING event type in pipeline run selector', () => {
+    useK8sWatchResourceMock.mockReturnValue([[], true]);
+    const components = [createComponent('my-component', ComponentBuildState.enabled)];
+
+    renderHook(() => usePACStatesForComponents(components));
+
+    const callArgs = useK8sWatchResourceMock.mock.calls[0];
+    const watchResource = callArgs[0];
+    const matchExpressions = watchResource?.selector?.matchExpressions || [];
+
+    const commitEventTypeExpression = matchExpressions.find(
+      (expr: { key: string }) => expr.key === PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL,
+    );
+
+    expect(commitEventTypeExpression).toBeDefined();
+    expect(commitEventTypeExpression.operator).toBe('In');
+    expect(commitEventTypeExpression.values).toContain('push');
+    expect(commitEventTypeExpression.values).toContain('Push');
+    expect(commitEventTypeExpression.values).toContain('incoming');
+  });
+
+  it('should identify ready state for component with build status done message', () => {
+    useK8sWatchResourceMock.mockReturnValue([[], true]);
+    useTRPipelineRunsMock.mockReturnValue([[], true, undefined, undefined]);
+
+    const componentWithDoneMessage = {
+      metadata: {
+        namespace: 'test-ns',
+        name: 'my-done-component',
+        annotations: {
+          [BUILD_STATUS_ANNOTATION]: JSON.stringify({
+            message: 'done',
+            pac: { state: 'enabled', 'configuration-time': 'Wed, 21 Jul 2023 19:36:25 UTC' },
+          }),
+        },
+      },
+      spec: {
+        source: {
+          git: {
+            url: 'https://github.com/org/test',
+          },
+        },
+      },
+    } as unknown as ComponentKind;
+
+    const components = [componentWithDoneMessage];
+    const results = renderHook(() => usePACStatesForComponents(components)).result.current;
+
+    expect(results['my-done-component']).toBe(PACState.ready);
+  });
+
+  it('should identify ready state for component with build status not enabled', () => {
+    useK8sWatchResourceMock.mockReturnValue([[], true]);
+    useTRPipelineRunsMock.mockReturnValue([[], true, undefined, undefined]);
+
+    const componentWithDifferentState = {
+      metadata: {
+        namespace: 'test-ns',
+        name: 'my-component',
+        annotations: {
+          [BUILD_STATUS_ANNOTATION]: JSON.stringify({
+            pac: { state: 'disabled', 'configuration-time': 'Wed, 21 Jul 2023 19:36:25 UTC' },
+          }),
+        },
+      },
+      spec: {
+        source: {
+          git: {
+            url: 'https://github.com/org/test',
+          },
+        },
+      },
+    } as unknown as ComponentKind;
+
+    const components = [componentWithDifferentState];
+    const results = renderHook(() => usePACStatesForComponents(components)).result.current;
+
+    expect(results['my-component']).toBe(PACState.disabled);
+  });
+
+  it('should keep error state when build status state is not enabled', () => {
+    useK8sWatchResourceMock.mockReturnValue([[], true]);
+    useTRPipelineRunsMock.mockReturnValue([[], true, undefined, undefined]);
+
+    const componentWithOtherState = {
+      metadata: {
+        namespace: 'test-ns',
+        name: 'my-component',
+        annotations: {
+          [BUILD_STATUS_ANNOTATION]: JSON.stringify({
+            pac: { state: 'configuring', 'configuration-time': 'Wed, 21 Jul 2023 19:36:25 UTC' },
+          }),
+        },
+      },
+      spec: {
+        source: {
+          git: {
+            url: 'https://github.com/org/test',
+          },
+        },
+      },
+    } as unknown as ComponentKind;
+
+    const components = [componentWithOtherState];
+    const results = renderHook(() => usePACStatesForComponents(components)).result.current;
+
+    expect(results['my-component']).toBe(PACState.error);
+  });
+
+  it('should set ready state when build status message is done and no pipeline runs exist', () => {
+    useK8sWatchResourceMock.mockReturnValue([[], true]);
+    useTRPipelineRunsMock.mockReturnValue([[], true, undefined, undefined]);
+
+    const componentWithDoneMessage = {
+      metadata: {
+        namespace: 'test-ns',
+        name: 'my-component',
+        annotations: {
+          [BUILD_STATUS_ANNOTATION]: JSON.stringify({
+            message: 'done',
+            pac: { state: 'enabled', 'configuration-time': 'Wed, 21 Jul 2023 19:36:25 UTC' },
+          }),
+        },
+      },
+      spec: {
+        source: {
+          git: {
+            url: 'https://github.com/org/test',
+          },
+        },
+      },
+    } as unknown as ComponentKind;
+
+    const components = [componentWithDoneMessage];
+    const results = renderHook(() => usePACStatesForComponents(components)).result.current;
+
+    expect(results['my-component']).toBe(PACState.ready);
   });
 });

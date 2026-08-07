@@ -5,6 +5,7 @@ import {
   UseQueryResult,
   UseQueryOptions,
   InfiniteData,
+  QueryKey,
 } from '@tanstack/react-query';
 import {
   k8sListResource,
@@ -41,7 +42,7 @@ export function useKubearchiveListResourceQuery<
   const k8sQueryOptions = convertToKubearchiveQueryParams(resourceInit);
   const queryKey = createQueryKeys({ model, queryOptions: k8sQueryOptions, prefix: 'kubearchive' });
   const { isKubearchiveEnabled } = useIsKubeArchiveEnabled();
-  return useInfiniteQuery<T[], Error, TData>({
+  return useInfiniteQuery<T[], Error, TData, QueryKey, unknown>({
     ...(queryOptions ?? {}),
     enabled: isKubearchiveEnabled && (queryOptions?.enabled ?? true),
     queryKey,

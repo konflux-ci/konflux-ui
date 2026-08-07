@@ -31,6 +31,8 @@ export const GIT_PROVIDER_ANNOTATION_VALUE = {
 };
 export const GIT_PROVIDER_URL_ANNOTATION = 'git-provider-url';
 
+export const PAC_STATE_DONE_MESSAGE = 'done';
+
 export enum ComponentBuildState {
   enabled = 'enabled',
   disabled = 'disabled',
