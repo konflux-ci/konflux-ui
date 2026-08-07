@@ -1,6 +1,7 @@
 import { Table, Tbody } from '@patternfly/react-table';
 import { flexRender } from '@tanstack/react-table';
 import { render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { TableRow } from '~/shared/components/TableV2';
 import { createMockRow } from '~/unit-test-utils';
 
@@ -132,5 +133,82 @@ describe('TableRow', () => {
     const tr = screen.getByTestId('table-row');
     const cells = within(tr).getAllByRole('cell');
     expect(cells).toHaveLength(2);
+  });
+
+  it('renders a checkbox cell when enableRowSelection is true', () => {
+    const row = createMockRow('row-1', { cells: mockCells });
+    renderTableRow(
+      <TableRow
+        row={row as never}
+        rowId="test-1"
+        virtualIndex={0}
+        measureElement={mockMeasureElement}
+        enableRowSelection
+      />,
+    );
+
+    const tr = screen.getByTestId('table-row');
+    const cells = within(tr).getAllByRole('cell');
+    // checkbox + 2 data cells = 3
+    expect(cells).toHaveLength(3);
+
+    // first cell should contain a checkbox
+    const firstCell = cells[0];
+    expect(within(firstCell).getByRole('checkbox')).toBeInTheDocument();
+  });
+
+  it('does not render checkbox when enableRowSelection is false or omitted', () => {
+    const row = createMockRow('row-1', { cells: mockCells });
+    renderTableRow(
+      <TableRow
+        row={row as never}
+        rowId="test-1"
+        virtualIndex={0}
+        measureElement={mockMeasureElement}
+      />,
+    );
+
+    const tr = screen.getByTestId('table-row');
+    expect(within(tr).queryByRole('checkbox')).not.toBeInTheDocument();
+  });
+
+  it('checkbox reflects row.getIsSelected() state', () => {
+    const row = createMockRow('row-1', { cells: mockCells });
+    // Mock getIsSelected to return true
+    row.getIsSelected = jest.fn().mockReturnValue(true);
+
+    renderTableRow(
+      <TableRow
+        row={row as never}
+        rowId="test-1"
+        virtualIndex={0}
+        measureElement={mockMeasureElement}
+        enableRowSelection
+      />,
+    );
+
+    const checkbox = screen.getByRole('checkbox');
+    expect(checkbox).toBeChecked();
+  });
+
+  it('calls row.toggleSelected when checkbox is clicked', async () => {
+    const user = userEvent.setup();
+    const toggleSelected = jest.fn();
+    const row = createMockRow('row-1', { cells: mockCells });
+    row.toggleSelected = toggleSelected;
+    row.getIsSelected = jest.fn().mockReturnValue(false);
+
+    renderTableRow(
+      <TableRow
+        row={row as never}
+        rowId="test-1"
+        virtualIndex={0}
+        measureElement={mockMeasureElement}
+        enableRowSelection
+      />,
+    );
+
+    await user.click(screen.getByRole('checkbox'));
+    expect(toggleSelected).toHaveBeenCalled();
   });
 });

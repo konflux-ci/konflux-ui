@@ -14,13 +14,11 @@ import {
   ToolbarItem,
   Truncate,
 } from '@patternfly/react-core';
-import {
-  CompressIcon,
-  DownloadIcon,
-  ExpandIcon,
-  OutlinedKeyboardIcon,
-  OutlinedPlayCircleIcon,
-} from '@patternfly/react-icons/dist/esm/icons';
+import { CompressIcon } from '@patternfly/react-icons/dist/esm/icons/compress-icon';
+import { DownloadIcon } from '@patternfly/react-icons/dist/esm/icons/download-icon';
+import { ExpandIcon } from '@patternfly/react-icons/dist/esm/icons/expand-icon';
+import { OutlinedKeyboardIcon } from '@patternfly/react-icons/dist/esm/icons/outlined-keyboard-icon';
+import { OutlinedPlayCircleIcon } from '@patternfly/react-icons/dist/esm/icons/outlined-play-circle-icon';
 import {
   LogViewerSearch,
   LogViewerContext,
