@@ -46,6 +46,24 @@ jest.mock('~/shared/providers/Namespace', () => ({
   useNamespace: () => 'test-namespace',
 }));
 
+let mockConformaPolicyEnabled = true;
+
+jest.mock('~/feature-flags/hooks', () => ({
+  ...jest.requireActual('~/feature-flags/hooks'),
+  IfFeature: ({ flag, children }: { flag: string; children: React.ReactNode }) =>
+    flag !== 'conforma-policy' || mockConformaPolicyEnabled ? <>{children}</> : null,
+}));
+
+jest.mock('../useWorkspaceConformaViolations', () => ({
+  useWorkspaceConformaViolations: jest.fn(() => ({
+    totalViolations: 0,
+    totalWarnings: 0,
+    applications: [],
+    loaded: true,
+    error: undefined,
+  })),
+}));
+
 describe('IssuesOverview', () => {
   const renderComponent = () => {
     return renderWithQueryClient(
@@ -54,6 +72,11 @@ describe('IssuesOverview', () => {
       </MemoryRouter>,
     );
   };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockConformaPolicyEnabled = true;
+  });
 
   it('should render without crashing', () => {
     const { container } = renderComponent();
@@ -67,6 +90,17 @@ describe('IssuesOverview', () => {
     expect(grid).toBeInTheDocument();
 
     const gridItems = container.querySelectorAll('.pf-v6-l-grid__item');
-    expect(gridItems.length).toBe(3);
+    expect(gridItems.length).toBe(4);
+  });
+
+  it('should render ConformaViolationsCard when conforma-policy feature flag is enabled', () => {
+    const { getByTestId } = renderComponent();
+    expect(getByTestId('conforma-violations-card')).toBeInTheDocument();
+  });
+
+  it('should not render ConformaViolationsCard when conforma-policy feature flag is disabled', () => {
+    mockConformaPolicyEnabled = false;
+    const { queryByTestId } = renderComponent();
+    expect(queryByTestId('conforma-violations-card')).not.toBeInTheDocument();
   });
 });
