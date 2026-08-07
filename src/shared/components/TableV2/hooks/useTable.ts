@@ -11,7 +11,6 @@ import {
   type Table,
   type Row,
   type ExpandedState,
-  type OnChangeFn,
 } from '@tanstack/react-table';
 import { type ColumnDefinition, type ColumnState } from '../types';
 
