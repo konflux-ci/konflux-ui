@@ -3,6 +3,8 @@ import {
   type CellContext as TanStackCellContext,
   type SortingFn,
   type FilterFn,
+  type ExpandedState,
+  type OnChangeFn,
 } from '@tanstack/react-table';
 
 /**
@@ -178,6 +180,9 @@ export interface TableProps<TData> {
   /** Accessible label for the table element. Required for screen readers. */
   'aria-label': string;
 
+  /** Optional data-test attribute for the table wrapper element. Defaults to 'table-v2'. */
+  'data-test'?: string;
+
   /**
    * Arbitrary metadata passed through to TanStack Table's `meta` option.
    * Accessible inside column definitions via `table.options.meta`.
@@ -192,6 +197,15 @@ export interface TableProps<TData> {
 
   /** Render function for expanded row content. Only called when the row is expanded. */
   expandedContent?: (row: TData) => ReactNode;
+
+  /** External expansion state (for controlled expansion). Maps row IDs to expansion state. */
+  expanded?: ExpandedState;
+
+  /** Callback when expansion state changes. */
+  onExpandedChange?: OnChangeFn<ExpandedState>;
+
+  /** Function to get sub-rows from a row (for hierarchical data). */
+  getSubRows?: (originalRow: TData, index: number) => TData[] | undefined;
 
   /** Enables row grouping by a column or custom function. Reserved for future use. */
   enableGrouping?: boolean;

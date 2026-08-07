@@ -69,18 +69,51 @@ export const TableBody = <TData,>({
         const row = rows[virtualRow.index];
         if (!row) return null;
         const rowId = getRowId(row.original);
+        const isExpanded = enableExpansion && row.getIsExpanded() && expandedContent;
+        
+        // Custom measurement for expanded rows: measure the combined height
+        // of the main row + expanded content row
+        const measureExpandedRow = (expandedRowNode: HTMLElement | null) => {
+          if (!expandedRowNode) return;
+          
+          // Find the main row (previous sibling TR element)
+          const mainRowNode = expandedRowNode.previousElementSibling as HTMLElement;
+          if (!mainRowNode) {
+            // Fallback: just measure the expanded row
+            measureElement(expandedRowNode);
+            return;
+          }
+          
+          // Calculate combined height
+          const mainHeight = mainRowNode.offsetHeight;
+          const expandedHeight = expandedRowNode.offsetHeight;
+          const totalHeight = mainHeight + expandedHeight;
+          
+          // Create a temporary wrapper to report the combined height
+          // We attach it to the main row so the virtualizer measures the correct element
+          const tempWrapper = {
+            offsetHeight: totalHeight,
+            getAttribute: (attr: string) => {
+              if (attr === 'data-index') return String(virtualRow.index);
+              return mainRowNode.getAttribute(attr);
+            },
+          } as HTMLElement;
+          
+          measureElement(tempWrapper);
+        };
+        
         return (
           <React.Fragment key={rowId}>
             <TableRow
               row={row}
               rowId={rowId}
               virtualIndex={virtualRow.index}
-              measureElement={measureElement}
+              measureElement={isExpanded ? () => {} : measureElement}
               enableExpansion={enableExpansion}
               enableRowSelection={enableRowSelection}
             />
-            {enableExpansion && row.getIsExpanded() && expandedContent && (
-              <Tr>
+            {isExpanded && (
+              <Tr ref={measureExpandedRow} data-index={virtualRow.index}>
                 <Td colSpan={visibleColumnCount}>
                   <ExpandableRowContent>{expandedContent(row.original)}</ExpandableRowContent>
                 </Td>

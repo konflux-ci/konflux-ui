@@ -10,6 +10,7 @@ import {
   type SortingState,
   type Table,
   type Row,
+  type ExpandedState,
 } from '@tanstack/react-table';
 import { type ColumnDefinition, type ColumnState } from '../types';
 
@@ -43,6 +44,12 @@ export interface UseTableOptions<TData> {
   enableGrouping?: boolean;
   /** Arbitrary metadata passed to TanStack Table's `meta` option. */
   meta?: Record<string, unknown>;
+  /** External expansion state (for controlled expansion). */
+  expanded?: ExpandedState;
+  /** Callback when expansion state changes. */
+  onExpandedChange?: OnChangeFn<ExpandedState>;
+  /** Function to get sub-rows from a row (for hierarchical data). */
+  getSubRows?: (originalRow: TData, index: number) => TData[] | undefined;
 }
 
 /**
@@ -135,6 +142,9 @@ export function useTable<TData>(options: UseTableOptions<TData>): UseTableResult
     enableExpansion,
     enableRowSelection,
     meta,
+    expanded,
+    onExpandedChange,
+    getSubRows,
   } = options;
 
   const columnDefs = useMemo(() => mapColumns(columns), [columns]);
@@ -178,7 +188,13 @@ export function useTable<TData>(options: UseTableOptions<TData>): UseTableResult
     ...(enableExpansion
       ? {
           getExpandedRowModel: getExpandedRowModel(),
-          getRowCanExpand: () => true,
+          getRowCanExpand: (row) => {
+            if (getSubRows) {
+              return row.subRows.length > 0;
+            }
+            return true;
+          },
+          ...(getSubRows ? { getSubRows } : {}),
         }
       : {}),
     enableRowSelection: !!enableRowSelection,
@@ -193,7 +209,9 @@ export function useTable<TData>(options: UseTableOptions<TData>): UseTableResult
       columnOrder,
       ...(sorting ? { sorting } : {}),
       ...(enableRowSelection ? { rowSelection } : {}),
+      ...(expanded !== undefined ? { expanded } : {}),
     },
+    ...(onExpandedChange ? { onExpandedChange } : {}),
     meta,
   });
 

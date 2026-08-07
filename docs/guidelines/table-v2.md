@@ -45,23 +45,27 @@ The main orchestrator. Composes hooks and sub-components into a full-featured ta
 
 #### Props (`TableProps<TData>`)
 
-| Prop                  | Type                           | Required | Description                                                      |
-| --------------------- | ------------------------------ | -------- | ---------------------------------------------------------------- |
-| `data`                | `TData[]`                      | Yes      | Array of row data to display                                     |
-| `columns`             | `ColumnDefinition<TData>[]`    | Yes      | Column definitions                                               |
-| `getRowId`            | `(row: TData) => string`       | Yes      | Stable unique row ID                                             |
-| `aria-label`          | `string`                       | Yes      | Accessible label for the table element                           |
-| `meta`                | `Record<string, unknown>`      | No       | Arbitrary metadata passed to TanStack's `table.options.meta`     |
-| `enableSorting`       | `boolean`                      | No       | Enable client-side column sorting                                |
-| `enableExpansion`     | `boolean`                      | No       | Enable expandable rows                                           |
-| `expandedContent`     | `(row: TData) => ReactNode`    | No       | Render function for expanded row content                         |
-| `hasNextPage`         | `boolean`                      | No       | Whether more data is available for infinite scroll               |
-| `isFetchingNextPage`  | `boolean`                      | No       | Whether next page is currently loading                           |
-| `fetchNextPage`       | `() => void`                   | No       | Callback to fetch the next page                                  |
-| `columnStateKey`      | `string`                       | No       | localStorage key for persisting column state                     |
-| `columnState`         | `ColumnState`                  | No       | Externally managed column state (overrides internal state)       |
-| `onColumnStateChange` | `(state: ColumnState) => void` | No       | Callback when column state changes (required with `columnState`) |
-| `scrollElement`       | `HTMLElement \| null`          | No       | External scroll container for virtualization                     |
+| Prop                  | Type                                                  | Required | Description                                                         |
+| --------------------- | ----------------------------------------------------- | -------- | ------------------------------------------------------------------- |
+| `data`                | `TData[]`                                             | Yes      | Array of row data to display                                        |
+| `columns`             | `ColumnDefinition<TData>[]`                           | Yes      | Column definitions                                                  |
+| `getRowId`            | `(row: TData) => string`                              | Yes      | Stable unique row ID                                                |
+| `aria-label`          | `string`                                              | Yes      | Accessible label for the table element                              |
+| `meta`                | `Record<string, unknown>`                             | No       | Arbitrary metadata passed to TanStack's `table.options.meta`        |
+| `enableSorting`       | `boolean`                                             | No       | Enable client-side column sorting                                   |
+| `enableExpansion`     | `boolean`                                             | No       | Enable expandable rows                                              |
+| `expandedContent`     | `(row: TData) => ReactNode`                           | No       | Render function for expanded row content                            |
+| `expanded`            | `ExpandedState`                                       | No       | External expansion state for controlled row expansion               |
+| `onExpandedChange`    | `OnChangeFn<ExpandedState>`                           | No       | Callback when expansion state changes (for controlled expansion)    |
+| `getSubRows`          | `(originalRow: TData, index: number) => TData[] \| undefined` | No       | Function to get sub-rows for hierarchical data structures           |
+| `hasNextPage`         | `boolean`                                             | No       | Whether more data is available for infinite scroll                  |
+| `isFetchingNextPage`  | `boolean`                                             | No       | Whether next page is currently loading                              |
+| `fetchNextPage`       | `() => void`                                          | No       | Callback to fetch the next page                                     |
+| `columnStateKey`      | `string`                                              | No       | localStorage key for persisting column state                        |
+| `columnState`         | `ColumnState`                                         | No       | Externally managed column state (overrides internal state)          |
+| `onColumnStateChange` | `(state: ColumnState) => void`                        | No       | Callback when column state changes (required with `columnState`)    |
+| `scrollElement`       | `HTMLElement \| null`                                 | No       | External scroll container for virtualization                        |
+| `data-test`           | `string`                                              | No       | Custom data-test attribute for the table root element (default: `table-v2`) |
 
 ### `TableContainer`
 
@@ -588,6 +592,125 @@ const MyListView = () => {
   },
 }
 ```
+
+### 4. Controlled Row Expansion
+
+For tables that need to control row expansion from a parent component (e.g., grouped tables with custom group headers):
+
+```tsx
+import { useState, useMemo, useCallback } from 'react';
+import { Table, type ColumnDefinition } from '~/shared/components/TableV2';
+import { type ExpandedState } from '@tanstack/react-table';
+
+interface MyGroupedData {
+  groupId: string;
+  groupName: string;
+  items: MyItem[];
+}
+
+interface MyItem {
+  id: string;
+  name: string;
+  value: string;
+}
+
+const MyGroupedTable = ({ groupedData }: { groupedData: MyGroupedData[] }) => {
+  // Track which groups are expanded
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+
+  // Convert Set to TanStack ExpandedState (Record<string, boolean>)
+  const expandedState: ExpandedState = useMemo(
+    () => Object.fromEntries(Array.from(expandedGroups).map((id) => [id, true])),
+    [expandedGroups]
+  );
+
+  const handleToggleGroup = useCallback((groupId: string) => {
+    setExpandedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(groupId)) {
+        next.delete(groupId);
+      } else {
+        next.add(groupId);
+      }
+      return next;
+    });
+  }, []);
+
+  // Handle expansion changes from TableV2
+  const handleExpandedChange = useCallback(
+    (updaterOrValue: ExpandedState | ((old: ExpandedState) => ExpandedState)) => {
+      const newExpanded =
+        typeof updaterOrValue === 'function' ? updaterOrValue(expandedState) : updaterOrValue;
+
+      // Find which row toggled by comparing old and new state
+      const oldKeys = new Set(expandedGroups);
+      const newExpandedRecord: Record<string, boolean> =
+        newExpanded === true
+          ? Object.fromEntries(groupedData.map((group) => [group.groupId, true]))
+          : newExpanded;
+      const newKeys = new Set(
+        Object.keys(newExpandedRecord).filter((key) => newExpandedRecord[key]),
+      );
+
+      // Find the difference and toggle
+      oldKeys.forEach((key) => {
+        if (!newKeys.has(key)) handleToggleGroup(key);
+      });
+      newKeys.forEach((key) => {
+        if (!oldKeys.has(key)) handleToggleGroup(key);
+      });
+    },
+    [expandedState, expandedGroups, groupedData, handleToggleGroup],
+  );
+
+  const columns: ColumnDefinition<MyGroupedData>[] = [
+    {
+      id: 'groupName',
+      header: 'Group',
+      cell: ({ row }) => row.original.groupName,
+    },
+    {
+      id: 'itemCount',
+      header: 'Item Count',
+      cell: ({ row }) => row.original.items.length,
+    },
+  ];
+
+  const detailColumns: ColumnDefinition<MyItem>[] = [
+    { id: 'name', header: 'Name', cell: ({ row }) => row.original.name },
+    { id: 'value', header: 'Value', cell: ({ row }) => row.original.value },
+  ];
+
+  return (
+    <Table
+      data={groupedData}
+      columns={columns}
+      getRowId={(row) => row.groupId}
+      aria-label="Grouped data table"
+      enableExpansion
+      expanded={expandedState}
+      onExpandedChange={handleExpandedChange}
+      expandedContent={(group) => (
+        <Table
+          data={group.items}
+          columns={detailColumns}
+          getRowId={(row) => row.id}
+          aria-label={`${group.groupName} details`}
+          data-test={`detail-table-${group.groupId}`}
+        />
+      )}
+    />
+  );
+};
+```
+
+**Key points:**
+
+- Use `expanded` prop to externally control which rows are expanded (TanStack `ExpandedState` = `true | Record<string, boolean>`)
+- Use `onExpandedChange` to receive expansion state updates from the table
+- Use `expandedContent` to render custom content when a row is expanded (e.g., nested tables, detail panels)
+- Use `getSubRows` when your data has a hierarchical structure (nested children)
+- Use `data-test` to provide custom test identifiers for table instances
 
 ## Migration from Legacy Table
 
