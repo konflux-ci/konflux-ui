@@ -150,15 +150,16 @@ const Logs: React.FC<LogsProps> = ({
               // (e.g. "container step-X is waiting to start: ImagePullBackOff")
               // which should be surfaced to the user.
               if (err?.code === 404 && source === ResourceSource.Archive) {
-                // Mark the container as fetched with empty content so folding can evaluate
-                // it after load (and so the section still appears in the viewer).
-                appendLog(name, '');
+                // Show the error message if available; otherwise mark the container as
+                // fetched with empty content so folding can evaluate it after load
+                // (and so the section still appears in the viewer).
+                appendLog(name, err?.message || '');
                 return;
               }
 
               appendLog(
                 name,
-                `\x1b[1;31mLOG FETCH ERROR${err?.message ? `:\n${err.message}` : ''}\x1b[0m\n`,
+                `\x1b[1;31mLOG FETCH ERROR${err instanceof Error ? `:\n${err.message}` : ''}\x1b[0m\n`,
               );
             }
           })
