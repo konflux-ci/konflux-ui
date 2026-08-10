@@ -153,7 +153,7 @@ const Logs: React.FC<LogsProps> = ({
                 // Show the error message if available; otherwise mark the container as
                 // fetched with empty content so folding can evaluate it after load
                 // (and so the section still appears in the viewer).
-                appendLog(name, err?.message || '');
+                appendLog(name, err instanceof Error ? err.message : '');
                 return;
               }
 
