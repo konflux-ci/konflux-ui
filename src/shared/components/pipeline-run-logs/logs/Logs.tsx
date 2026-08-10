@@ -158,7 +158,7 @@ const Logs: React.FC<LogsProps> = ({
 
               appendLog(
                 name,
-                `\x1b[1;31mLOG FETCH ERROR${err instanceof Error ? `:\n${err.message}` : ''}\x1b[0m\n`,
+                `\x1b[1;31mLOG FETCH ERROR${err?.message ? `:\n${err.message}` : ''}\x1b[0m\n`,
               );
             }
           })
