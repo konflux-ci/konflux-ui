@@ -4,8 +4,12 @@ import {
   Banner,
   Button,
   Checkbox,
+  Dropdown,
+  DropdownItem,
+  DropdownList,
   Flex,
   FlexItem,
+  MenuToggle,
   Popover,
   Spinner,
   Toolbar,
@@ -125,6 +129,7 @@ const LogViewer: React.FC<Props> = ({
       .join('\n\n');
   }, [sections]);
 
+  const [isDownloadOpen, setIsDownloadOpen] = React.useState(false);
   const [downloadAllStatus, setDownloadAllStatus] = React.useState(false);
 
   const downloadLogs = () => {
@@ -231,28 +236,39 @@ const LogViewer: React.FC<Props> = ({
                   </ToolbarItem>
                   <ToolbarItem variant="separator" className="log-viewer__divider" />
                   <ToolbarItem>
-                    <Button variant="link" onClick={downloadLogs}>
-                      <DownloadIcon className="log-viewer__icon" />
-                      Download
-                    </Button>
-                  </ToolbarItem>
-                  <ToolbarItem variant="separator" className="log-viewer__divider" />
-                  {onDownloadAll && (
-                    <>
-                      <ToolbarItem>
-                        <Button
-                          variant="link"
-                          onClick={startDownloadAll}
-                          isDisabled={downloadAllStatus}
+                    <Dropdown
+                      isOpen={isDownloadOpen}
+                      onSelect={() => setIsDownloadOpen(false)}
+                      onOpenChange={setIsDownloadOpen}
+                      toggle={(toggleRef) => (
+                        <MenuToggle
+                          ref={toggleRef}
+                          variant="plain"
+                          onClick={() => setIsDownloadOpen(!isDownloadOpen)}
+                          isExpanded={isDownloadOpen}
+                          aria-label="Download logs"
                         >
-                          <DownloadIcon className="log-viewer__icon" />
-                          {downloadAllLabel}
-                          {downloadAllStatus && <LoadingInline />}
-                        </Button>
-                      </ToolbarItem>
-                      <ToolbarItem variant="separator" className="log-viewer__divider" />
-                    </>
-                  )}
+                          <DownloadIcon />
+                        </MenuToggle>
+                      )}
+                    >
+                      <DropdownList>
+                        <DropdownItem onClick={downloadLogs} data-test="download-log">
+                          Download
+                        </DropdownItem>
+                        {onDownloadAll && (
+                          <DropdownItem
+                            onClick={startDownloadAll}
+                            isDisabled={downloadAllStatus}
+                            data-test="download-all-logs"
+                          >
+                            {downloadAllLabel}
+                            {downloadAllStatus && <LoadingInline />}
+                          </DropdownItem>
+                        )}
+                      </DropdownList>
+                    </Dropdown>
+                  </ToolbarItem>
                   {fullscreenToggle && isFullscreenSupported && (
                     <ToolbarItem gap={{ default: 'gapMd' }}>
                       <Button variant="link" onClick={fullscreenToggle}>
