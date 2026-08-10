@@ -1,3 +1,4 @@
+import { FeatureFlagsStore } from '~/feature-flags/store';
 import { isImageControllerEnabled } from '~/image-controller/conditional-checks';
 import { ApplicationKind, ImportSecret } from '../../types';
 import { SBOMEventNotification } from '../../types/konflux-public-info';
@@ -47,6 +48,12 @@ export const createResourcesWithLinkingComponents = async (
   namespace: string,
   notifications: SBOMEventNotification[],
 ) => {
+  // Ensure the image controller condition is resolved before checking it synchronously.
+  // This condition is not evaluated at startup (no flag guard references it), and no
+  // component in the import form tree calls useIsImageControllerEnabled, so without this
+  // the synchronous isImageControllerEnabled() would return false on a fresh session.
+  await FeatureFlagsStore.ensureConditions(['isImageControllerEnabled']);
+
   const {
     source,
     application,

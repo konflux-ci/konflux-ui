@@ -19,6 +19,13 @@ jest.mock('../../IntegrationTests/IntegrationTestForm/utils/create-utils', () =>
   createIntegrationTest: jest.fn(),
 }));
 
+// Mock FeatureFlagsStore.ensureConditions to resolve immediately in tests
+jest.mock('~/feature-flags/store', () => ({
+  FeatureFlagsStore: {
+    ensureConditions: jest.fn().mockResolvedValue(undefined),
+  },
+}));
+
 // Mock isImageControllerEnabled - default to enabled
 const mockIsImageControllerEnabled = jest.fn().mockReturnValue(true);
 jest.mock('~/image-controller/conditional-checks', () => ({
