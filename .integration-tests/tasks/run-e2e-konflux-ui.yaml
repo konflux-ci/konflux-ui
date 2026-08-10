@@ -142,7 +142,7 @@ spec:
         - input: '$(params.job-type)'
           operator: in
           values: ['pr-check']
-      image: quay.io/konflux-qe-incubator/konflux-qe-tools:latest
+      image: quay.io/konflux-qe-incubator/konflux-qe-tools@sha256:88d70f9c61d2059e3a084fe6f2fb3ac341bc65efe9c6ba994e42a61bbb54fcba
       volumeMounts:
         - name: e2e-overlay
           mountPath: /e2e-overlay
@@ -196,13 +196,32 @@ spec:
         SOURCE_REPO_URL="${SOURCE_REPO_URL:-${UPSTREAM}}"
         TARGET_BRANCH="${TARGET_BRANCH:-main}"
 
-        # Optional token for private forks / rate limits (public clones work without it)
+        # Optional token for private forks / rate limits (public clones work without it).
+        # Use GIT_ASKPASS so the token is never embedded in remote URLs (avoids leaks in git errors).
         clone_url="${SOURCE_REPO_URL}"
         upstream_url="${UPSTREAM}"
+        ASKPASS=""
         if [[ -n "${GITHUB_TOKEN:-}" ]]; then
-          clone_url="$(echo "${SOURCE_REPO_URL}" | sed -E "s#https://#https://x-access-token:${GITHUB_TOKEN}@#")"
-          upstream_url="$(echo "${UPSTREAM}" | sed -E "s#https://#https://x-access-token:${GITHUB_TOKEN}@#")"
+          ASKPASS="$(mktemp)"
+          chmod 700 "${ASKPASS}"
+          # Write askpass via printf (heredoc breaks prettier's YAML parser)
+          printf '%s\n' \
+            '#!/bin/sh' \
+            'case "$1" in' \
+            '  *Username*) printf "%s\n" "x-access-token" ;;' \
+            '  *Password*) printf "%s\n" "${GITHUB_TOKEN}" ;;' \
+            'esac' \
+            > "${ASKPASS}"
+          export GIT_ASKPASS="${ASKPASS}"
+          export GIT_TERMINAL_PROMPT=0
         fi
+        cleanup_askpass() {
+          if [[ -n "${ASKPASS}" ]]; then
+            rm -f "${ASKPASS}"
+            unset GIT_ASKPASS ASKPASS
+          fi
+        }
+        trap cleanup_askpass EXIT
 
         echo ""
         echo "=== Cloning PR at ${GIT_REVISION} ==="
@@ -348,7 +367,7 @@ spec:
         fi
         echo "Konflux base URL: ${CYPRESS_KONFLUX_BASE_URL}"
 
-        echo "=== Running E2E tests ==="
+        echo "=== Test configuration ==="
         SPEC_FILE="$(params.spec-file)"
         echo "Running test spec: ${SPEC_FILE}"
 
