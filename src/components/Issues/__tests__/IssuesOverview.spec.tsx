@@ -68,14 +68,14 @@ describe('IssuesOverview', () => {
     expect(outerGrid).toBeInTheDocument();
 
     // Outer grid should have 2 direct grid-item children (left column + right column)
-    const outerGridItems = outerGrid!.querySelectorAll(':scope > .pf-v6-l-grid__item');
+    const outerGridItems = outerGrid.querySelectorAll(':scope > .pf-v6-l-grid__item');
     expect(outerGridItems.length).toBe(2);
 
     // Left column should contain a nested grid with 2 grid items
     const nestedGrid = outerGridItems[0].querySelector('.pf-v6-l-grid');
     expect(nestedGrid).toBeInTheDocument();
 
-    const nestedGridItems = nestedGrid!.querySelectorAll(':scope > .pf-v6-l-grid__item');
+    const nestedGridItems = nestedGrid.querySelectorAll(':scope > .pf-v6-l-grid__item');
     expect(nestedGridItems.length).toBe(2);
   });
 });
