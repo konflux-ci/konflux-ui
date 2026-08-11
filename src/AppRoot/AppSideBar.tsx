@@ -5,6 +5,7 @@ import { css } from '@patternfly/react-styles';
 import {
   APPLICATION_LIST_PATH,
   COMPONENTS_PATH,
+  DEPENDENCY_SCHEDULE_PATH,
   GROUPS_PATH,
   ISSUES_PATH,
   NAMESPACE_LIST_PATH,
@@ -17,7 +18,11 @@ import {
 import IssuesNavItemContent from '~/components/Issues/IssuesNavItemContent';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { IfFeature } from '~/feature-flags/hooks';
-import { SavedViewNavSection, type SavedViewsConfig } from '~/shared/components/SavedViews';
+import {
+  SavedViewNavItems,
+  SavedViewNavSection,
+  type SavedViewsConfig,
+} from '~/shared/components/SavedViews';
 import { useActiveRouteChecker } from '../../src/hooks/useActiveRouteChecker';
 import { useNamespace } from '../shared/providers/Namespace';
 import './AppSideBar.scss';
@@ -189,6 +194,23 @@ export const AppSideBar: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
                 User Access
               </NavLink>
             </NavItem>
+
+            <IfFeature flag="pipeline-runs-page">
+              {namespace && <SavedViewNavItems config={pipelineRunsSavedViewsConfig} />}
+            </IfFeature>
+
+            <IfFeature flag="mintmaker">
+              <NavItem isActive={isActive(DEPENDENCY_SCHEDULE_PATH.path)}>
+                <NavLink to={DEPENDENCY_SCHEDULE_PATH.createPath({} as never)}>
+                  Dependency updates schedule{' '}
+                  <FeatureFlagIndicator
+                    flags={['mintmaker']}
+                    hasNoPadding
+                    popOverTriggerAction="hover"
+                  />
+                </NavLink>
+              </NavItem>
+            </IfFeature>
           </NavList>
         </Nav>
       </PageSidebarBody>
