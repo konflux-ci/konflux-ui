@@ -14,6 +14,7 @@ import componentRoutes from './page-routes/components';
 import componentsPageRoutes from './page-routes/components-page';
 import integrationTestRoutes from './page-routes/integration-test';
 import issuesRoutes from './page-routes/issues';
+import mintMakerScheduleRoutes from './page-routes/mintmaker-schedule';
 import workspaceRoutes from './page-routes/namespace';
 import pipelineRoutes from './page-routes/pipeline';
 import { pipelineRunsPageRoutes } from './page-routes/pipeline-runs-page';
@@ -65,6 +66,7 @@ export const router = sentryCreateBrowserRouter([
       ...taskRunRoutes,
       ...userAccessRoutes,
       ...pipelineRunsPageRoutes,
+      ...mintMakerScheduleRoutes,
       // '/ns/:ns',
       //   '/ns/:ns/pipelinerun/:pipelineRun',
       //   '/ns/:ns/pipelinerun/:pipelineRun/logs',

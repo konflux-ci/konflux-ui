@@ -578,3 +578,4 @@ In the composable `Select`, `SelectOption` requires an explicit `value` prop. If
 | Text truncation                 | `Truncate` from `~/shared/components/truncate-text/`   |
 | Overflow list with popover      | `TruncatedLinkListWithPopover`                         |
 | Skeleton placeholder            | `LoadingSkeleton` from `~/shared/components/skeleton/` |
+| Countdown display               | `Countdown` from `~/shared/components/countdown/`      |
