@@ -12,13 +12,13 @@ const IssuesOverview: React.FunctionComponent = () => {
         paddingTop: 'var(--pf-t--global--spacer--lg)',
       }}
     >
-      <GridItem span={8} style={{ alignSelf: 'start' }}>
+      <GridItem span={8}>
         <IssueDistributionCard />
       </GridItem>
       <GridItem span={4} rowSpan={2}>
         <LatestIssuesCard />
       </GridItem>
-      <GridItem span={8} style={{ alignSelf: 'start' }}>
+      <GridItem span={8}>
         <IssuesByStatusCard />
       </GridItem>
     </Grid>
