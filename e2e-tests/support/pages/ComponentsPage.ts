@@ -55,27 +55,6 @@ export class ComponentPage extends AbstractWizardPage {
     cy.contains('button', 'Merge pull request').scrollIntoView().should('be.visible').click();
   }
 
-  /**
-   * When isPACStateReady considers the component ready (e.g. build-status
-   * message is "done"), the label shows "Custom" instead of "Merge pull
-   * request".  This helper clicks the label only when it's still pending
-   * and returns whether the modal was opened.
-   */
-  clickMergePullRequestIfPending(): Cypress.Chainable<boolean> {
-    // Wait for PAC state to finish loading (skeleton disappears)
-    cy.get('[data-test="edit-build-pipeline"]', { timeout: 30000 }).should(($el) => {
-      expect($el.find('.pf-v6-c-skeleton')).to.have.length(0);
-    });
-
-    return cy.get('[data-test="edit-build-pipeline"]').then(($el) => {
-      if ($el.text().includes('Merge pull request')) {
-        cy.wrap($el).contains('button', 'Merge pull request').scrollIntoView().click();
-        return cy.wrap(true);
-      }
-      return cy.wrap(false);
-    });
-  }
-
   clickSendingPullRequest() {
     cy.contains('button', 'Sending pull request').should('be.visible').click();
   }
