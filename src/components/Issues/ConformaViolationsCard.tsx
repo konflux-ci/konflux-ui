@@ -20,7 +20,7 @@ import { t_global_icon_color_status_danger_default as dangerColor } from '@patte
 import { t_global_icon_color_status_success_default as successColor } from '@patternfly/react-tokens/dist/js/t_global_icon_color_status_success_default';
 import { t_global_icon_color_status_warning_default as warningColor } from '@patternfly/react-tokens/dist/js/t_global_icon_color_status_warning_default';
 import { type AppViolationSummary, useWorkspaceConformaViolations } from '~/components/Issues/useWorkspaceConformaViolations';
-import { APPLICATION_DETAILS_PATH } from '~/routes/paths';
+import { APPLICATION_CONFORMA_RESULTS_PATH } from '~/routes/paths';
 import { LoadingSkeleton } from '~/shared';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
@@ -37,10 +37,10 @@ const AppBreakdownList: React.FC<AppListProps> = ({ applications, namespace }) =
     {applications.map(({ applicationName, violationCount, warningCount }) => (
       <ListItem key={applicationName}>
         <Link
-          to={`${APPLICATION_DETAILS_PATH.createPath({
+          to={APPLICATION_CONFORMA_RESULTS_PATH.createPath({
             workspaceName: namespace,
             applicationName,
-          })}/conforma-results`}
+          })}
         >
           {applicationName}
         </Link>

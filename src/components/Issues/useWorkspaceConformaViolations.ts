@@ -24,6 +24,8 @@ export type WorkspaceConformaViolations = {
   partialError?: unknown;
 };
 
+const CONFORMA_STALE_TIME_MS = 5 * 60 * 1000;
+
 export const useWorkspaceConformaViolations = (): WorkspaceConformaViolations => {
   const namespace = useNamespace();
   const isKubearchiveLogsEnabled = useIsOnFeatureFlag('kubearchive-logs');
@@ -41,7 +43,7 @@ export const useWorkspaceConformaViolations = (): WorkspaceConformaViolations =>
       ] as const,
       queryFn: () =>
         fetchConformaForComponent(namespace, comp.metadata.name, isKubearchiveLogsEnabled),
-      staleTime: 5 * 60 * 1000,
+      staleTime: CONFORMA_STALE_TIME_MS,
       enabled: !!namespace && !!comp.metadata.name,
     })),
     combine: (queryResults) => {
@@ -77,34 +79,34 @@ export const useWorkspaceConformaViolations = (): WorkspaceConformaViolations =>
       };
     }
 
-    const perApp = new Map<string, { violationCount: number; warningCount: number }>();
+    let totalViolations = 0;
+    let totalWarnings = 0;
+
+    const perApp = new Map<string, AppViolationSummary>();
 
     conformaData.forEach((data, idx) => {
       if (!data) return;
       const applicationName = components[idx]?.spec.application ?? '';
       if (!applicationName) return;
       const { violationCount, warningCount } = aggregateCounts(data);
-      const existing = perApp.get(applicationName) ?? { violationCount: 0, warningCount: 0 };
+      totalViolations += violationCount;
+      totalWarnings += warningCount;
+      const existing = perApp.get(applicationName) ?? {
+        applicationName,
+        violationCount: 0,
+        warningCount: 0,
+      };
       perApp.set(applicationName, {
+        applicationName,
         violationCount: existing.violationCount + violationCount,
         warningCount: existing.warningCount + warningCount,
       });
     });
 
-    const applications: AppViolationSummary[] = Array.from(perApp.entries()).map(
-      ([applicationName, counts]) => ({
-        applicationName,
-        ...counts,
-      }),
-    );
-
-    const totalViolations = applications.reduce((s, a) => s + a.violationCount, 0);
-    const totalWarnings = applications.reduce((s, a) => s + a.warningCount, 0);
-
     return {
       totalViolations,
       totalWarnings,
-      applications,
+      applications: Array.from(perApp.values()),
       loaded: true,
       error,
       partialError: conformaPartialError,

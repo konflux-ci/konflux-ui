@@ -1,27 +1,18 @@
 import { filterInvalidImageConformaRows, resolveConformaResultFromTaskRun } from '~/components/Conforma/ConformaResultsTab/conforma-fetchers';
-import { EC_TASK, CONFORMA_TASK } from '~/consts/security';
 import { k8sListResource } from '~/k8s';
-import type { PipelineRunKind, TaskRunKind } from '~/types';
+import type { TaskRunKind } from '~/types';
 import { type ComponentConformaResult } from '~/types/conforma';
-import { isResourceEnterpriseContract } from '~/utils/conforma-utils';
-import { isTaskRunInPipelineRun, sortTaskRunsByTime } from '~/utils/pipeline-utils';
+import { sortTaskRunsByTime } from '~/utils/pipeline-utils';
 import {
   aggregateCounts,
   fetchConformaForComponent,
-  fetchConformaForPipeline,
-  securityTaskForPipeline,
 } from '../conforma-fetch-utils';
 
 jest.mock('~/k8s', () => ({
   k8sListResource: jest.fn(),
 }));
 
-jest.mock('~/utils/conforma-utils', () => ({
-  isResourceEnterpriseContract: jest.fn(),
-}));
-
 jest.mock('~/utils/pipeline-utils', () => ({
-  isTaskRunInPipelineRun: jest.fn(),
   sortTaskRunsByTime: jest.fn((trs: TaskRunKind[]) => [...trs]),
 }));
 
@@ -30,14 +21,10 @@ jest.mock('../ConformaResultsTab/conforma-fetchers', () => ({
   filterInvalidImageConformaRows: jest.fn((rows: ComponentConformaResult[]) => rows),
 }));
 
-const mockIsEC = isResourceEnterpriseContract as jest.Mock;
-const mockIsTaskInPR = isTaskRunInPipelineRun as jest.Mock;
 const mockSortTaskRuns = sortTaskRunsByTime as jest.Mock;
 const mockK8sListResource = k8sListResource as jest.Mock;
 const mockResolveConforma = resolveConformaResultFromTaskRun as jest.Mock;
 const mockFilterInvalid = filterInvalidImageConformaRows as jest.Mock;
-
-const fakePR = { metadata: { name: 'pr-1' } } as unknown as PipelineRunKind;
 
 const createTaskRun = (name: string): TaskRunKind =>
   ({
@@ -60,35 +47,6 @@ const mockComponents: ComponentConformaResult[] = [
     successes: [{ metadata: { title: 's1', description: '', collections: [], code: 's1' }, msg: 's1' }],
   },
 ];
-
-describe('securityTaskForPipeline', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
-  it('returns EC_TASK when the pipeline run is an Enterprise Contract run', () => {
-    mockIsEC.mockReturnValue(true);
-    expect(securityTaskForPipeline(fakePR)).toBe(EC_TASK);
-  });
-
-  it('returns CONFORMA_TASK when the pipeline run contains a Conforma task', () => {
-    mockIsEC.mockReturnValue(false);
-    mockIsTaskInPR.mockReturnValue(true);
-    expect(securityTaskForPipeline(fakePR)).toBe(CONFORMA_TASK);
-  });
-
-  it('returns undefined when the pipeline run has neither EC nor Conforma task', () => {
-    mockIsEC.mockReturnValue(false);
-    mockIsTaskInPR.mockReturnValue(false);
-    expect(securityTaskForPipeline(fakePR)).toBeUndefined();
-  });
-
-  it('does not call isTaskRunInPipelineRun when isResourceEnterpriseContract returns true', () => {
-    mockIsEC.mockReturnValue(true);
-    securityTaskForPipeline(fakePR);
-    expect(mockIsTaskInPR).not.toHaveBeenCalled();
-  });
-});
 
 describe('aggregateCounts', () => {
   it('sums violations, warnings and successes across components', () => {
@@ -118,81 +76,6 @@ describe('aggregateCounts', () => {
         ] },
     ];
     expect(aggregateCounts(two).violationCount).toBe(3);
-  });
-});
-
-describe('fetchConformaForPipeline', () => {
-  const NS = 'test-ns';
-  const PR_NAME = 'pr-1';
-
-  beforeEach(() => {
-    jest.clearAllMocks();
-    mockFilterInvalid.mockImplementation((rows: ComponentConformaResult[]) => rows);
-  });
-
-  it('returns an empty array when no TaskRuns are found', async () => {
-    mockK8sListResource.mockResolvedValue({ items: [] });
-    mockSortTaskRuns.mockReturnValue([]);
-
-    const result = await fetchConformaForPipeline(NS, PR_NAME, CONFORMA_TASK, false);
-
-    expect(result).toEqual([]);
-    expect(mockResolveConforma).not.toHaveBeenCalled();
-  });
-
-  it('resolves and filters conforma results from the first TaskRun', async () => {
-    const taskRun = createTaskRun('tr-1');
-    mockK8sListResource.mockResolvedValue({ items: [taskRun] });
-    mockSortTaskRuns.mockReturnValue([taskRun]);
-    mockResolveConforma.mockResolvedValue({ components: mockComponents });
-    mockFilterInvalid.mockReturnValue(mockComponents);
-
-    const result = await fetchConformaForPipeline(NS, PR_NAME, EC_TASK, false);
-
-    expect(mockResolveConforma).toHaveBeenCalledWith(NS, taskRun, false);
-    expect(result).toBe(mockComponents);
-  });
-
-  it('passes isKubearchiveLogsEnabled to resolveConformaResultFromTaskRun', async () => {
-    const taskRun = createTaskRun('tr-1');
-    mockK8sListResource.mockResolvedValue({ items: [taskRun] });
-    mockSortTaskRuns.mockReturnValue([taskRun]);
-    mockResolveConforma.mockResolvedValue({ components: [] });
-
-    await fetchConformaForPipeline(NS, PR_NAME, EC_TASK, true);
-
-    expect(mockResolveConforma).toHaveBeenCalledWith(NS, taskRun, true);
-  });
-
-  it('returns empty array when resolveConformaResultFromTaskRun returns undefined', async () => {
-    const taskRun = createTaskRun('tr-1');
-    mockK8sListResource.mockResolvedValue({ items: [taskRun] });
-    mockSortTaskRuns.mockReturnValue([taskRun]);
-    mockResolveConforma.mockResolvedValue(undefined);
-    mockFilterInvalid.mockReturnValue([]);
-
-    const result = await fetchConformaForPipeline(NS, PR_NAME, CONFORMA_TASK, false);
-
-    expect(result).toEqual([]);
-  });
-
-  it('propagates errors thrown by k8sListResource', async () => {
-    mockK8sListResource.mockRejectedValue(new Error('k8s unavailable'));
-
-    await expect(fetchConformaForPipeline(NS, PR_NAME, CONFORMA_TASK, false)).rejects.toThrow(
-      'k8s unavailable',
-    );
-  });
-
-  it('propagates errors thrown by resolveConformaResultFromTaskRun', async () => {
-    const taskRun = createTaskRun('tr-1');
-    mockK8sListResource.mockResolvedValue({ items: [taskRun] });
-    mockSortTaskRuns.mockReturnValue([taskRun]);
-    mockResolveConforma.mockRejectedValue(new Error('log fetch failed'));
-
-    await expect(fetchConformaForPipeline(NS, PR_NAME, EC_TASK, false)).rejects.toThrow(
-      'log fetch failed',
-    );
   });
 });
 
