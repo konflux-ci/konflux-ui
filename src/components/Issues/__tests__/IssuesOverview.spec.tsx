@@ -69,4 +69,14 @@ describe('IssuesOverview', () => {
     const gridItems = container.querySelectorAll('.pf-v6-l-grid__item');
     expect(gridItems.length).toBe(3);
   });
+
+  it('should top-align left-column grid items to prevent excessive spacing', () => {
+    const { container } = renderComponent();
+
+    const gridItems = container.querySelectorAll('.pf-v6-l-grid__item');
+    // First grid item (IssueDistributionCard) should have alignSelf: start
+    expect(gridItems[0]).toHaveStyle({ alignSelf: 'start' });
+    // Third grid item (IssuesByStatusCard) should have alignSelf: start
+    expect(gridItems[2]).toHaveStyle({ alignSelf: 'start' });
+  });
 });
