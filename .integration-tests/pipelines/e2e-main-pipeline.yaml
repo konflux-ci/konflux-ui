@@ -155,10 +155,6 @@ spec:
     - name: prepare-e2e-resources
       runAfter:
         - deploy-konflux
-      when:
-        - input: '$(params.job-type)'
-          operator: notin
-          values: ['periodic-stage']
       params:
         - name: job-type
           value: '$(params.job-type)'
@@ -166,6 +162,7 @@ spec:
         description: >-
           Prepares resources required before running Konflux UI E2E tests.
           For periodic-local and pr-check jobs, extracts the Konflux base URL from the Kind cluster kubeconfig.
+          For periodic-stage, emits an empty base-url result so downstream tasks can use their own URL selection.
         params:
           - name: job-type
             type: string
@@ -178,10 +175,6 @@ spec:
           - name: setup-base-url
             image: docker.io/bitnami/kubectl@sha256:95de17e6eb92da83a58c90a9df0c4cede634f898d2e6b92ea04f4a6ee6ace08d # kubectl 1.36.3
             env:
-              - name: TEKTON_PIPELINE_RUN
-                valueFrom:
-                  fieldRef:
-                    fieldPath: metadata.labels['tekton.dev/pipelineRun']
               - name: TEKTON_NAMESPACE
                 valueFrom:
                   fieldRef:
@@ -190,10 +183,15 @@ spec:
               #!/usr/bin/env bash
               set -euo pipefail
 
+              if [ "$(params.job-type)" = "periodic-stage" ]; then
+                echo "Skipping Kind cluster setup for periodic-stage"
+                : > "$(results.base-url.path)"
+                exit 0
+              fi
+
               echo "=== Getting PipelineRun name and kubeconfig ==="
 
-              # Get PipelineRun name and namespace from environment variables set by Tekton
-              PIPELINE_RUN_NAME="${TEKTON_PIPELINE_RUN}"
+              PIPELINE_RUN_NAME="$(context.pipelineRun.name)"
               NAMESPACE="${TEKTON_NAMESPACE}"
               echo "PipelineRun name: ${PIPELINE_RUN_NAME}"
               echo "Namespace: ${NAMESPACE}"
