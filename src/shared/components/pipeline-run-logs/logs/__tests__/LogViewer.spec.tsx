@@ -9,6 +9,7 @@ import { renderWithQueryClientAndRouter as render } from '~/unit-test-utils/rend
 import LogViewer from '../LogViewer';
 import { useAutoScrollWithResume } from '../useAutoScrollWithResume';
 import { useLogViewerTheme } from '../useLogViewerTheme';
+import { useLogViewerWrap } from '../useLogViewerWrap';
 
 jest.mock('~/shared/hooks/useContainerHeight', () => ({
   useContainerHeight: () => ({
@@ -39,6 +40,10 @@ jest.mock('../useLogViewerTheme', () => ({
   useLogViewerTheme: jest.fn(() => ['dark', jest.fn()]),
 }));
 
+jest.mock('../useLogViewerWrap', () => ({
+  useLogViewerWrap: jest.fn(() => [true, jest.fn()]),
+}));
+
 // Spy on the real implementation so we can assert on the args LogViewer passes it,
 // while keeping its actual behavior intact for other tests in this file.
 jest.mock('../useAutoScrollWithResume', () => {
@@ -55,6 +60,7 @@ const mockSaveAs = jest.requireMock('file-saver').saveAs as jest.Mock;
 const mockUseFullscreen = useFullscreen as jest.Mock;
 const mockUseTheme = useTheme as jest.Mock;
 const mockUseLogViewerTheme = useLogViewerTheme as jest.Mock;
+const mockUseLogViewerWrap = useLogViewerWrap as jest.Mock;
 const mockUseAutoScrollWithResume = useAutoScrollWithResume as jest.Mock;
 
 describe('LogViewer Integration Tests', () => {
@@ -114,6 +120,7 @@ describe('LogViewer Integration Tests', () => {
       setThemePreference: jest.fn(),
     });
     mockUseLogViewerTheme.mockReturnValue(['dark', jest.fn()]);
+    mockUseLogViewerWrap.mockReturnValue([true, jest.fn()]);
 
     // Suppress console output in test environment
     consoleMock = mockConsole();
@@ -174,6 +181,7 @@ describe('LogViewer Integration Tests', () => {
       render(<LogViewer {...defaultProps} />);
 
       expect(screen.getByLabelText('Dark theme')).toBeInTheDocument();
+      expect(screen.getByLabelText('Wrap lines')).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /download logs/i })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /expand/i })).toBeInTheDocument();
     });
@@ -255,6 +263,61 @@ describe('LogViewer Integration Tests', () => {
 
       // Component should handle scroll events
       expect(scrollContainer).toBeInTheDocument();
+    });
+  });
+
+  describe('Wrap lines toggle', () => {
+    it('should toggle log-viewer--nowrap without hiding log content', async () => {
+      const user = userEvent.setup();
+      const WrapToggleTestWrapper: React.FC = () => {
+        const [wrapLines, setWrapLines] = React.useState(true);
+        mockUseLogViewerWrap.mockReturnValue([wrapLines, setWrapLines]);
+        return <LogViewer {...defaultProps} />;
+      };
+
+      const { container } = render(<WrapToggleTestWrapper />);
+      const logViewer = container.querySelector('.pf-v6-c-log-viewer');
+      const wrapCheckbox = screen.getByLabelText('Wrap lines');
+
+      expect(wrapCheckbox).toBeChecked();
+      expect(logViewer).not.toHaveClass('log-viewer--nowrap');
+      expect(container.querySelector('.log-content__list')).toBeInTheDocument();
+      expect(container.textContent).toContain('line 1');
+
+      await user.click(wrapCheckbox);
+
+      await waitFor(() => {
+        expect(logViewer).toHaveClass('log-viewer--nowrap');
+      });
+      expect(container.querySelector('.log-content__list')).toBeInTheDocument();
+      expect(container.textContent).toContain('line 1');
+    });
+
+    it('should allow horizontal scroll when Wrap lines is off', async () => {
+      const user = userEvent.setup();
+      const longLine = `x${'y'.repeat(500)}`;
+      const WrapToggleTestWrapper: React.FC = () => {
+        const [wrapLines, setWrapLines] = React.useState(true);
+        mockUseLogViewerWrap.mockReturnValue([wrapLines, setWrapLines]);
+        return (
+          <LogViewer
+            {...defaultProps}
+            sections={[{ containerName: '', data: longLine }]}
+          />
+        );
+      };
+
+      const { container } = render(<WrapToggleTestWrapper />);
+      await user.click(screen.getByLabelText('Wrap lines'));
+
+      await waitFor(() => {
+        expect(container.querySelector('.pf-v6-c-log-viewer')).toHaveClass('log-viewer--nowrap');
+      });
+
+      const list = container.querySelector('.log-content__list');
+      expect(list).toBeInTheDocument();
+      // Ancestor modifier drives horizontal scroll on the content rail only.
+      expect(container.querySelector('.log-content__content-rail')).toBeInTheDocument();
     });
   });
 

@@ -99,14 +99,35 @@ describe('VirtualizedLogContent Integration Tests', () => {
       renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
 
       const items = document.querySelectorAll('.pf-v6-c-log-viewer__list-item');
-      // Virtual items should have positioning (either absolute position or transform)
+      // Virtual items use absolute + top positioning.
       const itemsWithPositioning = Array.from(items).filter((item) => {
         if (!(item instanceof HTMLElement)) return false;
-        const hasAbsolutePosition = item.style.position === 'absolute';
-        const hasTransform = item.style.transform && item.style.transform !== '';
-        return hasAbsolutePosition || hasTransform;
+        return item.style.position === 'absolute' && item.style.top !== '';
       });
       expect(itemsWithPositioning.length).toBeGreaterThan(0);
+    });
+
+    it('should keep line numbers in a fixed gutter rail with content-only horizontal scroll', () => {
+      const longLine = `prefix ${'abcdefghij'.repeat(80)}`;
+      const { container } = renderWithQueryClientAndRouter(
+        <div className="pf-v6-c-log-viewer log-viewer--nowrap">
+          <VirtualizedLogContent
+            {...defaultProps}
+            wrapLines={false}
+            sections={[{ containerName: '', data: `short\n${longLine}` }]}
+          />
+        </div>,
+      );
+
+      expect(container.querySelector('.log-content__gutter-rail')).toBeInTheDocument();
+      expect(container.querySelector('.log-content__content-rail')).toBeInTheDocument();
+
+      const gutterCells = container.querySelectorAll('.log-content__gutter-rail .log-content__gutter');
+      const contentRows = container.querySelectorAll(
+        '.log-content__content-rail .pf-v6-c-log-viewer__list-item',
+      );
+      expect(gutterCells.length).toBeGreaterThan(0);
+      expect(gutterCells.length).toBe(contentRows.length);
     });
 
     it('should efficiently handle large datasets with virtualization', () => {
@@ -564,8 +585,8 @@ Another short line`;
     it('should align gutter cells with content rows', () => {
       renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
 
-      const gutterCells = document.querySelectorAll('.log-content__gutter');
-      const contentItems = document.querySelectorAll('.log-content__row-content');
+      const gutterCells = document.querySelectorAll('.log-content__gutter-rail .log-content__gutter');
+      const contentItems = document.querySelectorAll('.log-content__content-rail .log-content__row-content');
 
       // Each virtual row has exactly one gutter cell and one content area
       expect(gutterCells.length).toBe(contentItems.length);

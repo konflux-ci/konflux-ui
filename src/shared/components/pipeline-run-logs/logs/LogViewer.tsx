@@ -48,6 +48,7 @@ import { TaskRunKind } from '~/types';
 import { useLogSearch } from '../useLogSearch';
 import LogsTaskDuration from './LogsTaskDuration';
 import { useLogViewerTheme } from './useLogViewerTheme';
+import { useLogViewerWrap } from './useLogViewerWrap';
 
 import '@patternfly/react-log-viewer/dist/css/log-viewer.css';
 
@@ -99,7 +100,9 @@ const LogViewer: React.FC<Props> = ({
 }) => {
   const taskName = taskRun?.spec.taskRef?.name ?? taskRun?.metadata.name;
   const [logTheme, setLogTheme] = useLogViewerTheme();
+  const [wrapLines, setWrapLines] = useLogViewerWrap();
   const themeCheckboxId = React.useId();
+  const wrapCheckboxId = React.useId();
 
   const normalizedSections = React.useMemo(
     () => normalizedSectionsProp ?? sections?.map(normalizeSection) ?? [],
@@ -149,7 +152,6 @@ const LogViewer: React.FC<Props> = ({
       });
   };
 
-  // Use containerRef to measure actual height for VirtualizedLogViewer
   const { containerRef, containerHeight } = useContainerHeight();
 
   const allLines = React.useMemo(
@@ -176,6 +178,7 @@ const LogViewer: React.FC<Props> = ({
       className={classNames('log-viewer__container', 'pf-v6-c-log-viewer', {
         'pf-m-dark': logTheme === 'dark',
         'log-viewer--light': logTheme === 'light',
+        'log-viewer--nowrap': !wrapLines,
       })}
     >
       {/* Toolbar */}
@@ -219,6 +222,14 @@ const LogViewer: React.FC<Props> = ({
                   label="Dark theme"
                   checked={logTheme === 'dark'}
                   onClick={() => setLogTheme(logTheme === 'dark' ? 'light' : 'dark')}
+                />
+              </ToolbarItem>
+              <ToolbarItem>
+                <Checkbox
+                  id={wrapCheckboxId}
+                  label="Wrap lines"
+                  checked={wrapLines}
+                  onClick={() => setWrapLines(!wrapLines)}
                 />
               </ToolbarItem>
               <ToolbarItem variant="separator" className="log-viewer__divider" />
@@ -354,6 +365,7 @@ const LogViewer: React.FC<Props> = ({
               onScroll={handleScroll}
               searchText={searchText}
               currentSearchMatch={currentMatch}
+              wrapLines={wrapLines}
               onDownloadFullLogs={onDownloadFullLogs}
               onViewFullLogs={onViewFullLogs}
               lineNumberNavigationProps={
