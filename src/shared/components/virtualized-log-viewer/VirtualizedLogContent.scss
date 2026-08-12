@@ -1,3 +1,8 @@
+.log-content__container {
+  position: relative;
+  isolation: isolate;
+}
+
 .log-content__list {
   position: relative;
   z-index: 1;
@@ -19,12 +24,47 @@
   }
 }
 
-// Per-row gutter cell — sticky left column rendered inline within each virtual row.
-.log-content__gutter {
-  position: sticky;
-  left: 0;
-  flex-shrink: 0;
+.log-content__inner {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+}
+
+.log-content__gutter-rail {
+  position: relative;
   width: var(--pf-t--global--spacer--3xl);
+  background-color: var(
+    --pf-v6-c-log-viewer__main--BackgroundColor,
+    var(--pf-t--global--background--color--primary--default)
+  );
+  border-right: var(--pf-t--global--border--width--box--default) solid
+    var(--pf-t--global--border--color--default);
+}
+
+.log-content__content-rail {
+  position: relative;
+}
+
+.log-content__row-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.pf-v6-c-log-viewer.log-viewer--nowrap {
+  .log-content__content-rail {
+    overflow-x: auto;
+  }
+
+  .log-content__row-content > .pf-v6-c-log-viewer__text {
+    width: max-content;
+    max-width: none;
+  }
+}
+
+.log-content__gutter {
+  position: absolute;
+  left: 0;
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -33,8 +73,6 @@
     --pf-v6-c-log-viewer__main--BackgroundColor,
     var(--pf-t--global--background--color--primary--default)
   );
-  border-right: var(--pf-t--global--border--width--box--default) solid
-    var(--pf-t--global--border--color--default);
   user-select: none;
   overflow: hidden;
 
@@ -45,17 +83,6 @@
   .pf-m-dark &--highlighted {
     background-color: var(--pf-t--global--color--status--warning--200);
   }
-}
-
-// Content cell within each virtual row (flex sibling of .log-content__gutter)
-.log-content__row-content {
-  flex: 1;
-  min-width: 0;
-}
-
-.log-content__container {
-  position: relative;
-  isolation: isolate;
 }
 
 .log-content__line--highlighted {

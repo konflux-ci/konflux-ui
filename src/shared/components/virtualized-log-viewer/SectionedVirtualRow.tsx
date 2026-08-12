@@ -8,11 +8,10 @@ import './VirtualizedLogContent.scss';
 
 const virtualRowStyle = (start: number): React.CSSProperties => ({
   position: 'absolute',
-  top: 0,
+  top: start,
   left: 0,
   width: '100%',
   display: 'flex',
-  transform: `translateY(${start}px)`,
 });
 
 function getRowLineNumber(row: LogDisplayRow): number | null {
@@ -21,39 +20,28 @@ function getRowLineNumber(row: LogDisplayRow): number | null {
   return null;
 }
 
-type SectionedVirtualRowProps = {
-  virtualIndex: number;
+type VirtualGutterCellProps = {
   start: number;
+  size: number;
   row: LogDisplayRow;
-  measureElement: Virtualizer<HTMLDivElement, Element>['measureElement'];
   isLineHighlighted: (lineNumber: number) => boolean;
-  onToggleSection: (sectionIndex: number) => void;
-  renderLogLine: (flatLineIndex: number) => React.ReactNode;
   onLineClick: (lineNumber: number, event: React.MouseEvent) => void;
 };
 
-export const SectionedVirtualRow: React.FC<SectionedVirtualRowProps> = ({
-  virtualIndex,
+export const VirtualGutterCell: React.FC<VirtualGutterCellProps> = ({
   start,
+  size,
   row,
-  measureElement,
   isLineHighlighted,
-  onToggleSection,
-  renderLogLine,
   onLineClick,
 }) => {
   const lineNumber = getRowLineNumber(row);
   const isHighlighted = lineNumber !== null && isLineHighlighted(lineNumber);
 
-  const rowClassName = `pf-v6-c-log-viewer__list-item${
-    row.kind === 'content' && isLineHighlighted(row.globalLineNumber)
-      ? ' log-content__line--highlighted'
-      : ''
-  }`;
-
-  const gutterCell = (
+  return (
     <div
       className={`log-content__gutter${isHighlighted ? ' log-content__gutter--highlighted' : ''}`}
+      style={{ top: start, height: size }}
     >
       {lineNumber !== null && (
         <a
@@ -71,6 +59,32 @@ export const SectionedVirtualRow: React.FC<SectionedVirtualRowProps> = ({
       )}
     </div>
   );
+};
+
+type SectionedVirtualRowProps = {
+  virtualIndex: number;
+  start: number;
+  row: LogDisplayRow;
+  measureElement: Virtualizer<HTMLDivElement, Element>['measureElement'];
+  isLineHighlighted: (lineNumber: number) => boolean;
+  onToggleSection: (sectionIndex: number) => void;
+  renderLogLine: (flatLineIndex: number) => React.ReactNode;
+};
+
+export const SectionedVirtualRow: React.FC<SectionedVirtualRowProps> = ({
+  virtualIndex,
+  start,
+  row,
+  measureElement,
+  isLineHighlighted,
+  onToggleSection,
+  renderLogLine,
+}) => {
+  const rowClassName = `pf-v6-c-log-viewer__list-item${
+    row.kind === 'content' && isLineHighlighted(row.globalLineNumber)
+      ? ' log-content__line--highlighted'
+      : ''
+  }`;
 
   const rowProps = {
     'data-index': virtualIndex,
@@ -82,7 +96,6 @@ export const SectionedVirtualRow: React.FC<SectionedVirtualRowProps> = ({
   if (row.kind === 'section-header') {
     return (
       <div {...rowProps}>
-        {gutterCell}
         <div className="log-content__row-content">
           <SectionHeaderButton row={row} onToggle={() => onToggleSection(row.sectionIndex)} />
         </div>
@@ -93,7 +106,6 @@ export const SectionedVirtualRow: React.FC<SectionedVirtualRowProps> = ({
   if (row.kind === 'fold-indicator') {
     return (
       <div {...rowProps}>
-        {gutterCell}
         <div className="log-content__row-content">
           <FoldIndicatorLine lineCount={row.lineCount} />
         </div>
@@ -103,7 +115,6 @@ export const SectionedVirtualRow: React.FC<SectionedVirtualRowProps> = ({
 
   return (
     <div {...rowProps}>
-      {gutterCell}
       <div className="log-content__row-content">{renderLogLine(row.flatLineIndex)}</div>
     </div>
   );

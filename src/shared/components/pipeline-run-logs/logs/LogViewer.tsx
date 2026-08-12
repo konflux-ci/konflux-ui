@@ -48,6 +48,7 @@ import { TaskRunKind } from '~/types';
 import { prepareLogViewerContent } from './log-viewer-content';
 import LogsTaskDuration from './LogsTaskDuration';
 import { useLogViewerTheme } from './useLogViewerTheme';
+import { useLogViewerWrap } from './useLogViewerWrap';
 
 import './LogViewer.scss';
 
@@ -89,7 +90,9 @@ const LogViewer: React.FC<Props> = ({
 }) => {
   const taskName = taskRun?.spec.taskRef?.name ?? taskRun?.metadata.name;
   const [logTheme, setLogTheme] = useLogViewerTheme();
+  const [wrapLines, setWrapLines] = useLogViewerWrap();
   const themeCheckboxId = React.useId();
+  const wrapCheckboxId = React.useId();
 
   const normalizedSections = React.useMemo(() => sections.map(normalizeSection), [sections]);
 
@@ -192,6 +195,7 @@ const LogViewer: React.FC<Props> = ({
           className={classNames('log-viewer__container', 'pf-v6-c-log-viewer', {
             'pf-m-dark': logTheme === 'dark',
             'log-viewer--light': logTheme === 'light',
+            'log-viewer--nowrap': !wrapLines,
           })}
         >
           {/* Toolbar */}
@@ -227,6 +231,14 @@ const LogViewer: React.FC<Props> = ({
                       label="Dark theme"
                       checked={logTheme === 'dark'}
                       onClick={() => setLogTheme(logTheme === 'dark' ? 'light' : 'dark')}
+                    />
+                  </ToolbarItem>
+                  <ToolbarItem>
+                    <Checkbox
+                      id={wrapCheckboxId}
+                      label="Wrap lines"
+                      checked={wrapLines}
+                      onClick={() => setWrapLines(!wrapLines)}
                     />
                   </ToolbarItem>
                   <ToolbarItem variant="separator" className="log-viewer__divider" />
@@ -347,6 +359,7 @@ const LogViewer: React.FC<Props> = ({
                 scrollToRow={scrolledRow}
                 onScroll={handleScroll}
                 readyToNavigate={!isLoading}
+                wrapLines={wrapLines}
               />
             )}
           </div>
