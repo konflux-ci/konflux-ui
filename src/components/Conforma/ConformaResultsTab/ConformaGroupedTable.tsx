@@ -1,10 +1,11 @@
 import * as React from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Content, Tooltip, Truncate as PfTruncate } from '@patternfly/react-core';
+import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import { type ExpandedState } from '@tanstack/react-table';
 import { PIPELINE_RUNS_SECURITY_PATH } from '@routes/paths';
 import { getRuleStatus } from '~/components/Conforma/utils';
-import { Table, type ColumnDefinition } from '~/shared/components/TableV2';
+import { Table as TableV2, type ColumnDefinition } from '~/shared/components/TableV2';
 import { Truncate } from '~/shared/components/truncate-text/Truncate';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { CONFORMA_RESULT_STATUS } from '~/types/conforma';
@@ -25,132 +26,104 @@ const DetailSubTable: React.FC<{ rows: ConformaResultRow[] }> = ({ rows }) => {
   const namespace = useNamespace();
   const { applicationName } = useParams();
 
-  const detailColumns = React.useMemo<ColumnDefinition<ConformaResultRow>[]>(
-    () => [
-      {
-        id: 'rule',
-        header: 'Rule',
-        accessorFn: (row) => row.title,
-        cell: ({ row }) => (
-          <Content>
-            <Content component="p">
-              <strong>{row.original.title ?? '-'}</strong>
-            </Content>
-            {row.original.code && <Content component="small">{row.original.code}</Content>}
-            {row.original.description && (
-              <Content component="small">{row.original.description}</Content>
-            )}
-          </Content>
-        ),
-      },
-      {
-        id: 'component',
-        header: 'Component',
-        accessorFn: (row) => row.component,
-        cell: ({ row }) => row.original.component,
-      },
-      {
-        id: 'image',
-        header: 'Image',
-        accessorFn: (row) => row.images[0] || '',
-        cell: ({ row }) => {
-          const { images } = row.original;
-          const commonName = images.length > 1 ? getCommonImageName(images) : undefined;
-
-          if (images.length > 1) {
-            return (
-              <Tooltip
-                content={
-                  <ul>
-                    {images.map((img) => (
-                      <li key={img}>{img}</li>
-                    ))}
-                  </ul>
-                }
-              >
-                <Content>
-                  {commonName ? (
-                    <>
-                      <Content component="p">
-                        <PfTruncate content={commonName} />
-                      </Content>
-                      <Content component="small">{images.length} arch variants</Content>
-                    </>
-                  ) : (
-                    <Content component="p">Affects {images.length} images</Content>
-                  )}
-                </Content>
-              </Tooltip>
-            );
-          }
-
-          return images.length === 1 ? <PfTruncate content={images[0]} /> : '-';
-        },
-      },
-      {
-        id: 'status',
-        header: 'Status',
-        accessorFn: (row) => row.status,
-        cell: ({ row }) => getRuleStatus(row.original.status),
-      },
-      {
-        id: 'message',
-        header: 'Message',
-        accessorFn: (row) => row.msg || '',
-        cell: ({ row }) => (
-          <Content>
-            <Content component="p">
-              {row.original.msg != null ? (
-                <Truncate
-                  content={row.original.msg}
-                  expandInline
-                  data-test="conforma-violation-msg"
-                />
-              ) : (
-                '-'
-              )}
-            </Content>
-            {row.original.solution && (
-              <Content component="small">Solution: {row.original.solution}</Content>
-            )}
-          </Content>
-        ),
-      },
-      {
-        id: 'pipelineRun',
-        header: 'Pipeline run',
-        accessorFn: (row) => row.pipelineRunName || '',
-        cell: ({ row }) =>
-          row.original.pipelineRunName ? (
-            <Link
-              to={PIPELINE_RUNS_SECURITY_PATH.createPath({
-                workspaceName: namespace,
-                applicationName: applicationName || '',
-                pipelineRunName: row.original.pipelineRunName,
-              })}
-              data-test="conforma-pipeline-run-link"
-            >
-              <PfTruncate content={row.original.pipelineRunName} />
-            </Link>
-          ) : (
-            '-'
-          ),
-      },
-    ],
-    [namespace, applicationName],
-  );
-
   return (
     <div className="conforma-results-tab__detail-table">
-      <Table
-        data={rows}
-        columns={detailColumns}
-        getRowId={(row) =>
-          `${row.component}-${row.title}-${row.status}-${row.pipelineRunName || ''}-${row.images.join(',')}`
-        }
-        aria-label="Conforma detail rows"
-        data-test="conforma-detail-table"
-      />
+      <Table aria-label="Conforma detail rows" data-test="conforma-detail-table" variant="compact">
+        <Thead>
+          <Tr>
+            <Th>Rule</Th>
+            <Th>Component</Th>
+            <Th>Image</Th>
+            <Th>Status</Th>
+            <Th>Message</Th>
+            <Th>Pipeline run</Th>
+          </Tr>
+        </Thead>
+        <Tbody>
+          {rows.map((row, idx) => {
+            const { images } = row;
+            const commonName = images.length > 1 ? getCommonImageName(images) : undefined;
+
+            return (
+              <Tr key={idx}>
+                <Td dataLabel="Rule">
+                  <Content>
+                    <Content component="p">
+                      <strong>{row.title ?? '-'}</strong>
+                    </Content>
+                    {row.code && <Content component="small">{row.code}</Content>}
+                    {row.description && <Content component="small">{row.description}</Content>}
+                  </Content>
+                </Td>
+                <Td dataLabel="Component">{row.component}</Td>
+                <Td dataLabel="Image">
+                  {images.length > 1 ? (
+                    <Tooltip
+                      content={
+                        <ul>
+                          {images.map((img) => (
+                            <li key={img}>{img}</li>
+                          ))}
+                        </ul>
+                      }
+                    >
+                      <Content>
+                        {commonName ? (
+                          <>
+                            <Content component="p">
+                              <PfTruncate content={commonName} />
+                            </Content>
+                            <Content component="small">{images.length} arch variants</Content>
+                          </>
+                        ) : (
+                          <Content component="p">Affects {images.length} images</Content>
+                        )}
+                      </Content>
+                    </Tooltip>
+                  ) : images.length === 1 ? (
+                    <PfTruncate content={images[0]} />
+                  ) : (
+                    '-'
+                  )}
+                </Td>
+                <Td dataLabel="Status">{getRuleStatus(row.status)}</Td>
+                <Td dataLabel="Message">
+                  <Content>
+                    <Content component="p">
+                      {row.msg != null ? (
+                        <Truncate
+                          content={row.msg}
+                          expandInline
+                          data-test="conforma-violation-msg"
+                        />
+                      ) : (
+                        '-'
+                      )}
+                    </Content>
+                    {row.solution && <Content component="small">Solution: {row.solution}</Content>}
+                  </Content>
+                </Td>
+                <Td dataLabel="Pipeline run">
+                  {row.pipelineRunName ? (
+                    <Link
+                      to={PIPELINE_RUNS_SECURITY_PATH.createPath({
+                        workspaceName: namespace,
+                        applicationName: applicationName || '',
+                        pipelineRunName: row.pipelineRunName,
+                      })}
+                      data-test="conforma-pipeline-run-link"
+                    >
+                      <PfTruncate content={row.pipelineRunName} />
+                    </Link>
+                  ) : (
+                    '-'
+                  )}
+                </Td>
+              </Tr>
+            );
+          })}
+        </Tbody>
+      </Table>
     </div>
   );
 };
@@ -255,7 +228,7 @@ export const ConformaGroupedTable: React.FC<ConformaGroupedTableProps> = ({
   );
 
   return (
-    <Table
+    <TableV2
       data={groups}
       columns={columns}
       getRowId={(row) => row.groupKey}
