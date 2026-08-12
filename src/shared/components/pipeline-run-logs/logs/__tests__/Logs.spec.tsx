@@ -482,7 +482,7 @@ describe('Logs', () => {
       });
     });
 
-    it('should display err.message for 404 errors from archive source', async () => {
+    it('should display formatted error message for 404 errors from archive source', async () => {
       const terminatedContainer: ContainerStatus = {
         name: 'container1',
         state: { terminated: { exitCode: 0 } },
@@ -515,10 +515,10 @@ describe('Logs', () => {
 
       expect(commonFetchText as jest.Mock).toHaveBeenCalled();
 
-      // Archive 404s should display err.message without LOG FETCH ERROR formatting
+      // Archive 404s with a message should display it with ANSI-styled LOG FETCH ERROR
       await waitFor(() => {
         const sectionsData = getLastSectionsData();
-        expect(sectionsData).not.toContain('LOG FETCH ERROR');
+        expect(sectionsData).toContain('LOG FETCH ERROR');
         expect(sectionsData).toContain('Not Found');
       });
     });
