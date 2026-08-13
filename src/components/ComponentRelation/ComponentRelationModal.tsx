@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { Formik, FormikHelpers } from 'formik';
+import { logger } from '~/monitoring/logger';
 import { useComponents, useSortedGroupComponents } from '../../hooks/useComponents';
 import { useNamespace } from '../../shared/providers/Namespace';
 import { ComponentKind } from '../../types';
@@ -27,6 +28,21 @@ export const ComponentRelationModal: React.FC<ComponentRelationModalProps> = ({
   const [showSubmissionModal, setShowSubmissionModal] = React.useState<boolean>(false);
   const [nudgeData, loaded, error] = useNudgeData(application);
   const namespace = useNamespace();
+
+  const handleSubmitError = (
+    e: unknown,
+    helpers: FormikHelpers<ComponentRelationFormikValue>,
+  ) => {
+    logger.error(
+      'Error while updating dependency data for component',
+      e instanceof Error ? e : undefined,
+    );
+
+    helpers.setSubmitting(false);
+    helpers.setStatus({
+      submitError: e instanceof Error ? e.message : String(e),
+    });
+  };
 
   const [components, cnLoaded, cnError] = useComponents(namespace, application);
   const [sortedGroupedComponents, allLoaded, allError] = useSortedGroupComponents(namespace);
@@ -67,12 +83,9 @@ export const ComponentRelationModal: React.FC<ComponentRelationModalProps> = ({
       });
       try {
         await updateNudgeDependencies(values.relations, initialValues.relations, namespace, true);
-      } catch (e) {
-        // eslint-disable-next-line no-console
-        console.error(`Error while updating dependency data for component`, e);
-
-        helpers.setSubmitting(false);
-        helpers.setStatus({ submitError: e?.message });
+      } catch (e: unknown) {
+        handleSubmitError(e, helpers);
+        return;
       }
       return updateNudgeDependencies(values.relations, initialValues.relations, namespace)
         .then((compResults: ComponentKind[]) => {
@@ -85,12 +98,8 @@ export const ComponentRelationModal: React.FC<ComponentRelationModalProps> = ({
           });
           onSaveRelationships();
         })
-        .catch((e) => {
-          // eslint-disable-next-line no-console
-          console.error(`Error while updating dependency data for component`, e);
-
-          helpers.setSubmitting(false);
-          helpers.setStatus({ submitError: e?.message });
+        .catch((e: unknown) => {
+          handleSubmitError(e, helpers);
         });
     },
     [application, namespace, onSaveRelationships, track, initialValues],
