@@ -3844,19 +3844,19 @@ __metadata:
   linkType: hard
 
 "@patternfly/react-code-editor@npm:^6.5.1":
-  version: 6.6.0
-  resolution: "@patternfly/react-code-editor@npm:6.6.0"
+  version: 6.6.1
+  resolution: "@patternfly/react-code-editor@npm:6.6.1"
   dependencies:
     "@monaco-editor/react": "npm:^4.7.0"
-    "@patternfly/react-core": "npm:^6.6.0"
-    "@patternfly/react-icons": "npm:^6.6.0"
-    "@patternfly/react-styles": "npm:^6.6.0"
+    "@patternfly/react-core": "npm:^6.6.1"
+    "@patternfly/react-icons": "npm:^6.6.1"
+    "@patternfly/react-styles": "npm:^6.6.1"
     react-dropzone: "npm:14.3.5"
     tslib: "npm:^2.8.1"
   peerDependencies:
     react: ^17 || ^18 || ^19
     react-dom: ^17 || ^18 || ^19
-  checksum: 10/1beb6617eb65fcf73894dc7358bf35e602df38d83ea53ef3ddf1daf69057333f97b437e4ebf8410d799d1aedecf265ef5da65252a221b0c5655b3dc9cca4a4b7
+  checksum: 10/8c3a815e5d5a1713bd4ab6272f0d86011442cf3776e69597b81bf32053373e3cf0ee29f74c567f895067702770ec6d9dc556295ddbcb256c1b9075e3f98a264b
   languageName: node
   linkType: hard
 
