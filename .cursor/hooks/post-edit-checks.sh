@@ -98,22 +98,36 @@ ${tsc_out}"
   }
 fi
 
-eslint_files=$(echo "$changed_files" | grep -E '\.(ts|tsx)$' || true)
+# Root ESLint ignores e2e-tests/* — linting those paths under --max-warnings 0
+# surfaces "File ignored..." warnings as failures. Skip them here.
+# Also skip deleted paths (eslint/xargs fail when the file is gone).
+existing_src_ts() {
+  echo "$changed_files" \
+    | grep -E '\.(ts|tsx)$' \
+    | grep -v '^e2e-tests/' \
+    | while IFS= read -r f; do
+        [[ -f "$f" ]] && printf '%s\n' "$f"
+      done
+}
+
+eslint_files=$(existing_src_ts || true)
 if [[ -n "$eslint_files" ]]; then
   lint_out=$(echo "$eslint_files" | tr '\n' '\0' | xargs -0 yarn eslint --report-unused-disable-directives --max-warnings 0 2>&1) || errors="${errors}
 === ESLint Errors ===
 ${lint_out}"
 fi
 
-scss_files=$(echo "$changed_files" | grep -E '\.scss$' || true)
+scss_files=$(echo "$changed_files" | grep -E '\.scss$' | while IFS= read -r f; do
+  [[ -f "$f" ]] && printf '%s\n' "$f"
+done || true)
 if [[ -n "$scss_files" ]]; then
   style_out=$(echo "$scss_files" | tr '\n' '\0' | xargs -0 yarn stylelint --config .stylelintrc.json 2>&1) || errors="${errors}
 === Stylelint Errors ===
 ${style_out}"
 fi
 
-# Only run test files the agent actually changed; skip source-only changes.
-test_files=$(echo "$changed_files" | grep -E '\.(spec|test)\.(ts|tsx)$' || true)
+# Only run unit test files the agent actually changed; skip e2e Cypress specs.
+test_files=$(echo "$changed_files" | grep -E '\.(spec|test)\.(ts|tsx)$' | grep -v '^e2e-tests/' || true)
 if [[ -n "$test_files" ]]; then
   test_out=$(echo "$test_files" | tr '\n' '\0' | xargs -0 yarn jest --passWithNoTests 2>&1) || {
     # Ignore "Cannot find module" failures sourced from files the agent didn't touch —

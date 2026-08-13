@@ -7,7 +7,7 @@ jest.mock('@sentry/react', () => ({
   captureException: jest.fn().mockReturnValue('event-id'),
   captureMessage: jest.fn().mockReturnValue('event-id'),
   setUser: jest.fn(),
-  browserTracingIntegration: jest.fn(),
+  reactRouterBrowserTracingIntegration: jest.fn(),
 }));
 
 describe('MonitoringService', () => {
@@ -22,7 +22,7 @@ describe('MonitoringService', () => {
     jest.clearAllMocks();
   });
 
-  it('should initialize with NoOpProvider for noop config', async () => {
+  it('should initialize with NoOpProvider for noop config', () => {
     const config: MonitoringConfig = {
       enabled: false,
       provider: 'noop',
@@ -30,13 +30,13 @@ describe('MonitoringService', () => {
     };
 
     const service = new MonitoringService();
-    await service.initialize(config);
+    service.initialize(config);
 
     service.captureException(new Error('test'));
     expect(consoleMock.error).toHaveBeenCalled();
   });
 
-  it('should initialize with SentryProvider for sentry config', async () => {
+  it('should initialize with SentryProvider for sentry config', () => {
     const Sentry = jest.requireMock('@sentry/react');
     const config: MonitoringConfig = {
       enabled: true,
@@ -46,12 +46,12 @@ describe('MonitoringService', () => {
     };
 
     const service = new MonitoringService();
-    await service.initialize(config);
+    service.initialize(config);
 
     expect(Sentry.init).toHaveBeenCalled();
   });
 
-  it('should delegate captureException to provider and return this for chaining', async () => {
+  it('should delegate captureException to provider and return this for chaining', () => {
     const config: MonitoringConfig = {
       enabled: false,
       provider: 'noop',
@@ -59,19 +59,17 @@ describe('MonitoringService', () => {
     };
 
     const service = new MonitoringService();
-    await service.initialize(config);
+    service.initialize(config);
 
     const result = service.captureException(new Error('test'), { key: 'value' });
 
-    expect(consoleMock.error).toHaveBeenCalledWith(
-      'captureException',
-      expect.any(Error),
-      { key: 'value' },
-    );
+    expect(consoleMock.error).toHaveBeenCalledWith('captureException', expect.any(Error), {
+      key: 'value',
+    });
     expect(result).toBe(service);
   });
 
-  it('should delegate captureMessage to provider and return this for chaining', async () => {
+  it('should delegate captureMessage to provider and return this for chaining', () => {
     const config: MonitoringConfig = {
       enabled: false,
       provider: 'noop',
@@ -79,7 +77,7 @@ describe('MonitoringService', () => {
     };
 
     const service = new MonitoringService();
-    await service.initialize(config);
+    service.initialize(config);
 
     const result = service.captureMessage('test message', 'warn', { extra: 'data' });
 
@@ -87,7 +85,7 @@ describe('MonitoringService', () => {
     expect(result).toBe(service);
   });
 
-  it('should delegate setUser to provider and return this for chaining', async () => {
+  it('should delegate setUser to provider and return this for chaining', () => {
     const config: MonitoringConfig = {
       enabled: false,
       provider: 'noop',
@@ -95,7 +93,7 @@ describe('MonitoringService', () => {
     };
 
     const service = new MonitoringService();
-    await service.initialize(config);
+    service.initialize(config);
 
     const result = service.setUser({ id: '123', username: 'testuser' });
 

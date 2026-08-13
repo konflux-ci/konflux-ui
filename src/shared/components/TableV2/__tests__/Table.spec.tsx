@@ -10,6 +10,7 @@ import { type ColumnDefinition } from '~/shared/components/TableV2/types';
 
 jest.mock('~/shared/hooks', () => ({
   getParentScrollableElement: jest.fn().mockReturnValue(null),
+  useLayoutResizeObserver: jest.fn(),
 }));
 jest.mock('~/shared/components/TableV2/hooks/useTable');
 jest.mock('~/shared/components/TableV2/hooks/useColumnState');
@@ -184,5 +185,31 @@ describe('Table', () => {
     render(<Table {...defaultProps} />);
 
     expect(computeColumnWidths).toHaveBeenCalledWith(columns, ['name', 'id']);
+  });
+
+  describe('row selection', () => {
+    it('passes enableRowSelection and onRowSelectionChange to useTable', () => {
+      const onRowSelectionChange = jest.fn();
+      render(
+        <Table {...defaultProps} enableRowSelection onRowSelectionChange={onRowSelectionChange} />,
+      );
+
+      expect(useTable).toHaveBeenCalledWith(
+        expect.objectContaining({
+          enableRowSelection: true,
+          onRowSelectionChange,
+        }),
+      );
+    });
+
+    it('does not pass enableRowSelection to useTable when omitted', () => {
+      render(<Table {...defaultProps} />);
+
+      expect(useTable).toHaveBeenCalledWith(
+        expect.not.objectContaining({
+          enableRowSelection: true,
+        }),
+      );
+    });
   });
 });

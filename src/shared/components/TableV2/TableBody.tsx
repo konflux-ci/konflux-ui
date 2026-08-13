@@ -19,12 +19,16 @@ interface TableBodyProps<TData> {
   getRowId: (row: TData) => string;
   /** Whether rows are expandable. */
   enableExpansion?: boolean;
+  /** Whether rows are selectable. */
+  enableRowSelection?: boolean;
   /** Render function for expanded row content. */
   expandedContent?: (row: TData) => ReactNode;
   /** Number of visible columns, used for `colSpan` on expanded content and loading rows. */
   visibleColumnCount: number;
   /** Whether the next page is being fetched. Shows skeleton rows when `true`. */
   isFetchingNextPage?: boolean;
+  /** Scroll margin from the virtualizer, subtracted from spacer calculations. */
+  scrollMargin?: number;
 }
 
 /**
@@ -45,20 +49,22 @@ export const TableBody = <TData,>({
   measureElement,
   getRowId,
   enableExpansion,
+  enableRowSelection,
   expandedContent,
   visibleColumnCount,
   isFetchingNextPage,
+  scrollMargin = 0,
 }: TableBodyProps<TData>) => {
   const lastVirtualRow = virtualRows[virtualRows.length - 1];
   const bottomSpacerHeight = lastVirtualRow
     ? totalSize - (lastVirtualRow.start + lastVirtualRow.size)
     : 0;
 
+  const topSpacerHeight = virtualRows.length > 0 ? virtualRows[0].start - scrollMargin : 0;
+
   return (
     <Tbody data-test="table-body" style={{ overflowAnchor: 'none' }}>
-      {virtualRows.length > 0 && virtualRows[0].start > 0 && (
-        <Tr style={{ height: virtualRows[0].start }} />
-      )}
+      {topSpacerHeight > 0 && <Tr style={{ height: topSpacerHeight }} />}
       {virtualRows.map((virtualRow) => {
         const row = rows[virtualRow.index];
         if (!row) return null;
@@ -71,6 +77,7 @@ export const TableBody = <TData,>({
               virtualIndex={virtualRow.index}
               measureElement={measureElement}
               enableExpansion={enableExpansion}
+              enableRowSelection={enableRowSelection}
             />
             {enableExpansion && row.getIsExpanded() && expandedContent && (
               <Tr>

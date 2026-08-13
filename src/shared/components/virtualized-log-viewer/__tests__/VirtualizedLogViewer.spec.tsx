@@ -17,8 +17,9 @@ jest.mock('lodash-es', () => ({
 
 describe('VirtualizedLogViewer Integration Tests', () => {
   const mockData = 'line 1\nline 2\nline 3';
+  // Incomplete so the single section stays expanded and content is in the DOM for assertions.
   const defaultProps = {
-    sections: [singleLogSection(mockData)],
+    sections: [singleLogSection(mockData, 'log', false)],
     height: 600,
   };
 

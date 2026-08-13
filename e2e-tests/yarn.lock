@@ -325,7 +325,7 @@ __metadata:
   dependencies:
     "@cypress/code-coverage": "npm:^3.12.0"
     "@types/fs-extra": "npm:^9.0.13"
-    "@types/node": "npm:^17.0.13"
+    "@types/node": "npm:^24.0.0"
     axe-core: "npm:^4.10.2"
     cypress: "npm:^15.7.0"
     cypress-axe: "npm:^1.6.0"
@@ -404,18 +404,20 @@ __metadata:
   linkType: hard
 
 "@types/node@npm:*":
-  version: 25.2.0
-  resolution: "@types/node@npm:25.2.0"
+  version: 26.1.2
+  resolution: "@types/node@npm:26.1.2"
   dependencies:
-    undici-types: "npm:~7.16.0"
-  checksum: 10/18a7245e20556bc92486161872c54bef7601e1e7970028e8a18d1f57d88aa3035efef42c144a2100f9e9bf6fba7a15b4ae8ee044cd98a8b06d6f754232611f70
+    undici-types: "npm:~8.3.0"
+  checksum: 10/2dd6d75b80c006deab4e381acc8cb2e3d634f10141f05fd6cadaabddd80a95f04aef7b00a574bd8fd5e08e940b899c23b91dd09a70b11a34a2762203b5eea25e
   languageName: node
   linkType: hard
 
-"@types/node@npm:^17.0.13":
-  version: 17.0.45
-  resolution: "@types/node@npm:17.0.45"
-  checksum: 10/b45fff7270b5e81be19ef91a66b764a8b21473a97a8d211218a52e3426b79ad48f371819ab9153370756b33ba284e5c875463de4d2cf48a472e9098d7f09e8a2
+"@types/node@npm:^24.0.0":
+  version: 24.13.3
+  resolution: "@types/node@npm:24.13.3"
+  dependencies:
+    undici-types: "npm:~7.18.0"
+  checksum: 10/cfa6ed1e16c4624d1e83b09aeb72a2f50a7e17d837bf5a1259a52e346f33a693afd289402d3b6118ce3abea7aff35f2a4f13a0284b96bc5807a50f0e22e1ec77
   languageName: node
   linkType: hard
 
@@ -1103,8 +1105,8 @@ __metadata:
   linkType: hard
 
 "cypress@npm:^15.7.0":
-  version: 15.18.0
-  resolution: "cypress@npm:15.18.0"
+  version: 15.19.0
+  resolution: "cypress@npm:15.19.0"
   dependencies:
     "@cypress/request": "npm:^4.0.0"
     "@cypress/xvfb": "npm:^1.2.4"
@@ -1147,7 +1149,7 @@ __metadata:
     yauzl: "npm:^3.3.1"
   bin:
     cypress: bin/cypress
-  checksum: 10/e81a161b0df769ee5ca6771becb2304df359fa569b654d2d346a577c9ac268b339b4f79756573e2c23dd630e0d8e73b9cad0bd99aef5f18ab4a1d10b03aa81de
+  checksum: 10/cb0da58d2af6f055aaeb08639fdd8c1dcc852758ee6a6409ba44242e9baa9157af5bbc72f16d2c094e25633b1d963e71e62c8f28fe6283b51c646951be6cac07
   languageName: node
   linkType: hard
 
@@ -3246,11 +3248,11 @@ __metadata:
   linkType: hard
 
 "prettier@npm:^3.4.2":
-  version: 3.9.5
-  resolution: "prettier@npm:3.9.5"
+  version: 3.9.6
+  resolution: "prettier@npm:3.9.6"
   bin:
     prettier: bin/prettier.cjs
-  checksum: 10/b6587f1582ba653ce5207ee227aff646500e5098646931088f176d1ab090b1f47d5a333f1facd634e9aa7dcb15c45940e2cec13a5962534cf0200617517b67b6
+  checksum: 10/1dd1a1e0e40ec3b91cda9d294c4a95022aef61880ca3f441aad99b1252279f58a766c4cece81132c01550dcff1fd445efbd8812ea4a2374313e7fc6c8136f11f
   languageName: node
   linkType: hard
 
@@ -4178,10 +4180,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"undici-types@npm:~7.16.0":
-  version: 7.16.0
-  resolution: "undici-types@npm:7.16.0"
-  checksum: 10/db43439f69c2d94cc29f75cbfe9de86df87061d6b0c577ebe9bb3255f49b22c50162a7d7eb413b0458b6510b8ca299ac7cff38c3a29fbd31af9f504bcf7fbc0d
+"undici-types@npm:~7.18.0":
+  version: 7.18.2
+  resolution: "undici-types@npm:7.18.2"
+  checksum: 10/e61a5918f624d68420c3ca9d301e9f15b61cba6e97be39fe2ce266dd6151e4afe424d679372638826cb506be33952774e0424141200111a9857e464216c009af
+  languageName: node
+  linkType: hard
+
+"undici-types@npm:~8.3.0":
+  version: 8.3.0
+  resolution: "undici-types@npm:8.3.0"
+  checksum: 10/6681d2837ac75a75ac1cc46090aa2b8ddc7c6b8ecc295a6cdb06838752a730da3d8afeecf05e5ab7903160eafad3a8b6ffa1927e5ded260590f4d4fef18646d5
   languageName: node
   linkType: hard
 

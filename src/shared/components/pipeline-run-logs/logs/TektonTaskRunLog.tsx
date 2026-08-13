@@ -1,5 +1,7 @@
 import * as React from 'react';
+import { runStatus } from '~/consts/pipelinerun';
 import { singleLogSection } from '~/shared/components/virtualized-log-viewer/log-viewer-utils';
+import { taskRunStatus } from '~/utils/pipeline-utils';
 import { useTRTaskRunLog } from '../../../../hooks/useTektonResults';
 import { HttpError } from '../../../../k8s/error';
 import { TaskRunKind } from '../../../../types';
@@ -24,10 +26,17 @@ export const TektonTaskRunLog: React.FC<React.PropsWithChildren<TektonTaskRunLog
       ? `Logs are no longer accessible for ${taskName} task`
       : null;
 
-  const sections = React.useMemo(
-    () => (trResults ? [singleLogSection(trResults, taskName ?? 'log')] : []),
-    [trResults, taskName],
-  );
+  const sections = React.useMemo(() => {
+    if (!trResults) {
+      return [];
+    }
+
+    const status = taskRun ? taskRunStatus(taskRun) : runStatus.Unknown;
+    const inProgress =
+      status === runStatus.Running || status === runStatus.Pending || status === runStatus.Idle;
+
+    return [singleLogSection(trResults, taskName ?? 'log', trLoaded && !inProgress)];
+  }, [trResults, taskName, taskRun, trLoaded]);
 
   return (
     <LogViewer

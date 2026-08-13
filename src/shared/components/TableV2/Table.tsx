@@ -5,6 +5,7 @@ import { computeColumnWidths } from './column-widths';
 import { useColumnState } from './hooks/useColumnState';
 import { useInfiniteScroll } from './hooks/useInfiniteScroll';
 import { useResponsiveColumns } from './hooks/useResponsiveColumns';
+import { useScrollMargin } from './hooks/useScrollMargin';
 import { useTable } from './hooks/useTable';
 import { useVirtualization } from './hooks/useVirtualization';
 import { TableBody } from './TableBody';
@@ -18,6 +19,7 @@ import { type TableProps } from './types';
  * - **Column state** (`useColumnState`) — persisted visibility, order, and sort
  * - **Responsive columns** (`useResponsiveColumns`) — hides columns at breakpoints
  * - **Core table** (`useTable`) — TanStack Table instance with sorting and expansion
+ * - **Scroll margin** (`useScrollMargin`) — offset for content above the table in the scroll container
  * - **Virtualization** (`useVirtualization`) — only renders visible rows for performance
  * - **Infinite scroll** (`useInfiniteScroll`) — triggers data fetching near the bottom
  * - **Column widths** (`computeColumnWidths`) — flex and fixed width calculation
@@ -63,6 +65,8 @@ export const Table = <TData,>({
   meta,
   enableSorting,
   enableExpansion,
+  enableRowSelection,
+  onRowSelectionChange,
   expandedContent,
   hasNextPage,
   isFetchingNextPage,
@@ -89,6 +93,8 @@ export const Table = <TData,>({
     }
   }, [scrollElementProp, tableNode]);
 
+  const scrollMargin = useScrollMargin(tableNode, scrollElement);
+
   const { columnState, setColumnState } = useColumnState(columnStateKey, columns);
   const { columnVisibility } = useResponsiveColumns(columns);
 
@@ -101,12 +107,15 @@ export const Table = <TData,>({
     responsiveColumnVisibility: columnVisibility,
     enableSorting,
     enableExpansion,
+    enableRowSelection,
+    onRowSelectionChange,
     meta,
   });
 
   const { virtualizer, virtualRows } = useVirtualization({
     count: rows.length,
     scrollElement,
+    scrollMargin,
   });
 
   useInfiniteScroll({
@@ -119,12 +128,19 @@ export const Table = <TData,>({
   });
 
   const columnWidths = computeColumnWidths(columns, columnState.visibleColumns);
-  const visibleColumnCount = table.getVisibleLeafColumns().length;
+  let visibleColumnCount = table.getVisibleLeafColumns().length;
+  if (enableExpansion) visibleColumnCount += 1;
+  if (enableRowSelection) visibleColumnCount += 1;
 
   return (
     <div data-test="table-v2" ref={tableRef}>
       <PfTable aria-label={ariaLabel} variant="compact" isExpandable={enableExpansion}>
-        <TableHeader table={table} columnWidths={columnWidths} enableExpansion={enableExpansion} />
+        <TableHeader
+          table={table}
+          columnWidths={columnWidths}
+          enableExpansion={enableExpansion}
+          enableRowSelection={enableRowSelection}
+        />
         <TableBody
           rows={rows}
           virtualRows={virtualRows}
@@ -132,9 +148,11 @@ export const Table = <TData,>({
           measureElement={virtualizer.measureElement}
           getRowId={getRowId}
           enableExpansion={enableExpansion}
+          enableRowSelection={enableRowSelection}
           expandedContent={expandedContent}
           visibleColumnCount={visibleColumnCount}
           isFetchingNextPage={isFetchingNextPage}
+          scrollMargin={scrollMargin}
         />
       </PfTable>
     </div>

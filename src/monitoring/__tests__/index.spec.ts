@@ -1,4 +1,3 @@
-import { mockConsole, MockConsole } from '~/unit-test-utils';
 import type { MonitoringConfig } from '../types';
 
 jest.mock('@sentry/react', () => ({
@@ -6,7 +5,7 @@ jest.mock('@sentry/react', () => ({
   captureException: jest.fn().mockReturnValue('event-id'),
   captureMessage: jest.fn().mockReturnValue('event-id'),
   setUser: jest.fn(),
-  browserTracingIntegration: jest.fn(),
+  reactRouterBrowserTracingIntegration: jest.fn(),
 }));
 
 jest.mock('../load-config', () => ({
@@ -14,17 +13,14 @@ jest.mock('../load-config', () => ({
 }));
 
 describe('initMonitoring', () => {
-  let consoleMock: MockConsole;
   let loadMonitoringConfigMock: jest.Mock;
 
   beforeEach(() => {
-    consoleMock = mockConsole();
     jest.resetModules();
     loadMonitoringConfigMock = jest.requireMock('../load-config').loadMonitoringConfig;
   });
 
   afterEach(() => {
-    consoleMock.restore();
     jest.clearAllMocks();
   });
 
@@ -41,7 +37,7 @@ describe('initMonitoring', () => {
     const createSpy = jest.spyOn(MonitoringService, 'create');
 
     const indexModule = await import('../index');
-    const result = await indexModule.initMonitoring();
+    const result = indexModule.initMonitoring();
 
     expect(loadMonitoringConfigMock).toHaveBeenCalled();
     expect(createSpy).toHaveBeenCalledWith(mockConfig);

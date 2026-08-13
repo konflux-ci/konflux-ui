@@ -55,6 +55,10 @@ spec:
       description: 'Type of job (pr-check, periodic-local, periodic-stage)'
       default: 'pr-check'
       type: string
+    - name: skip-slack-notification
+      description: 'Skip sending the Slack notification'
+      default: 'false'
+      type: string
     - name: test-image-tag
       description: >-
         Tag for the E2E test image (quay.io/konflux_ui_qe/konflux-ui-tests:<tag>).
@@ -232,7 +236,7 @@ spec:
       when:
         - input: '$(params.job-type)'
           operator: notin
-          values: ['periodic-stage']
+          values: ['periodic-stage', 'periodic-local']
       taskRef:
         resolver: git
         params:
@@ -259,6 +263,10 @@ spec:
           value: '$(params.artifact-browser-url)'
 
     - name: send-slack-notification
+      when:
+        - input: '$(params.skip-slack-notification)'
+          operator: notin
+          values: ['true']
       taskRef:
         resolver: git
         params:
