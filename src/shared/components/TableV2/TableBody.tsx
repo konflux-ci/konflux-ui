@@ -1,4 +1,4 @@
-import React, { type ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import { Skeleton } from '@patternfly/react-core';
 import { Tbody, Tr, Td, ExpandableRowContent } from '@patternfly/react-table';
 import { type Row } from '@tanstack/react-table';
@@ -63,19 +63,25 @@ export const TableBody = <TData,>({
   const topSpacerHeight = virtualRows.length > 0 ? virtualRows[0].start - scrollMargin : 0;
 
   return (
-    <Tbody data-test="table-body" style={{ overflowAnchor: 'none' }}>
-      {topSpacerHeight > 0 && <Tr style={{ height: topSpacerHeight }} />}
+    <>
+      <Tbody data-test="table-body" style={{ overflowAnchor: 'none' }}>
+        {topSpacerHeight > 0 && <Tr style={{ height: topSpacerHeight }} />}
+      </Tbody>
       {virtualRows.map((virtualRow) => {
         const row = rows[virtualRow.index];
         if (!row) return null;
         const rowId = getRowId(row.original);
         return (
-          <React.Fragment key={rowId}>
+          <tbody
+            key={rowId}
+            ref={measureElement}
+            data-index={virtualRow.index}
+            style={{ overflowAnchor: 'none' }}
+          >
             <TableRow
               row={row}
               rowId={rowId}
               virtualIndex={virtualRow.index}
-              measureElement={measureElement}
               enableExpansion={enableExpansion}
               enableRowSelection={enableRowSelection}
             />
@@ -86,20 +92,22 @@ export const TableBody = <TData,>({
                 </Td>
               </Tr>
             )}
-          </React.Fragment>
+          </tbody>
         );
       })}
-      {bottomSpacerHeight > 0 && <Tr style={{ height: bottomSpacerHeight }} />}
-      {isFetchingNextPage &&
-        Array.from({ length: 3 }, (_, rowIdx) => (
-          <Tr key={`skeleton-${rowIdx}`} data-test="table-loading-more">
-            {Array.from({ length: visibleColumnCount }, (__, colIdx) => (
-              <Td key={colIdx}>
-                <Skeleton width={`${50 + ((rowIdx + colIdx) % 4) * 10}%`} />
-              </Td>
-            ))}
-          </Tr>
-        ))}
-    </Tbody>
+      <tbody style={{ overflowAnchor: 'none' }}>
+        {bottomSpacerHeight > 0 && <Tr style={{ height: bottomSpacerHeight }} />}
+        {isFetchingNextPage &&
+          Array.from({ length: 3 }, (_, rowIdx) => (
+            <Tr key={`skeleton-${rowIdx}`} data-test="table-loading-more">
+              {Array.from({ length: visibleColumnCount }, (__, colIdx) => (
+                <Td key={colIdx}>
+                  <Skeleton width={`${50 + ((rowIdx + colIdx) % 4) * 10}%`} />
+                </Td>
+              ))}
+            </Tr>
+          ))}
+      </tbody>
+    </>
   );
 };
