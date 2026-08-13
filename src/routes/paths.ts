@@ -161,3 +161,6 @@ export const USER_ACCESS_EDIT_PAGE = USER_ACCESS_LIST_PAGE.extend(
 );
 
 export const PIPELINE_RUNS_PAGE_PATH = WORKSPACE_PATH.extend('prns');
+
+/** Standalone Copy login command page (no masthead). Opens in a new tab. */
+export const CLI_LOGIN_PATH = buildRoute('cli-login');

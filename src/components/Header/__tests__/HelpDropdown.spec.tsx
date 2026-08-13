@@ -58,6 +58,7 @@ describe('HelpDropdown Component', () => {
       renderWithModalProvider(<HelpDropdown />);
 
       expect(screen.queryByText('About Konflux')).not.toBeInTheDocument();
+      expect(screen.queryByText('Copy login command')).not.toBeInTheDocument();
       expect(screen.queryByText('Documentation')).not.toBeInTheDocument();
       expect(screen.queryByText('Share feedback')).not.toBeInTheDocument();
     });
@@ -84,6 +85,7 @@ describe('HelpDropdown Component', () => {
 
       await waitFor(() => {
         expect(screen.getByText('About Konflux')).toBeInTheDocument();
+        expect(screen.getByText('Copy login command')).toBeInTheDocument();
         expect(screen.getByText('Documentation')).toBeInTheDocument();
         expect(screen.getByText('Share feedback')).toBeInTheDocument();
       });
@@ -115,10 +117,12 @@ describe('HelpDropdown Component', () => {
 
       await waitFor(() => {
         const aboutItem = screen.getByTestId('help-dropdown-about');
+        const cliLoginItem = screen.getByTestId('help-dropdown-cli-login');
         const docItem = screen.getByTestId('help-dropdown-documentation');
         const feedbackItem = screen.getByTestId('help-dropdown-feedback');
 
         expect(aboutItem).toBeInTheDocument();
+        expect(cliLoginItem).toBeInTheDocument();
         expect(docItem).toBeInTheDocument();
         expect(feedbackItem).toBeInTheDocument();
       });
@@ -134,6 +138,21 @@ describe('HelpDropdown Component', () => {
         const docItem = screen.getByTestId('help-dropdown-documentation');
         expect(docItem.querySelector('svg')).toBeInTheDocument();
       });
+    });
+  });
+
+  describe('Copy login command', () => {
+    it('should show Copy login command as an external link like Documentation', async () => {
+      renderWithModalProvider(<HelpDropdown />);
+
+      const helpIcon = screen.getByLabelText('Help menu toggle');
+      fireEvent.click(helpIcon);
+
+      const cliLoginLink = await screen.findByRole('link', { name: /Copy login command/i });
+      expect(cliLoginLink.querySelector('svg')).toBeInTheDocument();
+      expect(cliLoginLink).toHaveAttribute('href', '/cli-login');
+      expect(cliLoginLink).toHaveAttribute('target', '_blank');
+      expect(cliLoginLink).toHaveAttribute('rel', 'noopener noreferrer');
     });
   });
 

@@ -8,6 +8,7 @@ import {
   Tooltip,
 } from '@patternfly/react-core';
 import { OutlinedQuestionCircleIcon } from '@patternfly/react-icons/dist/esm/icons/outlined-question-circle-icon';
+import { CLI_LOGIN_PATH } from '@routes/paths';
 import {
   EXTERNAL_DOCUMENTATION_BASE_URL,
   INTERNAL_DOCUMENTATION_BASE_URL,
@@ -60,6 +61,9 @@ export const HelpDropdown: React.FC = () => {
           <DropdownList>
             <DropdownItem key="about" onClick={handleAboutClick} data-test="help-dropdown-about">
               About Konflux
+            </DropdownItem>
+            <DropdownItem key="cli-login" data-test="help-dropdown-cli-login">
+              <ExternalLink href={`/${CLI_LOGIN_PATH.path}`} text="Copy login command" />
             </DropdownItem>
             <DropdownItem key="documentation" data-test="help-dropdown-documentation">
               <ExternalLink href={documentationLink} text={'Documentation'} />

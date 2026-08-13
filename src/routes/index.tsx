@@ -1,6 +1,7 @@
 import { createBrowserRouter, type LoaderFunctionArgs } from 'react-router-dom';
 import { wrapCreateBrowserRouter } from '@sentry/react';
 import { AppRoot } from '../AppRoot/AppRoot';
+import CliLoginPage from '../components/CLILogin/CliLoginPage';
 import { GithubRedirect, githubRedirectLoader } from '../components/GithubRedirect';
 import { ModalProvider } from '../components/modal/ModalProvider';
 import { Overview } from '../components/Overview/Overview';
@@ -24,12 +25,26 @@ import secretRoutes from './page-routes/secrets';
 import snapshotRoutes from './page-routes/snapshots';
 import taskRunRoutes from './page-routes/taskrun';
 import userAccessRoutes from './page-routes/user-access';
+import { CLI_LOGIN_PATH } from './paths';
 import { RouteErrorBoundry } from './RouteErrorBoundary';
 import { GithubRedirectRouteParams } from './utils';
 
 const sentryCreateBrowserRouter = wrapCreateBrowserRouter(createBrowserRouter);
 
 export const router = sentryCreateBrowserRouter([
+  {
+    // Standalone page: opens in a new tab without the AppRoot masthead.
+    path: CLI_LOGIN_PATH.path,
+    loader: async (params: LoaderFunctionArgs) => {
+      return await namespaceLoader(params);
+    },
+    errorElement: <RouteErrorBoundry />,
+    element: (
+      <NamespaceProvider>
+        <CliLoginPage />
+      </NamespaceProvider>
+    ),
+  },
   {
     path: '/',
     loader: async (params: LoaderFunctionArgs) => {

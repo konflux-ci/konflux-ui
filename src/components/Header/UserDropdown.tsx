@@ -6,7 +6,7 @@ import {
   DropdownList,
   MenuToggle,
 } from '@patternfly/react-core';
-import { useAuth } from '../../auth/useAuth';
+import { useAuth } from '~/auth/useAuth';
 
 export const UserDropdown: React.FC = () => {
   const [isOpen, setIsOpen] = React.useState(false);
@@ -14,6 +14,7 @@ export const UserDropdown: React.FC = () => {
     user: { email },
     signOut,
   } = useAuth();
+
   return (
     <Dropdown
       aria-label="User action"
@@ -34,7 +35,9 @@ export const UserDropdown: React.FC = () => {
     >
       <DropdownGroup>
         <DropdownList>
-          <DropdownItem onClick={() => signOut?.()}>Log out</DropdownItem>
+          <DropdownItem key="logout" onClick={() => signOut?.()}>
+            Log out
+          </DropdownItem>
         </DropdownList>
       </DropdownGroup>
     </Dropdown>
