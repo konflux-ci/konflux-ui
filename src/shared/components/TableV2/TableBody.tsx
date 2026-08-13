@@ -72,7 +72,7 @@ export const TableBody = <TData,>({
         if (!row) return null;
         const rowId = getRowId(row.original);
         return (
-          <tbody
+          <Tbody
             key={rowId}
             ref={measureElement}
             data-index={virtualRow.index}
@@ -92,10 +92,10 @@ export const TableBody = <TData,>({
                 </Td>
               </Tr>
             )}
-          </tbody>
+          </Tbody>
         );
       })}
-      <tbody style={{ overflowAnchor: 'none' }}>
+      <Tbody style={{ overflowAnchor: 'none' }}>
         {bottomSpacerHeight > 0 && <Tr style={{ height: bottomSpacerHeight }} />}
         {isFetchingNextPage &&
           Array.from({ length: 3 }, (_, rowIdx) => (
@@ -107,7 +107,7 @@ export const TableBody = <TData,>({
               ))}
             </Tr>
           ))}
-      </tbody>
+      </Tbody>
     </>
   );
 };
