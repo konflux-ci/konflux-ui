@@ -320,10 +320,14 @@ spec:
         STARTED_EPOCH=$(date +%s)
         STARTED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 
+        # KEEP
+
         # Run tests and capture exit code (don't exit on failure)
         set +e
         yarn run cy:run --spec "${SPEC_FILE}"
         TEST_RESULT=$?
+
+        # KEEP END
 
         ENDED_EPOCH=$(date +%s)
         ENDED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)
