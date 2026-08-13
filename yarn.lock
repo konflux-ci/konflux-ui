@@ -3860,20 +3860,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@patternfly/react-core@npm:6.6.0, @patternfly/react-core@npm:^6.6.0":
-  version: 6.6.0
-  resolution: "@patternfly/react-core@npm:6.6.0"
+"@patternfly/react-core@npm:6.6.1, @patternfly/react-core@npm:^6.6.1":
+  version: 6.6.1
+  resolution: "@patternfly/react-core@npm:6.6.1"
   dependencies:
-    "@patternfly/react-icons": "npm:^6.6.0"
-    "@patternfly/react-styles": "npm:^6.6.0"
-    "@patternfly/react-tokens": "npm:^6.6.0"
+    "@patternfly/react-icons": "npm:^6.6.1"
+    "@patternfly/react-styles": "npm:^6.6.1"
+    "@patternfly/react-tokens": "npm:^6.6.1"
     focus-trap: "npm:7.6.6"
     react-dropzone: "npm:^14.3.5"
     tslib: "npm:^2.8.1"
   peerDependencies:
     react: ^17 || ^18 || ^19
     react-dom: ^17 || ^18 || ^19
-  checksum: 10/f465c4bcea74db7a3e80d9eb9bc4592413a7f0a6c88bb89a35285ad42b0798a19b9ea9ba376c532b98c91fcc85ca3ebd542ac8cce8c563d49d79b8141d2b7c29
+  checksum: 10/43d2f77ebc990b857e5c62393292d52722b2ef551ddc843cb23a89d0b816e423ba1ca4b895773dba8812e087fbf7b613f0957885564de3b0c8db35f9a4c4810a
   languageName: node
   linkType: hard
 
@@ -3894,20 +3894,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@patternfly/react-core@npm:^6.6.1":
-  version: 6.6.1
-  resolution: "@patternfly/react-core@npm:6.6.1"
+"@patternfly/react-core@npm:^6.6.0":
+  version: 6.6.0
+  resolution: "@patternfly/react-core@npm:6.6.0"
   dependencies:
-    "@patternfly/react-icons": "npm:^6.6.1"
-    "@patternfly/react-styles": "npm:^6.6.1"
-    "@patternfly/react-tokens": "npm:^6.6.1"
+    "@patternfly/react-icons": "npm:^6.6.0"
+    "@patternfly/react-styles": "npm:^6.6.0"
+    "@patternfly/react-tokens": "npm:^6.6.0"
     focus-trap: "npm:7.6.6"
     react-dropzone: "npm:^14.3.5"
     tslib: "npm:^2.8.1"
   peerDependencies:
     react: ^17 || ^18 || ^19
     react-dom: ^17 || ^18 || ^19
-  checksum: 10/43d2f77ebc990b857e5c62393292d52722b2ef551ddc843cb23a89d0b816e423ba1ca4b895773dba8812e087fbf7b613f0957885564de3b0c8db35f9a4c4810a
+  checksum: 10/f465c4bcea74db7a3e80d9eb9bc4592413a7f0a6c88bb89a35285ad42b0798a19b9ea9ba376c532b98c91fcc85ca3ebd542ac8cce8c563d49d79b8141d2b7c29
   languageName: node
   linkType: hard
 
@@ -13943,7 +13943,7 @@ __metadata:
     "@patternfly/patternfly": "npm:^6.5.2"
     "@patternfly/react-charts": "npm:7.4.5"
     "@patternfly/react-code-editor": "npm:^6.5.1"
-    "@patternfly/react-core": "npm:6.6.0"
+    "@patternfly/react-core": "npm:6.6.1"
     "@patternfly/react-drag-drop": "npm:^6.5.1"
     "@patternfly/react-icons": "npm:6.6.0"
     "@patternfly/react-log-viewer": "npm:6.5.0"
