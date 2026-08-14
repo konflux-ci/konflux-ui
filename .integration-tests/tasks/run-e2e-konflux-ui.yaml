@@ -38,14 +38,16 @@ spec:
       type: string
       default: 'quay-secret'
       description: 'Secret name for OCI registry authentication'
+    - name: konflux-base-url
+      type: string
+      default: ''
+      description: 'Konflux base URL for Cypress tests (from prepare-e2e-resources pipeline task)'
   volumes:
     # Enlarge /dev/shm for Cypress/Chrome; default container shm (~64MB) causes flaky browser crashes
     - name: dshm
       emptyDir:
         medium: Memory
         sizeLimit: 3Gi
-    - name: kubeconfig-data
-      emptyDir: {}
     - name: test-artifacts
       emptyDir: {}
     - name: oci-credentials
@@ -60,65 +62,6 @@ spec:
       - name: test-artifacts
         mountPath: /artifacts
   steps:
-    - name: setup-base-url
-      when:
-        - input: '$(params.job-type)'
-          operator: notin
-          values: ['periodic-stage']
-      image: docker.io/bitnami/kubectl@sha256:95de17e6eb92da83a58c90a9df0c4cede634f898d2e6b92ea04f4a6ee6ace08d # kubectl 1.36.3
-      volumeMounts:
-        - name: kubeconfig-data
-          mountPath: /shared
-      env:
-        - name: TEKTON_PIPELINE_RUN
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.labels['tekton.dev/pipelineRun']
-        - name: TEKTON_NAMESPACE
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.namespace
-      script: |
-        #!/usr/bin/env bash
-        set -euo pipefail
-
-        echo "=== Getting PipelineRun name and kubeconfig ==="
-
-        # Get PipelineRun name and namespace from environment variables set by Tekton
-        PIPELINE_RUN_NAME="${TEKTON_PIPELINE_RUN}"
-        NAMESPACE="${TEKTON_NAMESPACE}"
-        echo "PipelineRun name: ${PIPELINE_RUN_NAME}"
-        echo "Namespace: ${NAMESPACE}"
-
-        # Construct the secret name
-        SECRET_NAME="kfg-${PIPELINE_RUN_NAME}"
-        echo "Looking for secret: ${SECRET_NAME}"
-
-        # Extract kubeconfig from the secret (0600 so it is not world-readable)
-        kubectl get secret "${SECRET_NAME}" -n "${NAMESPACE}" -o jsonpath='{.data.kubeconfig}' \
-          | base64 -d \
-          | install -m 0600 /dev/stdin /shared/kubeconfig
-
-        # Switch to Kind cluster context
-        export KUBECONFIG=/shared/kubeconfig
-
-        echo "=== Extracting Konflux base URL from kubeconfig ==="
-
-        KUBE_SERVER=$(kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}')
-        echo "Kubernetes API server: ${KUBE_SERVER}"
-
-        # Extract IP address (remove https:// prefix and :6443 port)
-        KUBE_IP=$(echo "${KUBE_SERVER}" | sed -E 's|https?://([^:]+):.*|\1|')
-        echo "Extracted IP: ${KUBE_IP}"
-
-        CYPRESS_KONFLUX_BASE_URL="https://${KUBE_IP}:9443"
-        echo "Konflux base URL: ${CYPRESS_KONFLUX_BASE_URL}"
-
-        # Save to shared volume for next step
-        echo "${CYPRESS_KONFLUX_BASE_URL}" > /shared/base-url
-
-        echo "Setup complete. Ready for E2E tests."
-
     - name: run-e2e-test
       image: quay.io/konflux_ui_qe/konflux-ui-tests:$(params.test-image-tag)
       onError: continue
@@ -137,9 +80,6 @@ spec:
         # Chromium-based browsers (such as Cypress and Playwright) require /dev/shm for reliable operation inside containers.
         - name: dshm
           mountPath: /dev/shm
-        - name: kubeconfig-data
-          mountPath: /shared
-          readOnly: true
       env:
         - name: CYPRESS_USERNAME
           valueFrom:
@@ -171,20 +111,18 @@ spec:
         # Note: NOT using 'set -e' so script continues after test failure
         set -uo pipefail
 
-        echo "=== Loading configuration from setup step ==="
+        echo "=== Loading configuration ==="
 
-        # Read base URL from shared volume
         if [ "$(params.job-type)" = "periodic-stage" ]; then
           export CYPRESS_KONFLUX_BASE_URL="https://konflux-ui.apps.stone-stg-rh01.l2vh.p1.openshiftapps.com"
           export CYPRESS_LOCAL_CLUSTER=false
           export CYPRESS_PERIODIC_RUN_STAGE=true
         else
-          if [ ! -s /shared/base-url ]; then
-            echo "ERROR: /shared/base-url is missing or empty (setup-base-url step failed?)"
-            ls -la /shared/ || true
+          if [ -z "$(params.konflux-base-url)" ]; then
+            echo "ERROR: konflux-base-url param is missing or empty (prepare-e2e-resources task failed?)"
             exit 1
           fi
-          export CYPRESS_KONFLUX_BASE_URL=$(cat /shared/base-url)
+          export CYPRESS_KONFLUX_BASE_URL="$(params.konflux-base-url)"
           export CYPRESS_LOCAL_CLUSTER=true
         fi
         echo "Konflux base URL: ${CYPRESS_KONFLUX_BASE_URL}"

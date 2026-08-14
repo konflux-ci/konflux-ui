@@ -152,6 +152,78 @@ spec:
         - name: build-credentials
           value: $(params.build-credentials-secret)
 
+    - name: prepare-e2e-resources
+      runAfter:
+        - deploy-konflux
+      params:
+        - name: job-type
+          value: '$(params.job-type)'
+      taskSpec:
+        description: >-
+          Prepares resources required before running Konflux UI E2E tests.
+          For periodic-local and pr-check jobs, extracts the Konflux base URL from the Kind cluster kubeconfig.
+          For periodic-stage, emits an empty base-url result so downstream tasks can use their own URL selection.
+        params:
+          - name: job-type
+            type: string
+            default: 'pr-check'
+            description: 'Type of job (pr-check, periodic-local, periodic-stage)'
+        results:
+          - name: base-url
+            description: 'Konflux base URL for Cypress tests (https://<kind-ip>:9443)'
+        steps:
+          - name: setup-base-url
+            image: docker.io/bitnami/kubectl@sha256:95de17e6eb92da83a58c90a9df0c4cede634f898d2e6b92ea04f4a6ee6ace08d # kubectl 1.36.3
+            env:
+              - name: TEKTON_NAMESPACE
+                valueFrom:
+                  fieldRef:
+                    fieldPath: metadata.namespace
+            script: |
+              #!/usr/bin/env bash
+              set -euo pipefail
+
+              if [ "$(params.job-type)" = "periodic-stage" ]; then
+                echo "Skipping Kind cluster setup for periodic-stage"
+                : > "$(results.base-url.path)"
+                exit 0
+              fi
+
+              echo "=== Getting PipelineRun name and kubeconfig ==="
+
+              PIPELINE_RUN_NAME="$(context.pipelineRun.name)"
+              NAMESPACE="${TEKTON_NAMESPACE}"
+              echo "PipelineRun name: ${PIPELINE_RUN_NAME}"
+              echo "Namespace: ${NAMESPACE}"
+
+              # Construct the secret name
+              SECRET_NAME="kfg-${PIPELINE_RUN_NAME}"
+              echo "Looking for secret: ${SECRET_NAME}"
+
+              # Extract kubeconfig from the secret (0600 so it is not world-readable)
+              kubectl get secret "${SECRET_NAME}" -n "${NAMESPACE}" -o jsonpath='{.data.kubeconfig}' \
+                | base64 -d \
+                | install -m 0600 /dev/stdin /tmp/kubeconfig
+
+              # Switch to Kind cluster context
+              export KUBECONFIG=/tmp/kubeconfig
+
+              echo "=== Extracting Konflux base URL from kubeconfig ==="
+
+              KUBE_SERVER=$(kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}')
+              echo "Kubernetes API server: ${KUBE_SERVER}"
+
+              # Extract IP address (remove https:// prefix and :6443 port)
+              KUBE_IP=$(echo "${KUBE_SERVER}" | sed -E 's|https?://([^:]+):.*|\1|')
+              echo "Extracted IP: ${KUBE_IP}"
+
+              CYPRESS_KONFLUX_BASE_URL="https://${KUBE_IP}:9443"
+              echo "Konflux base URL: ${CYPRESS_KONFLUX_BASE_URL}"
+
+              echo -n "${CYPRESS_KONFLUX_BASE_URL}" > "$(results.base-url.path)"
+
+              echo "Setup complete. Ready for E2E tests."
+
     - name: monitor-webhook-logs
       runAfter:
         - deploy-konflux
@@ -174,7 +246,7 @@ spec:
 
     - name: run-e2e-konflux-ui
       runAfter:
-        - deploy-konflux
+        - prepare-e2e-resources
       taskRef:
         resolver: git
         params:
@@ -185,7 +257,6 @@ spec:
           - name: pathInRepo
             value: .integration-tests/tasks/run-e2e-konflux-ui.yaml
       params:
-        # says if it is PR check or periodic job
         - name: job-type
           value: '$(params.job-type)'
           # oci for storing artefacts
@@ -203,6 +274,8 @@ spec:
           value: $(params.cypress-credentials-secret)
         - name: cypress-cloud-secret
           value: $(params.cypress-cloud-secret)
+        - name: konflux-base-url
+          value: $(tasks.prepare-e2e-resources.results.base-url)
   finally:
     - name: deprovision-kind-cluster
       when:
