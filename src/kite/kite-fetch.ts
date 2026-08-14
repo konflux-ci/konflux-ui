@@ -23,5 +23,5 @@ export const fetchIssues = (issueQuery: IssueQuery): Promise<IssueResponse> => {
 
 export const resolveIssue = (id: string, namespace?: string): Promise<Issue> => {
   const query = namespace ? `?namespace=${encodeURIComponent(namespace)}` : '';
-  return fetchKite<Issue>(`issues/${id}/resolve${query}`, { method: 'POST' });
+  return fetchKite<Issue>(`issues/${encodeURIComponent(id)}/resolve${query}`, { method: 'POST' });
 };
