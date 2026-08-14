@@ -1,5 +1,4 @@
-import { FeatureFlagsStore } from '~/feature-flags/store';
-import { isImageControllerEnabled } from '~/image-controller/conditional-checks';
+import { getKonfluxPublicInfo } from '~/hooks/useKonfluxPublicInfo';
 import { ApplicationKind, ImportSecret } from '../../types';
 import { SBOMEventNotification } from '../../types/konflux-public-info';
 import {
@@ -48,11 +47,19 @@ export const createResourcesWithLinkingComponents = async (
   namespace: string,
   notifications: SBOMEventNotification[],
 ) => {
-  // Ensure the image controller condition is resolved before checking it synchronously.
-  // This condition is not evaluated at startup (no flag guard references it), and no
-  // component in the import form tree calls useIsImageControllerEnabled, so without this
-  // the synchronous isImageControllerEnabled() would return false on a fresh session.
-  await FeatureFlagsStore.ensureConditions(['isImageControllerEnabled']);
+  // Fresh check at submit time — bypass every cache layer (React Query, condition
+  // registry, localStorage) so a stale "false" from a prior failed fetch can never
+  // silently prevent ImageRepository creation.  Default to enabled: only an explicit
+  // `enabled: false` from the API should suppress creation.
+  let imageControllerEnabled = true;
+  try {
+    const info = await getKonfluxPublicInfo({ staleTime: 0 });
+    imageControllerEnabled = info.integrations?.image_controller?.enabled !== false;
+  } catch {
+    // Cannot reach the API — default to enabled so we don't silently skip
+    // ImageRepository creation on a cluster that has the image controller.
+    imageControllerEnabled = true;
+  }
 
   const {
     source,
@@ -99,7 +106,7 @@ export const createResourcesWithLinkingComponents = async (
       undefined,
       componentAnnotations,
     );
-    if (isImageControllerEnabled()) {
+    if (imageControllerEnabled) {
       await createImageRepository(
         {
           application,
@@ -138,7 +145,7 @@ export const createResourcesWithLinkingComponents = async (
       componentAnnotations,
     );
 
-    if (isImageControllerEnabled()) {
+    if (imageControllerEnabled) {
       await createImageRepository({
         application,
         component: componentName,
