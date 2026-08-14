@@ -3,7 +3,7 @@ import { Button, Flex, FlexItem, ModalVariant, capitalize } from '@patternfly/re
 import { createModalLauncher } from '~/components/modal/createModalLauncher';
 import { useModalLauncher } from '~/components/modal/ModalProvider';
 import { Issue, IssueState } from '~/kite/issue-type';
-import { useIssueActions } from '~/kite/kite-hooks';
+import { useIssueActions } from '~/kite/kite-actions';
 import { RowFunctionArgs, TableData, Timestamp } from '~/shared';
 import ActionMenu from '~/shared/components/action-menu/ActionMenu';
 import ExternalLink from '~/shared/components/links/ExternalLink';

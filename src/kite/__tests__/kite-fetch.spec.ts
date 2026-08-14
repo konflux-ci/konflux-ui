@@ -41,6 +41,18 @@ describe('resolveIssue', () => {
     });
   });
 
+  it('should call enconded issue id', async () => {
+    const resolved = createMockIssue({ state: IssueState.RESOLVED });
+    mockCommonFetchJSON.mockResolvedValue(resolved);
+
+    await resolveIssue('issue-12#3');
+
+    expect(mockCommonFetchJSON).toHaveBeenCalledWith('/api/v1/issues/issue-12%233/resolve', {
+      method: 'POST',
+      pathPrefix: PLUGIN_KITE,
+    });
+  });
+
   it('should propagate request failures', async () => {
     const error = new Error('Network error');
     mockCommonFetchJSON.mockRejectedValue(error);
