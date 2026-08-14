@@ -1,10 +1,6 @@
 import * as React from 'react';
-import { useQueries } from '@tanstack/react-query';
-import {
-  aggregateCounts,
-  fetchConformaForComponent,
-} from '~/components/Conforma/conforma-fetch-utils';
-import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
+import { aggregateCounts } from '~/components/Conforma/conforma-fetch-utils';
+import { useComponentsConformaResults } from '~/components/Conforma/ConformaResultsTab/useComponentsConformaResults';
 import { useAllComponents } from '~/hooks/useComponents';
 import { logger } from '~/monitoring/logger';
 import { useNamespace } from '~/shared/providers/Namespace';
@@ -24,50 +20,35 @@ export type WorkspaceConformaViolations = {
   partialError?: unknown;
 };
 
-const CONFORMA_STALE_TIME_MS = 5 * 60 * 1000;
-
 export const useWorkspaceConformaViolations = (): WorkspaceConformaViolations => {
   const namespace = useNamespace();
-  const isKubearchiveLogsEnabled = useIsOnFeatureFlag('kubearchive-logs');
 
   const [components, componentsLoaded, componentsError] = useAllComponents(namespace);
 
-  const { conformaData, allSettled, conformaAllError, conformaPartialError } = useQueries({
-    queries: (componentsLoaded ? components : []).map((comp) => ({
-      queryKey: [
-        'workspace-conforma',
-        namespace,
-        comp.spec.application,
-        comp.metadata.name,
-        isKubearchiveLogsEnabled,
-      ] as const,
-      queryFn: () =>
-        fetchConformaForComponent(namespace, comp.metadata.name, isKubearchiveLogsEnabled),
-      staleTime: CONFORMA_STALE_TIME_MS,
-      enabled: !!namespace && !!comp.metadata.name,
-    })),
-    combine: (queryResults) => {
-      const errorQueries = queryResults.filter((q) => q.isError);
-      const allFailed = queryResults.length > 0 && errorQueries.length === queryResults.length;
-      const someFailed = errorQueries.length > 0 && !allFailed;
-      return {
-        conformaData: queryResults.map((q) => q.data),
-        allSettled: queryResults.every((q) => !q.isLoading),
-        conformaAllError: allFailed ? errorQueries[0]?.error : undefined,
-        conformaPartialError: someFailed ? errorQueries[0]?.error : undefined,
-      };
-    },
-  });
+  // No applicationName → watches all security TaskRuns in the namespace.
+  // The shared hook aligns fill-in query keys per component.spec.application,
+  // so data fetched here is reused when the user navigates to an app's
+  // Conforma Results tab (no re-fetch of logs already in cache).
+  const {
+    conformaByComponent,
+    taskRunsLoaded,
+    logsSettled,
+    fillInSettled,
+    taskRunsError,
+    aggregatedLogError,
+  } = useComponentsConformaResults(namespace, componentsLoaded ? components : []);
+
+  const allSettled = logsSettled && fillInSettled;
 
   React.useEffect(() => {
-    if (conformaPartialError) {
-      logger.warn('Partial workspace Conforma log fetch failure', { error: conformaPartialError });
+    if (aggregatedLogError) {
+      logger.warn('Partial workspace Conforma log fetch failure', { error: aggregatedLogError });
     }
-  }, [conformaPartialError]);
+  }, [aggregatedLogError]);
 
   return React.useMemo((): WorkspaceConformaViolations => {
-    const loaded = componentsLoaded;
-    const error = componentsError ?? conformaAllError;
+    const loaded = componentsLoaded && taskRunsLoaded;
+    const error = componentsError ?? taskRunsError;
 
     if (!loaded || !allSettled) {
       return {
@@ -81,23 +62,27 @@ export const useWorkspaceConformaViolations = (): WorkspaceConformaViolations =>
 
     let totalViolations = 0;
     let totalWarnings = 0;
-
     const perApp = new Map<string, AppViolationSummary>();
 
-    conformaData.forEach((data, idx) => {
-      if (!data) return;
-      const applicationName = components[idx]?.spec.application ?? '';
-      if (!applicationName) return;
-      const { violationCount, warningCount } = aggregateCounts(data);
+    components.forEach((comp) => {
+      const compName = comp.metadata?.name;
+      const appName = comp.spec?.application;
+      if (!compName || !appName) return;
+
+      const compData = conformaByComponent.get(compName);
+      if (!compData) return;
+
+      const { violationCount, warningCount } = aggregateCounts(compData.results);
       totalViolations += violationCount;
       totalWarnings += warningCount;
-      const existing = perApp.get(applicationName) ?? {
-        applicationName,
+
+      const existing = perApp.get(appName) ?? {
+        applicationName: appName,
         violationCount: 0,
         warningCount: 0,
       };
-      perApp.set(applicationName, {
-        applicationName,
+      perApp.set(appName, {
+        applicationName: appName,
         violationCount: existing.violationCount + violationCount,
         warningCount: existing.warningCount + warningCount,
       });
@@ -109,15 +94,16 @@ export const useWorkspaceConformaViolations = (): WorkspaceConformaViolations =>
       applications: Array.from(perApp.values()),
       loaded: true,
       error,
-      partialError: conformaPartialError,
+      partialError: aggregatedLogError,
     };
   }, [
     componentsLoaded,
     componentsError,
-    conformaData,
+    taskRunsLoaded,
+    taskRunsError,
     allSettled,
-    conformaAllError,
-    conformaPartialError,
+    conformaByComponent,
     components,
+    aggregatedLogError,
   ]);
 };
