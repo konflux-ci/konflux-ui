@@ -1,5 +1,6 @@
 import { BrowserRouter } from 'react-router-dom';
-import { fireEvent, screen, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { IssueSeverity, IssueState } from '~/kite/issue-type';
 import { createMockIssue } from '~/unit-test-utils/mock-issues';
 import { renderWithQueryClient } from '~/unit-test-utils/mock-react-query';
@@ -32,6 +33,7 @@ const renderRow = (issue = createMockIssue()) =>
   );
 
 describe('IssuesListRow', () => {
+  const user = userEvent.setup();
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -200,7 +202,7 @@ describe('IssuesListRow', () => {
   it('should render kebab menu with Resolve action', async () => {
     renderRow(createMockIssue({ state: IssueState.ACTIVE }));
 
-    fireEvent.click(screen.getByTestId('kebab-button'));
+    await user.click(screen.getByTestId('kebab-button'));
 
     await waitFor(() => {
       expect(screen.getByTestId('Resolve')).toBeInTheDocument();
@@ -210,7 +212,7 @@ describe('IssuesListRow', () => {
   it('should disable Resolve action for resolved issues', async () => {
     renderRow(createMockIssue({ state: IssueState.RESOLVED }));
 
-    fireEvent.click(screen.getByTestId('kebab-button'));
+    await user.click(screen.getByTestId('kebab-button'));
 
     await waitFor(() => {
       expect(screen.getByTestId('Resolve').querySelector('button, a')).toHaveAttribute(

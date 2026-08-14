@@ -40,4 +40,11 @@ describe('resolveIssue', () => {
       pathPrefix: PLUGIN_KITE,
     });
   });
+
+  it('should propagate request failures', async () => {
+    const error = new Error('Network error');
+    mockCommonFetchJSON.mockRejectedValue(error);
+
+    await expect(resolveIssue('issue-123')).rejects.toBe(error);
+  });
 });
