@@ -63,6 +63,11 @@ export const TableBody = <TData,>({
   const topSpacerHeight = virtualRows.length > 0 ? virtualRows[0].start - scrollMargin : 0;
 
   return (
+    // Multiple <Tbody> siblings (not nested) — each becomes a direct child of the
+    // <table> element. Multiple <tbody> per <table> is valid HTML5 (same pattern
+    // used by ConformaGroupedTable). Per-row wrappers let TanStack Virtual's
+    // measureElement capture the combined height of the main row + expanded content
+    // as a single virtual item, preventing spacer miscalculations on expand/collapse.
     <>
       <Tbody data-test="table-body" style={{ overflowAnchor: 'none' }}>
         {topSpacerHeight > 0 && <Tr style={{ height: topSpacerHeight }} />}
@@ -72,6 +77,9 @@ export const TableBody = <TData,>({
         if (!row) return null;
         const rowId = getRowId(row.original);
         return (
+          // No explicit role needed: <Tbody> renders a native <tbody> whose implicit
+          // ARIA role is "rowgroup", correctly grouping the main row with its optional
+          // expanded content for screen readers.
           <Tbody
             key={rowId}
             ref={measureElement}
