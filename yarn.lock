@@ -3978,10 +3978,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@patternfly/react-styles@npm:6.6.0, @patternfly/react-styles@npm:^6.6.0":
-  version: 6.6.0
-  resolution: "@patternfly/react-styles@npm:6.6.0"
-  checksum: 10/04116456660b719dccb45f82157993c9d3851fc9018b1833860c4d0e1ddf91d2d14f49fc97a620744c15f646bbc8a2ec1fa46ce7109dabb62e1751327da5c548
+"@patternfly/react-styles@npm:6.6.1, @patternfly/react-styles@npm:^6.6.1":
+  version: 6.6.1
+  resolution: "@patternfly/react-styles@npm:6.6.1"
+  checksum: 10/fb668ea4320bf4b042733fd9be757e1d383b29da635515756ea55f655820460145cc4dd67fb78b337b6c35e5c0dad75b5785ad72cb6a285d769669b82ada21f6
   languageName: node
   linkType: hard
 
@@ -3999,10 +3999,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@patternfly/react-styles@npm:^6.6.1":
-  version: 6.6.1
-  resolution: "@patternfly/react-styles@npm:6.6.1"
-  checksum: 10/fb668ea4320bf4b042733fd9be757e1d383b29da635515756ea55f655820460145cc4dd67fb78b337b6c35e5c0dad75b5785ad72cb6a285d769669b82ada21f6
+"@patternfly/react-styles@npm:^6.6.0":
+  version: 6.6.0
+  resolution: "@patternfly/react-styles@npm:6.6.0"
+  checksum: 10/04116456660b719dccb45f82157993c9d3851fc9018b1833860c4d0e1ddf91d2d14f49fc97a620744c15f646bbc8a2ec1fa46ce7109dabb62e1751327da5c548
   languageName: node
   linkType: hard
 
@@ -13947,7 +13947,7 @@ __metadata:
     "@patternfly/react-drag-drop": "npm:^6.5.1"
     "@patternfly/react-icons": "npm:6.6.0"
     "@patternfly/react-log-viewer": "npm:6.5.0"
-    "@patternfly/react-styles": "npm:6.6.0"
+    "@patternfly/react-styles": "npm:6.6.1"
     "@patternfly/react-table": "npm:6.6.0"
     "@patternfly/react-tokens": "npm:6.6.0"
     "@patternfly/react-topology": "npm:6.6.0"
