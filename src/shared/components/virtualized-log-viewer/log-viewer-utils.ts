@@ -26,8 +26,9 @@ export function singleLogSection(
   data: string,
   containerName = 'log',
   isCompleted = false,
+  hasTerminatedWithError = false,
 ): LogSection {
-  return { containerName, data, isCompleted };
+  return { containerName, data, isCompleted, hasTerminatedWithError };
 }
 
 /** Recursively flattens nested Prism tokens into plain text */

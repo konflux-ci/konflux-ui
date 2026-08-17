@@ -33,12 +33,14 @@ export const TektonTaskRunLog: React.FC<React.PropsWithChildren<TektonTaskRunLog
     const status = taskRun ? taskRunStatus(taskRun) : runStatus.Unknown;
     const inProgress =
       status === runStatus.Running || status === runStatus.Pending || status === runStatus.Idle;
+    const hasFailed = runStatus.Failed === status;
 
     return [
       {
         containerName: taskName ?? 'log',
         lines: normalizeLogLines(trResults),
         isCompleted: trLoaded && !inProgress,
+        hasTerminatedWithError: hasFailed,
       },
     ];
   }, [trResults, taskName, taskRun, trLoaded]);

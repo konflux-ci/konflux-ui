@@ -1,7 +1,41 @@
 import Prism from 'prismjs';
-import { flattenTokenText, getLineMatches, isMatchCurrent } from '../log-viewer-utils';
+import {
+  flattenTokenText,
+  getLineMatches,
+  isMatchCurrent,
+  singleLogSection,
+} from '../log-viewer-utils';
 
 describe('log-viewer-utils', () => {
+  describe('singleLogSection', () => {
+    it('should set hasTerminatedWithError to false by default', () => {
+      expect(singleLogSection('log data')).toEqual({
+        containerName: 'log',
+        data: 'log data',
+        isCompleted: false,
+        hasTerminatedWithError: false,
+      });
+    });
+
+    it('should pass through isCompleted and containerName', () => {
+      expect(singleLogSection('log data', 'my-container', true)).toEqual({
+        containerName: 'my-container',
+        data: 'log data',
+        isCompleted: true,
+        hasTerminatedWithError: false,
+      });
+    });
+
+    it('should set hasTerminatedWithError when a failed section is passed', () => {
+      expect(singleLogSection('log data', 'my-container', true, true)).toEqual({
+        containerName: 'my-container',
+        data: 'log data',
+        isCompleted: true,
+        hasTerminatedWithError: true,
+      });
+    });
+  });
+
   describe('flattenTokenText', () => {
     it('should return string as-is when token is a string', () => {
       expect(flattenTokenText('hello world')).toBe('hello world');
