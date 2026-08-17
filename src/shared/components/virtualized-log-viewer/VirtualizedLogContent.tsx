@@ -1,6 +1,7 @@
 import React from 'react';
 import { Content, Flex, FlexItem } from '@patternfly/react-core';
 import { useVirtualizer } from '@tanstack/react-virtual';
+import { useEventListener } from '~/shared/hooks/useEventListener';
 import { useLayoutResizeObserver } from '~/shared/hooks/useLayoutResizeObserver';
 import { normalizeSection } from './log-viewer-utils';
 import { SectionedVirtualRow, VirtualGutterCell } from './SectionedVirtualRow';
@@ -303,22 +304,24 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
     updateListClientWidth();
   }, [scrollListElement]);
 
-  React.useEffect(() => {
-    if (!scrollListElement) return;
-    scrollListElement.addEventListener('scroll', updateListClientWidth, { passive: true });
-    return () => scrollListElement.removeEventListener('scroll', updateListClientWidth);
-  }, [scrollListElement, updateListClientWidth]);
+  const scrollListTarget = React.useMemo(
+    () => ({ current: scrollListElement }) as React.RefObject<HTMLDivElement>,
+    [scrollListElement],
+  );
+
+  useEventListener('scroll', updateListClientWidth, scrollListTarget, { passive: true });
 
   const handleContentRailScroll = React.useCallback(() => {
     const left = contentRailRef.current?.scrollLeft ?? 0;
     setContentScrollLeft((prev) => (prev === left ? prev : left));
   }, []);
 
-  React.useEffect(() => {
-    if (!contentRailElement) return;
-    contentRailElement.addEventListener('scroll', handleContentRailScroll, { passive: true });
-    return () => contentRailElement.removeEventListener('scroll', handleContentRailScroll);
-  }, [contentRailElement, handleContentRailScroll]);
+  const contentRailTarget = React.useMemo(
+    () => ({ current: contentRailElement }) as React.RefObject<HTMLDivElement>,
+    [contentRailElement],
+  );
+
+  useEventListener('scroll', handleContentRailScroll, contentRailTarget, { passive: true });
 
   const setContentRailRef = React.useCallback((node: HTMLDivElement | null) => {
     contentRailRef.current = node;

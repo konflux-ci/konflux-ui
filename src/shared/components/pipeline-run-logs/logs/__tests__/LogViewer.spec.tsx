@@ -4,8 +4,12 @@ import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { useFullscreen } from '~/shared/hooks/fullscreen';
 import { useTheme } from '~/shared/theme';
-import { mockConsole, MockConsole } from '~/unit-test-utils';
-import { renderWithQueryClientAndRouter as render } from '~/unit-test-utils/rendering-utils';
+import {
+  mockConsole,
+  MockConsole,
+  renderWithQueryClientAndRouter,
+  renderWithQueryClientAndRouter as render,
+} from '~/unit-test-utils';
 import LogViewer from '../LogViewer';
 import { useAutoScrollWithResume } from '../useAutoScrollWithResume';
 import { useLogViewerTheme } from '../useLogViewerTheme';
@@ -278,7 +282,7 @@ describe('LogViewer Integration Tests', () => {
         return <LogViewer {...defaultProps} />;
       };
 
-      const { container } = render(<WrapToggleTestWrapper />);
+      const { container } = renderWithQueryClientAndRouter(<WrapToggleTestWrapper />);
       const logViewer = container.querySelector('.pf-v6-c-log-viewer');
       const wrapCheckbox = screen.getByLabelText('Wrap lines');
 
@@ -310,7 +314,7 @@ describe('LogViewer Integration Tests', () => {
         );
       };
 
-      const { container } = render(<WrapToggleTestWrapper />);
+      const { container } = renderWithQueryClientAndRouter(<WrapToggleTestWrapper />);
       await user.click(screen.getByLabelText('Wrap lines'));
 
       await waitFor(() => {

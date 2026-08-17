@@ -1,10 +1,10 @@
 import { renderHook, act } from '@testing-library/react';
-import { useLocalStorage } from '../../../../hooks/useLocalStorage';
+import { useLocalStorage } from '~/shared/hooks/useLocalStorage';
 import { useLogViewerWrap } from '../useLogViewerWrap';
 
 const LOG_WRAP_STORAGE_KEY = 'konflux-logs-wrap-preference';
 
-jest.mock('../../../../hooks/useLocalStorage', () => ({
+jest.mock('~/shared/hooks/useLocalStorage', () => ({
   useLocalStorage: jest.fn(),
 }));
 
