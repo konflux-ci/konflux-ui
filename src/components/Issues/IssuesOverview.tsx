@@ -13,13 +13,17 @@ const IssuesOverview: React.FunctionComponent = () => {
       }}
     >
       <GridItem span={8}>
-        <IssueDistributionCard />
+        <Grid hasGutter>
+          <GridItem>
+            <IssueDistributionCard />
+          </GridItem>
+          <GridItem>
+            <IssuesByStatusCard />
+          </GridItem>
+        </Grid>
       </GridItem>
-      <GridItem span={4} rowSpan={2}>
+      <GridItem span={4}>
         <LatestIssuesCard />
-      </GridItem>
-      <GridItem span={8}>
-        <IssuesByStatusCard />
       </GridItem>
     </Grid>
   );
