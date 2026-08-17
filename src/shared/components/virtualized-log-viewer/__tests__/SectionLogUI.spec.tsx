@@ -197,6 +197,11 @@ describe('FoldIndicatorLine', () => {
 });
 
 describe('StickySectionHeaderBar', () => {
+  const defaultStickyProps = {
+    listClientWidth: 800,
+    contentScrollLeft: 0,
+  };
+
   it('should render section header with line number and toggle', () => {
     const onToggle = jest.fn();
     const onLineClick = jest.fn();
@@ -206,6 +211,7 @@ describe('StickySectionHeaderBar', () => {
         row={makeRow()}
         pushUpOffset={0}
         itemSize={20}
+        {...defaultStickyProps}
         onToggle={onToggle}
         onLineClick={onLineClick}
       />,
@@ -224,6 +230,7 @@ describe('StickySectionHeaderBar', () => {
         row={makeRow({ isTailed: true })}
         pushUpOffset={0}
         itemSize={20}
+        {...defaultStickyProps}
         onToggle={jest.fn()}
         onLineClick={jest.fn()}
         onDownloadFullLogs={onDownload}
@@ -239,6 +246,7 @@ describe('StickySectionHeaderBar', () => {
         row={makeRow({ isTailed: true })}
         pushUpOffset={0}
         itemSize={20}
+        {...defaultStickyProps}
         onToggle={jest.fn()}
         onLineClick={jest.fn()}
         onViewFullLogs={jest.fn()}
@@ -254,6 +262,7 @@ describe('StickySectionHeaderBar', () => {
         row={makeRow()}
         pushUpOffset={-10}
         itemSize={24}
+        {...defaultStickyProps}
         onToggle={jest.fn()}
         onLineClick={jest.fn()}
       />,
@@ -271,6 +280,7 @@ describe('StickySectionHeaderBar', () => {
         row={makeRow()}
         pushUpOffset={0}
         itemSize={20}
+        {...defaultStickyProps}
         onToggle={jest.fn()}
         onLineClick={onLineClick}
       />,

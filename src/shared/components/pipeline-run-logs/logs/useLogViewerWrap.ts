@@ -1,4 +1,4 @@
-import { useLocalStorage } from '../../../hooks/useLocalStorage';
+import { useLocalStorage } from '~/shared/hooks/useLocalStorage';
 
 const LOG_WRAP_STORAGE_KEY = 'konflux-logs-wrap-preference';
 

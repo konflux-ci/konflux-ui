@@ -82,18 +82,29 @@ export function measureAverageCharWidth(font: string): number {
 export function calculateCharsPerLine(container: HTMLElement, avgCharWidth: number): number {
   if (!container) return VIRTUALIZATION_CONFIG.FALLBACK_CHARS_PER_LINE;
 
-  // 1. Calculate gutter (line numbers) width
+  // 1. Prefer the content rail's measured width when available
+  const contentRail = container.querySelector('.log-content__content-rail');
+  if (contentRail instanceof HTMLElement && contentRail.clientWidth > 0) {
+    const safeCharWidth =
+      avgCharWidth > 0 ? avgCharWidth : VIRTUALIZATION_CONFIG.FALLBACK_CHAR_WIDTH;
+    const charsPerLine = Math.floor(contentRail.clientWidth / safeCharWidth);
+    return charsPerLine > 0 ? charsPerLine : VIRTUALIZATION_CONFIG.FALLBACK_CHARS_PER_LINE;
+  }
+
+  // Fallback: subtract gutter rail width from the scroll container.
+
+  // 2. Calculate gutter (line numbers) width
   let gutterWidth = 0;
-  const gutterElement = container.querySelector('.line-number__gutter');
+  const gutterElement = container.querySelector('.log-content__gutter-rail');
   if (gutterElement instanceof HTMLElement) {
     gutterWidth = gutterElement.offsetWidth;
   }
 
-  // 2. Determine base available width
+  // 3. Determine base available width
   let contentWidth = container.clientWidth - gutterWidth;
 
-  // 3. Subtract horizontal padding from the content column
-  const contentColumn = container.querySelector('.log-content__content-column');
+  // 4. Subtract horizontal padding from the content column
+  const contentColumn = container.querySelector('.log-content__content-rail');
   if (contentColumn instanceof HTMLElement) {
     const contentStyle = window.getComputedStyle(contentColumn);
     const paddingLeft = parseFloat(contentStyle.paddingLeft) || 0;
@@ -101,7 +112,7 @@ export function calculateCharsPerLine(container: HTMLElement, avgCharWidth: numb
     contentWidth -= paddingLeft + paddingRight;
   }
 
-  // 4. Calculate final count with safety fallback
+  // 5. Calculate final count with safety fallback
   const safeCharWidth = avgCharWidth > 0 ? avgCharWidth : VIRTUALIZATION_CONFIG.FALLBACK_CHAR_WIDTH;
   const charsPerLine = Math.floor(Math.max(0, contentWidth) / safeCharWidth);
 

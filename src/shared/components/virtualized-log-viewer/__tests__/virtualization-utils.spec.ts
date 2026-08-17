@@ -76,22 +76,22 @@ describe('virtualization-utils', () => {
     beforeEach(() => {
       mockContainer = document.createElement('div');
       mockGutter = document.createElement('div');
-      mockGutter.className = 'line-number__gutter';
+      mockGutter.className = 'log-content__gutter-rail';
       mockContent = document.createElement('div');
-      mockContent.className = 'log-content__content-column';
+      mockContent.className = 'log-content__content-rail';
 
       mockContainer.appendChild(mockGutter);
       mockContainer.appendChild(mockContent);
 
       setWidth(mockContainer, 'clientWidth', 1000);
       setWidth(mockGutter, 'offsetWidth', 60);
+      setWidth(mockContent, 'clientWidth', 0);
 
-      // Explicitly type the selector to avoid unsafe-argument errors
       jest
         .spyOn(mockContainer, 'querySelector')
         .mockImplementation((selector: string): HTMLElement | null => {
-          if (selector === '.line-number__gutter') return mockGutter;
-          if (selector === '.log-content__content-column') return mockContent;
+          if (selector === '.log-content__gutter-rail') return mockGutter;
+          if (selector === '.log-content__content-rail') return mockContent;
           return null;
         });
 
@@ -110,6 +110,12 @@ describe('virtualization-utils', () => {
     it('should calculate chars correctly (1000 - 60 - 20) / 8 = 115', () => {
       const result = calculateCharsPerLine(mockContainer, 8);
       expect(result).toBe(115);
+    });
+
+    it('should prefer content rail client width when available', () => {
+      setWidth(mockContent, 'clientWidth', 800);
+      const result = calculateCharsPerLine(mockContainer, 8);
+      expect(result).toBe(100);
     });
 
     it('should return fallback if calculation results in 0 or less', () => {

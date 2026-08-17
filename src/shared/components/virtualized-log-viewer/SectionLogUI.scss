@@ -23,6 +23,12 @@
   align-items: center;
   justify-content: flex-end;
   padding-right: var(--pf-t--global--spacer--sm);
+  background-color: var(
+    --pf-v6-c-log-viewer__main--BackgroundColor,
+    var(--pf-t--global--background--color--primary--default)
+  );
+  border-right: var(--pf-t--global--border--width--box--default) solid
+    var(--pf-t--global--border--color--default);
 }
 
 .log-content__sticky-header-content {

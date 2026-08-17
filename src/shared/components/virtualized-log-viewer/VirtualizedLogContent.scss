@@ -30,15 +30,21 @@
   min-width: 0;
 }
 
+.log-content__row-highlight {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  pointer-events: none;
+  background-color: var(--pf-t--global--color--status--warning--default);
+
+  .pf-m-dark & {
+    background-color: var(--pf-t--global--color--nonstatus--yellow--hover);
+  }
+}
+
 .log-content__gutter-rail {
   position: relative;
   width: var(--pf-t--global--spacer--3xl);
-  background-color: var(
-    --pf-v6-c-log-viewer__main--BackgroundColor,
-    var(--pf-t--global--background--color--primary--default)
-  );
-  border-right: var(--pf-t--global--border--width--box--default) solid
-    var(--pf-t--global--border--color--default);
 }
 
 .log-content__content-rail {
@@ -51,8 +57,14 @@
 }
 
 .pf-v6-c-log-viewer.log-viewer--nowrap {
+  .log-content__gutter-rail {
+    overflow: hidden;
+  }
+
   .log-content__content-rail {
     overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
   }
 
   .log-content__row-content > .pf-v6-c-log-viewer__text {
@@ -66,29 +78,24 @@
   left: 0;
   width: 100%;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: flex-end;
   padding-right: var(--pf-t--global--spacer--sm);
   background-color: var(
     --pf-v6-c-log-viewer__main--BackgroundColor,
     var(--pf-t--global--background--color--primary--default)
   );
+  border-right: var(--pf-t--global--border--width--box--default) solid
+    var(--pf-t--global--border--color--default);
   user-select: none;
   overflow: hidden;
 
   &--highlighted {
-    background-color: var(--pf-t--global--color--status--warning--100);
-  }
-
-  .pf-m-dark &--highlighted {
-    background-color: var(--pf-t--global--color--status--warning--200);
+    background-color: transparent;
+    border-right-color: transparent;
   }
 }
 
 .log-content__line--highlighted {
-  background-color: var(--pf-t--global--color--status--warning--default);
-
-  .pf-m-dark & {
-    background-color: var(--pf-t--global--color--nonstatus--yellow--hover);
-  }
+  background-color: transparent;
 }

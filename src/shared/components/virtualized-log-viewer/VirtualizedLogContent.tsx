@@ -1,6 +1,7 @@
 import React from 'react';
 import { Content, Flex, FlexItem } from '@patternfly/react-core';
 import { useVirtualizer } from '@tanstack/react-virtual';
+import { useEventListener } from '~/shared/hooks/useEventListener';
 import { useLayoutResizeObserver } from '~/shared/hooks/useLayoutResizeObserver';
 import { normalizeSection } from './log-viewer-utils';
 import { SectionedVirtualRow, VirtualGutterCell } from './SectionedVirtualRow';
@@ -136,17 +137,6 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
     }
   }, []);
 
-  React.useEffect(() => {
-    if (!scrollRef.current) return;
-    const container = scrollRef.current;
-    const rafId = requestAnimationFrame(() => {
-      const style = getComputedStyle(container);
-      const font = style.font || `${style.fontSize} ${style.fontFamily}`;
-      charsPerLineRef.current = calculateCharsPerLine(container, measureAverageCharWidth(font));
-    });
-    return () => cancelAnimationFrame(rafId);
-  }, [height, wrapLines, rowCount]);
-
   const estimateRowHeight = React.useCallback(
     (index: number): number => {
       if (itemSize === 0) return VIRTUALIZATION_CONFIG.FALLBACK_LINE_HEIGHT;
@@ -156,6 +146,7 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
       if (!row || row.kind !== 'content') return itemSize;
       const text = allLines[row.flatLineIndex] || '';
       const estimatedLines = Math.max(1, Math.ceil(text.length / charsPerLineRef.current));
+      if (estimatedLines <= 1) return itemSize;
       return Math.ceil(itemSize * estimatedLines * getSafetyMargin(rowCount));
     },
     [displayRows, allLines, itemSize, rowCount, wrapLines],
@@ -172,6 +163,20 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
   const virtualizerRef = React.useRef(virtualizer);
   virtualizerRef.current = virtualizer;
   const prevWrapLinesRef = React.useRef(wrapLines);
+
+  React.useEffect(() => {
+    if (!scrollRef.current) return;
+    const container = scrollRef.current;
+    const rafId = requestAnimationFrame(() => {
+      const style = getComputedStyle(container);
+      const font = style.font || `${style.fontSize} ${style.fontFamily}`;
+      charsPerLineRef.current = calculateCharsPerLine(container, measureAverageCharWidth(font));
+      if (wrapLines) {
+        virtualizerRef.current.measure();
+      }
+    });
+    return () => cancelAnimationFrame(rafId);
+  }, [height, wrapLines, rowCount]);
 
   React.useEffect(() => {
     if (prevWrapLinesRef.current === wrapLines) return;
@@ -304,26 +309,26 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
     setListClientWidth((prev) => (prev === next ? prev : next));
   }, []);
 
-  useLayoutResizeObserver(() => {
-    updateListClientWidth();
-  }, [scrollListElement]);
+  useLayoutResizeObserver(updateListClientWidth, [scrollListElement]);
 
-  React.useEffect(() => {
-    if (!scrollListElement) return;
-    scrollListElement.addEventListener('scroll', updateListClientWidth, { passive: true });
-    return () => scrollListElement.removeEventListener('scroll', updateListClientWidth);
-  }, [scrollListElement, updateListClientWidth]);
+  const scrollListTarget = React.useMemo(
+    () => ({ current: scrollListElement }) as React.RefObject<HTMLDivElement>,
+    [scrollListElement],
+  );
+
+  useEventListener('scroll', updateListClientWidth, scrollListTarget, { passive: true });
 
   const handleContentRailScroll = React.useCallback(() => {
     const left = contentRailRef.current?.scrollLeft ?? 0;
     setContentScrollLeft((prev) => (prev === left ? prev : left));
   }, []);
 
-  React.useEffect(() => {
-    if (!contentRailElement) return;
-    contentRailElement.addEventListener('scroll', handleContentRailScroll, { passive: true });
-    return () => contentRailElement.removeEventListener('scroll', handleContentRailScroll);
-  }, [contentRailElement, handleContentRailScroll]);
+  const contentRailTarget = React.useMemo(
+    () => ({ current: contentRailElement }) as React.RefObject<HTMLDivElement>,
+    [contentRailElement],
+  );
+
+  useEventListener('scroll', handleContentRailScroll, contentRailTarget, { passive: true });
 
   const setContentRailRef = React.useCallback((node: HTMLDivElement | null) => {
     contentRailRef.current = node;
@@ -359,15 +364,38 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
         style={{
           height: `${height}px`,
           width: typeof width === 'number' ? `${width}px` : width,
-          overflow: 'auto',
+          overflowY: 'auto',
+          overflowX: 'auto',
         }}
         onClick={() => scrollRef.current?.focus({ preventScroll: true })}
       >
-        <Flex
-          direction={{ default: 'row' }}
+        <div
           className="log-content__inner"
           style={{ height: `${virtualizer.getTotalSize()}px` }}
         >
+          {virtualItems.map((virtualItem) => {
+            const row = displayRows[virtualItem.index];
+            if (!row) return null;
+            const lineNumber =
+              row.kind === 'section-header'
+                ? row.lineNumber
+                : row.kind === 'content'
+                  ? row.globalLineNumber
+                  : null;
+            if (lineNumber === null || !isLineHighlighted(lineNumber)) return null;
+            return (
+              <div
+                key={`highlight-${String(virtualItem.key)}`}
+                className="log-content__row-highlight"
+                style={{ top: virtualItem.start, height: virtualItem.size }}
+                aria-hidden="true"
+              />
+            );
+          })}
+          <Flex
+            direction={{ default: 'row' }}
+            style={{ height: '100%', width: '100%' }}
+          >
           <FlexItem
             flex={{ default: 'flexNone' }}
             className="log-content__gutter-rail"
@@ -396,6 +424,7 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
               height: `${virtualizer.getTotalSize()}px`,
               minWidth: 0,
               width: 0,
+              ...(!wrapLines && { overflowX: 'auto', overflowY: 'hidden' }),
             }}
           >
             {virtualItems.map((virtualItem) => {
@@ -417,7 +446,8 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
               );
             })}
           </FlexItem>
-        </Flex>
+          </Flex>
+        </div>
       </div>
 
       {stickyRow && (
