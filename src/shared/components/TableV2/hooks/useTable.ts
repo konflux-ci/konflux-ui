@@ -149,6 +149,14 @@ export function useTable<TData>(options: UseTableOptions<TData>): UseTableResult
 
   const columnDefs = useMemo(() => mapColumns(columns), [columns]);
 
+  // Validate expansion state is used correctly
+  if (expanded !== undefined && !onExpandedChange) {
+    throw new Error(
+      'useTable: When providing `expanded` state, you must also provide `onExpandedChange` to handle state updates. ' +
+        'TanStack Table requires both props for controlled expansion to work correctly.',
+    );
+  }
+
   const columnVisibility = useMemo(
     () =>
       mergeColumnVisibility(

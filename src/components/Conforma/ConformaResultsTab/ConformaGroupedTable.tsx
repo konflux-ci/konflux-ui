@@ -40,12 +40,13 @@ const DetailSubTable: React.FC<{ rows: ConformaResultRow[] }> = ({ rows }) => {
           </Tr>
         </Thead>
         <Tbody>
-          {rows.map((row, idx) => {
+          {rows.map((row) => {
             const { images } = row;
             const commonName = images.length > 1 ? getCommonImageName(images) : undefined;
+            const rowKey = `${row.component}-${row.title}-${row.pipelineRunName || ''}-${row.images[0] || ''}`;
 
             return (
-              <Tr key={idx}>
+              <Tr key={rowKey}>
                 <Td dataLabel="Rule">
                   <Content>
                     <Content component="p">
