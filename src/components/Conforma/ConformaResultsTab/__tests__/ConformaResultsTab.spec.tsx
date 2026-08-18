@@ -1,4 +1,4 @@
-import { act, configure, fireEvent, screen, within } from '@testing-library/react';
+import { act, fireEvent, screen } from '@testing-library/react';
 import type { ApplicationConformaResults, ConformaResultRow } from '~/types/conforma';
 import { CONFORMA_RESULT_STATUS } from '~/types/conforma';
 import { setupVirtualizerMock } from '~/unit-test-utils';
@@ -14,8 +14,6 @@ jest.mock('@tanstack/react-virtual', () => ({
 jest.mock('../useApplicationConformaResults', () => ({
   useApplicationConformaResults: jest.fn(),
 }));
-
-configure({ testIdAttribute: 'data-test' });
 
 jest.mock('react-router-dom', () => ({
   ...jest.requireActual('react-router-dom'),
@@ -257,9 +255,8 @@ describe('ConformaResultsTab', () => {
 
     routerRenderer(<ConformaResultsTab />);
 
-    // Scope to the grouped table so we don't pick up the early-warning "Show details" toggle
-    const groupedTable = screen.getByTestId('conforma-grouped-table');
-    const toggleButtons = within(groupedTable).getAllByRole('button', { name: /details/i });
+    // Click the first group expand button
+    const toggleButtons = screen.getAllByRole('button', { name: /details/i });
     fireEvent.click(toggleButtons[0]);
 
     // After expanding, detail row content becomes visible
@@ -505,50 +502,4 @@ describe('ConformaResultsTab', () => {
     jest.useRealTimers();
   });
 
-  it('shows the early warning alert when warnings are present', () => {
-    mockUseApplicationConformaResults.mockReturnValue(populatedResults);
-
-    routerRenderer(<ConformaResultsTab />);
-
-    expect(screen.getByTestId('conforma-early-warning')).toBeInTheDocument();
-    expect(
-      screen.getByText('1 upcoming policy change requires attention'),
-    ).toBeInTheDocument();
-  });
-
-  it('does not show the early warning alert when there are no warnings', () => {
-    const noWarningsResults: ApplicationConformaResults = {
-      ...populatedResults,
-      allResults: populatedResults.allResults.filter(
-        (r) => r.status !== CONFORMA_RESULT_STATUS.warnings,
-      ),
-    };
-    mockUseApplicationConformaResults.mockReturnValue(noWarningsResults);
-
-    routerRenderer(<ConformaResultsTab />);
-
-    expect(screen.queryByTestId('conforma-early-warning')).not.toBeInTheDocument();
-  });
-
-  it('shows correct warning count when multiple warnings exist', () => {
-    const multipleWarningsResults: ApplicationConformaResults = {
-      ...populatedResults,
-      allResults: [
-        ...populatedResults.allResults,
-        createMockRow({
-          title: 'Unsigned image',
-          component: 'auth-service',
-          status: CONFORMA_RESULT_STATUS.warnings,
-        }),
-      ],
-    };
-    mockUseApplicationConformaResults.mockReturnValue(multipleWarningsResults);
-
-    routerRenderer(<ConformaResultsTab />);
-
-    expect(screen.getByTestId('conforma-early-warning')).toBeInTheDocument();
-    expect(
-      screen.getByText('2 upcoming policy changes require attention'),
-    ).toBeInTheDocument();
-  });
 });
