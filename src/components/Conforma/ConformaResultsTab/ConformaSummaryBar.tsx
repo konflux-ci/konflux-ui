@@ -3,11 +3,10 @@ import { Flex } from '@patternfly/react-core';
 import { CheckCircleIcon } from '@patternfly/react-icons/dist/esm/icons/check-circle-icon';
 import { CubesIcon } from '@patternfly/react-icons/dist/esm/icons/cubes-icon';
 import { ExclamationCircleIcon } from '@patternfly/react-icons/dist/esm/icons/exclamation-circle-icon';
-import { ExclamationTriangleIcon } from '@patternfly/react-icons/dist/esm/icons/exclamation-triangle-icon';
 import { t_global_icon_color_status_danger_default as dangerColor } from '@patternfly/react-tokens/dist/js/t_global_icon_color_status_danger_default';
 import { t_global_icon_color_status_success_default as successColor } from '@patternfly/react-tokens/dist/js/t_global_icon_color_status_success_default';
-import { t_global_icon_color_status_warning_default as warningColor } from '@patternfly/react-tokens/dist/js/t_global_icon_color_status_warning_default';
 import { t_global_icon_color_subtle as subtleColor } from '@patternfly/react-tokens/dist/js/t_global_icon_color_subtle';
+import { WarningIcon } from '~/shared/components/status/icons';
 import {
   ConformaSummaryBarSection,
   type ConformaSummaryBarSectionProps,
@@ -58,7 +57,7 @@ export const ConformaSummaryBar: React.FC<ConformaSummaryBarProps> = ({
       'data-test': 'conforma-summary-upcoming-changes',
       items: [
         {
-          icon: <ExclamationTriangleIcon color={warningColor.value} />,
+          icon: <WarningIcon />,
           count: totalWarnings,
           label: 'Pending',
           tooltip: 'Policies that will become active soon',
@@ -77,7 +76,7 @@ export const ConformaSummaryBar: React.FC<ConformaSummaryBarProps> = ({
           tooltip: 'Rules that failed validation',
         },
         {
-          icon: <ExclamationTriangleIcon color={warningColor.value} />,
+          icon: <WarningIcon />,
           count: totalWarnings,
           rawCount: totalWarningsRaw,
           label: 'warnings',

@@ -14,7 +14,6 @@ import {
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { RouterParams } from '~/routes/utils';
 import { getErrorState } from '~/shared/utils/error-utils';
-import { CONFORMA_RESULT_STATUS } from '~/types/conforma';
 import type { GroupByMode } from './conforma-grouping-utils';
 import {
   collapseArchDuplicates,
@@ -23,15 +22,13 @@ import {
   groupByComponent,
   groupByRule,
 } from './conforma-grouping-utils';
-import { ConformaEarlyWarning } from './ConformaEarlyWarning';
 import { ConformaGroupedTable } from './ConformaGroupedTable';
 import { ConformaResultsToolbar } from './ConformaResultsToolbar';
 import { ConformaSettlingAnnouncement } from './ConformaSettlingAnnouncement';
 import { ConformaSummaryBar } from './ConformaSummaryBar';
-// import { useApplicationConformaResults } from './useApplicationConformaResults';
+import { useApplicationConformaResults } from './useApplicationConformaResults';
 import { useConformaFilters } from './useConformaFilters';
 import './ConformaResultsTab.scss';
-import { useMockApplicationConformaResults as useApplicationConformaResults } from '../__data__/mockConformaResults';
 
 /**
  * Inner content component that reads filter state from FilterContext.
@@ -162,10 +159,6 @@ const ConformaResultsTabContent: React.FC = () => {
             </Flex>
           ) : null}
         </div>
-        <ConformaEarlyWarning
-          warningCount={displayCounts.totalWarnings}
-          warnings={displayResults.filter((r) => r.status === CONFORMA_RESULT_STATUS.warnings)}
-        />
       </PageSection>
 
       <PageSection isFilled padding={{ default: 'noPadding' }}>

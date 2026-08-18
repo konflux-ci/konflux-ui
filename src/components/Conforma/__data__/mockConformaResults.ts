@@ -419,7 +419,7 @@ const mockComponentStatuses: ComponentConformaStatus[] = mockConformaComponentRe
 });
 
 export const useMockApplicationConformaResults = (
-  _applicationName: string,
+  _applicationName: string, // eslint-disable-line @typescript-eslint/no-unused-vars
 ): ApplicationConformaResults => ({
   componentStatuses: mockComponentStatuses,
   allResults: mockConformaUIDataMixed,
