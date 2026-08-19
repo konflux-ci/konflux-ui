@@ -1,9 +1,7 @@
 .log-content__sticky-header {
-  display: flex;
   position: absolute;
   top: 0;
   left: 0;
-  right: 0;
   z-index: 2;
   pointer-events: none;
   background: var(
@@ -20,9 +18,21 @@
   color: var(--pf-v6-c-log-viewer__text--Color);
 }
 
+.log-content__gutter--sticky {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: var(--pf-t--global--spacer--sm);
+}
+
 .log-content__sticky-header-content {
   display: flex;
   align-items: center;
+  overflow: hidden;
+}
+
+.log-content__sticky-header-content-inner {
+  flex-shrink: 0;
 }
 
 .log-content__fold-indicator {

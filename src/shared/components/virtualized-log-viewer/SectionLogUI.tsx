@@ -39,19 +39,32 @@ export const StickySectionHeaderBar: React.FC<{
   row: SectionHeaderRow;
   pushUpOffset: number;
   itemSize: number;
+  listClientWidth: number;
+  contentScrollLeft: number;
   onToggle: () => void;
   onLineClick: (lineNumber: number, event: React.MouseEvent) => void;
-}> = ({ row, pushUpOffset, itemSize, onToggle, onLineClick }) => (
-  <div
+}> = ({
+  row,
+  pushUpOffset,
+  itemSize,
+  listClientWidth,
+  contentScrollLeft,
+  onToggle,
+  onLineClick,
+}) => (
+  <Flex
+    direction={{ default: 'row' }}
     className="log-content__sticky-header"
     style={{
       transform: `translateY(${pushUpOffset}px)`,
       height: `${itemSize}px`,
+      width: listClientWidth > 0 ? `${listClientWidth}px` : undefined,
     }}
     data-test={`sticky-header-${row.sectionName}`}
   >
-    <div
-      className="log-content__gutter log-content__gutter--sticky"
+    <FlexItem
+      flex={{ default: 'flexNone' }}
+      className="log-content__gutter-rail log-content__gutter--sticky"
       style={{ height: `${itemSize}px` }}
     >
       <a
@@ -66,12 +79,18 @@ export const StickySectionHeaderBar: React.FC<{
       >
         {row.lineNumber}
       </a>
-    </div>
-    <div
-      className="log-content__row-content log-content__sticky-header-content pf-v6-c-log-viewer__list-item"
-      style={{ height: `${itemSize}px` }}
+    </FlexItem>
+    <FlexItem
+      flex={{ default: 'flex_1' }}
+      className="log-content__sticky-header-content"
+      style={{ height: `${itemSize}px`, minWidth: 0, width: 0 }}
     >
-      <SectionHeaderButton row={row} onToggle={onToggle} />
-    </div>
-  </div>
+      <div
+        className="log-content__sticky-header-content-inner"
+        style={{ transform: `translateX(-${contentScrollLeft}px)` }}
+      >
+        <SectionHeaderButton row={row} onToggle={onToggle} />
+      </div>
+    </FlexItem>
+  </Flex>
 );

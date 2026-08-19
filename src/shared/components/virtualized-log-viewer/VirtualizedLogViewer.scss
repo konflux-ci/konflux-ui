@@ -13,3 +13,8 @@
 .pf-v6-c-log-viewer__text {
   white-space: pre-wrap; // Allow long lines to wrap while preserving spaces and line breaks
 }
+
+// Toolbar "Wrap lines" off — single-line log text only (headers use other classes).
+.pf-v6-c-log-viewer.log-viewer--nowrap .log-content__row-content > .pf-v6-c-log-viewer__text {
+  white-space: pre;
+}

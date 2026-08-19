@@ -1,8 +1,10 @@
 import React from 'react';
-import { Content } from '@patternfly/react-core';
+import { Content, Flex, FlexItem } from '@patternfly/react-core';
 import { useVirtualizer } from '@tanstack/react-virtual';
+import { useEventListener } from '~/shared/hooks/useEventListener';
+import { useLayoutResizeObserver } from '~/shared/hooks/useLayoutResizeObserver';
 import { normalizeSection } from './log-viewer-utils';
-import { SectionedVirtualRow } from './SectionedVirtualRow';
+import { SectionedVirtualRow, VirtualGutterCell } from './SectionedVirtualRow';
 import { StickySectionHeaderBar } from './SectionLogUI';
 import { computeStickySectionHeader } from './sticky-section-header';
 import type { LogSection, NormalizedLogSection, SearchedWord } from './types';
@@ -47,6 +49,8 @@ export interface VirtualizedLogContentProps {
    * true.
    */
   readyToNavigate?: boolean;
+  /** When false, long lines stay on one row; only the content rail scrolls horizontally. */
+  wrapLines?: boolean;
 }
 
 export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
@@ -60,8 +64,14 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
   searchText = '',
   currentSearchMatch,
   readyToNavigate = true,
+  wrapLines = true,
 }) => {
   const scrollRef = React.useRef<HTMLDivElement | null>(null);
+  const contentRailRef = React.useRef<HTMLDivElement | null>(null);
+  const [scrollListElement, setScrollListElement] = React.useState<HTMLDivElement | null>(null);
+  const [contentRailElement, setContentRailElement] = React.useState<HTMLDivElement | null>(null);
+  const [listClientWidth, setListClientWidth] = React.useState(0);
+  const [contentScrollLeft, setContentScrollLeft] = React.useState(0);
   const [itemSize, setItemSize] = React.useState(VIRTUALIZATION_CONFIG.FALLBACK_LINE_HEIGHT);
   const charsPerLineRef = React.useRef(VIRTUALIZATION_CONFIG.FALLBACK_CHARS_PER_LINE);
 
@@ -136,11 +146,12 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
       charsPerLineRef.current = calculateCharsPerLine(container, measureAverageCharWidth(font));
     });
     return () => cancelAnimationFrame(rafId);
-  }, []);
+  }, [height, wrapLines, rowCount]);
 
   const estimateRowHeight = React.useCallback(
     (index: number): number => {
       if (itemSize === 0) return VIRTUALIZATION_CONFIG.FALLBACK_LINE_HEIGHT;
+      if (!wrapLines) return itemSize;
 
       const row = displayRows[index];
       if (!row || row.kind !== 'content') return itemSize;
@@ -148,7 +159,7 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
       const estimatedLines = Math.max(1, Math.ceil(text.length / charsPerLineRef.current));
       return Math.ceil(itemSize * estimatedLines * getSafetyMargin(rowCount));
     },
-    [displayRows, allLines, itemSize, rowCount],
+    [displayRows, allLines, itemSize, rowCount, wrapLines],
   );
 
   const virtualizer = useVirtualizer<HTMLDivElement, Element>({
@@ -158,6 +169,20 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
     overscan: getOverscanCount(rowCount),
     useFlushSync: false,
   });
+
+  const virtualizerRef = React.useRef(virtualizer);
+  virtualizerRef.current = virtualizer;
+  const prevWrapLinesRef = React.useRef(wrapLines);
+
+  React.useEffect(() => {
+    if (prevWrapLinesRef.current === wrapLines) return;
+    prevWrapLinesRef.current = wrapLines;
+    virtualizerRef.current.measure();
+    if (contentRailRef.current) {
+      contentRailRef.current.scrollLeft = 0;
+    }
+    setContentScrollLeft(0);
+  }, [wrapLines]);
 
   const effectiveScrollToRow = React.useMemo(() => {
     if (!scrollToRow || scrollToRow <= 0) return undefined;
@@ -264,10 +289,44 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
   const scrollContainerRef = React.useCallback(
     (node: HTMLDivElement | null) => {
       scrollRef.current = node;
+      setScrollListElement(node);
       navRef(node);
     },
     [navRef],
   );
+
+  const updateListClientWidth = React.useCallback(() => {
+    const next = scrollRef.current?.clientWidth ?? 0;
+    setListClientWidth((prev) => (prev === next ? prev : next));
+  }, []);
+
+  useLayoutResizeObserver(() => {
+    updateListClientWidth();
+  }, [scrollListElement]);
+
+  const scrollListTarget = React.useMemo(
+    () => ({ current: scrollListElement }) as React.RefObject<HTMLDivElement>,
+    [scrollListElement],
+  );
+
+  useEventListener('scroll', updateListClientWidth, scrollListTarget, { passive: true });
+
+  const handleContentRailScroll = React.useCallback(() => {
+    const left = contentRailRef.current?.scrollLeft ?? 0;
+    setContentScrollLeft((prev) => (prev === left ? prev : left));
+  }, []);
+
+  const contentRailTarget = React.useMemo(
+    () => ({ current: contentRailElement }) as React.RefObject<HTMLDivElement>,
+    [contentRailElement],
+  );
+
+  useEventListener('scroll', handleContentRailScroll, contentRailTarget, { passive: true });
+
+  const setContentRailRef = React.useCallback((node: HTMLDivElement | null) => {
+    contentRailRef.current = node;
+    setContentRailElement(node);
+  }, []);
 
   const virtualItems = virtualizer.getVirtualItems();
   const scrollTop = isMultiSection ? (virtualizer.scrollOffset ?? 0) : 0;
@@ -302,31 +361,59 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
         }}
         onClick={() => scrollRef.current?.focus({ preventScroll: true })}
       >
-        <div
-          style={{
-            height: `${virtualizer.getTotalSize()}px`,
-            width: '100%',
-            position: 'relative',
-          }}
+        <Flex
+          direction={{ default: 'row' }}
+          className="log-content__inner"
+          style={{ height: `${virtualizer.getTotalSize()}px` }}
         >
-          {virtualItems.map((virtualItem) => {
-            const row = displayRows[virtualItem.index];
-            if (!row) return null;
-            return (
-              <SectionedVirtualRow
-                key={virtualItem.key}
-                virtualIndex={virtualItem.index}
-                start={virtualItem.start}
-                row={row}
-                measureElement={virtualizer.measureElement}
-                isLineHighlighted={isLineHighlighted}
-                onToggleSection={toggleSection}
-                renderLogLine={renderLine}
-                onLineClick={handleLineClick}
-              />
-            );
-          })}
-        </div>
+          <FlexItem
+            flex={{ default: 'flexNone' }}
+            className="log-content__gutter-rail"
+            style={{ height: `${virtualizer.getTotalSize()}px` }}
+          >
+            {virtualItems.map((virtualItem) => {
+              const row = displayRows[virtualItem.index];
+              if (!row) return null;
+              return (
+                <VirtualGutterCell
+                  key={`gutter-${String(virtualItem.key)}`}
+                  start={virtualItem.start}
+                  size={virtualItem.size}
+                  row={row}
+                  isLineHighlighted={isLineHighlighted}
+                  onLineClick={handleLineClick}
+                />
+              );
+            })}
+          </FlexItem>
+          <FlexItem
+            ref={setContentRailRef}
+            flex={{ default: 'flex_1' }}
+            className="log-content__content-rail"
+            style={{
+              height: `${virtualizer.getTotalSize()}px`,
+              minWidth: 0,
+              width: 0,
+            }}
+          >
+            {virtualItems.map((virtualItem) => {
+              const row = displayRows[virtualItem.index];
+              if (!row) return null;
+              return (
+                <SectionedVirtualRow
+                  key={virtualItem.key}
+                  virtualIndex={virtualItem.index}
+                  start={virtualItem.start}
+                  row={row}
+                  measureElement={virtualizer.measureElement}
+                  isLineHighlighted={isLineHighlighted}
+                  onToggleSection={toggleSection}
+                  renderLogLine={renderLine}
+                />
+              );
+            })}
+          </FlexItem>
+        </Flex>
       </div>
 
       {stickyRow && (
@@ -334,6 +421,8 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
           row={stickyRow}
           pushUpOffset={pushUpOffset}
           itemSize={itemSize}
+          listClientWidth={listClientWidth}
+          contentScrollLeft={contentScrollLeft}
           onToggle={() => toggleSection(stickyRow.sectionIndex)}
           onLineClick={handleLineClick}
         />
