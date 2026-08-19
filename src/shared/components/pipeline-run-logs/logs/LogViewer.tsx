@@ -7,6 +7,7 @@ import {
   Flex,
   FlexItem,
   Popover,
+  SearchInput,
   Spinner,
   Toolbar,
   ToolbarContent,
@@ -19,11 +20,6 @@ import { DownloadIcon } from '@patternfly/react-icons/dist/esm/icons/download-ic
 import { ExpandIcon } from '@patternfly/react-icons/dist/esm/icons/expand-icon';
 import { OutlinedKeyboardIcon } from '@patternfly/react-icons/dist/esm/icons/outlined-keyboard-icon';
 import { OutlinedPlayCircleIcon } from '@patternfly/react-icons/dist/esm/icons/outlined-play-circle-icon';
-import {
-  LogViewerSearch,
-  LogViewerContext,
-  LogViewerToolbarContext,
-} from '@patternfly/react-log-viewer';
 import classNames from 'classnames';
 import { saveAs } from 'file-saver';
 import { debounce } from 'lodash-es';
@@ -35,19 +31,20 @@ import {
   type ShortcutEntry,
 } from '~/shared/components/keyboard-shortcut-hint';
 import { useAutoScrollWithResume } from '~/shared/components/pipeline-run-logs/logs/useAutoScrollWithResume';
-import { useLogViewerSearch } from '~/shared/components/pipeline-run-logs/logs/useLogViewerSearch';
 import { LoadingInline } from '~/shared/components/status-box/StatusBox';
 import {
-  VirtualizedLogViewer,
   type LogSection,
   normalizeSection,
   useLineNumberNavigation,
+  VirtualizedLogContent,
 } from '~/shared/components/virtualized-log-viewer';
 import { useFullscreen } from '~/shared/hooks/fullscreen';
 import { TaskRunKind } from '~/types';
-import { prepareLogViewerContent } from './log-viewer-content';
+import { useLogSearch } from '../useLogSearch';
 import LogsTaskDuration from './LogsTaskDuration';
 import { useLogViewerTheme } from './useLogViewerTheme';
+
+import '@patternfly/react-log-viewer/dist/css/log-viewer.css';
 
 import './LogViewer.scss';
 
@@ -93,11 +90,6 @@ const LogViewer: React.FC<Props> = ({
 
   const normalizedSections = React.useMemo(() => sections.map(normalizeSection), [sections]);
 
-  const lines = React.useMemo(
-    () => prepareLogViewerContent(normalizedSections),
-    [normalizedSections],
-  );
-
   // Tracks the line currently targeted via URL hash navigation (e.g. `#L20000`). Computed here
   // (rather than read from VirtualizedLogContent) so it's available in the very same render —
   // no round-trip delay through child effects/callbacks — and used to pause auto-scroll-to-bottom
@@ -110,11 +102,6 @@ const LogViewer: React.FC<Props> = ({
       activeLineTarget,
       onScroll: onScrollProp,
     });
-
-  const { logViewerContextValue, toolbarContextValue, scrolledRow } = useLogViewerSearch({
-    lines,
-    autoScroll,
-  });
 
   const [isFullscreen, fullscreenRef, fullscreenToggle, isFullscreenSupported] =
     useFullscreen<HTMLDivElement>();
@@ -147,7 +134,7 @@ const LogViewer: React.FC<Props> = ({
       });
   };
 
-  // Use containerRef to measure actual height for VirtualizedLogViewer
+  // Use containerRef to measure actual height for VirtualizedLogContent
   const containerRef = React.useRef<HTMLDivElement>(null);
   const [viewerHeight, setViewerHeight] = React.useState<number | undefined>(undefined);
 
@@ -183,190 +170,216 @@ const LogViewer: React.FC<Props> = ({
     };
   }, [isFullscreen]);
 
+  const allLines = React.useMemo(
+    () => normalizedSections.flatMap((s) => s.lines),
+    [normalizedSections],
+  );
+  const {
+    scrollToRow: searchScrollToRow,
+    searchText,
+    setSearchText,
+    currentMatch,
+    matchCount,
+    currentMatchIndex,
+    nextMatch,
+    prevMatch,
+  } = useLogSearch(allLines);
+
+  const scrollToRow = searchScrollToRow || (autoScroll ? allLines.length : 0);
+
   return (
-    <LogViewerContext.Provider value={logViewerContextValue}>
-      <LogViewerToolbarContext.Provider value={toolbarContextValue}>
-        <div
-          ref={fullscreenRef}
-          style={{ height: isFullscreen ? '100vh' : '100%' }}
-          className={classNames('log-viewer__container', 'pf-v6-c-log-viewer', {
-            'pf-m-dark': logTheme === 'dark',
-            'log-viewer--light': logTheme === 'light',
-          })}
-        >
-          {/* Toolbar */}
-          <div className="pf-v6-c-log-viewer__header">
-            <Toolbar>
-              <ToolbarContent
-                className={classNames({
-                  'log-viewer--fullscreen': isFullscreen,
-                })}
-                alignItems="center"
-              >
-                <ToolbarGroup>
+    <div
+      ref={fullscreenRef}
+      style={{ height: isFullscreen ? '100vh' : '100%' }}
+      className={classNames('log-viewer__container', 'pf-v6-c-log-viewer', {
+        'pf-m-dark': logTheme === 'dark',
+        'log-viewer--light': logTheme === 'light',
+      })}
+    >
+      {/* Toolbar */}
+      <div className="pf-v6-c-log-viewer__header">
+        <Toolbar>
+          <ToolbarContent
+            className={classNames({
+              'log-viewer--fullscreen': isFullscreen,
+            })}
+            alignItems="center"
+          >
+            <ToolbarGroup>
+              <ToolbarItem>
+                <FeatureFlagIndicator flags={['kubearchive-logs', 'taskruns-kubearchive']} />
+              </ToolbarItem>
+            </ToolbarGroup>
+            {showSearch && (
+              <ToolbarGroup>
+                <ToolbarItem>
+                  <SearchInput
+                    key={allLines.length > 0 ? 'logs-ready' : 'logs-empty'}
+                    value={searchText}
+                    onChange={(_event, value) => setSearchText(value)}
+                    resultsCount={
+                      matchCount > 0 ? `${currentMatchIndex + 1}/${matchCount}` : undefined
+                    }
+                    onNextClick={nextMatch}
+                    onPreviousClick={prevMatch}
+                    onClear={() => setSearchText('')}
+                    placeholder="Search"
+                    name="logViewerSearchInput"
+                    aria-label="Search logs"
+                  />
+                </ToolbarItem>
+              </ToolbarGroup>
+            )}
+            <ToolbarGroup align={{ default: 'alignEnd' }}>
+              <ToolbarItem>
+                <Checkbox
+                  id={themeCheckboxId}
+                  label="Dark theme"
+                  checked={logTheme === 'dark'}
+                  onClick={() => setLogTheme(logTheme === 'dark' ? 'light' : 'dark')}
+                />
+              </ToolbarItem>
+              <ToolbarItem variant="separator" className="log-viewer__divider" />
+              <ToolbarItem>
+                <Button variant="link" onClick={downloadLogs}>
+                  <DownloadIcon className="log-viewer__icon" />
+                  Download
+                </Button>
+              </ToolbarItem>
+              <ToolbarItem variant="separator" className="log-viewer__divider" />
+              {onDownloadAll && (
+                <>
                   <ToolbarItem>
-                    <FeatureFlagIndicator flags={['kubearchive-logs', 'taskruns-kubearchive']} />
-                  </ToolbarItem>
-                </ToolbarGroup>
-                {showSearch && (
-                  <ToolbarGroup>
-                    <ToolbarItem>
-                      <LogViewerSearch
-                        key={lines.length > 0 ? 'logs-ready' : 'logs-empty'}
-                        placeholder="Search"
-                        minSearchChars={0}
-                        name="logViewerSearchInput"
-                      />
-                    </ToolbarItem>
-                  </ToolbarGroup>
-                )}
-                <ToolbarGroup align={{ default: 'alignEnd' }}>
-                  <ToolbarItem>
-                    <Checkbox
-                      id={themeCheckboxId}
-                      label="Dark theme"
-                      checked={logTheme === 'dark'}
-                      onClick={() => setLogTheme(logTheme === 'dark' ? 'light' : 'dark')}
-                    />
-                  </ToolbarItem>
-                  <ToolbarItem variant="separator" className="log-viewer__divider" />
-                  <ToolbarItem>
-                    <Button variant="link" onClick={downloadLogs}>
+                    <Button
+                      variant="link"
+                      onClick={startDownloadAll}
+                      isDisabled={downloadAllStatus}
+                    >
                       <DownloadIcon className="log-viewer__icon" />
-                      Download
+                      {downloadAllLabel}
+                      {downloadAllStatus && <LoadingInline />}
                     </Button>
                   </ToolbarItem>
                   <ToolbarItem variant="separator" className="log-viewer__divider" />
-                  {onDownloadAll && (
-                    <>
-                      <ToolbarItem>
-                        <Button
-                          variant="link"
-                          onClick={startDownloadAll}
-                          isDisabled={downloadAllStatus}
-                        >
-                          <DownloadIcon className="log-viewer__icon" />
-                          {downloadAllLabel}
-                          {downloadAllStatus && <LoadingInline />}
-                        </Button>
-                      </ToolbarItem>
-                      <ToolbarItem variant="separator" className="log-viewer__divider" />
-                    </>
-                  )}
-                  {fullscreenToggle && isFullscreenSupported && (
-                    <ToolbarItem gap={{ default: 'gapMd' }}>
-                      <Button variant="link" onClick={fullscreenToggle}>
-                        {isFullscreen ? (
-                          <>
-                            <CompressIcon className="log-viewer__icon" />
-                            Collapse
-                          </>
-                        ) : (
-                          <>
-                            <ExpandIcon className="log-viewer__icon" />
-                            Expand
-                          </>
-                        )}
-                      </Button>
-                    </ToolbarItem>
-                  )}
-                  <ToolbarItem variant="separator" className="log-viewer__divider" />
-                  <ToolbarItem>
-                    <Popover
-                      aria-label="Keyboard shortcuts"
-                      appendTo={() =>
-                        document.getElementById('hacDev-modal-container') || document.body
-                      }
-                      bodyContent={
-                        <KeyboardShortcutHint
-                          shortcuts={LOG_VIEWER_SHORTCUTS}
-                          title="Keyboard shortcuts"
-                          helperText="Click the log area to enable these shortcuts."
-                        />
-                      }
-                      hasAutoWidth
-                    >
-                      <Button
-                        icon={<OutlinedKeyboardIcon />}
-                        variant="plain"
-                        aria-label="Show keyboard shortcuts"
-                      />
-                    </Popover>
-                  </ToolbarItem>
-                </ToolbarGroup>
-              </ToolbarContent>
-            </Toolbar>
-          </div>
-
-          {/* Header */}
-          <Banner data-test="logs-taskName">
-            <Flex
-              alignItems={{ default: 'alignItemsCenter' }}
-              flexWrap={{ default: 'nowrap' }}
-              justifyContent={{ default: 'justifyContentSpaceBetween' }}
-            >
-              {(taskName || isLoading) && (
-                <FlexItem className="log-viewer__task-name-group">
-                  <Flex
-                    gap={{ default: 'gapSm' }}
-                    alignItems={{ default: 'alignItemsCenter' }}
-                    flexWrap={{ default: 'nowrap' }}
-                  >
-                    {taskName && (
-                      <FlexItem flex={{ default: 'flex_1' }} className="log-viewer__task-name">
-                        <Truncate content={taskName} />
-                      </FlexItem>
-                    )}
-                    {isLoading && (
-                      <FlexItem flex={{ default: 'flexNone' }}>
-                        <Spinner
-                          isInline
-                          aria-label="Loading logs"
-                          className="log-viewer__task-name-spinner"
-                        />
-                      </FlexItem>
-                    )}
-                  </Flex>
-                </FlexItem>
+                </>
               )}
-              <FlexItem flex={{ default: 'flexNone' }}>
-                <LogsTaskDuration taskRun={taskRun} />
-              </FlexItem>
-            </Flex>
-            {errorMessage && <Alert variant="danger" isInline title={errorMessage} />}
-          </Banner>
+              {fullscreenToggle && isFullscreenSupported && (
+                <ToolbarItem gap={{ default: 'gapMd' }}>
+                  <Button variant="link" onClick={fullscreenToggle}>
+                    {isFullscreen ? (
+                      <>
+                        <CompressIcon className="log-viewer__icon" />
+                        Collapse
+                      </>
+                    ) : (
+                      <>
+                        <ExpandIcon className="log-viewer__icon" />
+                        Expand
+                      </>
+                    )}
+                  </Button>
+                </ToolbarItem>
+              )}
+              <ToolbarItem variant="separator" className="log-viewer__divider" />
+              <ToolbarItem>
+                <Popover
+                  aria-label="Keyboard shortcuts"
+                  appendTo={() =>
+                    document.getElementById('hacDev-modal-container') || document.body
+                  }
+                  bodyContent={
+                    <KeyboardShortcutHint
+                      shortcuts={LOG_VIEWER_SHORTCUTS}
+                      title="Keyboard shortcuts"
+                      helperText="Click the log area to enable these shortcuts."
+                    />
+                  }
+                  hasAutoWidth
+                >
+                  <Button
+                    icon={<OutlinedKeyboardIcon />}
+                    variant="plain"
+                    aria-label="Show keyboard shortcuts"
+                  />
+                </Popover>
+              </ToolbarItem>
+            </ToolbarGroup>
+          </ToolbarContent>
+        </Toolbar>
+      </div>
 
-          {/* Log Viewer */}
-          <div ref={containerRef} className="log-viewer__content">
-            {viewerHeight && (
-              <VirtualizedLogViewer
-                key={taskRun?.metadata?.uid || 'default'}
-                sections={sections}
-                normalizedSections={normalizedSections}
-                height={viewerHeight}
-                scrollToRow={scrolledRow}
-                onScroll={handleScroll}
-                readyToNavigate={!isLoading}
-              />
-            )}
-          </div>
-
-          {/* Footer */}
-          {showResumeStreamButton && (
-            <div className="log-viewer__resume-stream-button-wrapper">
-              <Button
-                data-test="resume-log-stream"
-                variant="primary"
-                isBlock
-                onClick={handleResumeClick}
+      {/* Header */}
+      <Banner data-test="logs-taskName">
+        <Flex
+          alignItems={{ default: 'alignItemsCenter' }}
+          flexWrap={{ default: 'nowrap' }}
+          justifyContent={{ default: 'justifyContentSpaceBetween' }}
+        >
+          {(taskName || isLoading) && (
+            <FlexItem className="log-viewer__task-name-group">
+              <Flex
+                gap={{ default: 'gapSm' }}
+                alignItems={{ default: 'alignItemsCenter' }}
+                flexWrap={{ default: 'nowrap' }}
               >
-                <OutlinedPlayCircleIcon /> Resume log stream
-              </Button>
-            </div>
+                {taskName && (
+                  <FlexItem flex={{ default: 'flex_1' }} className="log-viewer__task-name">
+                    <Truncate content={taskName} />
+                  </FlexItem>
+                )}
+                {isLoading && (
+                  <FlexItem flex={{ default: 'flexNone' }}>
+                    <Spinner
+                      isInline
+                      aria-label="Loading logs"
+                      className="log-viewer__task-name-spinner"
+                    />
+                  </FlexItem>
+                )}
+              </Flex>
+            </FlexItem>
           )}
+          <FlexItem flex={{ default: 'flexNone' }}>
+            <LogsTaskDuration taskRun={taskRun} />
+          </FlexItem>
+        </Flex>
+        {errorMessage && <Alert variant="danger" isInline title={errorMessage} />}
+      </Banner>
+
+      {/* Log Viewer */}
+      <div ref={containerRef} className="log-viewer__content">
+        {viewerHeight && (
+          <div className="pf-v6-c-log-viewer__main">
+            <VirtualizedLogContent
+              key={taskRun?.metadata?.uid || 'default'}
+              sections={sections}
+              normalizedSections={normalizedSections}
+              height={viewerHeight}
+              width="100%"
+              scrollToRow={scrollToRow}
+              onScroll={handleScroll}
+              searchText={searchText}
+              currentSearchMatch={currentMatch}
+              readyToNavigate={!isLoading}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Footer */}
+      {showResumeStreamButton && (
+        <div className="log-viewer__resume-stream-button-wrapper">
+          <Button
+            data-test="resume-log-stream"
+            variant="primary"
+            isBlock
+            onClick={handleResumeClick}
+          >
+            <OutlinedPlayCircleIcon /> Resume log stream
+          </Button>
         </div>
-      </LogViewerToolbarContext.Provider>
-    </LogViewerContext.Provider>
+      )}
+    </div>
   );
 };
 
