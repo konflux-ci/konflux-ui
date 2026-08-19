@@ -415,6 +415,120 @@ describe('LogViewer Integration Tests', () => {
 
       consoleSpy.mockRestore();
     });
+
+    it('should close dropdown after selecting download option', async () => {
+      const user = userEvent.setup();
+      render(<LogViewer {...defaultProps} />);
+
+      // Open the dropdown
+      await user.click(screen.getByRole('button', { name: /download logs/i }));
+      expect(screen.getByText('Download')).toBeVisible();
+
+      // Select "Download" option
+      await user.click(screen.getByText('Download'));
+
+      // Dropdown should close (menu item no longer visible)
+      await waitFor(() => {
+        expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+      });
+    });
+
+    it('should close dropdown after selecting download all option', async () => {
+      const user = userEvent.setup();
+      const onDownloadAll = jest.fn().mockResolvedValue(undefined);
+
+      render(
+        <LogViewer
+          {...defaultProps}
+          onDownloadAll={onDownloadAll}
+          downloadAllLabel="Download all task logs"
+        />,
+      );
+
+      // Open the dropdown
+      await user.click(screen.getByRole('button', { name: /download logs/i }));
+      expect(screen.getByText('Download all task logs')).toBeVisible();
+
+      // Select "Download all task logs" option
+      await user.click(screen.getByText('Download all task logs'));
+
+      // Dropdown should close
+      await waitFor(() => {
+        expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+      });
+    });
+
+    it('should use metadata name for filename when taskRef is not available', async () => {
+      const user = userEvent.setup();
+      const taskRunWithoutTaskRef = {
+        ...mockTaskRun,
+        spec: {},
+      };
+
+      render(<LogViewer {...defaultProps} taskRun={taskRunWithoutTaskRef} />);
+
+      await user.click(screen.getByRole('button', { name: /download logs/i }));
+      await user.click(screen.getByText('Download'));
+
+      expect(mockSaveAs).toHaveBeenCalledWith(expect.any(Blob), 'test-task-run.log');
+    });
+
+    it('should use uuid fallback for filename when taskRun is null', async () => {
+      const user = userEvent.setup();
+
+      render(<LogViewer {...defaultProps} taskRun={null} />);
+
+      await user.click(screen.getByRole('button', { name: /download logs/i }));
+      await user.click(screen.getByText('Download'));
+
+      expect(mockSaveAs).toHaveBeenCalledWith(
+        expect.any(Blob),
+        expect.stringMatching(/^task-run-.+\.log$/),
+      );
+    });
+
+    it('should combine all sections content in download', async () => {
+      const user = userEvent.setup();
+      const blobSpy = jest.spyOn(global, 'Blob').mockImplementation(
+        (parts) => ({ parts, type: 'text/plain;charset=utf-8' }) as unknown as Blob,
+      );
+
+      render(
+        <LogViewer
+          {...defaultProps}
+          sections={[
+            { containerName: 'step-build', data: 'building...' },
+            { containerName: 'step-test', data: 'testing...' },
+          ]}
+        />,
+      );
+
+      await user.click(screen.getByRole('button', { name: /download logs/i }));
+      await user.click(screen.getByText('Download'));
+
+      expect(mockSaveAs).toHaveBeenCalled();
+      const blobContent = (blobSpy.mock.calls[0][0] as string[])[0];
+      expect(blobContent).toContain('step-build');
+      expect(blobContent).toContain('building...');
+      expect(blobContent).toContain('step-test');
+      expect(blobContent).toContain('testing...');
+
+      blobSpy.mockRestore();
+    });
+
+    it('should show download all with custom label', async () => {
+      const user = userEvent.setup();
+      render(
+        <LogViewer
+          {...defaultProps}
+          onDownloadAll={jest.fn().mockResolvedValue(undefined)}
+          downloadAllLabel="Export all logs"
+        />,
+      );
+
+      await user.click(screen.getByRole('button', { name: /download logs/i }));
+      expect(screen.getByText('Export all logs')).toBeVisible();
+    });
   });
 
   describe('Fullscreen functionality', () => {

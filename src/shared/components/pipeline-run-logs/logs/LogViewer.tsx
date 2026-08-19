@@ -271,18 +271,12 @@ const LogViewer: React.FC<Props> = ({
                   </ToolbarItem>
                   {fullscreenToggle && isFullscreenSupported && (
                     <ToolbarItem gap={{ default: 'gapMd' }}>
-                      <Button variant="link" onClick={fullscreenToggle}>
-                        {isFullscreen ? (
-                          <>
-                            <CompressIcon className="log-viewer__icon" />
-                            Collapse
-                          </>
-                        ) : (
-                          <>
-                            <ExpandIcon className="log-viewer__icon" />
-                            Expand
-                          </>
-                        )}
+                      <Button
+                        variant="plain"
+                        onClick={fullscreenToggle}
+                        aria-label={isFullscreen ? 'Collapse' : 'Expand'}
+                      >
+                        {isFullscreen ? <CompressIcon /> : <ExpandIcon />}
                       </Button>
                     </ToolbarItem>
                   )}
