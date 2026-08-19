@@ -1,7 +1,7 @@
-name: "Watch changes in Konflux-ci deployment related files"
+name: 'Watch changes in Konflux-ci deployment related files'
 
 on:
-  # Can be triggered manually 
+  # Can be triggered manually
   workflow_dispatch:
 
   # Every day at 1:00 AM UTC
@@ -16,6 +16,7 @@ jobs:
       # secrets
       SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_JOB_REPORT_ID }}
       SLACK_TOKEN: ${{ secrets.SLACK_TOKEN_PERIODIC_REPORT }}
+      PERIODIC_JOBS_SLACK_WEBHOOK_URL: ${{ secrets.PERIODIC_JOBS_SLACK_WEBHOOK_URL }}
       JOB_TYPE: 'periodic-watch'
     steps:
       - name: Checkout repository
@@ -38,7 +39,7 @@ jobs:
             "operator/upstream-kustomizations/ui/core/proxy/proxy.yaml"
             "operator/upstream-kustomizations/ui/core/proxy/kustomization.yaml"
           )
-      
+
           TEMP_DIR=$(mktemp -d)
           cd "$TEMP_DIR"
 
@@ -67,7 +68,7 @@ jobs:
             echo "files_changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          
+
       - name: Report job result to Slack
         if: ${{ always() }}
         run: |

@@ -320,9 +320,13 @@ send_report() {
         return 0
     fi
 
-    curl -X POST https://slack.com/api/chat.postMessage \
-        -H "Authorization: Bearer ${SLACK_TOKEN}" \
-        -H "Content-Type: application/json; charset=utf-8" \
+    # curl -X POST https://slack.com/api/chat.postMessage \
+    #     -H "Authorization: Bearer ${SLACK_TOKEN}" \
+    #     -H "Content-Type: application/json; charset=utf-8" \
+    #     -d "$PAYLOAD"
+
+    curl -X POST "${PERIODIC_JOBS_SLACK_WEBHOOK_URL}" \
+        -H "Content-Type: application/json" \
         -d "$PAYLOAD"
 
 }
