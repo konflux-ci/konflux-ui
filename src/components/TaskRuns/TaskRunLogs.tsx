@@ -25,11 +25,9 @@ const TaskRunLogs: React.FC<React.PropsWithChildren<Props>> = ({ taskRun, namesp
     const logSnippet = getTRLogSnippet(taskRun);
     if (logSnippet && 'staticMessage' in logSnippet) {
       return (
-        <div data-test="taskrun-logs-nopod">
-          <CodeBlock>
-            <CodeBlockCode>{logSnippet.staticMessage}</CodeBlockCode>
-          </CodeBlock>
-        </div>
+        <CodeBlock data-test="taskrun-logs-nopod">
+          <CodeBlockCode>{logSnippet.staticMessage}</CodeBlockCode>
+        </CodeBlock>
       );
     }
     return <div data-test="taskrun-logs-nopod">No logs found.</div>;
