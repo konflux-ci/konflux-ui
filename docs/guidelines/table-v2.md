@@ -28,7 +28,9 @@ The key design principle is **composable hooks + sub-components** orchestrated b
       +-- <PfTable>                      -- PatternFly composable table
           +-- <TableHeader>              -- sort indicators, column widths
           +-- <TableBody>                -- virtualized rows + spacers
-              +-- <TableRow>             -- single row via flexRender
+              +-- <Tbody>                -- per-row wrapper (measureElement + data-index)
+                  +-- <TableRow>         -- single row via flexRender
+                  +-- expanded content   -- (optional) full-width row below
 ```
 
 ## Component Reference

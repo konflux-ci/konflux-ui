@@ -1,4 +1,4 @@
-import React, { type ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import { Skeleton } from '@patternfly/react-core';
 import { Tbody, Tr, Td, ExpandableRowContent } from '@patternfly/react-table';
 import { type Row } from '@tanstack/react-table';
@@ -63,19 +63,33 @@ export const TableBody = <TData,>({
   const topSpacerHeight = virtualRows.length > 0 ? virtualRows[0].start - scrollMargin : 0;
 
   return (
-    <Tbody data-test="table-body" style={{ overflowAnchor: 'none' }}>
-      {topSpacerHeight > 0 && <Tr style={{ height: topSpacerHeight }} />}
+    // Multiple <Tbody> siblings (not nested) — each becomes a direct child of the
+    // <table> element. Multiple <tbody> per <table> is valid HTML5 (same pattern
+    // used by ConformaGroupedTable). Per-row wrappers let TanStack Virtual's
+    // measureElement capture the combined height of the main row + expanded content
+    // as a single virtual item, preventing spacer miscalculations on expand/collapse.
+    <>
+      <Tbody data-test="table-body" style={{ overflowAnchor: 'none' }}>
+        {topSpacerHeight > 0 && <Tr style={{ height: topSpacerHeight }} />}
+      </Tbody>
       {virtualRows.map((virtualRow) => {
         const row = rows[virtualRow.index];
         if (!row) return null;
         const rowId = getRowId(row.original);
         return (
-          <React.Fragment key={rowId}>
+          // No explicit role needed: <Tbody> renders a native <tbody> whose implicit
+          // ARIA role is "rowgroup", correctly grouping the main row with its optional
+          // expanded content for screen readers.
+          <Tbody
+            key={rowId}
+            ref={measureElement}
+            data-index={virtualRow.index}
+            style={{ overflowAnchor: 'none' }}
+          >
             <TableRow
               row={row}
               rowId={rowId}
               virtualIndex={virtualRow.index}
-              measureElement={measureElement}
               enableExpansion={enableExpansion}
               enableRowSelection={enableRowSelection}
             />
@@ -86,20 +100,22 @@ export const TableBody = <TData,>({
                 </Td>
               </Tr>
             )}
-          </React.Fragment>
+          </Tbody>
         );
       })}
-      {bottomSpacerHeight > 0 && <Tr style={{ height: bottomSpacerHeight }} />}
-      {isFetchingNextPage &&
-        Array.from({ length: 3 }, (_, rowIdx) => (
-          <Tr key={`skeleton-${rowIdx}`} data-test="table-loading-more">
-            {Array.from({ length: visibleColumnCount }, (__, colIdx) => (
-              <Td key={colIdx}>
-                <Skeleton width={`${50 + ((rowIdx + colIdx) % 4) * 10}%`} />
-              </Td>
-            ))}
-          </Tr>
-        ))}
-    </Tbody>
+      <Tbody style={{ overflowAnchor: 'none' }}>
+        {bottomSpacerHeight > 0 && <Tr style={{ height: bottomSpacerHeight }} />}
+        {isFetchingNextPage &&
+          Array.from({ length: 3 }, (_, rowIdx) => (
+            <Tr key={`skeleton-${rowIdx}`} data-test="table-loading-more">
+              {Array.from({ length: visibleColumnCount }, (__, colIdx) => (
+                <Td key={colIdx}>
+                  <Skeleton width={`${50 + ((rowIdx + colIdx) % 4) * 10}%`} />
+                </Td>
+              ))}
+            </Tr>
+          ))}
+      </Tbody>
+    </>
   );
 };
