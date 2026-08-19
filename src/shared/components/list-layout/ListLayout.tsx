@@ -3,8 +3,8 @@ import { Flex } from '@patternfly/react-core';
 import ListHeader from './ListHeader';
 
 type ListLayoutProps = {
-  title: string;
-  description: React.ReactNode;
+  title: React.ReactNode;
+  description?: React.ReactNode;
   children: React.ReactNode;
 };
 
