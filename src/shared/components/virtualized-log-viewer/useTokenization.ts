@@ -44,10 +44,10 @@ export function useTokenization(lines: string[]) {
       const lineLength = line.length;
 
       if (lineLength >= MONSTER_LINE_THRESHOLD) {
-        // Monster line: render as plain text without syntax highlighting
-        const result = { tokens: [], text: line };
-        tokenizationCache.current.set(line, result);
-        return result;
+        // Monster line: render as plain text without syntax highlighting.
+        // Not cached: they skip Prism.tokenize() anyway, so caching them only
+        // retains their text in memory indefinitely.
+        return { tokens: [], text: line };
       }
 
       // Normal line: apply full Prism tokenization

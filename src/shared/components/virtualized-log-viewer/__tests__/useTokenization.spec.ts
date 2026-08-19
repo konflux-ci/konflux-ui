@@ -55,6 +55,18 @@ describe('useTokenization', () => {
       expect(firstCall).toBe(secondCall);
     });
 
+    it('should NOT cache monster lines to avoid retaining large text', () => {
+      const monsterLine = 'A'.repeat(MONSTER_LINE_THRESHOLD);
+      const { result } = renderHook(() => useTokenization([monsterLine]));
+
+      const firstCall = result.current.tokenizeLine(0);
+      const secondCall = result.current.tokenizeLine(0);
+
+      // Content must be identical but the object must NOT be reused from cache
+      expect(firstCall).toEqual(secondCall);
+      expect(firstCall).not.toBe(secondCall);
+    });
+
     it('should return correct result when lines array reference changes with different content', () => {
       const initialLines = ['Line A'];
       const updatedLines = ['Line B'];
