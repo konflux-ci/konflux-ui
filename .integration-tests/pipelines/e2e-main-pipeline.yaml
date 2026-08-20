@@ -276,6 +276,12 @@ spec:
           value: $(params.cypress-cloud-secret)
         - name: konflux-base-url
           value: $(tasks.prepare-e2e-resources.results.base-url)
+        - name: source-repo-url
+          value: $(tasks.test-metadata.results.source-repo-url)
+        - name: git-revision
+          value: $(tasks.test-metadata.results.git-revision)
+        - name: target-branch
+          value: $(tasks.test-metadata.results.target-repo-branch)
   finally:
     - name: deprovision-kind-cluster
       when:

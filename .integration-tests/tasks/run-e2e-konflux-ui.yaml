@@ -42,6 +42,18 @@ spec:
       type: string
       default: ''
       description: 'Konflux base URL for Cypress tests (from prepare-e2e-resources pipeline task)'
+    - name: source-repo-url
+      type: string
+      default: ''
+      description: 'Git URL of the PR source repo, from test-metadata'
+    - name: git-revision
+      type: string
+      default: ''
+      description: 'PR head commit SHA, from test-metadata'
+    - name: target-branch
+      type: string
+      default: ''
+      description: 'PR target branch (e.g. main), from test-metadata'
   volumes:
     # Enlarge /dev/shm for Cypress/Chrome; default container shm (~64MB) causes flaky browser crashes
     - name: dshm
@@ -49,6 +61,8 @@ spec:
         medium: Memory
         sizeLimit: 3Gi
     - name: test-artifacts
+      emptyDir: {}
+    - name: e2e-overlay
       emptyDir: {}
     - name: oci-credentials
       secret:
@@ -62,12 +76,94 @@ spec:
       - name: test-artifacts
         mountPath: /artifacts
   steps:
+    - name: prepare-e2e-sources
+      when:
+        - input: '$(params.job-type)'
+          operator: in
+          values: ['pr-check']
+      image: quay.io/konflux-qe-incubator/konflux-qe-tools:latest
+      volumeMounts:
+        - name: e2e-overlay
+          mountPath: /e2e
+      env:
+        - name: GIT_TERMINAL_PROMPT
+          value: '0'
+        - name: GITHUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: $(params.github-credentials-secret)
+              key: token
+              optional: true
+      script: |
+        #!/usr/bin/env bash
+        set -euo pipefail
+
+        REPO_URL="$(params.source-repo-url)"
+        GIT_REVISION="$(params.git-revision)"
+        TARGET_BRANCH="$(params.target-branch)"
+        TARGET_BRANCH="${TARGET_BRANCH#refs/heads/}"
+
+        echo "=== Checking for e2e-tests/ changes (pr-check) ==="
+        echo "Source repo: ${REPO_URL}"
+        echo "PR revision: ${GIT_REVISION}"
+        echo "Target branch: ${TARGET_BRANCH}"
+
+        # Use GIT_ASKPASS so the token is never embedded in remote URLs (avoids leaks in git errors).
+        setup_git_askpass() {
+          if [ -z "${GITHUB_TOKEN:-}" ]; then
+            echo "ERROR: GITHUB_TOKEN is not set — cannot fetch private fork repos (check github-credentials secret)"
+            exit 1
+          fi
+          ASKPASS="$(mktemp)"
+          chmod 700 "${ASKPASS}"
+          # Write askpass via printf (heredoc breaks prettier's YAML parser)
+          printf '%s\n' \
+            '#!/bin/sh' \
+            'case "$1" in' \
+            '  *Username*) printf "%s\n" "x-access-token" ;;' \
+            '  *Password*) printf "%s\n" "${GITHUB_TOKEN}" ;;' \
+            'esac' \
+            > "${ASKPASS}"
+          export GIT_ASKPASS="${ASKPASS}"
+        }
+        cleanup_git_askpass() {
+          if [ -n "${ASKPASS:-}" ] && [ -f "${ASKPASS}" ]; then
+            rm -f "${ASKPASS}"
+          fi
+          unset GIT_ASKPASS ASKPASS
+        }
+        setup_git_askpass
+        trap cleanup_git_askpass EXIT
+
+        git config --global init.defaultBranch main
+        git init /tmp/repo
+        cd /tmp/repo
+        git remote add origin "${REPO_URL}"
+
+        echo "Fetching origin/${TARGET_BRANCH} and ${GIT_REVISION}..."
+        git fetch --depth=1 origin \
+          "refs/heads/${TARGET_BRANCH}:refs/remotes/origin/${TARGET_BRANCH}" \
+          "${GIT_REVISION}"
+        echo "Fetch complete"
+
+        if git diff --quiet "origin/${TARGET_BRANCH}" "${GIT_REVISION}" -- e2e-tests/; then
+          echo "No e2e-tests/ changes detected — run-e2e will use image sources"
+          exit 0
+        fi
+
+        echo "e2e-tests/ changed — staging PR sources at /e2e"
+        git checkout "${GIT_REVISION}" -- e2e-tests/
+        cp -a e2e-tests/. /e2e/
+
+        # run-e2e-test runs as non-root (OpenShift arbitrary UID); root-owned files block yarn install.
+        chmod -R a+rwX /e2e
+
+        echo "Staged $(find /e2e -type f | wc -l) files under /e2e"
+
     - name: run-e2e-test
       image: quay.io/konflux_ui_qe/konflux-ui-tests:$(params.test-image-tag)
       onError: continue
-      workingDir: /tmp/e2e
-      # We should set the appropriate requests/limits based on our future observing
-      # Setting default values for memory and cpu by a guess
+      # workingDir is set dynamically in the script: /e2e when PR sources are staged, /tmp/e2e otherwise.
       computeResources:
         limits:
           memory: 8Gi
@@ -80,6 +176,8 @@ spec:
         # Chromium-based browsers (such as Cypress and Playwright) require /dev/shm for reliable operation inside containers.
         - name: dshm
           mountPath: /dev/shm
+        - name: e2e-overlay
+          mountPath: /e2e
       env:
         - name: CYPRESS_USERNAME
           valueFrom:
@@ -127,9 +225,24 @@ spec:
         fi
         echo "Konflux base URL: ${CYPRESS_KONFLUX_BASE_URL}"
 
-        echo "=== Running E2E tests ==="
+        echo "=== Selecting E2E test sources ==="
         SPEC_FILE="$(params.spec-file)"
 
+        # prepare-e2e-sources stages PR e2e-tests/ at /e2e when the folder changed; otherwise /e2e stays empty.
+        if [ -n "$(ls -A /e2e 2>/dev/null)" ]; then
+          echo "PR e2e sources detected at /e2e — installing dependencies"
+          cd /e2e
+          yarn install --immutable
+          yarn cypress install
+          E2E_DIR=/e2e
+        else
+          echo "No PR e2e overlay — using image-baked sources at /tmp/e2e"
+          cd /tmp/e2e
+          E2E_DIR=/tmp/e2e
+        fi
+
+        echo "=== Running E2E tests ==="
+        echo "Working directory: ${E2E_DIR}"
         echo "Running test spec: ${SPEC_FILE}"
 
         # Run tests and capture exit code (don't exit on failure)
@@ -147,19 +260,19 @@ spec:
         echo "=== Collecting test artifacts ==="
         mkdir -p /artifacts
 
-        # Copy Cypress artifacts if they exist
-        if [ -d "cypress/videos" ]; then
+        # Copy Cypress artifacts from whichever source tree was used for the run
+        if [ -d "${E2E_DIR}/cypress/videos" ]; then
           echo "Copying videos..."
-          cp -r cypress/videos /artifacts/ || true
+          cp -r "${E2E_DIR}/cypress/videos" /artifacts/ || true
         fi
 
-        if [ -d "cypress/screenshots" ]; then
+        if [ -d "${E2E_DIR}/cypress/screenshots" ]; then
           echo "Copying screenshots..."
-          cp -r cypress/screenshots /artifacts/ || true
+          cp -r "${E2E_DIR}/cypress/screenshots" /artifacts/ || true
         fi
 
         # Copy test reports
-        for f in cypress/junit-*.xml; do
+        for f in "${E2E_DIR}"/cypress/junit-*.xml; do
           if [ -f "$f" ]; then
             echo "Copying JUnit report: $f"
             cp "$f" /artifacts/ || true
@@ -170,6 +283,7 @@ spec:
         echo "Test execution completed with exit code: ${TEST_RESULT}" > /artifacts/e2e-tests.log
         echo "Timestamp: $(date)" >> /artifacts/e2e-tests.log
         echo "Base URL: ${CYPRESS_KONFLUX_BASE_URL}" >> /artifacts/e2e-tests.log
+        echo "E2E source: ${E2E_DIR}" >> /artifacts/e2e-tests.log
 
         # Save test result for later steps
         echo "${TEST_RESULT}" > /artifacts/test-exit-code
