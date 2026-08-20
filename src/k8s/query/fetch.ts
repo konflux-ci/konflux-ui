@@ -32,10 +32,12 @@ export const K8sQueryListResource = <TResource extends K8sResourceCommon>(
   resourceInit: K8sResourceListOptions,
   options?: TQueryOptions<K8sResourceListResult<TResource>>,
 ): Promise<K8sResourceListResult<TResource>> => {
-  return queryClient.ensureQueryData({
-    queryKey: createQueryKeys(resourceInit),
-    queryFn: () => k8sListResource(resourceInit),
-    ...options,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { queryKey, queryFn, filterData, ...rest } = options ?? {};
+  return queryClient.ensureQueryData<K8sResourceListResult<TResource>>({
+    queryKey: queryKey ?? createQueryKeys(resourceInit),
+    queryFn: queryFn ?? (() => k8sListResource<TResource>(resourceInit)),
+    ...rest,
   });
 };
 
