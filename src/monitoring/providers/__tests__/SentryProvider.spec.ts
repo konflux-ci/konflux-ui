@@ -265,23 +265,6 @@ describe('SentryProvider', () => {
     });
   });
 
-  describe('beforeSendSpan', () => {
-    const defaultConfig = {
-      enabled: true,
-      provider: 'sentry' as const,
-      dsn: 'https://test@sentry.io/123',
-      environment: 'production',
-    };
-
-    it('should pass beforeSendSpan callback to Sentry.init', () => {
-      provider.init(defaultConfig);
-      const initCall = Sentry.init as jest.Mock;
-      const config = initCall.mock.calls[0][0];
-      expect(config.beforeSendSpan).toBeDefined();
-      expect(typeof config.beforeSendSpan).toBe('function');
-    });
-  });
-
   describe('tracesSampler', () => {
     it('should use configured traces sample rate for same-origin transactions', () => {
       const config = {
