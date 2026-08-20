@@ -1,3 +1,4 @@
+import { getKonfluxPublicInfo } from '~/hooks/useKonfluxPublicInfo';
 import { ApplicationKind, ImportSecret } from '../../types';
 import { SBOMEventNotification } from '../../types/konflux-public-info';
 import {
@@ -46,6 +47,20 @@ export const createResourcesWithLinkingComponents = async (
   namespace: string,
   notifications: SBOMEventNotification[],
 ) => {
+  // Fresh check at submit time — bypass every cache layer (React Query, condition
+  // registry, localStorage) so a stale "false" from a prior failed fetch can never
+  // silently prevent ImageRepository creation.  Default to enabled: only an explicit
+  // `enabled: false` from the API should suppress creation.
+  let imageControllerEnabled = true;
+  try {
+    const info = await getKonfluxPublicInfo({ staleTime: 0 });
+    imageControllerEnabled = info.integrations?.image_controller?.enabled !== false;
+  } catch {
+    // Cannot reach the API — default to enabled so we don't silently skip
+    // ImageRepository creation on a cluster that has the image controller.
+    imageControllerEnabled = true;
+  }
+
   const {
     source,
     application,
@@ -91,16 +106,18 @@ export const createResourcesWithLinkingComponents = async (
       undefined,
       componentAnnotations,
     );
-    await createImageRepository(
-      {
-        application,
-        component: componentName,
-        namespace,
-        isPrivate: isPrivateRepo,
-        notifications,
-      },
-      true,
-    );
+    if (imageControllerEnabled) {
+      await createImageRepository(
+        {
+          application,
+          component: componentName,
+          namespace,
+          isPrivate: isPrivateRepo,
+          notifications,
+        },
+        true,
+      );
+    }
   }
 
   if (shouldCreateApplication) {
@@ -128,13 +145,15 @@ export const createResourcesWithLinkingComponents = async (
       componentAnnotations,
     );
 
-    await createImageRepository({
-      application,
-      component: componentName,
-      namespace,
-      isPrivate: isPrivateRepo,
-      notifications,
-    });
+    if (imageControllerEnabled) {
+      await createImageRepository({
+        application,
+        component: componentName,
+        namespace,
+        isPrivate: isPrivateRepo,
+        notifications,
+      });
+    }
 
     await createSecretsWithLinkingComponents(secretsToCreate, componentName, namespace, false);
   }
