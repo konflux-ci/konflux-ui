@@ -24,8 +24,6 @@ jobs:
       JOB_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
       # Dry run mode (only applies to Konflux cleanup)
       DRY_RUN: ${{ github.event_name == 'schedule' && 'false' || github.event.inputs.dry_run }}
-      SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_JOB_REPORT_ID }}
-      SLACK_TOKEN: ${{ secrets.SLACK_TOKEN_PERIODIC_REPORT }}
       PERIODIC_JOBS_SLACK_WEBHOOK_URL: ${{ secrets.PERIODIC_JOBS_SLACK_WEBHOOK_URL }}
       # secrets
       GH_TOKEN: ${{ secrets.HAC_TEST_GH_TOKEN }}
