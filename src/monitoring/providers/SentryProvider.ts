@@ -6,6 +6,8 @@ import {
   useNavigationType,
 } from 'react-router-dom';
 import * as Sentry from '@sentry/react';
+import { evaluateApiEventRules } from '../api-event-rules';
+import { getSlowApiThreshold } from '../api-performance-thresholds';
 import type { IMonitoringProvider, MonitoringConfig, LogLevel, UserContext } from '../types';
 
 interface SentryConfig extends MonitoringConfig {
@@ -49,6 +51,54 @@ export class SentryProvider implements IMonitoringProvider<SentryConfig> {
         tags: {
           cluster: mergedConfig.cluster || 'unknown',
         },
+      },
+      beforeSend(event) {
+        const request = event.request;
+        if (!request?.url) {
+          return event;
+        }
+
+        const statusCode = event.contexts?.response?.status_code;
+        if (typeof statusCode !== 'number') {
+          return event;
+        }
+
+        const action = evaluateApiEventRules(request.url, statusCode);
+        return action === 'send' ? event : null;
+      },
+      beforeSendSpan(span) {
+        const spanData = span.data;
+        if (spanData?.['sentry.op'] !== 'http.client') {
+          return span;
+        }
+
+        const url = spanData.url as string | undefined;
+        const startTimestamp = span.start_timestamp;
+        const endTimestamp = span.timestamp;
+
+        if (!url || !startTimestamp || !endTimestamp) {
+          return span;
+        }
+
+        const durationMs = (endTimestamp - startTimestamp) * 1000;
+        const slowResult = getSlowApiThreshold(url, durationMs);
+
+        if (slowResult) {
+          Sentry.captureMessage(`Slow API call: ${url}`, {
+            level: slowResult.level,
+            extra: {
+              url,
+              durationMs: Math.round(durationMs),
+              thresholdMs: slowResult.thresholdMs,
+              statusCode: spanData['http.response.status_code'],
+            },
+            tags: {
+              slowApiLevel: slowResult.level,
+            },
+          });
+        }
+
+        return span;
       },
     });
   }

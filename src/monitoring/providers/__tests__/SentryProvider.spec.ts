@@ -162,4 +162,86 @@ describe('SentryProvider', () => {
     provider.setUser(null);
     expect(Sentry.setUser).toHaveBeenCalledWith(null);
   });
+
+  describe('beforeSend', () => {
+    const defaultConfig = {
+      enabled: true,
+      provider: 'sentry' as const,
+      dsn: 'https://test@sentry.io/123',
+      environment: 'production',
+    };
+
+    it('should pass beforeSend callback to Sentry.init', () => {
+      provider.init(defaultConfig);
+      const initCall = Sentry.init as jest.Mock;
+      const config = initCall.mock.calls[0][0];
+      expect(config.beforeSend).toBeDefined();
+      expect(typeof config.beforeSend).toBe('function');
+    });
+
+    it('should return null for 404 on non-plugin API path', () => {
+      provider.init(defaultConfig);
+      const initCall = Sentry.init as jest.Mock;
+      const { beforeSend } = initCall.mock.calls[0][0];
+
+      const event = {
+        request: { url: '/api/k8s/apis/v1/pods/my-pod' },
+        // eslint-disable-next-line camelcase
+        contexts: { response: { status_code: 404 } },
+      };
+      expect(beforeSend(event)).toBeNull();
+    });
+
+    it('should return event for 404 on plugin path', () => {
+      provider.init(defaultConfig);
+      const initCall = Sentry.init as jest.Mock;
+      const { beforeSend } = initCall.mock.calls[0][0];
+
+      const event = {
+        request: { url: '/api/k8s/plugins/kubearchive/apis/v1/pods' },
+        // eslint-disable-next-line camelcase
+        contexts: { response: { status_code: 404 } },
+      };
+      expect(beforeSend(event)).toBe(event);
+    });
+
+    it('should return event when no request URL exists', () => {
+      provider.init(defaultConfig);
+      const initCall = Sentry.init as jest.Mock;
+      const { beforeSend } = initCall.mock.calls[0][0];
+
+      const event = { exception: { values: [{ type: 'Error', value: 'test' }] } };
+      expect(beforeSend(event)).toBe(event);
+    });
+
+    it('should ignore chrome extension requests', () => {
+      provider.init(defaultConfig);
+      const initCall = Sentry.init as jest.Mock;
+      const { beforeSend } = initCall.mock.calls[0][0];
+
+      const event = {
+        request: { url: 'chrome-extension://abc/content.js' },
+        // eslint-disable-next-line camelcase
+        contexts: { response: { status_code: 500 } },
+      };
+      expect(beforeSend(event)).toBeNull();
+    });
+  });
+
+  describe('beforeSendSpan', () => {
+    const defaultConfig = {
+      enabled: true,
+      provider: 'sentry' as const,
+      dsn: 'https://test@sentry.io/123',
+      environment: 'production',
+    };
+
+    it('should pass beforeSendSpan callback to Sentry.init', () => {
+      provider.init(defaultConfig);
+      const initCall = Sentry.init as jest.Mock;
+      const config = initCall.mock.calls[0][0];
+      expect(config.beforeSendSpan).toBeDefined();
+      expect(typeof config.beforeSendSpan).toBe('function');
+    });
+  });
 });
