@@ -63,10 +63,23 @@ describe('IssuesOverview', () => {
   it('should render the grid layout with correct structure', () => {
     const { container } = renderComponent();
 
-    const grid = container.querySelector('.pf-v6-l-grid');
-    expect(grid).toBeInTheDocument();
+    // Outer grid should exist
+    const outerGrid = container.querySelector('.pf-v6-l-grid');
+    expect(outerGrid).toBeInTheDocument();
 
-    const gridItems = container.querySelectorAll('.pf-v6-l-grid__item');
-    expect(gridItems.length).toBe(3);
+    // Outer grid should have 2 direct grid-item children (left column + right column)
+    const outerGridItems = Array.from(outerGrid.children).filter((child) =>
+      child.classList.contains('pf-v6-l-grid__item'),
+    );
+    expect(outerGridItems).toHaveLength(2);
+
+    // Left column should contain a nested grid with 2 grid items
+    const nestedGrid = outerGridItems[0].querySelector('.pf-v6-l-grid');
+    expect(nestedGrid).toBeInTheDocument();
+
+    const nestedGridItems = Array.from(nestedGrid.children).filter((child) =>
+      child.classList.contains('pf-v6-l-grid__item'),
+    );
+    expect(nestedGridItems).toHaveLength(2);
   });
 });

@@ -76,6 +76,14 @@ describe('TriggerReleaseForm', () => {
     screen.getByTestId('add-reference-button');
   });
 
+  it('should render without crashing when releasePlans is null and loaded is true', () => {
+    useReleasePlansMock.mockReturnValue([null, true]);
+    const values = {};
+    const props = { values } as FormikProps<TriggerReleaseFormValues>;
+    const result = formikRenderer(TriggerRelease(props), values);
+    expect(result.getByRole('heading', { name: 'Trigger release' })).toBeVisible();
+  });
+
   it('should show release & snapshot dropdown in loading state', () => {
     const values = {};
     const props = { values } as FormikProps<TriggerReleaseFormValues>;
@@ -108,6 +116,14 @@ describe('getApplicationNameForReleasePlan', () => {
     const releasePlans = [];
     const selectedReleasePlan = 'plan2';
     expect(getApplicationNameForReleasePlan(releasePlans, selectedReleasePlan, true)).toBe('');
+  });
+
+  it('should return an empty string if releasePlans is null', () => {
+    expect(getApplicationNameForReleasePlan(null, 'plan1', true)).toBe('');
+  });
+
+  it('should return an empty string if releasePlans is undefined', () => {
+    expect(getApplicationNameForReleasePlan(undefined, 'plan1', true)).toBe('');
   });
 
   it('should return an empty string if release plan has no application', () => {
