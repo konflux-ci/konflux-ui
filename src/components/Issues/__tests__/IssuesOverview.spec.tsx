@@ -90,21 +90,20 @@ describe('IssuesOverview', () => {
     const outerGrid = container.querySelector('.pf-v6-l-grid');
     expect(outerGrid).toBeInTheDocument();
 
-    // Outer grid should have 3 direct grid-item children when conforma-policy is enabled
-    // (left column + right column + conforma card)
+    // Outer grid should have 2 direct grid-item children (left column + right column)
     const outerGridItems = Array.from(outerGrid.children).filter((child) =>
       child.classList.contains('pf-v6-l-grid__item'),
     );
-    expect(outerGridItems).toHaveLength(3);
+    expect(outerGridItems).toHaveLength(2);
 
-    // Left column should contain a nested grid with 2 grid items
+    // Left column should contain a nested grid with 3 grid items
     const nestedGrid = outerGridItems[0].querySelector('.pf-v6-l-grid');
     expect(nestedGrid).toBeInTheDocument();
 
     const nestedGridItems = Array.from(nestedGrid.children).filter((child) =>
       child.classList.contains('pf-v6-l-grid__item'),
     );
-    expect(nestedGridItems).toHaveLength(2);
+    expect(nestedGridItems).toHaveLength(3);
   });
 
   it('should render ConformaViolationsCard when conforma-policy feature flag is enabled', () => {

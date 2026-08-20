@@ -22,16 +22,16 @@ const IssuesOverview: React.FunctionComponent = () => {
           <GridItem>
             <IssuesByStatusCard />
           </GridItem>
+          <IfFeature flag="conforma-policy">
+            <GridItem>
+              <ConformaViolationsCard />
+            </GridItem>
+          </IfFeature>
         </Grid>
       </GridItem>
       <GridItem span={4}>
         <LatestIssuesCard />
       </GridItem>
-      <IfFeature flag="conforma-policy">
-        <GridItem span={8}>
-          <ConformaViolationsCard />
-        </GridItem>
-      </IfFeature>
     </Grid>
   );
 };
