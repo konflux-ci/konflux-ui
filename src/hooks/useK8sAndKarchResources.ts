@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { hashKey } from '@tanstack/query-core';
-import { useQuery } from '@tanstack/react-query';
+import { UseQueryOptions, useQuery } from '@tanstack/react-query';
 import { createGetQueryOptions, createQueryKeys, useK8sWatchResource } from '~/k8s';
 import { useK8sQueryWatch } from '~/k8s/hooks/useK8sQueryWatch';
 import { POLLING_INTERVAL } from '~/k8s/hooks/useK8sWatchResource';
@@ -257,14 +257,20 @@ export function useK8sAndKarchResource<TResource extends K8sResourceCommon>(
     watchOptions,
   );
 
-  const { data: watchedResource } = useQuery<TResource>(
-    shouldWatch
-      ? {
-          ...createGetQueryOptions<TResource>(resourceInit, memoizedQueryOptions),
-          refetchInterval: wsError ? POLLING_INTERVAL : undefined,
-        }
-      : { queryKey: ['disabled'], enabled: false },
-  );
+  const getQueryOptions = (): UseQueryOptions<TResource> => {
+    if (!resourceInit) {
+      return { queryKey: ['disabled'], enabled: false };
+    }
+
+    return {
+      ...createGetQueryOptions<TResource>(resourceInit, memoizedQueryOptions),
+      enabled: !!shouldWatch,
+      staleTime: Infinity,
+      refetchInterval: wsError ? POLLING_INTERVAL : undefined,
+    };
+  };
+
+  const { data: watchedResource } = useQuery<TResource>(getQueryOptions());
 
   const data = (shouldWatch && watchedResource) || result?.resource;
 
