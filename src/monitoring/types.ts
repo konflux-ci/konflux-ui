@@ -30,8 +30,8 @@ export interface IMonitoringProvider<TConfig extends MonitoringConfig> {
   /** Initialize the monitoring provider with the given configuration. */
   init(config: TConfig): void;
 
-  /** Capture an exception with optional structured context. */
-  captureException(error: unknown, context?: Record<string, unknown>): void;
+  /** Capture an exception with optional structured context. Returns an event ID if available. */
+  captureException(error: unknown, context?: Record<string, unknown>): string | undefined;
 
   /** Capture a log message with optional severity and context. */
   captureMessage(message: string, level?: LogLevel, context?: Record<string, unknown>): void;

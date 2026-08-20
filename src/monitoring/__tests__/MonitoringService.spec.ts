@@ -51,7 +51,7 @@ describe('MonitoringService', () => {
     expect(Sentry.init).toHaveBeenCalled();
   });
 
-  it('should delegate captureException to provider and return this for chaining', () => {
+  it('should delegate captureException to provider and return undefined for noop', () => {
     const config: MonitoringConfig = {
       enabled: false,
       provider: 'noop',
@@ -66,7 +66,7 @@ describe('MonitoringService', () => {
     expect(consoleMock.error).toHaveBeenCalledWith('captureException', expect.any(Error), {
       key: 'value',
     });
-    expect(result).toBe(service);
+    expect(result).toBeUndefined();
   });
 
   it('should delegate captureMessage to provider and return this for chaining', () => {
