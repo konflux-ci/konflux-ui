@@ -50,7 +50,7 @@ describe('SentryProvider', () => {
       expect.objectContaining({
         dsn: 'https://test@sentry.io/123',
         environment: 'production',
-        sampleRate: 1.0,
+        sampleRate: 0.5,
         sendDefaultPii: true,
         tracesSampler: expect.any(Function),
         tracePropagationTargets: ['localhost', /^\/api\/k8s/, /^\/oauth2\//],
@@ -225,12 +225,8 @@ describe('SentryProvider', () => {
       expect(beforeSend(event)).toBe(event);
     });
 
-    it('should use sample rate for partial sampling', () => {
-      const configWithRate = {
-        ...defaultConfig,
-        sampleRates: { errors: 0.5 },
-      };
-      provider.init(configWithRate);
+    it('should return event for non-404 errors (no override, let sampleRate handle it)', () => {
+      provider.init(defaultConfig);
       const initCall = Sentry.init as jest.Mock;
       const { beforeSend } = initCall.mock.calls[0][0];
 
@@ -239,16 +235,7 @@ describe('SentryProvider', () => {
         // eslint-disable-next-line camelcase
         contexts: { response: { status_code: 500 } },
       };
-
-      // With Math.random mocked to return 0.3 (< 0.5), event should be sent
-      jest.spyOn(Math, 'random').mockReturnValue(0.3);
       expect(beforeSend(event)).toBe(event);
-
-      // With Math.random mocked to return 0.7 (>= 0.5), event should be dropped
-      jest.spyOn(Math, 'random').mockReturnValue(0.7);
-      expect(beforeSend(event)).toBeNull();
-
-      jest.restoreAllMocks();
     });
 
     it('should ignore chrome extension requests', () => {

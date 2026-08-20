@@ -7,7 +7,7 @@ import {
 } from 'react-router-dom';
 import * as Sentry from '@sentry/react';
 import { obfuscate } from '~/analytics/obfuscate';
-import { createDefaultApiEventRules, evaluateApiEventRules } from '../api-event-rules';
+import { evaluateApiEventRules } from '../api-event-rules';
 import type { IMonitoringProvider, MonitoringConfig, LogLevel, UserContext } from '../types';
 
 interface SentryConfig extends MonitoringConfig {
@@ -31,9 +31,7 @@ const toSentryLevel = (level?: LogLevel): Sentry.SeverityLevel => {
 export class SentryProvider implements IMonitoringProvider<SentryConfig> {
   init(config: SentryConfig): void {
     const mergedConfig = { ...DEFAULTS, ...config };
-    const errorSampleRate = mergedConfig.sampleRates?.errors ?? 1.0;
     const tracesSampleRate = mergedConfig.sampleRates?.traces ?? 0.2;
-    const apiEventRules = createDefaultApiEventRules(errorSampleRate);
 
     Sentry.init({
       dsn: mergedConfig.dsn,
@@ -55,13 +53,12 @@ export class SentryProvider implements IMonitoringProvider<SentryConfig> {
         }
 
         const transactionName = samplingContext.name ?? '';
-        // Use rule-based sampling — non-app paths get 0, everything else gets configured rate
-        return evaluateApiEventRules(transactionName, 200, apiEventRules) > 0
-          ? tracesSampleRate
-          : 0;
+        const override = evaluateApiEventRules(transactionName, 200);
+        // If a rule explicitly sets 0 (e.g., non-app requests), drop the trace
+        // Otherwise use the configured traces sample rate
+        return override === 0 ? 0 : tracesSampleRate;
       },
-      // Set to 1 — per-event sampling is handled by beforeSend via api event rules
-      sampleRate: 1.0,
+      sampleRate: mergedConfig.sampleRates?.errors ?? 1.0,
       tracePropagationTargets: ['localhost', /^\/api\/k8s/, /^\/oauth2\//],
       initialScope: {
         tags: {
@@ -79,14 +76,13 @@ export class SentryProvider implements IMonitoringProvider<SentryConfig> {
           return event;
         }
 
-        const sampleRate = evaluateApiEventRules(request.url, statusCode, apiEventRules);
-        if (sampleRate === 0) {
-          return null;
-        }
-        if (sampleRate >= 1) {
+        const override = evaluateApiEventRules(request.url, statusCode);
+        // undefined = no override, let Sentry's sampleRate handle it
+        if (override === undefined) {
           return event;
         }
-        return Math.random() < sampleRate ? event : null;
+        // 0 = discard, >0 = always send (overrides default rate)
+        return override > 0 ? event : null;
       },
     });
   }

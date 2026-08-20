@@ -3,15 +3,20 @@ export interface ApiEventRule {
   name: string;
   /** Return true if this rule applies to the given URL and status */
   matches: (url: string, statusCode: number) => boolean;
-  /** Sample rate (0 = never send, 1 = always send) */
-  sampleRate: number;
+  /**
+   * Sample rate override for matched events.
+   * 0 = discard, 1 = always send.
+   * undefined = no override, use the default sampleRate from Sentry config.
+   */
+  sampleRate: number | undefined;
 }
 
 /**
- * Create the default API event rules with the given default sample rate.
- * Rules are evaluated in order — first match wins.
+ * Default API event rules. Evaluated in order — first match wins.
+ * Rules with sampleRate override the default config rate.
+ * The fallback rule returns undefined (no override).
  */
-export const createDefaultApiEventRules = (defaultSampleRate: number): ApiEventRule[] => [
+export const DEFAULT_API_EVENT_RULES: ApiEventRule[] = [
   {
     name: 'non-app-requests',
     matches: (url) => !url.startsWith('/'),
@@ -30,19 +35,19 @@ export const createDefaultApiEventRules = (defaultSampleRate: number): ApiEventR
   {
     name: 'default',
     matches: () => true,
-    sampleRate: defaultSampleRate,
+    sampleRate: undefined,
   },
 ];
 
 /**
  * Evaluate API event rules in order. First matching rule wins.
- * Returns the sample rate (0..1) for the matched rule.
+ * Returns the sample rate override, or undefined if no override applies.
  */
 export const evaluateApiEventRules = (
   url: string,
   statusCode: number,
-  rules: ApiEventRule[],
-): number => {
+  rules: ApiEventRule[] = DEFAULT_API_EVENT_RULES,
+): number | undefined => {
   const matchedRule = rules.find((rule) => rule.matches(url, statusCode));
-  return matchedRule?.sampleRate ?? 1;
+  return matchedRule?.sampleRate;
 };
