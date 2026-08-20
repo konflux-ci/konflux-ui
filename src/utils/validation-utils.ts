@@ -71,12 +71,16 @@ export const SecretFromSchema = yup.object({
   opaque: yup.object().when('type', {
     is: SecretTypeDropdownLabel.opaque,
     then: yup.object({
-      keyValues: yup.array().of(
-        yup.object({
-          key: yup.string().required('Required'),
-          value: yup.string().required('Required'),
-        }),
-      ),
+      keyValues: yup.array().when('$isUsingExisting', {
+        is: true,
+        then: yup.array(),
+        otherwise: yup.array().of(
+          yup.object({
+            key: yup.string().required('Required'),
+            value: yup.string().required('Required'),
+          }),
+        ),
+      }),
     }),
   }),
   image: yup.object().when('type', {
