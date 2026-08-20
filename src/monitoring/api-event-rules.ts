@@ -24,7 +24,7 @@ export const DEFAULT_API_EVENT_RULES: ApiEventRule[] = [
   },
   {
     name: 'plugin-paths-always-send',
-    matches: (url) => url.includes('/plugins/'),
+    matches: (url) => url.includes('/api/k8s/plugins/'),
     sampleRate: 1,
   },
   {

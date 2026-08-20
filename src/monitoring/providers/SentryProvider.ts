@@ -29,6 +29,8 @@ const toSentryLevel = (level?: LogLevel): Sentry.SeverityLevel => {
 };
 
 export class SentryProvider implements IMonitoringProvider<SentryConfig> {
+  private userUpdateToken = 0;
+
   init(config: SentryConfig): void {
     const mergedConfig = { ...DEFAULTS, ...config };
     const tracesSampleRate = mergedConfig.sampleRates?.traces ?? 0.2;
@@ -54,9 +56,8 @@ export class SentryProvider implements IMonitoringProvider<SentryConfig> {
 
         const transactionName = samplingContext.name ?? '';
         const override = evaluateApiEventRules(transactionName, 200);
-        // If a rule explicitly sets 0 (e.g., non-app requests), drop the trace
-        // Otherwise use the configured traces sample rate
-        return override === 0 ? 0 : tracesSampleRate;
+        // Use rule override if defined, otherwise fall back to configured rate
+        return override ?? tracesSampleRate;
       },
       sampleRate: mergedConfig.sampleRates?.errors ?? 1.0,
       tracePropagationTargets: ['localhost', /^\/api\/k8s/, /^\/oauth2\//],
@@ -96,11 +97,17 @@ export class SentryProvider implements IMonitoringProvider<SentryConfig> {
   }
 
   async setUser(user: UserContext | null): Promise<void> {
+    const token = ++this.userUpdateToken;
+
     if (!user?.id) {
       Sentry.setUser(null);
       return;
     }
+
     const hashedId = await obfuscate(user.id);
-    Sentry.setUser({ id: hashedId });
+    // Only apply if this is still the latest setUser call
+    if (token === this.userUpdateToken) {
+      Sentry.setUser({ id: hashedId });
+    }
   }
 }

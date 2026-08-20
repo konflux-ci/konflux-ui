@@ -174,6 +174,29 @@ describe('SentryProvider', () => {
     expect(Sentry.setUser).toHaveBeenCalledWith(null);
   });
 
+  it('should not restore stale user when setUser(null) is called after setUser(user)', async () => {
+    const { obfuscate: obfuscateMock } = jest.requireMock('~/analytics/obfuscate');
+    let resolveHash: (value: string) => void = () => {};
+    obfuscateMock.mockReturnValueOnce(
+      new Promise<string>((resolve) => {
+        resolveHash = resolve;
+      }),
+    );
+
+    // Start hashing userA, but don't resolve yet
+    const userAPromise = provider.setUser({ id: 'userA' });
+    // Immediately clear user — this should invalidate the pending hash
+    await provider.setUser(null);
+    expect(Sentry.setUser).toHaveBeenCalledWith(null);
+
+    // Now resolve the stale hash — it should NOT call setUser
+    (Sentry.setUser as jest.Mock).mockClear();
+    resolveHash('hashed-userA');
+    await userAPromise;
+
+    expect(Sentry.setUser).not.toHaveBeenCalled();
+  });
+
   describe('beforeSend', () => {
     const defaultConfig = {
       enabled: true,
@@ -297,7 +320,7 @@ describe('SentryProvider', () => {
       expect(tracesSampler({ name: 'chrome-extension://abc/script.js' })).toBe(0);
     });
 
-    it('should sample plugin path transactions at configured rate', () => {
+    it('should use rule override for plugin path transactions', () => {
       const config = {
         enabled: true,
         provider: 'sentry' as const,
@@ -309,8 +332,8 @@ describe('SentryProvider', () => {
       const initCall = Sentry.init as jest.Mock;
       const { tracesSampler } = initCall.mock.calls[0][0];
 
-      // Plugin paths have sampleRate 1 from rules, so tracesSampler returns the traces rate
-      expect(tracesSampler({ name: '/api/k8s/plugins/kubearchive/test' })).toBe(0.3);
+      // Plugin paths have sampleRate 1 from rules — override takes precedence
+      expect(tracesSampler({ name: '/api/k8s/plugins/kubearchive/test' })).toBe(1);
     });
 
     it('should inherit parent sampling decision when parentSampled is defined', () => {

@@ -41,6 +41,11 @@ describe('evaluateApiEventRules', () => {
     it('returns 0 for 404 from oauth2 paths', () => {
       expect(evaluateApiEventRules('/oauth2/callback', 404)).toBe(0);
     });
+
+    it('does not match non-API paths containing plugins', () => {
+      expect(evaluateApiEventRules('/applications/plugins/example', 404)).toBe(0);
+      expect(evaluateApiEventRules('/applications/plugins/example', 500)).toBeUndefined();
+    });
   });
 
   describe('extensibility', () => {
