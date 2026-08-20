@@ -36,6 +36,6 @@ export interface IMonitoringProvider<TConfig extends MonitoringConfig> {
   /** Capture a log message with optional severity and context. */
   captureMessage(message: string, level?: LogLevel, context?: Record<string, unknown>): void;
 
-  /** Associate user context with future events. */
-  setUser(user: UserContext | null): void;
+  /** Associate user context with future events. Only a hashed ID is sent. */
+  setUser(user: UserContext | null): void | Promise<void>;
 }

@@ -6,6 +6,7 @@ import {
   useNavigationType,
 } from 'react-router-dom';
 import * as Sentry from '@sentry/react';
+import { obfuscate } from '~/analytics/obfuscate';
 import { createDefaultApiEventRules, evaluateApiEventRules } from '../api-event-rules';
 import { getSlowApiThreshold } from '../api-performance-thresholds';
 import type { IMonitoringProvider, MonitoringConfig, LogLevel, UserContext } from '../types';
@@ -32,6 +33,7 @@ export class SentryProvider implements IMonitoringProvider<SentryConfig> {
   init(config: SentryConfig): void {
     const mergedConfig = { ...DEFAULTS, ...config };
     const errorSampleRate = mergedConfig.sampleRates?.errors ?? 1.0;
+    const tracesSampleRate = mergedConfig.sampleRates?.traces ?? 0.2;
     const apiEventRules = createDefaultApiEventRules(errorSampleRate);
 
     Sentry.init({
@@ -47,7 +49,18 @@ export class SentryProvider implements IMonitoringProvider<SentryConfig> {
           matchRoutes,
         }),
       ],
-      tracesSampleRate: mergedConfig.sampleRates?.traces ?? 0.2,
+      tracesSampler: (samplingContext) => {
+        // Inherit parent sampling decision to avoid breaking distributed traces
+        if (samplingContext.parentSampled !== undefined) {
+          return samplingContext.parentSampled;
+        }
+
+        const transactionName = samplingContext.name ?? '';
+        // Use rule-based sampling — non-app paths get 0, everything else gets configured rate
+        return evaluateApiEventRules(transactionName, 200, apiEventRules) > 0
+          ? tracesSampleRate
+          : 0;
+      },
       // Set to 1 — per-event sampling is handled by beforeSend via api event rules
       sampleRate: 1.0,
       tracePropagationTargets: ['localhost', /^\/api\/k8s/, /^\/oauth2\//],
@@ -121,7 +134,12 @@ export class SentryProvider implements IMonitoringProvider<SentryConfig> {
     return Sentry.captureMessage(message, { level: toSentryLevel(level), ...context });
   }
 
-  setUser(user: UserContext | null): void {
-    Sentry.setUser(user);
+  async setUser(user: UserContext | null): Promise<void> {
+    if (!user?.id) {
+      Sentry.setUser(null);
+      return;
+    }
+    const hashedId = await obfuscate(user.id);
+    Sentry.setUser({ id: hashedId });
   }
 }

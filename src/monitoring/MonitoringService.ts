@@ -34,9 +34,8 @@ export class MonitoringService {
     return this;
   }
 
-  setUser(user: UserContext | null): this {
-    this.provider.setUser(user);
-    return this;
+  setUser(user: UserContext | null): void {
+    void this.provider.setUser(user);
   }
 
   static create(config: MonitoringConfig): MonitoringService {

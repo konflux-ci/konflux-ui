@@ -85,7 +85,7 @@ describe('MonitoringService', () => {
     expect(result).toBe(service);
   });
 
-  it('should delegate setUser to provider and return this for chaining', () => {
+  it('should delegate setUser to provider', () => {
     const config: MonitoringConfig = {
       enabled: false,
       provider: 'noop',
@@ -95,10 +95,9 @@ describe('MonitoringService', () => {
     const service = new MonitoringService();
     service.initialize(config);
 
-    const result = service.setUser({ id: '123', username: 'testuser' });
+    service.setUser({ id: '123' });
 
-    expect(consoleMock.info).toHaveBeenCalledWith('setUser', { id: '123', username: 'testuser' });
-    expect(result).toBe(service);
+    expect(consoleMock.info).toHaveBeenCalledWith('setUser', { id: '123' });
   });
 
   it('should create and initialize service via static create method', () => {

@@ -11,6 +11,10 @@ jest.mock('@sentry/react', () => ({
     .mockReturnValue({ name: 'ReactRouterBrowserTracing' }),
 }));
 
+jest.mock('~/analytics/obfuscate', () => ({
+  obfuscate: jest.fn().mockResolvedValue('hashed-user-id'),
+}));
+
 describe('SentryProvider', () => {
   let provider: SentryProvider;
   let Sentry: typeof import('@sentry/react');
@@ -48,7 +52,7 @@ describe('SentryProvider', () => {
         environment: 'production',
         sampleRate: 1.0,
         sendDefaultPii: true,
-        tracesSampleRate: 0.3,
+        tracesSampler: expect.any(Function),
         tracePropagationTargets: ['localhost', /^\/api\/k8s/, /^\/oauth2\//],
         initialScope: { tags: { cluster: 'prod-cluster' } },
       }),
@@ -93,7 +97,7 @@ describe('SentryProvider', () => {
     expect(Sentry.init).toHaveBeenCalledWith(
       expect.objectContaining({
         sampleRate: 1.0,
-        tracesSampleRate: 0.2,
+        tracesSampler: expect.any(Function),
         initialScope: { tags: { cluster: 'unknown' } },
       }),
     );
@@ -155,11 +159,18 @@ describe('SentryProvider', () => {
     expect(result).toBe('message-event-id');
   });
 
-  it('should delegate setUser to Sentry', () => {
-    provider.setUser({ id: '123', email: 'test@example.com' });
-    expect(Sentry.setUser).toHaveBeenCalledWith({ id: '123', email: 'test@example.com' });
+  it('should hash user ID and drop email/username before sending to Sentry', async () => {
+    await provider.setUser({ id: '123', username: 'testuser', email: 'test@example.com' });
+    expect(Sentry.setUser).toHaveBeenCalledWith({ id: 'hashed-user-id' });
+  });
 
-    provider.setUser(null);
+  it('should set Sentry user to null when user is null', async () => {
+    await provider.setUser(null);
+    expect(Sentry.setUser).toHaveBeenCalledWith(null);
+  });
+
+  it('should set Sentry user to null when user has no id', async () => {
+    await provider.setUser({ username: 'testuser' });
     expect(Sentry.setUser).toHaveBeenCalledWith(null);
   });
 
@@ -268,6 +279,84 @@ describe('SentryProvider', () => {
       const config = initCall.mock.calls[0][0];
       expect(config.beforeSendSpan).toBeDefined();
       expect(typeof config.beforeSendSpan).toBe('function');
+    });
+  });
+
+  describe('tracesSampler', () => {
+    it('should use configured traces sample rate for same-origin transactions', () => {
+      const config = {
+        enabled: true,
+        provider: 'sentry' as const,
+        dsn: 'https://test@sentry.io/123',
+        environment: 'production',
+        sampleRates: { traces: 0.3 },
+      };
+      provider.init(config);
+      const initCall = Sentry.init as jest.Mock;
+      const { tracesSampler } = initCall.mock.calls[0][0];
+
+      expect(tracesSampler({ name: '/applications' })).toBe(0.3);
+    });
+
+    it('should use default 0.2 rate when traces rate is not configured', () => {
+      const config = {
+        enabled: true,
+        provider: 'sentry' as const,
+        dsn: 'https://test@sentry.io/123',
+        environment: 'production',
+      };
+      provider.init(config);
+      const initCall = Sentry.init as jest.Mock;
+      const { tracesSampler } = initCall.mock.calls[0][0];
+
+      expect(tracesSampler({ name: '/applications' })).toBe(0.2);
+    });
+
+    it('should return 0 for non-app transaction names', () => {
+      const config = {
+        enabled: true,
+        provider: 'sentry' as const,
+        dsn: 'https://test@sentry.io/123',
+        environment: 'production',
+        sampleRates: { traces: 0.5 },
+      };
+      provider.init(config);
+      const initCall = Sentry.init as jest.Mock;
+      const { tracesSampler } = initCall.mock.calls[0][0];
+
+      expect(tracesSampler({ name: 'chrome-extension://abc/script.js' })).toBe(0);
+    });
+
+    it('should sample plugin path transactions at configured rate', () => {
+      const config = {
+        enabled: true,
+        provider: 'sentry' as const,
+        dsn: 'https://test@sentry.io/123',
+        environment: 'production',
+        sampleRates: { traces: 0.3 },
+      };
+      provider.init(config);
+      const initCall = Sentry.init as jest.Mock;
+      const { tracesSampler } = initCall.mock.calls[0][0];
+
+      // Plugin paths have sampleRate 1 from rules, so tracesSampler returns the traces rate
+      expect(tracesSampler({ name: '/api/k8s/plugins/kubearchive/test' })).toBe(0.3);
+    });
+
+    it('should inherit parent sampling decision when parentSampled is defined', () => {
+      const config = {
+        enabled: true,
+        provider: 'sentry' as const,
+        dsn: 'https://test@sentry.io/123',
+        environment: 'production',
+        sampleRates: { traces: 0.3 },
+      };
+      provider.init(config);
+      const initCall = Sentry.init as jest.Mock;
+      const { tracesSampler } = initCall.mock.calls[0][0];
+
+      expect(tracesSampler({ name: '/applications', parentSampled: true })).toBe(true);
+      expect(tracesSampler({ name: '/applications', parentSampled: false })).toBe(false);
     });
   });
 });
