@@ -1950,22 +1950,23 @@ __metadata:
   linkType: hard
 
 "@dotenvx/dotenvx@npm:^2.0.0":
-  version: 2.19.2
-  resolution: "@dotenvx/dotenvx@npm:2.19.2"
+  version: 2.21.0
+  resolution: "@dotenvx/dotenvx@npm:2.21.0"
   dependencies:
-    "@dotenvx/primitives": "npm:^2.1.1"
+    "@dotenvx/primitives": "npm:^2.2.0"
     "@dotenvx/tooling": "npm:^1.0.3"
     yocto-spinner: "npm:^1.2.1"
   bin:
     dotenvx: src/cli/dotenvx.js
-  checksum: 10/9494b4b8acda7fe1ae39bd4086291c73ecb2b94ef63ad339e3c74e532ebebde8fadb6c80fe276324230e1b08e52c80b5e5418f8316eda724ae13aa512bda86da
+    dx: src/cli/dotenvx.js
+  checksum: 10/2680cbb8d6d5afa324f51e128f042b591c83ccd92dba11c61fa41aeb17c45a58d430cc93fdfd1a6bf91e1a2b2849a17ed271450929f96a7eab6ca1572e3288fe
   languageName: node
   linkType: hard
 
-"@dotenvx/primitives@npm:^2.1.1":
-  version: 2.1.1
-  resolution: "@dotenvx/primitives@npm:2.1.1"
-  checksum: 10/db113b629327ee623185bb3c5c8a20e457cd28fbd6e1a2871187c762758a3dd37220815ae787a37999dfcaa4071476a5588403c887445732458629107880a5ff
+"@dotenvx/primitives@npm:^2.2.0":
+  version: 2.2.0
+  resolution: "@dotenvx/primitives@npm:2.2.0"
+  checksum: 10/77425cd0589b5bc85a9bfcc92d7de14e8466e35fddb42a9dae79a978e3ceb59ece65a6b2558de94cd6071cb5aedb2b24bbdfcd7f93622ebea525f8e712c99e68
   languageName: node
   linkType: hard
 
@@ -5273,11 +5274,11 @@ __metadata:
   linkType: hard
 
 "@testing-library/user-event@npm:^14.5.2, @testing-library/user-event@npm:^14.6.1":
-  version: 14.6.3
-  resolution: "@testing-library/user-event@npm:14.6.3"
+  version: 14.6.4
+  resolution: "@testing-library/user-event@npm:14.6.4"
   peerDependencies:
     "@testing-library/dom": ">=7.21.4"
-  checksum: 10/a41add78922fa7ea4a0026995d8c00f0fc8bc51f037d67a0ecac1b11b2d1632f4fa2147e9690d2bb755789d2c33bf173195230d7ede13957d36f86607c2316c1
+  checksum: 10/cf0406382327c6751bf282f6acebfc68d08cffc5a01d9cb808f4130a4b713962b32bd5d38c9ff351c3d13495134af72cf2efb330f711e1afa1f6750d3ed2dc68
   languageName: node
   linkType: hard
 
@@ -20665,8 +20666,8 @@ __metadata:
   linkType: hard
 
 "zustand@npm:^5.0.4":
-  version: 5.0.14
-  resolution: "zustand@npm:5.0.14"
+  version: 5.0.15
+  resolution: "zustand@npm:5.0.15"
   peerDependencies:
     "@types/react": ">=18.0.0"
     immer: ">=9.0.6"
@@ -20681,6 +20682,6 @@ __metadata:
       optional: true
     use-sync-external-store:
       optional: true
-  checksum: 10/136ab316fa4fa479ce7cc0cf485665dcee9e1bd926d4e51e138cd40d6602900fd2a4b6bb172b39b03bd7b6df073a0656679e5a237c28dd026d8fd4e5228e1b7c
+  checksum: 10/5124e93d8f57483985981ea9795df6872991f0693eb3730d562b3cb09e72af8a892703f2610744e5814b2045f7373df3d6f80625a646197d700572f2c7f70db3
   languageName: node
   linkType: hard
