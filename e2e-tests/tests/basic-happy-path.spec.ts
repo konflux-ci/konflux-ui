@@ -257,6 +257,31 @@ describe('Basic Happy Path', () => {
     });
   });
 
+  describe('Check Secrets Page', () => {
+    const secretName = 'testing-secret-e2e-flow';
+    const secretKey = 'mykey';
+    const secretValue = 'myvalue';
+
+    it('Navigate to Secrets page from the sidebar', () => {
+      cy.log('Navigate to Secrets page from the sidebar');
+      Common.navigateTo(NavItem.secrets);
+      Common.waitForLoad();
+      cy.get(secretsPagePO.page).contains(secretsPagePO.pageDescription).should('exist');
+      cy.get(secretsPagePO.secretsTab).should('exist');
+
+      Common.waitForLoad();
+
+      SecretsPage.addSecret(secretName, secretKey, secretValue);
+
+      // Search secret in a filter field
+      SecretsPage.searchSecret(secretName);
+      // Verify secret values, no edition is done
+      SecretsPage.editSecret(secretName, secretKey, secretValue);
+      // Delete secret
+      SecretsPage.deleteSecret(secretName);
+    });
+  });
+
   describe('Check Issues page', () => {
     it('Navigate to Issues page from the sidebar', () => {
       Common.navigateTo(NavItem.issues);
@@ -270,6 +295,19 @@ describe('Basic Happy Path', () => {
         cy.get(issuesPagePO.serviceUnavailableState).should('exist');
         cy.contains(issuesPagePO.serviceUnavailableTitle).should('exist');
       }
+    });
+  });
+
+  describe('Check Page Header', () => {
+    it('Check Theme Switcher', () => {
+      // Checking Theme Switcher
+      ThemeSwitcher.clickOnThemeSwitcher();
+      ThemeSwitcher.switchTheme(Themes.SYSTEM, Themes.LIGHT);
+      ThemeSwitcher.switchTheme(Themes.LIGHT, Themes.DARK);
+
+      // Checking Contrast Switcher
+      ContrastSwitcher.switchContrast(Contrasts.SYSTEM, Contrasts.DEFAULT);
+      ContrastSwitcher.switchContrast(Contrasts.DEFAULT, Contrasts.HIGH);
     });
   });
 
