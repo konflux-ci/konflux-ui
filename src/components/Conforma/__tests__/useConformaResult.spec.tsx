@@ -272,10 +272,9 @@ describe('useConformaResult', () => {
     await waitForNextUpdate();
     const [ecResult, loaded] = result.current;
     expect(mockGetTaskRunLogs).toHaveBeenCalled();
-    expect(logger.warn).toHaveBeenCalledWith(
-      'Failed to resolve Conforma result from TaskRun',
-      { error: 'Api error' },
-    );
+    expect(logger.warn).toHaveBeenCalledWith('Failed to resolve Conforma result from TaskRun', {
+      error: 'Api error',
+    });
     expect(loaded).toBe(true);
     expect(ecResult).toBeUndefined();
   });

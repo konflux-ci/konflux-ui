@@ -1,12 +1,5 @@
 import * as React from 'react';
-import {
-  Button,
-  Flex,
-  FlexItem,
-  Label,
-  LabelGroup,
-  Truncate,
-} from '@patternfly/react-core';
+import { Button, Flex, FlexItem, Label, LabelGroup, Truncate } from '@patternfly/react-core';
 import { MinusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/minus-circle-icon';
 import { useField } from 'formik';
 import { SegmentedToggle } from '~/shared/components/segmented-toggle';

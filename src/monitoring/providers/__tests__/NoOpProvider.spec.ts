@@ -60,4 +60,45 @@ describe('NoOpProvider', () => {
     provider.setUser(null);
     expect(consoleMock.info).toHaveBeenCalledWith('setUser', null);
   });
+
+  it('should return a span object with end and setAttribute methods from startInactiveSpan', () => {
+    const span = provider.startInactiveSpan({ name: 'test-span', op: 'ui.render' });
+
+    expect(span).toHaveProperty('end');
+    expect(span).toHaveProperty('setAttribute');
+    expect(typeof span.end).toBe('function');
+    expect(typeof span.setAttribute).toBe('function');
+  });
+
+  it('should log to console.debug when span end() is called', () => {
+    const span = provider.startInactiveSpan({
+      name: 'test-span',
+      op: 'ui.render',
+      attributes: { component: 'Test' },
+    });
+
+    span.end();
+
+    expect(consoleMock.debug).toHaveBeenCalledWith(
+      '[noop-span]',
+      'test-span',
+      expect.stringMatching(/^\d+\.\d+ms$/),
+      expect.objectContaining({ component: 'Test' }),
+    );
+  });
+
+  it('should log reportMetric to console.debug', () => {
+    provider.reportMetric('render.duration', 1500, {
+      unit: 'millisecond',
+      attributes: { page: 'list' },
+    });
+
+    expect(consoleMock.debug).toHaveBeenCalledWith(
+      '[noop-metric]',
+      'render.duration',
+      1500,
+      'millisecond',
+      { page: 'list' },
+    );
+  });
 });

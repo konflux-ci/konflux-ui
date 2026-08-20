@@ -90,11 +90,7 @@ const DetailSubTable: React.FC<{ rows: ConformaResultRow[] }> = ({ rows }) => {
                 <Content>
                   <Content component="p">
                     {row.msg != null ? (
-                      <Truncate
-                        content={row.msg}
-                        expandInline
-                        data-test="conforma-violation-msg"
-                      />
+                      <Truncate content={row.msg} expandInline data-test="conforma-violation-msg" />
                     ) : (
                       '-'
                     )}

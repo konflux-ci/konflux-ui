@@ -8,6 +8,8 @@ jest.mock('@sentry/react', () => ({
   captureMessage: jest.fn().mockReturnValue('event-id'),
   setUser: jest.fn(),
   reactRouterBrowserTracingIntegration: jest.fn(),
+  startInactiveSpan: jest.fn(),
+  metrics: { distribution: jest.fn() },
 }));
 
 describe('MonitoringService', () => {
@@ -99,6 +101,44 @@ describe('MonitoringService', () => {
 
     expect(consoleMock.info).toHaveBeenCalledWith('setUser', { id: '123', username: 'testuser' });
     expect(result).toBe(service);
+  });
+
+  it('should delegate startInactiveSpan to provider', () => {
+    const config: MonitoringConfig = {
+      enabled: false,
+      provider: 'noop',
+      environment: 'development',
+    };
+
+    const service = new MonitoringService();
+    service.initialize(config);
+
+    const span = service.startInactiveSpan({ name: 'test-span', op: 'ui.render' });
+
+    expect(span).toBeDefined();
+    expect(span).toHaveProperty('end');
+    expect(span).toHaveProperty('setAttribute');
+  });
+
+  it('should delegate reportMetric to provider', () => {
+    const config: MonitoringConfig = {
+      enabled: false,
+      provider: 'noop',
+      environment: 'development',
+    };
+
+    const service = new MonitoringService();
+    service.initialize(config);
+
+    service.reportMetric('render.duration', 1500, { unit: 'millisecond' });
+
+    expect(consoleMock.debug).toHaveBeenCalledWith(
+      '[noop-metric]',
+      'render.duration',
+      1500,
+      'millisecond',
+      undefined,
+    );
   });
 
   it('should create and initialize service via static create method', () => {

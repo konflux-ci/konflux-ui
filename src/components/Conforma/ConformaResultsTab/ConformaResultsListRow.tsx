@@ -28,4 +28,3 @@ export const ConformaResultsListRow: React.FC<ConformaResultsListRowProps> = ({ 
     </TableData>
   </>
 );
-

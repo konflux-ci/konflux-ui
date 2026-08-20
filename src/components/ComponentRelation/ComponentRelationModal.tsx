@@ -29,10 +29,7 @@ export const ComponentRelationModal: React.FC<ComponentRelationModalProps> = ({
   const [nudgeData, loaded, error] = useNudgeData(application);
   const namespace = useNamespace();
 
-  const handleSubmitError = (
-    e: unknown,
-    helpers: FormikHelpers<ComponentRelationFormikValue>,
-  ) => {
+  const handleSubmitError = (e: unknown, helpers: FormikHelpers<ComponentRelationFormikValue>) => {
     logger.error(
       'Error while updating dependency data for component',
       e instanceof Error ? e : undefined,

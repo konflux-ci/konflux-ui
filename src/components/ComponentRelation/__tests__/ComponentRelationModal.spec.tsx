@@ -4,10 +4,7 @@ import {
   componentCRMocks,
   sortedGroupedComponentsMocks,
 } from '../../Components/__data__/mock-data';
-import {
-  ComponentRelationModal,
-  createComponentRelationModal,
-} from '../ComponentRelationModal';
+import { ComponentRelationModal, createComponentRelationModal } from '../ComponentRelationModal';
 import { ComponentRelationNudgeType, ComponentRelationValue } from '../type';
 import { useNudgeData } from '../useNudgeData';
 import { updateNudgeDependencies } from '../utils';

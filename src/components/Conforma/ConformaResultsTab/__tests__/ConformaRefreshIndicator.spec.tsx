@@ -63,9 +63,7 @@ describe('ConformaRefreshIndicator', () => {
     jest.useFakeTimers();
     try {
       const twoMinutesAgo = Date.now() - 2 * 60 * 1000;
-      render(
-        <ConformaRefreshIndicator refresh={makeRefresh({ lastFetchedAt: twoMinutesAgo })} />,
-      );
+      render(<ConformaRefreshIndicator refresh={makeRefresh({ lastFetchedAt: twoMinutesAgo })} />);
 
       const trigger = screen.getByTestId('conforma-last-checked');
       const expectedAbsoluteTime = dateTime.utcDateTimeFormatter.format(new Date(twoMinutesAgo));
