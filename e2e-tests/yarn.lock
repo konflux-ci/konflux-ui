@@ -327,7 +327,7 @@ __metadata:
     "@types/fs-extra": "npm:^9.0.13"
     "@types/node": "npm:^24.0.0"
     axe-core: "npm:^4.10.2"
-    cypress: "npm:^15.7.0"
+    cypress: "npm:^15.20.0"
     cypress-axe: "npm:^1.6.0"
     cypress-high-resolution: "npm:^1.0.0"
     cypress-mochawesome-reporter: "npm:^3.4.0"
@@ -1123,9 +1123,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+<<<<<<< HEAD
 "cypress@npm:^15.7.0":
   version: 15.21.1
   resolution: "cypress@npm:15.21.1"
+=======
+"cypress@npm:^15.20.0":
+  version: 15.20.0
+  resolution: "cypress@npm:15.20.0"
+>>>>>>> 6c40f713 (fix: fix Cypress Studio feature)
   dependencies:
     "@cypress/request": "npm:^4.0.0"
     "@cypress/xvfb": "npm:^1.2.4"
@@ -1168,7 +1174,11 @@ __metadata:
     yauzl: "npm:^3.3.1"
   bin:
     cypress: bin/cypress
+<<<<<<< HEAD
   checksum: 10/71b14a52c989484608e2d70bd9c442432f32a811df83ce4193283a506493f547e8340770db79e20cb5889c60c0ec9ef7288a862b290c59219c7d8db27e987661
+=======
+  checksum: 10/210643f3cd8d2f49df7166f94ab6dcfb3d8b256ad5b337fcb03ad58b12fd3a183afa357f8e4f754417b747bb24bdb38784690e6d569497769a24cb1837b764db
+>>>>>>> 6c40f713 (fix: fix Cypress Studio feature)
   languageName: node
   linkType: hard
 
