@@ -57,13 +57,10 @@ The main orchestrator. Composes hooks and sub-components into a full-featured ta
 | `expandedContent`     | `(row: TData) => ReactNode`                           | No       | Render function for expanded row content                            |
 | `expanded`            | `ExpandedState`                                       | No       | External expansion state for controlled row expansion               |
 | `onExpandedChange`    | `OnChangeFn<ExpandedState>`                           | No       | Callback when expansion state changes (for controlled expansion)    |
-| `getSubRows`          | `(originalRow: TData, index: number) => TData[] \| undefined` | No       | Function to get sub-rows for hierarchical data structures           |
 | `hasNextPage`         | `boolean`                                             | No       | Whether more data is available for infinite scroll                  |
 | `isFetchingNextPage`  | `boolean`                                             | No       | Whether next page is currently loading                              |
 | `fetchNextPage`       | `() => void`                                          | No       | Callback to fetch the next page                                     |
 | `columnStateKey`      | `string`                                              | No       | localStorage key for persisting column state                        |
-| `columnState`         | `ColumnState`                                         | No       | Externally managed column state (overrides internal state)          |
-| `onColumnStateChange` | `(state: ColumnState) => void`                        | No       | Callback when column state changes (required with `columnState`)    |
 | `scrollElement`       | `HTMLElement \| null`                                 | No       | External scroll container for virtualization                        |
 | `data-test`           | `string`                                              | No       | Custom data-test attribute for the table root element (default: `table-v2`) |
 
@@ -667,18 +664,20 @@ const MyGroupedTable = ({ groupedData }: { groupedData: MyGroupedData[] }) => {
     {
       id: 'groupName',
       header: 'Group',
+      accessorFn: (row) => row.groupName,
       cell: ({ row }) => row.original.groupName,
     },
     {
       id: 'itemCount',
       header: 'Item Count',
+      accessorFn: (row) => row.items.length,
       cell: ({ row }) => row.original.items.length,
     },
   ];
 
   const detailColumns: ColumnDefinition<MyItem>[] = [
-    { id: 'name', header: 'Name', cell: ({ row }) => row.original.name },
-    { id: 'value', header: 'Value', cell: ({ row }) => row.original.value },
+    { id: 'name', header: 'Name', accessorFn: (row) => row.name, cell: ({ row }) => row.original.name },
+    { id: 'value', header: 'Value', accessorFn: (row) => row.value, cell: ({ row }) => row.original.value },
   ];
 
   return (
@@ -709,7 +708,6 @@ const MyGroupedTable = ({ groupedData }: { groupedData: MyGroupedData[] }) => {
 - Use `expanded` prop to externally control which rows are expanded (TanStack `ExpandedState` = `true | Record<string, boolean>`)
 - Use `onExpandedChange` to receive expansion state updates from the table
 - Use `expandedContent` to render custom content when a row is expanded (e.g., nested tables, detail panels)
-- Use `getSubRows` when your data has a hierarchical structure (nested children)
 - Use `data-test` to provide custom test identifiers for table instances
 
 ## Migration from Legacy Table

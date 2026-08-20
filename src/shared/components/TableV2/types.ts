@@ -204,9 +204,6 @@ export interface TableProps<TData> {
   /** Callback when expansion state changes. */
   onExpandedChange?: OnChangeFn<ExpandedState>;
 
-  /** Function to get sub-rows from a row (for hierarchical data). */
-  getSubRows?: (originalRow: TData, index: number) => TData[] | undefined;
-
   /** Enables row grouping by a column or custom function. Reserved for future use. */
   enableGrouping?: boolean;
 

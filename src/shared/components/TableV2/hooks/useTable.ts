@@ -48,8 +48,6 @@ export interface UseTableOptions<TData> {
   expanded?: ExpandedState;
   /** Callback when expansion state changes. */
   onExpandedChange?: OnChangeFn<ExpandedState>;
-  /** Function to get sub-rows from a row (for hierarchical data). */
-  getSubRows?: (originalRow: TData, index: number) => TData[] | undefined;
 }
 
 /**
@@ -144,18 +142,9 @@ export function useTable<TData>(options: UseTableOptions<TData>): UseTableResult
     meta,
     expanded,
     onExpandedChange,
-    getSubRows,
   } = options;
 
   const columnDefs = useMemo(() => mapColumns(columns), [columns]);
-
-  // Validate expansion state is used correctly
-  if (expanded !== undefined && !onExpandedChange) {
-    throw new Error(
-      'useTable: When providing `expanded` state, you must also provide `onExpandedChange` to handle state updates. ' +
-        'TanStack Table requires both props for controlled expansion to work correctly.',
-    );
-  }
 
   const columnVisibility = useMemo(
     () =>
@@ -196,13 +185,7 @@ export function useTable<TData>(options: UseTableOptions<TData>): UseTableResult
     ...(enableExpansion
       ? {
           getExpandedRowModel: getExpandedRowModel(),
-          getRowCanExpand: (row) => {
-            if (getSubRows) {
-              return row.subRows.length > 0;
-            }
-            return true;
-          },
-          ...(getSubRows ? { getSubRows } : {}),
+          getRowCanExpand: () => true,
         }
       : {}),
     enableRowSelection: !!enableRowSelection,

@@ -71,7 +71,6 @@ export const Table = <TData,>({
   expandedContent,
   expanded,
   onExpandedChange,
-  getSubRows,
   hasNextPage,
   isFetchingNextPage,
   fetchNextPage,
@@ -116,7 +115,6 @@ export const Table = <TData,>({
     meta,
     expanded,
     onExpandedChange,
-    getSubRows,
   });
 
   const { virtualizer, virtualRows } = useVirtualization({

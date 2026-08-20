@@ -70,7 +70,7 @@ describe('ConformaGroupedTable', () => {
     groups: mockGroups,
     groupBy: 'rule' as const,
     expandedGroups: new Set<string>(),
-    onToggleGroup: jest.fn(),
+    onExpandedGroupsChange: jest.fn(),
   };
   const useParamsMock = createUseParamsMock();
 
@@ -111,15 +111,20 @@ describe('ConformaGroupedTable', () => {
     expect(screen.getAllByText('Component').length).toBeGreaterThanOrEqual(1);
   });
 
-  it('calls onToggleGroup when expand button is clicked', async () => {
+  it('calls onExpandedGroupsChange when expand button is clicked', async () => {
     const user = userEvent.setup();
-    const onToggle = jest.fn();
-    routerRenderer(<ConformaGroupedTable {...defaultProps} onToggleGroup={onToggle} />);
+    const onExpandedGroupsChange = jest.fn();
+    routerRenderer(
+      <ConformaGroupedTable
+        {...defaultProps}
+        onExpandedGroupsChange={onExpandedGroupsChange}
+      />,
+    );
 
     const toggleButtons = screen.getAllByRole('button');
     await user.click(toggleButtons[0]);
 
-    expect(onToggle).toHaveBeenCalledWith('Missing CVE scan');
+    expect(onExpandedGroupsChange).toHaveBeenCalledWith(new Set(['Missing CVE scan']));
   });
 
   it('shows detail sub-table when a group is expanded', () => {
