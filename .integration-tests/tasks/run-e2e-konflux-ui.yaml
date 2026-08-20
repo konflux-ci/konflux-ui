@@ -66,8 +66,8 @@ spec:
       image: quay.io/konflux_ui_qe/konflux-ui-tests:$(params.test-image-tag)
       onError: continue
       workingDir: /tmp/e2e
-      # We should set the appropriate requests/limits based on our future observing
-      # Setting default values for memory and cpu by a guess
+      # Temporary resource sampler (KFLUXUI-1500) writes /artifacts/resource-usage.json.
+      # Update these from collected peaks, then remove the sampler block in the script.
       computeResources:
         limits:
           memory: 8Gi
@@ -132,10 +132,153 @@ spec:
 
         echo "Running test spec: ${SPEC_FILE}"
 
+        # --- Temporary (KFLUXUI-1500): sample container CPU/memory while tests run ---
+        # Remove this block after collecting stats and updating computeResources.
+        mkdir -p /artifacts
+        SAMPLE_INTERVAL_S=5
+        SAMPLES_FILE=/tmp/resource-usage-samples.txt
+        : > "${SAMPLES_FILE}"
+
+        resolve_cgroup_dir() {
+          if [ -f /sys/fs/cgroup/memory.current ]; then
+            echo /sys/fs/cgroup
+            return
+          fi
+          local rel
+          rel=$(awk -F: 'END { print $3 }' /proc/self/cgroup 2>/dev/null || true)
+          if [ -n "${rel}" ] && [ -f "/sys/fs/cgroup${rel}/memory.current" ]; then
+            echo "/sys/fs/cgroup${rel}"
+            return
+          fi
+          echo ""
+        }
+
+        CGROUP_DIR=$(resolve_cgroup_dir)
+        SAMPLER_PID=""
+        if [ -n "${CGROUP_DIR}" ]; then
+          echo "Resource sampler: cgroup dir=${CGROUP_DIR}, interval=${SAMPLE_INTERVAL_S}s"
+          (
+            while true; do
+              mem=$(cat "${CGROUP_DIR}/memory.current" 2>/dev/null || echo 0)
+              cpu_us=$(awk '/^usage_usec / { print $2 }' "${CGROUP_DIR}/cpu.stat" 2>/dev/null || echo 0)
+              throttled_us=$(awk '/^throttled_usec / { print $2 }' "${CGROUP_DIR}/cpu.stat" 2>/dev/null || echo 0)
+              echo "$(date +%s) ${mem} ${cpu_us} ${throttled_us}"
+              sleep "${SAMPLE_INTERVAL_S}"
+            done
+          ) > "${SAMPLES_FILE}" &
+          SAMPLER_PID=$!
+        else
+          echo "Resource sampler: cgroup metrics unavailable; skipping"
+        fi
+
+        write_resource_usage_summary() {
+          local out=/artifacts/resource-usage.json
+          local started_at="$1"
+          local ended_at="$2"
+          local duration_s="$3"
+
+          if [ ! -s "${SAMPLES_FILE}" ]; then
+            printf '%s\n' \
+              '{' \
+              "  \"job_type\": \"$(params.job-type)\"," \
+              "  \"spec_file\": \"${SPEC_FILE}\"," \
+              "  \"started_at\": \"${started_at}\"," \
+              "  \"ended_at\": \"${ended_at}\"," \
+              "  \"duration_s\": ${duration_s}," \
+              "  \"sample_interval_s\": ${SAMPLE_INTERVAL_S}," \
+              '  "limits": { "memory": "8Gi", "cpu": "2" },' \
+              '  "requests": { "memory": "8Gi", "cpu": "1" },' \
+              '  "error": "no samples collected"' \
+              '}' > "${out}"
+            return
+          fi
+
+          awk -v started_at="${started_at}" -v ended_at="${ended_at}" -v duration_s="${duration_s}" \
+              -v interval="${SAMPLE_INTERVAL_S}" -v job_type="$(params.job-type)" -v spec_file="${SPEC_FILE}" '
+          BEGIN {
+            peak_mem = 0; sum_mem = 0; n = 0
+            peak_cpu = 0; sum_cpu = 0; cpu_n = 0
+            prev_ts = 0; prev_cpu = 0
+            first = 1
+            first_thr = -1
+            last_thr = 0
+          }
+          {
+            ts = $1 + 0; mem = $2 + 0; cpu = $3 + 0; thr = $4 + 0
+            n++
+            sum_mem += mem
+            if (mem > peak_mem) peak_mem = mem
+            if (!first) {
+              dt = ts - prev_ts
+              if (dt > 0) {
+                cores = ((cpu - prev_cpu) / 1000000) / dt
+                if (cores < 0) cores = 0
+                sum_cpu += cores
+                cpu_n++
+                if (cores > peak_cpu) peak_cpu = cores
+              }
+            }
+            if (first_thr < 0) first_thr = thr
+            last_thr = thr
+            prev_ts = ts; prev_cpu = cpu
+            first = 0
+          }
+          END {
+            avg_mem = (n > 0) ? sum_mem / n : 0
+            avg_cpu = (cpu_n > 0) ? sum_cpu / cpu_n : 0
+            thr_delta = last_thr - first_thr
+            if (thr_delta < 0) thr_delta = 0
+            thr_pct = (duration_s > 0) ? (thr_delta / 1000000) / duration_s * 100 : 0
+            printf "{\n"
+            printf "  \"job_type\": \"%s\",\n", job_type
+            printf "  \"spec_file\": \"%s\",\n", spec_file
+            printf "  \"started_at\": \"%s\",\n", started_at
+            printf "  \"ended_at\": \"%s\",\n", ended_at
+            printf "  \"duration_s\": %d,\n", duration_s
+            printf "  \"sample_interval_s\": %d,\n", interval
+            printf "  \"sample_count\": %d,\n", n
+            printf "  \"limits\": { \"memory\": \"8Gi\", \"cpu\": \"2\" },\n"
+            printf "  \"requests\": { \"memory\": \"8Gi\", \"cpu\": \"1\" },\n"
+            printf "  \"memory\": {\n"
+            printf "    \"peak_bytes\": %.0f,\n", peak_mem
+            printf "    \"avg_bytes\": %.0f,\n", avg_mem
+            printf "    \"peak_mi\": %.1f,\n", peak_mem / 1024 / 1024
+            printf "    \"avg_mi\": %.1f\n", avg_mem / 1024 / 1024
+            printf "  },\n"
+            printf "  \"cpu\": {\n"
+            printf "    \"avg_cores\": %.3f,\n", avg_cpu
+            printf "    \"peak_cores\": %.3f,\n", peak_cpu
+            printf "    \"throttled_pct\": %.2f\n", thr_pct
+            printf "  }\n"
+            printf "}\n"
+          }
+          ' "${SAMPLES_FILE}" > "${out}"
+        }
+
+        STARTED_EPOCH=$(date +%s)
+        STARTED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+
+        # KEEP
+
         # Run tests and capture exit code (don't exit on failure)
         set +e
         yarn run cy:run --spec "${SPEC_FILE}"
         TEST_RESULT=$?
+
+        # KEEP END
+
+        ENDED_EPOCH=$(date +%s)
+        ENDED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+        DURATION_S=$((ENDED_EPOCH - STARTED_EPOCH))
+
+        if [ -n "${SAMPLER_PID}" ]; then
+          kill "${SAMPLER_PID}" 2>/dev/null
+          wait "${SAMPLER_PID}" 2>/dev/null
+        fi
+        write_resource_usage_summary "${STARTED_AT}" "${ENDED_AT}" "${DURATION_S}"
+        echo "Wrote /artifacts/resource-usage.json"
+        cat /artifacts/resource-usage.json
+        # --- end KFLUXUI-1500 temporary sampler ---
         set -e
 
         echo ""
