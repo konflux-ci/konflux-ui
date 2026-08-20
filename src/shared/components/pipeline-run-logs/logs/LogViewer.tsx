@@ -22,7 +22,6 @@ import { OutlinedKeyboardIcon } from '@patternfly/react-icons/dist/esm/icons/out
 import { OutlinedPlayCircleIcon } from '@patternfly/react-icons/dist/esm/icons/outlined-play-circle-icon';
 import classNames from 'classnames';
 import { saveAs } from 'file-saver';
-import { debounce } from 'lodash-es';
 import { v4 as uuidv4 } from 'uuid';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { logger } from '~/monitoring/logger';
@@ -39,6 +38,7 @@ import {
   useLineNumberNavigation,
   VirtualizedLogContent,
 } from '~/shared/components/virtualized-log-viewer';
+import { useContainerHeight } from '~/shared/hooks';
 import { useFullscreen } from '~/shared/hooks/fullscreen';
 import { TaskRunKind } from '~/types';
 import { useLogSearch } from '../useLogSearch';
@@ -146,41 +146,8 @@ const LogViewer: React.FC<Props> = ({
       });
   };
 
-  // Use containerRef to measure actual height for VirtualizedLogContent
-  const containerRef = React.useRef<HTMLDivElement>(null);
-  const [viewerHeight, setViewerHeight] = React.useState<number | undefined>(undefined);
-
-  React.useEffect(() => {
-    const updateHeight = (immediate = false) => {
-      if (containerRef.current) {
-        const measured = containerRef.current.clientHeight;
-        if (measured > 0) {
-          if (immediate) {
-            // Immediate update for fullscreen toggle and initial mount
-            setViewerHeight(measured);
-          } else {
-            // Use requestAnimationFrame for resize events to avoid ResizeObserver warnings
-            requestAnimationFrame(() => {
-              setViewerHeight(measured);
-            });
-          }
-        }
-      }
-    };
-
-    // Update immediately on mount and fullscreen changes
-    updateHeight(true);
-
-    // Debounced resize handler for better performance (150ms delay)
-    const debouncedUpdateHeight = debounce(() => updateHeight(false), 150);
-
-    // Update on window resize
-    window.addEventListener('resize', debouncedUpdateHeight);
-    return () => {
-      window.removeEventListener('resize', debouncedUpdateHeight);
-      debouncedUpdateHeight.cancel();
-    };
-  }, [isFullscreen]);
+  // Use containerRef to measure actual height for VirtualizedLogViewer
+  const { containerRef, containerHeight } = useContainerHeight();
 
   const allLines = React.useMemo(
     () => normalizedSections.flatMap((s) => s.lines),
@@ -360,13 +327,13 @@ const LogViewer: React.FC<Props> = ({
 
       {/* Log Viewer */}
       <div ref={containerRef} className="log-viewer__content">
-        {viewerHeight && (
+        {containerHeight && (
           <div className="pf-v6-c-log-viewer__main">
             <VirtualizedLogContent
               key={taskRun?.metadata?.uid || 'default'}
               sections={sections ?? []}
               normalizedSections={normalizedSections}
-              height={viewerHeight}
+              height={containerHeight}
               width="100%"
               scrollToRow={scrollToRow}
               onScroll={handleScroll}
