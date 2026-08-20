@@ -46,7 +46,7 @@ describe('SentryProvider', () => {
       expect.objectContaining({
         dsn: 'https://test@sentry.io/123',
         environment: 'production',
-        sampleRate: 0.5,
+        sampleRate: 1.0,
         sendDefaultPii: true,
         tracesSampleRate: 0.3,
         tracePropagationTargets: ['localhost', /^\/api\/k8s/, /^\/oauth2\//],
@@ -212,6 +212,32 @@ describe('SentryProvider', () => {
 
       const event = { exception: { values: [{ type: 'Error', value: 'test' }] } };
       expect(beforeSend(event)).toBe(event);
+    });
+
+    it('should use sample rate for partial sampling', () => {
+      const configWithRate = {
+        ...defaultConfig,
+        sampleRates: { errors: 0.5 },
+      };
+      provider.init(configWithRate);
+      const initCall = Sentry.init as jest.Mock;
+      const { beforeSend } = initCall.mock.calls[0][0];
+
+      const event = {
+        request: { url: '/api/k8s/apis/v1/pods' },
+        // eslint-disable-next-line camelcase
+        contexts: { response: { status_code: 500 } },
+      };
+
+      // With Math.random mocked to return 0.3 (< 0.5), event should be sent
+      jest.spyOn(Math, 'random').mockReturnValue(0.3);
+      expect(beforeSend(event)).toBe(event);
+
+      // With Math.random mocked to return 0.7 (>= 0.5), event should be dropped
+      jest.spyOn(Math, 'random').mockReturnValue(0.7);
+      expect(beforeSend(event)).toBeNull();
+
+      jest.restoreAllMocks();
     });
 
     it('should ignore chrome extension requests', () => {

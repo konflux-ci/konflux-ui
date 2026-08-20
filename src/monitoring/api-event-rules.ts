@@ -1,39 +1,48 @@
-export type ApiEventAction = 'send' | 'ignore';
-
 export interface ApiEventRule {
+  /** Human-readable name for debugging */
   name: string;
+  /** Return true if this rule applies to the given URL and status */
   matches: (url: string, statusCode: number) => boolean;
-  action: ApiEventAction;
+  /** Sample rate (0 = never send, 1 = always send) */
+  sampleRate: number;
 }
 
-export const DEFAULT_API_EVENT_RULES: ApiEventRule[] = [
+/**
+ * Create the default API event rules with the given default sample rate.
+ * Rules are evaluated in order — first match wins.
+ */
+export const createDefaultApiEventRules = (defaultSampleRate: number): ApiEventRule[] => [
   {
     name: 'non-app-requests',
     matches: (url) => !url.startsWith('/'),
-    action: 'ignore',
+    sampleRate: 0,
   },
   {
     name: 'plugin-paths-always-send',
     matches: (url) => url.includes('/plugins/'),
-    action: 'send',
+    sampleRate: 1,
   },
   {
     name: 'ignore-404',
     matches: (_url, statusCode) => statusCode === 404,
-    action: 'ignore',
+    sampleRate: 0,
   },
   {
-    name: 'default-send',
+    name: 'default',
     matches: () => true,
-    action: 'send',
+    sampleRate: defaultSampleRate,
   },
 ];
 
+/**
+ * Evaluate API event rules in order. First matching rule wins.
+ * Returns the sample rate (0..1) for the matched rule.
+ */
 export const evaluateApiEventRules = (
   url: string,
   statusCode: number,
-  rules: ApiEventRule[] = DEFAULT_API_EVENT_RULES,
-): ApiEventAction => {
+  rules: ApiEventRule[],
+): number => {
   const matchedRule = rules.find((rule) => rule.matches(url, statusCode));
-  return matchedRule?.action ?? 'send';
+  return matchedRule?.sampleRate ?? 1;
 };

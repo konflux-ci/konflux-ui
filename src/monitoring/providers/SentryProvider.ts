@@ -6,7 +6,7 @@ import {
   useNavigationType,
 } from 'react-router-dom';
 import * as Sentry from '@sentry/react';
-import { evaluateApiEventRules } from '../api-event-rules';
+import { createDefaultApiEventRules, evaluateApiEventRules } from '../api-event-rules';
 import { getSlowApiThreshold } from '../api-performance-thresholds';
 import type { IMonitoringProvider, MonitoringConfig, LogLevel, UserContext } from '../types';
 
@@ -31,6 +31,9 @@ const toSentryLevel = (level?: LogLevel): Sentry.SeverityLevel => {
 export class SentryProvider implements IMonitoringProvider<SentryConfig> {
   init(config: SentryConfig): void {
     const mergedConfig = { ...DEFAULTS, ...config };
+    const errorSampleRate = mergedConfig.sampleRates?.errors ?? 1.0;
+    const apiEventRules = createDefaultApiEventRules(errorSampleRate);
+
     Sentry.init({
       dsn: mergedConfig.dsn,
       environment: mergedConfig.environment,
@@ -45,7 +48,8 @@ export class SentryProvider implements IMonitoringProvider<SentryConfig> {
         }),
       ],
       tracesSampleRate: mergedConfig.sampleRates?.traces ?? 0.2,
-      sampleRate: mergedConfig.sampleRates?.errors ?? 1.0,
+      // Set to 1 — per-event sampling is handled by beforeSend via api event rules
+      sampleRate: 1.0,
       tracePropagationTargets: ['localhost', /^\/api\/k8s/, /^\/oauth2\//],
       initialScope: {
         tags: {
@@ -63,8 +67,14 @@ export class SentryProvider implements IMonitoringProvider<SentryConfig> {
           return event;
         }
 
-        const action = evaluateApiEventRules(request.url, statusCode);
-        return action === 'send' ? event : null;
+        const sampleRate = evaluateApiEventRules(request.url, statusCode, apiEventRules);
+        if (sampleRate === 0) {
+          return null;
+        }
+        if (sampleRate >= 1) {
+          return event;
+        }
+        return Math.random() < sampleRate ? event : null;
       },
       beforeSendSpan(span) {
         const spanData = span.data;
