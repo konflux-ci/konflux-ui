@@ -250,10 +250,11 @@ spec:
       taskRef:
         resolver: git
         params:
+          # Load the task from the commit under test so PR changes to this task are exercised (not main).
           - name: url
-            value: https://github.com/konflux-ci/konflux-ui
+            value: $(tasks.test-metadata.results.git-url)
           - name: revision
-            value: main
+            value: $(tasks.test-metadata.results.git-revision)
           - name: pathInRepo
             value: .integration-tests/tasks/run-e2e-konflux-ui.yaml
       params:

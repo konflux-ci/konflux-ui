@@ -81,7 +81,7 @@ spec:
         - input: '$(params.job-type)'
           operator: in
           values: ['pr-check']
-      image: quay.io/konflux-qe-incubator/konflux-qe-tools:latest
+      image: quay.io/konflux-qe-incubator/konflux-qe-tools@sha256:88d70f9c61d2059e3a084fe6f2fb3ac341bc65efe9c6ba994e42a61bbb54fcba
       volumeMounts:
         - name: e2e-overlay
           mountPath: /e2e
@@ -232,7 +232,7 @@ spec:
         if [ -n "$(ls -A /e2e 2>/dev/null)" ]; then
           echo "PR e2e sources detected at /e2e — installing dependencies"
           cd /e2e
-          yarn install --immutable
+          yarn install --immutable || { echo 'ERROR: yarn install failed'; exit 1; }
           yarn cypress install
           E2E_DIR=/e2e
         else
