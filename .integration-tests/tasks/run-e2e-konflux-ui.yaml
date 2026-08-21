@@ -54,6 +54,10 @@ spec:
       type: string
       default: ''
       description: 'PR target branch (e.g. main), from test-metadata'
+    - name: target-repo-url
+      type: string
+      default: ''
+      description: 'Upstream Git URL (git-org/git-repo). Required for fork -> upstream PR overlay.'
   volumes:
     # Enlarge /dev/shm for Cypress/Chrome; default container shm (~64MB) causes flaky browser crashes
     - name: dshm
@@ -98,15 +102,23 @@ spec:
         #!/usr/bin/env bash
         set -euo pipefail
 
-        REPO_URL="$(params.source-repo-url)"
+        SOURCE_REPO_URL="$(params.source-repo-url)"
+        TARGET_REPO_URL="$(params.target-repo-url)"
         GIT_REVISION="$(params.git-revision)"
         TARGET_BRANCH="$(params.target-branch)"
         TARGET_BRANCH="${TARGET_BRANCH#refs/heads/}"
 
         echo "=== Checking for e2e-tests/ changes (pr-check) ==="
-        echo "Source repo: ${REPO_URL}"
+        echo "Source repo: ${SOURCE_REPO_URL}"
+        echo "Target repo: ${TARGET_REPO_URL}"
         echo "PR revision: ${GIT_REVISION}"
         echo "Target branch: ${TARGET_BRANCH}"
+
+        # PR overlay applies only to fork -> upstream PRs (same as pr_check scope on konflux-ci/konflux-ui).
+        if [ "${SOURCE_REPO_URL}" = "${TARGET_REPO_URL}" ]; then
+          echo "Same-repo PR — skipping e2e overlay, run-e2e will use image sources"
+          exit 0
+        fi
 
         # Use GIT_ASKPASS so the token is never embedded in remote URLs (avoids leaks in git errors).
         setup_git_askpass() {
@@ -138,15 +150,17 @@ spec:
         git config --global init.defaultBranch main
         git init /tmp/repo
         cd /tmp/repo
-        git remote add origin "${REPO_URL}"
+        git remote add origin "${SOURCE_REPO_URL}"
 
-        echo "Fetching origin/${TARGET_BRANCH} and ${GIT_REVISION}..."
-        git fetch --depth=1 origin \
-          "refs/heads/${TARGET_BRANCH}:refs/remotes/origin/${TARGET_BRANCH}" \
-          "${GIT_REVISION}"
+        echo "Fetching PR revision ${GIT_REVISION} from fork..."
+        git fetch --depth=1 origin "${GIT_REVISION}"
+        git remote add upstream "${TARGET_REPO_URL}"
+        echo "Fetching upstream/${TARGET_BRANCH}..."
+        git fetch --depth=1 upstream \
+          "refs/heads/${TARGET_BRANCH}:refs/remotes/upstream/${TARGET_BRANCH}"
         echo "Fetch complete"
 
-        if git diff --quiet "origin/${TARGET_BRANCH}" "${GIT_REVISION}" -- e2e-tests/; then
+        if git diff --quiet "upstream/${TARGET_BRANCH}" "${GIT_REVISION}" -- e2e-tests/; then
           echo "No e2e-tests/ changes detected — run-e2e will use image sources"
           exit 0
         fi

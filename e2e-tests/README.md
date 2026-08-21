@@ -195,12 +195,12 @@ The test step executes `pr_check.sh` file which does the tests setup and runs te
 
 #### Konflux integration pipeline
 
-Konflux also runs E2E tests via the integration pipeline (`.integration-tests/pipelines/e2e-main-pipeline.yaml`) using the `run-e2e-konflux-ui` Tekton task. For `pr-check` jobs, the task uses the same `/e2e` mount point as manual container runs, but source selection happens in two stages:
+Konflux also runs E2E tests via the integration pipeline (`.integration-tests/pipelines/e2e-main-pipeline.yaml`) using the `run-e2e-konflux-ui` Tekton task. For `pr-check` jobs on **fork → upstream** PRs only, the task may overlay PR `e2e-tests/` sources:
 
-1. **`prepare-e2e-sources` step** — Fetches the PR repository, compares `e2e-tests/` against the target branch, and stages changed files into the `/e2e` volume. If `e2e-tests/` is unchanged, `/e2e` stays empty.
-2. **`run-e2e-test` step** — If `/e2e` contains staged sources, installs dependencies with `yarn install` and runs Cypress from `/e2e`. Otherwise uses the image-baked sources at `/tmp/e2e`.
+1. **`prepare-e2e-sources` step** — Skipped for same-repo PRs (uses image-baked tests, like `pr_check.sh` on upstream). For fork → upstream PRs, fetches the PR commit from the fork and compares `e2e-tests/` against upstream `main`; stages changed files into `/e2e` when needed.
+2. **`run-e2e-test` step** — If `/e2e` contains staged sources, installs dependencies and runs Cypress from `/e2e`. Otherwise uses image-baked sources at `/tmp/e2e`.
 
-The container entrypoint performs a similar `/e2e` vs `/tmp/e2e` check for manual runs; in CI, the Tekton task script handles detection and dependency installation before invoking Cypress.
+The container entrypoint performs a similar `/e2e` vs `/tmp/e2e` check for manual runs only.
 
 ### Periodic tests
 

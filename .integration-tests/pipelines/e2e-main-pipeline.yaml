@@ -284,6 +284,8 @@ spec:
           value: $(tasks.test-metadata.results.git-revision)
         - name: target-branch
           value: $(tasks.test-metadata.results.target-repo-branch)
+        - name: target-repo-url
+          value: https://github.com/$(tasks.test-metadata.results.git-org)/$(tasks.test-metadata.results.git-repo)
   finally:
     - name: deprovision-kind-cluster
       when:
