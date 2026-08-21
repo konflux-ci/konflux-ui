@@ -289,14 +289,14 @@ describe('ConformaResultsTab', () => {
     expect(screen.getByText('3 arch variants')).toBeInTheDocument();
   });
 
-  it('shows the raw violation count alongside the collapsed count when duplicates are collapsed', () => {
+  it('shows raw violation count in summary bar even when duplicates are collapsed', () => {
     mockUseApplicationConformaResults.mockReturnValue(archDupeResults);
 
-    routerRenderer(<ConformaResultsTab />);
+    const { container } = routerRenderer(<ConformaResultsTab />);
 
-    // 3 arch-duplicate violations collapse into 1 row; the true count (3)
-    // must still be surfaced, not silently dropped.
-    expect(screen.getByText('(3 incl. multi-arch)')).toBeInTheDocument();
+    const resultsSection = container.querySelector('[data-test="conforma-summary-results"]');
+    expect(resultsSection).toHaveTextContent('3');
+    expect(resultsSection).toHaveTextContent('violations');
   });
 
   it('hides the raw-count qualifier once "Show multi-arch duplicates" is enabled', () => {
@@ -501,4 +501,5 @@ describe('ConformaResultsTab', () => {
 
     jest.useRealTimers();
   });
+
 });

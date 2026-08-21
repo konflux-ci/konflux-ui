@@ -1,9 +1,9 @@
 import * as React from 'react';
 import { Icon } from '@patternfly/react-core';
 import { ExclamationCircleIcon } from '@patternfly/react-icons/dist/esm/icons/exclamation-circle-icon';
-import { ExclamationTriangleIcon } from '@patternfly/react-icons/dist/esm/icons/exclamation-triangle-icon';
 import { IssueSeverity } from '~/kite/issue-type';
 import { useCriticalAndMajorIssues } from '~/kite/kite-hooks';
+import { WarningIcon } from '~/shared/components/status/icons';
 
 const IssuesNavItemContent: React.FC<{ namespace: string }> = ({ namespace }) => {
   const { data, isLoaded, hasError } = useCriticalAndMajorIssues(
@@ -46,7 +46,7 @@ const IssuesNavItemContent: React.FC<{ namespace: string }> = ({ namespace }) =>
         aria-label="Major issues present"
         className="pf-v6-u-ml-sm"
       >
-        <ExclamationTriangleIcon />
+        <WarningIcon />
       </Icon>
     );
   }
