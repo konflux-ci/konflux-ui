@@ -156,7 +156,8 @@
   "sideEffects": [
     "*.css",
     "*.scss",
-    "./src/registers.ts"
+    "./src/registers.ts",
+    "./src/instrument.ts"
   ],
   "lint-staged": {
     "*.{ts,tsx,js,mjs,jsx}": [

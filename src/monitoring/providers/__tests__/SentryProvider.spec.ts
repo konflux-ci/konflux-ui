@@ -11,6 +11,10 @@ jest.mock('@sentry/react', () => ({
     .mockReturnValue({ name: 'ReactRouterBrowserTracing' }),
 }));
 
+jest.mock('~/analytics/obfuscate', () => ({
+  obfuscate: jest.fn().mockResolvedValue('hashed-user-id'),
+}));
+
 describe('SentryProvider', () => {
   let provider: SentryProvider;
   let Sentry: typeof import('@sentry/react');
@@ -48,7 +52,7 @@ describe('SentryProvider', () => {
         environment: 'production',
         sampleRate: 0.5,
         sendDefaultPii: true,
-        tracesSampleRate: 0.3,
+        tracesSampler: expect.any(Function),
         tracePropagationTargets: ['localhost', /^\/api\/k8s/, /^\/oauth2\//],
         initialScope: { tags: { cluster: 'prod-cluster' } },
       }),
@@ -93,7 +97,7 @@ describe('SentryProvider', () => {
     expect(Sentry.init).toHaveBeenCalledWith(
       expect.objectContaining({
         sampleRate: 1.0,
-        tracesSampleRate: 0.2,
+        tracesSampler: expect.any(Function),
         initialScope: { tags: { cluster: 'unknown' } },
       }),
     );
@@ -155,11 +159,197 @@ describe('SentryProvider', () => {
     expect(result).toBe('message-event-id');
   });
 
-  it('should delegate setUser to Sentry', () => {
-    provider.setUser({ id: '123', email: 'test@example.com' });
-    expect(Sentry.setUser).toHaveBeenCalledWith({ id: '123', email: 'test@example.com' });
+  it('should hash user ID and drop email/username before sending to Sentry', async () => {
+    await provider.setUser({ id: '123', username: 'testuser', email: 'test@example.com' });
+    expect(Sentry.setUser).toHaveBeenCalledWith({ id: 'hashed-user-id' });
+  });
 
-    provider.setUser(null);
+  it('should set Sentry user to null when user is null', async () => {
+    await provider.setUser(null);
     expect(Sentry.setUser).toHaveBeenCalledWith(null);
+  });
+
+  it('should set Sentry user to null when user has no id', async () => {
+    await provider.setUser({ username: 'testuser' });
+    expect(Sentry.setUser).toHaveBeenCalledWith(null);
+  });
+
+  it('should not restore stale user when setUser(null) is called after setUser(user)', async () => {
+    const { obfuscate: obfuscateMock } = jest.requireMock('~/analytics/obfuscate');
+    let resolveHash: (value: string) => void = () => {};
+    obfuscateMock.mockReturnValueOnce(
+      new Promise<string>((resolve) => {
+        resolveHash = resolve;
+      }),
+    );
+
+    // Start hashing userA, but don't resolve yet
+    const userAPromise = provider.setUser({ id: 'userA' });
+    // Immediately clear user — this should invalidate the pending hash
+    await provider.setUser(null);
+    expect(Sentry.setUser).toHaveBeenCalledWith(null);
+
+    // Now resolve the stale hash — it should NOT call setUser
+    (Sentry.setUser as jest.Mock).mockClear();
+    resolveHash('hashed-userA');
+    await userAPromise;
+
+    expect(Sentry.setUser).not.toHaveBeenCalled();
+  });
+
+  describe('beforeSend', () => {
+    const defaultConfig = {
+      enabled: true,
+      provider: 'sentry' as const,
+      dsn: 'https://test@sentry.io/123',
+      environment: 'production',
+    };
+
+    it('should pass beforeSend callback to Sentry.init', () => {
+      provider.init(defaultConfig);
+      const initCall = Sentry.init as jest.Mock;
+      const config = initCall.mock.calls[0][0];
+      expect(config.beforeSend).toBeDefined();
+      expect(typeof config.beforeSend).toBe('function');
+    });
+
+    it('should return null for 404 on non-plugin API path', () => {
+      provider.init(defaultConfig);
+      const initCall = Sentry.init as jest.Mock;
+      const { beforeSend } = initCall.mock.calls[0][0];
+
+      const event = {
+        request: { url: '/api/k8s/apis/v1/pods/my-pod' },
+        // eslint-disable-next-line camelcase
+        contexts: { response: { status_code: 404 } },
+      };
+      expect(beforeSend(event)).toBeNull();
+    });
+
+    it('should return event for 404 on plugin path', () => {
+      provider.init(defaultConfig);
+      const initCall = Sentry.init as jest.Mock;
+      const { beforeSend } = initCall.mock.calls[0][0];
+
+      const event = {
+        request: { url: '/api/k8s/plugins/kubearchive/apis/v1/pods' },
+        // eslint-disable-next-line camelcase
+        contexts: { response: { status_code: 404 } },
+      };
+      expect(beforeSend(event)).toBe(event);
+    });
+
+    it('should return event when no request URL exists', () => {
+      provider.init(defaultConfig);
+      const initCall = Sentry.init as jest.Mock;
+      const { beforeSend } = initCall.mock.calls[0][0];
+
+      const event = { exception: { values: [{ type: 'Error', value: 'test' }] } };
+      expect(beforeSend(event)).toBe(event);
+    });
+
+    it('should return event for non-404 errors (no override, let sampleRate handle it)', () => {
+      provider.init(defaultConfig);
+      const initCall = Sentry.init as jest.Mock;
+      const { beforeSend } = initCall.mock.calls[0][0];
+
+      const event = {
+        request: { url: '/api/k8s/apis/v1/pods' },
+        // eslint-disable-next-line camelcase
+        contexts: { response: { status_code: 500 } },
+      };
+      expect(beforeSend(event)).toBe(event);
+    });
+
+    it('should ignore chrome extension requests', () => {
+      provider.init(defaultConfig);
+      const initCall = Sentry.init as jest.Mock;
+      const { beforeSend } = initCall.mock.calls[0][0];
+
+      const event = {
+        request: { url: 'chrome-extension://abc/content.js' },
+        // eslint-disable-next-line camelcase
+        contexts: { response: { status_code: 500 } },
+      };
+      expect(beforeSend(event)).toBeNull();
+    });
+  });
+
+  describe('tracesSampler', () => {
+    it('should use configured traces sample rate for same-origin transactions', () => {
+      const config = {
+        enabled: true,
+        provider: 'sentry' as const,
+        dsn: 'https://test@sentry.io/123',
+        environment: 'production',
+        sampleRates: { traces: 0.3 },
+      };
+      provider.init(config);
+      const initCall = Sentry.init as jest.Mock;
+      const { tracesSampler } = initCall.mock.calls[0][0];
+
+      expect(tracesSampler({ name: '/applications' })).toBe(0.3);
+    });
+
+    it('should use default 0.2 rate when traces rate is not configured', () => {
+      const config = {
+        enabled: true,
+        provider: 'sentry' as const,
+        dsn: 'https://test@sentry.io/123',
+        environment: 'production',
+      };
+      provider.init(config);
+      const initCall = Sentry.init as jest.Mock;
+      const { tracesSampler } = initCall.mock.calls[0][0];
+
+      expect(tracesSampler({ name: '/applications' })).toBe(0.2);
+    });
+
+    it('should return 0 for non-app transaction names', () => {
+      const config = {
+        enabled: true,
+        provider: 'sentry' as const,
+        dsn: 'https://test@sentry.io/123',
+        environment: 'production',
+        sampleRates: { traces: 0.5 },
+      };
+      provider.init(config);
+      const initCall = Sentry.init as jest.Mock;
+      const { tracesSampler } = initCall.mock.calls[0][0];
+
+      expect(tracesSampler({ name: 'chrome-extension://abc/script.js' })).toBe(0);
+    });
+
+    it('should use rule override for plugin path transactions', () => {
+      const config = {
+        enabled: true,
+        provider: 'sentry' as const,
+        dsn: 'https://test@sentry.io/123',
+        environment: 'production',
+        sampleRates: { traces: 0.3 },
+      };
+      provider.init(config);
+      const initCall = Sentry.init as jest.Mock;
+      const { tracesSampler } = initCall.mock.calls[0][0];
+
+      // Plugin paths have sampleRate 1 from rules — override takes precedence
+      expect(tracesSampler({ name: '/api/k8s/plugins/kubearchive/test' })).toBe(1);
+    });
+
+    it('should inherit parent sampling decision when parentSampled is defined', () => {
+      const config = {
+        enabled: true,
+        provider: 'sentry' as const,
+        dsn: 'https://test@sentry.io/123',
+        environment: 'production',
+        sampleRates: { traces: 0.3 },
+      };
+      provider.init(config);
+      const initCall = Sentry.init as jest.Mock;
+      const { tracesSampler } = initCall.mock.calls[0][0];
+
+      expect(tracesSampler({ name: '/applications', parentSampled: true })).toBe(true);
+      expect(tracesSampler({ name: '/applications', parentSampled: false })).toBe(false);
+    });
   });
 });
