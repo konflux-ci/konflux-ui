@@ -1,8 +1,8 @@
 import { commonFetchJSON, getQueryString } from '~/k8s';
 import { PLUGIN_KITE } from './const';
-import { HealthResponse, IssueQuery, IssueResponse } from './issue-type';
+import { HealthResponse, Issue, IssueQuery, IssueResponse } from './issue-type';
 
-export const fetchKite = <T = IssueResponse | HealthResponse>(
+export const fetchKite = <T = IssueResponse | HealthResponse | Issue>(
   url: string,
   requestInit?: RequestInit,
 ): Promise<T> => {
@@ -19,4 +19,9 @@ export const fetchIssues = (issueQuery: IssueQuery): Promise<IssueResponse> => {
   const resourcePath = api + options;
 
   return fetchKite<IssueResponse>(resourcePath);
+};
+
+export const resolveIssue = (id: string, namespace?: string): Promise<Issue> => {
+  const query = namespace ? `?namespace=${encodeURIComponent(namespace)}` : '';
+  return fetchKite<Issue>(`issues/${encodeURIComponent(id)}/resolve${query}`, { method: 'POST' });
 };
