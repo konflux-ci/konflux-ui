@@ -1,0 +1,9 @@
+.cli-login-page {
+  min-height: 100vh;
+  padding: var(--pf-t--global--spacer--2xl);
+  background-color: var(--pf-t--global--background--color--primary--default);
+}
+
+.cli-login-page__command {
+  max-width: 60rem;
+}
