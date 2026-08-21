@@ -76,6 +76,8 @@ export const TableBody = <TData,>({
         const row = rows[virtualRow.index];
         if (!row) return null;
         const rowId = getRowId(row.original);
+        const isExpanded = enableExpansion && row.getIsExpanded() && expandedContent;
+        
         return (
           // No explicit role needed: <Tbody> renders a native <tbody> whose implicit
           // ARIA role is "rowgroup", correctly grouping the main row with its optional
@@ -93,7 +95,7 @@ export const TableBody = <TData,>({
               enableExpansion={enableExpansion}
               enableRowSelection={enableRowSelection}
             />
-            {enableExpansion && row.getIsExpanded() && expandedContent && (
+            {isExpanded && (
               <Tr>
                 <Td colSpan={visibleColumnCount}>
                   <ExpandableRowContent>{expandedContent(row.original)}</ExpandableRowContent>
