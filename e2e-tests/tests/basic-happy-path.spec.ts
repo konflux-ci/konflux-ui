@@ -1,9 +1,11 @@
 import { NavItem, pageTitles } from '../support/constants/PageTitle';
 import { actions } from '../support/pageObjects/global-po';
-import { issuesPagePO } from '../support/pageObjects/pages-po';
+import { issuesPagePO, secretsPagePO } from '../support/pageObjects/pages-po';
 import { ApplicationDetailPage } from '../support/pages/ApplicationDetailPage';
 import { ComponentDetailsPage } from '../support/pages/ComponentDetailsPage';
 import { ComponentPage } from '../support/pages/ComponentsPage';
+import { ContrastSwitcher, Contrasts, ThemeSwitcher, Themes } from '../support/pages/PageHeader';
+import { SecretsPage } from '../support/pages/SecretsPage';
 import { ComponentsTabPage } from '../support/pages/tabs/ComponentsTabPage';
 import { IntegrationTestsTabPage } from '../support/pages/tabs/IntegrationTestsTabPage';
 import {
@@ -62,6 +64,29 @@ describe('Basic Happy Path', () => {
   let hasTestFailed = false;
 
   before(function () {
+    if (Cypress.env('SKIP_GLOBAL_SETUP')) {
+      const baseUrl = Cypress.env('KONFLUX_BASE_URL') as string;
+
+      // Studio replays in isolation — cache SSO cookies so replay skips the login redirect.
+      cy.session(
+        'konflux-sso',
+        () => {
+          cy.visit(baseUrl);
+          cy.get('[id="page-sidebar"]', { timeout: 300000 }).should('be.visible');
+        },
+        {
+          validate() {
+            cy.request({ url: `${baseUrl}/oauth2/userinfo`, failOnStatusCode: false })
+              .its('status')
+              .should('eq', 200);
+          },
+        },
+      );
+
+      cy.visit(baseUrl);
+      return;
+    }
+
     APIHelper.createRepositoryFromTemplate(sourceOwner, sourceRepo, repoOwner, repoName);
     Features.resetToDefault();
   });
@@ -232,6 +257,31 @@ describe('Basic Happy Path', () => {
     });
   });
 
+  describe('Check Secrets Page', () => {
+    const secretName = 'testing-secret-e2e-flow';
+    const secretKey = 'mykey';
+    const secretValue = 'myvalue';
+
+    it('Navigate to Secrets page from the sidebar', () => {
+      cy.log('Navigate to Secrets page from the sidebar');
+      Common.navigateTo(NavItem.secrets);
+      Common.waitForLoad();
+      cy.get(secretsPagePO.page).contains(secretsPagePO.pageDescription).should('exist');
+      cy.get(secretsPagePO.secretsTab).should('exist');
+
+      Common.waitForLoad();
+
+      SecretsPage.addSecret(secretName, secretKey, secretValue);
+
+      // Search secret in a filter field
+      SecretsPage.searchSecret(secretName);
+      // Verify secret values, no edition is done
+      SecretsPage.editSecret(secretName, secretKey, secretValue);
+      // Delete secret
+      SecretsPage.deleteSecret(secretName);
+    });
+  });
+
   describe('Check Issues page', () => {
     it('Navigate to Issues page from the sidebar', () => {
       Common.navigateTo(NavItem.issues);
@@ -245,6 +295,19 @@ describe('Basic Happy Path', () => {
         cy.get(issuesPagePO.serviceUnavailableState).should('exist');
         cy.contains(issuesPagePO.serviceUnavailableTitle).should('exist');
       }
+    });
+  });
+
+  describe('Check Page Header', () => {
+    it('Check Theme Switcher', () => {
+      // Checking Theme Switcher
+      ThemeSwitcher.clickOnThemeSwitcher();
+      ThemeSwitcher.switchTheme(Themes.SYSTEM, Themes.LIGHT);
+      ThemeSwitcher.switchTheme(Themes.LIGHT, Themes.DARK);
+
+      // Checking Contrast Switcher
+      ContrastSwitcher.switchContrast(Contrasts.SYSTEM, Contrasts.DEFAULT);
+      ContrastSwitcher.switchContrast(Contrasts.DEFAULT, Contrasts.HIGH);
     });
   });
 
