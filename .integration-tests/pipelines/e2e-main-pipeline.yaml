@@ -10,7 +10,9 @@ spec:
       description: 'The JSON string representing the snapshot of the application under test.'
       # Should there be test image or UI builded image? Or are there both? Where to find out?
       # Should be verified during https://redhat.atlassian.net/browse/KFLUXUI-1497
-      default: '{"components": [{"name":"konflux-ui", "containerImage": "quay.io/konflux_ui_qe/konflux-ui-tests:latest"}]}'
+      # Fallback for manual runs only; Konflux/PAC always supplies a real snapshot.
+      default: >-
+        {"components":[{"name":"konflux-ui","containerImage":"quay.io/konflux_ui_qe/konflux-ui-tests:latest","source":{"git":{"url":"https://github.com/konflux-ci/konflux-ui","revision":"main"}}}]}
       type: string
     - name: konflux-test-infra-secret
       description: The name of secret where testing infrastructures credentials are stored.
@@ -276,6 +278,14 @@ spec:
           value: $(params.cypress-cloud-secret)
         - name: konflux-base-url
           value: $(tasks.prepare-e2e-resources.results.base-url)
+        - name: source-repo-url
+          value: $(tasks.test-metadata.results.source-repo-url)
+        - name: git-revision
+          value: $(tasks.test-metadata.results.git-revision)
+        - name: target-branch
+          value: $(tasks.test-metadata.results.target-repo-branch)
+        - name: target-repo-url
+          value: https://github.com/$(tasks.test-metadata.results.git-org)/$(tasks.test-metadata.results.git-repo)
   finally:
     - name: deprovision-kind-cluster
       when:
