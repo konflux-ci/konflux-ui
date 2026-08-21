@@ -29,6 +29,8 @@ const FILTERED_CREATE_QUERY_PARAMS: Array<keyof CreateQueryParams> = [
   'fieldValidation',
 ];
 
+export const POLLING_INTERVAL = 10000;
+
 /**
  * Validates if the provided unknown data is of the K8sStatus type.
  * @param data - the unknown data to check.
