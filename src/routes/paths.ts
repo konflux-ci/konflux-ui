@@ -31,6 +31,9 @@ export const APPLICATION_DETAILS_PATH = APPLICATION_LIST_PATH.extend(
 
 export const APPLICATION_ACTIVITY_PATH = APPLICATION_DETAILS_PATH.extend('activity');
 
+export const APPLICATION_CONFORMA_RESULTS_PATH =
+  APPLICATION_DETAILS_PATH.extend('conforma-results');
+
 export const COMPONENTS_PATH = WORKSPACE_PATH.extend('components');
 
 export const COMPONENT_DETAILS_V2_PATH = COMPONENTS_PATH.extend(`:${RouterParams.componentName}`);
