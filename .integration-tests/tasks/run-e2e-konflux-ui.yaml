@@ -123,7 +123,7 @@ spec:
         # Use GIT_ASKPASS so the token is never embedded in remote URLs (avoids leaks in git errors).
         setup_git_askpass() {
           if [ -z "${GITHUB_TOKEN:-}" ]; then
-            echo "ERROR: GITHUB_TOKEN is not set — cannot fetch private fork repos (check github-credentials secret)"
+            echo "ERROR: GITHUB_TOKEN secret is not set, please check github-credentials secret"
             exit 1
           fi
           ASKPASS="$(mktemp)"
