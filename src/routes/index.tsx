@@ -1,4 +1,4 @@
-import { createBrowserRouter, type LoaderFunctionArgs } from 'react-router-dom';
+import { createBrowserRouter, type LoaderFunctionArgs, type RouteObject } from 'react-router-dom';
 import { wrapCreateBrowserRouter } from '@sentry/react';
 import { AppRoot } from '../AppRoot/AppRoot';
 import { GithubRedirect, githubRedirectLoader } from '../components/GithubRedirect';
@@ -26,10 +26,11 @@ import taskRunRoutes from './page-routes/taskrun';
 import userAccessRoutes from './page-routes/user-access';
 import { RouteErrorBoundry } from './RouteErrorBoundary';
 import { GithubRedirectRouteParams } from './utils';
+import { withRoutePatterns } from './with-route-patterns';
 
 const sentryCreateBrowserRouter = wrapCreateBrowserRouter(createBrowserRouter);
 
-export const router = sentryCreateBrowserRouter([
+export const routes: RouteObject[] = [
   {
     path: '/',
     loader: async (params: LoaderFunctionArgs) => {
@@ -65,11 +66,6 @@ export const router = sentryCreateBrowserRouter([
       ...taskRunRoutes,
       ...userAccessRoutes,
       ...pipelineRunsPageRoutes,
-      // '/ns/:ns',
-      //   '/ns/:ns/pipelinerun/:pipelineRun',
-      //   '/ns/:ns/pipelinerun/:pipelineRun/logs',
-      //   '/ns/:ns/pipelinerun/:pipelineRun/logs/:task',
-      /* Github Redirects */
       {
         path: `/ns/:${GithubRedirectRouteParams.ns}/pipelinerun?/:${GithubRedirectRouteParams.pipelineRunName}?/logs?/:${GithubRedirectRouteParams.taskName}?`,
         element: <GithubRedirect />,
@@ -82,4 +78,6 @@ export const router = sentryCreateBrowserRouter([
     path: '*',
     element: <ErrorEmptyState httpError={HttpError.fromCode(404)} />,
   },
-]);
+];
+
+export const router = sentryCreateBrowserRouter(withRoutePatterns(routes));

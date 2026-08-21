@@ -1,40 +1,69 @@
-import { CommonFields, EventPropertiesMap, getAnalytics, SHA256Hash, TrackEvents } from '.';
+import { v4 as uuidv4 } from 'uuid';
+import type { SHA256Hash } from './obfuscate';
+import { CommonFields, EventPropertiesMap, getAnalytics, TrackEvents } from '.';
 
 export const LOGGED_IN_QUERY_PARAM = 'logged_in';
 
-export type CommonAnalyticsProperties = CommonFields & {
-  /**
-   * Unique identifier of the user. Obfuscated via sha256 with `clusterId` as salt.
-   */
-  userId: SHA256Hash;
-};
+export type CommonProperties = Pick<CommonFields, 'sessionId'> &
+  Partial<Omit<CommonFields, 'sessionId'>>;
 
 export class AnalyticsService {
-  private commonProperties: Partial<CommonAnalyticsProperties> = {};
+  private commonProperties: CommonProperties = { sessionId: uuidv4() };
 
-  setCommonProperties(properties: Partial<CommonAnalyticsProperties>): void {
+  private userId: SHA256Hash | undefined;
+
+  setCommonProperties(properties: Partial<Omit<CommonFields, 'sessionId'>>): void {
     this.commonProperties = { ...this.commonProperties, ...properties };
   }
 
-  track<E extends TrackEvents>(event: E, properties: EventPropertiesMap[E]): void {
-    void getAnalytics()?.track(event, { ...this.commonProperties, ...properties });
-  }
+  track<E extends TrackEvents>(event: E, properties: EventPropertiesMap[E]): boolean {
+    const analytics = getAnalytics();
+    const commonProperties = this.getReadyCommonProperties();
+    if (!analytics || !commonProperties) {
+      return false;
+    }
 
-  page(name?: string, properties: Record<string, unknown> = {}): void {
-    void getAnalytics()?.page(name, { ...this.commonProperties, ...properties });
+    void analytics.track(event, { ...commonProperties, ...properties });
+    return true;
   }
 
   identify(userId: SHA256Hash): void {
+    this.userId = userId;
     void getAnalytics()?.identify(userId);
   }
 
   reset(): void {
-    void getAnalytics()?.reset();
-    this.commonProperties = {};
+    const sessionId = uuidv4() as string;
+    this.commonProperties = { ...this.commonProperties, sessionId };
+    this.userId = undefined;
+
+    const analytics = getAnalytics();
+    analytics?.reset();
+    analytics?.setAnonymousId(sessionId);
   }
 
-  getCommonProperties(): Partial<CommonAnalyticsProperties> {
-    return { ...(this.commonProperties ?? {}) };
+  getCommonProperties(): CommonProperties {
+    return { ...this.commonProperties };
+  }
+
+  getUserId(): SHA256Hash | undefined {
+    return this.userId;
+  }
+
+  getReadyCommonProperties(): CommonFields | undefined {
+    const { sessionId, clusterVersion, konfluxVersion, kubernetesVersion, openshiftVersion } =
+      this.commonProperties;
+    if (!clusterVersion || !konfluxVersion || !kubernetesVersion) {
+      return undefined;
+    }
+
+    return {
+      sessionId,
+      clusterVersion,
+      konfluxVersion,
+      kubernetesVersion,
+      ...(openshiftVersion ? { openshiftVersion } : {}),
+    };
   }
 }
 

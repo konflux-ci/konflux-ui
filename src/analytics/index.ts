@@ -1,5 +1,15 @@
 import type { Analytics } from '@segment/analytics-next';
+import { analyticsService } from './AnalyticsService';
+import { journeyCollector } from './JourneyCollector';
 import { loadAnalyticsConfig } from './load-config';
+
+/**
+ * How long the tab must remain hidden before a checkpoint flush fires.
+ * Prevents event spam from routine tab-switching while still capturing
+ * abandoned-tab sessions. Logout, beforeunload, and auto-split flushes
+ * are unaffected by this delay.
+ */
+export const HIDDEN_FLUSH_DELAY_MS = 10 * 60 * 1000;
 
 let analyticsInstance: Analytics | undefined;
 
@@ -9,6 +19,15 @@ let resolveReady: (value: boolean) => void;
 const analyticsReady: Promise<boolean> = new Promise((r) => {
   resolveReady = r;
 });
+
+/**
+ * Converts a configured Segment API URL into the host form expected by both
+ * the Segment SDK and the unload beacon endpoint.
+ */
+function normalizeApiHost(apiUrl: string): string {
+  const url = new URL(/^https?:\/\//i.test(apiUrl) ? apiUrl : `https://${apiUrl}`);
+  return url.host;
+}
 
 /**
  * Returns the initialized Segment analytics instance, or undefined if analytics
@@ -37,11 +56,36 @@ export async function initAnalytics(): Promise<void> {
     const config = await loadAnalyticsConfig();
 
     const writeKey = config.writeKey?.trim();
-    const apiHost = config.apiUrl?.trim();
-    if (!config.enabled || !writeKey || !apiHost) {
+    const apiUrl = config.apiUrl?.trim();
+    if (!config.enabled || !writeKey || !apiUrl) {
       resolveReady(false);
       return;
     }
+    const apiHost = normalizeApiHost(apiUrl);
+
+    let hiddenFlushTimer: ReturnType<typeof setTimeout> | undefined;
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') {
+        journeyCollector.notifyHidden();
+        if (hiddenFlushTimer === undefined) {
+          hiddenFlushTimer = setTimeout(() => {
+            journeyCollector.flush();
+            hiddenFlushTimer = undefined;
+          }, HIDDEN_FLUSH_DELAY_MS);
+        }
+      } else {
+        journeyCollector.notifyVisible();
+        if (hiddenFlushTimer !== undefined) {
+          clearTimeout(hiddenFlushTimer);
+          hiddenFlushTimer = undefined;
+        }
+      }
+    });
+
+    window.addEventListener('beforeunload', () => {
+      journeyCollector.flushViaBeacon({ writeKey, apiHost });
+    });
 
     const { AnalyticsBrowser } = await import(
       '@segment/analytics-next' /* webpackChunkName: "segment-analytics" */
@@ -52,6 +96,7 @@ export async function initAnalytics(): Promise<void> {
         writeKey,
       },
       {
+        disableClientPersistence: true,
         integrations: {
           'Segment.io': {
             apiHost,
@@ -62,6 +107,11 @@ export async function initAnalytics(): Promise<void> {
     );
 
     analyticsInstance = analytics;
+    analytics.setAnonymousId(analyticsService.getCommonProperties().sessionId);
+    const userId = analyticsService.getUserId();
+    if (userId) {
+      void analytics.identify(userId);
+    }
     resolveReady(true);
     // eslint-disable-next-line no-console
     console.info('Analytics loaded');

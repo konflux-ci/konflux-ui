@@ -12,17 +12,13 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
 // Pinned commit hash for stable schema reference. Update this when adopting new schema changes.
-const SCHEMA_COMMIT = 'main'; // TODO: replace with merge commit hash once segment-bridge PR is merged
+const SCHEMA_COMMIT = '0099a60b14b3e7e3860a4bb9e292d340b669f62e';
 const SCHEMA_URL = `https://raw.githubusercontent.com/konflux-ci/segment-bridge/${SCHEMA_COMMIT}/schema/ui.json`;
 
-const LOCAL_SCHEMA_PATH = join(
-  import.meta.dirname,
-  '..',
-  '..',
-  'segment-bridge',
-  'schema',
-  'ui.json',
-);
+const LOCAL_SCHEMA_PATHS = [
+  join(import.meta.dirname, '..', '..', 'segment-bridge', 'schema', 'ui.json'),
+  join(import.meta.dirname, '..', '..', '..', 'segment-bridge', 'schema', 'ui.json'),
+];
 
 const OUTPUT_DIR = join(import.meta.dirname, '..', 'src', 'analytics', 'gen');
 const OUTPUT_FILE = join(OUTPUT_DIR, 'analytics-types.ts');
@@ -38,7 +34,8 @@ const HEADER = `/**
  *
  * LLM INSTRUCTIONS: If asked to modify analytics types, always regenerate
  * from schema instead of editing this file directly.
- */`;
+ */
+/* eslint-disable @typescript-eslint/ban-types, @typescript-eslint/no-duplicate-type-constituents */`;
 
 async function fetchSchema() {
   try {
@@ -48,13 +45,14 @@ async function fetchSchema() {
     // Fall through to local file
   }
 
-  if (existsSync(LOCAL_SCHEMA_PATH)) {
-    console.log('  Remote fetch failed, using local schema:', LOCAL_SCHEMA_PATH);
-    return JSON.parse(await readFile(LOCAL_SCHEMA_PATH, 'utf-8'));
+  const localSchemaPath = LOCAL_SCHEMA_PATHS.find(existsSync);
+  if (localSchemaPath) {
+    console.log('  Remote fetch failed, using local schema:', localSchemaPath);
+    return JSON.parse(await readFile(localSchemaPath, 'utf-8'));
   }
 
   throw new Error(
-    `Failed to fetch schema from ${SCHEMA_URL} and no local fallback found at ${LOCAL_SCHEMA_PATH}`,
+    `Failed to fetch schema from ${SCHEMA_URL} and no local fallback found at ${LOCAL_SCHEMA_PATHS.join(' or ')}`,
   );
 }
 
@@ -83,11 +81,6 @@ async function main() {
     additionalProperties: false,
   });
 
-  // SHA256Hash branded type — referenced by tsType in the schema
-  const sha256Type =
-    '/** Branded type for SHA-256 obfuscated strings. Use `obfuscate()` to create. */\n' +
-    "export type SHA256Hash = string & { readonly __brand: 'SHA256Hash' };\n\n";
-
   // Collect event defs that have x-event-name
   const defs = schema.$defs || {};
   const eventDefs = Object.entries(defs).filter(([, def]) => def['x-event-name']);
@@ -115,9 +108,15 @@ async function main() {
 
   // Generate EventPropertiesMap — maps each TrackEvents value to its event-specific
   // properties with CommonFields excluded (they are merged via commonProperties).
-  const mapEntries = eventDefs.map(
-    ([key]) => `  [TrackEvents.${key}]: Omit<${toPascalCase(key)}, keyof CommonFields>;`,
-  );
+  const mapEntries = eventDefs.map(([key, def]) => {
+    const hasEventProperties = (def.allOf || []).some(
+      (schemaEntry) => Object.keys(schemaEntry.properties || {}).length > 0,
+    );
+    const propertiesType = hasEventProperties
+      ? `Omit<${toPascalCase(key)}, keyof CommonFields>`
+      : 'Record<string, never>';
+    return `  [TrackEvents.${key}]: ${propertiesType};`;
+  });
 
   const mapBlock = [
     '',
@@ -131,7 +130,7 @@ async function main() {
     '',
   ].join('\n');
 
-  await writeFile(OUTPUT_FILE, ts + sha256Type + enumBlock + mapBlock);
+  await writeFile(OUTPUT_FILE, ts + enumBlock + mapBlock);
   console.log('  Generated: analytics-types.ts');
 }
 

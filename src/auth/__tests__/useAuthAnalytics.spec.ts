@@ -1,5 +1,6 @@
 import { renderHook, act } from '@testing-library/react';
-import { SHA256Hash, TrackEvents } from '~/analytics/gen/analytics-types';
+import { TrackEvents } from '~/analytics/gen/analytics-types';
+import { journeyCollector } from '~/analytics/JourneyCollector';
 import { mockAnalyticsServiceFn } from '~/unit-test-utils';
 import { useAuthAnalytics } from '../useAuthAnalytics';
 
@@ -14,11 +15,10 @@ jest.mock('~/monitoring/logger', () => ({
 const { useTrackAnalyticsEvent }: { useTrackAnalyticsEvent: jest.Mock } =
   jest.requireMock('~/analytics/hooks');
 const { logger }: { logger: Record<string, jest.Mock> } = jest.requireMock('~/monitoring/logger');
+const flushSpy = jest.spyOn(journeyCollector, 'flush').mockImplementation(jest.fn());
+const journeyResetSpy = jest.spyOn(journeyCollector, 'reset').mockImplementation(jest.fn());
 
-const FAKE_HASH = 'abc123def456' as SHA256Hash;
-const identifyMock = mockAnalyticsServiceFn('identify');
 const resetMock = mockAnalyticsServiceFn('reset');
-const getCommonPropertiesMock = mockAnalyticsServiceFn('getCommonProperties');
 
 describe('useAuthAnalytics', () => {
   let mockTrackEvent: jest.Mock;
@@ -27,69 +27,41 @@ describe('useAuthAnalytics', () => {
     jest.clearAllMocks();
     mockTrackEvent = jest.fn();
     useTrackAnalyticsEvent.mockReturnValue(mockTrackEvent);
-    getCommonPropertiesMock.mockReturnValue({ userId: FAKE_HASH });
   });
 
   describe('onLogin', () => {
-    it('should identify the user and track a login event', () => {
+    it('should track a login event without a user identifier', () => {
       const { result } = renderHook(() => useAuthAnalytics());
 
       act(() => {
         result.current.onLogin();
       });
 
-      expect(getCommonPropertiesMock).toHaveBeenCalled();
-      expect(identifyMock).toHaveBeenCalledWith(FAKE_HASH);
-      expect(mockTrackEvent).toHaveBeenCalledWith(TrackEvents.user_login_event, {
-        userId: FAKE_HASH,
-      });
-      expect(logger.info).toHaveBeenCalledWith('User Logged In');
-    });
-
-    it('should still identify and track when common properties omit userId', () => {
-      getCommonPropertiesMock.mockReturnValue({});
-      const { result } = renderHook(() => useAuthAnalytics());
-
-      act(() => {
-        result.current.onLogin();
-      });
-
-      expect(identifyMock).toHaveBeenCalledWith(undefined);
-      expect(mockTrackEvent).toHaveBeenCalledWith(TrackEvents.user_login_event, {
-        userId: undefined,
-      });
+      expect(mockTrackEvent).toHaveBeenCalledWith(TrackEvents.user_login_event, {});
       expect(logger.info).toHaveBeenCalledWith('User Logged In');
     });
   });
 
   describe('onLogout', () => {
-    it('should track logout event and reset analytics', () => {
+    it('tracks logout, then flushes and resets journey and identity in order', () => {
+      const callOrder: string[] = [];
+      flushSpy.mockImplementation(() => {
+        callOrder.push('flush');
+        return true;
+      });
+      journeyResetSpy.mockImplementation(() => callOrder.push('journeyReset'));
+      resetMock.mockImplementation(() => callOrder.push('reset'));
       const { result } = renderHook(() => useAuthAnalytics());
 
       act(() => {
         result.current.onLogout();
       });
 
-      expect(getCommonPropertiesMock).toHaveBeenCalled();
-      expect(mockTrackEvent).toHaveBeenCalledWith(TrackEvents.user_logout_event, {
-        userId: FAKE_HASH,
-      });
+      expect(mockTrackEvent).toHaveBeenCalledWith(TrackEvents.user_logout_event, {});
+      expect(flushSpy).toHaveBeenCalledWith({ force: true });
+      expect(journeyResetSpy).toHaveBeenCalled();
       expect(resetMock).toHaveBeenCalled();
-      expect(logger.info).toHaveBeenCalledWith('User Logged Out');
-    });
-
-    it('should still track logout and reset when common properties omit userId', () => {
-      getCommonPropertiesMock.mockReturnValue({});
-      const { result } = renderHook(() => useAuthAnalytics());
-
-      act(() => {
-        result.current.onLogout();
-      });
-
-      expect(mockTrackEvent).toHaveBeenCalledWith(TrackEvents.user_logout_event, {
-        userId: undefined,
-      });
-      expect(resetMock).toHaveBeenCalled();
+      expect(callOrder).toEqual(['flush', 'journeyReset', 'reset']);
       expect(logger.info).toHaveBeenCalledWith('User Logged Out');
     });
   });
