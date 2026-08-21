@@ -218,7 +218,7 @@ describe('VirtualizedLogContent Integration Tests', () => {
           {...defaultProps}
           sections={[singleLogSection('error on line 1')]}
           searchText="error"
-          currentSearchMatch={{ rowIndex: 1, matchIndex: 1 }}
+          currentSearchMatch={{ rowIndex: 0, matchIndex: 1 }}
         />,
       );
 
