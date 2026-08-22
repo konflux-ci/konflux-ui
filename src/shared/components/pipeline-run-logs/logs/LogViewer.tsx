@@ -249,8 +249,10 @@ const LogViewer: React.FC<Props> = ({
                         onClick={startDownloadAll}
                         isDisabled={downloadAllStatus}
                       >
-                        {downloadAllLabel}
-                        {downloadAllStatus && <LoadingInline />}
+                        <span className="log-viewer__download-all-label">
+                          {downloadAllLabel}
+                          {downloadAllStatus && <LoadingInline />}
+                        </span>
                       </DropdownItem>
                     )}
                   </DropdownList>
