@@ -1,6 +1,7 @@
 import { NavItem, pageTitles } from '../support/constants/PageTitle';
 import { actions } from '../support/pageObjects/global-po';
 import { issuesPagePO } from '../support/pageObjects/pages-po';
+import { userAccessPO } from '../support/pageObjects/userAccess-po';
 import { ApplicationDetailPage } from '../support/pages/ApplicationDetailPage';
 import { ComponentDetailsPage } from '../support/pages/ComponentDetailsPage';
 import { ComponentPage } from '../support/pages/ComponentsPage';
@@ -11,6 +12,7 @@ import {
   PipelinerunsTabPage,
   TaskRunsTab,
 } from '../support/pages/tabs/PipelinerunsTabPage';
+import { UserAccessPage } from '../support/pages/UserAccessPage';
 import { APIHelper } from '../utils/APIHelper';
 import { Applications } from '../utils/Applications';
 import { Common } from '../utils/Common';
@@ -245,6 +247,39 @@ describe('Basic Happy Path', () => {
         cy.get(issuesPagePO.serviceUnavailableState).should('exist');
         cy.contains(issuesPagePO.serviceUnavailableTitle).should('exist');
       }
+    });
+  });
+
+  describe('User Access flow', () => {
+    const username = `e2euser-${new Date().getTime()}`;
+    const grantedRole = 'Contributor';
+    const changedRole = 'Maintainer';
+
+    it('Grant, change, and revoke user access', () => {
+      cy.log('Navigate to the User Access page from the left navigation');
+      Common.navigateTo(NavItem.userAcces);
+      cy.url().should('match', /\/ns\/.+\/access$/);
+      Common.verifyPageTitle('User access');
+      cy.testA11y('User access page');
+
+      cy.log(`Grant "${grantedRole}" access to the user "${username}"`);
+      UserAccessPage.grantAccess(username, grantedRole);
+      cy.url({ timeout: 60000 }).should('match', /\/ns\/.+\/access$/);
+
+      cy.log('Verify the user is listed with the correct role');
+      UserAccessPage.verifyUserInTable(username, grantedRole);
+
+      cy.log(`Change the access role of the user to "${changedRole}"`);
+      UserAccessPage.changeAccessRole(username, changedRole);
+
+      cy.log('Verify the role change was applied');
+      UserAccessPage.verifyUserInTable(username, changedRole);
+
+      cy.log('Revoke the user access from the row actions');
+      UserAccessPage.revokeAccess(username);
+
+      cy.log('Verify the user was removed from the list');
+      cy.contains(userAccessPO.listTableRow, username, { timeout: 60000 }).should('not.exist');
     });
   });
 
