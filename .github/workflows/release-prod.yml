@@ -175,6 +175,36 @@ jobs:
             -d "$(pwd)" \
             -o /tmp/changelog.md
 
+      # --- Fetch staging PRs merged in the last 14 days ---
+      - name: Fetch staging PRs
+        env:
+          GH_TOKEN: ${{ secrets.INFRA_PR_PAT }}
+        run: |
+          END_DATE=$(date -d "${RELEASE_DATE} -1 day" +%Y-%m-%d 2>/dev/null \
+            || date -v-1d -j -f "%Y-%m-%d" "$RELEASE_DATE" +%Y-%m-%d)
+          START_DATE=$(date -d "${RELEASE_DATE} -14 days" +%Y-%m-%d 2>/dev/null \
+            || date -v-14d -j -f "%Y-%m-%d" "$RELEASE_DATE" +%Y-%m-%d)
+
+          echo "Fetching staging PRs merged between ${START_DATE} and ${END_DATE}"
+
+          STAGING_PRS=$(gh pr list \
+            --repo "$INFRA_REPO" \
+            --search "is:pr is:closed merged:${START_DATE}..${END_DATE} author:app/rh-tap-build-team konflux-ui update" \
+            --state closed \
+            --limit 100 \
+            --json number,url,mergedAt \
+            --jq '.[] | "- \(.mergedAt[0:10])  \(.url)"' \
+            | sort)
+
+          if [[ -z "$STAGING_PRS" ]]; then
+            echo "No staging PRs found in the last 14 days." > /tmp/staging-prs.md
+          else
+            echo "$STAGING_PRS" > /tmp/staging-prs.md
+          fi
+
+          echo "--- Staging PRs ---"
+          cat /tmp/staging-prs.md
+
       # --- Create tracking issue (before infra PR so we can include Fixes link) ---
       - name: Create tracking issue
         id: tracking
@@ -252,6 +282,11 @@ jobs:
             --title "chore: bump konflux-ui ${SHORT_OLD} => ${SHORT_NEW}" \
             --body "$(cat <<PRBODY
           Update konflux-ui production image to staging commit \`${NEW_SHA}\`.
+
+          ## Verification
+
+          Staging PRs:
+          $(cat /tmp/staging-prs.md)
 
           <details>
           <summary>What's in this release</summary>
