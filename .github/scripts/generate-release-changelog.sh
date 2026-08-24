@@ -114,7 +114,9 @@ else
   trap '[[ "$CLEANUP_CLONE" == true ]] && rm -rf "$WORK_DIR" 2>/dev/null || true' EXIT
 
   log_info "Cloning $REPO to $WORK_DIR"
-  if ! git clone --depth=100 "https://github.com/${REPO}.git" "$WORK_DIR" 2>/dev/null; then
+  # Full history is required: a shallow clone can resolve BASE and TARGET
+  # while omitting commits between them, which truncates the changelog.
+  if ! git clone "https://github.com/${REPO}.git" "$WORK_DIR" 2>/dev/null; then
     log_error "Failed to clone repository: $REPO"
     exit 1
   fi
@@ -129,13 +131,14 @@ fi
 pushd "$WORK_DIR" >/dev/null
 
 log_info "Fetching commits..."
+if [[ "$(git rev-parse --is-shallow-repository 2>/dev/null)" == "true" ]]; then
+  log_info "Repository is shallow; fetching full history"
+  git fetch --unshallow
+fi
 git fetch --all --tags --prune >/dev/null 2>&1 || true
 git fetch origin "$BASE_SHA" "$TARGET_SHA" >/dev/null 2>&1 || true
 
 for sha in "$BASE_SHA" "$TARGET_SHA"; do
-  if ! git cat-file -t "$sha" >/dev/null 2>&1; then
-    git fetch --unshallow 2>/dev/null || git fetch --depth=1000 2>/dev/null || true
-  fi
   if ! git cat-file -t "$sha" >/dev/null 2>&1; then
     log_error "Commit not found after fetch: $sha"
     exit 1
