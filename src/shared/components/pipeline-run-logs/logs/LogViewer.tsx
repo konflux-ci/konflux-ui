@@ -230,6 +230,7 @@ const LogViewer: React.FC<Props> = ({
                   toggle={(toggleRef) => (
                     <MenuToggle
                       ref={toggleRef}
+                      className="log-viewer__toolbar-icon"
                       variant="plain"
                       onClick={() => setIsDownloadOpen(!isDownloadOpen)}
                       isExpanded={isDownloadOpen}
@@ -288,6 +289,7 @@ const LogViewer: React.FC<Props> = ({
                   hasAutoWidth
                 >
                   <Button
+                    className="log-viewer__toolbar-icon"
                     icon={<OutlinedKeyboardIcon />}
                     variant="plain"
                     aria-label="Show keyboard shortcuts"
