@@ -92,12 +92,6 @@ spec:
       env:
         - name: GIT_TERMINAL_PROMPT
           value: '0'
-        - name: GITHUB_TOKEN
-          valueFrom:
-            secretKeyRef:
-              name: $(params.github-credentials-secret)
-              key: token
-              optional: true
       script: |
         #!/usr/bin/env bash
         set -euo pipefail
@@ -119,33 +113,6 @@ spec:
           echo "Same-repo PR — skipping e2e overlay, run-e2e will use image sources"
           exit 0
         fi
-
-        # Use GIT_ASKPASS so the token is never embedded in remote URLs (avoids leaks in git errors).
-        setup_git_askpass() {
-          if [ -z "${GITHUB_TOKEN:-}" ]; then
-            echo "ERROR: GITHUB_TOKEN secret is not set, please check github-credentials secret"
-            exit 1
-          fi
-          ASKPASS="$(mktemp)"
-          chmod 700 "${ASKPASS}"
-          # Write askpass via printf (heredoc breaks prettier's YAML parser)
-          printf '%s\n' \
-            '#!/bin/sh' \
-            'case "$1" in' \
-            '  *Username*) printf "%s\n" "x-access-token" ;;' \
-            '  *Password*) printf "%s\n" "${GITHUB_TOKEN}" ;;' \
-            'esac' \
-            > "${ASKPASS}"
-          export GIT_ASKPASS="${ASKPASS}"
-        }
-        cleanup_git_askpass() {
-          if [ -n "${ASKPASS:-}" ] && [ -f "${ASKPASS}" ]; then
-            rm -f "${ASKPASS}"
-          fi
-          unset GIT_ASKPASS ASKPASS
-        }
-        setup_git_askpass
-        trap cleanup_git_askpass EXIT
 
         git config --global init.defaultBranch main
         git init /tmp/repo
