@@ -170,12 +170,22 @@ const Logs: React.FC<LogsProps> = ({
           })
           .catch((err) => {
             if (err.name !== 'AbortError') {
-              // Gracefully handle empty logs (404) from kubearch, similar to how Tekton Results handles 404
-              // When logs don't exist, both kubearch and Tekton Results return 404
-              if (err?.code === 404) {
-                // Mark the container as fetched with empty content so folding can evaluate
-                // it after load (and so the section still appears in the viewer).
-                appendLog(name, '');
+              // Gracefully handle empty logs (404) from KubeArchive/Tekton Results.
+              // When logs don't exist, both KubeArchive and Tekton Results return 404.
+              // For cluster-sourced 404s the API often returns a meaningful message
+              // (e.g. "container step-X is waiting to start: ImagePullBackOff")
+              // which should be surfaced to the user.
+              if (err?.code === 404 && source === ResourceSource.Archive) {
+                const message = err instanceof Error ? err.message : '';
+                // Show the error with ANSI styling if available; otherwise mark the
+                // container as fetched with empty content so folding can evaluate it
+                // after load (and so the section still appears in the viewer).
+                appendLog(
+                  name,
+                  message
+                    ? `\x1b[1;31mLOG FETCH ERROR:\n${message}\x1b[0m\n`
+                    : '',
+                );
                 return;
               }
 
