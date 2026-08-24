@@ -333,7 +333,7 @@ describe('Basic Happy Path', () => {
   describe('Check Page Header', () => {
     it('Check Theme Switcher', () => {
       // Checking Theme Switcher
-      ThemeSwitcher.clickOnThemeSwitcher();
+      ThemeSwitcher.clickThemeSwitcher();
       ThemeSwitcher.switchTheme(Themes.SYSTEM, Themes.LIGHT);
       ThemeSwitcher.switchTheme(Themes.LIGHT, Themes.DARK);
 

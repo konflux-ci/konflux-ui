@@ -7,7 +7,7 @@ export enum Themes {
 }
 
 export class ThemeSwitcher {
-  static clickOnThemeSwitcher() {
+  static clickThemeSwitcher() {
     cy.get(pageHeaderPO.themeDropdownToggle).should('be.visible').click();
     cy.get(pageHeaderPO.themeDropdown).should('be.visible');
   }

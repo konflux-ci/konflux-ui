@@ -6,7 +6,7 @@ export class SecretsPage {
     cy.get(secretsPagePO.editButton).click();
     cy.contains('button', secretsPagePO.showValuesButton).click();
     cy.get(secretsPagePO.keyInputByValue(secretKey)).should('exist');
-    cy.get(secretsPagePO.valueInput).scrollIntoView().should('contain', secretValue);
+    cy.get(secretsPagePO.valueInput).scrollIntoView().should('has.value', secretValue);
     cy.get(secretsPagePO.cancelButton).click();
   }
 
