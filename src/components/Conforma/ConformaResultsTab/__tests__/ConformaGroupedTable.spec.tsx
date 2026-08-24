@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { CONFORMA_RESULT_STATUS } from '~/types/conforma';
 import type { ConformaResultRow } from '~/types/conforma';
+import { setupVirtualizerMock } from '~/unit-test-utils';
 import { createUseParamsMock, routerRenderer } from '~/unit-test-utils/mock-react-router';
 import type { GroupedConformaRow } from '../conforma-grouping-utils';
 import { ConformaGroupedTable } from '../ConformaGroupedTable';
@@ -10,6 +11,10 @@ import '@testing-library/jest-dom';
 
 jest.mock('~/shared/providers/Namespace', () => ({
   useNamespace: jest.fn(),
+}));
+
+jest.mock('@tanstack/react-virtual', () => ({
+  useVirtualizer: jest.fn(),
 }));
 
 const mockUseNamespace = useNamespace as jest.Mock;
@@ -65,12 +70,13 @@ describe('ConformaGroupedTable', () => {
     groups: mockGroups,
     groupBy: 'rule' as const,
     expandedGroups: new Set<string>(),
-    onToggleGroup: jest.fn(),
+    onExpandedGroupsChange: jest.fn(),
   };
   const useParamsMock = createUseParamsMock();
 
   beforeEach(() => {
     jest.clearAllMocks();
+    setupVirtualizerMock();
     mockUseNamespace.mockReturnValue('test-ns');
     useParamsMock.mockReturnValue({ applicationName: 'test-app' });
   });
@@ -105,15 +111,20 @@ describe('ConformaGroupedTable', () => {
     expect(screen.getAllByText('Component').length).toBeGreaterThanOrEqual(1);
   });
 
-  it('calls onToggleGroup when expand button is clicked', async () => {
+  it('calls onExpandedGroupsChange when expand button is clicked', async () => {
     const user = userEvent.setup();
-    const onToggle = jest.fn();
-    routerRenderer(<ConformaGroupedTable {...defaultProps} onToggleGroup={onToggle} />);
+    const onExpandedGroupsChange = jest.fn();
+    routerRenderer(
+      <ConformaGroupedTable
+        {...defaultProps}
+        onExpandedGroupsChange={onExpandedGroupsChange}
+      />,
+    );
 
     const toggleButtons = screen.getAllByRole('button');
     await user.click(toggleButtons[0]);
 
-    expect(onToggle).toHaveBeenCalledWith('Missing CVE scan');
+    expect(onExpandedGroupsChange).toHaveBeenCalledWith(new Set(['Missing CVE scan']));
   });
 
   it('shows detail sub-table when a group is expanded', () => {

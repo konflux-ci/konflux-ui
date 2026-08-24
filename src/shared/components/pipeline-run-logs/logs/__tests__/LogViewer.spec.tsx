@@ -10,6 +10,13 @@ import LogViewer from '../LogViewer';
 import { useAutoScrollWithResume } from '../useAutoScrollWithResume';
 import { useLogViewerTheme } from '../useLogViewerTheme';
 
+jest.mock('~/shared/hooks/useContainerHeight', () => ({
+  useContainerHeight: () => ({
+    containerRef: { current: document.createElement('div') },
+    containerHeight: 600,
+  }),
+}));
+
 // Mock only external dependencies and browser APIs
 jest.mock('file-saver', () => ({
   saveAs: jest.fn(),
@@ -43,16 +50,6 @@ jest.mock('../useAutoScrollWithResume', () => {
     useAutoScrollWithResume: jest.fn(actual.useAutoScrollWithResume),
   };
 });
-
-// Mock lodash-es debounce to make tests synchronous
-jest.mock('lodash-es', () => ({
-  ...jest.requireActual('lodash-es'),
-  debounce: (fn: (...args: unknown[]) => unknown) => {
-    const debounced = (...args: unknown[]) => fn(...args);
-    debounced.cancel = jest.fn();
-    return debounced;
-  },
-}));
 
 const mockSaveAs = jest.requireMock('file-saver').saveAs as jest.Mock;
 const mockUseFullscreen = useFullscreen as jest.Mock;
@@ -536,7 +533,17 @@ describe('LogViewer Integration Tests', () => {
     });
 
     it('should pass the URL hash line target to useAutoScrollWithResume so it can pause auto-scroll', () => {
-      window.location.hash = '#L3';
+      const originalPathname = window.location.pathname;
+      const originalSearch = window.location.search;
+      Object.defineProperty(window, 'location', {
+        configurable: true,
+        value: {
+          ...window.location,
+          pathname: '/app/logs',
+          search: '?task=test',
+          hash: '#L3',
+        },
+      });
 
       try {
         render(<LogViewer {...defaultProps} allowAutoScroll={true} />);
@@ -545,7 +552,15 @@ describe('LogViewer Integration Tests', () => {
           expect.objectContaining({ activeLineTarget: { start: 3, end: 3 } }),
         );
       } finally {
-        window.location.hash = '';
+        Object.defineProperty(window, 'location', {
+          configurable: true,
+          value: {
+            ...window.location,
+            pathname: originalPathname,
+            search: originalSearch,
+            hash: '',
+          },
+        });
       }
     });
 
@@ -712,19 +727,17 @@ describe('LogViewer Integration Tests', () => {
     });
   });
 
-  describe('Context providers integration', () => {
-    it('should provide LogViewerContext to children', () => {
+  describe('Search integration', () => {
+    it('should render search input by default', () => {
       render(<LogViewer {...defaultProps} />);
 
-      // LogViewerContext is used by search functionality
       const searchInput = screen.queryByPlaceholderText('Search');
       expect(searchInput).toBeInTheDocument();
     });
 
-    it('should provide LogViewerToolbarContext to children', () => {
+    it('should render search input when showSearch is true', () => {
       render(<LogViewer {...defaultProps} showSearch={true} />);
 
-      // Search component should be able to access toolbar context
       const searchInput = screen.getByPlaceholderText('Search');
       expect(searchInput).toBeInTheDocument();
     });
