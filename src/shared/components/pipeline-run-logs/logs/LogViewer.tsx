@@ -188,7 +188,7 @@ const LogViewer: React.FC<Props> = ({
             alignItems="center"
           >
             <ToolbarGroup>
-              <ToolbarItem>
+              <ToolbarItem className="log-viewer__toolbar-icon">
                 <FeatureFlagIndicator flags={['kubearchive-logs', 'taskruns-kubearchive']} />
               </ToolbarItem>
             </ToolbarGroup>
@@ -230,7 +230,6 @@ const LogViewer: React.FC<Props> = ({
                   toggle={(toggleRef) => (
                     <MenuToggle
                       ref={toggleRef}
-                      className="log-viewer__toolbar-icon"
                       variant="plain"
                       onClick={() => setIsDownloadOpen(!isDownloadOpen)}
                       isExpanded={isDownloadOpen}
