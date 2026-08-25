@@ -36,6 +36,7 @@ Components
 | `src/analytics/obfuscate.ts` | SHA-256 hashing for PIA fields (`SHA256Hash` branded type) |
 | `src/analytics/load-config.ts` | Config resolution (API-first, runtime fallback) |
 | `src/analytics/conditional-checks.ts` | `isAnalyticsEnabled` condition + `useIsAnalyticsEnabled` hook |
+| `src/analytics/arrival-source.ts` | Classifies `document.referrer` into an `ArrivalSource` and persists it across the OAuth redirect |
 | `src/auth/useAuthAnalytics.ts` | `useAuthAnalytics` hook — `onLogin` / `onLogout` callbacks |
 
 ---
@@ -94,9 +95,8 @@ analyticsService.setCommonProperties({
 });
 
 // Type-safe tracking — compiler enforces correct payload per event
-const userId = await obfuscate(rawUsername);
 analyticsService.track(TrackEvents.feedback_submitted_event, {
-  userId, rating: 5, feedback: 'Great experience',
+  rating: 5, feedback: 'Great experience',
 });
 
 // Page view
@@ -142,6 +142,25 @@ On a page refresh there is no `logged_in` param, so no login event fires.
 
 ---
 
+## Arrival Source
+
+`captureArrivalSourceOnce()` runs as the first statement in `main.tsx` to classify `document.referrer` before the OAuth redirect can overwrite it. The classified value (`'github'` or `'other'`) is persisted to `sessionStorage` so it survives the redirect.
+
+`markSessionStartedOnce()` is a separate guard that ensures the `ui_session_started` event fires exactly **once per new tab** — it returns `true` only the first time it's called per tab session. `sessionStorage` persists across reloads/navigation but is fresh for a new tab, which is what enforces the "new tab only" rule.
+
+```ts
+// In the App effect (main.tsx):
+if (markSessionStartedOnce()) {
+  trackEvent(TrackEvents.ui_session_started_event, { arrivalSource: getArrivalSource() });
+}
+```
+
+Why two guards:
+- `captureArrivalSourceOnce()` dedupes the *referrer capture* (runs at boot, before React).
+- `markSessionStartedOnce()` dedupes the *event fire* (runs inside the App effect, after auth/publicInfo settle).
+
+---
+
 ## Condition System Integration
 
 Analytics registers an `isAnalyticsEnabled` condition for the feature flags system:
@@ -177,14 +196,12 @@ This produces `src/analytics/gen/analytics-types.ts` with the event type, `Track
 ```ts
 import { useTrackAnalyticsEvent } from '~/analytics/hooks';
 import { TrackEvents } from '~/analytics';
-import { obfuscate } from '~/analytics/obfuscate';
 
 const trackEvent = useTrackAnalyticsEvent();
 
-const handleSubmit = async () => {
-  const userId = await obfuscate(username);
+const handleSubmit = () => {
   trackEvent(TrackEvents.feedback_submitted_event, {
-    userId, rating: 5, feedback: 'Great!',
+    rating: 5, feedback: 'Great!',
   });
 };
 ```
