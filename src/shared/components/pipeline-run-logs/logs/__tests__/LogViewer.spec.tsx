@@ -421,9 +421,10 @@ describe('LogViewer Integration Tests', () => {
 
       expect(onDownloadAll).toHaveBeenCalled();
 
-      // After download completes, reopen dropdown and verify item is re-enabled
-      await waitFor(async () => {
-        await user.click(screen.getByRole('button', { name: /download logs/i }));
+      // Wait for the async download to complete (promise resolves, state resets)
+      // then reopen dropdown and verify item is re-enabled
+      await user.click(screen.getByRole('button', { name: /download logs/i }));
+      await waitFor(() => {
         const downloadAllItem = screen.getByText('Download all task logs');
         expect(downloadAllItem.closest('button')).not.toBeDisabled();
       });
@@ -446,9 +447,10 @@ describe('LogViewer Integration Tests', () => {
       await user.click(screen.getByRole('button', { name: /download logs/i }));
       await user.click(screen.getByText('Download all task logs'));
 
-      // After error, reopen dropdown and verify item is re-enabled
-      await waitFor(async () => {
-        await user.click(screen.getByRole('button', { name: /download logs/i }));
+      // Wait for the async error handler to complete, then reopen dropdown
+      // and verify item is re-enabled
+      await user.click(screen.getByRole('button', { name: /download logs/i }));
+      await waitFor(() => {
         const downloadAllItem = screen.getByText('Download all task logs');
         expect(downloadAllItem.closest('button')).not.toBeDisabled();
       });

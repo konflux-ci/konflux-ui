@@ -188,7 +188,7 @@ const LogViewer: React.FC<Props> = ({
             alignItems="center"
           >
             <ToolbarGroup>
-              <ToolbarItem className="log-viewer__toolbar-icon">
+              <ToolbarItem className="log-viewer__toolbar-item--padded">
                 <FeatureFlagIndicator flags={['kubearchive-logs', 'taskruns-kubearchive']} />
               </ToolbarItem>
             </ToolbarGroup>
@@ -234,13 +234,14 @@ const LogViewer: React.FC<Props> = ({
                       onClick={() => setIsDownloadOpen(!isDownloadOpen)}
                       isExpanded={isDownloadOpen}
                       aria-label="Download logs"
+                      data-test="download-logs-toggle"
                     >
                       <DownloadIcon />
                     </MenuToggle>
                   )}
                 >
                   <DropdownList>
-                    <DropdownItem key="download" onClick={downloadLogs}>
+                    <DropdownItem key="download" onClick={downloadLogs} data-test="download-log">
                       Download
                     </DropdownItem>
                     {onDownloadAll && (
@@ -248,6 +249,7 @@ const LogViewer: React.FC<Props> = ({
                         key="download-all"
                         onClick={startDownloadAll}
                         isDisabled={downloadAllStatus}
+                        data-test="download-all-logs"
                       >
                         <span className="log-viewer__download-all-label">
                           {downloadAllLabel}
@@ -288,7 +290,7 @@ const LogViewer: React.FC<Props> = ({
                   hasAutoWidth
                 >
                   <Button
-                    className="log-viewer__toolbar-icon"
+                    className="log-viewer__toolbar-item--padded"
                     icon={<OutlinedKeyboardIcon />}
                     variant="plain"
                     aria-label="Show keyboard shortcuts"

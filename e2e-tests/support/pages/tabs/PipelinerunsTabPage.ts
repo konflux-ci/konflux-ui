@@ -268,7 +268,9 @@ export class LogsTab {
     // Open the download dropdown menu first
     cy.get('button[aria-label="Download logs"]').click();
     if (allTaskLogs) {
-      cy.contains(pipelinerunsTabPO.downloadAllTaskLogsButton).should('be.visible').click();
+      cy.contains('[role="menuitem"]', pipelinerunsTabPO.downloadAllTaskLogsButton)
+        .should('be.visible')
+        .click();
     } else {
       cy.contains('[role="menuitem"]', /^Download$/)
         .should('be.visible')
