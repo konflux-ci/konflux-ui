@@ -176,7 +176,18 @@ describe('opaqueSecretSyncUtils', () => {
       ).toEqual({ action: 'makeEditable' });
     });
 
-    it('returns resetOpaque when switching from a partner task to a regular secret', () => {
+    it('returns populateFromExisting when switching from an existing cluster secret to a partner task template', () => {
+      expect(
+        getOpaqueSecretSyncTransition({
+          previousName: 'existing-secret',
+          currentName: 'snyk-secret',
+          currentType: SecretTypeDropdownLabel.opaque,
+          existingSecrets,
+        }),
+      ).toEqual({ action: 'populateFromExisting', secretName: 'snyk-secret' });
+    });
+
+    it('returns makeEditable when switching from a partner task name to a custom name', () => {
       expect(
         getOpaqueSecretSyncTransition({
           previousName: 'snyk-secret',
@@ -184,7 +195,40 @@ describe('opaqueSecretSyncUtils', () => {
           currentType: SecretTypeDropdownLabel.opaque,
           existingSecrets,
         }),
-      ).toEqual({ action: 'resetOpaque' });
+      ).toEqual({ action: 'makeEditable' });
+    });
+
+    it('returns makeEditable when correcting a partner task name typo', () => {
+      expect(
+        getOpaqueSecretSyncTransition({
+          previousName: 'snyk-secret',
+          currentName: 'snyk-secrett',
+          currentType: SecretTypeDropdownLabel.opaque,
+          existingSecrets,
+        }),
+      ).toEqual({ action: 'makeEditable' });
+    });
+
+    it('returns populateFromExisting when typing a partner task name from a custom name', () => {
+      expect(
+        getOpaqueSecretSyncTransition({
+          previousName: 'new-secret',
+          currentName: 'snyk-secret',
+          currentType: SecretTypeDropdownLabel.opaque,
+          existingSecrets,
+        }),
+      ).toEqual({ action: 'populateFromExisting', secretName: 'snyk-secret' });
+    });
+
+    it('returns none when selecting a partner task name from empty (onSelect handles population)', () => {
+      expect(
+        getOpaqueSecretSyncTransition({
+          previousName: '',
+          currentName: 'snyk-secret',
+          currentType: SecretTypeDropdownLabel.opaque,
+          existingSecrets,
+        }),
+      ).toEqual({ action: 'none' });
     });
   });
 });

@@ -31,14 +31,19 @@ export const getEditableKeyValues = (keyValues: KeyValueEntry[]): KeyValueEntry[
   }));
 };
 
+export const isUnpopulatedPartnerTemplate = (
+  secretName: string,
+  currentType: string,
+  existingSecrets: BuildTimeSecret[],
+): boolean =>
+  isPartnerTask(secretName, supportedPartnerTasksSecrets) &&
+  !isUsingExistingClusterSecret(secretName, currentType, existingSecrets);
+
 export const getOpaqueFieldsFromExistingSecret = (
   secretName: string,
   existingSecrets: BuildTimeSecret[],
 ): { keyValues?: KeyValueEntry[]; labels: KeyValueEntry[] } => {
-  if (
-    isPartnerTask(secretName, supportedPartnerTasksSecrets) &&
-    !isUsingExistingClusterSecret(secretName, SecretTypeDropdownLabel.opaque, existingSecrets)
-  ) {
+  if (isUnpopulatedPartnerTemplate(secretName, SecretTypeDropdownLabel.opaque, existingSecrets)) {
     return {
       keyValues: [...getSupportedPartnerTaskKeyValuePairs(secretName)],
       labels: DEFAULT_OPAQUE_LABELS,
@@ -89,15 +94,19 @@ export const getOpaqueSecretSyncTransition = ({
     return { action: 'populateFromExisting', secretName: currentName };
   }
 
-  if (wasUsingExistingCluster) {
-    return { action: 'makeEditable' };
+  const isPartnerTemplate = isUnpopulatedPartnerTemplate(currentName, currentType, existingSecrets);
+  const hadCustomPreviousName =
+    previousName !== '' && !isPartnerTask(previousName, supportedPartnerTasksSecrets);
+  const leftPartnerTaskName =
+    isPartnerTask(previousName, supportedPartnerTasksSecrets) &&
+    !isPartnerTask(currentName, supportedPartnerTasksSecrets);
+
+  if (isPartnerTemplate && (wasUsingExistingCluster || hadCustomPreviousName)) {
+    return { action: 'populateFromExisting', secretName: currentName };
   }
 
-  if (
-    isPartnerTask(previousName, supportedPartnerTasksSecrets) &&
-    !isPartnerTask(currentName, supportedPartnerTasksSecrets)
-  ) {
-    return { action: 'resetOpaque' };
+  if (wasUsingExistingCluster || leftPartnerTaskName) {
+    return { action: 'makeEditable' };
   }
 
   return { action: 'none' };

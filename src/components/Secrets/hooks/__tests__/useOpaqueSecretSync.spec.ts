@@ -269,6 +269,53 @@ describe('useOpaqueSecretSync', () => {
       ]);
     });
 
+    it('should populate partner task template when switching from existing cluster secret to snyk-secret', () => {
+      const initialValues = {
+        ...defaultValues,
+        secretName: 'existing-secret',
+        opaque: {
+          keyValues: [
+            { key: 'existing-key-1', value: 'value1', readOnlyKey: true },
+            { key: 'existing-key-2', value: 'value2', readOnlyKey: true },
+          ],
+        },
+      };
+
+      const { rerender } = renderHook(
+        (props: { secretName: string }) => {
+          useFormikContextMock.mockReturnValue(
+            mockFormikContext({ ...initialValues, secretName: props.secretName }),
+          );
+          return useOpaqueSecretSync({
+            currentType: SecretTypeDropdownLabel.opaque,
+            existingSecrets,
+          });
+        },
+        { initialProps: { secretName: 'existing-secret' } },
+      );
+
+      rerender({ secretName: 'snyk-secret' });
+
+      expect(mockSetFieldValue).toHaveBeenCalledWith(
+        'opaque.keyValues',
+        expect.arrayContaining([
+          expect.objectContaining({
+            key: 'snyk_token',
+            readOnlyKey: true,
+          }),
+        ]),
+      );
+      expect(mockSetFieldValue).not.toHaveBeenCalledWith(
+        'opaque.keyValues',
+        expect.arrayContaining([
+          expect.objectContaining({
+            key: 'snyk_token',
+            readOnlyKey: false,
+          }),
+        ]),
+      );
+    });
+
     it('should make fields editable when switching from existing cluster secret to new', () => {
       const initialValues = {
         ...defaultValues,
@@ -304,10 +351,50 @@ describe('useOpaqueSecretSync', () => {
       ]);
     });
 
-    it('should reset fields when switching from partner task to regular secret', () => {
+    it('should populate partner task template when typing snyk-secret from a custom name', () => {
+      const initialValues = {
+        ...defaultValues,
+        secretName: 'new-secret',
+        opaque: {
+          keyValues: [
+            { key: 'existing-key-1', value: 'value1', readOnlyKey: false, readOnlyValue: false },
+          ],
+        },
+      };
+
+      const { rerender } = renderHook(
+        (props: { secretName: string }) => {
+          useFormikContextMock.mockReturnValue(
+            mockFormikContext({ ...initialValues, secretName: props.secretName }),
+          );
+          return useOpaqueSecretSync({
+            currentType: SecretTypeDropdownLabel.opaque,
+            existingSecrets,
+          });
+        },
+        { initialProps: { secretName: 'new-secret' } },
+      );
+
+      rerender({ secretName: 'snyk-secret' });
+
+      expect(mockSetFieldValue).toHaveBeenCalledWith(
+        'opaque.keyValues',
+        expect.arrayContaining([
+          expect.objectContaining({
+            key: 'snyk_token',
+            readOnlyKey: true,
+          }),
+        ]),
+      );
+    });
+
+    it('should keep values editable when switching from partner task name to custom name', () => {
       const initialValues = {
         ...defaultValues,
         secretName: 'snyk-secret',
+        opaque: {
+          keyValues: [{ key: 'snyk_token', value: 'my-value', readOnlyKey: true }],
+        },
       };
 
       const { rerender } = renderHook(
@@ -323,13 +410,14 @@ describe('useOpaqueSecretSync', () => {
         { initialProps: { secretName: 'snyk-secret' } },
       );
 
-      // Change from partner task to regular secret
       rerender({ secretName: 'my-new-secret' });
 
       expect(mockSetFieldValue).toHaveBeenCalledWith('opaque.keyValues', [
+        { key: 'snyk_token', value: 'my-value', readOnlyKey: false, readOnlyValue: false },
+      ]);
+      expect(mockSetFieldValue).not.toHaveBeenCalledWith('opaque.keyValues', [
         { key: '', value: '', readOnlyKey: false },
       ]);
-      expect(mockSetFieldValue).toHaveBeenCalledWith('labels', [{ key: '', value: '' }]);
     });
 
     it('should not trigger updates when secretName does not change', () => {
