@@ -38,10 +38,6 @@ spec:
       type: string
       default: 'quay-secret'
       description: 'Secret name for OCI registry authentication'
-    - name: konflux-base-url
-      type: string
-      default: ''
-      description: 'Konflux base URL for Cypress tests (from prepare-e2e-resources pipeline task)'
     - name: source-repo-url
       type: string
       default: ''
@@ -80,6 +76,61 @@ spec:
       - name: test-artifacts
         mountPath: /artifacts
   steps:
+    - name: retrieve-local-url
+      results:
+        - name: base-url
+          description: 'Konflux base URL for Cypress tests (https://<kind-ip>:9443)'
+      image: docker.io/bitnami/kubectl@sha256:95de17e6eb92da83a58c90a9df0c4cede634f898d2e6b92ea04f4a6ee6ace08d # kubectl 1.36.3
+      env:
+        - name: TEKTON_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+      script: |
+        #!/usr/bin/env bash
+        set -euo pipefail
+
+        if [ "$(params.job-type)" = "periodic-stage" ]; then
+          echo "Skipping Kind cluster setup for periodic-stage"
+          : > "$(step.results.base-url.path)"
+          exit 0
+        fi
+
+        echo "=== Getting PipelineRun name and kubeconfig ==="
+
+        PIPELINE_RUN_NAME="$(context.pipelineRun.name)"
+        NAMESPACE="${TEKTON_NAMESPACE}"
+        echo "PipelineRun name: ${PIPELINE_RUN_NAME}"
+        echo "Namespace: ${NAMESPACE}"
+
+        # Construct the secret name
+        SECRET_NAME="kfg-${PIPELINE_RUN_NAME}"
+        echo "Looking for secret: ${SECRET_NAME}"
+
+        # Extract kubeconfig from the secret (0600 so it is not world-readable)
+        kubectl get secret "${SECRET_NAME}" -n "${NAMESPACE}" -o jsonpath='{.data.kubeconfig}' \
+          | base64 -d \
+          | install -m 0600 /dev/stdin /tmp/kubeconfig
+
+        # Switch to Kind cluster context
+        export KUBECONFIG=/tmp/kubeconfig
+
+        echo "=== Extracting Konflux base URL from kubeconfig ==="
+
+        KUBE_SERVER=$(kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}')
+        echo "Kubernetes API server: ${KUBE_SERVER}"
+
+        # Extract IP address (remove https:// prefix and :6443 port)
+        KUBE_IP=$(echo "${KUBE_SERVER}" | sed -E 's|https?://([^:]+):.*|\1|')
+        echo "Extracted IP: ${KUBE_IP}"
+
+        CYPRESS_KONFLUX_BASE_URL="https://${KUBE_IP}:9443"
+        echo "Konflux base URL: ${CYPRESS_KONFLUX_BASE_URL}"
+
+        echo -n "${CYPRESS_KONFLUX_BASE_URL}" > "$(step.results.base-url.path)"
+
+        echo "Setup complete. Ready for E2E tests."
+
     - name: prepare-e2e-sources
       when:
         - input: '$(params.job-type)'
@@ -185,6 +236,8 @@ spec:
             secretKeyRef:
               name: $(params.cypress-cloud-secret)
               key: record-key
+        - name: LOCAL_KONFLUX_BASE_URL
+          value: $(steps.retrieve-local-url.results.base-url)
       script: |
         #!/usr/bin/env bash
         # Note: NOT using 'set -e' so script continues after test failure
@@ -197,11 +250,11 @@ spec:
           export CYPRESS_LOCAL_CLUSTER=false
           export CYPRESS_PERIODIC_RUN_STAGE=true
         else
-          if [ -z "$(params.konflux-base-url)" ]; then
-            echo "ERROR: konflux-base-url param is missing or empty (prepare-e2e-resources task failed?)"
+          if [ -z "${LOCAL_KONFLUX_BASE_URL}" ]; then
+            echo "ERROR: LOCAL_KONFLUX_BASE_URL is missing or empty (retrieve-local-url step failed?)"
             exit 1
           fi
-          export CYPRESS_KONFLUX_BASE_URL="$(params.konflux-base-url)"
+          export CYPRESS_KONFLUX_BASE_URL="${LOCAL_KONFLUX_BASE_URL}"
           export CYPRESS_LOCAL_CLUSTER=true
         fi
         echo "Konflux base URL: ${CYPRESS_KONFLUX_BASE_URL}"
