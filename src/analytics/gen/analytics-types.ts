@@ -14,7 +14,11 @@
 /**
  * Union of all Konflux UI analytics event types
  */
-export type KonfluxUISegmentEvents = UserLoginEvent | UserLogoutEvent | FeedbackSubmittedEvent;
+export type KonfluxUISegmentEvents =
+  | UserLoginEvent
+  | UserLogoutEvent
+  | FeedbackSubmittedEvent
+  | FeatureFlagsChangedEvent;
 /**
  * Fired when a user successfully authenticates into Konflux
  */
@@ -49,6 +53,25 @@ export type FeedbackSubmittedEvent = CommonFields & {
    * Optional contact email provided by the user for follow-up
    */
   email?: string;
+};
+/**
+ * Fired every time the Feature Flag Panel modal is closed. Contains only the flags whose effective state changed between panel open and panel close. changesCount may be 0 when user opened the panel but did not change anything (tracks panel awareness).
+ */
+export type FeatureFlagsChangedEvent = CommonFields & {
+  /**
+   * Map of changed flag keys to their new boolean value. Empty object if no flags were changed.
+   */
+  changes: {
+    [k: string]: boolean;
+  };
+  /**
+   * Number of flags that changed. 0 means the user opened the panel but did not change anything.
+   */
+  changesCount: number;
+  /**
+   * URL pathname when the panel was opened (e.g. /ns/my-ns/applications)
+   */
+  pagePath: string;
 };
 
 /**
@@ -87,6 +110,7 @@ export enum TrackEvents {
   user_login_event = 'user_login',
   user_logout_event = 'user_logout',
   feedback_submitted_event = 'feedback_submitted',
+  feature_flags_changed_event = 'feature_flags_changed',
 }
 
 /**
@@ -97,4 +121,5 @@ export type EventPropertiesMap = {
   [TrackEvents.user_login_event]: Omit<UserLoginEvent, keyof CommonFields>;
   [TrackEvents.user_logout_event]: Omit<UserLogoutEvent, keyof CommonFields>;
   [TrackEvents.feedback_submitted_event]: Omit<FeedbackSubmittedEvent, keyof CommonFields>;
+  [TrackEvents.feature_flags_changed_event]: Omit<FeatureFlagsChangedEvent, keyof CommonFields>;
 };
