@@ -1,20 +1,15 @@
 import * as React from 'react';
-import { hashKey } from '@tanstack/query-core';
-import { useK8sQueryWatch } from '~/k8s/hooks/useK8sQueryWatch';
+import { useQuery } from '@tanstack/react-query';
+import { createGetQueryOptions, useK8sWatchResource } from '~/k8s';
+import { HttpError } from '~/k8s/error';
 import { WebSocketOptions } from '~/k8s/web-socket/types';
-import { fetchResourceWithK8sAndKubeArchive } from '~/kubearchive/resource-utils';
-import { createQueryKeys, useK8sWatchResource } from '../k8s';
+import { useIsKubeArchiveEnabled } from '~/kubearchive/conditional-checks';
+import { withKubearchivePathPrefix } from '~/kubearchive/fetch-utils';
 import { K8sResourceReadOptions } from '../k8s/k8s-fetch';
 import { TQueryOptions } from '../k8s/query/type';
 import { useKubearchiveListResourceQuery } from '../kubearchive/hooks';
 import { useDeepCompareMemoize } from '../shared';
-import {
-  K8sModelCommon,
-  K8sResourceCommon,
-  ResourceSource,
-  ResourceWithSource,
-  WatchK8sResource,
-} from '../types/k8s';
+import { K8sModelCommon, K8sResourceCommon, ResourceSource, WatchK8sResource } from '../types/k8s';
 
 const getResourceId = (resource: K8sResourceCommon): string => {
   return resource.metadata?.uid || `${resource.metadata?.name}-${resource.metadata?.namespace}`;
@@ -208,57 +203,64 @@ export function useK8sAndKarchResource<TResource extends K8sResourceCommon>(
   > = {},
   enabled: boolean = true,
 ): useK8sAndKarchResourceResult<TResource> {
-  const [result, setResult] = React.useState<ResourceWithSource<TResource> | undefined>(undefined);
-  const [isLoading, setIsLoading] = React.useState<boolean>(true);
-  const [fetchError, setFetchError] = React.useState<unknown>(null);
-
   const memoizedResourceInit = useDeepCompareMemoize(resourceInit, true);
   const memoizedQueryOptions = useDeepCompareMemoize(queryOptions, true);
+  const queryEnabled = enabled && !!memoizedResourceInit;
+  const { isKubearchiveEnabled } = useIsKubeArchiveEnabled();
 
-  React.useEffect(() => {
-    if (!enabled || !memoizedResourceInit) {
-      setIsLoading(false);
-      return;
-    }
-
-    setIsLoading(true);
-    setFetchError(null);
-
-    fetchResourceWithK8sAndKubeArchive<TResource>(memoizedResourceInit, memoizedQueryOptions)
-      .then((res) => {
-        setResult(res);
-        setFetchError(null);
-      })
-      .catch((err) => {
-        setFetchError(err);
-        setResult(undefined);
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
-  }, [memoizedResourceInit, enabled, memoizedQueryOptions]);
-
-  const shouldWatch = enabled && watch && result?.source === ResourceSource.Cluster && resourceInit;
-
-  const wsError = useK8sQueryWatch(
-    shouldWatch ? resourceInit : null,
-    false,
-    shouldWatch
-      ? hashKey(
-          createQueryKeys({
-            model: resourceInit.model,
-            queryOptions: resourceInit.queryOptions,
-            prefix: watchOptions?.pathPrefix ?? resourceInit.fetchOptions?.requestInit?.pathPrefix,
-          }),
-        )
-      : hashKey(['disabled', 'no-resource']),
+  const clusterQuery = useK8sWatchResource<TResource>(
+    memoizedResourceInit
+      ? {
+          groupVersionKind: {
+            group: memoizedResourceInit.model.apiGroup,
+            version: memoizedResourceInit.model.apiVersion,
+            kind: memoizedResourceInit.model.kind,
+          },
+          name: memoizedResourceInit.queryOptions?.name,
+          namespace: memoizedResourceInit.queryOptions?.ns,
+          watch: watch && queryEnabled,
+        }
+      : undefined,
+    memoizedResourceInit?.model,
+    {
+      ...memoizedQueryOptions,
+      enabled: queryEnabled,
+      ...(watch && queryEnabled ? { staleTime: Infinity } : {}),
+    },
     watchOptions,
   );
 
+  const clusterErrorIs404 =
+    clusterQuery.isFetched &&
+    clusterQuery.error instanceof HttpError &&
+    clusterQuery.error.code === 404;
+
+  const archiveQuery = useQuery<TResource>(
+    memoizedResourceInit && queryEnabled && clusterErrorIs404 && isKubearchiveEnabled
+      ? {
+          ...createGetQueryOptions<TResource>(
+            withKubearchivePathPrefix(memoizedResourceInit),
+            memoizedQueryOptions,
+          ),
+          enabled: true,
+          staleTime: Infinity,
+        }
+      : { queryKey: ['disabled'], enabled: false },
+  );
+
+  const data = archiveQuery.data ?? clusterQuery.data;
+  const source = archiveQuery.data
+    ? ResourceSource.Archive
+    : clusterQuery.data
+      ? ResourceSource.Cluster
+      : undefined;
+  const fetchError = data ? null : (clusterQuery.error ?? archiveQuery.error);
+  const wsError = clusterQuery.wsError;
+
   return {
-    data: result?.resource,
-    source: result?.source,
-    isLoading,
+    data,
+    source,
+    isLoading: queryEnabled && (clusterQuery.isLoading || archiveQuery.isLoading),
     fetchError,
     wsError,
     isError: !!(fetchError || wsError),
