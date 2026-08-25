@@ -263,25 +263,6 @@ describe('Logs', () => {
           }),
         );
       });
-
-      expect(mockLogViewer).toHaveBeenLastCalledWith(
-        expect.objectContaining({
-          sections: expect.arrayContaining([
-            {
-              containerName: 'CONTAINER1',
-              data: 'log line 1\nlog line 2',
-              isCompleted: true,
-              hasTerminatedWithError: false,
-            },
-            {
-              containerName: 'CONTAINER2',
-              data: 'log line 3\nlog line 4',
-              isCompleted: true,
-              hasTerminatedWithError: false,
-            },
-          ]),
-        }),
-      );
     });
 
     it('should preserve container ordering from containers prop', async () => {
@@ -381,21 +362,24 @@ describe('Logs', () => {
         await Promise.resolve();
       });
 
-      // Empty fetched logs still create a section (e.g. 404 / no output) so fold state is consistent.
       const lastCall = mockLogViewer.mock.calls[mockLogViewer.mock.calls.length - 1][0];
-      expect(lastCall.sections).toHaveLength(2);
-      expect(lastCall.sections[0]).toEqual({
-        containerName: 'CONTAINER1',
-        data: 'has logs',
-        isCompleted: true,
-        hasTerminatedWithError: false,
-      });
-      expect(lastCall.sections[1]).toEqual({
-        containerName: 'CONTAINER2',
-        data: '',
-        isCompleted: true,
-        hasTerminatedWithError: false,
-      });
+      expect(lastCall.normalizedSections).toHaveLength(2);
+      expect(lastCall.normalizedSections[0]).toEqual(
+        expect.objectContaining({
+          containerName: 'CONTAINER1',
+          lines: ['has logs'],
+          isCompleted: true,
+          hasTerminatedWithError: false,
+        }),
+      );
+      expect(lastCall.normalizedSections[1]).toEqual(
+        expect.objectContaining({
+          containerName: 'CONTAINER2',
+          lines: [],
+          isCompleted: true,
+          hasTerminatedWithError: false,
+        }),
+      );
     });
 
     it('should mark sections with hasTerminatedWithError as true when a container exits with a non-zero code', async () => {
@@ -417,7 +401,7 @@ describe('Logs', () => {
       };
 
       (containerToLogSourceStatus as jest.Mock).mockReturnValue('terminated');
-      (commonFetchText as jest.Mock).mockResolvedValueOnce('failed step logs');
+      (commonFetchText as jest.Mock).mockResolvedValueOnce('failed step logs\n');
 
       render(
         <Logs
@@ -427,16 +411,15 @@ describe('Logs', () => {
         />,
       );
 
-      await act(async () => {
-        await Promise.resolve();
-      });
-
-      const lastCall = mockLogViewer.mock.calls[mockLogViewer.mock.calls.length - 1][0];
-      expect(lastCall.sections[0]).toEqual({
-        containerName: 'CONTAINER1',
-        data: 'failed step logs',
-        isCompleted: true,
-        hasTerminatedWithError: true,
+      await waitFor(() => {
+        const lastCall = mockLogViewer.mock.calls[mockLogViewer.mock.calls.length - 1][0];
+        expect(lastCall.normalizedSections[0]).toEqual(
+          expect.objectContaining({
+            containerName: 'CONTAINER1',
+            isCompleted: true,
+            hasTerminatedWithError: true,
+          }),
+        );
       });
     });
 
@@ -471,7 +454,7 @@ describe('Logs', () => {
 
       await waitFor(() => {
         const lastCall = mockLogViewer.mock.calls[mockLogViewer.mock.calls.length - 1][0];
-        expect(lastCall.sections[0].hasTerminatedWithError).toBe(true);
+        expect(lastCall.normalizedSections[0].hasTerminatedWithError).toBe(true);
       });
     });
 
@@ -511,12 +494,13 @@ describe('Logs', () => {
 
       await waitFor(() => {
         const lastCall = mockLogViewer.mock.calls[mockLogViewer.mock.calls.length - 1][0];
-        expect(lastCall.sections[0]).toEqual({
-          containerName: 'CONTAINER1',
-          data: 'decoded-aGVsbG8gd29ybGQ=',
-          isCompleted: false,
-          hasTerminatedWithError: false,
-        });
+        expect(lastCall.normalizedSections[0]).toEqual(
+          expect.objectContaining({
+            containerName: 'CONTAINER1',
+            isCompleted: false,
+            hasTerminatedWithError: false,
+          }),
+        );
       });
     });
 

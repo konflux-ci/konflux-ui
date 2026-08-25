@@ -10,7 +10,12 @@ const mockLogViewer = jest.fn();
 
 jest.mock('../LogViewer', () => {
   return function MockLogViewer(props: {
-    sections: Array<{ containerName: string; data: string; isCompleted?: boolean }>;
+    normalizedSections: Array<{
+      containerName: string;
+      lines: string[];
+      isCompleted?: boolean;
+      hasTerminatedWithError?: boolean;
+    }>;
     isLoading?: boolean;
     onScroll?: () => void;
   }) {
@@ -51,9 +56,14 @@ const mockTaskRun: TaskRunKind = {
   },
 };
 
-const getLastSections = (): Array<{ containerName: string; isCompleted?: boolean }> => {
+const getLastSections = (): Array<{
+  containerName: string;
+  lines: string[];
+  isCompleted?: boolean;
+  hasTerminatedWithError?: boolean;
+}> => {
   const lastCall = mockLogViewer.mock.calls[mockLogViewer.mock.calls.length - 1][0];
-  return lastCall.sections || [];
+  return lastCall.normalizedSections || [];
 };
 
 describe('TektonTaskRunLog', () => {
@@ -77,7 +87,7 @@ describe('TektonTaskRunLog', () => {
       expect(getLastSections()[0]).toEqual(
         expect.objectContaining({
           containerName: 'test-task',
-          data: 'pipeline log',
+          lines: ['pipeline log'],
           isCompleted: true,
           hasTerminatedWithError: true,
         }),
@@ -93,7 +103,7 @@ describe('TektonTaskRunLog', () => {
       expect(getLastSections()[0]).toEqual(
         expect.objectContaining({
           containerName: 'test-task',
-          data: 'pipeline log',
+          lines: ['pipeline log'],
           isCompleted: true,
           hasTerminatedWithError: false,
         }),
@@ -109,7 +119,7 @@ describe('TektonTaskRunLog', () => {
       expect(getLastSections()[0]).toEqual(
         expect.objectContaining({
           containerName: 'test-task',
-          data: 'pipeline log',
+          lines: ['pipeline log'],
           isCompleted: false,
           hasTerminatedWithError: false,
         }),
@@ -124,7 +134,7 @@ describe('TektonTaskRunLog', () => {
 
     expect(mockLogViewer).toHaveBeenCalledWith(
       expect.objectContaining({
-        sections: [],
+        normalizedSections: [],
         isLoading: true,
       }),
     );

@@ -262,7 +262,7 @@ const Logs: React.FC<LogsProps> = ({
           isCompleted: isContainerStepCompleted(statusByName.get(c.name)),
           isTailed: tailedContainersRef.current.has(c.name),
           hasTerminatedWithError:
-            lines?.includes('LOG FETCH ERROR') ||
+            lines?.includes('LOG FETCH ERROR:') ||
             (statusByName.get(c.name)?.state?.terminated?.exitCode ?? 0) !== 0,
         };
       });
