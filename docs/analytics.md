@@ -37,6 +37,7 @@ Components
 | `src/analytics/load-config.ts` | Config resolution (API-first, runtime fallback) |
 | `src/analytics/conditional-checks.ts` | `isAnalyticsEnabled` condition + `useIsAnalyticsEnabled` hook |
 | `src/auth/useAuthAnalytics.ts` | `useAuthAnalytics` hook — `onLogin` / `onLogout` callbacks |
+| `src/feature-flags/useFeatureFlagAnalytics.ts` | Hook fired from `Panel.tsx` — diffs flag state on panel open vs. close and tracks `feature_flags_changed` |
 
 ---
 
@@ -139,6 +140,16 @@ On a page refresh there is no `logged_in` param, so no login event fires.
 ### Logout
 
 `onLogout(user)` is called in `AuthContext.signOut()` before the sign-out fetch. It tracks a `user_logout` event, then calls `analyticsService.reset()` to clear the Segment identity.
+
+---
+
+## Feature Flag Change Tracking
+
+`useFeatureFlagAnalytics()` (`src/feature-flags/useFeatureFlagAnalytics.ts`) is called from `FeatureFlagPanel` and tracks `feature_flags_changed` **every time** the panel closes — including when nothing changed, to measure panel awareness.
+
+On mount (panel opens) it snapshots `FeatureFlagsStore.state` and `window.location.pathname`. On unmount (panel closes — `ModalProvider` unmounts rather than hides it), `computeFeatureFlagChanges()` diffs that snapshot against the current state and tracks the result: `changes` (only the flags whose net value differs, with their new value), `changesCount`, and `pagePath`.
+
+A flag toggled off then back on before closing nets to unchanged and is omitted — only the final state at close time is observed. Changes via the "Reset to Defaults" button are captured the same way, since the button doesn't close the modal itself. Flag changes via URL params (`?ff_flag=true`) happen outside the panel and are not tracked.
 
 ---
 
