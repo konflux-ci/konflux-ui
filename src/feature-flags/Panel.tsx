@@ -5,10 +5,14 @@ import { guardSatisfied } from './conditions';
 import { FlagKey, FLAGS, FLAGS_STATUS } from './flags';
 import { useAllFlagsConditions, useFeatureFlags } from './hooks';
 import { FeatureFlagsStore } from './store';
+import { useFeatureFlagAnalytics } from './useFeatureFlagAnalytics';
 
 export const FeatureFlagPanel: React.FC = () => {
   const [flags, setFlag] = useFeatureFlags();
   const conditions = useAllFlagsConditions();
+
+  // Fires `feature_flags_changed` on close (see docs/analytics.md).
+  useFeatureFlagAnalytics();
 
   const flagList = Object.values(FLAGS).filter((flag) => {
     if (!flag.guard) return true;
