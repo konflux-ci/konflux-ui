@@ -38,6 +38,7 @@ Components
 | `src/analytics/conditional-checks.ts` | `isAnalyticsEnabled` condition + `useIsAnalyticsEnabled` hook |
 | `src/analytics/arrival-source.ts` | Classifies `document.referrer` into an `ArrivalSource` and persists it across the OAuth redirect |
 | `src/auth/useAuthAnalytics.ts` | `useAuthAnalytics` hook — `onLogin` / `onLogout` callbacks |
+| `src/feature-flags/useFeatureFlagAnalytics.ts` | Hook fired from `Panel.tsx` — diffs flag state on panel open vs. close and tracks `feature_flags_changed` |
 
 ---
 
@@ -160,6 +161,14 @@ if (markSessionStartedOnce()) {
 Why two guards:
 - `captureArrivalSourceOnce()` dedupes the *referrer capture* (runs at boot, before React).
 - `markSessionStartedOnce()` dedupes the *event fire* (runs inside the App effect, after auth/publicInfo settle).
+
+---
+
+## Feature Flag Change Tracking
+
+`useFeatureFlagAnalytics()` in `FeatureFlagPanel` tracks `feature_flags_changed` on every panel close (including `changesCount: 0`), via the modal's `onClose` in `Panel.tsx` — not on unmount.
+
+On open it snapshots flag state (from `useFeatureFlags()`) and `pagePattern` (`getRoutePatternFromMatches()` / `with-route-patterns.ts`). On close, `computeFeatureFlagChanges()` diffs open vs. current state. Net-zero toggles are omitted; "Reset to Defaults" is included. URL param overrides (`?ff_flag=true`) are not tracked.
 
 ---
 
