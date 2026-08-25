@@ -14,7 +14,7 @@
 /**
  * Union of all Konflux UI analytics event types
  */
-export type KonfluxUISegmentEvents = UserLoginEvent | UserLogoutEvent | FeedbackSubmittedEvent;
+export type KonfluxUISegmentEvents = UserLoginEvent | UserLogoutEvent | FeedbackSubmittedEvent | UiSessionStartedEvent;
 /**
  * Fired when a user successfully authenticates into Konflux
  */
@@ -50,6 +50,15 @@ export type FeedbackSubmittedEvent = CommonFields & {
    */
   email?: string;
 };
+/**
+ * Fired once per browser tab on the first app load, regardless of auth state, to capture how the user arrived at Konflux UI
+ */
+export type UiSessionStartedEvent = CommonFields & {
+  /**
+   * Classification of document.referrer on first load, e.g. 'github' if the referrer host is github.com (or a subdomain).
+   */
+  arrivalSource: string;
+};
 
 /**
  * Base fields required on every Segment event sent from Konflux UI
@@ -79,6 +88,7 @@ export interface CommonFields {
 /** Branded type for SHA-256 obfuscated strings. Use `obfuscate()` to create. */
 export type SHA256Hash = string & { readonly __brand: 'SHA256Hash' };
 
+
 /**
  * Event names for Segment track() calls.
  * Values match the x-event-name field in the schema.
@@ -87,6 +97,7 @@ export enum TrackEvents {
   user_login_event = 'user_login',
   user_logout_event = 'user_logout',
   feedback_submitted_event = 'feedback_submitted',
+  ui_session_started_event = 'ui_session_started',
 }
 
 /**
@@ -97,4 +108,5 @@ export type EventPropertiesMap = {
   [TrackEvents.user_login_event]: Omit<UserLoginEvent, keyof CommonFields>;
   [TrackEvents.user_logout_event]: Omit<UserLogoutEvent, keyof CommonFields>;
   [TrackEvents.feedback_submitted_event]: Omit<FeedbackSubmittedEvent, keyof CommonFields>;
+  [TrackEvents.ui_session_started_event]: Omit<UiSessionStartedEvent, keyof CommonFields>;
 };
