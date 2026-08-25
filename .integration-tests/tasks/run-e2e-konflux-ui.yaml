@@ -317,7 +317,6 @@ spec:
         echo "Test execution completed with exit code: ${TEST_RESULT}" > /artifacts/e2e-tests.log
         echo "Timestamp: $(date)" >> /artifacts/e2e-tests.log
         echo "Base URL: ${CYPRESS_KONFLUX_BASE_URL}" >> /artifacts/e2e-tests.log
-        echo "E2E source: ${E2E_DIR}" >> /artifacts/e2e-tests.log
 
         # Save test result for later steps
         echo "${TEST_RESULT}" > /artifacts/test-exit-code
