@@ -255,7 +255,7 @@ export function useK8sAndKarchResource<TResource extends K8sResourceCommon>(
       ? ResourceSource.Cluster
       : undefined;
   const fetchError = data ? null : (clusterQuery.error ?? archiveQuery.error);
-  const wsError = clusterQuery.wsError;
+  const wsError = source === ResourceSource.Archive ? undefined : clusterQuery.wsError;
 
   return {
     data,
