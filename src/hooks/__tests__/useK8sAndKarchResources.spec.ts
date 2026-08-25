@@ -4,11 +4,11 @@
 import * as React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
-import { HttpError } from '../../k8s/error';
-import * as k8sFetch from '../../k8s/k8s-fetch';
-import { K8sResourceReadOptions } from '../../k8s/k8s-fetch';
-import { useIsKubeArchiveEnabled } from '../../kubearchive/conditional-checks';
-import { useKubearchiveListResourceQuery } from '../../kubearchive/hooks';
+import { HttpError } from '~/k8s/error';
+import * as k8sFetch from '~/k8s/k8s-fetch';
+import { K8sResourceReadOptions } from '~/k8s/k8s-fetch';
+import { useIsKubeArchiveEnabled } from '~/kubearchive/conditional-checks';
+import { useKubearchiveListResourceQuery } from '~/kubearchive/hooks';
 import {
   K8sResourceCommon,
   K8sModelCommon,
@@ -19,15 +19,15 @@ import { createK8sWatchResourceMock, createTestQueryClient } from '../../utils/t
 import { useK8sAndKarchResources, useK8sAndKarchResource } from '../useK8sAndKarchResources';
 
 // Mock the kubearchive hooks and functions
-jest.mock('../../kubearchive/hooks', () => ({
+jest.mock('~/kubearchive/hooks', () => ({
   useKubearchiveListResourceQuery: jest.fn(),
 }));
 
-jest.mock('../../kubearchive/conditional-checks', () => ({
+jest.mock('~/kubearchive/conditional-checks', () => ({
   useIsKubeArchiveEnabled: jest.fn(() => ({ isKubearchiveEnabled: false })),
 }));
 
-jest.mock('../../k8s/k8s-fetch', () => ({
+jest.mock('~/k8s/k8s-fetch', () => ({
   __esModule: true,
   K8sGetResource: jest.fn(),
 }));
