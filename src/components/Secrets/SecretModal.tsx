@@ -18,9 +18,9 @@ import {
   CurrentComponentRef,
   ImagePullSecretType,
   SecretForComponentOption,
-} from '../../types';
-import { isUsingExistingClusterSecret } from '../../utils/secrets/secret-utils';
-import { SecretFromSchema } from '../../utils/validation-utils';
+} from '~/types';
+import { isUsingExistingClusterSecret } from '~/utils/secrets/secret-utils';
+import { SecretFromSchema } from '~/utils/validation-utils';
 import { RawComponentProps } from '../modal/createModalLauncher';
 import SecretForm from './SecretForm';
 
