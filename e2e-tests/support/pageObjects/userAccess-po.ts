@@ -1,6 +1,5 @@
 export const userAccessPO = {
   listTableRow: '[aria-label="User access list"] tr',
-  grantAccessButton: '[data-ouia-component-type="PF6/Button"]',
   changeAccessButton: 'button:contains("Change access")',
   rowKebab: '[data-test="kebab-button"]',
   revokeAccessItem: '[data-test="Revoke access"]',

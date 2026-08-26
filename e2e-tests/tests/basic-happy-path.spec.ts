@@ -255,18 +255,6 @@ describe('Basic Happy Path', () => {
     const grantedRole = 'Contributor';
     const changedRole = 'Maintainer';
 
-    after(() => {
-      cy.log('Cleanup: revoke the user access from the row actions, if it still exists');
-      cy.get(userAccessPO.listTableRow, { timeout: 60000 })
-        .invoke('text')
-        .then((text: string) => {
-          const hasUser = text.includes(username);
-          if (hasUser) {
-            UserAccessPage.revokeAccess(username);
-          }
-        });
-    });
-
     it('Grant, change, and revoke user access', () => {
       cy.log('Navigate to the User Access page from the left navigation');
       Common.navigateTo(NavItem.userAcces);

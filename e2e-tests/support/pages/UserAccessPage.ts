@@ -1,3 +1,4 @@
+import { UIhelperPO } from '../pageObjects/global-po';
 import { userAccessPO } from '../pageObjects/userAccess-po';
 
 export class UserAccessPage {
@@ -7,7 +8,7 @@ export class UserAccessPage {
 
   static grantAccess(username: string, role: string) {
     cy.log(`Grant "${role}" access to user "${username}"`);
-    cy.contains(userAccessPO.grantAccessButton, /^\s*Grant access\s*$/).click();
+    cy.contains(UIhelperPO.pf6_button, /^\s*Grant access\s*$/).click();
 
     cy.log('Enter the username');
     cy.get(userAccessPO.usernameInput).find('input').type(`${username}{enter}`);
