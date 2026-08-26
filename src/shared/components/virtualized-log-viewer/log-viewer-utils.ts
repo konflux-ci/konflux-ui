@@ -19,6 +19,7 @@ export function normalizeSection(section: LogSection): NormalizedLogSection {
     containerName: section.containerName,
     lines: normalizeLogLines(section.data),
     isCompleted: section.isCompleted,
+    hasTerminatedWithError: section.hasTerminatedWithError,
   };
 }
 
