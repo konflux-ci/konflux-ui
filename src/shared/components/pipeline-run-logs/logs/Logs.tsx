@@ -1,9 +1,11 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
+import { saveAs } from 'file-saver';
 import { Base64 } from 'js-base64';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
-import { KUBEARCHIVE_PATH_PREFIX } from '~/kubearchive/const';
-import { type LogSection } from '~/shared/components/virtualized-log-viewer';
+import { KUBEARCHIVE_PATH_PREFIX, KUBEARCHIVE_TAIL_LINES } from '~/kubearchive/const';
+import { type NormalizedLogSection } from '~/shared/components/virtualized-log-viewer';
+import { LineBuffer } from '~/shared/utils/line-buffer';
 import { ResourceSource } from '~/types/k8s';
 import { commonFetchText } from '../../../../k8s';
 import { getK8sResourceURL, getWebsocketSubProtocolAndPathPrefix } from '../../../../k8s/k8s-utils';
@@ -12,10 +14,12 @@ import { WebSocketFactory } from '../../../../k8s/web-socket/WebSocketFactory';
 import { PodModel } from '../../../../models/pod';
 import { TaskRunKind } from '../../../../types';
 import { PodKind, ContainerSpec, ContainerStatus } from '../../types';
-import { containerToLogSourceStatus, LOG_SOURCE_TERMINATED } from '../utils';
+import {
+  containerToLogSourceStatus,
+  isContainerStepCompleted,
+  LOG_SOURCE_TERMINATED,
+} from '../utils';
 import LogViewer, { type Props as LogViewerProps } from './LogViewer';
-
-type LogSources = { [containerName: string]: string };
 
 const WEB_SOCKET_RETRY_COUNT = 5;
 
@@ -72,8 +76,10 @@ const Logs: React.FC<LogsProps> = ({
   const { metadata = {} } = resource;
   const { name: resName, namespace: resNamespace } = metadata;
 
-  // state to hold the logs for each container individually
-  const [logSources, setLogSources] = React.useState<LogSources>({});
+  const buffersRef = React.useRef(new Map<string, LineBuffer>());
+  const tailedContainersRef = React.useRef(new Set<string>());
+  const [renderTick, forceRender] = React.useReducer((x: number) => x + 1, 0);
+  const rafRef = React.useRef(0);
   const [error, setError] = React.useState<boolean>(false);
   const pendingFetchesRef = React.useRef(0);
   const [isFetchingLogs, setIsFetchingLogs] = React.useState(false);
@@ -81,11 +87,27 @@ const Logs: React.FC<LogsProps> = ({
   const connectionManagerRef = React.useRef(new Map<string, () => void>());
 
   const appendLog = React.useCallback((containerName: string, message: string) => {
-    setLogSources((prev) => ({
-      ...prev,
-      [containerName]: (prev[containerName] || '') + message,
-    }));
+    let buf = buffersRef.current.get(containerName);
+    if (!buf) {
+      buf = new LineBuffer();
+      buffersRef.current.set(containerName, buf);
+    }
+    buf.append(message);
+
+    if (!rafRef.current) {
+      rafRef.current = requestAnimationFrame(() => {
+        rafRef.current = 0;
+        forceRender();
+      });
+    }
   }, []);
+
+  React.useEffect(
+    () => () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    },
+    [],
+  );
 
   // loops through the containers and initiates fetching for each one
   React.useEffect(() => {
@@ -115,6 +137,7 @@ const Logs: React.FC<LogsProps> = ({
       const status = allStatuses.find((c) => c.name === name);
       const resourceStatus = containerToLogSourceStatus(status);
 
+      const isArchiveSource = isKubearchiveEnabled && source === ResourceSource.Archive;
       const urlOpts = {
         ns: resNamespace,
         name: resName,
@@ -122,6 +145,7 @@ const Logs: React.FC<LogsProps> = ({
         queryParams: {
           container: name,
           follow: resourceStatus === LOG_SOURCE_TERMINATED ? 'false' : 'true',
+          ...(isArchiveSource ? { tailLines: String(KUBEARCHIVE_TAIL_LINES) } : undefined),
         },
       };
       const watchURL = getK8sResourceURL(PodModel, undefined, urlOpts);
@@ -133,18 +157,35 @@ const Logs: React.FC<LogsProps> = ({
         markFetchStarted();
         commonFetchText(watchURL, {
           signal,
-          ...(isKubearchiveEnabled && source === ResourceSource.Archive
-            ? { pathPrefix: KUBEARCHIVE_PATH_PREFIX }
-            : undefined),
+          ...(isArchiveSource ? { pathPrefix: KUBEARCHIVE_PATH_PREFIX } : undefined),
         })
-          .then((res) => appendLog(name, res))
+          .then((res) => {
+            appendLog(name, res);
+            if (isArchiveSource) {
+              const buf = buffersRef.current.get(name);
+              if (buf && buf.length() >= KUBEARCHIVE_TAIL_LINES) {
+                tailedContainersRef.current.add(name);
+              }
+            }
+          })
           .catch((err) => {
             if (err.name !== 'AbortError') {
-              // Gracefully handle empty logs (404) from kubearch, similar to how Tekton Results handles 404
-              // When logs don't exist, both kubearch and Tekton Results return 404
-              if (err?.code === 404) {
-                // Don't append any error message for missing logs - just leave it empty
-                // This matches the behavior of Tekton Results which returns empty logs for 404
+              // Gracefully handle empty logs (404) from KubeArchive/Tekton Results.
+              // When logs don't exist, both KubeArchive and Tekton Results return 404.
+              // For cluster-sourced 404s the API often returns a meaningful message
+              // (e.g. "container step-X is waiting to start: ImagePullBackOff")
+              // which should be surfaced to the user.
+              if (err?.code === 404 && source === ResourceSource.Archive) {
+                const message = err instanceof Error ? err.message : '';
+                // Show the error with ANSI styling if available; otherwise mark the
+                // container as fetched with empty content so folding can evaluate it
+                // after load (and so the section still appears in the viewer).
+                appendLog(
+                  name,
+                  message
+                    ? `\x1b[1;31mLOG FETCH ERROR:\n${message}\x1b[0m\n`
+                    : '',
+                );
                 return;
               }
 
@@ -210,27 +251,78 @@ const Logs: React.FC<LogsProps> = ({
     return allTerminated;
   }, [containers, resource?.status?.containerStatuses]);
 
-  const sections = React.useMemo<LogSection[]>(() => {
-    const allStatuses: ContainerStatus[] = resource?.status?.containerStatuses ?? [];
+  const sections = React.useMemo<NormalizedLogSection[]>(() => {
+    void renderTick;
+    const statusByName = new Map(
+      (resource?.status?.containerStatuses ?? []).map((status) => [status.name, status]),
+    );
     return containers
-      .filter((c) => logSources[c.name])
+      .filter((c) => buffersRef.current.has(c.name))
       .map((c) => {
-        const status = allStatuses.find((s) => s.name === c.name);
+        const buf = buffersRef.current.get(c.name);
         return {
           containerName: c.name.toUpperCase(),
-          data: logSources[c.name],
-          isCompleted: containerToLogSourceStatus(status) === LOG_SOURCE_TERMINATED,
+          lines: buf?.getLines() ?? [],
+          isCompleted: isContainerStepCompleted(statusByName.get(c.name)),
+          isTailed: tailedContainersRef.current.has(c.name),
         };
       });
-  }, [logSources, containers, resource?.status?.containerStatuses]);
+  }, [renderTick, resource?.status?.containerStatuses, containers]);
+
+  const isArchiveSource = isKubearchiveEnabled && source === ResourceSource.Archive;
+
+  const getFullLogUrl = React.useCallback(
+    (sectionIndex: number) => {
+      const section = sections[sectionIndex];
+      if (!section) return null;
+
+      const containerName = containers.find(
+        (c) => c.name.toUpperCase() === section.containerName,
+      )?.name;
+      if (!containerName) return null;
+
+      const urlOpts = {
+        ns: resNamespace,
+        name: resName,
+        path: 'log',
+        queryParams: { container: containerName, follow: 'false' },
+      };
+      return { url: getK8sResourceURL(PodModel, undefined, urlOpts), containerName };
+    },
+    [sections, containers, resNamespace, resName],
+  );
+
+  const handleDownloadFullLogs = React.useCallback(
+    async (sectionIndex: number) => {
+      const result = getFullLogUrl(sectionIndex);
+      if (!result) return;
+
+      const text = await commonFetchText(result.url, { pathPrefix: KUBEARCHIVE_PATH_PREFIX });
+      const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+      saveAs(blob, `${result.containerName}.log`);
+    },
+    [getFullLogUrl],
+  );
+
+  const handleViewFullLogs = React.useCallback(
+    (sectionIndex: number) => {
+      const result = getFullLogUrl(sectionIndex);
+      if (!result) return;
+
+      window.open(`/api/k8s/${KUBEARCHIVE_PATH_PREFIX}${result.url}`, '_blank');
+    },
+    [getFullLogUrl],
+  );
 
   return (
     <LogViewer
-      sections={sections}
+      normalizedSections={sections}
       allowAutoScroll={allowAutoScroll && !allLogsTerminated}
       onScroll={onScroll}
       downloadAllLabel={downloadAllLabel}
       onDownloadAll={onDownloadAll}
+      onDownloadFullLogs={isArchiveSource ? handleDownloadFullLogs : undefined}
+      onViewFullLogs={isArchiveSource ? handleViewFullLogs : undefined}
       taskRun={taskRun}
       isLoading={isLoading || isFetchingLogs}
       errorMessage={error ? t('An error occurred while retrieving the requested logs.') : null}

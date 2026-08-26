@@ -1,8 +1,8 @@
-name: "Periodic job: STAGE FEATURES (test Konflux UI against stage cluster for feature flags)"
+name: 'Periodic job: STAGE FEATURES (test Konflux UI against stage cluster for feature flags)'
 
 on:
   workflow_dispatch:
-  
+
   # Currently not run due to AIA Remediation process https://redhat.atlassian.net/browse/KFLUXUI-1141
 
 jobs:
@@ -12,8 +12,7 @@ jobs:
       REF_BRANCH: ${{ github.ref_name }}
       HEAD_SHA: ${{ github.sha }}
       JOB_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-      SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_JOB_REPORT_ID }}
-      SLACK_TOKEN: ${{ secrets.SLACK_TOKEN_PERIODIC_REPORT }}
+      PERIODIC_JOBS_SLACK_WEBHOOK_URL: ${{ secrets.PERIODIC_JOBS_SLACK_WEBHOOK_URL }}
       # secrets
       CYPRESS_GH_TOKEN: ${{ secrets.HAC_TEST_GH_TOKEN }}
       GH_APP_ID: ${{ secrets.GH_APP_ID }}
@@ -24,14 +23,14 @@ jobs:
       CYPRESS_PASSWORD: ${{ secrets.STAGE_CYPRESS_PASSWORD }}
       CYPRESS_PROJECT_ID: ${{ secrets.PROJECT_ID }}
       CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
-      CYPRESS_KONFLUX_BASE_URL: "https://konflux-ui.apps.stone-stg-rh01.l2vh.p1.openshiftapps.com"
+      CYPRESS_KONFLUX_BASE_URL: 'https://konflux-ui.apps.stone-stg-rh01.l2vh.p1.openshiftapps.com'
       JOB_TYPE: 'periodic-stage'
       SUITE: 'features'
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: ${{ github.repository }}
-          ref: "${{ env.HEAD_SHA }}"
+          ref: '${{ env.HEAD_SHA }}'
 
       - name: Konflux-ui e2e test
         uses: ./.github/actions/konflux-ui-e2e-test

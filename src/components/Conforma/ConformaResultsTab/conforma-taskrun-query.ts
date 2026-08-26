@@ -2,7 +2,29 @@ import { PipelineRunLabel, PipelineRunType } from '~/consts/pipelinerun';
 import { CONFORMA_TASK, EC_TASK } from '~/consts/security';
 import { TaskRunGroupVersionKind } from '~/models/taskruns';
 import { TektonResourceLabel } from '~/types/coreTekton';
-import { WatchK8sResource } from '~/types/k8s';
+import type { Selector, WatchK8sResource } from '~/types/k8s';
+
+/**
+ * Builds the label selector for Conforma/EC security TaskRuns.
+ * Shared by both the K8s watch path and the on-demand fetcher path.
+ */
+export const buildConformaSecurityTaskRunSelector = (
+  applicationName: string,
+  componentName?: string,
+): Selector => ({
+  matchLabels: {
+    [PipelineRunLabel.APPLICATION]: applicationName,
+    ...(componentName ? { [PipelineRunLabel.COMPONENT]: componentName } : {}),
+    [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.TEST,
+  },
+  matchExpressions: [
+    {
+      key: TektonResourceLabel.pipelineTask,
+      operator: 'In' as const,
+      values: [EC_TASK, CONFORMA_TASK],
+    },
+  ],
+});
 
 /**
  * Returns the WatchK8sResource descriptor for the Conforma security TaskRun
@@ -17,17 +39,5 @@ export const buildConformaSecurityTaskRunWatchOptions = (
   namespace,
   isList: true,
   watch: true,
-  selector: {
-    matchLabels: {
-      [PipelineRunLabel.APPLICATION]: applicationName,
-      [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.TEST,
-    },
-    matchExpressions: [
-      {
-        key: TektonResourceLabel.pipelineTask,
-        operator: 'In',
-        values: [EC_TASK, CONFORMA_TASK],
-      },
-    ],
-  },
+  selector: buildConformaSecurityTaskRunSelector(applicationName),
 });

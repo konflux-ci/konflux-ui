@@ -76,6 +76,7 @@ export type ConformaResultRow = {
   images: string[];
   /** Policy rule code — stable identifier used as primary group key. Optional for backward-compat. */
   code?: string;
+  pipelineRunName?: string;
 };
 
 export type ComponentConformaStatus = {
@@ -102,6 +103,11 @@ export type ApplicationConformaResults = {
   totalComponents: number;
   totalFailed: number;
   loaded: boolean;
+  /**
+   * True while fill-in TaskRun queries or per-component log queries are still settling.
+   * The tab can render progressive results while this is true.
+   */
+  settling: boolean;
   /** Fatal errors that prevent the tab from loading (components or TaskRun list). */
   error: unknown;
   /** Non-fatal log fetch failures for one or more components; results may still be partial. */

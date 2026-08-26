@@ -38,14 +38,16 @@ spec:
       type: string
       default: 'quay-secret'
       description: 'Secret name for OCI registry authentication'
+    - name: konflux-base-url
+      type: string
+      default: ''
+      description: 'Konflux base URL for Cypress tests (from prepare-e2e-resources pipeline task)'
   volumes:
     # Enlarge /dev/shm for Cypress/Chrome; default container shm (~64MB) causes flaky browser crashes
     - name: dshm
       emptyDir:
         medium: Memory
         sizeLimit: 3Gi
-    - name: kubeconfig-data
-      emptyDir: {}
     - name: test-artifacts
       emptyDir: {}
     - name: oci-credentials
@@ -78,9 +80,6 @@ spec:
         # Chromium-based browsers (such as Cypress and Playwright) require /dev/shm for reliable operation inside containers.
         - name: dshm
           mountPath: /dev/shm
-        - name: kubeconfig-data
-          mountPath: /shared
-          readOnly: true
       env:
         - name: CYPRESS_USERNAME
           valueFrom:
@@ -112,24 +111,27 @@ spec:
         # Note: NOT using 'set -e' so script continues after test failure
         set -uo pipefail
 
-        echo "=== Loading configuration from setup step ==="
+        echo "=== Loading configuration ==="
 
-        # Read base URL from shared volume
         if [ "$(params.job-type)" = "periodic-stage" ]; then
           export CYPRESS_KONFLUX_BASE_URL="https://konflux-ui.apps.stone-stg-rh01.l2vh.p1.openshiftapps.com"
           export CYPRESS_LOCAL_CLUSTER=false
           export CYPRESS_PERIODIC_RUN_STAGE=true
         else
-          export CYPRESS_KONFLUX_BASE_URL=$(cat /shared/base-url)
+          if [ -z "$(params.konflux-base-url)" ]; then
+            echo "ERROR: konflux-base-url param is missing or empty (prepare-e2e-resources task failed?)"
+            exit 1
+          fi
+          export CYPRESS_KONFLUX_BASE_URL="$(params.konflux-base-url)"
           export CYPRESS_LOCAL_CLUSTER=true
         fi
         echo "Konflux base URL: ${CYPRESS_KONFLUX_BASE_URL}"
 
         echo "=== Running E2E tests ==="
         SPEC_FILE="$(params.spec-file)"
-        
+
         echo "Running test spec: ${SPEC_FILE}"
-   
+
         # Run tests and capture exit code (don't exit on failure)
         set +e
         yarn run cy:run --spec "${SPEC_FILE}"

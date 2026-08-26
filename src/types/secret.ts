@@ -189,6 +189,7 @@ export enum SecretTypeAbstraction {
 export enum SecretTypeDisplayLabel {
   imagePull = 'Image pull',
   keyValue = 'Key/value',
+  source = 'Source',
 }
 
 export enum ImagePullSecretType {

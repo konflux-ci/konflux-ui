@@ -1,4 +1,13 @@
+import React from 'react';
+import {
+  createRoutesFromChildren,
+  matchRoutes,
+  useLocation,
+  useNavigationType,
+} from 'react-router-dom';
 import * as Sentry from '@sentry/react';
+import { obfuscate } from '~/analytics/obfuscate';
+import { evaluateApiEventRules } from '../api-event-rules';
 import type { IMonitoringProvider, MonitoringConfig, LogLevel, UserContext } from '../types';
 
 interface SentryConfig extends MonitoringConfig {
@@ -20,26 +29,63 @@ const toSentryLevel = (level?: LogLevel): Sentry.SeverityLevel => {
 };
 
 export class SentryProvider implements IMonitoringProvider<SentryConfig> {
-  init(config: SentryConfig): Promise<void> {
+  private userUpdateToken = 0;
+
+  init(config: SentryConfig): void {
     const mergedConfig = { ...DEFAULTS, ...config };
+    const tracesSampleRate = mergedConfig.sampleRates?.traces ?? 0.2;
+
     Sentry.init({
       dsn: mergedConfig.dsn,
       environment: mergedConfig.environment,
       sendDefaultPii: true,
-      integrations: [Sentry.browserTracingIntegration()],
-      tracesSampleRate: 0.2,
+      integrations: [
+        Sentry.reactRouterBrowserTracingIntegration({
+          useEffect: React.useEffect,
+          useLocation,
+          useNavigationType,
+          createRoutesFromChildren,
+          matchRoutes,
+        }),
+      ],
+      tracesSampler: (samplingContext) => {
+        // Inherit parent sampling decision to avoid breaking distributed traces
+        if (samplingContext.parentSampled !== undefined) {
+          return samplingContext.parentSampled;
+        }
+
+        const transactionName = samplingContext.name ?? '';
+        const override = evaluateApiEventRules(transactionName, 200);
+        // Use rule override if defined, otherwise fall back to configured rate
+        return override ?? tracesSampleRate;
+      },
       sampleRate: mergedConfig.sampleRates?.errors ?? 1.0,
-      // Set `tracePropagationTargets` to control for which URLs trace propagation should be enabled
-      tracePropagationTargets: ['localhost'],
+      tracePropagationTargets: ['localhost', /^\/api\/k8s/, /^\/oauth2\//],
       initialScope: {
         tags: {
           cluster: mergedConfig.cluster || 'unknown',
         },
       },
+      beforeSend(event) {
+        const request = event.request;
+        if (!request?.url) {
+          return event;
+        }
+
+        const statusCode = event.contexts?.response?.status_code;
+        if (typeof statusCode !== 'number') {
+          return event;
+        }
+
+        const override = evaluateApiEventRules(request.url, statusCode);
+        // undefined = no override, let Sentry's sampleRate handle it
+        if (override === undefined) {
+          return event;
+        }
+        // 0 = discard, >0 = always send (overrides default rate)
+        return override > 0 ? event : null;
+      },
     });
-    // eslint-disable-next-line no-console
-    console.info('Sentry initialized', mergedConfig);
-    return Promise.resolve();
   }
 
   captureException(error: unknown, context?: Record<string, unknown>): string {
@@ -50,7 +96,18 @@ export class SentryProvider implements IMonitoringProvider<SentryConfig> {
     return Sentry.captureMessage(message, { level: toSentryLevel(level), ...context });
   }
 
-  setUser(user: UserContext | null): void {
-    Sentry.setUser(user);
+  async setUser(user: UserContext | null): Promise<void> {
+    const token = ++this.userUpdateToken;
+
+    if (!user?.id) {
+      Sentry.setUser(null);
+      return;
+    }
+
+    const hashedId = await obfuscate(user.id);
+    // Only apply if this is still the latest setUser call
+    if (token === this.userUpdateToken) {
+      Sentry.setUser({ id: hashedId });
+    }
   }
 }

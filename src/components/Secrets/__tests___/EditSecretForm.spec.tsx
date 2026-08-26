@@ -9,6 +9,7 @@ import {
   mockImageSecretDockercfgForEdit,
   mockOpaqueSecretForEdit,
   mockSourceSecretBasicAuthForEdit,
+  mockSourceSecretBasicAuthPasswordOnlyForEdit,
   mockSourceSecretSSHForEdit,
 } from '~/components/Secrets/__data__/mock-secrets';
 import EditSecretForm from '~/components/Secrets/SecretsForm/EditSecretForm';
@@ -940,6 +941,91 @@ describe('EditSecretForm', () => {
       });
 
       expect(editSecretResource).not.toHaveBeenCalled();
+    });
+
+    it('does not submit an empty username for password-only basic auth source secrets', async () => {
+      const user = userEvent.setup();
+      (editSecretResource as jest.Mock).mockResolvedValue(undefined);
+
+      renderWithSecret(mockSourceSecretBasicAuthPasswordOnlyForEdit);
+
+      await showSecretValues(user);
+      await waitFor(() => {
+        expect(screen.getByLabelText('Password')).toBeInTheDocument();
+      });
+      expect(screen.queryByDisplayValue('gituser')).not.toBeInTheDocument();
+
+      const hostInput = screen.getByLabelText(/^Host/);
+      await user.clear(hostInput);
+      await user.type(hostInput, 'github.org');
+      await user.click(screen.getByRole('heading', { name: 'Edit secret' }));
+
+      await waitFor(() => {
+        expect(screen.getByTestId('submit-button')).not.toBeDisabled();
+      });
+
+      await user.click(screen.getByTestId('submit-button'));
+
+      await waitFor(() => {
+        expect(editSecretResource).toHaveBeenCalledWith(
+          expect.objectContaining({
+            type: SecretTypeDropdownLabel.source,
+            name: 'source-secret-basic-password-only',
+            source: expect.objectContaining({
+              authType: SourceSecretType.basic,
+              username: '',
+              password: 'token-pass',
+              host: 'github.org',
+              repo: 'org/repo',
+            }),
+          }),
+          'test-ns',
+          mockSourceSecretBasicAuthPasswordOnlyForEdit,
+        );
+      });
+    });
+
+    it('submits empty username when username is cleared after reveal so it can be omitted', async () => {
+      const user = userEvent.setup();
+      (editSecretResource as jest.Mock).mockResolvedValue(undefined);
+
+      renderWithSecret(mockSourceSecretBasicAuthForEdit);
+
+      await showSecretValues(user);
+      await waitFor(() => {
+        expect(screen.getByDisplayValue('gituser')).toBeInTheDocument();
+      });
+
+      const usernameInput = screen.getByTestId('secret-source-username');
+      await user.clear(usernameInput);
+      const hostInput = screen.getByLabelText(/^Host/);
+      await user.clear(hostInput);
+      await user.type(hostInput, 'github.org');
+      await user.click(screen.getByRole('heading', { name: 'Edit secret' }));
+
+      await waitFor(() => {
+        expect(screen.getByTestId('submit-button')).not.toBeDisabled();
+      });
+
+      await user.click(screen.getByTestId('submit-button'));
+
+      await waitFor(() => {
+        expect(editSecretResource).toHaveBeenCalledWith(
+          expect.objectContaining({
+            type: SecretTypeDropdownLabel.source,
+            name: 'source-secret-basic',
+            source: expect.objectContaining({
+              authType: SourceSecretType.basic,
+              username: '',
+              password: 'gitpass',
+              host: 'github.org',
+              repo: 'org/repo',
+            }),
+          }),
+          'test-ns',
+          mockSourceSecretBasicAuthForEdit,
+        );
+      });
     });
 
     it('calls editSecretResource with preserved source password when password cleared after reveal', async () => {

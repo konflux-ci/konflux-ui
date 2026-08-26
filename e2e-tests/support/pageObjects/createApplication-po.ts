@@ -1,3 +1,5 @@
+import { logViewerPO } from './logViewer-po';
+
 export const addComponentPagePO = {
   samples: 'Start with a sample.',
   addComponent: '[data-test="add-component"] > a',
@@ -83,7 +85,8 @@ export const componentsListPagePO = {
 export const buildLogModalContentPO = {
   modal: 'div[data-ouia-component-type="PF6/ModalContent"]',
   closeButton: '[aria-label="Close"]',
-  logText: '.pf-v6-c-log-viewer__text',
+  logText: logViewerPO.logText,
+  logViewerSearchInput: logViewerPO.searchInput,
   logsTasklist: 'div[data-test="logs-tasklist"]',
   failedPipelineRunLogs: 'div[class="pipeline-run-logs"] [class*="pf-m-danger"]',
   podLogNavList: '[data-ouia-component-type="PF6/Nav"]',

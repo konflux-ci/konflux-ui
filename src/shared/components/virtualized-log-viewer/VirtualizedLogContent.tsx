@@ -7,7 +7,7 @@ import { StickySectionHeaderBar } from './SectionLogUI';
 import { computeStickySectionHeader } from './sticky-section-header';
 import type { LogSection, NormalizedLogSection, SearchedWord } from './types';
 import { useKeyboardNavigation } from './useKeyboardNavigation';
-import { useLineNumberNavigation } from './useLineNumberNavigation';
+import { UseLineNumberNavigationResult } from './useLineNumberNavigation';
 import { useLineRenderer } from './useLineRenderer';
 import { useResizeObserverFix } from './useResizeObserverFix';
 import { useSearchRegex } from './useSearchRegex';
@@ -32,8 +32,6 @@ export interface VirtualizedLogContentProps {
   height: number;
   width: string | number;
   scrollToRow?: number;
-  /** Set when user navigates search matches (prev/next); expands folded step for that match only */
-  expandSearchTargetRow?: number;
   onScroll?: (props: {
     scrollDirection: 'forward' | 'backward';
     scrollOffset: number;
@@ -41,12 +39,9 @@ export interface VirtualizedLogContentProps {
   }) => void;
   searchText?: string;
   currentSearchMatch?: SearchedWord;
-  /**
-   * When false, URL hash line navigation (`#L123`) is deferred until logs are fully fetched,
-   * so we don't highlight/scroll to a line before the log content has stabilized. Defaults to
-   * true.
-   */
-  readyToNavigate?: boolean;
+  onDownloadFullLogs?: (sectionIndex: number) => Promise<void>;
+  onViewFullLogs?: (sectionIndex: number) => void;
+  lineNumberNavigationProps?: UseLineNumberNavigationResult;
 }
 
 export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
@@ -55,42 +50,43 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
   height,
   width,
   scrollToRow,
-  expandSearchTargetRow,
   onScroll,
   searchText = '',
   currentSearchMatch,
-  readyToNavigate = true,
+  onDownloadFullLogs,
+  onViewFullLogs,
+  lineNumberNavigationProps,
 }) => {
   const scrollRef = React.useRef<HTMLDivElement | null>(null);
   const [itemSize, setItemSize] = React.useState(VIRTUALIZATION_CONFIG.FALLBACK_LINE_HEIGHT);
   const charsPerLineRef = React.useRef(VIRTUALIZATION_CONFIG.FALLBACK_CHARS_PER_LINE);
 
-  const isMultiSection = sections.length > 1;
-  const { expandedSections, toggleSection, expandSection } = useSectionFold(sections);
-
   const internalNormalizedSections = React.useMemo(
     () => (normalizedSectionsProp ? null : sections.map(normalizeSection)),
     [normalizedSectionsProp, sections],
   );
-  const effectiveNormalizedSections = normalizedSectionsProp ?? internalNormalizedSections ?? [];
+  const effectiveNormalizedSections = React.useMemo(
+    () => normalizedSectionsProp ?? internalNormalizedSections ?? [],
+    [normalizedSectionsProp, internalNormalizedSections],
+  );
+
+  const isMultiSection = effectiveNormalizedSections.length > 1;
+  const { expandedSections, toggleSection, expandSection } = useSectionFold(
+    effectiveNormalizedSections,
+  );
 
   const {
     displayRows,
     allLines,
-    searchLineToDisplayRow,
-    searchLineToFlatLineIndex,
-    searchLineToSectionIndex,
     lineNumberToDisplayRow,
     lineNumberToSectionIndex,
+    flatLineIndexToDisplayRow,
   } = useSectionRows(effectiveNormalizedSections, expandedSections);
 
   const rowCount = displayRows.length;
 
   // Keep a ref so the expand-on-search effect always reads the latest map
   // without listing it as a dep (which would re-trigger on every fold/unfold).
-  const searchLineToSectionIndexRef = React.useRef(searchLineToSectionIndex);
-  searchLineToSectionIndexRef.current = searchLineToSectionIndex;
-
   const lineNumberToSectionIndexRef = React.useRef(lineNumberToSectionIndex);
   lineNumberToSectionIndexRef.current = lineNumberToSectionIndex;
 
@@ -100,25 +96,29 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
   const searchRegex = useSearchRegex(deferredSearchText);
   const { tokenizeLine } = useTokenization(allLines);
 
-  const contentSearchMatch = React.useMemo((): SearchedWord | undefined => {
-    if (!currentSearchMatch || currentSearchMatch.rowIndex < 0) return undefined;
-    const flatLineIndex = searchLineToFlatLineIndex.get(currentSearchMatch.rowIndex);
-    if (flatLineIndex === undefined) return undefined;
-    return { rowIndex: flatLineIndex, matchIndex: currentSearchMatch.matchIndex };
-  }, [currentSearchMatch, searchLineToFlatLineIndex]);
-
   const renderLine = useLineRenderer({
     tokenizeLine,
     searchRegex,
-    currentSearchMatch: contentSearchMatch,
+    currentSearchMatch,
   });
 
+  const normalizedSectionsRef = React.useRef(effectiveNormalizedSections);
+  normalizedSectionsRef.current = effectiveNormalizedSections;
+
   React.useEffect(() => {
-    if (!isMultiSection || !expandSearchTargetRow || expandSearchTargetRow <= 0) return;
-    const sectionIndex = searchLineToSectionIndexRef.current.get(expandSearchTargetRow - 1);
-    if (sectionIndex === undefined) return;
-    expandSection(sectionIndex);
-  }, [isMultiSection, expandSearchTargetRow, expandSection]);
+    if (!currentSearchMatch || currentSearchMatch.rowIndex < 0) return;
+    const flatIndex = currentSearchMatch.rowIndex;
+    const currentSections = normalizedSectionsRef.current;
+    let offset = 0;
+    for (let i = 0; i < currentSections.length; i++) {
+      const sectionLineCount = currentSections[i].lines.length;
+      if (flatIndex < offset + sectionLineCount) {
+        expandSection(i);
+        return;
+      }
+      offset += sectionLineCount;
+    }
+  }, [currentSearchMatch, expandSection]);
 
   const measureCallbackRef = React.useCallback((node: HTMLDivElement | null) => {
     if (node) {
@@ -161,9 +161,12 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
 
   const effectiveScrollToRow = React.useMemo(() => {
     if (!scrollToRow || scrollToRow <= 0) return undefined;
-    const displayIdx = searchLineToDisplayRow.get(scrollToRow - 1);
-    return displayIdx !== undefined ? displayIdx + 1 : undefined;
-  }, [scrollToRow, searchLineToDisplayRow]);
+    const flatIndex = scrollToRow - 1;
+    const displayIdx = flatLineIndexToDisplayRow.get(flatIndex);
+    if (displayIdx !== undefined) return displayIdx + 1;
+    // auto-scroll-to-bottom: scrollToRow >= total lines means "follo the tail"
+    return scrollToRow >= allLines.length ? displayRows.length : undefined;
+  }, [scrollToRow, flatLineIndexToDisplayRow, displayRows.length, allLines.length]);
 
   const { clearScrollTracking } = useVirtualizedScroll({
     virtualizer,
@@ -171,20 +174,23 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
     onScroll,
   });
 
-  const { highlightedLines, handleLineClick, isLineHighlighted } = useLineNumberNavigation({
-    readyToNavigate,
-  });
+  const {
+    highlightedLines = null,
+    handleLineClick = () => {},
+    isLineHighlighted = () => false,
+  } = lineNumberNavigationProps ?? {};
 
   React.useEffect(() => {
-    if (!isMultiSection || !highlightedLines) return;
+    if (!highlightedLines) return;
 
-    const sectionsToExpand = new Set<number>();
+    const expanded = new Set<number>();
     for (let line = highlightedLines.start; line <= highlightedLines.end; line++) {
       const sectionIndex = lineNumberToSectionIndexRef.current.get(line);
-      if (sectionIndex !== undefined) sectionsToExpand.add(sectionIndex);
+      if (sectionIndex === undefined || expanded.has(sectionIndex)) continue;
+      expanded.add(sectionIndex);
+      expandSection(sectionIndex);
     }
-    sectionsToExpand.forEach((sectionIndex) => expandSection(sectionIndex));
-  }, [isMultiSection, highlightedLines, expandSection]);
+  }, [highlightedLines, expandSection]);
 
   const highlightScrollTargetIndex = React.useMemo((): number | null => {
     if (!highlightedLines || rowCount === 0) return null;
@@ -217,10 +223,7 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
 
     const sectionIndex = lineNumberToSectionIndexRef.current.get(highlightedLines.start);
     const awaitingExpand =
-      isMultiSection &&
-      displayIdx === undefined &&
-      sectionIndex !== undefined &&
-      !expandedSections.has(sectionIndex);
+      displayIdx === undefined && sectionIndex !== undefined && !expandedSections.has(sectionIndex);
 
     if (awaitingExpand) return;
     if (!isNewHighlight && !targetImproved) return;
@@ -254,7 +257,6 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
     lineNumberToDisplayRow,
     virtualizer,
     clearScrollTracking,
-    isMultiSection,
     expandedSections,
   ]);
 
@@ -324,6 +326,8 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
                 measureElement={virtualizer.measureElement}
                 isLineHighlighted={isLineHighlighted}
                 onToggleSection={toggleSection}
+                onDownloadFullLogs={onDownloadFullLogs}
+                onViewFullLogs={onViewFullLogs}
                 renderLogLine={renderLine}
                 onLineClick={handleLineClick}
               />
@@ -339,6 +343,16 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
           itemSize={itemSize}
           onToggle={() => toggleSection(stickyRow.sectionIndex)}
           onLineClick={handleLineClick}
+          onDownloadFullLogs={
+            stickyRow.isTailed && onDownloadFullLogs
+              ? () => onDownloadFullLogs(stickyRow.sectionIndex)
+              : undefined
+          }
+          onViewFullLogs={
+            stickyRow.isTailed && onViewFullLogs
+              ? () => onViewFullLogs(stickyRow.sectionIndex)
+              : undefined
+          }
         />
       )}
     </div>

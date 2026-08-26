@@ -1,4 +1,4 @@
-name: "Periodic job: LOCAL (test Konflux UI against local cluster)"
+name: 'Periodic job: LOCAL (test Konflux UI against local cluster)'
 
 on:
   workflow_dispatch:
@@ -13,8 +13,7 @@ jobs:
       REF_BRANCH: ${{ github.ref_name}}
       HEAD_SHA: ${{ github.sha }}
       JOB_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-      SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_JOB_REPORT_ID }}
-      SLACK_TOKEN: ${{ secrets.SLACK_TOKEN_PERIODIC_REPORT }}
+      PERIODIC_JOBS_SLACK_WEBHOOK_URL: ${{ secrets.PERIODIC_JOBS_SLACK_WEBHOOK_URL }}
       # secrets
       CYPRESS_GH_TOKEN: ${{ secrets.HAC_TEST_GH_TOKEN }}
       GH_APP_ID: ${{ secrets.GH_APP_ID }}
@@ -25,16 +24,16 @@ jobs:
       SMEE_URL: ${{ secrets.SMEE_URL }}
       CYPRESS_USERNAME: ${{ secrets.CYPRESS_USERNAME }}
       CYPRESS_PASSWORD: ${{ secrets.CYPRESS_PASSWORD }}
-      CYPRESS_KONFLUX_BASE_URL: "https://localhost:9443"
+      CYPRESS_KONFLUX_BASE_URL: 'https://localhost:9443'
       CYPRESS_PROJECT_ID: ${{ secrets.PROJECT_ID }}
       CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       JOB_TYPE: 'periodic-local'
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: ${{ github.repository }}
-          ref: "${{ env.HEAD_SHA }}"
+          ref: '${{ env.HEAD_SHA }}'
 
       - name: Enable Corepack 📦
         run: corepack enable
@@ -43,7 +42,7 @@ jobs:
         run: |
           set -x
           df -h --total
-          free -m 
+          free -m
 
       # Redirect Cypress Cache to /mnt to free up disk space on /dev/root
       - name: Redirect Cypress Cache to /mnt
@@ -59,16 +58,16 @@ jobs:
           # Stop Docker completely
           sudo systemctl stop docker.socket
           sudo systemctl stop docker
-          
+
           sudo mkdir -p /mnt/docker
-          
+
           # Create a Systemd Override (This is more powerful than daemon.json)
           sudo mkdir -p /etc/systemd/system/docker.service.d
           printf '[Service]\nExecStart=\nExecStart=/usr/bin/dockerd --data-root=/mnt/docker -H fd://' | sudo tee /etc/systemd/system/docker.service.d/override.conf
-          
+
           sudo systemctl daemon-reload
           sudo systemctl start docker
-          
+
       - name: Move npm/yarn cache to /mnt
         run: |
           sudo mkdir -p /mnt/npm_cache
@@ -84,7 +83,7 @@ jobs:
           # 1. Create the new storage directory
           sudo mkdir -p /mnt/podman_storage
           sudo chown -R runner:docker /mnt/podman_storage
-          
+
           # 2. Create/Override the Podman storage config
           mkdir -p ~/.config/containers
           cat <<EOF > ~/.config/containers/storage.conf
@@ -92,7 +91,7 @@ jobs:
           driver = "overlay"
           graphroot = "/mnt/podman_storage"
           EOF
-          
+
           # 3. Verify the change
           podman info --format '{{.Store.GraphRoot}}'
 

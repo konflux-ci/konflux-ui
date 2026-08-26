@@ -10,6 +10,12 @@ interface UseVirtualizationOptions {
   overscan?: number;
   /** The scrollable container element. Virtualization is inactive while `null`. */
   scrollElement: HTMLElement | null;
+  /**
+   * Distance in pixels from the top of the scroll container to the start of
+   * the list. Prevents the virtualizer from miscalculating visible rows when
+   * there is content (headers, tabs, etc.) above the table.
+   */
+  scrollMargin?: number;
 }
 
 /**
@@ -33,13 +39,14 @@ interface UseVirtualizationOptions {
  * ```
  */
 export const useVirtualization = (options: UseVirtualizationOptions) => {
-  const { count, estimateSize = 44, overscan = 10, scrollElement } = options;
+  const { count, estimateSize = 44, overscan = 10, scrollElement, scrollMargin = 0 } = options;
 
   const virtualizer = useVirtualizer({
     count,
     getScrollElement: () => scrollElement,
     estimateSize: () => estimateSize,
     overscan,
+    scrollMargin,
     measureElement: (el) => el.getBoundingClientRect().height,
   });
 

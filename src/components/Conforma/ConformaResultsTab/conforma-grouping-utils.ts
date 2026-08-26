@@ -89,6 +89,7 @@ export const filterResults = (
   results: ConformaResultRow[],
   searchText: string,
   statusFilters: string[],
+  componentFilters: string[] = [],
 ): ConformaResultRow[] =>
   results.filter((row) => {
     if (
@@ -101,6 +102,10 @@ export const filterResults = (
     }
 
     if (statusFilters.length > 0 && !statusFilters.includes(row.status)) {
+      return false;
+    }
+
+    if (componentFilters.length > 0 && !componentFilters.includes(row.component)) {
       return false;
     }
 
@@ -177,6 +182,7 @@ export const collapseArchDuplicates = (rows: ConformaResultRow[]): ConformaResul
           existing.images = [...existing.images, image];
         }
       }
+      existing.pipelineRunName = existing.pipelineRunName || row.pipelineRunName;
     } else {
       map.set(key, { ...row, images: [...row.images] });
     }

@@ -1,5 +1,8 @@
 import * as React from 'react';
-import { singleLogSection } from '~/shared/components/virtualized-log-viewer/log-viewer-utils';
+import { runStatus } from '~/consts/pipelinerun';
+import { normalizeLogLines } from '~/shared/components/virtualized-log-viewer/log-viewer-utils';
+import type { NormalizedLogSection } from '~/shared/components/virtualized-log-viewer/types';
+import { taskRunStatus } from '~/utils/pipeline-utils';
 import { useTRTaskRunLog } from '../../../../hooks/useTektonResults';
 import { HttpError } from '../../../../k8s/error';
 import { TaskRunKind } from '../../../../types';
@@ -24,14 +27,25 @@ export const TektonTaskRunLog: React.FC<React.PropsWithChildren<TektonTaskRunLog
       ? `Logs are no longer accessible for ${taskName} task`
       : null;
 
-  const sections = React.useMemo(
-    () => (trResults ? [singleLogSection(trResults, taskName ?? 'log')] : []),
-    [trResults, taskName],
-  );
+  const normalizedSections = React.useMemo<NormalizedLogSection[]>(() => {
+    if (!trResults) return [];
+
+    const status = taskRun ? taskRunStatus(taskRun) : runStatus.Unknown;
+    const inProgress =
+      status === runStatus.Running || status === runStatus.Pending || status === runStatus.Idle;
+
+    return [
+      {
+        containerName: taskName ?? 'log',
+        lines: normalizeLogLines(trResults),
+        isCompleted: trLoaded && !inProgress,
+      },
+    ];
+  }, [trResults, taskName, taskRun, trLoaded]);
 
   return (
     <LogViewer
-      sections={sections}
+      normalizedSections={normalizedSections}
       downloadAllLabel={downloadAllLabel}
       onDownloadAll={onDownloadAll}
       taskRun={taskRun}

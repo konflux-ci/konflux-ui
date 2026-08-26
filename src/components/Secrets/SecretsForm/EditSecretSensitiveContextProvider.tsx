@@ -30,6 +30,7 @@ export const EditSecretSensitiveContextProvider: React.FC<
   const clearFullSecretAndSensitiveFields = React.useCallback(() => {
     clearSensitiveMemory();
     const { setFieldValue, values: v } = formikRef.current;
+    void setFieldValue('source.username', '');
     void setFieldValue('source.password', '');
     void setFieldValue('source.ssh-privatekey', '');
     void setFieldValue('image.dockerconfig', undefined);
