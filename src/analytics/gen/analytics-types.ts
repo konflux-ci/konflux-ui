@@ -14,7 +14,12 @@
 /**
  * Union of all Konflux UI analytics event types
  */
-export type KonfluxUISegmentEvents = UserLoginEvent | UserLogoutEvent | FeedbackSubmittedEvent | UiSessionStartedEvent;
+export type KonfluxUISegmentEvents =
+  | UserLoginEvent
+  | UserLogoutEvent
+  | FeedbackSubmittedEvent
+  | UiSessionStartedEvent
+  | FeatureFlagsChangedEvent;
 /**
  * Fired when a user successfully authenticates into Konflux
  */
@@ -38,6 +43,10 @@ export type UserLogoutEvent = CommonFields & {
  */
 export type FeedbackSubmittedEvent = CommonFields & {
   /**
+   * Unique identifier of the user. Obfuscated via sha256 with `clusterId` as salt.
+   */
+  userId: SHA256Hash;
+  /**
    * User satisfaction rating, typically on a 1-5 scale
    */
   rating: number;
@@ -58,6 +67,25 @@ export type UiSessionStartedEvent = CommonFields & {
    * Classification of document.referrer on first load, e.g. 'github' if the referrer host is github.com (or a subdomain).
    */
   arrivalSource: string;
+};
+/**
+ * Fired every time the Feature Flag Panel modal is closed. Contains only the flags whose effective state changed between panel open and panel close. changesCount may be 0 when user opened the panel but did not change anything (tracks panel awareness).
+ */
+export type FeatureFlagsChangedEvent = CommonFields & {
+  /**
+   * Map of changed flag keys to their new boolean value. Empty object if no flags were changed.
+   */
+  changes: {
+    [k: string]: boolean;
+  };
+  /**
+   * Number of flags that changed. 0 means the user opened the panel but did not change anything.
+   */
+  changesCount: number;
+  /**
+   * URL pathname when the panel was opened (e.g. /ns/my-ns/applications)
+   */
+  pagePath: string;
 };
 
 /**
@@ -98,6 +126,7 @@ export enum TrackEvents {
   user_logout_event = 'user_logout',
   feedback_submitted_event = 'feedback_submitted',
   ui_session_started_event = 'ui_session_started',
+  feature_flags_changed_event = 'feature_flags_changed',
 }
 
 /**
@@ -109,4 +138,5 @@ export type EventPropertiesMap = {
   [TrackEvents.user_logout_event]: Omit<UserLogoutEvent, keyof CommonFields>;
   [TrackEvents.feedback_submitted_event]: Omit<FeedbackSubmittedEvent, keyof CommonFields>;
   [TrackEvents.ui_session_started_event]: Omit<UiSessionStartedEvent, keyof CommonFields>;
+  [TrackEvents.feature_flags_changed_event]: Omit<FeatureFlagsChangedEvent, keyof CommonFields>;
 };
