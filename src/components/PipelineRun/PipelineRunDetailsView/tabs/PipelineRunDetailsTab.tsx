@@ -26,6 +26,7 @@ import { useImageRepository } from '~/hooks/useImageRepository';
 import { usePipelineRunV2 } from '~/hooks/usePipelineRunsV2';
 import { useTaskRunsForPipelineRuns } from '~/hooks/useTaskRunsV2';
 import { useSbomUrl } from '~/hooks/useUIInstance';
+import { useIsImageControllerEnabled } from '~/image-controller/conditional-checks';
 import {
   SNAPSHOT_DETAILS_PATH,
   PIPELINE_RUNS_LOG_PATH,
@@ -93,6 +94,7 @@ const PipelineRunDetailsTab: React.FC = () => {
     pipelineRunName,
   );
 
+  const { isImageControllerEnabled } = useIsImageControllerEnabled();
   const componentName = pipelineRun?.metadata?.labels?.[PipelineRunLabel.COMPONENT];
   const [urlInfo, imageProxyLoaded, proxyError] = useImageProxy();
   const [imageRepository, imageRepoLoaded, imageRepoError] = useImageRepository(
@@ -110,7 +112,10 @@ const PipelineRunDetailsTab: React.FC = () => {
   const results = getPipelineRunStatusResults(pipelineRun);
   const patchedResultsForProxy = React.useMemo(
     () =>
-      imageProxyLoaded && imageRepoLoaded && !!imageRepository?.spec?.image?.visibility
+      isImageControllerEnabled &&
+      imageProxyLoaded &&
+      imageRepoLoaded &&
+      !!imageRepository?.spec?.image?.visibility
         ? addProxyUrlParamValue(
             results,
             'IMAGE_URL',
@@ -119,6 +124,7 @@ const PipelineRunDetailsTab: React.FC = () => {
           )
         : results,
     [
+      isImageControllerEnabled,
       imageProxyLoaded,
       imageRepoLoaded,
       imageRepository?.spec.image?.visibility,
@@ -129,7 +135,10 @@ const PipelineRunDetailsTab: React.FC = () => {
   const specParams = pipelineRun?.spec?.params;
   const patchedSpecParamsForProxy = React.useMemo(
     () =>
-      imageProxyLoaded && imageRepoLoaded && !!imageRepository?.spec?.image?.visibility
+      isImageControllerEnabled &&
+      imageProxyLoaded &&
+      imageRepoLoaded &&
+      !!imageRepository?.spec?.image?.visibility
         ? addProxyUrlParamValue(
             specParams,
             'output-image',
@@ -138,6 +147,7 @@ const PipelineRunDetailsTab: React.FC = () => {
           )
         : specParams,
     [
+      isImageControllerEnabled,
       imageProxyLoaded,
       imageRepoLoaded,
       imageRepository?.spec.image?.visibility,
@@ -173,11 +183,13 @@ const PipelineRunDetailsTab: React.FC = () => {
     pipelineRun.metadata?.annotations?.[PipelineRunLabel.BUILD_IMAGE_ANNOTATION] ||
     getPipelineRunStatusResultForName(`IMAGE_URL`, pipelineRun)?.value;
 
-  const displayImageUrl = getImageUrlForVisibility(
-    buildImage,
-    imageRepository?.spec?.image?.visibility ?? null,
-    proxyError || imageRepoError || !urlInfo ? null : urlInfo.hostname,
-  );
+  const displayImageUrl = isImageControllerEnabled
+    ? getImageUrlForVisibility(
+        buildImage,
+        imageRepository?.spec?.image?.visibility ?? null,
+        proxyError || imageRepoError || !urlInfo ? null : urlInfo.hostname,
+      )
+    : (buildImage ?? null);
 
   const sourceUrl = getSourceUrl(pipelineRun);
   const pipelineStatus = !error ? pipelineRunStatus(pipelineRun) : null;
