@@ -1,5 +1,6 @@
 export const userAccessPO = {
   listTableRow: '[aria-label="User access list"] tr',
+  searchInput: 'input[name*="usernameInput"]',
   changeAccessButton: 'button:contains("Change access")',
   rowKebab: '[data-test="kebab-button"]',
   revokeAccessItem: '[data-test="Revoke access"]',

@@ -23,6 +23,11 @@ export class UserAccessPage {
   }
 
   static verifyUserInTable(username: string, role: string) {
+    // search for the user in the table
+    cy.get(userAccessPO.searchInput, { timeout: 60000 }).should('be.visible');
+    cy.get(userAccessPO.searchInput).clear();
+    cy.get(userAccessPO.searchInput).type(username);
+
     cy.contains(userAccessPO.listTableRow, username, { timeout: 60000 }).scrollIntoView();
     cy.contains(userAccessPO.listTableRow, username).within(() => {
       cy.contains(role, { timeout: 60000 }).scrollIntoView().should('be.visible');
