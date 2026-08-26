@@ -265,13 +265,15 @@ export class LogsTab {
 
   static downloadAllTaskLogs(allTaskLogs = true) {
     LogsTab.goToLogsTab();
+    // Open the download dropdown menu first
+    cy.get('button[aria-label="Download logs"]').click();
     if (allTaskLogs) {
-      cy.contains('button', pipelinerunsTabPO.downloadAllTaskLogsButton)
-        .should('be.enabled')
+      cy.contains('[role="menuitem"]', pipelinerunsTabPO.downloadAllTaskLogsButton)
+        .should('be.visible')
         .click();
     } else {
-      cy.contains('button', /^Download$/)
-        .should('be.enabled')
+      cy.contains('[role="menuitem"]', /^Download$/)
+        .should('be.visible')
         .click();
     }
     DetailsTab.goToDetailsTab();
