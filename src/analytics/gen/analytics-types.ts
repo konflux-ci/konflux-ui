@@ -18,6 +18,7 @@ export type KonfluxUISegmentEvents =
   | UserLoginEvent
   | UserLogoutEvent
   | FeedbackSubmittedEvent
+  | UiSessionStartedEvent
   | FeatureFlagsChangedEvent;
 /**
  * Fired when a user successfully authenticates into Konflux
@@ -42,6 +43,10 @@ export type UserLogoutEvent = CommonFields & {
  */
 export type FeedbackSubmittedEvent = CommonFields & {
   /**
+   * Unique identifier of the user. Obfuscated via sha256 with `clusterId` as salt.
+   */
+  userId: SHA256Hash;
+  /**
    * User satisfaction rating, typically on a 1-5 scale
    */
   rating: number;
@@ -53,6 +58,15 @@ export type FeedbackSubmittedEvent = CommonFields & {
    * Optional contact email provided by the user for follow-up
    */
   email?: string;
+};
+/**
+ * Fired once per browser tab on the first app load, regardless of auth state, to capture how the user arrived at Konflux UI
+ */
+export type UiSessionStartedEvent = CommonFields & {
+  /**
+   * Classification of document.referrer on first load, e.g. 'github' if the referrer host is github.com (or a subdomain).
+   */
+  arrivalSource: string;
 };
 /**
  * Fired every time the Feature Flag Panel modal is closed. Contains only the flags whose effective state changed between panel open and panel close. changesCount may be 0 when user opened the panel but did not change anything (tracks panel awareness).
@@ -102,6 +116,7 @@ export interface CommonFields {
 /** Branded type for SHA-256 obfuscated strings. Use `obfuscate()` to create. */
 export type SHA256Hash = string & { readonly __brand: 'SHA256Hash' };
 
+
 /**
  * Event names for Segment track() calls.
  * Values match the x-event-name field in the schema.
@@ -110,6 +125,7 @@ export enum TrackEvents {
   user_login_event = 'user_login',
   user_logout_event = 'user_logout',
   feedback_submitted_event = 'feedback_submitted',
+  ui_session_started_event = 'ui_session_started',
   feature_flags_changed_event = 'feature_flags_changed',
 }
 
@@ -121,5 +137,6 @@ export type EventPropertiesMap = {
   [TrackEvents.user_login_event]: Omit<UserLoginEvent, keyof CommonFields>;
   [TrackEvents.user_logout_event]: Omit<UserLogoutEvent, keyof CommonFields>;
   [TrackEvents.feedback_submitted_event]: Omit<FeedbackSubmittedEvent, keyof CommonFields>;
+  [TrackEvents.ui_session_started_event]: Omit<UiSessionStartedEvent, keyof CommonFields>;
   [TrackEvents.feature_flags_changed_event]: Omit<FeatureFlagsChangedEvent, keyof CommonFields>;
 };
