@@ -50,11 +50,7 @@ export const useComponentGroups = (
   );
 
   return useMemo(
-    () => [
-      !isLoading && !error ? (data ?? []) : [],
-      !isLoading,
-      error,
-    ],
+    () => [!isLoading && !error ? (data ?? []) : [], !isLoading, error],
     [data, isLoading, error],
   );
 };
