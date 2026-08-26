@@ -9,10 +9,20 @@ import {
 } from '@redhat-cloud-services/ai-react-state';
 import { KONFLUX_ASSISTANT_NAME } from '~/components/AIChat/consts';
 import {
+  clearPendingLightspeedAttachments,
+  setPendingLightspeedAttachments,
+} from '~/components/AIChat/lightspeed-attachments';
+import { extractPageContext, pageContextToAttachments } from '~/components/AIChat/page-context';
+import {
   getUserFacingLightspeedErrorMessage,
   stateMessagesToMessageProps,
 } from '~/components/AIChat/utils';
 import { logger } from '~/monitoring/logger';
+
+export type SendChatMessageOptions = {
+  /** When true, extract the current page and attach it to this request only. */
+  includePageContext?: boolean;
+};
 
 type UseLightspeedChatResult = {
   messages: MessageProps[];
@@ -20,7 +30,7 @@ type UseLightspeedChatResult = {
   isSendButtonDisabled: boolean;
   isInitializing: boolean;
   backendError?: string;
-  sendMessage: (message: string | number) => Promise<void>;
+  sendMessage: (message: string | number, options?: SendChatMessageOptions) => Promise<void>;
 };
 
 const getErrorMessage = (error: unknown, fallback: string): string => {
@@ -33,9 +43,21 @@ const getErrorMessage = (error: unknown, fallback: string): string => {
   return fallback;
 };
 
+const stagePageContextAttachments = (): void => {
+  try {
+    setPendingLightspeedAttachments(pageContextToAttachments(extractPageContext()));
+  } catch (error) {
+    clearPendingLightspeedAttachments();
+    logger.warn('Failed to extract page context for Konflux AI', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+};
+
 /**
  * Send messages via Lightspeed SSE (`useSendStreamMessage` → `/v1/streaming_query`)
  * and map client-state messages into PatternFly Chatbot message props.
+ * Page context is attached only when the caller opts in for that message.
  */
 export const useLightspeedChat = (): UseLightspeedChatResult => {
   const [backendError, setBackendError] = React.useState<string>();
@@ -52,7 +74,7 @@ export const useLightspeedChat = (): UseLightspeedChatResult => {
   );
 
   const sendMessage = React.useCallback(
-    async (message: string | number) => {
+    async (message: string | number, options?: SendChatMessageOptions) => {
       const trimmedMessage = String(message).trim();
       if (!trimmedMessage || isInProgress) {
         return;
@@ -62,6 +84,12 @@ export const useLightspeedChat = (): UseLightspeedChatResult => {
       setAnnouncement(
         `Message from you: ${trimmedMessage}. ${KONFLUX_ASSISTANT_NAME} is responding.`,
       );
+
+      if (options?.includePageContext === true) {
+        stagePageContextAttachments();
+      } else {
+        clearPendingLightspeedAttachments();
+      }
 
       try {
         const response = await sendStreamMessage(trimmedMessage);
@@ -76,6 +104,8 @@ export const useLightspeedChat = (): UseLightspeedChatResult => {
           'Lightspeed streaming query failed',
           error instanceof Error ? error : new Error(messageText),
         );
+      } finally {
+        clearPendingLightspeedAttachments();
       }
     },
     [isInProgress, sendStreamMessage],

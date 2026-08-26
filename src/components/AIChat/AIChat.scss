@@ -51,4 +51,9 @@
   .konflux-ai-chat__brand {
     color: var(--pf-t--global--text--color--regular);
   }
+
+  .konflux-ai-chat__page-context {
+    margin-block-start: var(--pf-t--global--spacer--sm);
+    padding-inline: var(--pf-t--global--spacer--md);
+  }
 }

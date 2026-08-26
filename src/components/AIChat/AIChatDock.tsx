@@ -15,10 +15,13 @@ import ChatbotWelcomePrompt from '@patternfly/chatbot/dist/dynamic/ChatbotWelcom
 import Message from '@patternfly/chatbot/dist/dynamic/Message';
 import MessageBar from '@patternfly/chatbot/dist/dynamic/MessageBar';
 import MessageBox from '@patternfly/chatbot/dist/dynamic/MessageBox';
+import { Checkbox, Flex, FlexItem } from '@patternfly/react-core';
 import KonfluxLogo from '~/assets/konflux-logo.svg';
 import { CHAT_MESSAGE_REHYPE_PLUGINS } from '~/components/AIChat/chatMessagePlugins';
 import {
   KONFLUX_AI_FOOTNOTE,
+  KONFLUX_AI_INCLUDE_PAGE_CONTEXT_DESCRIPTION,
+  KONFLUX_AI_INCLUDE_PAGE_CONTEXT_LABEL,
   KONFLUX_AI_MESSAGE_PLACEHOLDER,
   KONFLUX_AI_TOGGLE_BUTTON_LABEL,
   KONFLUX_AI_TOGGLE_TOOLTIP,
@@ -37,6 +40,7 @@ const displayMode = ChatbotDisplayMode.default;
  */
 export const AIChatDock: React.FC = () => {
   const [isChatbotVisible, setIsChatbotVisible] = React.useState(false);
+  const [includePageContext, setIncludePageContext] = React.useState(false);
   const scrollToBottomRef = React.useRef<HTMLDivElement>(null);
   const {
     messages,
@@ -53,6 +57,15 @@ export const AIChatDock: React.FC = () => {
     }
     scrollToBottomRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'end' });
   }, [messages]);
+
+  const handleSendMessage = React.useCallback(
+    (message: string | number) => {
+      const shouldAttachPageContext = includePageContext;
+      setIncludePageContext(false);
+      void sendMessage(message, { includePageContext: shouldAttachPageContext });
+    },
+    [includePageContext, sendMessage],
+  );
 
   return createPortal(
     <div className="konflux-ai-chat" data-test="ai-chat-dock">
@@ -102,11 +115,22 @@ export const AIChatDock: React.FC = () => {
           <MessageBar
             hasAttachButton={false}
             isSendButtonDisabled={isSendButtonDisabled}
-            onSendMessage={(message) => {
-              void sendMessage(message);
-            }}
+            onSendMessage={handleSendMessage}
             placeholder={KONFLUX_AI_MESSAGE_PLACEHOLDER}
           />
+          <Flex className="konflux-ai-chat__page-context">
+            <FlexItem>
+              <Checkbox
+                id="ai-chat-include-page-context"
+                data-test="ai-chat-include-page-context"
+                label={KONFLUX_AI_INCLUDE_PAGE_CONTEXT_LABEL}
+                description={KONFLUX_AI_INCLUDE_PAGE_CONTEXT_DESCRIPTION}
+                isChecked={includePageContext}
+                isDisabled={isSendButtonDisabled}
+                onChange={(_event, checked) => setIncludePageContext(checked)}
+              />
+            </FlexItem>
+          </Flex>
           <ChatbotFootnote label={KONFLUX_AI_FOOTNOTE} />
         </ChatbotFooter>
       </Chatbot>

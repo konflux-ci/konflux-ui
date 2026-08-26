@@ -15,3 +15,8 @@ export const KONFLUX_AI_MESSAGE_PLACEHOLDER = 'Ask about your Konflux resources.
 export const KONFLUX_AI_TOGGLE_TOOLTIP = 'Konflux AI assistant';
 
 export const KONFLUX_AI_TOGGLE_BUTTON_LABEL = 'Open Konflux AI assistant';
+
+export const KONFLUX_AI_INCLUDE_PAGE_CONTEXT_LABEL = 'Include page context with this message';
+
+export const KONFLUX_AI_INCLUDE_PAGE_CONTEXT_DESCRIPTION =
+  'Attaches visible logs, tables, and pipeline status from this page. Off unless you opt in.';
