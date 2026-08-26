@@ -6,6 +6,7 @@ import { parseAsString, useQueryState } from 'nuqs';
 import {
   APPLICATION_LIST_PATH,
   COMPONENTS_PATH,
+  GROUPS_PATH,
   ISSUES_PATH,
   NAMESPACE_LIST_PATH,
   PIPELINE_RUNS_PAGE_PATH,
@@ -54,7 +55,7 @@ export const AppSideBar: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
               <NavLink to={NAMESPACE_LIST_PATH.createPath({} as never)}>Namespaces</NavLink>
             </NavItem>
 
-            <IfFeature flag="components-page">
+            <IfFeature flag="component-model">
               <NavItem
                 className={css({ 'app-side-bar__nav-item--disabled': disabled })}
                 isActive={isActive(COMPONENTS_PATH.path)}
@@ -66,7 +67,25 @@ export const AppSideBar: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
                 >
                   Components{' '}
                   <FeatureFlagIndicator
-                    flags={['components-page']}
+                    flags={['component-model']}
+                    hasNoPadding
+                    popOverTriggerAction="hover"
+                  />
+                </Link>
+              </NavItem>
+            </IfFeature>
+
+            <IfFeature flag="component-model">
+              <NavItem
+                className={css({ 'app-side-bar__nav-item--disabled': disabled })}
+                isActive={isActive(GROUPS_PATH.path)}
+              >
+                <Link
+                  to={namespace ? GROUPS_PATH.createPath({ workspaceName: namespace }) : undefined}
+                >
+                  Groups{' '}
+                  <FeatureFlagIndicator
+                    flags={['component-model']}
                     hasNoPadding
                     popOverTriggerAction="hover"
                   />

@@ -15,7 +15,7 @@ const componentsPageRoutes = [
     path: COMPONENTS_PATH.path,
     errorElement: <RouteErrorBoundry />,
     async lazy() {
-      ensureFeatureFlagOnLoader('components-page');
+      ensureFeatureFlagOnLoader('component-model');
       const { default: Component } = await import(
         '~/components/ComponentList/ComponentsListView' /* webpackChunkName: "components-list" */
       );
