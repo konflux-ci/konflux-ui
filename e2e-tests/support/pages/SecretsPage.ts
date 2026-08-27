@@ -1,7 +1,7 @@
 import { secretsPagePO } from '../pageObjects/pages-po';
 
 export class SecretsPage {
-  static editSecret(secretName: string, secretKey: string, secretValue: string) {
+  static checkValues(secretName: string, secretKey: string, secretValue: string) {
     cy.get(secretsPagePO.rowKebabButton(secretName)).click();
     cy.get(secretsPagePO.editButton).click();
     cy.contains('button', secretsPagePO.showValuesButton).click();
@@ -16,11 +16,15 @@ export class SecretsPage {
     cy.get(secretsPagePO.keyInput).scrollIntoView().clear().type(secretKey);
     cy.get(secretsPagePO.valueInput).scrollIntoView().clear().type(secretValue);
     cy.get(secretsPagePO.submitButton).click();
-    cy.get(secretsPagePO.secretRow(secretName)).should('exist');
   }
 
-  static searchSecret(secretName: string) {
+  static searchSecret(secretName: string, isListed: boolean) {
     cy.get(secretsPagePO.listNameInput).clear().type(secretName);
+    if (isListed) {
+      cy.get(secretsPagePO.secretRow(secretName)).should('exist');
+    } else {
+      cy.get(secretsPagePO.secretRow(secretName)).should('not.exist');
+    }
   }
 
   static deleteSecret(secretName: string) {
@@ -28,6 +32,5 @@ export class SecretsPage {
     cy.get(secretsPagePO.deleteButton).click();
     cy.get(secretsPagePO.deleteConfirmInput).click().type(secretName);
     cy.get(secretsPagePO.deleteResourceButton).click();
-    cy.get(secretsPagePO.secretRow(secretName)).should('not.exist');
   }
 }

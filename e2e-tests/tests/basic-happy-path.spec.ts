@@ -264,7 +264,7 @@ describe('Basic Happy Path', () => {
     const secretKey = 'mykey';
     const secretValue = 'myvalue';
 
-    it('Navigate to Secrets page from the sidebar', () => {
+    it('Add, Verify and Delete a secret', () => {
       cy.log('Navigate to Secrets page from the sidebar');
       Common.navigateTo(NavItem.secrets);
       Common.waitForLoad();
@@ -276,11 +276,13 @@ describe('Basic Happy Path', () => {
       SecretsPage.addSecret(secretName, secretKey, secretValue);
 
       // Search secret in a filter field
-      SecretsPage.searchSecret(secretName);
+      SecretsPage.searchSecret(secretName, true);
       // Verify secret values, no edition is done
-      SecretsPage.editSecret(secretName, secretKey, secretValue);
+      SecretsPage.checkValues(secretName, secretKey, secretValue);
       // Delete secret
       SecretsPage.deleteSecret(secretName);
+      // Search secret in a filter field
+      SecretsPage.searchSecret(secretName, false);
     });
   });
 
