@@ -3,12 +3,12 @@ import { userAccessPO } from '../pageObjects/userAccess-po';
 
 export class UserAccessPage {
   static getTableRow(username: string) {
-    return cy.contains(userAccessPO.listTableRow, username, { timeout: 60000 }).scrollIntoView();
+    return cy.contains(userAccessPO.listTableRow, username).scrollIntoView();
   }
 
   static grantAccess(username: string, role: string) {
     cy.log(`Grant "${role}" access to user "${username}"`);
-    cy.contains(UIhelperPO.pf6_button, /^\s*Grant access\s*$/).click();
+    cy.contains(UIhelperPO.pf6_button, 'Grant access').click();
 
     cy.log('Enter the username');
     cy.get(userAccessPO.usernameInput).find('input').type(`${username}{enter}`);
@@ -24,28 +24,26 @@ export class UserAccessPage {
 
   static verifyUserInTable(username: string, role: string) {
     // search for the user in the table
-    cy.get(userAccessPO.searchInput, { timeout: 60000 }).should('be.visible');
+    cy.get(userAccessPO.searchInput).should('be.visible');
     cy.get(userAccessPO.searchInput).clear();
     cy.get(userAccessPO.searchInput).type(username);
 
-    cy.contains(userAccessPO.listTableRow, username, { timeout: 60000 }).scrollIntoView();
+    cy.contains(userAccessPO.listTableRow, username).scrollIntoView();
     cy.contains(userAccessPO.listTableRow, username).within(() => {
-      cy.contains(role, { timeout: 60000 }).scrollIntoView().should('be.visible');
+      cy.contains(role).should('be.visible');
     });
   }
 
   static changeAccessRole(username: string, newRole: string) {
     cy.log(`Change the role of user "${username}" to "${newRole}"`);
     UserAccessPage.getTableRow(username).find(userAccessPO.rowCheckbox).check();
-    cy.get(userAccessPO.changeAccessButton).should('be.enabled').click({ force: true });
+    cy.get(userAccessPO.changeAccessButton).should('be.enabled').click();
 
     cy.get(userAccessPO.changeRoleModal).should('be.visible');
     cy.get(userAccessPO.changeRoleSelect).click();
     // PF6 renders the Select menu in a fixed-position popper outside the modal
     cy.get('[role="listbox"]:visible').contains(newRole).click();
-    cy.get(userAccessPO.changeRoleModal)
-      .contains('button', /^\s*Save\s*$/)
-      .click();
+    cy.get(userAccessPO.changeRoleModal).contains('button', 'Save').click();
     cy.get(userAccessPO.changeRoleModal).should('not.exist');
   }
 

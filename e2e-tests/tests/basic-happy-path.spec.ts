@@ -262,24 +262,19 @@ describe('Basic Happy Path', () => {
       Common.verifyPageTitle('User access');
       cy.testA11y('User access page');
 
-      cy.log(`Grant "${grantedRole}" access to the user "${username}"`);
       UserAccessPage.grantAccess(username, grantedRole);
-      cy.url({ timeout: 60000 }).should('match', /\/ns\/.+\/access$/);
+      cy.url().should('match', /\/ns\/.+\/access$/);
 
-      cy.log('Verify the user is listed with the correct role');
       UserAccessPage.verifyUserInTable(username, grantedRole);
 
-      cy.log(`Change the access role of the user to "${changedRole}"`);
       UserAccessPage.changeAccessRole(username, changedRole);
 
-      cy.log('Verify the role change was applied');
       UserAccessPage.verifyUserInTable(username, changedRole);
 
-      cy.log('Revoke the user access from the row actions');
       UserAccessPage.revokeAccess(username);
 
       cy.log('Verify the user was removed from the list');
-      cy.contains(userAccessPO.listTableRow, username, { timeout: 60000 }).should('not.exist');
+      cy.contains(userAccessPO.listTableRow, username).should('not.exist');
     });
   });
 
