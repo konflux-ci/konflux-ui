@@ -3,7 +3,6 @@ import { TrackEvents } from '~/analytics';
 import { useTrackAnalyticsEvent } from '~/analytics/hooks';
 import { logger } from '~/monitoring/logger';
 import { FlagKey } from './flags';
-import { FeatureFlagsStore } from './store';
 
 /** Map of flag keys to their new boolean value. Only changed flags are included. */
 export type FeatureFlagChanges = Partial<Record<FlagKey, boolean>>;
@@ -39,8 +38,12 @@ export function computeFeatureFlagChanges(
  * Tracks `feature_flags_changed` once per panel open/close (mount = open,
  * unmount = close), always firing even with no changes. Mirrors the
  * `useAuthAnalytics` pattern of a domain-colocated analytics hook.
+ *
+ * Takes `flags` from the caller's `useFeatureFlags()` rather than reading
+ * `FeatureFlagsStore.state` directly, so the diff always matches what React
+ * actually rendered instead of racing the store's imperative mutations.
  */
-export const useFeatureFlagAnalytics = (): void => {
+export const useFeatureFlagAnalytics = (flags: Record<FlagKey, boolean>): void => {
   const trackEvent = useTrackAnalyticsEvent();
 
   // trackEvent's identity changes on every render (useIsAnalyticsEnabled's
@@ -49,8 +52,15 @@ export const useFeatureFlagAnalytics = (): void => {
   const trackEventRef = React.useRef(trackEvent);
   trackEventRef.current = trackEvent;
 
+  // openFlagsRef: set once, on the first render (mount = panel open).
+  // latestFlagsRef: re-synced on every render, so the unmount cleanup below
+  // always diffs against the latest rendered flags, never a stale closure.
+  const openFlagsRef = React.useRef(flags);
+  const latestFlagsRef = React.useRef(flags);
+  latestFlagsRef.current = flags;
+
   React.useEffect(() => {
-    const openState = { ...FeatureFlagsStore.state };
+    const openFlags = openFlagsRef.current;
     const pagePath = window.location.pathname;
 
     // Dev-only: React.StrictMode (main.tsx) fakes an instant
@@ -69,8 +79,8 @@ export const useFeatureFlagAnalytics = (): void => {
       }
 
       const { changes, changesCount } = computeFeatureFlagChanges(
-        openState,
-        FeatureFlagsStore.state,
+        openFlags,
+        latestFlagsRef.current,
       );
 
       trackEventRef.current(TrackEvents.feature_flags_changed_event, {

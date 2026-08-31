@@ -1,6 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { TrackEvents } from '~/analytics';
 import { FlagKey } from '../flags';
+import { useFeatureFlags } from '../hooks';
 import { FeatureFlagsStore } from '../store';
 import { computeFeatureFlagChanges, useFeatureFlagAnalytics } from '../useFeatureFlagAnalytics';
 
@@ -125,10 +126,17 @@ describe('useFeatureFlagAnalytics', () => {
     jest.clearAllMocks();
   });
 
+  // Mirrors how Panel.tsx wires the hook: `flags` comes from useFeatureFlags(),
+  // never read from FeatureFlagsStore.state directly.
+  const useOpenPanel = () => {
+    const [flags] = useFeatureFlags();
+    useFeatureFlagAnalytics(flags);
+  };
+
   // Renders and lets the "confirmed real mount" microtask flush, so unmount()
   // isn't mistaken for StrictMode's fake unmount (see test below).
   const renderOpenPanel = async () => {
-    const utils = renderHook(() => useFeatureFlagAnalytics());
+    const utils = renderHook(useOpenPanel);
     await act(async () => {
       await Promise.resolve();
     });
@@ -136,7 +144,7 @@ describe('useFeatureFlagAnalytics', () => {
   };
 
   it('does not track anything while mounted (panel still open)', () => {
-    renderHook(() => useFeatureFlagAnalytics());
+    renderHook(useOpenPanel);
 
     expect(trackEventMock).not.toHaveBeenCalled();
   });
@@ -245,7 +253,11 @@ describe('useFeatureFlagAnalytics', () => {
     // Regression test: trackEvent's identity legitimately changes on every
     // render in the real app -- only the real unmount should ever fire.
     const calls: unknown[][] = [];
-    useTrackAnalyticsEvent.mockImplementation(() => (...args: unknown[]) => calls.push(args));
+    useTrackAnalyticsEvent.mockImplementation(
+      () =>
+        (...args: unknown[]) =>
+          calls.push(args),
+    );
 
     const { rerender, unmount } = await renderOpenPanel();
 
@@ -268,15 +280,15 @@ describe('useFeatureFlagAnalytics', () => {
     ]);
   });
 
-  it('does not fire from React StrictMode\'s synchronous dev-only mount/unmount/remount', async () => {
+  it("does not fire from React StrictMode's synchronous dev-only mount/unmount/remount", async () => {
     // StrictMode mounts/unmounts/remounts synchronously in dev; that fake
     // unmount must be ignored -- only the real close should fire.
-    const fake = renderHook(() => useFeatureFlagAnalytics());
+    const fake = renderHook(useOpenPanel);
     fake.unmount(); // simulates StrictMode's synchronous fake unmount
 
     expect(trackEventMock).not.toHaveBeenCalled();
 
-    const real = renderHook(() => useFeatureFlagAnalytics()); // simulates the real re-mount
+    const real = renderHook(useOpenPanel); // simulates the real re-mount
     await act(async () => {
       await Promise.resolve(); // let the deferred "confirmed mount" microtask flush
     });
