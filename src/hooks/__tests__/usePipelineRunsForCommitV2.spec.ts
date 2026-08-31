@@ -219,7 +219,6 @@ describe('usePipelineRunsForCommitV2', () => {
     it('should not report loaded until components are also loaded when filtering by components', () => {
       mockUseComponents.mockReturnValue([[], false]);
 
-      // @ts-expect-error - Mocking partial infinite query result for testing
       mockUseKubearchiveListResourceQuery.mockReturnValue({
         data: {
           pages: [[resultMock[0]]],
@@ -230,7 +229,7 @@ describe('usePipelineRunsForCommitV2', () => {
         hasNextPage: false,
         isFetchingNextPage: false,
         fetchNextPage: undefined,
-      });
+      } as ReturnType<typeof useKubearchiveListResourceQuery>);
 
       const { result } = renderHook(() =>
         usePipelineRunsForCommitV2('test-ns', 'test-app', 'sample-sha'),
