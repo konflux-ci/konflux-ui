@@ -5,6 +5,7 @@ import {
   classifyReferrer,
   getArrivalSource,
   markSessionStartedOnce,
+  refineArrivalSource,
 } from '../arrival-source';
 
 const setReferrer = (referrer: string) => {
@@ -23,10 +24,15 @@ describe('classifyReferrer', () => {
     ['https://gist.github.com/someone/abc', 'github'],
     ['HTTPS://GITHUB.COM/foo', 'github'],
     ['http://github.com/', 'github'],
-    ['https://gitlab.com/some/project', 'other'],
+    ['https://gitlab.com/some/project', 'gitlab'],
+    ['https://gitlab.com/konflux-ci/konflux-ui/-/merge_requests/42', 'gitlab'],
+    ['https://sub.gitlab.com/org/repo', 'gitlab'],
+    ['HTTPS://GITLAB.COM/foo', 'gitlab'],
     ['https://app.slack.com/client', 'other'],
     ['https://notgithub.com', 'other'],
+    ['https://notgitlab.com', 'other'],
     ['https://github.com.evil.com/phishing', 'other'],
+    ['https://gitlab.com.evil.com/phishing', 'other'],
     ['https://evilgithub.com/', 'other'],
     ['not a valid url', 'other'],
     ['/relative/path/only', 'other'],
@@ -60,8 +66,16 @@ describe('captureArrivalSourceOnce / getArrivalSource', () => {
     expect(getArrivalSource()).toBe('github');
   });
 
-  it('should capture and persist "other" for a non-github referrer', () => {
+  it('should capture and persist "gitlab" for a gitlab.com referrer', () => {
     setReferrer('https://gitlab.com/some/project');
+
+    captureArrivalSourceOnce();
+
+    expect(getArrivalSource()).toBe('gitlab');
+  });
+
+  it('should capture and persist "other" for a non-github/gitlab referrer', () => {
+    setReferrer('https://app.slack.com/client');
 
     captureArrivalSourceOnce();
 
@@ -183,5 +197,47 @@ describe('markSessionStartedOnce', () => {
     // fixed without persistent storage, so we only assert it doesn't throw.
     expect(() => markSessionStartedOnce()).not.toThrow();
     expect(markSessionStartedOnce()).toBe(true);
+  });
+});
+
+describe('refineArrivalSource', () => {
+  beforeEach(() => {
+    window.sessionStorage.clear();
+    setReferrer('');
+  });
+
+  it('should upgrade from "other" to "gitlab" when git-provider label is available', () => {
+    captureArrivalSourceOnce();
+    expect(getArrivalSource()).toBe('other');
+
+    refineArrivalSource('gitlab');
+
+    expect(getArrivalSource()).toBe('gitlab');
+  });
+
+  it('should upgrade from "other" to "github" when git-provider label is available', () => {
+    captureArrivalSourceOnce();
+
+    refineArrivalSource('github');
+
+    expect(getArrivalSource()).toBe('github');
+  });
+
+  it('should not downgrade a specific source back to "other"', () => {
+    setReferrer('https://github.com');
+    captureArrivalSourceOnce();
+
+    refineArrivalSource('other');
+
+    expect(getArrivalSource()).toBe('github');
+  });
+
+  it('should not overwrite an already-specific source with a different one', () => {
+    setReferrer('https://github.com');
+    captureArrivalSourceOnce();
+
+    refineArrivalSource('gitlab');
+
+    expect(getArrivalSource()).toBe('github');
   });
 });

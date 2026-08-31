@@ -4,11 +4,11 @@ import { createKeyedJSONStorage } from '~/shared/utils/storage';
 /**
  * Coarse classification of where a browser session arrived from.
  *
- * Only two buckets are reliably detectable via `document.referrer`: `github`
- * and `other` (everything else, including an empty referrer).
+ * Three buckets are reliably detectable via `document.referrer`: `github`,
+ * `gitlab`, and `other` (everything else, including an empty referrer).
  * See docs/analytics.md for details.
  */
-export type ArrivalSource = 'github' | 'other';
+export type ArrivalSource = 'github' | 'gitlab' | 'other';
 
 const arrivalSourceStorage = createKeyedJSONStorage<ArrivalSource>(
   SESSION_STORAGE_KEYS.ARRIVAL_SOURCE,
@@ -30,7 +30,9 @@ export function classifyReferrer(referrer: string): ArrivalSource {
   }
   try {
     const { hostname } = new URL(referrer);
-    return hostname === 'github.com' || hostname.endsWith('.github.com') ? 'github' : 'other';
+    if (hostname === 'github.com' || hostname.endsWith('.github.com')) return 'github';
+    if (hostname === 'gitlab.com' || hostname.endsWith('.gitlab.com')) return 'gitlab';
+    return 'other';
   } catch {
     return 'other';
   }
@@ -57,6 +59,20 @@ export function captureArrivalSourceOnce(): void {
  */
 export function getArrivalSource(): ArrivalSource {
   return arrivalSourceStorage.get() ?? 'other';
+}
+
+/**
+ * Overrides the stored arrival source with a more accurate value.
+ * Used by components that can determine the source from richer context
+ * (e.g. the `git-provider` label on a PipelineRun) than `document.referrer`
+ * alone. Only upgrades from `'other'` — a specific source is never
+ * downgraded.
+ */
+export function refineArrivalSource(source: ArrivalSource): void {
+  if (source === 'other' || getArrivalSource() !== 'other') {
+    return;
+  }
+  arrivalSourceStorage.set(source);
 }
 
 /**

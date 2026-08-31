@@ -144,7 +144,7 @@ On a page refresh there is no `logged_in` param, so no login event fires.
 
 ## Arrival Source
 
-`captureArrivalSourceOnce()` runs as the first statement in `main.tsx` to classify `document.referrer` before the OAuth redirect can overwrite it. The classified value (`'github'` or `'other'`) is persisted to `sessionStorage` so it survives the redirect.
+`captureArrivalSourceOnce()` runs as the first statement in `main.tsx` to classify `document.referrer` before the OAuth redirect can overwrite it. The classified value (`'github'`, `'gitlab'`, or `'other'`) is persisted to `sessionStorage` so it survives the redirect.
 
 `markSessionStartedOnce()` is a separate guard that ensures the `ui_session_started` event fires exactly **once per new tab** — it returns `true` only the first time it's called per tab session. `sessionStorage` persists across reloads/navigation but is fresh for a new tab, which is what enforces the "new tab only" rule.
 
