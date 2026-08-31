@@ -12,7 +12,7 @@ export const FeatureFlagPanel: React.FC = () => {
   const conditions = useAllFlagsConditions();
 
   // Fires `feature_flags_changed` on close (see docs/analytics.md).
-  useFeatureFlagAnalytics();
+  useFeatureFlagAnalytics(flags);
 
   const flagList = Object.values(FLAGS).filter((flag) => {
     if (!flag.guard) return true;
