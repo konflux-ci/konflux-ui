@@ -1,4 +1,5 @@
 import { SESSION_STORAGE_KEYS } from '~/consts/constants';
+import { GitProvider } from '~/shared/utils/git-utils';
 import {
   ArrivalSource,
   captureArrivalSourceOnce,
@@ -17,26 +18,31 @@ const setReferrer = (referrer: string) => {
 
 describe('classifyReferrer', () => {
   const cases: Array<[referrer: string, expected: ArrivalSource]> = [
-    ['', 'other'],
-    ['https://github.com', 'github'],
-    ['https://github.com/konflux-ci/konflux-ui', 'github'],
-    ['https://github.com/konflux-ci/konflux-ui/pull/1', 'github'],
-    ['https://gist.github.com/someone/abc', 'github'],
-    ['HTTPS://GITHUB.COM/foo', 'github'],
-    ['http://github.com/', 'github'],
-    ['https://gitlab.com/some/project', 'gitlab'],
-    ['https://gitlab.com/konflux-ci/konflux-ui/-/merge_requests/42', 'gitlab'],
-    ['https://sub.gitlab.com/org/repo', 'gitlab'],
-    ['HTTPS://GITLAB.COM/foo', 'gitlab'],
-    ['https://app.slack.com/client', 'other'],
-    ['https://notgithub.com', 'other'],
-    ['https://notgitlab.com', 'other'],
-    ['https://github.com.evil.com/phishing', 'other'],
-    ['https://gitlab.com.evil.com/phishing', 'other'],
-    ['https://evilgithub.com/', 'other'],
-    ['not a valid url', 'other'],
-    ['/relative/path/only', 'other'],
-    ['   ', 'other'],
+    ['', GitProvider.UNSURE],
+    ['https://github.com', GitProvider.GITHUB],
+    ['https://github.com/konflux-ci/konflux-ui', GitProvider.GITHUB],
+    ['https://github.com/konflux-ci/konflux-ui/pull/1', GitProvider.GITHUB],
+    ['https://gist.github.com/someone/abc', GitProvider.GITHUB],
+    ['HTTPS://GITHUB.COM/foo', GitProvider.GITHUB],
+    ['http://github.com/', GitProvider.GITHUB],
+    ['https://gitlab.com/some/project', GitProvider.GITLAB],
+    ['https://gitlab.com/konflux-ci/konflux-ui/-/merge_requests/42', GitProvider.GITLAB],
+    ['https://sub.gitlab.com/org/repo', GitProvider.GITLAB],
+    ['HTTPS://GITLAB.COM/foo', GitProvider.GITLAB],
+    ['https://bitbucket.org/some/project', GitProvider.BITBUCKET],
+    ['https://sub.bitbucket.org/org/repo', GitProvider.BITBUCKET],
+    ['HTTPS://BITBUCKET.ORG/foo', GitProvider.BITBUCKET],
+    ['https://app.slack.com/client', GitProvider.UNSURE],
+    ['https://notgithub.com', GitProvider.UNSURE],
+    ['https://notgitlab.com', GitProvider.UNSURE],
+    ['https://notbitbucket.org.evil.com', GitProvider.UNSURE],
+    ['https://github.com.evil.com/phishing', GitProvider.UNSURE],
+    ['https://gitlab.com.evil.com/phishing', GitProvider.UNSURE],
+    ['https://bitbucket.org.evil.com/phishing', GitProvider.UNSURE],
+    ['https://evilgithub.com/', GitProvider.UNSURE],
+    ['not a valid url', GitProvider.UNSURE],
+    ['/relative/path/only', GitProvider.UNSURE],
+    ['   ', GitProvider.UNSURE],
   ];
 
   it.each(cases)('classifies "%s" as "%s"', (referrer, expected) => {
@@ -55,7 +61,7 @@ describe('captureArrivalSourceOnce / getArrivalSource', () => {
   });
 
   it('should default to "other" when nothing has been captured yet', () => {
-    expect(getArrivalSource()).toBe('other');
+    expect(getArrivalSource()).toBe(GitProvider.UNSURE);
   });
 
   it('should capture and persist "github" for a github.com referrer', () => {
@@ -63,7 +69,7 @@ describe('captureArrivalSourceOnce / getArrivalSource', () => {
 
     captureArrivalSourceOnce();
 
-    expect(getArrivalSource()).toBe('github');
+    expect(getArrivalSource()).toBe(GitProvider.GITHUB);
   });
 
   it('should capture and persist "gitlab" for a gitlab.com referrer', () => {
@@ -71,15 +77,15 @@ describe('captureArrivalSourceOnce / getArrivalSource', () => {
 
     captureArrivalSourceOnce();
 
-    expect(getArrivalSource()).toBe('gitlab');
+    expect(getArrivalSource()).toBe(GitProvider.GITLAB);
   });
 
-  it('should capture and persist "other" for a non-github/gitlab referrer', () => {
+  it('should capture and persist "other" for a non-github/gitlab/bitbucket referrer', () => {
     setReferrer('https://app.slack.com/client');
 
     captureArrivalSourceOnce();
 
-    expect(getArrivalSource()).toBe('other');
+    expect(getArrivalSource()).toBe(GitProvider.UNSURE);
   });
 
   it('should capture and persist "other" for an empty referrer (direct navigation)', () => {
@@ -87,19 +93,19 @@ describe('captureArrivalSourceOnce / getArrivalSource', () => {
 
     captureArrivalSourceOnce();
 
-    expect(getArrivalSource()).toBe('other');
+    expect(getArrivalSource()).toBe(GitProvider.UNSURE);
   });
 
   it('should only capture once per session — a second call must not overwrite the first value', () => {
     setReferrer('https://github.com/konflux-ci/konflux-ui');
     captureArrivalSourceOnce();
-    expect(getArrivalSource()).toBe('github');
+    expect(getArrivalSource()).toBe(GitProvider.GITHUB);
 
     // Simulates the OAuth redirect landing back with a different referrer.
     setReferrer('https://oauth-proxy.example.com/oauth2/callback');
     captureArrivalSourceOnce();
 
-    expect(getArrivalSource()).toBe('github');
+    expect(getArrivalSource()).toBe(GitProvider.GITHUB);
   });
 
   it('should only write to sessionStorage once, under the arrival-source key, with only the enum value', () => {
@@ -112,7 +118,7 @@ describe('captureArrivalSourceOnce / getArrivalSource', () => {
     expect(setItemSpy).toHaveBeenCalledTimes(1);
     expect(setItemSpy).toHaveBeenCalledWith(
       SESSION_STORAGE_KEYS.ARRIVAL_SOURCE,
-      JSON.stringify('github'),
+      JSON.stringify(GitProvider.GITHUB),
     );
   });
 
@@ -122,7 +128,7 @@ describe('captureArrivalSourceOnce / getArrivalSource', () => {
     captureArrivalSourceOnce();
 
     const stored = window.sessionStorage.getItem(SESSION_STORAGE_KEYS.ARRIVAL_SOURCE);
-    expect(stored).toBe(JSON.stringify('github'));
+    expect(stored).toBe(JSON.stringify(GitProvider.GITHUB));
     expect(stored).not.toContain('super-secret-private-repo');
   });
 
@@ -133,7 +139,7 @@ describe('captureArrivalSourceOnce / getArrivalSource', () => {
     setReferrer('https://github.com/konflux-ci/konflux-ui');
 
     expect(() => captureArrivalSourceOnce()).not.toThrow();
-    expect(getArrivalSource()).toBe('other');
+    expect(getArrivalSource()).toBe(GitProvider.UNSURE);
   });
 });
 
@@ -208,36 +214,36 @@ describe('refineArrivalSource', () => {
 
   it('should upgrade from "other" to "gitlab" when git-provider label is available', () => {
     captureArrivalSourceOnce();
-    expect(getArrivalSource()).toBe('other');
+    expect(getArrivalSource()).toBe(GitProvider.UNSURE);
 
-    refineArrivalSource('gitlab');
+    refineArrivalSource(GitProvider.GITLAB);
 
-    expect(getArrivalSource()).toBe('gitlab');
+    expect(getArrivalSource()).toBe(GitProvider.GITLAB);
   });
 
-  it('should upgrade from "other" to "github" when git-provider label is available', () => {
+  it('should upgrade from "other" to "forgejo" when git-provider label is available', () => {
     captureArrivalSourceOnce();
 
-    refineArrivalSource('github');
+    refineArrivalSource(GitProvider.FORGEJO);
 
-    expect(getArrivalSource()).toBe('github');
+    expect(getArrivalSource()).toBe(GitProvider.FORGEJO);
   });
 
   it('should not downgrade a specific source back to "other"', () => {
     setReferrer('https://github.com');
     captureArrivalSourceOnce();
 
-    refineArrivalSource('other');
+    refineArrivalSource(GitProvider.UNSURE);
 
-    expect(getArrivalSource()).toBe('github');
+    expect(getArrivalSource()).toBe(GitProvider.GITHUB);
   });
 
   it('should not overwrite an already-specific source with a different one', () => {
     setReferrer('https://github.com');
     captureArrivalSourceOnce();
 
-    refineArrivalSource('gitlab');
+    refineArrivalSource(GitProvider.GITLAB);
 
-    expect(getArrivalSource()).toBe('github');
+    expect(getArrivalSource()).toBe(GitProvider.GITHUB);
   });
 });

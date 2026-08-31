@@ -1,14 +1,25 @@
 import { SESSION_STORAGE_KEYS } from '~/consts/constants';
+import { GitProvider } from '~/shared/utils/git-utils';
 import { createKeyedJSONStorage } from '~/shared/utils/storage';
 
 /**
  * Coarse classification of where a browser session arrived from.
  *
- * Three buckets are reliably detectable via `document.referrer`: `github`,
- * `gitlab`, and `other` (everything else, including an empty referrer).
+ * Reuses {@link GitProvider} so provider identifiers stay consistent with
+ * the rest of the app. `document.referrer` can only reliably classify
+ * providers with a fixed public domain (`github`, `gitlab`, `bitbucket`) —
+ * `forgejo` is self-hosted with no canonical domain, so it's only detected
+ * via {@link refineArrivalSource} using the PipelineRun `git-provider` label
+ * (see `GithubRedirect`). Everything else, including an empty referrer,
+ * falls into `GitProvider.UNSURE` ('other').
  * See docs/analytics.md for details.
  */
-export type ArrivalSource = 'github' | 'gitlab' | 'other';
+export type ArrivalSource =
+  | GitProvider.GITHUB
+  | GitProvider.GITLAB
+  | GitProvider.BITBUCKET
+  | GitProvider.FORGEJO
+  | GitProvider.UNSURE;
 
 const arrivalSourceStorage = createKeyedJSONStorage<ArrivalSource>(
   SESSION_STORAGE_KEYS.ARRIVAL_SOURCE,
@@ -26,15 +37,17 @@ const sessionStartedStorage = createKeyedJSONStorage<boolean>(
  */
 export function classifyReferrer(referrer: string): ArrivalSource {
   if (!referrer) {
-    return 'other';
+    return GitProvider.UNSURE;
   }
   try {
     const { hostname } = new URL(referrer);
-    if (hostname === 'github.com' || hostname.endsWith('.github.com')) return 'github';
-    if (hostname === 'gitlab.com' || hostname.endsWith('.gitlab.com')) return 'gitlab';
-    return 'other';
+    if (hostname === 'github.com' || hostname.endsWith('.github.com')) return GitProvider.GITHUB;
+    if (hostname === 'gitlab.com' || hostname.endsWith('.gitlab.com')) return GitProvider.GITLAB;
+    if (hostname === 'bitbucket.org' || hostname.endsWith('.bitbucket.org'))
+      return GitProvider.BITBUCKET;
+    return GitProvider.UNSURE;
   } catch {
-    return 'other';
+    return GitProvider.UNSURE;
   }
 }
 
@@ -58,18 +71,18 @@ export function captureArrivalSourceOnce(): void {
  * unavailable (e.g. Safari private mode).
  */
 export function getArrivalSource(): ArrivalSource {
-  return arrivalSourceStorage.get() ?? 'other';
+  return arrivalSourceStorage.get() ?? GitProvider.UNSURE;
 }
 
 /**
  * Overrides the stored arrival source with a more accurate value.
  * Used by components that can determine the source from richer context
  * (e.g. the `git-provider` label on a PipelineRun) than `document.referrer`
- * alone. Only upgrades from `'other'` — a specific source is never
- * downgraded.
+ * alone. Only upgrades from `GitProvider.UNSURE` — a specific source is
+ * never downgraded.
  */
 export function refineArrivalSource(source: ArrivalSource): void {
-  if (source === 'other' || getArrivalSource() !== 'other') {
+  if (source === GitProvider.UNSURE || getArrivalSource() !== GitProvider.UNSURE) {
     return;
   }
   arrivalSourceStorage.set(source);

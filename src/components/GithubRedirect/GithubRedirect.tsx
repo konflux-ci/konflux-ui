@@ -3,10 +3,19 @@ import { Bullseye, Flex, HelperText, HelperTextItem, Spinner } from '@patternfly
 import { ArrivalSource, refineArrivalSource } from '~/analytics/arrival-source';
 import { usePipelineRunV2 } from '~/hooks/usePipelineRunsV2';
 import { getErrorState } from '~/shared/utils/error-utils';
+import { GitProvider } from '~/shared/utils/git-utils';
 import { PipelineRunLabel } from '../../consts/pipelinerun';
 import { GithubRedirectRouteParams } from '../../routes/utils';
 
-const KNOWN_GIT_PROVIDERS = new Set<ArrivalSource>(['github', 'gitlab']);
+// All PAC-reported providers except UNSURE/INVALID — the git-provider label
+// is reliable regardless of hosting (unlike document.referrer, this also
+// covers self-hosted Forgejo instances with no fixed domain).
+const KNOWN_GIT_PROVIDERS = new Set<ArrivalSource>([
+  GitProvider.GITHUB,
+  GitProvider.GITLAB,
+  GitProvider.BITBUCKET,
+  GitProvider.FORGEJO,
+]);
 
 const GithubRedirect: React.FC = () => {
   const { pathname } = useLocation();
