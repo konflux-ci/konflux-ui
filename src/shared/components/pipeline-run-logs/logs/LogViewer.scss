@@ -20,10 +20,6 @@
     padding: var(--pf-t--global--spacer--sm);
   }
 
-  &__icon {
-    margin-right: var(--pf-t--global--spacer--xs);
-  }
-
   &__divider {
     color: var(--pf-t--global--text--color--subtle);
     margin: 0 var(--pf-t--global--spacer--sm);
@@ -61,6 +57,16 @@
 
   &__task-name-spinner {
     display: flex;
+  }
+
+  &__download-all-label {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--pf-t--global--spacer--xs);
+  }
+
+  &__toolbar-item--padded {
+    padding: var(--pf-t--global--spacer--sm);
   }
 
   &__content {

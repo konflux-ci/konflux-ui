@@ -3,6 +3,7 @@ import {
   mockPrivateImageRepository,
   mockPublicImageRepository,
 } from '~/__data__/image-repository-data';
+import { useIsImageControllerEnabled } from '~/image-controller/conditional-checks';
 import { renderWithQueryClient } from '~/utils/test-utils';
 import { ImageUrlDisplay } from '../ImageUrlDisplay';
 
@@ -17,6 +18,12 @@ const mockUseImageRepository = jest.fn();
 jest.mock('~/hooks/useImageRepository', () => ({
   useImageRepository: (...args: unknown[]) => mockUseImageRepository(...args),
 }));
+
+// Mock useIsImageControllerEnabled hook
+jest.mock('~/image-controller/conditional-checks', () => ({
+  useIsImageControllerEnabled: jest.fn(),
+}));
+const useIsImageControllerEnabledMock = useIsImageControllerEnabled as jest.Mock;
 
 const testImageUrl = 'quay.io/test-namespace/test-image@sha256:abc123';
 const testNamespace = 'test-namespace';
@@ -41,7 +48,8 @@ describe('ImageUrlDisplay', () => {
   beforeEach(() => {
     mockUseImageRepository.mockClear();
     mockUseImageProxy.mockClear();
-    // Default: image proxy is loaded
+    // Default: image controller is enabled and image proxy is loaded
+    useIsImageControllerEnabledMock.mockReturnValue({ isImageControllerEnabled: true });
     mockUseImageProxy.mockReturnValue([mockUrlInfo, true, null]);
   });
 
@@ -195,6 +203,43 @@ describe('ImageUrlDisplay', () => {
     expect(link).toBeInTheDocument();
     expect(link).toHaveStyle({
       userSelect: 'auto',
+    });
+  });
+
+  describe('when image controller is disabled', () => {
+    beforeEach(() => {
+      useIsImageControllerEnabledMock.mockReturnValue({ isImageControllerEnabled: false });
+    });
+
+    it('should display raw image URL without loading skeleton', () => {
+      mockUseImageRepository.mockReturnValue([null, false, null]);
+
+      renderWithQueryClient(
+        <ImageUrlDisplay
+          imageUrl={testImageUrl}
+          namespace={testNamespace}
+          componentName={testComponentName}
+        />,
+      );
+
+      expect(screen.queryByLabelText('Loading image URL')).not.toBeInTheDocument();
+      expectLinkWithCopyButton('https://quay.io/test-namespace/test-image');
+    });
+
+    it('should display raw image URL even when ImageRepository CR exists', () => {
+      mockUseImageRepository.mockReturnValue([mockPrivateImageRepository, true, null]);
+
+      renderWithQueryClient(
+        <ImageUrlDisplay
+          imageUrl={testImageUrl}
+          namespace={testNamespace}
+          componentName={testComponentName}
+        />,
+      );
+
+      // Should show original URL, not proxied URL
+      const link = screen.getByRole('link');
+      expect(link).toHaveAttribute('href', 'https://quay.io/test-namespace/test-image');
     });
   });
 });
