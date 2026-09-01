@@ -14,7 +14,7 @@ import {
   FilterToolbar,
   buildOptions,
 } from '~/shared/components/Filter';
-import { useActiveSavedView, SavedViewStar } from '~/shared/components/SavedViews';
+import { useActiveSavedView, SavedViewActions } from '~/shared/components/SavedViews';
 import { Table, TableContainer } from '~/shared/components/TableV2';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { PipelineRunKind, ComponentKind } from '~/types';
@@ -233,7 +233,7 @@ export const PipelineRunsPage: React.FC = () => {
       description="Monitor pipeline runs across applications and components."
       customActions={
         <FilterToolbar configs={TopFilter}>
-          <SavedViewStar
+          <SavedViewActions
             resourceKey="pipeline-runs"
             columnKeyPrefix="prns-columns"
             currentColumnStateKey={columnStateKey}
