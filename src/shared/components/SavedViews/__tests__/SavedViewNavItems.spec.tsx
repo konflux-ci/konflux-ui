@@ -3,21 +3,24 @@ import { Nav, NavList } from '@patternfly/react-core';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { NuqsTestingAdapter } from 'nuqs/adapters/testing';
 import { useModalLauncher } from '~/shared/components/modal/ModalProvider';
+import { useNamespace } from '~/shared/providers/Namespace';
 import { SavedViewNavItems } from '../SavedViewNavItems';
 import { SavedViewsConfig } from '../types';
 import { useSavedViews } from '../useSavedViews';
 
 jest.mock('../useSavedViews');
 jest.mock('~/shared/components/modal/ModalProvider');
+jest.mock('~/shared/providers/Namespace', () => ({
+  useNamespace: jest.fn(),
+}));
 
-const mockRenameView = jest.fn();
 const mockDeleteView = jest.fn();
 const mockShowModal = jest.fn();
 
 const testConfig: SavedViewsConfig = {
   resourceKey: 'pipelines',
   columnKeyPrefix: 'cols-pipelines',
-  routePath: 'ns/my-workspace/pipelines',
+  routePathBuilder: (ns: string) => `ns/${ns}/pipelines`,
 };
 
 const testViews = [
@@ -26,12 +29,14 @@ const testViews = [
     label: 'Running Builds',
     searchParams: 'status=running&type=build',
     columnStateKey: 'cols-pipelines:running-builds',
+    namespace: 'my-workspace',
   },
   {
     slug: 'failed-tests',
     label: 'Failed Tests',
     searchParams: 'status=failed&type=test',
     columnStateKey: 'cols-pipelines:failed-tests',
+    namespace: 'my-workspace',
   },
 ];
 
@@ -50,11 +55,12 @@ const renderComponent = (searchParams?: Record<string, string>) =>
 
 beforeEach(() => {
   jest.clearAllMocks();
+  jest.mocked(useNamespace).mockReturnValue('my-workspace');
   jest.mocked(useSavedViews).mockReturnValue({
     views: testViews,
     saveView: jest.fn(),
     deleteView: mockDeleteView,
-    renameView: mockRenameView,
+    renameView: jest.fn(),
     updateView: jest.fn(),
     isSlugAvailable: jest.fn(),
   });
@@ -102,21 +108,71 @@ describe('SavedViewNavItems', () => {
     expect(navItem.closest('a')).not.toHaveClass('pf-m-current');
   });
 
-  it('shows Rename and Delete actions for each view', () => {
+  it('shows Delete action for each view', () => {
     renderComponent();
-    expect(screen.getByTestId('saved-view-rename-running-builds')).toBeInTheDocument();
     expect(screen.getByTestId('saved-view-delete-running-builds')).toBeInTheDocument();
-  });
-
-  it('launches rename modal on Rename click', () => {
-    renderComponent();
-    fireEvent.click(screen.getByTestId('saved-view-rename-running-builds'));
-    expect(mockShowModal).toHaveBeenCalledTimes(1);
+    expect(screen.getByTestId('saved-view-delete-failed-tests')).toBeInTheDocument();
   });
 
   it('launches delete modal on Delete click', () => {
     renderComponent();
     fireEvent.click(screen.getByTestId('saved-view-delete-running-builds'));
     expect(mockShowModal).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not render NavGroup headers when all views are in the same namespace', () => {
+    renderComponent();
+    expect(screen.queryByText('my-workspace')).not.toBeInTheDocument();
+  });
+
+  it('renders NavGroup headers when views span multiple namespaces', () => {
+    const multiNsViews = [
+      ...testViews,
+      {
+        slug: 'other-view',
+        label: 'Other View',
+        searchParams: 'status=succeeded',
+        columnStateKey: 'cols-pipelines:other-view',
+        namespace: 'other-workspace',
+      },
+    ];
+    jest.mocked(useSavedViews).mockReturnValue({
+      views: multiNsViews,
+      saveView: jest.fn(),
+      deleteView: mockDeleteView,
+      renameView: jest.fn(),
+      updateView: jest.fn(),
+      isSlugAvailable: jest.fn(),
+    });
+    renderComponent();
+    expect(screen.getByText('my-workspace')).toBeInTheDocument();
+    expect(screen.getByText('other-workspace')).toBeInTheDocument();
+    expect(screen.getByText('Other View')).toBeInTheDocument();
+  });
+
+  it('builds correct href for cross-namespace views', () => {
+    const multiNsViews = [
+      {
+        slug: 'cross-ns-view',
+        label: 'Cross NS View',
+        searchParams: 'status=failed',
+        columnStateKey: 'cols-pipelines:cross-ns-view',
+        namespace: 'other-workspace',
+      },
+    ];
+    jest.mocked(useSavedViews).mockReturnValue({
+      views: multiNsViews,
+      saveView: jest.fn(),
+      deleteView: jest.fn(),
+      renameView: jest.fn(),
+      updateView: jest.fn(),
+      isSlugAvailable: jest.fn(),
+    });
+    renderComponent();
+    const link = screen.getByText('Cross NS View').closest('a');
+    expect(link).toHaveAttribute(
+      'href',
+      '/ns/other-workspace/pipelines?status=failed&view=cross-ns-view',
+    );
   });
 });

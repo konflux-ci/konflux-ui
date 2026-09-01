@@ -14,6 +14,7 @@ import {
 import { OutlinedStarIcon } from '@patternfly/react-icons/dist/esm/icons/outlined-star-icon';
 import { StarIcon } from '@patternfly/react-icons/dist/esm/icons/star-icon';
 import { parseAsString, useQueryState } from 'nuqs';
+import { useNamespace } from '~/shared/providers/Namespace';
 import { SavedView } from './types';
 import { useSavedViews } from './useSavedViews';
 
@@ -32,11 +33,15 @@ export const SavedViewStar: React.FC<SavedViewStarProps> = ({
   isFiltered,
   activeSavedView,
 }) => {
-  const { saveView, updateView } = useSavedViews({
-    resourceKey,
-    columnKeyPrefix,
-    routePath: '',
-  });
+  const namespace = useNamespace();
+  const { saveView, updateView } = useSavedViews(
+    {
+      resourceKey,
+      columnKeyPrefix,
+      routePathBuilder: () => '',
+    },
+    namespace,
+  );
   const [, setViewParam] = useQueryState('view', parseAsString);
 
   const [name, setName] = React.useState('');
@@ -60,6 +65,7 @@ export const SavedViewStar: React.FC<SavedViewStarProps> = ({
       label: name,
       searchParams: getSearchParams(),
       currentColumnStateKey,
+      namespace,
     });
     void setViewParam(savedSlug);
     setName('');
