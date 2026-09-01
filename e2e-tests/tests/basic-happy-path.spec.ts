@@ -255,6 +255,13 @@ describe('Basic Happy Path', () => {
     const grantedRole = 'Contributor';
     const changedRole = 'Maintainer';
 
+    after(() => {
+      UserAccessPage.revokeAccess(username);
+
+      cy.log('Verify the user was removed from the list');
+      cy.contains(userAccessPO.listTableRow, username).should('not.exist');
+    });
+
     it('Grant, change, and revoke user access', () => {
       cy.log('Navigate to the User Access page from the left navigation');
       Common.navigateTo(NavItem.userAcces);
@@ -270,11 +277,6 @@ describe('Basic Happy Path', () => {
       UserAccessPage.changeAccessRole(username, changedRole);
 
       UserAccessPage.verifyUserInTable(username, changedRole);
-
-      UserAccessPage.revokeAccess(username);
-
-      cy.log('Verify the user was removed from the list');
-      cy.contains(userAccessPO.listTableRow, username).should('not.exist');
     });
   });
 
