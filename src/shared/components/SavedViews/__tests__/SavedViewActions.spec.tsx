@@ -7,6 +7,9 @@ import { useSavedViews } from '../useSavedViews';
 
 jest.mock('../useSavedViews');
 jest.mock('~/shared/components/modal/ModalProvider');
+jest.mock('~/shared/providers/Namespace', () => ({
+  useNamespace: jest.fn().mockReturnValue('test-ns'),
+}));
 jest.mock('nuqs', () => ({
   useQueryState: jest.fn(),
   parseAsString: {},
@@ -33,6 +36,7 @@ const activeView: SavedView = {
   label: 'My View',
   searchParams: 'status=running',
   columnStateKey: 'cols-pipelines:my-view',
+  namespace: 'test-ns',
 };
 
 beforeEach(() => {
