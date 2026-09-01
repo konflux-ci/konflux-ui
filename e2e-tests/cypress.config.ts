@@ -105,16 +105,18 @@ export default defineConfig({
         return launchOptions;
       });
 
-      on('after:spec', async (spec, res) => {
-        // cypress-mochawesome-reporter
-        const results = res as CypressCommandLine.RunResult;
-        if (results.stats?.failures > 0) {
-          console.log(
-            `A total of ${results.stats.failures} tests failed, DOM content saved at './cypress/saved-doms'`,
-          );
-        }
-        return null;
-      });
+      (on as any)(
+        'after:spec',
+        async (spec: Cypress.Spec, results: CypressCommandLine.RunResult) => {
+          // cypress-mochawesome-reporter
+          if (results.stats?.failures > 0 && !isStudioMode) {
+            console.log(
+              `A total of ${results.stats.failures} tests failed, DOM content saved at './cypress/saved-doms'`,
+            );
+          }
+          return null;
+        },
+      );
 
       const defaultValues: { [key: string]: string | boolean } = {
         KONFLUX_BASE_URL: 'https://localhost:8080',
