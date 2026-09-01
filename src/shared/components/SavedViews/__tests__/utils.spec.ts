@@ -35,12 +35,14 @@ describe('isSlugUnique', () => {
       label: 'View A',
       searchParams: 'status=running',
       columnStateKey: 'cols-a',
+      namespace: 'test-ns',
     },
     {
       slug: 'sv-def67890',
       label: 'View B',
       searchParams: 'status=failed',
       columnStateKey: 'cols-b',
+      namespace: 'test-ns',
     },
   ];
 
