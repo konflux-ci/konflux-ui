@@ -1,0 +1,30 @@
+[
+  {
+    "name": "main",
+    "path": "dist/main.*.js",
+    "limit": "275 kB",
+    "gzip": true
+  },
+  {
+    "name": "vendor",
+    "path": "dist/vendor.*.js",
+    "limit": "650 kB",
+    "gzip": true
+  },
+  {
+    "name": "route-chunks",
+    "path": [
+      "dist/release-monitor.*.js",
+      "dist/namespace-list.*.js",
+      "dist/components-list.*.js",
+      "dist/issues.[0-9a-f]*.js",
+      "dist/issues-overview.*.js",
+      "dist/issues-list-page.*.js",
+      "dist/tekton-logs.*.js",
+      "dist/kubearchive-logs.*.js",
+      "dist/[0-9]*.js"
+    ],
+    "limit": "40 kB",
+    "gzip": true
+  }
+]
