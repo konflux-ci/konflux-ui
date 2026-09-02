@@ -9,6 +9,11 @@ jest.mock('~/analytics/hooks', () => ({
   useTrackAnalyticsEvent: jest.fn(),
 }));
 
+jest.mock('react-router-dom', () => ({
+  ...jest.requireActual('react-router-dom'),
+  useMatches: jest.fn(),
+}));
+
 jest.mock('../flags', () => {
   const actual = jest.requireActual('../flags');
   return {
@@ -22,6 +27,10 @@ jest.mock('../flags', () => {
 
 const { useTrackAnalyticsEvent }: { useTrackAnalyticsEvent: jest.Mock } =
   jest.requireMock('~/analytics/hooks');
+const { useMatches }: { useMatches: jest.Mock } = jest.requireMock('react-router-dom');
+
+/** Mocks useMatches() so the hook resolves `pattern` via getRoutePatternFromMatches. */
+const mockPagePattern = (pattern: string) => useMatches.mockReturnValue([{ handle: { routePattern: pattern } }]);
 
 const state = (overrides: Partial<Record<FlagKey, boolean>>) =>
   ({
@@ -117,6 +126,7 @@ describe('useFeatureFlagAnalytics', () => {
   beforeEach(() => {
     trackEventMock = jest.fn();
     useTrackAnalyticsEvent.mockReturnValue(trackEventMock);
+    mockPagePattern('/');
     localStorage.clear();
     history.replaceState(null, '', '/');
     FeatureFlagsStore.refresh();
@@ -158,7 +168,7 @@ describe('useFeatureFlagAnalytics', () => {
     expect(trackEventMock).toHaveBeenCalledWith(TrackEvents.feature_flags_changed_event, {
       changes: {},
       changesCount: 0,
-      pagePath: '/',
+      pagePattern: '/',
     });
   });
 
@@ -173,7 +183,7 @@ describe('useFeatureFlagAnalytics', () => {
     expect(trackEventMock).toHaveBeenCalledWith(TrackEvents.feature_flags_changed_event, {
       changes: { alpha: true },
       changesCount: 1,
-      pagePath: '/',
+      pagePattern: '/',
     });
   });
 
@@ -189,7 +199,7 @@ describe('useFeatureFlagAnalytics', () => {
     expect(trackEventMock).toHaveBeenCalledWith(TrackEvents.feature_flags_changed_event, {
       changes: { alpha: true, beta: false },
       changesCount: 2,
-      pagePath: '/',
+      pagePattern: '/',
     });
   });
 
@@ -205,19 +215,20 @@ describe('useFeatureFlagAnalytics', () => {
     expect(trackEventMock).toHaveBeenCalledWith(TrackEvents.feature_flags_changed_event, {
       changes: {},
       changesCount: 0,
-      pagePath: '/',
+      pagePattern: '/',
     });
   });
 
-  it('captures the pathname from when the hook mounted (panel opened)', async () => {
-    history.replaceState(null, '', '/ns/my-ns/applications');
+  it('captures the page pattern from when the hook mounted (panel opened), not when it closed', async () => {
+    mockPagePattern('/ns/:workspaceName/applications');
 
     const { unmount } = await renderOpenPanel();
+    mockPagePattern('/ns/:workspaceName/applications/:applicationName');
     unmount();
 
     expect(trackEventMock).toHaveBeenCalledWith(
       TrackEvents.feature_flags_changed_event,
-      expect.objectContaining({ pagePath: '/ns/my-ns/applications' }),
+      expect.objectContaining({ pagePattern: '/ns/:workspaceName/applications' }),
     );
   });
 
@@ -233,7 +244,7 @@ describe('useFeatureFlagAnalytics', () => {
     expect(trackEventMock).toHaveBeenCalledWith(TrackEvents.feature_flags_changed_event, {
       changes: {},
       changesCount: 0,
-      pagePath: '/',
+      pagePattern: '/',
     });
   });
 
@@ -276,7 +287,7 @@ describe('useFeatureFlagAnalytics', () => {
     expect(calls).toHaveLength(1);
     expect(calls[0]).toEqual([
       TrackEvents.feature_flags_changed_event,
-      { changes: { alpha: true }, changesCount: 1, pagePath: '/' },
+      { changes: { alpha: true }, changesCount: 1, pagePattern: '/' },
     ]);
   });
 
@@ -299,7 +310,7 @@ describe('useFeatureFlagAnalytics', () => {
     expect(trackEventMock).toHaveBeenCalledWith(TrackEvents.feature_flags_changed_event, {
       changes: {},
       changesCount: 0,
-      pagePath: '/',
+      pagePattern: '/',
     });
   });
 });

@@ -11,8 +11,18 @@ jest.mock('~/analytics/hooks', () => ({
   useTrackAnalyticsEvent: jest.fn(),
 }));
 
+jest.mock('react-router-dom', () => ({
+  ...jest.requireActual('react-router-dom'),
+  useMatches: jest.fn(),
+}));
+
 const useTrackAnalyticsEventMock = jest.requireMock('~/analytics/hooks')
   .useTrackAnalyticsEvent as jest.Mock;
+const useMatchesMock = jest.requireMock('react-router-dom').useMatches as jest.Mock;
+
+/** Mocks useMatches() so the hook resolves its page pattern via getRoutePatternFromMatches. */
+const mockPagePattern = (pattern: string) =>
+  useMatchesMock.mockReturnValue([{ handle: { routePattern: pattern } }]);
 
 jest.mock('../flags', () => {
   const actual = jest.requireActual('../flags');
@@ -53,6 +63,7 @@ describe('FeatureFlagPanel analytics', () => {
   beforeEach(() => {
     trackEventMock = jest.fn();
     useTrackAnalyticsEventMock.mockReturnValue(trackEventMock);
+    mockPagePattern('/');
     localStorage.clear();
     history.replaceState(null, '', '/');
     FeatureFlagsStore.refresh();
@@ -77,7 +88,7 @@ describe('FeatureFlagPanel analytics', () => {
     expect(trackEventMock).toHaveBeenCalledWith(TrackEvents.feature_flags_changed_event, {
       changes: {},
       changesCount: 0,
-      pagePath: '/',
+      pagePattern: '/',
     });
   });
 
@@ -91,19 +102,19 @@ describe('FeatureFlagPanel analytics', () => {
     expect(trackEventMock).toHaveBeenCalledWith(TrackEvents.feature_flags_changed_event, {
       changes: { alpha: true },
       changesCount: 1,
-      pagePath: '/',
+      pagePattern: '/',
     });
   });
 
-  it('uses the pathname captured when the panel opened', async () => {
-    history.replaceState(null, '', '/ns/my-ns/applications');
+  it('uses the page pattern captured when the panel opened', async () => {
+    mockPagePattern('/ns/:workspaceName/applications');
 
     const { unmount } = await renderOpenPanel();
     unmount();
 
     expect(trackEventMock).toHaveBeenCalledWith(
       TrackEvents.feature_flags_changed_event,
-      expect.objectContaining({ pagePath: '/ns/my-ns/applications' }),
+      expect.objectContaining({ pagePattern: '/ns/:workspaceName/applications' }),
     );
   });
 
@@ -118,7 +129,7 @@ describe('FeatureFlagPanel analytics', () => {
     expect(trackEventMock).toHaveBeenCalledWith(TrackEvents.feature_flags_changed_event, {
       changes: {},
       changesCount: 0,
-      pagePath: '/',
+      pagePattern: '/',
     });
   });
 });

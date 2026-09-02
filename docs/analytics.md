@@ -34,6 +34,7 @@ Components
 | `src/analytics/hooks.ts` | `useTrackAnalyticsEvent` hook |
 | `src/analytics/gen/analytics-types.ts` | Auto-generated types from segment-bridge schema |
 | `src/analytics/obfuscate.ts` | SHA-256 hashing for PIA fields (`SHA256Hash` branded type) |
+| `src/routes/with-route-patterns.ts` | Stamps each route's privacy-safe pattern (e.g. `/ns/:workspaceName/applications`) onto `handle.routePattern`; `getRoutePatternFromMatches()` reads it back via `useMatches()` |
 | `src/analytics/load-config.ts` | Config resolution (API-first, runtime fallback) |
 | `src/analytics/conditional-checks.ts` | `isAnalyticsEnabled` condition + `useIsAnalyticsEnabled` hook |
 | `src/analytics/arrival-source.ts` | Classifies `document.referrer` into an `ArrivalSource` and persists it across the OAuth redirect |
@@ -168,7 +169,7 @@ Why two guards:
 
 `useFeatureFlagAnalytics()` in `FeatureFlagPanel` tracks `feature_flags_changed` on every panel close (including `changesCount: 0`), via the modal's `onClose` in `Panel.tsx` — not on unmount.
 
-On open it snapshots flag state (from `useFeatureFlags()`) and `pagePattern` (`getRoutePatternFromMatches()` / `with-route-patterns.ts`). On close, `computeFeatureFlagChanges()` diffs open vs. current state. Net-zero toggles are omitted; "Reset to Defaults" is included. URL param overrides (`?ff_flag=true`) are not tracked.
+On open it snapshots flag state (from `useFeatureFlags()`) and `pagePattern` via `useMatches()` + `getRoutePatternFromMatches()` (`src/routes/with-route-patterns.ts`) — e.g. `/ns/:workspaceName/applications`, never the resolved URL. `withRoutePatterns()` stamps the pattern onto every route's `handle` at router creation (`src/routes/index.tsx`), so other route-aware analytics hooks can reuse the same helper. On close, `computeFeatureFlagChanges()` diffs open vs. current state. Net-zero toggles are omitted; "Reset to Defaults" is included. URL param overrides (`?ff_flag=true`) are not tracked.
 
 ---
 
