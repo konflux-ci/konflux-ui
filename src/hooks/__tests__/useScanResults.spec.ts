@@ -19,13 +19,7 @@ jest.mock('../useTektonResults', () => ({
 const useTRTaskRunsMock = useTRTaskRuns as jest.Mock;
 
 jest.mock('../useTaskRunsV2', () => ({
-  useTaskRunsForPipelineRuns: jest.fn(() => [
-    [],
-    true,
-    undefined,
-    () => {},
-    { isFetchingNextPage: false, hasNextPage: false },
-  ]),
+  useTaskRunsForPipelineRuns: jest.fn(() => [[], true, undefined]),
   useTaskRunsV2: jest.fn(() => [
     [],
     true,
@@ -93,37 +87,19 @@ describe('useScanResults', () => {
   });
 
   it('returns null if results are not fetched', () => {
-    useTaskRunsForPipelineRunsMock.mockReturnValue([
-      null,
-      false,
-      undefined,
-      () => {},
-      { isFetchingNextPage: false, hasNextPage: false },
-    ]);
+    useTaskRunsForPipelineRunsMock.mockReturnValue([null, false, undefined]);
     const { result } = renderHook(() => useScanResults('test'));
     expect(result.current).toEqual([undefined, false, undefined]);
   });
 
   it('returns null if scan results are not found in taskrun', () => {
-    useTaskRunsForPipelineRunsMock.mockReturnValue([
-      [],
-      true,
-      undefined,
-      () => {},
-      { isFetchingNextPage: false, hasNextPage: false },
-    ]);
+    useTaskRunsForPipelineRunsMock.mockReturnValue([[], true, undefined]);
     const { result } = renderHook(() => useScanResults('test'));
     expect(result.current).toEqual([null, true]);
   });
 
   it('returns scan results if taskrun is found', () => {
-    useTaskRunsForPipelineRunsMock.mockReturnValue([
-      [taskRunData[0]],
-      true,
-      undefined,
-      () => {},
-      { isFetchingNextPage: false, hasNextPage: false },
-    ]);
+    useTaskRunsForPipelineRunsMock.mockReturnValue([[taskRunData[0]], true, undefined]);
     const { result } = renderHook(() => useScanResults('test'));
     expect(result.current).toEqual([
       { vulnerabilities: { critical: 1, high: 2, medium: 3, low: 4, unknown: 5 } },

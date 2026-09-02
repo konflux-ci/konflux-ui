@@ -67,41 +67,22 @@ const processScanTaskRuns = (taskRuns: TaskRunKind[]): ScanResults => {
 
 export const useScanResults = (pipelineRunName: string): [ScanResults, boolean, unknown] => {
   const namespace = useNamespace();
-  const [taskRuns, loaded, error, getNextPage, nextPageProps] = useTaskRunsForPipelineRuns(
+  const [taskRuns, loaded, error] = useTaskRunsForPipelineRuns(
     namespace,
     pipelineRunName,
     undefined,
     false, // Don't watch - scan results are for completed pipeline runs
   );
 
-  React.useEffect(() => {
-    if (nextPageProps.hasNextPage && !nextPageProps.isFetchingNextPage && loaded && !error) {
-      getNextPage();
-    }
-  }, [nextPageProps.hasNextPage, nextPageProps.isFetchingNextPage, loaded, getNextPage, error]);
-
   return React.useMemo(() => {
-    if (
-      !loaded ||
-      !pipelineRunName ||
-      nextPageProps.isFetchingNextPage ||
-      nextPageProps.hasNextPage ||
-      error
-    ) {
+    if (!loaded || !pipelineRunName || error) {
       return [undefined, loaded, error];
     }
 
     const resultObj = processScanTaskRuns(taskRuns);
 
     return [resultObj, loaded, error];
-  }, [
-    loaded,
-    pipelineRunName,
-    taskRuns,
-    error,
-    nextPageProps.isFetchingNextPage,
-    nextPageProps.hasNextPage,
-  ]);
+  }, [loaded, pipelineRunName, taskRuns, error]);
 };
 
 const dataSelectorForScanResults = (data: InfiniteData<TaskRunKind[], unknown>): ScanResults => {
