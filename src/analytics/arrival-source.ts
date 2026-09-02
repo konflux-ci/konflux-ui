@@ -14,12 +14,7 @@ import { createKeyedJSONStorage } from '~/shared/utils/storage';
  * falls into `GitProvider.UNSURE` ('other').
  * See docs/analytics.md for details.
  */
-export type ArrivalSource =
-  | GitProvider.GITHUB
-  | GitProvider.GITLAB
-  | GitProvider.BITBUCKET
-  | GitProvider.FORGEJO
-  | GitProvider.UNSURE;
+export type ArrivalSource = Exclude<GitProvider, GitProvider.INVALID>;
 
 const arrivalSourceStorage = createKeyedJSONStorage<ArrivalSource>(
   SESSION_STORAGE_KEYS.ARRIVAL_SOURCE,
@@ -72,6 +67,17 @@ export function captureArrivalSourceOnce(): void {
  */
 export function getArrivalSource(): ArrivalSource {
   return arrivalSourceStorage.get() ?? GitProvider.UNSURE;
+}
+
+// Every ArrivalSource except UNSURE.
+const KNOWN_GIT_PROVIDERS = new Set<GitProvider>(
+  Object.values(GitProvider).filter(
+    (provider) => provider !== GitProvider.UNSURE && provider !== GitProvider.INVALID,
+  ),
+);
+
+export function isKnownGitProvider(value: string | undefined): value is ArrivalSource {
+  return KNOWN_GIT_PROVIDERS.has(value as GitProvider);
 }
 
 /**

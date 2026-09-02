@@ -5,6 +5,7 @@ import {
   captureArrivalSourceOnce,
   classifyReferrer,
   getArrivalSource,
+  isKnownGitProvider,
   markSessionStartedOnce,
   refineArrivalSource,
 } from '../arrival-source';
@@ -246,4 +247,20 @@ describe('refineArrivalSource', () => {
 
     expect(getArrivalSource()).toBe(GitProvider.GITHUB);
   });
+});
+
+describe('isKnownGitProvider', () => {
+  it.each([GitProvider.GITHUB, GitProvider.GITLAB, GitProvider.BITBUCKET, GitProvider.FORGEJO])(
+    'returns true for %s',
+    (provider) => {
+      expect(isKnownGitProvider(provider)).toBe(true);
+    },
+  );
+
+  it.each([GitProvider.UNSURE, GitProvider.INVALID, undefined, '', 'not-a-provider'])(
+    'returns false for %s',
+    (value) => {
+      expect(isKnownGitProvider(value)).toBe(false);
+    },
+  );
 });
