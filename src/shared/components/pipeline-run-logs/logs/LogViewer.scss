@@ -20,10 +20,6 @@
     padding: var(--pf-t--global--spacer--sm);
   }
 
-  &__icon {
-    margin-right: var(--pf-t--global--spacer--xs);
-  }
-
   &__divider {
     color: var(--pf-t--global--text--color--subtle);
     margin: 0 var(--pf-t--global--spacer--sm);
@@ -43,6 +39,9 @@
     max-height: 100% !important;
     display: flex;
     flex-direction: column;
+    border: var(--pf-t--global--border--width--box--default) solid
+      var(--pf-t--global--border--color--default);
+    border-radius: var(--pf-t--global--border--radius--small);
   }
 
   &__task-name-group {
@@ -58,6 +57,16 @@
 
   &__task-name-spinner {
     display: flex;
+  }
+
+  &__download-all-label {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--pf-t--global--spacer--xs);
+  }
+
+  &__toolbar-item--padded {
+    padding: var(--pf-t--global--spacer--sm);
   }
 
   &__content {
@@ -79,7 +88,7 @@
 // Force light theme on the log content when user selects "Light theme" (e.g. when main app theme is dark)
 // Uses base tokens (fixed values) so they don't adapt to the app-level dark theme
 .pf-v6-c-log-viewer.log-viewer--light {
-  --pf-v6-c-log-viewer__main--BackgroundColor: var(--pf-t--global--background--color--100);
+  --pf-v6-c-log-viewer__main--BackgroundColor: var(--pf-t--global--background--color--secondary--default);
   --pf-v6-c-log-viewer__main--BorderColor: var(--pf-t--global--border--color--100);
   --pf-v6-c-log-viewer__text--Color: var(--pf-t--global--text--color--100);
   --pf-v6-c-log-viewer__index--Color: var(--pf-t--global--text--color--200);

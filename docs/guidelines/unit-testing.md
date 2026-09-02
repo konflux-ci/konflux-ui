@@ -34,6 +34,7 @@ Import from `~/unit-test-utils/`:
 | -------------------------------- | ----------------------------------------------------------------- |
 | `renderWithQueryClientAndRouter` | Component needs BrowserRouter + QueryClientProvider (most common) |
 | `renderWithQueryClient`          | Component needs only QueryClientProvider (no routing)             |
+| `renderHookWithQueryClient`      | Hook tests that need QueryClientProvider (pass `{ client }` option) |
 | `routerRenderer`                 | Component needs only BrowserRouter                                |
 | `formikRenderer`                 | Component uses Formik fields                                      |
 | `namespaceRenderer`              | Component uses `useNamespace()` via context                       |
@@ -60,9 +61,8 @@ formikRenderer(<MyFormField />, { fieldName: 'initial value' });
 namespaceRenderer(<MyComponent />, 'test-namespace');
 
 // Hook tests with React Query
-const { result } = renderHook(() => useMyHook(), {
-  wrapper: ({ children }) =>
-    React.createElement(QueryClientProvider, { client: createTestQueryClient() }, children),
+const { result } = renderHookWithQueryClient(() => useMyHook(), {
+  client: createTestQueryClient(),
 });
 ```
 

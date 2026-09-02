@@ -47,6 +47,20 @@ describe('ReleasePlanDropdown', () => {
     expect(screen.getByText('rp1')).toBeVisible();
   });
 
+  it('should render without crashing when releasePlans is null', () => {
+    formikRenderer(
+      <ReleasePlanDropdown name="releasePlan" releasePlans={null} loaded={true} />,
+    );
+    expect(screen.getByText('Select release plan')).toBeVisible();
+  });
+
+  it('should render without crashing when releasePlans is undefined', () => {
+    formikRenderer(
+      <ReleasePlanDropdown name="releasePlan" releasePlans={undefined} loaded={true} />,
+    );
+    expect(screen.getByText('Select release plan')).toBeVisible();
+  });
+
   it('should change the release plan dropdown value', async () => {
     const [releasePlans, loaded] = useReleasePlansMock.mockReturnValue([
       [{ metadata: { name: 'rp1' } }, { metadata: { name: 'rp2' } }],

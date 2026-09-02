@@ -16,7 +16,7 @@ export const createPipelineRunMockStates = () => ({
 
 /**
  * Mock state helpers for useTaskRunsForPipelineRuns hook
- * Returns [data, loaded, error, getNextPage, { hasNextPage, isFetchingNextPage }] tuple
+ * Returns [data, allPagesLoaded, error, getNextPage, { hasNextPage, isFetchingNextPage }] tuple
  */
 export const createTaskRunsMockStates = () => ({
   loading: () =>
