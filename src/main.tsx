@@ -46,7 +46,6 @@ const App = () => {
 
     if (loaded && !error && publicInfo) {
       analyticsService.setCommonProperties({
-        clusterId: publicInfo.clusterId,
         clusterVersion: publicInfo.clusterVersion,
         konfluxVersion: publicInfo.konfluxVersion,
         kubernetesVersion: publicInfo.kubernetesVersion,
