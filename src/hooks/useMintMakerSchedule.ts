@@ -6,7 +6,7 @@ import { ConfigMap } from '~/types/configmap';
 
 export type MintMakerScheduleEntry = {
   manager: string;
-  nextRun: string;
+  scheduledRuns: string[];
 };
 
 const SCHEDULE_SUFFIX = '_scheduled_times.txt';
@@ -30,6 +30,7 @@ export const useMintMakerSchedule = (): [MintMakerScheduleEntry[], boolean, unkn
       return [];
     }
 
+    const now = Date.now();
     const entries = Object.entries(configMap.data).reduce<MintMakerScheduleEntry[]>(
       (acc, [key, value]: [string, string]) => {
         if (typeof value !== 'string' || !key.endsWith(SCHEDULE_SUFFIX)) {
@@ -37,12 +38,15 @@ export const useMintMakerSchedule = (): [MintMakerScheduleEntry[], boolean, unkn
         }
 
         const manager = key.replace(SCHEDULE_SUFFIX, '');
-        const timestamps = value.trim().split('\n').filter(Boolean);
-        for (const t of timestamps) {
-          if (Date.parse(t) > Date.now()) {
-            acc.push({ manager, nextRun: t });
-            break;
-          }
+        const scheduledRuns = value
+          .trim()
+          .split('\n')
+          .filter(Boolean)
+          .filter((t) => Date.parse(t) > now)
+          .sort((a, b) => a.localeCompare(b));
+
+        if (scheduledRuns.length > 0) {
+          acc.push({ manager, scheduledRuns });
         }
 
         return acc;
@@ -50,7 +54,7 @@ export const useMintMakerSchedule = (): [MintMakerScheduleEntry[], boolean, unkn
       [],
     );
 
-    return [...entries].sort((s1, s2) => s1.nextRun.localeCompare(s2.nextRun));
+    return [...entries].sort((s1, s2) => s1.scheduledRuns[0].localeCompare(s2.scheduledRuns[0]));
   }, [configMap?.data, isLoading, error]);
 
   return useMemo(() => [schedule, !isLoading, error] as const, [schedule, isLoading, error]);

@@ -1,0 +1,20 @@
+.mintmaker-schedule-manager-card {
+  &__next-run {
+    border: var(--pf-t--global--border--width--regular) solid
+      var(--pf-t--global--border--color--default);
+    border-radius: var(--pf-t--global--border--radius--medium);
+    padding: var(--pf-t--global--spacer--sm) var(--pf-t--global--spacer--md);
+  }
+
+  &__later-runs {
+    display: grid;
+    grid-template-columns: max-content max-content;
+    column-gap: var(--pf-t--global--spacer--lg);
+    row-gap: var(--pf-t--global--spacer--sm);
+    align-items: baseline;
+  }
+
+  &__later-run {
+    display: contents;
+  }
+}
