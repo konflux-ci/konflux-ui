@@ -2,7 +2,8 @@
 set -euo pipefail
 # Purpose: This script cleans up repositories and bots that remain on GitHub and Quay after CI automation runs.
 GH_ORG="redhat-hac-qe"
-GH_SEARCH_PHASE="devfile-sample-code-with-quarkus-"
+GH_SEARCH_PHASE_OLD="devfile-sample-code-with-quarkus-"
+GH_SEARCH_PHASE="testrepo-"
 
 MATCH_BOTS=("sample_component" "java_quarkus")
 QUAY_HOMEPAGE="https://quay.io"
@@ -42,7 +43,7 @@ clean_github() {
 
     while read -r repo; do
         name=$(echo "$repo" | jq -r '.name')
-        if [[ $name != *${GH_SEARCH_PHASE}* ]]; then
+        if [[ $name != *${GH_SEARCH_PHASE_OLD}* ]] && [[ $name != *${GH_SEARCH_PHASE}* ]]; then
             echo "Skipping $name from deletion - not matching repo name."
             skipped_repos=$((skipped_repos + 1))
             continue

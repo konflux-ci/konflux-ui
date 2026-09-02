@@ -121,7 +121,7 @@ export default defineConfig({
         PERIODIC_RUN_STAGE: false,
         PIPELINE: 'docker-build-oci-ta-min',
         SOURCE_REPO_OWNER: 'hac-test',
-        SOURCE_REPO_NAME: 'devfile-sample-code-with-quarkus',
+        SOURCE_REPO_NAME: 'testrepo',
         resolution: 'high',
         REMOVE_APP_ON_FAIL: false,
         SNYK_TOKEN: '',
