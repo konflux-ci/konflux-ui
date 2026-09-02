@@ -1,4 +1,11 @@
-export { STEP_TYPES, TOUR_ACTIONS, TOUR_STATUS, TOUR_STORAGE_KEY, getTourElement } from './consts';
+export {
+  POSITION_MAP,
+  STEP_TYPES,
+  TOUR_ACTIONS,
+  TOUR_STATUS,
+  TOUR_STORAGE_KEY,
+  getTourElement,
+} from './consts';
 export { collectAndMerge } from './merge-utils';
 export { TourAutoTrigger } from './TourAutoTrigger';
 export { TourProvider } from './TourProvider';

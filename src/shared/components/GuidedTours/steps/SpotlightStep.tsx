@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { Popover } from '@patternfly/react-core';
+import { POSITION_MAP } from '../consts';
 import { useTargetElement } from '../hooks/useTargetElement';
 import { PopoverPosition } from '../types';
 import { SpotlightOverlay } from './SpotlightOverlay';
@@ -19,14 +20,6 @@ interface SpotlightStepProps {
   onSkip: () => void;
   onDone: () => void;
 }
-
-const POSITION_MAP: Record<PopoverPosition, 'top' | 'bottom' | 'left' | 'right' | 'auto'> = {
-  top: 'top',
-  bottom: 'bottom',
-  left: 'left',
-  right: 'right',
-  auto: 'auto',
-};
 
 export const SpotlightStep: React.FC<SpotlightStepProps> = ({
   title,
@@ -66,7 +59,7 @@ export const SpotlightStep: React.FC<SpotlightStepProps> = ({
           />
         }
         position={POSITION_MAP[position]}
-        triggerRef={triggerRef as React.RefObject<HTMLElement>}
+        triggerRef={triggerRef}
         headerContent={title}
         bodyContent={content}
         appendTo={() => document.querySelector('#hacDev-modal-container') ?? document.body}

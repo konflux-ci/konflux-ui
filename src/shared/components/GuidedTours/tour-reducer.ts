@@ -20,7 +20,10 @@ export const tourReducer = (state: TourState, action: TourAction): TourState => 
     case TOUR_ACTIONS.NEXT:
       return {
         ...state,
-        currentStepIndex: Math.min(state.currentStepIndex + 1, state.mergedSteps.length - 1),
+        currentStepIndex: Math.min(
+          state.currentStepIndex + 1,
+          Math.max(state.mergedSteps.length - 1, 0),
+        ),
       };
     case TOUR_ACTIONS.PREV:
       return {

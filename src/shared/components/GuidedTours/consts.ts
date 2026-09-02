@@ -19,6 +19,15 @@ export const STEP_TYPES = {
 
 export const TOUR_STORAGE_KEY = 'konflux-tours';
 
+/** Maps PopoverPosition config values to PF Popover position prop values */
+export const POSITION_MAP: Record<string, 'top' | 'bottom' | 'left' | 'right' | 'auto'> = {
+  top: 'top',
+  bottom: 'bottom',
+  left: 'left',
+  right: 'right',
+  auto: 'auto',
+};
+
 /**
  * Find a DOM element annotated with a data-tour attribute.
  */
