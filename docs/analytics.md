@@ -146,11 +146,9 @@ On a page refresh there is no `logged_in` param, so no login event fires.
 
 ## Feature Flag Change Tracking
 
-`useFeatureFlagAnalytics()` (`src/feature-flags/useFeatureFlagAnalytics.ts`) is called from `FeatureFlagPanel` and tracks `feature_flags_changed` **every time** the panel closes — including when nothing changed, to measure panel awareness.
+`useFeatureFlagAnalytics()` in `FeatureFlagPanel` tracks `feature_flags_changed` on every panel close (including `changesCount: 0`), via the modal's `onClose` in `Panel.tsx` — not on unmount.
 
-On mount (panel opens) it snapshots the flag state and the current route **pattern** via `useMatches()` + `getRoutePatternFromMatches()` (`src/routes/with-route-patterns.ts`) — e.g. `/ns/:workspaceName/applications`, never the resolved URL, so tenant/resource names never leak into analytics. `withRoutePatterns()` stamps this pattern onto every route's `handle` once, at router creation (`src/routes/index.tsx`), so any other route-aware analytics hook can reuse `getRoutePatternFromMatches()` instead of re-deriving it. On unmount (panel closes — `ModalProvider` unmounts rather than hides it), `computeFeatureFlagChanges()` diffs the flag snapshot against the current state and tracks the result: `changes` (only the flags whose net value differs, with their new value), `changesCount`, and `pagePattern`.
-
-A flag toggled off then back on before closing nets to unchanged and is omitted — only the final state at close time is observed. Changes via the "Reset to Defaults" button are captured the same way, since the button doesn't close the modal itself. Flag changes via URL params (`?ff_flag=true`) happen outside the panel and are not tracked.
+On open it snapshots flag state (from `useFeatureFlags()`) and `pagePattern` (`getRoutePatternFromMatches()` / `with-route-patterns.ts`). On close, `computeFeatureFlagChanges()` diffs open vs. current state. Net-zero toggles are omitted; "Reset to Defaults" is included. URL param overrides (`?ff_flag=true`) are not tracked.
 
 ---
 

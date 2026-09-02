@@ -5,13 +5,12 @@ import { guardSatisfied } from './conditions';
 import { FlagKey, FLAGS, FLAGS_STATUS } from './flags';
 import { useAllFlagsConditions, useFeatureFlags } from './hooks';
 import { FeatureFlagsStore } from './store';
-import { useFeatureFlagAnalytics } from './useFeatureFlagAnalytics';
+import { trackFeatureFlagPanelClosed, useFeatureFlagAnalytics } from './useFeatureFlagAnalytics';
 
 export const FeatureFlagPanel: React.FC = () => {
   const [flags, setFlag] = useFeatureFlags();
   const conditions = useAllFlagsConditions();
 
-  // Fires `feature_flags_changed` on close (see docs/analytics.md).
   useFeatureFlagAnalytics(flags);
 
   const flagList = Object.values(FLAGS).filter((flag) => {
@@ -79,4 +78,5 @@ export const createFeatureFlagPanelModal = createModalLauncher(FeatureFlagPanel,
   'data-test': 'feature-flag-panel',
   title: 'Feature Flags',
   variant: 'medium',
+  onClose: trackFeatureFlagPanelClosed,
 });
