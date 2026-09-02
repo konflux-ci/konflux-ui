@@ -420,7 +420,7 @@ User clicks Next/Back/Skip/Done  -->  dispatch action  -->  update state / local
 
 1. **Create the tour config file** -- define `TourConfig` with an `id`, `route`, `trigger`, and `steps` array
 2. **Call `registerTour()`** at module level in the same file
-3. **Import the file** so registration executes (e.g., import it in the page component or a central tour index)
+3. **Import the file eagerly** so registration executes before `TourAutoTrigger`'s initial route check. Import it from a central tour index or a module loaded before the router mounts -- **not** from a lazy-loaded page component, which may land in a code-split chunk and miss the first route check
 4. **Add `data-tour` attributes** to any target elements referenced by spotlight/highlight steps
 5. **Verify auto-trigger works** -- `TourAutoTrigger` is already mounted at the app root; tours with `trigger: 'auto'` are triggered automatically when the user navigates to the matching route
 6. **Test locally** -- clear `konflux-tours` from localStorage to re-trigger, verify each step renders correctly

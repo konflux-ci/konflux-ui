@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { Popover } from '@patternfly/react-core';
+import { POSITION_MAP } from '../consts';
 import { useTargetElement } from '../hooks/useTargetElement';
 import { PopoverPosition } from '../types';
 import './HighlightStep.scss';
@@ -21,14 +22,6 @@ interface HighlightStepProps {
 }
 
 const HIGHLIGHT_CLASS = 'guided-tours__highlight-ring';
-
-const POSITION_MAP: Record<PopoverPosition, 'top' | 'bottom' | 'left' | 'right' | 'auto'> = {
-  top: 'top',
-  bottom: 'bottom',
-  left: 'left',
-  right: 'right',
-  auto: 'auto',
-};
 
 export const HighlightStep: React.FC<HighlightStepProps> = ({
   title,
@@ -75,7 +68,7 @@ export const HighlightStep: React.FC<HighlightStepProps> = ({
       }
       shouldClose={onSkip}
       position={POSITION_MAP[position]}
-      triggerRef={triggerRef as React.RefObject<HTMLElement>}
+      triggerRef={triggerRef}
       headerContent={title}
       bodyContent={content}
       appendTo={() => document.querySelector('#hacDev-modal-container') ?? document.body}

@@ -17,6 +17,11 @@ export const useTargetElement = (target: string) => {
   }, [targetEl]);
 
   React.useEffect(() => {
+    // Clear stale state immediately when target changes to prevent rendering
+    // a new step against the previous element while the new one resolves
+    setTargetEl(null);
+    setTargetRect(null);
+
     const el = getTourElement(target);
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'center' });
