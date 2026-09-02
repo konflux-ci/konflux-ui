@@ -1,14 +1,9 @@
-import { act, screen, waitFor } from '@testing-library/react';
+import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { NuqsTestingAdapter } from 'nuqs/adapters/testing';
 import { useMintMakerSchedule } from '~/hooks/useMintMakerSchedule';
 import { renderWithQueryClient } from '~/unit-test-utils/mock-react-query';
-import { setupVirtualizerMock } from '~/unit-test-utils/mock-virtualizer';
 import { MintMakerSchedulePage } from '../MintMakerSchedulePage';
-
-jest.mock('@tanstack/react-virtual', () => ({
-  useVirtualizer: jest.fn(),
-}));
 
 jest.mock('~/hooks/useMintMakerSchedule', () => ({
   useMintMakerSchedule: jest.fn(),
@@ -17,8 +12,14 @@ jest.mock('~/hooks/useMintMakerSchedule', () => ({
 const useMintMakerScheduleMock = useMintMakerSchedule as jest.Mock;
 
 const mockSchedule = [
-  { manager: 'renovate', nextRun: '2026-08-15T10:00:00Z' },
-  { manager: 'dependabot', nextRun: '2026-08-16T10:00:00Z' },
+  {
+    manager: 'renovate',
+    scheduledRuns: ['2026-08-15T10:00:00Z', '2026-08-22T10:00:00Z', '2026-08-29T10:00:00Z'],
+  },
+  {
+    manager: 'dependabot',
+    scheduledRuns: ['2026-08-16T10:00:00Z'],
+  },
 ];
 
 const TestedComponent = ({ searchParams }: { searchParams?: string }) => (
@@ -29,7 +30,6 @@ const TestedComponent = ({ searchParams }: { searchParams?: string }) => (
 
 describe('MintMakerSchedulePage', () => {
   beforeEach(() => {
-    setupVirtualizerMock();
     useMintMakerScheduleMock.mockReturnValue([mockSchedule, true, undefined]);
   });
 
@@ -48,29 +48,38 @@ describe('MintMakerSchedulePage', () => {
     useMintMakerScheduleMock.mockReturnValue([[], false, undefined]);
     renderWithQueryClient(<TestedComponent />);
     expect(screen.getByTestId('table-container')).toBeInTheDocument();
-    expect(screen.queryByTestId('table-v2')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('mintmaker-schedule-manager-card')).not.toBeInTheDocument();
   });
 
-  it('renders schedule rows when data is available', async () => {
+  it('renders a card per manager when data is available', async () => {
     renderWithQueryClient(<TestedComponent />);
     await waitFor(() => {
-      expect(screen.getByText('renovate')).toBeInTheDocument();
-      expect(screen.getByText('dependabot')).toBeInTheDocument();
+      expect(screen.getByText('Renovate')).toBeInTheDocument();
+      expect(screen.getByText('Dependabot')).toBeInTheDocument();
     });
+    expect(screen.getAllByTestId('mintmaker-schedule-manager-card')).toHaveLength(2);
   });
 
-  it('renders all column headers', () => {
+  it('highlights the next run as the primary focus of each card', () => {
     renderWithQueryClient(<TestedComponent />);
-    expect(screen.getByText('Manager')).toBeInTheDocument();
-    expect(screen.getByText('Next run')).toBeInTheDocument();
-    expect(screen.getByText('Next run in')).toBeInTheDocument();
+    const cards = screen.getAllByTestId('mintmaker-schedule-manager-card');
+    expect(within(cards[0]).getByTestId('mintmaker-schedule-next-run')).toBeInTheDocument();
+    expect(within(cards[0]).getByTestId('mintmaker-next-label')).toHaveTextContent('Next run');
+    expect(within(cards[0]).getByTestId('mintmaker-schedule-next-countdown')).toBeInTheDocument();
+    expect(within(cards[0]).getByTestId('mintmaker-schedule-next-timestamp')).toBeInTheDocument();
   });
 
-  it('renders all row columns when data is available', () => {
+  it('lists later runs separately and excludes the next run from that list', () => {
     renderWithQueryClient(<TestedComponent />);
-    expect(screen.queryAllByTestId('mintmaker-schedule-manager')).toHaveLength(2);
-    expect(screen.queryAllByTestId('mintmaker-schedule-next-run')).toHaveLength(2);
-    expect(screen.queryAllByTestId('mintmaker-schedule-next-run-in')).toHaveLength(2);
+
+    const renovateCard = screen.getAllByTestId('mintmaker-schedule-manager-card')[0];
+    expect(within(renovateCard).getByText('Later runs')).toBeInTheDocument();
+    expect(within(renovateCard).getAllByTestId('mintmaker-schedule-later-run')).toHaveLength(2);
+
+    const dependabotCard = screen.getAllByTestId('mintmaker-schedule-manager-card')[1];
+    expect(
+      within(dependabotCard).queryByTestId('mintmaker-schedule-later-runs'),
+    ).not.toBeInTheDocument();
   });
 
   it('renders the filter toolbar when schedule is non-empty', () => {
@@ -112,14 +121,14 @@ describe('MintMakerSchedulePage', () => {
     expect(screen.getByText('Forbidden')).toBeInTheDocument();
   });
 
-  it('filters schedule rows by manager name using the search filter', async () => {
+  it('filters schedule cards by manager name using the search filter', async () => {
     jest.useFakeTimers();
 
     renderWithQueryClient(<TestedComponent />);
 
     await waitFor(() => {
-      expect(screen.getByText('renovate')).toBeInTheDocument();
-      expect(screen.getByText('dependabot')).toBeInTheDocument();
+      expect(screen.getByText('Renovate')).toBeInTheDocument();
+      expect(screen.getByText('Dependabot')).toBeInTheDocument();
     });
 
     const searchInput = screen
@@ -135,8 +144,8 @@ describe('MintMakerSchedulePage', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText('renovate')).toBeInTheDocument();
-      expect(screen.queryByText('dependabot')).not.toBeInTheDocument();
+      expect(screen.getByText('Renovate')).toBeInTheDocument();
+      expect(screen.queryByText('Dependabot')).not.toBeInTheDocument();
     });
 
     jest.useRealTimers();
@@ -164,13 +173,5 @@ describe('MintMakerSchedulePage', () => {
     });
 
     jest.useRealTimers();
-  });
-
-  it('uses manager field as row id', async () => {
-    renderWithQueryClient(<TestedComponent />);
-    await waitFor(() => {
-      const rows = screen.getAllByTestId('table-row');
-      expect(rows).toHaveLength(mockSchedule.length);
-    });
   });
 });
