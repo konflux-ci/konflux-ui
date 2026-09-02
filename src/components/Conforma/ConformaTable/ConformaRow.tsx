@@ -4,13 +4,13 @@ import { Truncate } from '@patternfly/react-core';
 import { COMPONENT_DETAILS_PATH } from '@routes/paths';
 import { TableData } from '~/shared';
 import { useNamespace } from '~/shared/providers/Namespace';
-import { UIConformaData } from '~/types/conforma';
+import { ConformaResultRow } from '~/types/conforma';
 import { getRuleStatus } from '../utils';
 import { conformaTableColumnClasses } from './ConformaHeader';
 import './ConformaTable.scss';
 
 type ConformaRowType = {
-  data: UIConformaData;
+  data: ConformaResultRow;
 };
 
 const ConformaRow: React.FC<ConformaRowType> = ({ data }) => {
@@ -46,8 +46,8 @@ const ConformaRow: React.FC<ConformaRowType> = ({ data }) => {
 };
 
 interface WrappedConformaRowProps {
-  obj: UIConformaData;
-  customData: { sortedConformaResult: UIConformaData[] };
+  obj: ConformaResultRow;
+  customData: { sortedConformaResult: ConformaResultRow[] };
 }
 
 export const WrappedConformaRow: React.FC<WrappedConformaRowProps> = ({ obj, customData }) => {

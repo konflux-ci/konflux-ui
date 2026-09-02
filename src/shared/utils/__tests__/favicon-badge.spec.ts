@@ -4,6 +4,7 @@ import { t_global_icon_color_status_info_default as blueColor } from '@patternfl
 import {
   applyFaviconBadge,
   compositeFaviconWithBadge,
+  getFaviconBaselineHref,
   getFaviconLink,
   readFaviconHref,
   restoreFaviconHref,
@@ -119,6 +120,28 @@ describe('favicon-badge', () => {
       document.head.appendChild(link);
 
       expect(readFaviconHref()).toBe('https://example.com/favicon.ico');
+    });
+
+    it('remembers a non-badged favicon as the baseline', () => {
+      const link = document.createElement('link');
+      link.rel = 'icon';
+      link.href = 'https://example.com/favicon.ico';
+      document.head.appendChild(link);
+
+      expect(getFaviconBaselineHref()).toBe('https://example.com/favicon.ico');
+    });
+
+    it('ignores data: badge hrefs and returns the remembered baseline', () => {
+      const link = document.createElement('link');
+      link.rel = 'icon';
+      link.href = 'https://example.com/favicon.ico';
+      document.head.appendChild(link);
+
+      expect(getFaviconBaselineHref()).toBe('https://example.com/favicon.ico');
+
+      setFaviconHref('data:image/png;base64,badged');
+
+      expect(getFaviconBaselineHref()).toBe('https://example.com/favicon.ico');
     });
 
     it('restores the original favicon href', () => {

@@ -36,7 +36,7 @@ export function useKubearchiveListResourceQuery<
 >(
   resourceInit: WatchK8sResource,
   model: K8sModelCommon,
-  queryOptions?: TQueryInfiniteOptions<T[], Error, TData, T[]>,
+  queryOptions?: TQueryInfiniteOptions<T[], Error, TData>,
 ): UseInfiniteQueryResult<TData, Error> {
   const k8sQueryOptions = convertToKubearchiveQueryParams(resourceInit);
   const queryKey = createQueryKeys({ model, queryOptions: k8sQueryOptions, prefix: 'kubearchive' });

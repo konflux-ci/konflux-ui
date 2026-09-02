@@ -23,6 +23,7 @@ A process checklist for reviewing pull requests. For coding standards and detail
   - Custom hook outputs are memoized
   - PatternFly components used over raw HTML elements
   - Absolute imports via `~/` alias
+- [ ] **No `pf-v5-` CSS class prefixes.** All PatternFly CSS classes must use the `pf-v6-` prefix (e.g., `pf-v6-u-ml-sm`). The `pf-v5-` prefix is incompatible with PatternFly v6.
 - [ ] **No `eslint-disable` comments** without a documented justification directly above. Never suppress `exhaustive-deps` or `no-explicit-any`.
 - [ ] **No `console.*` calls.** Use `logger` from `~/monitoring/logger`.
 - [ ] **No magic strings or numbers.** Use constants from `src/consts/` or local named constants.
@@ -80,3 +81,4 @@ Skip this section if the PR has no UI changes.
 | `style={{ ... }}` | Use co-located SCSS with BEM |
 | `import ... from '../../../'` | Use `~/` absolute import |
 | `localStorage.getItem(...)` | Use `useLocalStorage` hook |
+| `pf-v5-u-*` or `pf-v5-c-*` | Replace prefix with `pf-v6-` |

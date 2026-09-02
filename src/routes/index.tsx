@@ -1,4 +1,5 @@
-import { createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, type LoaderFunctionArgs } from 'react-router-dom';
+import { wrapCreateBrowserRouter } from '@sentry/react';
 import { TourAutoTrigger, TourProvider, TourRenderer } from '~/shared/components/GuidedTours';
 import { AppRoot } from '../AppRoot/AppRoot';
 import { GithubRedirect, githubRedirectLoader } from '../components/GithubRedirect';
@@ -27,10 +28,12 @@ import userAccessRoutes from './page-routes/user-access';
 import { RouteErrorBoundry } from './RouteErrorBoundary';
 import { GithubRedirectRouteParams } from './utils';
 
-export const router = createBrowserRouter([
+const sentryCreateBrowserRouter = wrapCreateBrowserRouter(createBrowserRouter);
+
+export const router = sentryCreateBrowserRouter([
   {
     path: '/',
-    loader: async (params) => {
+    loader: async (params: LoaderFunctionArgs) => {
       return await namespaceLoader(params);
     },
     errorElement: <RouteErrorBoundry />,

@@ -1,15 +1,18 @@
 import * as React from 'react';
 import { useParams } from 'react-router-dom';
 import {
+  Alert,
+  AlertVariant,
   Bullseye,
+  Flex,
   PageSection,
   Content,
   ContentVariants,
   Spinner,
   Title,
 } from '@patternfly/react-core';
-import { FilterContext, FilterContextProvider } from '~/components/Filter/generic/FilterContext';
-import { useDeepCompareMemoize } from '~/shared';
+import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
+import { RouterParams } from '~/routes/utils';
 import { getErrorState } from '~/shared/utils/error-utils';
 import type { GroupByMode } from './conforma-grouping-utils';
 import {
@@ -21,8 +24,10 @@ import {
 } from './conforma-grouping-utils';
 import { ConformaGroupedTable } from './ConformaGroupedTable';
 import { ConformaResultsToolbar } from './ConformaResultsToolbar';
+import { ConformaSettlingAnnouncement } from './ConformaSettlingAnnouncement';
 import { ConformaSummaryBar } from './ConformaSummaryBar';
 import { useApplicationConformaResults } from './useApplicationConformaResults';
+import { useConformaFilters } from './useConformaFilters';
 import './ConformaResultsTab.scss';
 
 /**
@@ -31,16 +36,24 @@ import './ConformaResultsTab.scss';
  * ConformaResultsTab provides.
  */
 const ConformaResultsTabContent: React.FC = () => {
-  const { applicationName } = useParams();
-  const { allResults, componentStatuses, totalComponents, totalFailed, loaded, error } =
-    useApplicationConformaResults(applicationName);
+  const { applicationName } = useParams<RouterParams>();
+  const {
+    allResults,
+    componentStatuses,
+    totalComponents,
+    totalFailed,
+    loaded,
+    settling,
+    error,
+    partialLogError,
+    refresh,
+  } = useApplicationConformaResults(applicationName);
 
-  const { filters: unparsedFilters } = React.useContext(FilterContext);
-  const filters = useDeepCompareMemoize({
-    name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
-    status: unparsedFilters.status ? (unparsedFilters.status as string[]) : [],
-  });
-  const { name: nameFilter, status: statusFilter } = filters;
+  const {
+    name: nameFilter,
+    status: statusFilter,
+    component: componentFilter,
+  } = useConformaFilters();
 
   const [groupBy, setGroupBy] = React.useState<GroupByMode>('rule');
   const [expandedGroups, setExpandedGroups] = React.useState<Set<string>>(new Set());
@@ -64,8 +77,8 @@ const ConformaResultsTabContent: React.FC = () => {
   const rawCounts = React.useMemo(() => countResultsByStatus(allResults), [allResults]);
 
   const filteredResults = React.useMemo(
-    () => filterResults(displayResults, nameFilter, statusFilter),
-    [displayResults, nameFilter, statusFilter],
+    () => filterResults(displayResults, nameFilter, statusFilter, componentFilter),
+    [displayResults, nameFilter, statusFilter, componentFilter],
   );
 
   const allComponentNames = React.useMemo(
@@ -73,25 +86,21 @@ const ConformaResultsTabContent: React.FC = () => {
     [componentStatuses],
   );
 
+  const visibleComponentNames = React.useMemo(
+    () =>
+      componentFilter.length > 0
+        ? allComponentNames.filter((name) => componentFilter.includes(name))
+        : allComponentNames,
+    [allComponentNames, componentFilter],
+  );
+
   const groups = React.useMemo(
     () =>
       groupBy === 'rule'
         ? groupByRule(filteredResults)
-        : groupByComponent(filteredResults, allComponentNames),
-    [groupBy, filteredResults, allComponentNames],
+        : groupByComponent(filteredResults, visibleComponentNames),
+    [groupBy, filteredResults, visibleComponentNames],
   );
-
-  const handleToggleGroup = React.useCallback((groupKey: string) => {
-    setExpandedGroups((prev) => {
-      const next = new Set(prev);
-      if (next.has(groupKey)) {
-        next.delete(groupKey);
-      } else {
-        next.add(groupKey);
-      }
-      return next;
-    });
-  }, []);
 
   const allExpanded = groups.length > 0 && groups.every((g) => expandedGroups.has(g.groupKey));
 
@@ -115,7 +124,7 @@ const ConformaResultsTabContent: React.FC = () => {
     );
   }
 
-  const isEmpty = allResults.length === 0;
+  const isEmpty = allResults.length === 0 && !settling;
 
   return (
     <>
@@ -129,7 +138,11 @@ const ConformaResultsTabContent: React.FC = () => {
             validating them against a clearly defined policy.
           </Content>
         </Content>
-        <div className="conforma-results-tab__summary-wrapper">
+        <div
+          className="conforma-results-tab__summary-wrapper"
+          aria-busy={settling}
+          data-test="conforma-results-summary-wrapper"
+        >
           <ConformaSummaryBar
             totalComponents={totalComponents}
             totalFailed={totalFailed}
@@ -140,6 +153,11 @@ const ConformaResultsTabContent: React.FC = () => {
             totalWarningsRaw={rawCounts.totalWarnings}
             totalSuccessesRaw={rawCounts.totalSuccesses}
           />
+          {settling ? (
+            <Flex justifyContent={{ default: 'justifyContentCenter' }}>
+              <Spinner size="md" aria-label="Updating summary" />
+            </Flex>
+          ) : null}
         </div>
       </PageSection>
 
@@ -152,7 +170,22 @@ const ConformaResultsTabContent: React.FC = () => {
           onToggleExpandAll={handleToggleExpandAll}
           showDuplicates={showDuplicates}
           onShowDuplicatesChange={setShowDuplicates}
+          refresh={refresh}
         />
+
+        {partialLogError ? (
+          <Alert
+            data-test="conforma-partial-log-error"
+            className="pf-v6-u-mt-md pf-v6-u-mx-lg"
+            variant={AlertVariant.warning}
+            isInline
+            title="Some Conforma results could not be loaded"
+          >
+            {partialLogError instanceof Error && partialLogError.message
+              ? partialLogError.message
+              : 'One or more component log fetches failed. Results shown may be incomplete.'}
+          </Alert>
+        ) : null}
 
         {isEmpty ? (
           <Bullseye>
@@ -161,18 +194,22 @@ const ConformaResultsTabContent: React.FC = () => {
             </Content>
           </Bullseye>
         ) : groups.length === 0 ? (
-          <Bullseye>
-            <Content component={ContentVariants.p}>No results match the current filters.</Content>
-          </Bullseye>
+          settling ? null : (
+            <Bullseye>
+              <Content component={ContentVariants.p}>No results match the current filters.</Content>
+            </Bullseye>
+          )
         ) : (
           <ConformaGroupedTable
             groups={groups}
             groupBy={groupBy}
             expandedGroups={expandedGroups}
-            onToggleGroup={handleToggleGroup}
+            onExpandedGroupsChange={setExpandedGroups}
           />
         )}
       </PageSection>
+
+      <ConformaSettlingAnnouncement settling={settling} />
     </>
   );
 };
@@ -183,7 +220,7 @@ const ConformaResultsTabContent: React.FC = () => {
  * same pattern used by CommitsListViewV2 and PipelineRunsListViewV2.
  */
 export const ConformaResultsTab: React.FC = () => (
-  <FilterContextProvider filterParams={['name', 'status']}>
+  <FilterContextProvider filterParams={['name', 'status', 'component']}>
     <ConformaResultsTabContent />
   </FilterContextProvider>
 );

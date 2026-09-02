@@ -9,7 +9,7 @@ runs:
   using: "composite"
   steps:
     - name: Free Disk Space (Ubuntu)
-      uses: jlumbroso/free-disk-space@main
+      uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be # v1.3.1
       with:
         # this might remove tools that are actually needed,
         # if set to "true" but frees about 6 GB
@@ -31,7 +31,7 @@ runs:
     # konflux-ci is cloned to /home/runner/work/konflux-ui/konflux-ui
     # as it have to be at home folder to use helm/kind-action@v1 action
     - name: Checkout Repository
-      uses: actions/checkout@v6
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         repository: 'konflux-ci/konflux-ci'
         path: 'konflux-ci'
@@ -69,6 +69,13 @@ runs:
         : Deploy Konflux using operator-based deployment
         cd konflux-ci
         ./scripts/deploy-local.sh
+      shell: bash
+
+    - name: Patch konflux-public-info with image controller integration
+      run: |
+        kubectl get configmap konflux-public-info -n konflux-info -o json \
+          | jq '.data["info.json"] = (.data["info.json"] | fromjson | .integrations.image_controller.enabled = true | tojson)' \
+          | kubectl apply -f -
       shell: bash
 
     - name: List namespaces

@@ -411,6 +411,78 @@ describe('conforma-grouping-utils', () => {
       expect(result).toHaveLength(1);
       expect(result[0].images).toEqual(['img@sha256:aaa', 'img@sha256:bbb']);
     });
+
+    it('keeps the first non-empty pipelineRunName when merging arch-duplicate rows', () => {
+      const rows = [
+        mockRow({
+          title: 'CVE rule',
+          msg: 'CVE-2024-001',
+          component: 'api',
+          images: ['img@sha256:aaa'],
+          pipelineRunName: 'pr-1',
+        }),
+        mockRow({
+          title: 'CVE rule',
+          msg: 'CVE-2024-001',
+          component: 'api',
+          images: ['img@sha256:bbb'],
+          pipelineRunName: undefined,
+        }),
+      ];
+
+      const result = collapseArchDuplicates(rows);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].pipelineRunName).toBe('pr-1');
+    });
+
+    it('keeps the non-empty pipelineRunName when the first row is missing it', () => {
+      const rows = [
+        mockRow({
+          title: 'CVE rule',
+          msg: 'CVE-2024-001',
+          component: 'api',
+          images: ['img@sha256:aaa'],
+          pipelineRunName: undefined,
+        }),
+        mockRow({
+          title: 'CVE rule',
+          msg: 'CVE-2024-001',
+          component: 'api',
+          images: ['img@sha256:bbb'],
+          pipelineRunName: 'pr-1',
+        }),
+      ];
+
+      const result = collapseArchDuplicates(rows);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].pipelineRunName).toBe('pr-1');
+    });
+
+    it('keeps pipelineRunName when both rows share the same value', () => {
+      const rows = [
+        mockRow({
+          title: 'CVE rule',
+          msg: 'CVE-2024-001',
+          component: 'api',
+          images: ['img@sha256:aaa'],
+          pipelineRunName: 'pr-1',
+        }),
+        mockRow({
+          title: 'CVE rule',
+          msg: 'CVE-2024-001',
+          component: 'api',
+          images: ['img@sha256:bbb'],
+          pipelineRunName: 'pr-1',
+        }),
+      ];
+
+      const result = collapseArchDuplicates(rows);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].pipelineRunName).toBe('pr-1');
+    });
   });
 
   describe('getCommonImageName', () => {
@@ -478,6 +550,26 @@ describe('conforma-grouping-utils', () => {
       expect(results[0].component).toBe('auth-service');
     });
 
+    it('filters by search text matching rule code (case-insensitive)', () => {
+      const rowsWithCode = [
+        mockRow({
+          code: 'cve-scan-required',
+          title: 'Missing scan metadata',
+          component: 'api-gateway',
+        }),
+        mockRow({
+          code: 'base-image-allowed',
+          title: 'Base image allowed',
+          component: 'auth-service',
+        }),
+      ];
+
+      const results = filterResults(rowsWithCode, 'CVE-SCAN', []);
+
+      expect(results).toHaveLength(1);
+      expect(results[0].code).toBe('cve-scan-required');
+    });
+
     it('filters by status array', () => {
       const results = filterResults(sampleRows, '', [CONFORMA_RESULT_STATUS.violations]);
       expect(results).toHaveLength(1);
@@ -504,6 +596,55 @@ describe('conforma-grouping-utils', () => {
 
     it('returns empty array for empty input', () => {
       expect(filterResults([], 'test', [])).toHaveLength(0);
+    });
+
+    it('filters by search text matching code even when title has no matching punctuation', () => {
+      const rows = [
+        mockRow({
+          code: 'trusted.task_trusted_rule',
+          title: 'Trusted Task Check',
+          component: 'build-service',
+        }),
+        ...sampleRows,
+      ];
+
+      const underscoreResults = filterResults(rows, 'trusted_', []);
+      expect(underscoreResults).toHaveLength(1);
+      expect(underscoreResults[0].code).toBe('trusted.task_trusted_rule');
+
+      const dotResults = filterResults(rows, 'trusted.', []);
+      expect(dotResults).toHaveLength(1);
+      expect(dotResults[0].code).toBe('trusted.task_trusted_rule');
+    });
+
+    it('filters by a single component', () => {
+      const results = filterResults(sampleRows, '', [], ['auth-service']);
+      expect(results).toHaveLength(1);
+      expect(results[0].component).toBe('auth-service');
+    });
+
+    it('filters by multiple components', () => {
+      const results = filterResults(sampleRows, '', [], ['api-gateway', 'auth-service']);
+      expect(results).toHaveLength(3);
+    });
+
+    it('returns all rows when componentFilters is empty', () => {
+      expect(filterResults(sampleRows, '', [], [])).toHaveLength(3);
+    });
+
+    it('composes with text search and status filters', () => {
+      const results = filterResults(
+        sampleRows,
+        'CVE',
+        [CONFORMA_RESULT_STATUS.violations],
+        ['api-gateway'],
+      );
+      expect(results).toHaveLength(1);
+      expect(results[0].title).toBe('Missing CVE scan');
+    });
+
+    it('returns empty when filtering by a nonexistent component', () => {
+      expect(filterResults(sampleRows, '', [], ['nonexistent'])).toHaveLength(0);
     });
   });
 });

@@ -39,8 +39,7 @@ export const getResolvedKubernetesSecretType = (secret: SecretKind): SecretType 
     return secret.type as SecretType;
   }
   const fromLabel = secret.metadata?.labels?.[SecretLabels.K8S_TYPE_LABEL] as
-    | SecretType
-    | undefined;
+    SecretType | undefined;
   if (fromLabel) {
     return fromLabel;
   }
@@ -137,6 +136,7 @@ export const typeToLabel = (type: string) => {
       return SecretTypeDisplayLabel.imagePull;
     case SecretType.basicAuth:
     case SecretType.sshAuth:
+      return SecretTypeDisplayLabel.source;
     case SecretType.opaque:
       return SecretTypeDisplayLabel.keyValue;
 
@@ -229,7 +229,9 @@ export const getSecretFormData = (values: AddSecretFormValues, namespace: string
     if (values.source.authType === SourceSecretType.basic) {
       const authObj = pick(values.source, ['username', 'password']);
       data = Object.entries(authObj).reduce((acc, [key, value]) => {
-        acc[key] = Base64.encode(value);
+        if (value) {
+          acc[key] = Base64.encode(value);
+        }
         return acc;
       }, {});
     } else {
@@ -396,8 +398,8 @@ export const getSecretTypetoLabel = (obj: SecretKind) => {
   if (!obj) {
     return;
   }
-  const rawType = obj.type ?? obj.metadata?.labels?.[SecretLabels.K8S_TYPE_LABEL];
-  const type = typeToLabel(rawType);
+  const resolvedType = getResolvedKubernetesSecretType(obj);
+  const type = typeToLabel(resolvedType);
 
   const secretType =
     type === SecretTypeDisplayLabel.keyValue && obj.data

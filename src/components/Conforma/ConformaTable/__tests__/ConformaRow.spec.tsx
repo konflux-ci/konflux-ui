@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { UIConformaData, CONFORMA_RESULT_STATUS } from '~/types/conforma';
+import { ConformaResultRow, CONFORMA_RESULT_STATUS } from '~/types/conforma';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { ConformaExpandedRowContent } from '../ConformaExpandedRowContent';
 import { WrappedConformaRow } from '../ConformaRow';
@@ -23,9 +23,9 @@ const dummySuccessRowData = {
   component: 'component-1',
   description: 'dummy description',
   images: [],
-} as UIConformaData;
+} as ConformaResultRow;
 
-const dumpFailRowData: UIConformaData = {
+const dumpFailRowData: ConformaResultRow = {
   title: 'dummyTitle',
   status: CONFORMA_RESULT_STATUS.violations,
   component: 'component-1',

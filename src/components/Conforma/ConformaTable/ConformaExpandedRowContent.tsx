@@ -6,12 +6,13 @@ import {
 } from '@patternfly/react-core';
 import { ExpandableRowContent, Tr } from '@patternfly/react-table';
 import { CONFORMA_POLICY_AVAILABLE_RULE_COLLECTIONS_URL } from '~/consts/documentation';
-import { UIConformaData } from '~/types/conforma';
-import { ExternalLink, Timestamp } from '../../../shared';
+import ExternalLink from '~/shared/components/links/ExternalLink';
+import { Timestamp } from '~/shared/components/timestamp/Timestamp';
+import { ConformaResultRow } from '~/types/conforma';
 import './ConformaTable.scss';
 
 interface Props {
-  obj: UIConformaData;
+  obj: ConformaResultRow;
 }
 
 export const ConformaExpandedRowContent: React.FC<Props> = ({ obj }) => {

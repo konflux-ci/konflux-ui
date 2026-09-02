@@ -86,6 +86,12 @@ jest.mock('~/hooks/useImageRepository', () => ({
     mockUseImageRepository(namespace, name, watch),
 }));
 
+// Mock useIsImageControllerEnabled hook
+const mockUseIsImageControllerEnabled = jest.fn();
+jest.mock('~/image-controller/conditional-checks', () => ({
+  useIsImageControllerEnabled: () => mockUseIsImageControllerEnabled(),
+}));
+
 const mockUsePipelineRunV2 = usePipelineRunV2 as jest.Mock;
 const mockUseTaskRunsForPipelineRuns = useTaskRunsForPipelineRuns as jest.Mock;
 
@@ -116,7 +122,8 @@ describe('PipelineRunDetailsTab', () => {
     jest.clearAllMocks();
     useNamespaceMock.mockReturnValue(mockNamespace);
     useParamsMock.mockReturnValue({ pipelineRunName: mockPipelineRunName });
-    // Default: image proxy and repository are loaded with public visibility
+    // Default: image controller is enabled, image proxy and repository are loaded with public visibility
+    mockUseIsImageControllerEnabled.mockReturnValue({ isImageControllerEnabled: true });
     mockUseImageProxy.mockReturnValue([mockUrlInfo, true, null]);
     mockUseImageRepository.mockReturnValue([mockPublicImageRepository, true, null]);
   });
@@ -552,6 +559,19 @@ describe('PipelineRunDetailsTab', () => {
 
       // User-owned repo should NOT use proxy URL in params even if private
       expect(screen.getAllByText(userOwnedImageUrl).length).toBeGreaterThan(0);
+    });
+
+    it('should not replace URL with proxy when image controller is disabled', () => {
+      mockUseIsImageControllerEnabled.mockReturnValue({ isImageControllerEnabled: false });
+      mockUsePipelineRunV2.mockReturnValue(mockPipelineRunStates.loaded(pipelineRunWithImageUrl));
+      mockUseTaskRunsForPipelineRuns.mockReturnValue(mockTaskRunsStates.loaded(mockTaskRuns));
+      mockUseImageRepository.mockReturnValue([mockPrivateImageRepository, true, null]);
+
+      renderWithQueryClientAndRouter(<PipelineRunDetailsTab />);
+
+      // Should show original URL, not proxy URL
+      expect(screen.getByText(konfluxImageUrl)).toBeInTheDocument();
+      expect(screen.queryByText(proxyImageUrl)).not.toBeInTheDocument();
     });
   });
 });

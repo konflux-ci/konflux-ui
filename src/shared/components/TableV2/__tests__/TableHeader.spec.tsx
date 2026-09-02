@@ -70,33 +70,78 @@ describe('TableHeader', () => {
     expect(screen.getByTestId('table-header')).toBeInTheDocument();
   });
 
-  it('sets sort prop on sortable columns', () => {
+  it('renders ascending sort icon for sorted asc column', () => {
     const table = createMockTable(defaultHeaders);
     renderTableHeader(<TableHeader table={table as never} columnWidths={defaultWidths} />);
 
     const thead = screen.getByTestId('table-header');
     const columnHeaders = within(thead).getAllByRole('columnheader');
-    // Sortable column (Name) should have aria-sort attribute
+    // Sorted column (Name, asc) should have sort indicator
+    const sortIndicator = within(columnHeaders[0]).getByTestId('sort-indicator');
+    expect(sortIndicator).toBeInTheDocument();
+  });
+
+  it('renders descending sort icon for sorted desc column', () => {
+    const headers = [
+      { id: 'name', header: 'Name', canSort: true, isSorted: 'desc' as const },
+      { id: 'status', header: 'Status', canSort: false, isSorted: false as const },
+    ];
+    const table = createMockTable(headers);
+    renderTableHeader(<TableHeader table={table as never} columnWidths={defaultWidths} />);
+
+    const thead = screen.getByTestId('table-header');
+    const columnHeaders = within(thead).getAllByRole('columnheader');
+    const sortIndicator = within(columnHeaders[0]).getByTestId('sort-indicator');
+    expect(sortIndicator).toBeInTheDocument();
+  });
+
+  it('does not render sort icon on non-sorted columns', () => {
+    const table = createMockTable(defaultHeaders);
+    renderTableHeader(<TableHeader table={table as never} columnWidths={defaultWidths} />);
+
+    const thead = screen.getByTestId('table-header');
+    const columnHeaders = within(thead).getAllByRole('columnheader');
+    // Non-sortable column (Status) should NOT have sort indicator
+    expect(within(columnHeaders[1]).queryByTestId('sort-indicator')).not.toBeInTheDocument();
+  });
+
+  it('sets aria-sort on sorted columns', () => {
+    const headers = [
+      { id: 'name', header: 'Name', canSort: true, isSorted: 'asc' as const },
+      { id: 'status', header: 'Status', canSort: true, isSorted: 'desc' as const },
+      { id: 'id', header: 'ID', canSort: false, isSorted: false as const },
+    ];
+    const widths: ColumnWidth[] = [
+      { id: 'name', type: 'flex', widthPercent: 40 },
+      { id: 'status', type: 'flex', widthPercent: 40 },
+      { id: 'id', type: 'flex', widthPercent: 20 },
+    ];
+    const table = createMockTable(headers);
+    renderTableHeader(<TableHeader table={table as never} columnWidths={widths} />);
+
+    const thead = screen.getByTestId('table-header');
+    const columnHeaders = within(thead).getAllByRole('columnheader');
     expect(columnHeaders[0]).toHaveAttribute('aria-sort', 'ascending');
+    expect(columnHeaders[1]).toHaveAttribute('aria-sort', 'descending');
+    expect(columnHeaders[2]).not.toHaveAttribute('aria-sort');
   });
 
-  it('does not set sort on non-sortable columns', () => {
+  it('does not render sort button (read-only indicators)', () => {
+    const table = createMockTable(defaultHeaders);
+    renderTableHeader(<TableHeader table={table as never} columnWidths={defaultWidths} />);
+
+    const thead = screen.getByTestId('table-header');
+    // No interactive sort buttons — indicators are read-only
+    expect(within(thead).queryByRole('button')).not.toBeInTheDocument();
+  });
+
+  it('applies inline style for flex columns', () => {
     const table = createMockTable(defaultHeaders);
     renderTableHeader(<TableHeader table={table as never} columnWidths={defaultWidths} />);
 
     const thead = screen.getByTestId('table-header');
     const columnHeaders = within(thead).getAllByRole('columnheader');
-    // Non-sortable column (Status) should NOT have aria-sort
-    expect(columnHeaders[1]).not.toHaveAttribute('aria-sort');
-  });
-
-  it('applies width class for flex columns', () => {
-    const table = createMockTable(defaultHeaders);
-    renderTableHeader(<TableHeader table={table as never} columnWidths={defaultWidths} />);
-
-    const thead = screen.getByTestId('table-header');
-    const columnHeaders = within(thead).getAllByRole('columnheader');
-    expect(columnHeaders[0]).toHaveClass('pf-m-width-60');
+    expect(columnHeaders[0]).toHaveStyle({ width: '60%' });
   });
 
   it('applies inline style for fixed-width columns', () => {
@@ -131,5 +176,49 @@ describe('TableHeader', () => {
     const thead = screen.getByTestId('table-header');
     const columnHeaders = within(thead).getAllByRole('columnheader');
     expect(columnHeaders).toHaveLength(2);
+  });
+
+  it('renders an empty Th with screen reader text when enableRowSelection is true', () => {
+    const table = createMockTable(defaultHeaders);
+    renderTableHeader(
+      <TableHeader table={table as never} columnWidths={defaultWidths} enableRowSelection />,
+    );
+
+    const thead = screen.getByTestId('table-header');
+    const columnHeaders = within(thead).getAllByRole('columnheader');
+    // selection placeholder + 2 data headers = 3
+    expect(columnHeaders).toHaveLength(3);
+  });
+
+  it('does not render selection placeholder when enableRowSelection is false', () => {
+    const table = createMockTable(defaultHeaders);
+    renderTableHeader(
+      <TableHeader
+        table={table as never}
+        columnWidths={defaultWidths}
+        enableRowSelection={false}
+      />,
+    );
+
+    const thead = screen.getByTestId('table-header');
+    const columnHeaders = within(thead).getAllByRole('columnheader');
+    expect(columnHeaders).toHaveLength(2);
+  });
+
+  it('renders both selection and expansion placeholders when both enabled', () => {
+    const table = createMockTable(defaultHeaders);
+    renderTableHeader(
+      <TableHeader
+        table={table as never}
+        columnWidths={defaultWidths}
+        enableExpansion
+        enableRowSelection
+      />,
+    );
+
+    const thead = screen.getByTestId('table-header');
+    const columnHeaders = within(thead).getAllByRole('columnheader');
+    // selection + expansion + 2 data headers = 4
+    expect(columnHeaders).toHaveLength(4);
   });
 });

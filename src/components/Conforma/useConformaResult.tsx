@@ -2,7 +2,8 @@ import * as React from 'react';
 import { CONFORMA_TASK, EC_TASK } from '~/consts/security';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { usePipelineRunV2 } from '~/hooks/usePipelineRunsV2';
-import { ComponentConformaResult, ConformaResult, UIConformaData } from '~/types/conforma';
+import { logger } from '~/monitoring/logger';
+import { ComponentConformaResult, ConformaResult, ConformaResultRow } from '~/types/conforma';
 import { isResourceEnterpriseContract } from '~/utils/conforma-utils';
 import { isTaskRunInPipelineRun } from '~/utils/pipeline-utils';
 import { useTaskRunsForPipelineRuns } from '../../hooks/useTaskRunsV2';
@@ -57,6 +58,9 @@ export const useConformaResultFromLogs = (
   const taskRunId = taskRun?.metadata?.uid ?? taskRun?.status?.podName;
 
   React.useEffect(() => {
+    setCrJson(undefined);
+    setCrLoaded(false);
+
     if (!taskRunLoaded || !securityTaskRunName || !taskRunId) return;
 
     const currentTaskRun = taskRunRef.current;
@@ -70,8 +74,13 @@ export const useConformaResultFromLogs = (
           setCrLoaded(true);
         }
       })
-      .catch(() => {
-        if (!cancelled) setCrLoaded(true);
+      .catch((err: unknown) => {
+        if (!cancelled) {
+          logger.warn('Failed to resolve Conforma result from TaskRun', {
+            error: err instanceof Error ? err.message : String(err),
+          });
+          setCrLoaded(true);
+        }
       });
 
     return () => {
@@ -100,7 +109,7 @@ export const useConformaResultFromLogs = (
 
 export const useConformaResult = (
   pipelineRunName: string,
-): [UIConformaData[], boolean, unknown] => {
+): [ConformaResultRow[] | undefined, boolean, unknown] => {
   const [cr, crLoaded, crError] = useConformaResultFromLogs(pipelineRunName);
   const conformaResult = React.useMemo(() => {
     return crLoaded && cr && !crError ? mapConformaResultData(cr) : undefined;

@@ -22,6 +22,13 @@ describe('useStatusOnFavicon', () => {
     jest.clearAllMocks();
   });
 
+  it('passes null color when status is not yet known', () => {
+    renderHook(() => useStatusOnFavicon(null));
+
+    expect(getStatusColorMock).not.toHaveBeenCalled();
+    expect(useFaviconStatusBadgeMock).toHaveBeenCalledWith(null);
+  });
+
   it('maps status to color and passes it to useFaviconStatusBadge', () => {
     getStatusColorMock.mockReturnValue(blueColor.value);
 

@@ -1,23 +1,67 @@
 import { extractConformaResultsFromTaskRunLogs } from '~/components/Conforma/utils';
-import { commonFetchJSON, getK8sResourceURL } from '~/k8s';
+import { commonFetchJSON, getK8sResourceURL, k8sListResource, K8sResourceListOptions } from '~/k8s';
 import { KUBEARCHIVE_PATH_PREFIX } from '~/kubearchive/const';
+import {
+  convertToKubearchiveQueryParams,
+  withKubearchivePathPrefix,
+} from '~/kubearchive/fetch-utils';
+import { TaskRunGroupVersionKind, TaskRunModel } from '~/models';
 import { PodModel } from '~/models/pod';
 import type { TaskRunKind } from '~/types';
 import {
   type ComponentConformaResult,
   CONFORMA_RESULT_STATUS,
   type ConformaResult,
+  type ConformaResultRow,
   type ConformaRule,
-  type UIConformaData,
 } from '~/types/conforma';
 import { getPipelineRunFromTaskRunOwnerRef } from '~/utils/common-utils';
-import { getTaskRunLog } from '~/utils/tekton-results';
+import { getTaskRunLog, getTaskRuns } from '~/utils/tekton-results';
+import { buildConformaSecurityTaskRunSelector } from './conforma-taskrun-query';
 
-const mapToUIConformaData = (
+export async function fetchLatestSecurityTaskRunForComponent(
+  namespace: string,
+  applicationName: string,
+  componentName: string,
+  isKubearchiveTaskRunsEnabled: boolean,
+): Promise<TaskRunKind | null> {
+  const selector = buildConformaSecurityTaskRunSelector(applicationName, componentName);
+
+  if (isKubearchiveTaskRunsEnabled) {
+    const k8sQueryOptions = convertToKubearchiveQueryParams({
+      groupVersionKind: TaskRunGroupVersionKind,
+      namespace,
+      isList: true,
+      selector,
+    });
+    // KubeArchive's list API always orders results by creationTimestamp desc
+    // (then id desc) server-side before applying `limit`, so items[0] is the
+    // newest match — same guarantee as Tekton Results' `create_time desc`.
+    const res = await k8sListResource<TaskRunKind>(
+      withKubearchivePathPrefix<K8sResourceListOptions>({
+        model: TaskRunModel,
+        queryOptions: {
+          ...(k8sQueryOptions || {}),
+          queryParams: {
+            ...(k8sQueryOptions?.queryParams || {}),
+            limit: 1,
+          },
+        },
+      }),
+    );
+    return res?.items?.[0] ?? null;
+  }
+
+  const [results] = await getTaskRuns(namespace, { selector, limit: 1 });
+  return results[0] ?? null;
+}
+
+const mapToConformaResultRow = (
   v: ConformaRule,
   compResult: ComponentConformaResult,
   status: CONFORMA_RESULT_STATUS,
-): UIConformaData => ({
+  pipelineRunName?: string,
+): ConformaResultRow => ({
   title: v.metadata?.title,
   description: v.metadata?.description,
   status,
@@ -28,23 +72,31 @@ const mapToUIConformaData = (
   solution: v.metadata?.solution,
   images: compResult.containerImage ? [compResult.containerImage] : [],
   code: v.metadata?.code,
+  pipelineRunName,
 });
 
 export const mapConformaResultData = (
   conformaResult: ComponentConformaResult[],
-): UIConformaData[] => {
+  pipelineRunName?: string,
+): ConformaResultRow[] => {
   return conformaResult.reduce((acc, compResult) => {
     compResult?.violations?.forEach((v) => {
-      acc.push(mapToUIConformaData(v, compResult, CONFORMA_RESULT_STATUS.violations));
+      acc.push(
+        mapToConformaResultRow(v, compResult, CONFORMA_RESULT_STATUS.violations, pipelineRunName),
+      );
     });
     compResult?.warnings?.forEach((v) => {
-      acc.push(mapToUIConformaData(v, compResult, CONFORMA_RESULT_STATUS.warnings));
+      acc.push(
+        mapToConformaResultRow(v, compResult, CONFORMA_RESULT_STATUS.warnings, pipelineRunName),
+      );
     });
     compResult?.successes?.forEach((v) => {
-      acc.push(mapToUIConformaData(v, compResult, CONFORMA_RESULT_STATUS.successes));
+      acc.push(
+        mapToConformaResultRow(v, compResult, CONFORMA_RESULT_STATUS.successes, pipelineRunName),
+      );
     });
     return acc;
-  }, [] as UIConformaData[]);
+  }, [] as ConformaResultRow[]);
 };
 
 export async function fetchConformaLogFromKubearchive(
@@ -60,7 +112,7 @@ export async function fetchConformaLogFromKubearchive(
     ns: namespace,
     name: podName,
     path: 'log',
-    queryParams: { container: 'step-report-json', follow: 'true' },
+    queryParams: { container: 'step-report-json' },
   };
 
   return commonFetchJSON<ConformaResult>(getK8sResourceURL(PodModel, undefined, podLogOpts), {

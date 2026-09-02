@@ -56,6 +56,8 @@ src/
 
 > Archive resources only get added if their ID doesn't exist in cluster data.
 
+**Stale PipelineRun ghosts:** KubeArchive list responses are filtered in `hooks.ts` via `filterOutDeletedAndStaleRunningResources`. Deleted archive PipelineRuns with no `completionTime` and a `Succeeded` condition stuck at `Unknown` with reasons `Running`, `ResolvingTaskRef`, `ResolvingPipelineRef`, or `PipelineRunPending` are dropped so Activity does not show perpetual Running rows after live delete.
+
 ---
 
 ## 3. Fetching resources with archive support
@@ -261,5 +263,15 @@ const handleScroll = useCallback(() => {
 ```
 
 ---
+
+## 7. Log tailing
+
+When viewing logs from KubeArchive, only the **last 500 lines** per container are fetched. This keeps the initial load fast for large logs.
+
+- Tailed sections show a **"showing last N lines"** label in the section header.
+- Each tailed section has a **"Download full logs"** button that fetches the complete log (without the tail limit) and saves it as a file.
+- Each tailed section also has a **"View full logs"** button (with an external link icon) that opens the complete log in a new browser tab via the KubeArchive API.
+- This only applies to **archive source** logs. Cluster logs (live or terminated) are fetched in full.
+- The tail limit is configured via `KUBEARCHIVE_TAIL_LINES` in `src/kubearchive/const.ts`.
 
 Happy archiving! 📚 

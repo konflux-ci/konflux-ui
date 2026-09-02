@@ -27,8 +27,10 @@
   }
   &__logtext {
     position: relative;
-    background: var(--pf-t--global--background--color--primary--default); // pod log background color
-    color: var(--pf-t--global--text--color--on-brand--default);
+    background: var(
+      --pf-t--global--background--color--primary--default
+    ); // pod log background color
+    color: var(--pf-t--global--text--color--regular);
     height: 100%;
     padding: var(--pf-t--global--spacer--sm) var(--pf-t--global--spacer--md);
   }
@@ -42,7 +44,9 @@
     overflow-y: auto;
 
     .pf-v6-c-nav__link.pf-m-current {
-      --pf-v6-c-nav__link--m-current--BackgroundColor: var(--pf-t--global--background--color--primary--clicked);
+      --pf-v6-c-nav__link--m-current--BackgroundColor: var(
+        --pf-t--global--background--color--primary--clicked
+      );
       border-inline-start: 3px solid var(--pf-t--global--color--brand--default);
     }
   }

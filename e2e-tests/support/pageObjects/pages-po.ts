@@ -1,3 +1,5 @@
+import { logViewerPO } from './logViewer-po';
+
 export const applicationsPagePO = {
   filterInput: '[aria-label="name filter"]',
   appStatus: '[data-test="details__status"]',
@@ -43,7 +45,8 @@ export const pipelinerunsTabPO = {
   relatedPipelineCloseBtn: 'button[aria-label="Close"]',
 
   node: (nodeId) => `g[data-id="${nodeId}"]`,
-  logText: '.pf-v6-c-log-viewer__text',
+  logText: logViewerPO.logText,
+  logViewerSearchInput: logViewerPO.searchInput,
   drawerPanel: 'div[class*="drawer__panel-main"]',
   drawerClose: 'div[class="pf-v6-c-drawer__close"]',
   listGroup: 'div[class$="list__group"]',

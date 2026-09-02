@@ -1,11 +1,13 @@
 import { LoaderFunction } from 'react-router-dom';
+import { isFeatureFlagOn } from '../../feature-flags/utils';
 import { PipelineRunModel } from '../../models';
 import { GithubRedirectRouteParams } from '../../routes/utils';
-import { QueryPipelineRun } from '../../utils/pipelinerun-utils';
+import { QueryPipelineRun, QueryPipelineRunWithKubearchive } from '../../utils/pipelinerun-utils';
 import { checkReviewAccesses } from '../../utils/rbac';
 
 export const githubRedirectLoader: LoaderFunction = async ({ params }) => {
   const namespace = params[GithubRedirectRouteParams.ns];
+  const pipelineRunName = params[GithubRedirectRouteParams.pipelineRunName];
   const allowed = await checkReviewAccesses(
     {
       model: PipelineRunModel,
@@ -14,11 +16,13 @@ export const githubRedirectLoader: LoaderFunction = async ({ params }) => {
     namespace,
   );
   if (!allowed) throw new Response('Access check Denied', { status: 403 });
-  if (!params[GithubRedirectRouteParams.pipelineRunName]) return null;
-  return QueryPipelineRun(
-    params[GithubRedirectRouteParams.ns],
-    params[GithubRedirectRouteParams.pipelineRunName],
-  );
+  if (!pipelineRunName) return null;
+
+  if (isFeatureFlagOn('pipelineruns-kubearchive')) {
+    return QueryPipelineRunWithKubearchive(namespace, pipelineRunName);
+  }
+
+  return QueryPipelineRun(namespace, pipelineRunName);
 };
 
 export { default as GithubRedirect } from './GithubRedirect';

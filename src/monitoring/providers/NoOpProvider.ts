@@ -2,14 +2,14 @@ import type { IMonitoringProvider, LogLevel, MonitoringConfig, UserContext } fro
 
 export class NoOpProvider implements IMonitoringProvider<MonitoringConfig> {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async init(_: MonitoringConfig): Promise<void> {
+  init(_: MonitoringConfig): void {
     // Intentionally no-op
   }
 
-  captureException(error: unknown, context?: Record<string, unknown>): void {
+  captureException(error: unknown, context?: Record<string, unknown>): undefined {
     // eslint-disable-next-line no-console
     console.error('captureException', error, context);
-    // Intentionally no-op
+    return undefined;
   }
 
   captureMessage(message: string, level?: LogLevel, context?: Record<string, unknown>): void {

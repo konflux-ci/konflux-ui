@@ -47,8 +47,8 @@ export const useTRTaskRuns = (
   namespace: string,
   options?: TektonResultsOptions,
   queryOptions?: TQueryInfiniteOptions<TaskRunKind[], Error, InfiniteData<TaskRunKind[], unknown>>,
-): [TaskRunKind[], boolean, unknown, GetNextPage, NextPageProps] => {
-  const { data, isLoading, isFetchingNextPage, error, fetchNextPage, hasNextPage } =
+): [TaskRunKind[], boolean, unknown, GetNextPage, NextPageProps, () => Promise<unknown>] => {
+  const { data, isLoading, isFetchingNextPage, error, fetchNextPage, hasNextPage, refetch } =
     useInfiniteQuery({
       ...createTaskRunTektonResultsQueryOptions(namespace, options),
       ...(queryOptions ?? ({} as TQueryInfiniteOptions<TaskRunKind>)),
@@ -63,6 +63,7 @@ export const useTRTaskRuns = (
       isFetchingNextPage,
       hasNextPage,
     },
+    refetch,
   ];
 };
 

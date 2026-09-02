@@ -13,7 +13,7 @@ import {
   ToolbarGroup,
   ToolbarItem,
 } from '@patternfly/react-core';
-import { FilterIcon } from '@patternfly/react-icons/dist/esm/icons';
+import { FilterIcon } from '@patternfly/react-icons/dist/esm/icons/filter-icon';
 import { IfFeature } from '~/feature-flags/hooks';
 import ColumnManagementButton from '../components/ColumnManagementButton';
 

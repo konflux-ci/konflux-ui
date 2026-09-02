@@ -302,15 +302,13 @@ send_report() {
 
     # Build JSON payload properly using jq to avoid injection issues
     PAYLOAD=$(jq -n \
-        --arg channel "${SLACK_CHANNEL_ID}" \
         --arg text "$MESSAGE" \
-        '{channel: $channel, text: $text}')
+        '{text: $text}')
 
     # For testing: print the Slack payload without actually sending
     if [ "${DRY_RUN:-false}" = "true" ]; then
         echo ""
         echo "=== DRY RUN: Would send to Slack ==="
-        echo "Channel: ${SLACK_CHANNEL_ID:-[NOT SET]}"
         echo "Message:"
         echo -e "$MESSAGE"
         echo ""
@@ -320,9 +318,8 @@ send_report() {
         return 0
     fi
 
-    curl -X POST https://slack.com/api/chat.postMessage \
-        -H "Authorization: Bearer ${SLACK_TOKEN}" \
-        -H "Content-Type: application/json; charset=utf-8" \
+    curl -X POST "${PERIODIC_JOBS_SLACK_WEBHOOK_URL}" \
+        -H "Content-Type: application/json" \
         -d "$PAYLOAD"
 
 }

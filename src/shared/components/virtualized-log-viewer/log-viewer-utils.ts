@@ -15,13 +15,17 @@ export function normalizeLogLines(data: string): string[] {
 }
 
 export function normalizeSection(section: LogSection): NormalizedLogSection {
-  return { containerName: section.containerName, lines: normalizeLogLines(section.data) };
+  return {
+    containerName: section.containerName,
+    lines: normalizeLogLines(section.data),
+    isCompleted: section.isCompleted,
+  };
 }
 
 export function singleLogSection(
   data: string,
   containerName = 'log',
-  isCompleted = true,
+  isCompleted = false,
 ): LogSection {
   return { containerName, data, isCompleted };
 }

@@ -9,18 +9,18 @@ import {
 } from '@patternfly/react-core';
 import dayjs from 'dayjs';
 import { PIPELINERUN_DETAILS_PATH } from '@routes/paths';
+import { ComponentProps, createModalLauncher } from '~/components/modal/createModalLauncher';
+import { useModalLauncher } from '~/components/modal/ModalProvider';
+import { StatusIconWithTextLabel } from '~/components/topology/StatusIcon';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
+import { useLatestBuildPipelineRunForComponentV2 } from '~/hooks/useLatestPushBuildPipeline';
 import { useTaskRunsForPipelineRuns } from '~/hooks/useTaskRunsV2';
+import PipelineRunLogs from '~/shared/components/pipeline-run-logs/PipelineRunLogs';
+import { EmptyBox, LoadingBox } from '~/shared/components/status-box/StatusBox';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
-import { useLatestBuildPipelineRunForComponent } from '../../hooks/usePipelineRuns';
-import PipelineRunLogs from '../../shared/components/pipeline-run-logs/PipelineRunLogs';
-import { EmptyBox, LoadingBox } from '../../shared/components/status-box/StatusBox';
-import { ComponentKind } from '../../types';
-import { pipelineRunStatus } from '../../utils/pipeline-utils';
-import { ComponentProps, createModalLauncher } from '../modal/createModalLauncher';
-import { useModalLauncher } from '../modal/ModalProvider';
-import { StatusIconWithTextLabel } from '../topology/StatusIcon';
+import { ComponentKind } from '~/types';
+import { pipelineRunStatus } from '~/utils/pipeline-utils';
 
 import './BuildLogViewer.scss';
 
@@ -32,7 +32,7 @@ export const BuildLogViewer: React.FC<React.PropsWithChildren<BuildLogViewerProp
   component,
 }) => {
   const namespace = useNamespace();
-  const [pipelineRun, loaded, pipelineRunError] = useLatestBuildPipelineRunForComponent(
+  const [pipelineRun, loaded, pipelineRunError] = useLatestBuildPipelineRunForComponentV2(
     component.metadata.namespace,
     component.metadata.name,
   );

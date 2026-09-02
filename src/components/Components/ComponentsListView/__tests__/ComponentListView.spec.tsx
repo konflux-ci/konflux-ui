@@ -1,17 +1,17 @@
 import { screen, fireEvent, within, act } from '@testing-library/react';
+import ComponentListView from '~/components/Components/ComponentsListView/ComponentListView';
+import { createCustomizeAllPipelinesModalLauncher } from '~/components/CustomizedPipeline/CustomizePipelinesModal';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
+import { useModalLauncher } from '~/components/modal/ModalProvider';
+import { PACState } from '~/hooks/usePACState';
+import { useTRPipelineRuns } from '~/hooks/useTektonResults';
+import { ComponentGroupVersionKind, PipelineRunGroupVersionKind } from '~/models';
+import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { renderWithQueryClient } from '~/unit-test-utils/mock-react-query';
 import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
-import { PACState } from '../../../../hooks/usePACState';
-import { useTRPipelineRuns } from '../../../../hooks/useTektonResults';
-import { ComponentGroupVersionKind, PipelineRunGroupVersionKind } from '../../../../models';
-import { mockUseNamespaceHook } from '../../../../unit-test-utils/mock-namespace';
-import { createK8sWatchResourceMock, createUseApplicationMock } from '../../../../utils/test-utils';
-import { createCustomizeAllPipelinesModalLauncher } from '../../../CustomizedPipeline/CustomizePipelinesModal';
-import { useModalLauncher } from '../../../modal/ModalProvider';
+import { createK8sWatchResourceMock, createUseApplicationMock } from '~/utils/test-utils';
 import { componentCRMocks } from '../../__data__/mock-data';
 import { mockPipelineRuns } from '../../__data__/mock-pipeline-run';
-import ComponentListView from '../ComponentListView';
 
 jest.useFakeTimers();
 
@@ -20,13 +20,13 @@ const mockComponents = componentCRMocks.reduce((acc, mock) => {
   return acc;
 }, []);
 
-jest.mock('../../../../hooks/useTektonResults');
+jest.mock('~/hooks/useTektonResults');
 
 jest.mock('react-i18next', () => ({
   useTranslation: jest.fn(() => ({ t: (x) => x })),
 }));
 
-jest.mock('../../../../utils/rbac', () => ({
+jest.mock('~/utils/rbac', () => ({
   useAccessReviewForModel: jest.fn(() => [true, true]),
 }));
 
@@ -41,29 +41,28 @@ jest.mock('react-router-dom', () => {
   };
 });
 
-jest.mock('../../../../hooks/useSearchParam', () => ({
+jest.mock('~/hooks/useSearchParam', () => ({
   useSearchParamBatch: () => mockUseSearchParamBatch(),
 }));
 
-jest.mock('../../../../hooks/usePipelineRuns', () => ({
-  ...jest.requireActual('../../../../hooks/usePipelineRuns'),
-  useLatestBuildPipelineRunForComponent: () => [mockPipelineRuns[0], true],
+jest.mock('~/hooks/useLatestPushBuildPipeline', () => ({
+  useLatestBuildPipelineRunForComponentV2: () => [mockPipelineRuns[0], true],
 }));
 
-jest.mock('../../../CustomizedPipeline/CustomizePipelinesModal', () => ({
+jest.mock('~/components/CustomizedPipeline/CustomizePipelinesModal', () => ({
   createCustomizeAllPipelinesModalLauncher: jest.fn((applicationName, namespace) => ({
     applicationName,
     namespace,
   })),
 }));
 
-jest.mock('../../../modal/ModalProvider', () => ({
-  ...jest.requireActual('../../../modal/ModalProvider'),
+jest.mock('~/components/modal/ModalProvider', () => ({
+  ...jest.requireActual('~/components/modal/ModalProvider'),
   useModalLauncher: jest.fn(),
 }));
 
-jest.mock('../../../../hooks/usePACStatesForComponents', () => {
-  const actual = jest.requireActual('../../../../hooks/usePACState');
+jest.mock('~/hooks/usePACStatesForComponents', () => {
+  const actual = jest.requireActual('~/hooks/usePACState');
   return {
     ...actual,
     __esModule: true,

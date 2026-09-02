@@ -1,5 +1,6 @@
 import { hacAPIEndpoints } from '../../../utils/APIEndpoints';
 import { APIHelper } from '../../../utils/APIHelper';
+import { LogViewerHelper } from '../../../utils/LogViewerHelper';
 import { UIhelper } from '../../../utils/UIhelper';
 import { pipelinerunsTabPO } from '../../pageObjects/pages-po';
 
@@ -183,10 +184,7 @@ export class DetailsTab {
   }
 
   static verifyLogs(logText: string | RegExp) {
-    cy.get(pipelinerunsTabPO.logText)
-      .contains(logText, { timeout: 80000 })
-      .scrollIntoView()
-      .should('be.visible');
+    LogViewerHelper.revealLogText(logText, { assertInitiallyFolded: true });
   }
 
   static closeDrawerPanel() {
@@ -267,13 +265,15 @@ export class LogsTab {
 
   static downloadAllTaskLogs(allTaskLogs = true) {
     LogsTab.goToLogsTab();
+    // Open the download dropdown menu first
+    cy.get('button[aria-label="Download logs"]').click();
     if (allTaskLogs) {
-      cy.contains('button', pipelinerunsTabPO.downloadAllTaskLogsButton)
-        .should('be.enabled')
+      cy.contains('[role="menuitem"]', pipelinerunsTabPO.downloadAllTaskLogsButton)
+        .should('be.visible')
         .click();
     } else {
-      cy.contains('button', /^Download$/)
-        .should('be.enabled')
+      cy.contains('[role="menuitem"]', /^Download$/)
+        .should('be.visible')
         .click();
     }
     DetailsTab.goToDetailsTab();

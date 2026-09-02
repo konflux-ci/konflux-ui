@@ -20,14 +20,13 @@ const getProvider = (provider: MonitoringProviderId): IMonitoringProvider<Monito
 export class MonitoringService {
   private provider: IMonitoringProvider<MonitoringConfig>;
 
-  initialize(config: MonitoringConfig): Promise<void> {
+  initialize(config: MonitoringConfig): void {
     this.provider = getProvider(config.provider);
-    return this.provider.init(config);
+    this.provider.init(config);
   }
 
-  captureException(error: unknown, context?: Record<string, unknown>): this {
-    this.provider.captureException(error, context);
-    return this;
+  captureException(error: unknown, context?: Record<string, unknown>): string | undefined {
+    return this.provider.captureException(error, context);
   }
 
   captureMessage(message: string, level?: LogLevel, context?: Record<string, unknown>): this {
@@ -35,14 +34,13 @@ export class MonitoringService {
     return this;
   }
 
-  setUser(user: UserContext | null): this {
-    this.provider.setUser(user);
-    return this;
+  setUser(user: UserContext | null): void {
+    void this.provider.setUser(user);
   }
 
   static create(config: MonitoringConfig): MonitoringService {
     const service = new MonitoringService();
-    void service.initialize(config);
+    service.initialize(config);
     return service;
   }
 }

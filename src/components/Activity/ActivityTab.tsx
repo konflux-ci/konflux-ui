@@ -1,7 +1,8 @@
 import * as React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Tab, Tabs, TabTitleText, Content, Title } from '@patternfly/react-core';
+import { Tab, Tabs, TabTitleText } from '@patternfly/react-core';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
+import ListLayout from '~/shared/components/list-layout/ListLayout';
 import { APPLICATION_ACTIVITY_PATH } from '../../routes/paths';
 import { RouterParams } from '../../routes/utils';
 import CommitsListView from '../Commits/CommitsListPage/CommitsListView';
@@ -38,13 +39,14 @@ export const ActivityTab: React.FC = () => {
   );
 
   return (
-    <>
-      <Title size="xl" headingLevel="h3" className="pf-v6-c-title pf-v6-u-mt-lg pf-v6-u-mb-sm">
-        Activity by <FeatureFlagIndicator flags={['pipelineruns-kubearchive']} />
-      </Title>
-      <Content component="p" className="pf-v6-u-mb-sm">
-        Monitor your commits and their pipeline progression across all components.
-      </Content>
+    <ListLayout
+      title={
+        <>
+          Activity by <FeatureFlagIndicator flags={['pipelineruns-kubearchive']} />
+        </>
+      }
+      description="Monitor your commits and their pipeline progression across all components."
+    >
       <Tabs
         style={{
           width: 'fit-content',
@@ -79,6 +81,6 @@ export const ActivityTab: React.FC = () => {
           <PipelineRunsTab applicationName={applicationName} />
         </Tab>
       </Tabs>
-    </>
+    </ListLayout>
   );
 };

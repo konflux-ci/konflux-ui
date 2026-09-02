@@ -13,7 +13,7 @@ export class ComponentsTabPage {
   }
 
   static openComponent(name: string) {
-    this.getComponentListItem(name).click();
+    this.getComponentListItem(name).scrollIntoView().should('be.visible').click();
     Common.waitForLoad();
     cy.contains('h2', name).scrollIntoView().should('be.visible');
   }

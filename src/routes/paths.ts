@@ -120,6 +120,8 @@ export const PIPELINE_RUNS_DETAILS_PATH = PLR_LIST_PATH.extend(`:${RouterParams.
 
 export const PIPELINE_RUNS_LOG_PATH = PIPELINE_RUNS_DETAILS_PATH.extend('logs');
 
+export const PIPELINE_RUNS_SECURITY_PATH = PIPELINE_RUNS_DETAILS_PATH.extend('security');
+
 // TaskRun routes
 
 export const TASKRUN_LIST_PATH = APPLICATION_DETAILS_PATH.extend('taskruns');

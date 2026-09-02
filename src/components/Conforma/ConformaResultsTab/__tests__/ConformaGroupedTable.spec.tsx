@@ -1,11 +1,23 @@
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { useNamespace } from '~/shared/providers/Namespace';
 import { CONFORMA_RESULT_STATUS } from '~/types/conforma';
 import type { ConformaResultRow } from '~/types/conforma';
-import { routerRenderer } from '~/unit-test-utils/mock-react-router';
+import { setupVirtualizerMock } from '~/unit-test-utils';
+import { createUseParamsMock, routerRenderer } from '~/unit-test-utils/mock-react-router';
 import type { GroupedConformaRow } from '../conforma-grouping-utils';
 import { ConformaGroupedTable } from '../ConformaGroupedTable';
 import '@testing-library/jest-dom';
+
+jest.mock('~/shared/providers/Namespace', () => ({
+  useNamespace: jest.fn(),
+}));
+
+jest.mock('@tanstack/react-virtual', () => ({
+  useVirtualizer: jest.fn(),
+}));
+
+const mockUseNamespace = useNamespace as jest.Mock;
 
 const createRow = (overrides: Partial<ConformaResultRow> = {}): ConformaResultRow => ({
   title: 'Test rule',
@@ -58,11 +70,15 @@ describe('ConformaGroupedTable', () => {
     groups: mockGroups,
     groupBy: 'rule' as const,
     expandedGroups: new Set<string>(),
-    onToggleGroup: jest.fn(),
+    onExpandedGroupsChange: jest.fn(),
   };
+  const useParamsMock = createUseParamsMock();
 
   beforeEach(() => {
     jest.clearAllMocks();
+    setupVirtualizerMock();
+    mockUseNamespace.mockReturnValue('test-ns');
+    useParamsMock.mockReturnValue({ applicationName: 'test-app' });
   });
 
   it('renders group rows with correct labels', () => {
@@ -95,15 +111,17 @@ describe('ConformaGroupedTable', () => {
     expect(screen.getAllByText('Component').length).toBeGreaterThanOrEqual(1);
   });
 
-  it('calls onToggleGroup when expand button is clicked', async () => {
+  it('calls onExpandedGroupsChange when expand button is clicked', async () => {
     const user = userEvent.setup();
-    const onToggle = jest.fn();
-    routerRenderer(<ConformaGroupedTable {...defaultProps} onToggleGroup={onToggle} />);
+    const onExpandedGroupsChange = jest.fn();
+    routerRenderer(
+      <ConformaGroupedTable {...defaultProps} onExpandedGroupsChange={onExpandedGroupsChange} />,
+    );
 
     const toggleButtons = screen.getAllByRole('button');
     await user.click(toggleButtons[0]);
 
-    expect(onToggle).toHaveBeenCalledWith('Missing CVE scan');
+    expect(onExpandedGroupsChange).toHaveBeenCalledWith(new Set(['Missing CVE scan']));
   });
 
   it('shows detail sub-table when a group is expanded', () => {
@@ -284,6 +302,29 @@ describe('ConformaGroupedTable', () => {
     expect(screen.getAllByText('-').length).toBeGreaterThanOrEqual(1);
   });
 
+  it('renders row code in the detail sub-table when present', () => {
+    const groupsWithCode: GroupedConformaRow[] = [
+      {
+        groupKey: 'Trusted task rule',
+        violations: 1,
+        warnings: 0,
+        successes: 0,
+        rows: [createRow({ code: 'trusted_task.trusted' })],
+      },
+    ];
+    const expandedGroups = new Set(['Trusted task rule']);
+
+    routerRenderer(
+      <ConformaGroupedTable
+        {...defaultProps}
+        groups={groupsWithCode}
+        expandedGroups={expandedGroups}
+      />,
+    );
+
+    expect(screen.getByText('trusted_task.trusted')).toBeInTheDocument();
+  });
+
   it('renders empty string msg instead of falling back to dash', () => {
     const groupsWithEmptyMsg: GroupedConformaRow[] = [
       {
@@ -362,5 +403,54 @@ describe('ConformaGroupedTable', () => {
 
     expect(screen.getByText(longMsg)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'less' })).toBeInTheDocument();
+  });
+
+  it('renders a pipeline run link with /security in href when pipelineRunName is present', () => {
+    const groupsWithPipelineRun: GroupedConformaRow[] = [
+      {
+        groupKey: 'Has pipeline run',
+        violations: 1,
+        warnings: 0,
+        successes: 0,
+        rows: [createRow({ pipelineRunName: 'my-pipelinerun' })],
+      },
+    ];
+    const expandedGroups = new Set(['Has pipeline run']);
+    routerRenderer(
+      <ConformaGroupedTable
+        {...defaultProps}
+        groups={groupsWithPipelineRun}
+        expandedGroups={expandedGroups}
+      />,
+    );
+
+    const link = screen.getByTestId('conforma-pipeline-run-link');
+    expect(link).toHaveTextContent('my-pipelinerun');
+    expect(link).toHaveAttribute(
+      'href',
+      '/ns/test-ns/applications/test-app/pipelineruns/my-pipelinerun/security',
+    );
+  });
+
+  it('renders dash when pipelineRunName is absent', () => {
+    const groupsWithoutPipelineRun: GroupedConformaRow[] = [
+      {
+        groupKey: 'No pipeline run',
+        violations: 1,
+        warnings: 0,
+        successes: 0,
+        rows: [createRow({ pipelineRunName: undefined })],
+      },
+    ];
+    const expandedGroups = new Set(['No pipeline run']);
+    routerRenderer(
+      <ConformaGroupedTable
+        {...defaultProps}
+        groups={groupsWithoutPipelineRun}
+        expandedGroups={expandedGroups}
+      />,
+    );
+
+    expect(screen.queryByTestId('conforma-pipeline-run-link')).not.toBeInTheDocument();
   });
 });

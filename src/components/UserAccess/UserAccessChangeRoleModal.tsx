@@ -16,6 +16,8 @@ import {
   SelectOption,
   Spinner,
   Content,
+  ModalBody,
+  ModalHeader,
 } from '@patternfly/react-core';
 import textStyles from '@patternfly/react-styles/css/utilities/Text/text.mjs';
 import { useRoleMap } from '~/hooks/useRole';
@@ -202,109 +204,109 @@ export const UserAccessChangeRoleModal: React.FC<UserAccessChangeRoleModalProps>
       onClose={handleClose}
       appendTo={() => document.querySelector('#hacDev-modal-container') ?? document.body}
     >
-      <Flex direction={{ default: 'column' }} gap={{ default: 'gapMd' }}>
-        <FlexItem>
-          <Content>
-            Change role for {selectedCount} user{selectedCount !== 1 ? 's' : ''} (highest role
-            displayed)
-          </Content>
-        </FlexItem>
-        {hasUnrankedRoles ? (
+      <ModalHeader
+        title={`Change role for ${selectedCount} user${selectedCount !== 1 ? 's' : ''} (highest role
+              displayed)`}
+      />
+      <ModalBody>
+        <Flex direction={{ default: 'column' }} gap={{ default: 'gapMd' }}>
+          {hasUnrankedRoles ? (
+            <FlexItem>
+              <Alert variant={AlertVariant.danger} title="Unsupported roles" isInline>
+                Cannot evaluate role changes for: {unrankedRoleRefs.join(', ')}. These role bindings
+                reference roles that are not listed in the cluster Konflux configuration, or the
+                configuration order is invalid. Update konflux-public-info or remove affected users
+                before continuing.
+              </Alert>
+            </FlexItem>
+          ) : null}
           <FlexItem>
-            <Alert variant={AlertVariant.danger} title="Unsupported roles" isInline>
-              Cannot evaluate role changes for: {unrankedRoleRefs.join(', ')}. These role bindings
-              reference roles that are not listed in the cluster Konflux configuration, or the
-              configuration order is invalid. Update konflux-public-info or remove affected users
-              before continuing.
+            <Alert variant={AlertVariant.warning} title="Role change information" isInline>
+              When changing access, the user will be removed from all role bindings in the current
+              namespace and then added to the new role binding in the namespace. If any selected
+              role binding contains multiple users, the role binding will be split and the users not
+              selected will be added to the new role binding with the same role.
             </Alert>
           </FlexItem>
-        ) : null}
-        <FlexItem>
-          <Alert variant={AlertVariant.warning} title="Role change information" isInline>
-            When changing access, the user will be removed from all role bindings in the current
-            namespace and then added to the new role binding in the namespace. If any selected role
-            binding contains multiple users, the role binding will be split and the users not
-            selected will be added to the new role binding with the same role.
-          </Alert>
-        </FlexItem>
-        <FlexItem>
-          <List className="user-access-change-role-modal__user-list">
-            {[...selectedRowKeys].map((rowKey) => {
-              const { username, subjectKind } = splitRowKey(rowKey);
+          <FlexItem>
+            <List className="user-access-change-role-modal__user-list">
+              {[...selectedRowKeys].map((rowKey) => {
+                const { username, subjectKind } = splitRowKey(rowKey);
 
-              return (
-                <ListItem key={rowKey}>
-                  <span className={textStyles.fontWeightBold}>
-                    {username} ({subjectKind})
-                  </span>
-                  : {getUserHighestRole(username)}
-                </ListItem>
-              );
-            })}
-          </List>
-        </FlexItem>
+                return (
+                  <ListItem key={rowKey}>
+                    <span className={textStyles.fontWeightBold}>
+                      {username} ({subjectKind})
+                    </span>
+                    : {getUserHighestRole(username)}
+                  </ListItem>
+                );
+              })}
+            </List>
+          </FlexItem>
 
-        <FlexItem>
-          <Flex direction={{ default: 'column' }}>
-            <FlexItem className="user-access-change-role-modal__role-label">
-              <Content data-test="user-access-change-role-label">New role*</Content>
-            </FlexItem>
-            <FlexItem>
-              {roleMapLoaded && roleMap ? (
-                <Select
-                  toggle={(toggleRef) => (
-                    <MenuToggle
-                      ref={toggleRef}
-                      data-test="user-access-change-role-select"
-                      isExpanded={isRoleSelectOpen}
-                      onClick={() => setRoleSelectOpen(!isRoleSelectOpen)}
-                      isDisabled={roleSelectOptions.length === 0 || isSaving}
-                      isFullWidth
-                    >
-                      {modalSelectedRoleRef
-                        ? (roleMap.roleMap[modalSelectedRoleRef] ?? modalSelectedRoleRef)
-                        : 'Select a role'}
-                    </MenuToggle>
-                  )}
-                  onSelect={(_, val) => {
-                    if (typeof val === 'string') {
-                      setModalSelectedRoleRef(val);
-                    }
-                    setRoleSelectOpen(false);
-                    setSaveError(null);
-                  }}
-                  selected={modalSelectedRoleRef}
-                  isOpen={isRoleSelectOpen}
-                  onOpenChange={setRoleSelectOpen}
-                >
-                  <SelectList>
-                    {roleSelectOptions.map(([refName, displayName]) => (
-                      <SelectOption key={refName} value={refName}>
-                        {displayName}
-                      </SelectOption>
-                    ))}
-                  </SelectList>
-                </Select>
-              ) : (
-                <Spinner size="sm" />
-              )}
-            </FlexItem>
-
-            {saveError ? (
-              <FlexItem>
-                <Alert
-                  variant={AlertVariant.danger}
-                  title="Unable to change roles"
-                  isInline
-                  data-test="user-access-change-role-save-error"
-                >
-                  {saveError}
-                </Alert>
+          <FlexItem>
+            <Flex direction={{ default: 'column' }}>
+              <FlexItem className="user-access-change-role-modal__role-label">
+                <Content data-test="user-access-change-role-label">New role*</Content>
               </FlexItem>
-            ) : null}
-          </Flex>
-        </FlexItem>
-      </Flex>
+              <FlexItem>
+                {roleMapLoaded && roleMap ? (
+                  <Select
+                    toggle={(toggleRef) => (
+                      <MenuToggle
+                        ref={toggleRef}
+                        data-test="user-access-change-role-select"
+                        isExpanded={isRoleSelectOpen}
+                        onClick={() => setRoleSelectOpen(!isRoleSelectOpen)}
+                        isDisabled={roleSelectOptions.length === 0 || isSaving}
+                        isFullWidth
+                      >
+                        {modalSelectedRoleRef
+                          ? (roleMap.roleMap[modalSelectedRoleRef] ?? modalSelectedRoleRef)
+                          : 'Select a role'}
+                      </MenuToggle>
+                    )}
+                    onSelect={(_, val) => {
+                      if (typeof val === 'string') {
+                        setModalSelectedRoleRef(val);
+                      }
+                      setRoleSelectOpen(false);
+                      setSaveError(null);
+                    }}
+                    selected={modalSelectedRoleRef}
+                    isOpen={isRoleSelectOpen}
+                    onOpenChange={setRoleSelectOpen}
+                  >
+                    <SelectList>
+                      {roleSelectOptions.map(([refName, displayName]) => (
+                        <SelectOption key={refName} value={refName}>
+                          {displayName}
+                        </SelectOption>
+                      ))}
+                    </SelectList>
+                  </Select>
+                ) : (
+                  <Spinner size="sm" />
+                )}
+              </FlexItem>
+
+              {saveError ? (
+                <FlexItem>
+                  <Alert
+                    variant={AlertVariant.danger}
+                    title="Unable to change roles"
+                    isInline
+                    data-test="user-access-change-role-save-error"
+                  >
+                    {saveError}
+                  </Alert>
+                </FlexItem>
+              ) : null}
+            </Flex>
+          </FlexItem>
+        </Flex>
+      </ModalBody>
       <ModalFooter>
         {isSaving ? (
           <Button key="save" variant="primary" isDisabled isLoading>

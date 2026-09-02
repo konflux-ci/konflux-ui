@@ -15,24 +15,25 @@ describe('NoOpProvider', () => {
     consoleMock.restore();
   });
 
-  it('should resolve init without error or logging', async () => {
+  it('should complete init without error or logging', () => {
     const config: MonitoringConfig = {
       enabled: false,
       provider: 'noop',
       environment: 'development',
     };
 
-    await expect(provider.init(config)).resolves.toBeUndefined();
+    expect(() => provider.init(config)).not.toThrow();
     expect(consoleMock.info).not.toHaveBeenCalled();
   });
 
-  it('should log captureException to console.error', () => {
+  it('should log captureException to console.error and return undefined', () => {
     const error = new Error('test error');
     const context = { userId: '123' };
 
-    provider.captureException(error, context);
+    const result = provider.captureException(error, context);
 
     expect(consoleMock.error).toHaveBeenCalledWith('captureException', error, context);
+    expect(result).toBeUndefined();
   });
 
   it('should log captureMessage to appropriate console level', () => {

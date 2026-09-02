@@ -2,14 +2,19 @@ import '@testing-library/jest-dom';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { testPipelineRuns, DataState } from '~/__data__/pipelinerun-data';
-import { PipelineRunLabel } from '~/consts/pipelinerun';
+import { PipelineRunLabel, runStatus } from '~/consts/pipelinerun';
 import { CONFORMA_TASK, ENTERPRISE_CONTRACT_LABEL } from '~/consts/security';
+import { useStatusOnFavicon } from '~/hooks/useStatusOnFavicon';
 import { PipelineRunKind } from '~/types';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { createPipelineRunMockStates } from '~/unit-test-utils/mock-pipelinerun-test-utils';
 import { createUseParamsMock, routerRenderer } from '~/unit-test-utils/mock-react-router';
 import { downloadYaml } from '~/utils/common-utils';
 import { PipelineRunDetailsView } from '../PipelineRunDetailsView';
+
+jest.mock('~/hooks/useStatusOnFavicon', () => ({
+  useStatusOnFavicon: jest.fn(),
+}));
 
 // Reuse existing mock data from src/__data__/pipelinerun-data.ts
 const mockPipelineRun: PipelineRunKind = {
@@ -82,6 +87,7 @@ jest.mock('~/utils/common-utils', () => {
 // Shared mock state helpers
 const mockPipelineRunStates = createPipelineRunMockStates();
 const downloadYamlMock = downloadYaml as jest.Mock;
+const useStatusOnFaviconMock = useStatusOnFavicon as jest.Mock;
 
 // We are testing:
 // component composition, loading/error states, tab rendering logic, action setup, query param handling
@@ -150,6 +156,32 @@ describe('PipelineRunDetailsView', () => {
     // Find the Details tab and verify it's present
     const detailsTab = screen.getByRole('tab', { name: /details/i });
     expect(detailsTab).toBeInTheDocument();
+  });
+
+  it('passes pipeline run status to useStatusOnFavicon when loaded', () => {
+    mockUsePipelineRunV2.mockReturnValue(mockPipelineRunStates.loaded(mockPipelineRun));
+
+    routerRenderer(<PipelineRunDetailsView />);
+
+    expect(useStatusOnFaviconMock).toHaveBeenCalledWith(runStatus.Succeeded);
+  });
+
+  it('passes null to useStatusOnFavicon while pipeline run is loading', () => {
+    mockUsePipelineRunV2.mockReturnValue(mockPipelineRunStates.loading());
+
+    routerRenderer(<PipelineRunDetailsView />);
+
+    expect(useStatusOnFaviconMock).toHaveBeenCalledWith(null);
+  });
+
+  it('passes null to useStatusOnFavicon when pipeline run fails to load', () => {
+    mockUsePipelineRunV2.mockReturnValue(
+      mockPipelineRunStates.error({ message: 'Pipeline run not found', code: 404 }),
+    );
+
+    routerRenderer(<PipelineRunDetailsView />);
+
+    expect(useStatusOnFaviconMock).toHaveBeenCalledWith(null);
   });
 
   it('should render standard tabs for non-enterprise-contract pipeline', () => {

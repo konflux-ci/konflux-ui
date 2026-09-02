@@ -15,7 +15,7 @@ import {
   snapshotsTabLoader,
 } from '~/components/Snapshots/SnapshotsListView/SnapshotsTab';
 import { ensureFeatureFlagOnLoader } from '~/feature-flags/utils';
-import { PipelineRunModel } from '~/models/pipelineruns';
+import { TaskRunModel } from '~/models/taskruns';
 import { createLoaderWithAccessCheck } from '~/utils/rbac';
 import { APPLICATION_DETAILS_PATH, APPLICATION_LIST_PATH } from '../paths';
 import { RouteErrorBoundry } from '../RouteErrorBoundary';
@@ -83,7 +83,7 @@ const applicationRoutes = [
             ensureFeatureFlagOnLoader('conforma-policy');
             return null;
           },
-          { model: PipelineRunModel, verb: 'list' },
+          { model: TaskRunModel, verb: 'list' },
         ),
         errorElement: <RouteErrorBoundry />,
         element: <ConformaResultsTab />,
