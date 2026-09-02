@@ -4583,6 +4583,27 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@size-limit/file@npm:^13.0.3":
+  version: 13.0.3
+  resolution: "@size-limit/file@npm:13.0.3"
+  peerDependencies:
+    size-limit: 13.0.3
+  checksum: 10/c94ba067996e71baa0965603e640730a69d5d63d924411b22f752b07ac1deba94054a20a0fcc0e2163d7051d41c40b8c4f8c995f76c3371308cc5b52667811c6
+  languageName: node
+  linkType: hard
+
+"@size-limit/webpack@npm:^13.0.3":
+  version: 13.0.3
+  resolution: "@size-limit/webpack@npm:13.0.3"
+  dependencies:
+    nanoid: "npm:^6.0.0"
+    webpack: "npm:^5.109.2"
+  peerDependencies:
+    size-limit: 13.0.3
+  checksum: 10/fd9681082ed8564e7fe398dd479336239316e07f5167c56f068da25e0e9fd7c132af263ab9a591f288bf96a7f4fbada7d72d0ad2ae5ceed108e605edb1b08f9e
+  languageName: node
+  linkType: hard
+
 "@standard-schema/spec@npm:1.1.0":
   version: 1.1.0
   resolution: "@standard-schema/spec@npm:1.1.0"
@@ -7659,6 +7680,13 @@ __metadata:
   dependencies:
     run-applescript: "npm:^7.0.0"
   checksum: 10/1d966c8d2dbf4d9d394e53b724ac756c2414c45c01340b37743621f59cc565a435024b394ddcb62b9b335d1c9a31f4640eb648c3fec7f97ee74dc0694c9beb6c
+  languageName: node
+  linkType: hard
+
+"bytes-iec@npm:^3.1.1":
+  version: 3.1.1
+  resolution: "bytes-iec@npm:3.1.1"
+  checksum: 10/2f89d1dbb058b1bc8a9284658b6c779ffe16127f93f3647b749723660c989a38ac87bad065cc874d380f05b566c95153348f416e6a08985625812512d01e689f
   languageName: node
   linkType: hard
 
@@ -13969,6 +13997,8 @@ __metadata:
     "@pmmmwh/react-refresh-webpack-plugin": "npm:^0.5.15"
     "@segment/analytics-next": "npm:^1.81.1"
     "@sentry/react": "npm:^10.38.0"
+    "@size-limit/file": "npm:^13.0.3"
+    "@size-limit/webpack": "npm:^13.0.3"
     "@storybook/addon-a11y": "npm:10.5.10"
     "@storybook/addon-webpack5-compiler-swc": "npm:4.0.3"
     "@storybook/react": "npm:10.5.10"
@@ -14046,6 +14076,7 @@ __metadata:
     sass: "npm:^1.77.8"
     sass-loader: "npm:^14.2.1"
     showdown: "npm:^2.1.0"
+    size-limit: "npm:^13.0.3"
     source-map-explorer: "npm:^2.5.3"
     storybook: "npm:10.5.10"
     strip-json-comments: "npm:^5.0.1"
@@ -14980,6 +15011,24 @@ __metadata:
   bin:
     nanoid: bin/nanoid.cjs
   checksum: 10/73b5afe5975a307aaa3c95dfe3334c52cdf9ae71518176895229b8d65ab0d1c0417dd081426134eb7571c055720428ea5d57c645138161e7d10df80815527c48
+  languageName: node
+  linkType: hard
+
+"nanoid@npm:^6.0.0":
+  version: 6.0.1
+  resolution: "nanoid@npm:6.0.1"
+  bin:
+    nanoid: bin/nanoid.js
+  checksum: 10/e49582351f6fff22c275a58504950e923b74c611fc1eac9589a98e89506270d2d1e3b61ed6429df6e7529e54ff71d9f0c5fbb1c540aaee81ae33a523e88ca668
+  languageName: node
+  linkType: hard
+
+"nanospinner@npm:^1.2.2":
+  version: 1.2.2
+  resolution: "nanospinner@npm:1.2.2"
+  dependencies:
+    picocolors: "npm:^1.1.1"
+  checksum: 10/40ed63364c95b58806a9989b16af8728fdb57d19a8bf05e643542a0c64b184df29435308a07a618af48817f22850dc1ef5827724c226047cab7e70bd22705a0e
   languageName: node
   linkType: hard
 
@@ -17896,6 +17945,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"size-limit@npm:^13.0.3":
+  version: 13.0.3
+  resolution: "size-limit@npm:13.0.3"
+  dependencies:
+    bytes-iec: "npm:^3.1.1"
+    lilconfig: "npm:^3.1.3"
+    nanospinner: "npm:^1.2.2"
+  bin:
+    size-limit: bin.js
+  checksum: 10/440de38f1b8bc7724d007defb632ab8518f71c220dd082732dc5a2321deb43a14333697fa2c6b7c066cf81e302c3017f1ebf878b673be722fa8466d9c72c48ee
+  languageName: node
+  linkType: hard
+
 "slash@npm:^3.0.0":
   version: 3.0.0
   resolution: "slash@npm:3.0.0"
@@ -20128,7 +20190,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"webpack@npm:5, webpack@npm:^5.93.0":
+"webpack@npm:5, webpack@npm:^5.109.2, webpack@npm:^5.93.0":
   version: 5.109.2
   resolution: "webpack@npm:5.109.2"
   dependencies:
