@@ -72,7 +72,7 @@ const InternalFLAGS = {
   },
   'conforma-policy': {
     key: 'conforma-policy',
-    description: 'Show the Conforma Results tab on application details',
+    description: 'Show the Conforma Results tab on application details and the Conforma violations card on the Issues Dashboard',
     defaultEnabled: false,
     status: 'wip',
     guard: {
