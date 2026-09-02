@@ -1,8 +1,9 @@
-import { act, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { TrackEvents } from '~/analytics';
-import { FeatureFlagPanel } from '../Panel';
+import { createFeatureFlagPanelModal, FeatureFlagPanel } from '../Panel';
 import { FeatureFlagsStore } from '../store';
+import { trackFeatureFlagPanelClosed } from '../useFeatureFlagAnalytics';
 
 // Delta-computation edge cases (multi-flag, net-zero toggles, etc.) are
 // covered at the hook level in useFeatureFlagAnalytics.spec.ts. These tests
@@ -47,16 +48,6 @@ jest.mock('../flags', () => {
 
 const getSwitch = (name: string | RegExp) => screen.getByRole('switch', { name });
 
-// Lets the "confirmed real mount" microtask flush (useFeatureFlagAnalytics.ts)
-// so unmount() isn't mistaken for StrictMode's dev-only fake unmount.
-const renderOpenPanel = async () => {
-  const utils = render(<FeatureFlagPanel />);
-  await act(async () => {
-    await Promise.resolve();
-  });
-  return utils;
-};
-
 describe('FeatureFlagPanel analytics', () => {
   let trackEventMock: jest.Mock;
 
@@ -73,16 +64,18 @@ describe('FeatureFlagPanel analytics', () => {
     jest.clearAllMocks();
   });
 
-  it('does not fire until the panel is closed (unmounted)', () => {
-    render(<FeatureFlagPanel />);
+  it('does not fire while open, nor on a plain unmount -- only on a real close', () => {
+    const { unmount } = render(<FeatureFlagPanel />);
+    expect(trackEventMock).not.toHaveBeenCalled();
 
+    unmount();
     expect(trackEventMock).not.toHaveBeenCalled();
   });
 
-  it('fires the event with changesCount 0 and empty changes when nothing was toggled', async () => {
-    const { unmount } = await renderOpenPanel();
+  it('fires the event with changesCount 0 and empty changes when nothing was toggled', () => {
+    render(<FeatureFlagPanel />);
 
-    unmount();
+    trackFeatureFlagPanelClosed();
 
     expect(trackEventMock).toHaveBeenCalledTimes(1);
     expect(trackEventMock).toHaveBeenCalledWith(TrackEvents.feature_flags_changed_event, {
@@ -94,10 +87,10 @@ describe('FeatureFlagPanel analytics', () => {
 
   it('reports a flag toggled via the real Switch control, with its new value, on close', async () => {
     const user = userEvent.setup();
-    const { unmount } = render(<FeatureFlagPanel />);
+    render(<FeatureFlagPanel />);
 
     await user.click(getSwitch(/Alpha flag/i));
-    unmount();
+    trackFeatureFlagPanelClosed();
 
     expect(trackEventMock).toHaveBeenCalledWith(TrackEvents.feature_flags_changed_event, {
       changes: { alpha: true },
@@ -106,11 +99,11 @@ describe('FeatureFlagPanel analytics', () => {
     });
   });
 
-  it('uses the page pattern captured when the panel opened', async () => {
+  it('uses the page pattern captured when the panel opened', () => {
     mockPagePattern('/ns/:workspaceName/applications');
 
-    const { unmount } = await renderOpenPanel();
-    unmount();
+    render(<FeatureFlagPanel />);
+    trackFeatureFlagPanelClosed();
 
     expect(trackEventMock).toHaveBeenCalledWith(
       TrackEvents.feature_flags_changed_event,
@@ -120,15 +113,39 @@ describe('FeatureFlagPanel analytics', () => {
 
   it('captures changes made via the real "Reset to Defaults" button, which does not close the panel', async () => {
     const user = userEvent.setup();
-    const { unmount } = render(<FeatureFlagPanel />);
+    render(<FeatureFlagPanel />);
 
     await user.click(getSwitch(/Alpha flag/i)); // alpha: false -> true
     await user.click(screen.getByTestId('reset-feature-overrides-button'));
-    unmount();
+    trackFeatureFlagPanelClosed();
 
     expect(trackEventMock).toHaveBeenCalledWith(TrackEvents.feature_flags_changed_event, {
       changes: {},
       changesCount: 0,
+      pagePattern: '/',
+    });
+  });
+
+  it('fires when the modal is really closed (X button) -- proves the launcher is wired, not just the hook', async () => {
+    // Full loop: createFeatureFlagPanelModal's static onClose (Panel.tsx) is
+    // trackFeatureFlagPanelClosed, invoked by PatternFly's real close button.
+    const user = userEvent.setup();
+    render(createFeatureFlagPanelModal()(jest.fn()), {
+      wrapper: ({ children }) => (
+        <div>
+          <div id="hacDev-modal-container" />
+          {children}
+        </div>
+      ),
+    });
+
+    await user.click(getSwitch(/Alpha flag/i));
+    await user.click(screen.getByRole('button', { name: 'Close' }));
+
+    expect(trackEventMock).toHaveBeenCalledTimes(1);
+    expect(trackEventMock).toHaveBeenCalledWith(TrackEvents.feature_flags_changed_event, {
+      changes: { alpha: true },
+      changesCount: 1,
       pagePattern: '/',
     });
   });

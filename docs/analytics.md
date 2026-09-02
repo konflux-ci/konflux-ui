@@ -169,7 +169,7 @@ Why two guards:
 
 `useFeatureFlagAnalytics()` in `FeatureFlagPanel` tracks `feature_flags_changed` on every panel close (including `changesCount: 0`), via the modal's `onClose` in `Panel.tsx` — not on unmount.
 
-On open it snapshots flag state (from `useFeatureFlags()`) and `pagePattern` via `useMatches()` + `getRoutePatternFromMatches()` (`src/routes/with-route-patterns.ts`) — e.g. `/ns/:workspaceName/applications`, never the resolved URL. `withRoutePatterns()` stamps the pattern onto every route's `handle` at router creation (`src/routes/index.tsx`), so other route-aware analytics hooks can reuse the same helper. On close, `computeFeatureFlagChanges()` diffs open vs. current state. Net-zero toggles are omitted; "Reset to Defaults" is included. URL param overrides (`?ff_flag=true`) are not tracked.
+On open it snapshots flag state (from `useFeatureFlags()`) and `pagePattern` via `useMatches()` + `getRoutePatternFromMatches()` (`src/routes/with-route-patterns.ts`) — e.g. `/ns/:workspaceName/applications`, never the resolved URL. `withRoutePatterns()` stamps the pattern onto every route's `handle` at router creation (`src/routes/index.tsx`), so other route-aware analytics hooks can reuse the same helper. On close, `computeFeatureFlagChanges()` diffs open vs. current state and tracks `changes`, `changesCount`, and `pagePattern`. Net-zero toggles are omitted; "Reset to Defaults" is included. URL param overrides (`?ff_flag=true`) are not tracked.
 
 ---
 

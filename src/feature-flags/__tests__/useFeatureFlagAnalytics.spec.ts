@@ -3,7 +3,11 @@ import { TrackEvents } from '~/analytics';
 import { FlagKey } from '../flags';
 import { useFeatureFlags } from '../hooks';
 import { FeatureFlagsStore } from '../store';
-import { computeFeatureFlagChanges, useFeatureFlagAnalytics } from '../useFeatureFlagAnalytics';
+import {
+  computeFeatureFlagChanges,
+  trackFeatureFlagPanelClosed,
+  useFeatureFlagAnalytics,
+} from '../useFeatureFlagAnalytics';
 
 jest.mock('~/analytics/hooks', () => ({
   useTrackAnalyticsEvent: jest.fn(),
@@ -143,26 +147,24 @@ describe('useFeatureFlagAnalytics', () => {
     useFeatureFlagAnalytics(flags);
   };
 
-  // Renders and lets the "confirmed real mount" microtask flush, so unmount()
-  // isn't mistaken for StrictMode's fake unmount (see test below).
-  const renderOpenPanel = async () => {
-    const utils = renderHook(useOpenPanel);
-    await act(async () => {
-      await Promise.resolve();
-    });
-    return utils;
-  };
-
   it('does not track anything while mounted (panel still open)', () => {
     renderHook(useOpenPanel);
 
     expect(trackEventMock).not.toHaveBeenCalled();
   });
 
-  it('tracks changesCount 0 and empty changes when nothing was toggled before unmount', async () => {
-    const { unmount } = await renderOpenPanel();
+  it('does not track anything on unmount alone -- only a real close (trackFeatureFlagPanelClosed) fires', () => {
+    const { unmount } = renderHook(useOpenPanel);
 
     unmount();
+
+    expect(trackEventMock).not.toHaveBeenCalled();
+  });
+
+  it('tracks changesCount 0 and empty changes when nothing was toggled before close', () => {
+    renderHook(useOpenPanel);
+
+    trackFeatureFlagPanelClosed();
 
     expect(trackEventMock).toHaveBeenCalledTimes(1);
     expect(trackEventMock).toHaveBeenCalledWith(TrackEvents.feature_flags_changed_event, {
@@ -172,13 +174,13 @@ describe('useFeatureFlagAnalytics', () => {
     });
   });
 
-  it('tracks a single flag change with its new value on unmount', async () => {
-    const { unmount } = await renderOpenPanel();
+  it('tracks a single flag change with its new value on close', () => {
+    renderHook(useOpenPanel);
 
     act(() => {
       FeatureFlagsStore.set('alpha' as FlagKey, true);
     });
-    unmount();
+    trackFeatureFlagPanelClosed();
 
     expect(trackEventMock).toHaveBeenCalledWith(TrackEvents.feature_flags_changed_event, {
       changes: { alpha: true },
@@ -187,14 +189,14 @@ describe('useFeatureFlagAnalytics', () => {
     });
   });
 
-  it('tracks multiple flag changes on unmount', async () => {
-    const { unmount } = await renderOpenPanel();
+  it('tracks multiple flag changes on close', () => {
+    renderHook(useOpenPanel);
 
     act(() => {
       FeatureFlagsStore.set('alpha' as FlagKey, true);
       FeatureFlagsStore.set('beta' as FlagKey, false);
     });
-    unmount();
+    trackFeatureFlagPanelClosed();
 
     expect(trackEventMock).toHaveBeenCalledWith(TrackEvents.feature_flags_changed_event, {
       changes: { alpha: true, beta: false },
@@ -203,14 +205,14 @@ describe('useFeatureFlagAnalytics', () => {
     });
   });
 
-  it('treats a flag toggled off then back on before unmount as a net-zero change', async () => {
-    const { unmount } = await renderOpenPanel();
+  it('treats a flag toggled off then back on before close as a net-zero change', () => {
+    renderHook(useOpenPanel);
 
     act(() => {
       FeatureFlagsStore.set('beta' as FlagKey, false);
       FeatureFlagsStore.set('beta' as FlagKey, true);
     });
-    unmount();
+    trackFeatureFlagPanelClosed();
 
     expect(trackEventMock).toHaveBeenCalledWith(TrackEvents.feature_flags_changed_event, {
       changes: {},
@@ -219,12 +221,12 @@ describe('useFeatureFlagAnalytics', () => {
     });
   });
 
-  it('captures the page pattern from when the hook mounted (panel opened), not when it closed', async () => {
+  it('captures the page pattern from when the hook mounted (panel opened), not when it closed', () => {
     mockPagePattern('/ns/:workspaceName/applications');
 
-    const { unmount } = await renderOpenPanel();
+    renderHook(useOpenPanel);
     mockPagePattern('/ns/:workspaceName/applications/:applicationName');
-    unmount();
+    trackFeatureFlagPanelClosed();
 
     expect(trackEventMock).toHaveBeenCalledWith(
       TrackEvents.feature_flags_changed_event,
@@ -232,14 +234,14 @@ describe('useFeatureFlagAnalytics', () => {
     );
   });
 
-  it('captures changes made via resetAll() even though it does not unmount the hook', async () => {
-    const { unmount } = await renderOpenPanel();
+  it('captures changes made via resetAll() even though it does not unmount the hook', () => {
+    renderHook(useOpenPanel);
 
     act(() => {
       FeatureFlagsStore.set('alpha' as FlagKey, true);
       FeatureFlagsStore.resetAll();
     });
-    unmount();
+    trackFeatureFlagPanelClosed();
 
     expect(trackEventMock).toHaveBeenCalledWith(TrackEvents.feature_flags_changed_event, {
       changes: {},
@@ -248,21 +250,28 @@ describe('useFeatureFlagAnalytics', () => {
     });
   });
 
-  it('fires exactly one event per mount/unmount cycle', async () => {
-    const { unmount } = await renderOpenPanel();
+  it('fires exactly once per close, even if trackFeatureFlagPanelClosed is called more than once', () => {
+    renderHook(useOpenPanel);
 
     act(() => {
       FeatureFlagsStore.set('alpha' as FlagKey, true);
       FeatureFlagsStore.set('beta' as FlagKey, false);
     });
-    unmount();
+    trackFeatureFlagPanelClosed();
+    trackFeatureFlagPanelClosed();
 
     expect(trackEventMock).toHaveBeenCalledTimes(1);
   });
 
-  it('fires exactly one event even when useTrackAnalyticsEvent() returns a new function on every render', async () => {
+  it('is a no-op when there is no mounted panel to close', () => {
+    trackFeatureFlagPanelClosed();
+
+    expect(trackEventMock).not.toHaveBeenCalled();
+  });
+
+  it('fires exactly one event even when useTrackAnalyticsEvent() returns a new function on every render', () => {
     // Regression test: trackEvent's identity legitimately changes on every
-    // render in the real app -- only the real unmount should ever fire.
+    // render in the real app -- only a real close should ever fire.
     const calls: unknown[][] = [];
     useTrackAnalyticsEvent.mockImplementation(
       () =>
@@ -270,7 +279,7 @@ describe('useFeatureFlagAnalytics', () => {
           calls.push(args),
     );
 
-    const { rerender, unmount } = await renderOpenPanel();
+    const { rerender } = renderHook(useOpenPanel);
 
     rerender(); // e.g. an unrelated condition resolving asynchronously
     rerender();
@@ -282,7 +291,7 @@ describe('useFeatureFlagAnalytics', () => {
 
     expect(calls).toHaveLength(0); // no fire yet -- panel is still open
 
-    unmount();
+    trackFeatureFlagPanelClosed();
 
     expect(calls).toHaveLength(1);
     expect(calls[0]).toEqual([
@@ -291,25 +300,23 @@ describe('useFeatureFlagAnalytics', () => {
     ]);
   });
 
-  it("does not fire from React StrictMode's synchronous dev-only mount/unmount/remount", async () => {
-    // StrictMode mounts/unmounts/remounts synchronously in dev; that fake
-    // unmount must be ignored -- only the real close should fire.
-    const fake = renderHook(useOpenPanel);
-    fake.unmount(); // simulates StrictMode's synchronous fake unmount
+  it('only the latest mounted instance responds to a close, surviving an unrelated remount', () => {
+    // e.g. React.StrictMode's dev-only double-invoke, or a `key` change on an
+    // ancestor -- neither should leave a stale handler active.
+    const first = renderHook(useOpenPanel);
+    first.unmount();
 
-    expect(trackEventMock).not.toHaveBeenCalled();
+    renderHook(useOpenPanel); // the instance that's actually open
 
-    const real = renderHook(useOpenPanel); // simulates the real re-mount
-    await act(async () => {
-      await Promise.resolve(); // let the deferred "confirmed mount" microtask flush
+    act(() => {
+      FeatureFlagsStore.set('alpha' as FlagKey, true);
     });
-
-    real.unmount(); // the real panel close
+    trackFeatureFlagPanelClosed();
 
     expect(trackEventMock).toHaveBeenCalledTimes(1);
     expect(trackEventMock).toHaveBeenCalledWith(TrackEvents.feature_flags_changed_event, {
-      changes: {},
-      changesCount: 0,
+      changes: { alpha: true },
+      changesCount: 1,
       pagePattern: '/',
     });
   });

@@ -14,11 +14,9 @@ export interface FeatureFlagChangeDelta {
   changesCount: number;
 }
 
-/**
- * Diffs feature-flag state between panel open and close (see
- * docs/analytics.md#feature-flag-change-tracking). Exported separately so
- * it's unit-testable without a component.
- */
+// Diffs flag state at open vs. close.
+// See docs/analytics.md#feature-flag-change-tracking
+
 export function computeFeatureFlagChanges(
   before: Record<FlagKey, boolean>,
   after: Record<FlagKey, boolean>,
@@ -36,22 +34,20 @@ export function computeFeatureFlagChanges(
   return { changes, changesCount };
 }
 
-/**
- * Tracks `feature_flags_changed` on panel close (see
- * docs/analytics.md#feature-flag-change-tracking). Takes `flags` from the
- * caller's `useFeatureFlags()` rather than reading `FeatureFlagsStore.state`
- * directly, so the diff always matches what React actually rendered.
- */
+// Module ref bridges Panel.tsx's static modal onClose to the mounted hook instance.
+let activeCloseHandler: (() => void) | null = null;
+
+/** Modal onClose callback */
+export const trackFeatureFlagPanelClosed = (): void => {
+  activeCloseHandler?.();
+};
+
 export const useFeatureFlagAnalytics = (flags: Record<FlagKey, boolean>): void => {
   const trackEvent = useTrackAnalyticsEvent();
 
-  // trackEvent's identity changes every render; a ref keeps the effect below
-  // tied to mount/unmount only.
   const trackEventRef = React.useRef(trackEvent);
   trackEventRef.current = trackEvent;
 
-  // openFlagsRef/openPagePatternRef capture state at mount (open) only;
-  // latestFlagsRef stays in sync so unmount always diffs fresh state.
   const openFlagsRef = React.useRef(flags);
   const latestFlagsRef = React.useRef(flags);
   latestFlagsRef.current = flags;
@@ -62,18 +58,13 @@ export const useFeatureFlagAnalytics = (flags: Record<FlagKey, boolean>): void =
   React.useEffect(() => {
     const openFlags = openFlagsRef.current;
     const pagePattern = openPagePatternRef.current;
+    let hasFired = false;
 
-    // React.StrictMode fakes a mount->unmount->mount in dev only; ignore
-    // that fake unmount via a microtask -- a real close can't happen first.
-    let isConfirmedMount = false;
-    void Promise.resolve().then(() => {
-      isConfirmedMount = true;
-    });
-
-    return () => {
-      if (!isConfirmedMount) {
+    activeCloseHandler = () => {
+      if (hasFired) {
         return;
       }
+      hasFired = true;
 
       const { changes, changesCount } = computeFeatureFlagChanges(
         openFlags,
@@ -91,6 +82,10 @@ export const useFeatureFlagAnalytics = (flags: Record<FlagKey, boolean>): void =
         changesCount,
         pagePattern,
       });
+    };
+
+    return () => {
+      activeCloseHandler = null;
     };
   }, []);
 };
