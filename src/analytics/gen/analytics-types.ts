@@ -19,33 +19,20 @@ export type KonfluxUISegmentEvents =
   | UserLogoutEvent
   | FeedbackSubmittedEvent
   | UiSessionStartedEvent
-  | FeatureFlagsChangedEvent;
+  | FeatureFlagsChangedEvent
+  | UserJourneyEvent;
 /**
  * Fired when a user successfully authenticates into Konflux
  */
-export type UserLoginEvent = CommonFields & {
-  /**
-   * Unique identifier of the user. Obfuscated via sha256 with `clusterId` as salt.
-   */
-  userId: SHA256Hash;
-};
+export type UserLoginEvent = CommonFields & {};
 /**
  * Fired when a user session ends, either by explicit logout or session expiry
  */
-export type UserLogoutEvent = CommonFields & {
-  /**
-   * Unique identifier of the user. Obfuscated via sha256 with `clusterId` as salt.
-   */
-  userId: SHA256Hash;
-};
+export type UserLogoutEvent = CommonFields & {};
 /**
  * Fired when a user submits feedback through the Konflux UI
  */
 export type FeedbackSubmittedEvent = CommonFields & {
-  /**
-   * Unique identifier of the user. Obfuscated via sha256 with `clusterId` as salt.
-   */
-  userId: SHA256Hash;
   /**
    * User satisfaction rating, typically on a 1-5 scale
    */
@@ -83,9 +70,36 @@ export type FeatureFlagsChangedEvent = CommonFields & {
    */
   changesCount: number;
   /**
-   * URL pathname when the panel was opened (e.g. /ns/my-ns/applications)
+   * Route pattern when the panel was opened (e.g. /ns/:workspaceName/applications), never the resolved URL
    */
-  pagePath: string;
+  pagePattern: string;
+};
+/**
+ * Fired once per session, or once per part when the payload is auto-split, capturing the navigation path and per-page dwell times
+ */
+export type UserJourneyEvent = CommonFields & {
+  /**
+   * ISO-8601 timestamp of when the session started
+   */
+  sessionStartedAt: string;
+  /**
+   * Duration of this journey part in milliseconds. For auto-split journeys, each part reports the duration of its own session segment rather than the full journey.
+   */
+  totalDurationMs: number;
+  /**
+   * Ordered list of steps (page visits) taken during the session
+   *
+   * @minItems 1
+   */
+  steps: [JourneyStep, ...JourneyStep[]];
+  /**
+   * Stable identifier linking all parts of a split journey. Only present when auto-split fires (payload exceeded size threshold).
+   */
+  journeyId?: string;
+  /**
+   * Zero-based index of this part within a split journey. Only present when auto-split fires.
+   */
+  journeyPartIndex?: number;
 };
 
 /**
@@ -93,9 +107,9 @@ export type FeatureFlagsChangedEvent = CommonFields & {
  */
 export interface CommonFields {
   /**
-   * Unique identifier of the cluster, used as salt for obfuscating PIA fields
+   * Random UUID generated in memory for the current browser tab; regenerated for each tab
    */
-  clusterId?: string;
+  sessionId: string;
   /**
    * Version of the OpenShift/Kubernetes cluster
    */
@@ -113,6 +127,27 @@ export interface CommonFields {
    */
   openshiftVersion?: string;
 }
+/**
+ * A single step (page visit) within a user's navigation journey
+ */
+export interface JourneyStep {
+  /**
+   * Route pattern of the page, e.g. /ns/:workspaceName/applications. Must be the route pattern, not the resolved URL — never include workspace/tenant names or other identifiers from the actual path.
+   */
+  pagePattern: string;
+  /**
+   * Time in milliseconds the user spent on this step
+   */
+  durationMs: number;
+  /**
+   * Route pattern the user navigated to after leaving this step. Absent on the last (still-open) step. Must be the route pattern, not the resolved URL.
+   */
+  toPagePattern?: string;
+  /**
+   * Total milliseconds the browser tab was hidden (backgrounded) while the user was on this step. Allows computing active dwell time as durationMs - hiddenMs. Only present when greater than 0.
+   */
+  hiddenMs?: number;
+}
 /** Branded type for SHA-256 obfuscated strings. Use `obfuscate()` to create. */
 export type SHA256Hash = string & { readonly __brand: 'SHA256Hash' };
 
@@ -124,6 +159,7 @@ export type SHA256Hash = string & { readonly __brand: 'SHA256Hash' };
 export enum TrackEvents {
   user_login_event = 'user_login',
   user_logout_event = 'user_logout',
+  user_journey_event = 'user_journey',
   feedback_submitted_event = 'feedback_submitted',
   ui_session_started_event = 'ui_session_started',
   feature_flags_changed_event = 'feature_flags_changed',
@@ -136,6 +172,7 @@ export enum TrackEvents {
 export type EventPropertiesMap = {
   [TrackEvents.user_login_event]: Omit<UserLoginEvent, keyof CommonFields>;
   [TrackEvents.user_logout_event]: Omit<UserLogoutEvent, keyof CommonFields>;
+  [TrackEvents.user_journey_event]: Omit<UserJourneyEvent, keyof CommonFields>;
   [TrackEvents.feedback_submitted_event]: Omit<FeedbackSubmittedEvent, keyof CommonFields>;
   [TrackEvents.ui_session_started_event]: Omit<UiSessionStartedEvent, keyof CommonFields>;
   [TrackEvents.feature_flags_changed_event]: Omit<FeatureFlagsChangedEvent, keyof CommonFields>;
