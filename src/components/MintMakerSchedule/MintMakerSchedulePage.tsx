@@ -1,15 +1,13 @@
-import { PageSection } from '@patternfly/react-core';
-import {
-  mintMakerScheduleFilterConfig,
-  mintMakerScheduleTableColumns,
-} from '~/components/MintMakerSchedule/mintmaker-schedule-table-config';
+import { PageSection, Stack, StackItem } from '@patternfly/react-core';
+import { mintMakerScheduleFilterConfig } from '~/components/MintMakerSchedule/mintmaker-schedule-table-config';
 import { MintMakerScheduleEmptyState } from '~/components/MintMakerSchedule/MintMakerScheduleEmptyState';
+import { MintMakerScheduleManagerCard } from '~/components/MintMakerSchedule/MintMakerScheduleManagerCard';
 import PageLayout from '~/components/PageLayout/PageLayout';
 import { useMintMakerSchedule } from '~/hooks/useMintMakerSchedule';
 import { HttpError } from '~/k8s/error';
 import FilteredEmptyState from '~/shared/components/empty-state/FilteredEmptyState';
 import { FilterToolbar, useFilteredData, useFilterState } from '~/shared/components/Filter';
-import { Table, TableContainer } from '~/shared/components/TableV2';
+import { TableContainer } from '~/shared/components/TableV2';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { MintMakerScheduleNotFoundState } from './MintMakerScheduleNotFoundState';
 
@@ -57,13 +55,13 @@ export const MintMakerSchedulePage = () => {
             ) : undefined
           }
         >
-          <Table
-            data={filteredSchedule}
-            columns={mintMakerScheduleTableColumns}
-            getRowId={(row) => row.manager}
-            aria-label="MintMaker schedule list"
-            enableSorting
-          />
+          <Stack hasGutter>
+            {filteredSchedule.map((entry) => (
+              <StackItem key={entry.manager}>
+                <MintMakerScheduleManagerCard entry={entry} />
+              </StackItem>
+            ))}
+          </Stack>
         </TableContainer>
       </PageSection>
     </PageLayout>

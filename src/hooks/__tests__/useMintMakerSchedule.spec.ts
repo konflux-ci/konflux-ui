@@ -77,7 +77,7 @@ describe('useMintMakerSchedule', () => {
     expect(error).toBeNull();
   });
 
-  it('parses schedule entries from configmap data', () => {
+  it('parses all future schedule entries from configmap data', () => {
     useK8sWatchResourceMock.mockReturnValue({
       data: makeConfigMap({
         'renovate_scheduled_times.txt': `${FUTURE_1}\n${FUTURE_2}`,
@@ -92,15 +92,15 @@ describe('useMintMakerSchedule', () => {
     expect(schedule).toHaveLength(2);
     expect(schedule.find((e) => e.manager === 'renovate')).toEqual({
       manager: 'renovate',
-      nextRun: FUTURE_1,
+      scheduledRuns: [FUTURE_1, FUTURE_2],
     });
     expect(schedule.find((e) => e.manager === 'dependabot')).toEqual({
       manager: 'dependabot',
-      nextRun: FUTURE_1,
+      scheduledRuns: [FUTURE_1],
     });
   });
 
-  it('picks the first future timestamp, skipping past ones', () => {
+  it('includes all future timestamps, skipping past ones', () => {
     useK8sWatchResourceMock.mockReturnValue({
       data: makeConfigMap({
         'renovate_scheduled_times.txt': `${PAST_1}\n${PAST_2}\n${FUTURE_1}\n${FUTURE_2}`,
@@ -112,7 +112,7 @@ describe('useMintMakerSchedule', () => {
     const [schedule] = result.current;
 
     expect(schedule).toHaveLength(1);
-    expect(schedule[0].nextRun).toBe(FUTURE_1);
+    expect(schedule[0].scheduledRuns).toEqual([FUTURE_1, FUTURE_2]);
   });
 
   it('excludes a manager entirely when all its timestamps are in the past', () => {
@@ -164,7 +164,7 @@ describe('useMintMakerSchedule', () => {
     expect(schedule[0].manager).toBe('renovate');
   });
 
-  it('sorts entries by nextRun ascending', () => {
+  it('sorts managers by earliest next run ascending', () => {
     useK8sWatchResourceMock.mockReturnValue({
       data: makeConfigMap({
         'renovate_scheduled_times.txt': FUTURE_3,
