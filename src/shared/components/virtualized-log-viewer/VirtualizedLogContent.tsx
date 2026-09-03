@@ -86,9 +86,13 @@ export const VirtualizedLogContent = forwardRef<
       effectiveNormalizedSections,
     );
 
-    useImperativeHandle(ref, () => ({
-      toggleAllSections,
-    }));
+    useImperativeHandle(
+      ref,
+      () => ({
+        toggleAllSections,
+      }),
+      [toggleAllSections],
+    );
 
     const {
       displayRows,
