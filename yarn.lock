@@ -4592,18 +4592,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@size-limit/webpack@npm:^13.0.3":
-  version: 13.0.3
-  resolution: "@size-limit/webpack@npm:13.0.3"
-  dependencies:
-    nanoid: "npm:^6.0.0"
-    webpack: "npm:^5.109.2"
-  peerDependencies:
-    size-limit: 13.0.3
-  checksum: 10/fd9681082ed8564e7fe398dd479336239316e07f5167c56f068da25e0e9fd7c132af263ab9a591f288bf96a7f4fbada7d72d0ad2ae5ceed108e605edb1b08f9e
-  languageName: node
-  linkType: hard
-
 "@standard-schema/spec@npm:1.1.0":
   version: 1.1.0
   resolution: "@standard-schema/spec@npm:1.1.0"
@@ -13998,7 +13986,6 @@ __metadata:
     "@segment/analytics-next": "npm:^1.81.1"
     "@sentry/react": "npm:^10.38.0"
     "@size-limit/file": "npm:^13.0.3"
-    "@size-limit/webpack": "npm:^13.0.3"
     "@storybook/addon-a11y": "npm:10.5.10"
     "@storybook/addon-webpack5-compiler-swc": "npm:4.0.3"
     "@storybook/react": "npm:10.5.10"
@@ -15011,15 +14998,6 @@ __metadata:
   bin:
     nanoid: bin/nanoid.cjs
   checksum: 10/73b5afe5975a307aaa3c95dfe3334c52cdf9ae71518176895229b8d65ab0d1c0417dd081426134eb7571c055720428ea5d57c645138161e7d10df80815527c48
-  languageName: node
-  linkType: hard
-
-"nanoid@npm:^6.0.0":
-  version: 6.0.1
-  resolution: "nanoid@npm:6.0.1"
-  bin:
-    nanoid: bin/nanoid.js
-  checksum: 10/e49582351f6fff22c275a58504950e923b74c611fc1eac9589a98e89506270d2d1e3b61ed6429df6e7529e54ff71d9f0c5fbb1c540aaee81ae33a523e88ca668
   languageName: node
   linkType: hard
 
@@ -20190,7 +20168,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"webpack@npm:5, webpack@npm:^5.109.2, webpack@npm:^5.93.0":
+"webpack@npm:5, webpack@npm:^5.93.0":
   version: 5.109.2
   resolution: "webpack@npm:5.109.2"
   dependencies:

@@ -1,6 +1,6 @@
 # Bundle Size Budgets
 
-Production bundle sizes are enforced in CI via [size-limit](https://github.com/ai/size-limit). PRs that exceed a budget fail the `size-limit` check in the **UI Lint & Unit Tests** workflow.
+Production bundle sizes are enforced in CI via [size-limit](https://github.com/ai/size-limit). PRs that exceed a budget fail the `size-limit` check in the **UI Lint, Unit Tests & Bundle Size** workflow.
 
 ## How it works
 

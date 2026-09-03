@@ -1,4 +1,4 @@
-name: UI Lint & Unit Tests
+name: UI Lint, Unit Tests & Bundle Size
 
 # Controls when the action will run.
 on:
