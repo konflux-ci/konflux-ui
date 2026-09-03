@@ -220,7 +220,9 @@ describe('Basic Happy Path', () => {
       }
     });
 
-    it('Verify vulnerabilities', () => {
+    // Skipping this test until the issue is fixed
+    // See https://redhat.atlassian.net/browse/KFLUXUI-1642
+    it.skip('Verify vulnerabilities', () => {
       cy.log('Verifying vulnerabilities column exists in Pipeline runs table');
       Applications.clickBreadcrumbLink('Pipeline runs');
       PipelinerunsTabPage.verifyVulnerabilityColumn();
