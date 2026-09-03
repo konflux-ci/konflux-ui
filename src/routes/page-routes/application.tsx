@@ -88,6 +88,18 @@ const applicationRoutes = [
         errorElement: <RouteErrorBoundry />,
         element: <ConformaResultsTab />,
       },
+      {
+        path: `dep-updates`,
+        loader: () => {
+          ensureFeatureFlagOnLoader('mintmaker');
+          return null;
+        },
+        async lazy() {
+          const { DependencyTab: ComponentDependencyTab } =
+            await import('~/shared/components/DependencyManager/DependencyTab');
+          return { element: <ComponentDependencyTab /> };
+        },
+      },
     ],
   },
 ];
