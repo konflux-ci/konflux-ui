@@ -32,9 +32,7 @@ describe('TableRow', () => {
 
   it('renders a Td for each visible cell', () => {
     const row = createMockRow('row-1', { cells: mockCells });
-    renderTableRow(
-      <TableRow row={row as never} rowId="test-1" virtualIndex={0} />,
-    );
+    renderTableRow(<TableRow row={row as never} rowId="test-1" virtualIndex={0} />);
 
     expect(screen.getByText('my-app')).toBeInTheDocument();
     expect(screen.getByText('Running')).toBeInTheDocument();
@@ -42,9 +40,7 @@ describe('TableRow', () => {
 
   it('sets data-test and data-id attributes on the row', () => {
     const row = createMockRow('row-1', { cells: mockCells });
-    renderTableRow(
-      <TableRow row={row as never} rowId="test-1" virtualIndex={0} />,
-    );
+    renderTableRow(<TableRow row={row as never} rowId="test-1" virtualIndex={0} />);
 
     const tr = screen.getByTestId('table-row');
     expect(tr).toBeInTheDocument();
@@ -53,9 +49,7 @@ describe('TableRow', () => {
 
   it('sets dataLabel on each Td from column header', () => {
     const row = createMockRow('row-1', { cells: mockCells });
-    renderTableRow(
-      <TableRow row={row as never} rowId="test-1" virtualIndex={0} />,
-    );
+    renderTableRow(<TableRow row={row as never} rowId="test-1" virtualIndex={0} />);
 
     const cells = screen.getAllByRole('cell');
     expect(cells[0]).toHaveAttribute('data-label', 'Name');
@@ -64,9 +58,7 @@ describe('TableRow', () => {
 
   it('calls flexRender with cell renderer and context', () => {
     const row = createMockRow('row-1', { cells: mockCells });
-    renderTableRow(
-      <TableRow row={row as never} rowId="test-1" virtualIndex={0} />,
-    );
+    renderTableRow(<TableRow row={row as never} rowId="test-1" virtualIndex={0} />);
 
     expect(flexRender).toHaveBeenCalledTimes(2);
     expect(flexRender).toHaveBeenCalledWith(
@@ -77,14 +69,7 @@ describe('TableRow', () => {
 
   it('renders expand toggle as first cell when enableExpansion is true', () => {
     const row = createMockRow('row-1', { cells: mockCells });
-    renderTableRow(
-      <TableRow
-        row={row as never}
-        rowId="test-1"
-        virtualIndex={0}
-        enableExpansion
-      />,
-    );
+    renderTableRow(<TableRow row={row as never} rowId="test-1" virtualIndex={0} enableExpansion />);
 
     const tr = screen.getByTestId('table-row');
     const cells = within(tr).getAllByRole('cell');
@@ -98,9 +83,7 @@ describe('TableRow', () => {
 
   it('does not render expand toggle when enableExpansion is false', () => {
     const row = createMockRow('row-1', { cells: mockCells });
-    renderTableRow(
-      <TableRow row={row as never} rowId="test-1" virtualIndex={0} />,
-    );
+    renderTableRow(<TableRow row={row as never} rowId="test-1" virtualIndex={0} />);
 
     const tr = screen.getByTestId('table-row');
     const cells = within(tr).getAllByRole('cell');
@@ -110,12 +93,7 @@ describe('TableRow', () => {
   it('renders a checkbox cell when enableRowSelection is true', () => {
     const row = createMockRow('row-1', { cells: mockCells });
     renderTableRow(
-      <TableRow
-        row={row as never}
-        rowId="test-1"
-        virtualIndex={0}
-        enableRowSelection
-      />,
+      <TableRow row={row as never} rowId="test-1" virtualIndex={0} enableRowSelection />,
     );
 
     const tr = screen.getByTestId('table-row');
@@ -130,9 +108,7 @@ describe('TableRow', () => {
 
   it('does not render checkbox when enableRowSelection is false or omitted', () => {
     const row = createMockRow('row-1', { cells: mockCells });
-    renderTableRow(
-      <TableRow row={row as never} rowId="test-1" virtualIndex={0} />,
-    );
+    renderTableRow(<TableRow row={row as never} rowId="test-1" virtualIndex={0} />);
 
     const tr = screen.getByTestId('table-row');
     expect(within(tr).queryByRole('checkbox')).not.toBeInTheDocument();
@@ -144,12 +120,7 @@ describe('TableRow', () => {
     row.getIsSelected = jest.fn().mockReturnValue(true);
 
     renderTableRow(
-      <TableRow
-        row={row as never}
-        rowId="test-1"
-        virtualIndex={0}
-        enableRowSelection
-      />,
+      <TableRow row={row as never} rowId="test-1" virtualIndex={0} enableRowSelection />,
     );
 
     const checkbox = screen.getByRole('checkbox');
@@ -164,12 +135,7 @@ describe('TableRow', () => {
     row.getIsSelected = jest.fn().mockReturnValue(false);
 
     renderTableRow(
-      <TableRow
-        row={row as never}
-        rowId="test-1"
-        virtualIndex={0}
-        enableRowSelection
-      />,
+      <TableRow row={row as never} rowId="test-1" virtualIndex={0} enableRowSelection />,
     );
 
     await user.click(screen.getByRole('checkbox'));

@@ -497,7 +497,9 @@ describe('kite-hooks', () => {
         });
 
       // First render without noRefetch parameter (undefined) - default behavior
-      const { result } = renderHookWithQueryClient(() => useCriticalAndMajorIssues('test-namespace'));
+      const { result } = renderHookWithQueryClient(() =>
+        useCriticalAndMajorIssues('test-namespace'),
+      );
 
       await waitFor(() => {
         expect(result.current.isLoaded).toBe(true);

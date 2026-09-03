@@ -48,9 +48,7 @@ describe('ReleasePlanDropdown', () => {
   });
 
   it('should render without crashing when releasePlans is null', () => {
-    formikRenderer(
-      <ReleasePlanDropdown name="releasePlan" releasePlans={null} loaded={true} />,
-    );
+    formikRenderer(<ReleasePlanDropdown name="releasePlan" releasePlans={null} loaded={true} />);
     expect(screen.getByText('Select release plan')).toBeVisible();
   });
 

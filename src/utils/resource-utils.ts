@@ -58,8 +58,7 @@ export const filterOutStaleRunningPipelineRunsFromArchive = (
 ): PipelineRunResource[] | undefined =>
   pipelineRuns?.filter(
     (pipelinerun) =>
-      pipelinerun?.status?.conditions?.every((c) => !isStaleRunningPipelineRunCondition(c)) ??
-      true,
+      pipelinerun?.status?.conditions?.every((c) => !isStaleRunningPipelineRunCondition(c)) ?? true,
   );
 
 export const filterOutDeletedAndStaleRunningResources = <T extends K8sResourceCommon>(

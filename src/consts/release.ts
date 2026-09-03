@@ -69,13 +69,7 @@ export const enum SortableHeaders {
 
 // Release Plan Column Configurations
 export type ReleasePlanColumnKeys =
-  | 'name'
-  | 'application'
-  | 'target'
-  | 'autoRelease'
-  | 'standingAttribution'
-  | 'status'
-  | 'rpa';
+  'name' | 'application' | 'target' | 'autoRelease' | 'standingAttribution' | 'status' | 'rpa';
 
 export const RELEASE_PLAN_COLUMNS_DEFINITIONS: readonly ColumnDefinition<ReleasePlanColumnKeys>[] =
   [

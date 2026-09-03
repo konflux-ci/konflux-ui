@@ -14,9 +14,7 @@ type ConformaGroupedTableProps = {
   onExpandedGroupsChange: (groups: Set<string>) => void;
 };
 
-const getGroupedColumns = (
-  groupLabel: string,
-): ColumnDefinition<GroupedConformaRow, unknown>[] => [
+const getGroupedColumns = (groupLabel: string): ColumnDefinition<GroupedConformaRow, unknown>[] => [
   {
     id: 'group',
     header: groupLabel,
@@ -41,7 +39,10 @@ const getGroupedColumns = (
     header: 'Warnings',
     accessorFn: (row) => row.warnings,
     cell: (info) => (
-      <ConformaCountBadge count={info.getValue() as number} type={CONFORMA_RESULT_STATUS.warnings} />
+      <ConformaCountBadge
+        count={info.getValue() as number}
+        type={CONFORMA_RESULT_STATUS.warnings}
+      />
     ),
     size: 1,
   },

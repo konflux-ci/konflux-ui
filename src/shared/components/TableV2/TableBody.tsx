@@ -77,7 +77,7 @@ export const TableBody = <TData,>({
         if (!row) return null;
         const rowId = getRowId(row.original);
         const isExpanded = enableExpansion && row.getIsExpanded() && expandedContent;
-        
+
         return (
           // No explicit role needed: <Tbody> renders a native <tbody> whose implicit
           // ARIA role is "rowgroup", correctly grouping the main row with its optional

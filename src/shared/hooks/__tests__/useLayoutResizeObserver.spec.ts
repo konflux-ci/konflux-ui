@@ -110,10 +110,9 @@ describe('useLayoutResizeObserver', () => {
     const elementB = document.createElement('div');
     const callback = jest.fn();
 
-    const { rerender } = renderHook(
-      ({ target }) => useLayoutResizeObserver(callback, [target]),
-      { initialProps: { target: elementA } },
-    );
+    const { rerender } = renderHook(({ target }) => useLayoutResizeObserver(callback, [target]), {
+      initialProps: { target: elementA },
+    });
 
     expect(observeMock).toHaveBeenCalledTimes(1);
     expect(disconnectMock).not.toHaveBeenCalled();

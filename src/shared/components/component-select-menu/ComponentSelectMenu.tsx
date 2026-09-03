@@ -115,9 +115,7 @@ export const ComponentSelectMenu: React.FC<ComponentSelectMenuProps> = ({
   }, [isGrouped, options, searchQuery]);
 
   const toggleText = React.useMemo(() => {
-    const hasSelection = isMulti
-      ? Array.isArray(value) && value.length > 0
-      : Boolean(value);
+    const hasSelection = isMulti ? Array.isArray(value) && value.length > 0 : Boolean(value);
 
     if (typeof selectedToggleText === 'function') {
       return hasSelection ? selectedToggleText(value) : defaultToggleText;

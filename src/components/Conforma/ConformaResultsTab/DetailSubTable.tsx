@@ -83,7 +83,11 @@ export const DetailSubTable: React.FC<DetailSubTableProps> = ({ rows }) => {
                   <Content>
                     <Content component="p">
                       {row.msg != null ? (
-                        <Truncate content={row.msg} expandInline data-test="conforma-violation-msg" />
+                        <Truncate
+                          content={row.msg}
+                          expandInline
+                          data-test="conforma-violation-msg"
+                        />
                       ) : (
                         '-'
                       )}

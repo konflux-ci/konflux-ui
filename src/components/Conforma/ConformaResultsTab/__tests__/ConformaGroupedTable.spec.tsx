@@ -115,10 +115,7 @@ describe('ConformaGroupedTable', () => {
     const user = userEvent.setup();
     const onExpandedGroupsChange = jest.fn();
     routerRenderer(
-      <ConformaGroupedTable
-        {...defaultProps}
-        onExpandedGroupsChange={onExpandedGroupsChange}
-      />,
+      <ConformaGroupedTable {...defaultProps} onExpandedGroupsChange={onExpandedGroupsChange} />,
     );
 
     const toggleButtons = screen.getAllByRole('button');

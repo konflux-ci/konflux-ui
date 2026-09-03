@@ -32,11 +32,7 @@ export const TableRow = <TData,>({
   enableRowSelection,
 }: TableRowProps<TData>) => {
   return (
-    <Tr
-      role="row"
-      data-test="table-row"
-      data-id={rowId}
-    >
+    <Tr role="row" data-test="table-row" data-id={rowId}>
       {enableRowSelection && (
         <Td
           select={{
