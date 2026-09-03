@@ -68,6 +68,9 @@ describe('HelpDropdown Component', () => {
     jest.clearAllMocks();
     mockUseKonfluxPublicInfo.mockReturnValue([{ visibility: 'public' }]);
     mockFeatureFlagsStore.isOn.mockReturnValue(true);
+    mockUseTour.mockReturnValue({ startTour: mockStartTour, currentRoute: undefined });
+    mockGetToursByRoute.mockReturnValue([]);
+    mockCollectAndMerge.mockReturnValue({ mergedSteps: [], sourceIds: [], hasPrompt: false });
   });
 
   describe('Rendering', () => {
