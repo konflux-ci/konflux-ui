@@ -16,7 +16,6 @@ export interface FeatureFlagChangeDelta {
 
 // Diffs flag state at open vs. close.
 // See docs/analytics.md#feature-flag-change-tracking
-
 export function computeFeatureFlagChanges(
   before: Record<FlagKey, boolean>,
   after: Record<FlagKey, boolean>,
@@ -34,19 +33,13 @@ export function computeFeatureFlagChanges(
   return { changes, changesCount };
 }
 
-// Module ref bridges Panel.tsx's static modal onClose to the mounted hook instance.
-let activeCloseHandler: (() => void) | null = null;
-
-/** Modal onClose callback */
-export const trackFeatureFlagPanelClosed = (): void => {
-  activeCloseHandler?.();
-};
-
-export const useFeatureFlagAnalytics = (flags: Record<FlagKey, boolean>): void => {
+/**
+ * Snapshots flag state + page pattern on mount (panel opened), and returns a
+ * callback that diffs against the latest flags and tracks the event. The
+ * caller decides when "closed" means -- see docs/analytics.md#feature-flag-change-tracking.
+ */
+export const useFeatureFlagAnalytics = (flags: Record<FlagKey, boolean>): (() => void) => {
   const trackEvent = useTrackAnalyticsEvent();
-
-  const trackEventRef = React.useRef(trackEvent);
-  trackEventRef.current = trackEvent;
 
   const openFlagsRef = React.useRef(flags);
   const latestFlagsRef = React.useRef(flags);
@@ -55,37 +48,30 @@ export const useFeatureFlagAnalytics = (flags: Record<FlagKey, boolean>): void =
   const matches = useMatches();
   const openPagePatternRef = React.useRef(getRoutePatternFromMatches(matches));
 
-  React.useEffect(() => {
-    const openFlags = openFlagsRef.current;
+  const hasFiredRef = React.useRef(false);
+
+  return React.useCallback(() => {
+    if (hasFiredRef.current) {
+      return;
+    }
+    hasFiredRef.current = true;
+
+    const { changes, changesCount } = computeFeatureFlagChanges(
+      openFlagsRef.current,
+      latestFlagsRef.current,
+    );
     const pagePattern = openPagePatternRef.current;
-    let hasFired = false;
 
-    activeCloseHandler = () => {
-      if (hasFired) {
-        return;
-      }
-      hasFired = true;
-
-      const { changes, changesCount } = computeFeatureFlagChanges(
-        openFlags,
-        latestFlagsRef.current,
-      );
-
-      trackEventRef.current(TrackEvents.feature_flags_changed_event, {
-        changes,
-        changesCount,
-        pagePattern,
-      });
-      logger.info('Feature flags panel closed', {
-        event: TrackEvents.feature_flags_changed_event,
-        changes,
-        changesCount,
-        pagePattern,
-      });
-    };
-
-    return () => {
-      activeCloseHandler = null;
-    };
-  }, []);
+    trackEvent(TrackEvents.feature_flags_changed_event, {
+      changes,
+      changesCount,
+      pagePattern,
+    });
+    logger.info('Feature flags panel closed', {
+      event: TrackEvents.feature_flags_changed_event,
+      changes,
+      changesCount,
+      pagePattern,
+    });
+  }, [trackEvent]);
 };
