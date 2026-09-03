@@ -113,8 +113,21 @@ export const useSectionFold = (sections: readonly FoldableSection[]) => {
     });
   }, []);
 
+  const toggleAllSections = React.useCallback(() => {
+    const currentSections = sectionsRef.current;
+    const fold = expandedSections.size > 1;
+    setOverrides((prev) => {
+      let next = prev;
+      for (let i = 0; i < currentSections.length; i++) {
+        const defaultExpanded = isExpandedByDefault(currentSections[i]);
+        next = withOverride(next, i, !fold, defaultExpanded);
+      }
+      return next;
+    });
+  }, [expandedSections.size]);
+
   return React.useMemo(
-    () => ({ expandedSections, toggleSection, expandSection }),
-    [expandedSections, toggleSection, expandSection],
+    () => ({ expandedSections, toggleSection, expandSection, toggleAllSections }),
+    [expandedSections, toggleSection, expandSection, toggleAllSections],
   );
 };
