@@ -370,8 +370,12 @@ describe('Basic Happy Path', () => {
         timeout: 10000,
       }).should('not.exist');
 
-      // Delete GitHub repository after UI deletion is confirmed
-      APIHelper.deleteGitHubRepository(repoOwner, repoName);
+      if (hasTestFailed) {
+        cy.log('Skipping deletion of GitHub repository as test failed');
+      } else {
+        cy.log('Deleting GitHub repository after UI deletion is confirmed');
+        APIHelper.deleteGitHubRepository(repoOwner, repoName);
+      }
     });
   });
 });

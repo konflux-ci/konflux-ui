@@ -332,7 +332,7 @@ __metadata:
     cypress-high-resolution: "npm:^1.0.0"
     cypress-mochawesome-reporter: "npm:^3.4.0"
     cypress-multi-reporters: "npm:^1.6.0"
-    cypress-terminal-report: "npm:^7.1.0"
+    cypress-terminal-report: "npm:^7.3.0"
     deepmerge: "npm:^4.3.1"
     eslint-config-prettier: "npm:^9.1.0"
     eslint-plugin-cypress: "npm:^4.1.0"
@@ -1110,7 +1110,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cypress-terminal-report@npm:^7.1.0":
+"cypress-terminal-report@npm:^7.3.0":
   version: 7.3.3
   resolution: "cypress-terminal-report@npm:7.3.3"
   dependencies:
@@ -1123,8 +1123,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-  version: 15.21.0
-  resolution: "cypress@npm:15.21.0"
+"cypress@npm:^15.20.0":
+  version: 15.21.1
+  resolution: "cypress@npm:15.21.1"
   dependencies:
     "@cypress/request": "npm:^4.0.0"
     "@cypress/xvfb": "npm:^1.2.4"
@@ -1167,7 +1168,7 @@ __metadata:
     yauzl: "npm:^3.3.1"
   bin:
     cypress: bin/cypress
-  checksum: 10/f242d433ca1107eb8d68ff3d63686f575e54675ab85f228b02f86214204a92dfcff2e4ca27af725fb220b9229eab17889cdde023b8f9c194b5bc95688a7eb102
+  checksum: 10/71b14a52c989484608e2d70bd9c442432f32a811df83ce4193283a506493f547e8340770db79e20cb5889c60c0ec9ef7288a862b290c59219c7d8db27e987661
   languageName: node
   linkType: hard
 
