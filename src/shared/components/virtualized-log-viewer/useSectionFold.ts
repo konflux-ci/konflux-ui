@@ -115,7 +115,7 @@ export const useSectionFold = (sections: readonly FoldableSection[]) => {
 
   const toggleAllSections = React.useCallback(() => {
     const currentSections = sectionsRef.current;
-    const fold = expandedSections.size > 1;
+    const fold = expandedSections.size >= currentSections.length;
     setOverrides((prev) => {
       let next = prev;
       for (let i = 0; i < currentSections.length; i++) {
