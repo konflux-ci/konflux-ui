@@ -1,9 +1,11 @@
 import * as React from 'react';
 import { render, screen } from '@testing-library/react';
+import { PipelineRunLabel } from '~/consts/pipelinerun';
+import { COMPONENT_DETAILS_PATH } from '~/routes/paths';
 import { Table, TableContainer } from '~/shared/components/TableV2';
 import { PipelineRunKind, PipelineRunStatus } from '~/types';
 import { setupVirtualizerMock } from '~/unit-test-utils/mock-virtualizer';
-import { dependencyRunsTableColumns } from '../dependency-runs-table-config';
+import { getDependencyRunsTableColumns } from '../dependency-runs-table-config';
 
 jest.mock('@tanstack/react-virtual', () => ({
   useVirtualizer: jest.fn(),
@@ -24,6 +26,7 @@ const makePipelineRun = (overrides: Partial<PipelineRunKind> = {}): PipelineRunK
     namespace: 'test-ns',
     creationTimestamp: '2023-01-01T00:00:00Z',
     uid: 'test-uid',
+    labels: {},
   },
   spec: {},
   status: {
@@ -34,12 +37,12 @@ const makePipelineRun = (overrides: Partial<PipelineRunKind> = {}): PipelineRunK
   ...overrides,
 });
 
-const renderTable = (data: PipelineRunKind[]) =>
+const renderTable = (data: PipelineRunKind[], isSingleComponent = true) =>
   render(
     <TableContainer data={data} unfilteredData={data} loaded={true}>
       <Table
         data={data}
-        columns={dependencyRunsTableColumns}
+        columns={getDependencyRunsTableColumns('test-ns', 'test-application', isSingleComponent)}
         getRowId={(row) => row.metadata?.uid ?? row.metadata?.name ?? ''}
         aria-label="Dependency run list"
       />
@@ -61,6 +64,50 @@ describe('Dependency runs column renderers', () => {
     renderTable([makePipelineRun()]);
     expect(screen.getByTestId('dependency-run-status')).toBeInTheDocument();
     expect(screen.getByTestId('dependency-run-status')).toHaveTextContent('Succeeded');
+  });
+
+  it('renders the component cell for application-level runs', () => {
+    const run = makePipelineRun({
+      metadata: {
+        ...makePipelineRun().metadata,
+        labels: {
+          [PipelineRunLabel.MINTMAKER_COMPONENT_LABEL]: 'component-alpha',
+        },
+      },
+    });
+    renderTable([run], false);
+    expect(screen.getByRole('columnheader', { name: 'Component' })).toBeInTheDocument();
+    const componentLink = screen.getByRole('link', { name: 'component-alpha' });
+    expect(componentLink).toHaveAttribute(
+      'href',
+      COMPONENT_DETAILS_PATH.createPath({
+        workspaceName: 'test-ns',
+        applicationName: 'test-application',
+        componentName: 'component-alpha',
+      }),
+    );
+  });
+
+  it('renders a fallback when an application-level run has no component label', () => {
+    renderTable([makePipelineRun()], false);
+    expect(screen.getByRole('columnheader', { name: 'Component' })).toBeInTheDocument();
+    expect(screen.getByTestId('dependency-run-component')).toHaveTextContent('-');
+  });
+
+  it('renders a fallback when application-level run metadata has no labels', () => {
+    const run = makePipelineRun({
+      metadata: {
+        ...makePipelineRun().metadata,
+        labels: undefined,
+      },
+    });
+    renderTable([run], false);
+    expect(screen.getByTestId('dependency-run-component')).toHaveTextContent('-');
+  });
+
+  it('does not render the component column for component-level runs', () => {
+    renderTable([makePipelineRun()]);
+    expect(screen.queryByRole('columnheader', { name: 'Component' })).not.toBeInTheDocument();
   });
 
   it('renders started timestamp when startTime is present', () => {

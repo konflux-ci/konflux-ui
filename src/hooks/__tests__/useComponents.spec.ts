@@ -6,6 +6,13 @@ import { useAllComponents, useComponents } from '../useComponents';
 const useK8sWatchResourceMock = createK8sWatchResourceMock();
 
 describe('useComponents', () => {
+  it('does not request components when application name is missing', () => {
+    useK8sWatchResourceMock.mockReturnValue([[], true, undefined]);
+    renderHook(() => useComponents('test-ns', undefined));
+
+    expect(useK8sWatchResourceMock).toHaveBeenCalledWith(undefined, expect.anything());
+  });
+
   it('should return empty array when call is inflight', () => {
     useK8sWatchResourceMock.mockReturnValue([[], false, undefined]);
     const { result } = renderHook(() => useComponents('test-ns', 'test-dev-samples'));
