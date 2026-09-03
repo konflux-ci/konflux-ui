@@ -743,13 +743,13 @@ describe('LogViewer Integration Tests', () => {
     it('should not render the expand all button by default', () => {
       render(<LogViewer {...defaultProps} />);
 
-      expect(screen.queryByRole('button', { name: 'Expand all' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Expand/Collapse all' })).not.toBeInTheDocument();
     });
 
     it('should render the expand all button when allowExpandAllSections is true', () => {
       render(<LogViewer {...defaultProps} allowExpandAllSections />);
 
-      expect(screen.getByRole('button', { name: 'Expand all' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Expand/Collapse all' })).toBeInTheDocument();
       expect(screen.getByText('Expand/Collapse all')).toBeInTheDocument();
     });
 
@@ -760,7 +760,7 @@ describe('LogViewer Integration Tests', () => {
       expect(screen.queryByText('compile')).not.toBeInTheDocument();
       expect(screen.queryByText('runningtests')).not.toBeInTheDocument();
 
-      await user.click(screen.getByRole('button', { name: 'Expand all' }));
+      await user.click(screen.getByRole('button', { name: 'Expand/Collapse all' }));
 
       expect(screen.getByText('compile')).toBeInTheDocument();
       expect(screen.getByText('runningtests')).toBeInTheDocument();
@@ -773,7 +773,7 @@ describe('LogViewer Integration Tests', () => {
       expect(screen.getByText('compile')).toBeInTheDocument();
       expect(screen.getByText('runningtests')).toBeInTheDocument();
 
-      await user.click(screen.getByRole('button', { name: 'Expand all' }));
+      await user.click(screen.getByRole('button', { name: 'Expand/Collapse all' }));
 
       expect(screen.queryByText('compile')).not.toBeInTheDocument();
       expect(screen.queryByText('runningtests')).not.toBeInTheDocument();
@@ -783,7 +783,7 @@ describe('LogViewer Integration Tests', () => {
       const user = userEvent.setup();
       render(<LogViewer {...defaultProps} sections={foldedSections} allowExpandAllSections />);
 
-      const toggleButton = screen.getByRole('button', { name: 'Expand all' });
+      const toggleButton = screen.getByRole('button', { name: 'Expand/Collapse all' });
       await user.click(toggleButton);
       expect(screen.getByText('compile')).toBeInTheDocument();
 

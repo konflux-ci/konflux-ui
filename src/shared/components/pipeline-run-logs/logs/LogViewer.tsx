@@ -174,7 +174,7 @@ const LogViewer: React.FC<Props> = ({
 
   const childRef = React.useRef<VirtualizedLogContentImperativeHandleMethods | null>(null);
 
-  const handleOnExpandAllSections = () => {
+  const handleOnToggleAllSections = () => {
     childRef?.current?.toggleAllSections();
   };
 
@@ -226,8 +226,8 @@ const LogViewer: React.FC<Props> = ({
                 <ToolbarItem>
                   <Button
                     variant="link"
-                    aria-label="Expand all"
-                    onClick={handleOnExpandAllSections}
+                    aria-label="Expand/Collapse all"
+                    onClick={handleOnToggleAllSections}
                   >
                     Expand/Collapse all
                   </Button>
