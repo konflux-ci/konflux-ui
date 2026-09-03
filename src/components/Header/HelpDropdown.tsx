@@ -8,14 +8,15 @@ import {
   Tooltip,
 } from '@patternfly/react-core';
 import { OutlinedQuestionCircleIcon } from '@patternfly/react-icons/dist/esm/icons/outlined-question-circle-icon';
+import { createCliLoginModal } from '~/components/CLILogin/CliLoginModal';
+import { createFeedbackModal } from '~/components/FeedbackSection/FeedbackModal';
+import { useModalLauncher } from '~/components/modal/ModalProvider';
 import {
   EXTERNAL_DOCUMENTATION_BASE_URL,
   INTERNAL_DOCUMENTATION_BASE_URL,
 } from '~/consts/documentation';
 import { useKonfluxPublicInfo } from '~/hooks/useKonfluxPublicInfo';
 import { ExternalLink } from '~/shared';
-import { createFeedbackModal } from '../FeedbackSection/FeedbackModal';
-import { useModalLauncher } from '../modal/ModalProvider';
 import { createAboutModal } from './AboutModal';
 
 export const HelpDropdown: React.FC = () => {
@@ -30,6 +31,11 @@ export const HelpDropdown: React.FC = () => {
   const handleAboutClick = () => {
     setIsOpen(false);
     showModal(createAboutModal());
+  };
+
+  const handleCliLoginClick = () => {
+    setIsOpen(false);
+    showModal(createCliLoginModal());
   };
 
   const handleFeedbackClick = () => {
@@ -60,6 +66,13 @@ export const HelpDropdown: React.FC = () => {
           <DropdownList>
             <DropdownItem key="about" onClick={handleAboutClick} data-test="help-dropdown-about">
               About Konflux
+            </DropdownItem>
+            <DropdownItem
+              key="cli-login"
+              onClick={handleCliLoginClick}
+              data-test="help-dropdown-cli-login"
+            >
+              Copy login command
             </DropdownItem>
             <DropdownItem key="documentation" data-test="help-dropdown-documentation">
               <ExternalLink href={documentationLink} text={'Documentation'} />
