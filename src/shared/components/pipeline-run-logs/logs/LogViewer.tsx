@@ -38,6 +38,7 @@ import { LoadingInline } from '~/shared/components/status-box/StatusBox';
 import {
   type LogSection,
   type NormalizedLogSection,
+  type VirtualizedLogContentImperativeHandleMethods,
   normalizeSection,
   useLineNumberNavigation,
   VirtualizedLogContent,
@@ -80,6 +81,7 @@ export type Props = {
     scrollUpdateWasRequested: boolean;
   }) => void;
   enableLineNavigation?: boolean;
+  allowExpandAllSections?: boolean;
 };
 
 const LogViewer: React.FC<Props> = ({
@@ -96,6 +98,7 @@ const LogViewer: React.FC<Props> = ({
   errorMessage,
   onScroll: onScrollProp,
   enableLineNavigation = true,
+  allowExpandAllSections = false,
 }) => {
   const taskName = taskRun?.spec.taskRef?.name ?? taskRun?.metadata.name;
   const [logTheme, setLogTheme] = useLogViewerTheme();
@@ -169,6 +172,12 @@ const LogViewer: React.FC<Props> = ({
 
   const scrollToRow = searchScrollToRow || (autoScroll ? allLines.length : 0);
 
+  const childRef = React.useRef<VirtualizedLogContentImperativeHandleMethods | null>(null);
+
+  const handleOnExpandAllSections = () => {
+    childRef?.current?.toggleAllSections();
+  };
+
   return (
     <div
       ref={fullscreenRef}
@@ -213,6 +222,17 @@ const LogViewer: React.FC<Props> = ({
               </ToolbarGroup>
             )}
             <ToolbarGroup align={{ default: 'alignEnd' }}>
+              {!!allowExpandAllSections && (
+                <ToolbarItem>
+                  <Button
+                    variant="link"
+                    aria-label="Expand all"
+                    onClick={handleOnExpandAllSections}
+                  >
+                    Expand/Collapse all
+                  </Button>
+                </ToolbarItem>
+              )}
               <ToolbarItem>
                 <Checkbox
                   id={themeCheckboxId}
@@ -345,6 +365,7 @@ const LogViewer: React.FC<Props> = ({
         {containerHeight && (
           <div className="pf-v6-c-log-viewer__main">
             <VirtualizedLogContent
+              ref={childRef}
               key={taskRun?.metadata?.uid || 'default'}
               sections={sections ?? []}
               normalizedSections={normalizedSections}
