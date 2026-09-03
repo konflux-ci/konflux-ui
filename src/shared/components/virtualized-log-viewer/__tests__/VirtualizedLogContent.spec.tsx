@@ -1,11 +1,15 @@
-import { fireEvent, screen } from '@testing-library/react';
+import React from 'react';
+import { act, fireEvent, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import Prism from 'prismjs';
 import { renderWithQueryClientAndRouter } from '~/unit-test-utils/rendering-utils';
 import { singleLogSection } from '../log-viewer-utils';
 import registerLogSyntax from '../refractor-log';
 import type { LogSection } from '../types';
-import { VirtualizedLogContent } from '../VirtualizedLogContent';
+import {
+  VirtualizedLogContent,
+  type VirtualizedLogContentImperativeHandleMethods,
+} from '../VirtualizedLogContent';
 
 // Register the log language
 registerLogSyntax(Prism);
@@ -748,6 +752,82 @@ Another short line`;
       fireEvent.scroll(listElement);
 
       expect(screen.getByTestId('sticky-header-BUILD')).toBeInTheDocument();
+    });
+  });
+
+  describe('toggleAllSections imperative handle', () => {
+    const toggleAllSections: LogSection[] = [
+      { containerName: 'BUILD', data: 'compile\nlink', isCompleted: true },
+      { containerName: 'TEST', data: 'pass\npass2', isCompleted: true },
+    ];
+
+    it('should expose toggleAllSections via ref', () => {
+      const ref = React.createRef<VirtualizedLogContentImperativeHandleMethods>();
+      renderWithQueryClientAndRouter(
+        <VirtualizedLogContent {...defaultProps} ref={ref} sections={toggleAllSections} />,
+      );
+
+      expect(ref.current).not.toBeNull();
+      expect(typeof ref.current?.toggleAllSections).toBe('function');
+    });
+
+    it('should expand all folded sections when invoked via ref', () => {
+      const ref = React.createRef<VirtualizedLogContentImperativeHandleMethods>();
+      renderWithQueryClientAndRouter(
+        <VirtualizedLogContent {...defaultProps} ref={ref} sections={toggleAllSections} />,
+      );
+
+      expect(screen.queryByText('compile')).not.toBeInTheDocument();
+      expect(screen.queryByText('pass')).not.toBeInTheDocument();
+
+      act(() => {
+        ref.current?.toggleAllSections();
+      });
+
+      expect(screen.getByText('compile')).toBeInTheDocument();
+      expect(screen.getByText('link')).toBeInTheDocument();
+      expect(screen.getByText('pass')).toBeInTheDocument();
+      expect(screen.getByText('pass2')).toBeInTheDocument();
+    });
+
+    it('should collapse all sections when multiple are expanded', () => {
+      const expandedSections: LogSection[] = [
+        { containerName: 'BUILD', data: 'compile', isCompleted: false },
+        { containerName: 'TEST', data: 'pass', isCompleted: false },
+      ];
+      const ref = React.createRef<VirtualizedLogContentImperativeHandleMethods>();
+      renderWithQueryClientAndRouter(
+        <VirtualizedLogContent {...defaultProps} ref={ref} sections={expandedSections} />,
+      );
+
+      expect(screen.getByText('compile')).toBeInTheDocument();
+      expect(screen.getByText('pass')).toBeInTheDocument();
+
+      act(() => {
+        ref.current?.toggleAllSections();
+      });
+
+      expect(screen.queryByText('compile')).not.toBeInTheDocument();
+      expect(screen.queryByText('pass')).not.toBeInTheDocument();
+      expect(screen.getAllByText('··· 1 line hidden')).toHaveLength(2);
+    });
+
+    it('should toggle back to expanded on a second invocation', () => {
+      const ref = React.createRef<VirtualizedLogContentImperativeHandleMethods>();
+      renderWithQueryClientAndRouter(
+        <VirtualizedLogContent {...defaultProps} ref={ref} sections={toggleAllSections} />,
+      );
+
+      act(() => {
+        ref.current?.toggleAllSections();
+      });
+      expect(screen.getByText('compile')).toBeInTheDocument();
+
+      act(() => {
+        ref.current?.toggleAllSections();
+      });
+      expect(screen.queryByText('compile')).not.toBeInTheDocument();
+      expect(screen.queryByText('pass')).not.toBeInTheDocument();
     });
   });
 });
