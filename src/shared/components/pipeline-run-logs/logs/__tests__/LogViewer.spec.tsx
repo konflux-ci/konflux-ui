@@ -276,6 +276,7 @@ describe('LogViewer Integration Tests', () => {
       expect(themeCheckbox).toBeChecked();
       expect(logViewer).toHaveClass('pf-m-dark');
       expect(logViewer).not.toHaveClass('log-viewer--light');
+      expect(logViewer).not.toHaveClass('pf-v6-theme-light');
 
       // Switch to light theme
       await user.click(themeCheckbox);
@@ -283,6 +284,7 @@ describe('LogViewer Integration Tests', () => {
       await waitFor(() => {
         expect(logViewer).not.toHaveClass('pf-m-dark');
         expect(logViewer).toHaveClass('log-viewer--light');
+        expect(logViewer).toHaveClass('pf-v6-theme-light');
       });
 
       // Switch back to dark theme
@@ -291,6 +293,7 @@ describe('LogViewer Integration Tests', () => {
       await waitFor(() => {
         expect(logViewer).toHaveClass('pf-m-dark');
         expect(logViewer).not.toHaveClass('log-viewer--light');
+        expect(logViewer).not.toHaveClass('pf-v6-theme-light');
       });
     });
 
@@ -307,6 +310,7 @@ describe('LogViewer Integration Tests', () => {
 
       const logViewer = container.querySelector('.pf-v6-c-log-viewer');
       expect(logViewer).toHaveClass('log-viewer--light');
+      expect(logViewer).toHaveClass('pf-v6-theme-light');
       expect(logViewer).not.toHaveClass('pf-m-dark');
     });
 
