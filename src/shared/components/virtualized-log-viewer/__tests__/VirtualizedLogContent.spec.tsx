@@ -400,6 +400,26 @@ describe('VirtualizedLogContent Integration Tests', () => {
     });
   });
 
+  describe('Wrap lines toggle', () => {
+    it('should not apply nowrap class when wrapLines is enabled', () => {
+      renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} wrapLines />);
+
+      const listElement = document.querySelector('.log-content__list');
+      expect(listElement).toBeInTheDocument();
+      expect(listElement).not.toHaveClass('log-content__list--nowrap');
+    });
+
+    it('should apply nowrap class when wrapLines is disabled', () => {
+      renderWithQueryClientAndRouter(
+        <VirtualizedLogContent {...defaultProps} wrapLines={false} />,
+      );
+
+      const listElement = document.querySelector('.log-content__list');
+      expect(listElement).toBeInTheDocument();
+      expect(listElement).toHaveClass('log-content__list--nowrap');
+    });
+  });
+
   describe('Text Wrapping for Long Lines', () => {
     it('should wrap long lines using pre-wrap white-space', () => {
       // Create a very long line that would normally overflow
