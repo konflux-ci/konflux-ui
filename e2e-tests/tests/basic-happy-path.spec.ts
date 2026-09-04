@@ -66,7 +66,7 @@ describe('Basic Happy Path', () => {
   let hasTestFailed = false;
 
   before(function () {
-    if (Cypress.env('SKIP_GLOBAL_SETUP')) {
+    if (Cypress.env('STUDIO_MODE')) {
       const baseUrl = Cypress.env('KONFLUX_BASE_URL') as string;
 
       // Studio replays in isolation — cache SSO cookies so replay skips the login redirect.
@@ -266,6 +266,13 @@ describe('Basic Happy Path', () => {
     const secretKey = 'mykey';
     const secretValue = 'myvalue';
 
+    after(() => {
+      // Delete secret
+      SecretsPage.deleteSecret(secretName);
+      // Search secret in a filter field, it should not be listed
+      SecretsPage.searchSecret(secretName, false);
+    });
+
     it('Add, Verify and Delete a secret', () => {
       cy.log('Navigate to Secrets page from the sidebar');
       Common.navigateTo(NavItem.secrets);
@@ -281,10 +288,6 @@ describe('Basic Happy Path', () => {
       SecretsPage.searchSecret(secretName, true);
       // Verify secret values, no edition is done
       SecretsPage.checkValues(secretName, secretKey, secretValue);
-      // Delete secret
-      SecretsPage.deleteSecret(secretName);
-      // Search secret in a filter field
-      SecretsPage.searchSecret(secretName, false);
     });
   });
 

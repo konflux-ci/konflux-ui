@@ -21,6 +21,6 @@ Cypress.on('uncaught:exception', () => {
 });
 
 // Plugins that hook command:start/end break Cypress Studio recording.
-if (!Cypress.env('SKIP_GLOBAL_SETUP')) {
+if (!Cypress.env('STUDIO_MODE')) {
   registerRunPlugins();
 }

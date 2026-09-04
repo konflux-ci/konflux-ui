@@ -36,7 +36,7 @@ before(() => {
 
   // Cypress Studio replays a single test in isolation; the global login/setup flow
   // leaves the AUT on a blank page and breaks recording. Skip it when using Studio.
-  if (Cypress.env('SKIP_GLOBAL_SETUP')) {
+  if (Cypress.env('STUDIO_MODE')) {
     return;
   }
 
@@ -52,7 +52,7 @@ before(() => {
 });
 
 afterEach(function () {
-  if (Cypress.env('SKIP_GLOBAL_SETUP')) {
+  if (Cypress.env('STUDIO_MODE')) {
     return;
   }
 
@@ -74,7 +74,7 @@ afterEach(function () {
 });
 
 after(() => {
-  if (Cypress.env('SKIP_GLOBAL_SETUP')) {
+  if (Cypress.env('STUDIO_MODE')) {
     return;
   }
 

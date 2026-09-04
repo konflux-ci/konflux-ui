@@ -39,7 +39,7 @@ export default defineConfig({
         ? 'tests/*-private-git-*' // TODO: remove once https://issues.redhat.com/browse/RHTAPBUGS-111 is resolved
         : 'tests/{advanced-happy-path*,private-basic*,*-private-git-*}',
     setupNodeEvents(on, config) {
-      const isStudioMode = Boolean(config.env.SKIP_GLOBAL_SETUP);
+      const isStudioMode = Boolean(config.env.STUDIO_MODE);
 
       // Code coverage plugin - must be registered first (breaks Cypress Studio recording)
       if (process.env.CYPRESS_PERIODIC_RUN_STAGE !== 'true' && !isStudioMode) {
@@ -137,7 +137,7 @@ export default defineConfig({
         SOURCE_REPO_NAME: 'devfile-sample-code-with-quarkus',
         resolution: 'high',
         REMOVE_APP_ON_FAIL: false,
-        SKIP_GLOBAL_SETUP: false,
+        STUDIO_MODE: false,
         SNYK_TOKEN: '',
         SSO_URL: 'https://sso.redhat.com/auth/',
       };
@@ -148,6 +148,7 @@ export default defineConfig({
         }
       }
 
+      // We need a GH_TOKEN even for Studio mode to create a testing repository.
       if (config.env.GH_TOKEN == '') {
         throw new Error('GH_TOKEN variable needs to be set to run a test.');
       }

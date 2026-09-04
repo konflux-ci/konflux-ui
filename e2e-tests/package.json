@@ -9,7 +9,7 @@
     "cy:run": "cypress run -b chrome --spec 'tests/basic-happy-path.spec.ts'",
     "cy:run:coverage": "cypress run -b chrome --env coverage=true",
     "cy:open": "cypress open",
-    "cy:open:studio": "cypress open --env SKIP_GLOBAL_SETUP=true",
+    "cy:open:studio": "cypress open --env STUDIO_MODE=true",
     "cy:open:coverage": "cypress open --env coverage=true",
     "coverage:report": "nyc report --reporter=html --reporter=text --reporter=lcov",
     "coverage:merge": "nyc merge .nyc_output coverage/coverage.json",
