@@ -33,39 +33,42 @@ export default defineConfig({
     supportFile: 'support/commands/index.ts',
     specPattern: 'tests/*.spec.ts',
     testIsolation: false,
-    experimentalPromptCommand: true,
     excludeSpecPattern:
       process.env.CYPRESS_PERIODIC_RUN_STAGE ||
       process.env.GH_COMMENTBODY?.toLowerCase() === '[test]'
         ? 'tests/*-private-git-*' // TODO: remove once https://issues.redhat.com/browse/RHTAPBUGS-111 is resolved
         : 'tests/{advanced-happy-path*,private-basic*,*-private-git-*}',
     setupNodeEvents(on, config) {
-      // Code coverage plugin - must be registered first
-      if (process.env.CYPRESS_PERIODIC_RUN_STAGE !== 'true') {
+      const isStudioMode = Boolean(config.env.STUDIO_MODE);
+
+      // Code coverage plugin - must be registered first (breaks Cypress Studio recording)
+      if (process.env.CYPRESS_PERIODIC_RUN_STAGE !== 'true' && !isStudioMode) {
         codeCoverageTask(on, config);
+      } else if (isStudioMode) {
+        console.log('Skipping code coverage for Cypress Studio mode');
       } else {
         console.log('Skipping code coverage for periodic run stage');
       }
 
-      require('cypress-mochawesome-reporter/plugin')(on);
+      if (!isStudioMode) {
+        require('cypress-mochawesome-reporter/plugin')(on);
+        require('cypress-high-resolution')(on, config);
 
-      const logOptions = {
-        outputRoot: `${config.projectRoot}/cypress`,
-        outputTarget: {
-          'cypress-log.txt': 'txt',
-        },
-        printLogsToFile: 'always',
-      };
-      require('cypress-terminal-report/src/installLogsPrinter')(on, logOptions);
-
+        const logOptions = {
+          outputRoot: `${config.projectRoot}/cypress`,
+          outputTarget: {
+            'cypress-log.txt': 'txt',
+          },
+          printLogsToFile: 'always',
+        };
+        require('cypress-terminal-report/src/installLogsPrinter')(on, logOptions);
+      }
       on('task', {
         log(message) {
-          // eslint-disable-next-line no-console
           console.log(message);
           return null;
         },
         logTable(data) {
-          // eslint-disable-next-line no-console
           console.table(data);
           return null;
         },
@@ -83,27 +86,37 @@ export default defineConfig({
         },
       });
 
-      on('before:run', async (details) => {
-        // cypress-mochawesome-reporter
-        await beforeRunHook(details);
-      });
+      if (!isStudioMode) {
+        on('before:run', async (details) => {
+          // cypress-mochawesome-reporter
+          await beforeRunHook(details);
+        });
 
-      on('after:spec', async (spec, res) => {
-        // cypress-mochawesome-reporter
-        const results = res as CypressCommandLine.RunResult;
-        if (results.stats?.failures > 0) {
-          // eslint-disable-next-line no-console
-          console.log(
-            `A total of ${results.stats.failures} tests failed, DOM content saved at './cypress/saved-doms'`,
-          );
+        on('after:run', async () => {
+          // cypress-mochawesome-reporter
+          await afterRunHook();
+        });
+      }
+
+      on('before:browser:launch', (browser, launchOptions) => {
+        if (browser.family === 'chromium') {
+          launchOptions.args.push('--disable-extensions');
         }
-        return null;
+        return launchOptions;
       });
 
-      on('after:run', async () => {
-        // cypress-mochawesome-reporter
-        await afterRunHook();
-      });
+      (on as any)(
+        'after:spec',
+        async (spec: Cypress.Spec, results: CypressCommandLine.RunResult) => {
+          // cypress-mochawesome-reporter
+          if (results.stats?.failures > 0 && !isStudioMode) {
+            console.log(
+              `A total of ${results.stats.failures} tests failed, DOM content saved at './cypress/saved-doms'`,
+            );
+          }
+          return null;
+        },
+      );
 
       const defaultValues: { [key: string]: string | boolean } = {
         KONFLUX_BASE_URL: 'https://localhost:8080',
@@ -124,6 +137,7 @@ export default defineConfig({
         SOURCE_REPO_NAME: 'testrepo',
         resolution: 'high',
         REMOVE_APP_ON_FAIL: false,
+        STUDIO_MODE: false,
         SNYK_TOKEN: '',
         SSO_URL: 'https://sso.redhat.com/auth/',
       };
@@ -134,6 +148,7 @@ export default defineConfig({
         }
       }
 
+      // We need a GH_TOKEN even for Studio mode to create a testing repository.
       if (config.env.GH_TOKEN == '') {
         throw new Error('GH_TOKEN variable needs to be set to run a test.');
       }
@@ -147,7 +162,6 @@ export default defineConfig({
         }
       }
 
-      require('cypress-high-resolution')(on, config);
       return config;
     },
   },

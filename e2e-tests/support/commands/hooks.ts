@@ -34,6 +34,12 @@ before(() => {
     JSON.stringify({ 'application-list-getting-started-modal': true }),
   );
 
+  // Cypress Studio replays a single test in isolation; the global login/setup flow
+  // leaves the AUT on a blank page and breaks recording. Skip it when using Studio.
+  if (Cypress.env('STUDIO_MODE')) {
+    return;
+  }
+
   if (Cypress.env('LOGIN_PROVIDER') === 'openshift') {
     Login.openshiftLogin();
   } else if (Cypress.env('LOCAL_CLUSTER')) {
@@ -46,6 +52,10 @@ before(() => {
 });
 
 afterEach(function () {
+  if (Cypress.env('STUDIO_MODE')) {
+    return;
+  }
+
   if (this.currentTest?.state === 'failed') {
     cy.window().then((win) => {
       cy.log('Capturing DOM structure');
@@ -64,6 +74,10 @@ afterEach(function () {
 });
 
 after(() => {
+  if (Cypress.env('STUDIO_MODE')) {
+    return;
+  }
+
   //Clear namespace after running the tests
   Common.cleanNamespace();
 });
