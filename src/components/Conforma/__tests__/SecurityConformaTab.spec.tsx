@@ -1,5 +1,5 @@
 import { Table, Thead, Tr, Th, Tbody } from '@patternfly/react-table';
-import { act, fireEvent, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
 import { routerRenderer } from '../../../utils/test-utils';
@@ -165,10 +165,9 @@ describe('SecurityConformaTab', () => {
   it('should render result summary', () => {
     routerRenderer(securityConforma('dummy-1'));
     const resultSummary = screen.getByTestId('result-summary');
-    const status = resultSummary.getElementsByTagName('span');
-    expect(status[0].textContent.trim()).toBe('Failed');
-    expect(status[1].textContent.trim()).toBe('Warning');
-    expect(status[2].textContent.trim()).toBe('Success');
+    expect(within(resultSummary).getByText('Failed')).toBeInTheDocument();
+    expect(within(resultSummary).getByText('Warning')).toBeInTheDocument();
+    expect(within(resultSummary).getByText('Success')).toBeInTheDocument();
     const value = resultSummary.getElementsByTagName('b');
     expect(value[0].textContent).toBe('1');
     expect(value[1].textContent).toBe('0');

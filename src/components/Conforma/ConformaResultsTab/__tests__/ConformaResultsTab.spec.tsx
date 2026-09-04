@@ -147,6 +147,10 @@ describe('ConformaResultsTab', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     setupVirtualizerMock();
+    // Reset URL-synced filter params (e.g. status, policy_exception_only) between
+    // tests. routerRenderer uses BrowserRouter, so window.location persists across
+    // tests and would otherwise leak filter state set via setFilters.
+    window.history.replaceState({}, '', '/');
   });
 
   afterEach(() => {
@@ -266,6 +270,131 @@ describe('ConformaResultsTab', () => {
     fireEvent.click(toggleButtons[0]);
     // After collapse, detail sub-table content is hidden (S3 assertion)
     expect(screen.queryAllByText('Test message').length).toBe(0);
+  });
+
+  it('filters the table to only policy-exception rows when the toggle is on', () => {
+    mockUseApplicationConformaResults.mockReturnValue({
+      ...populatedResults,
+      allResults: [
+        createMockRow({
+          title: 'Missing CVE scan',
+          component: 'api-gateway',
+          status: CONFORMA_RESULT_STATUS.violations,
+        }),
+        createMockRow({
+          title: 'Expiring policy rule',
+          code: 'volatile_config.expiring_rule',
+          component: 'api-gateway',
+          status: CONFORMA_RESULT_STATUS.warnings,
+        }),
+      ],
+    });
+
+    routerRenderer(<ConformaResultsTab />);
+
+    // Both rules visible before toggling.
+    expect(screen.getByText('Missing CVE scan')).toBeInTheDocument();
+    expect(screen.getByText('volatile_config.expiring_rule')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('switch', { name: /show policy exceptions only/i }));
+
+    // Only the policy-exception rule remains.
+    expect(screen.queryByText('Missing CVE scan')).not.toBeInTheDocument();
+    expect(screen.getByText('volatile_config.expiring_rule')).toBeInTheDocument();
+
+    // The switch reflects the enabled state.
+    expect(screen.getByRole('switch', { name: /show policy exceptions only/i })).toBeChecked();
+  });
+
+  it('syncs the toggle to the URL and ticks the warnings status filter when enabled', () => {
+    mockUseApplicationConformaResults.mockReturnValue({
+      ...populatedResults,
+      allResults: [
+        createMockRow({
+          title: 'Expiring policy rule',
+          code: 'volatile_config.expiring_rule',
+          component: 'api-gateway',
+          status: CONFORMA_RESULT_STATUS.warnings,
+        }),
+      ],
+    });
+
+    routerRenderer(<ConformaResultsTab />);
+
+    fireEvent.click(screen.getByRole('switch', { name: /show policy exceptions only/i }));
+
+    // Toggle state is persisted to the URL, and the warnings status filter is
+    // ticked so the visible filters stay consistent with what is shown.
+    expect(window.location.search).toContain('policy_exception_only=true');
+    expect(decodeURIComponent(window.location.search)).toContain(CONFORMA_RESULT_STATUS.warnings);
+  });
+
+  it('starts with the toggle enabled when policy_exception_only=true is in the URL', () => {
+    window.history.replaceState({}, '', '/?policy_exception_only=true');
+
+    mockUseApplicationConformaResults.mockReturnValue({
+      ...populatedResults,
+      allResults: [
+        createMockRow({
+          title: 'Missing CVE scan',
+          component: 'api-gateway',
+          status: CONFORMA_RESULT_STATUS.violations,
+        }),
+        createMockRow({
+          title: 'Expiring policy rule',
+          code: 'volatile_config.expiring_rule',
+          component: 'api-gateway',
+          status: CONFORMA_RESULT_STATUS.warnings,
+        }),
+      ],
+    });
+
+    routerRenderer(<ConformaResultsTab />);
+
+    // Toggle is on from the URL, so only the policy-exception rule is shown.
+    expect(screen.getByRole('switch', { name: /show policy exceptions only/i })).toBeChecked();
+    expect(screen.getByText('volatile_config.expiring_rule')).toBeInTheDocument();
+    expect(screen.queryByText('Missing CVE scan')).not.toBeInTheDocument();
+  });
+
+  it('shows a removable policy exception label group that turns the toggle off when closed', () => {
+    mockUseApplicationConformaResults.mockReturnValue({
+      ...populatedResults,
+      allResults: [
+        createMockRow({
+          title: 'Missing CVE scan',
+          component: 'api-gateway',
+          status: CONFORMA_RESULT_STATUS.violations,
+        }),
+        createMockRow({
+          title: 'Expiring policy rule',
+          code: 'volatile_config.expiring_rule',
+          component: 'api-gateway',
+          status: CONFORMA_RESULT_STATUS.warnings,
+        }),
+      ],
+    });
+
+    routerRenderer(<ConformaResultsTab />);
+
+    // No label group before enabling the toggle.
+    expect(screen.queryByText('Policy exceptions only')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('switch', { name: /show policy exceptions only/i }));
+
+    // The label group appears while the toggle is on.
+    expect(screen.getByText('Policy exceptions only')).toBeInTheDocument();
+
+    // Closing the label group turns the toggle off and drops the URL param. The
+    // separately-ticked "warnings" status filter is intentionally left in place,
+    // so it remains as its own status label group.
+    fireEvent.click(screen.getByRole('button', { name: /close policy exceptions only/i }));
+
+    expect(screen.getByRole('switch', { name: /show policy exceptions only/i })).not.toBeChecked();
+    expect(screen.queryByText('Policy exceptions only')).not.toBeInTheDocument();
+    expect(window.location.search).not.toContain('policy_exception_only');
+    // The warning row is still shown (warnings status filter remains active).
+    expect(screen.getByText('volatile_config.expiring_rule')).toBeInTheDocument();
   });
 
   it('renders "Show multi-arch duplicates" switch unchecked by default (duplicates collapsed)', () => {

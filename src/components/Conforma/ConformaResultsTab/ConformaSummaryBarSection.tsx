@@ -16,7 +16,7 @@ const SummaryItem: React.FC<SummaryItemDef> = ({ icon, count, rawCount, label, t
       <FlexItem>
         {count} {label}
         {rawCount !== undefined && rawCount !== count && (
-          <Content component={ContentVariants.small} className="pf-v6-u-ml-s pf-v6-u-color-400">
+          <Content component={ContentVariants.small} className="pf-v6-u-ml-sm pf-v6-u-color-400">
             ({rawCount} incl. multi-arch)
           </Content>
         )}

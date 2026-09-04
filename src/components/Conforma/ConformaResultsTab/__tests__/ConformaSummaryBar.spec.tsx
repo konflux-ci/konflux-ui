@@ -10,6 +10,7 @@ describe('ConformaSummaryBar', () => {
     totalViolations: 7,
     totalWarnings: 4,
     totalSuccesses: 20,
+    upcomingChanges: 2,
   };
 
   it('renders three summary sections', () => {
@@ -30,11 +31,11 @@ describe('ConformaSummaryBar', () => {
     expect(section).toHaveTextContent('failed');
   });
 
-  it('renders warning count as pending in the Upcoming changes section', () => {
+  it('renders upcoming changes count as pending in the Upcoming changes section', () => {
     const { container } = routerRenderer(<ConformaSummaryBar {...defaultProps} />);
 
     const section = container.querySelector('[data-test="conforma-summary-upcoming-changes"]');
-    expect(section).toHaveTextContent('4');
+    expect(section).toHaveTextContent('2');
     expect(section).toHaveTextContent('Pending');
   });
 
@@ -58,6 +59,7 @@ describe('ConformaSummaryBar', () => {
         totalViolations={0}
         totalWarnings={0}
         totalSuccesses={0}
+        upcomingChanges={0}
       />,
     );
 

@@ -39,16 +39,7 @@ const IssuesNavItemContent: React.FC<{ namespace: string }> = ({ namespace }) =>
   const hasMajorIssues = (majorGroup?.total ?? 0) > 0;
 
   if (hasMajorIssues) {
-    return (
-      <Icon
-        status="warning"
-        data-test="major-issues-icon"
-        aria-label="Major issues present"
-        className="pf-v6-u-ml-sm"
-      >
-        <WarningIcon />
-      </Icon>
-    );
+    return <WarningIcon data-test="major-issues-icon" aria-label="Major issues present" />;
   }
 
   return null;

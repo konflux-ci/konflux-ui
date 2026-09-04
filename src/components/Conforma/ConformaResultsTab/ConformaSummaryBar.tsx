@@ -21,6 +21,8 @@ type ConformaSummaryBarProps = {
   totalViolationsRaw?: number;
   totalWarningsRaw?: number;
   totalSuccessesRaw?: number;
+  upcomingChanges: number;
+  upcomingChangesRaw?: number;
 };
 
 export const ConformaSummaryBar: React.FC<ConformaSummaryBarProps> = ({
@@ -32,6 +34,8 @@ export const ConformaSummaryBar: React.FC<ConformaSummaryBarProps> = ({
   totalWarningsRaw,
   totalSuccessesRaw,
   totalViolationsRaw,
+  upcomingChanges,
+  upcomingChangesRaw,
 }) => {
   const sections: ConformaSummaryBarSectionProps[] = [
     {
@@ -58,9 +62,10 @@ export const ConformaSummaryBar: React.FC<ConformaSummaryBarProps> = ({
       items: [
         {
           icon: <WarningIcon />,
-          count: totalWarnings,
+          count: upcomingChanges,
+          rawCount: upcomingChangesRaw,
           label: 'Pending',
-          tooltip: 'Policies that will become active soon',
+          tooltip: 'Rules with upcoming policy changes',
         },
       ],
     },
@@ -80,7 +85,7 @@ export const ConformaSummaryBar: React.FC<ConformaSummaryBarProps> = ({
           count: totalWarnings,
           rawCount: totalWarningsRaw,
           label: 'warnings',
-          tooltip: 'Rules with upcoming policy changes',
+          tooltip: 'Rules with warnings',
         },
         {
           icon: <CheckCircleIcon color={successColor.value} />,
