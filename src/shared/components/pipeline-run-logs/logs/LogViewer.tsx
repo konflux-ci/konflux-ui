@@ -176,7 +176,6 @@ const LogViewer: React.FC<Props> = ({
       className={classNames('log-viewer__container', 'pf-v6-c-log-viewer', {
         'pf-m-dark': logTheme === 'dark',
         'log-viewer--light': logTheme === 'light',
-        'pf-v6-theme-light': logTheme === 'light',
       })}
     >
       {/* Toolbar */}
