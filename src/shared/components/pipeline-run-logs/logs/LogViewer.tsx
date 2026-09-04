@@ -100,6 +100,7 @@ const LogViewer: React.FC<Props> = ({
   const taskName = taskRun?.spec.taskRef?.name ?? taskRun?.metadata.name;
   const [logTheme, setLogTheme] = useLogViewerTheme();
   const themeCheckboxId = React.useId();
+  const wrapLineCheckboxId=React.useId();
 
   const normalizedSections = React.useMemo(
     () => normalizedSectionsProp ?? sections?.map(normalizeSection) ?? [],
@@ -128,6 +129,7 @@ const LogViewer: React.FC<Props> = ({
 
   const [downloadAllStatus, setDownloadAllStatus] = React.useState(false);
   const [isDownloadOpen, setIsDownloadOpen] = React.useState(false);
+  const [wrapLines, setWrapLines] = React.useState(true);
 
   const downloadLogs = () => {
     if (!downloadData) return;
@@ -175,6 +177,7 @@ const LogViewer: React.FC<Props> = ({
       style={{ height: isFullscreen ? '100vh' : '100%' }}
       className={classNames('log-viewer__container', 'pf-v6-c-log-viewer', {
         'pf-m-dark': logTheme === 'dark',
+        'pf-m-nowrap': !wrapLines,
         'log-viewer--light': logTheme === 'light',
       })}
     >
@@ -219,6 +222,14 @@ const LogViewer: React.FC<Props> = ({
                   label="Dark theme"
                   checked={logTheme === 'dark'}
                   onClick={() => setLogTheme(logTheme === 'dark' ? 'light' : 'dark')}
+                />
+              </ToolbarItem>
+              <ToolbarItem>
+                <Checkbox
+                  id={wrapLineCheckboxId}
+                  label="Wrap lines"
+                  checked={wrapLines}
+                  onClick={() => setWrapLines(!wrapLines)}
                 />
               </ToolbarItem>
               <ToolbarItem variant="separator" className="log-viewer__divider" />
@@ -350,6 +361,7 @@ const LogViewer: React.FC<Props> = ({
               normalizedSections={normalizedSections}
               height={containerHeight}
               width="100%"
+              wrapLines={wrapLines}
               scrollToRow={scrollToRow}
               onScroll={handleScroll}
               searchText={searchText}
