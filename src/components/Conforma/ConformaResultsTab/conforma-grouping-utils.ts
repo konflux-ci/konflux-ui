@@ -189,3 +189,23 @@ export const collapseArchDuplicates = (rows: ConformaResultRow[]): ConformaResul
   }
   return Array.from(map.values());
 };
+
+const UPCOMING_POLICY_CHANGE_CODES = [
+  'volatile_config.expiring_rule',
+  'volatile_config.expired_rule',
+  'volatile_config.invalid_config',
+  'volatile_config.no_expiration',
+  'volatile_config.pending_rule',
+];
+
+/**
+ * Filters warnings that represent upcoming policy changes based on specific
+ * policy codes. These are warnings that will become violations in the future.
+ */
+export const filterUpcomingPolicyChanges = (results: ConformaResultRow[]): ConformaResultRow[] =>
+  results.filter(
+    (row) =>
+      row.status === CONFORMA_RESULT_STATUS.warnings &&
+      row.code &&
+      UPCOMING_POLICY_CHANGE_CODES.includes(row.code),
+  );
