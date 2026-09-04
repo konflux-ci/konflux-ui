@@ -7,6 +7,7 @@ import {
   APPLICATION_LIST_PATH,
   COMPONENTS_PATH,
   ISSUES_PATH,
+  MINTMAKER_SCHEDULE_PATH,
   NAMESPACE_LIST_PATH,
   PIPELINE_RUNS_PAGE_PATH,
   RELEASE_MONITOR_PATH,
@@ -174,6 +175,19 @@ export const AppSideBar: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
 
             <IfFeature flag="pipeline-runs-page">
               {namespace && <SavedViewNavItems config={pipelineRunsSavedViewsConfig} />}
+            </IfFeature>
+
+            <IfFeature flag="mintmaker">
+              <NavItem isActive={isActive(MINTMAKER_SCHEDULE_PATH.path)}>
+                <NavLink to={MINTMAKER_SCHEDULE_PATH.createPath({} as never)}>
+                  MintMaker Schedule{' '}
+                  <FeatureFlagIndicator
+                    flags={['mintmaker']}
+                    hasNoPadding
+                    popOverTriggerAction="hover"
+                  />
+                </NavLink>
+              </NavItem>
             </IfFeature>
           </NavList>
         </Nav>
