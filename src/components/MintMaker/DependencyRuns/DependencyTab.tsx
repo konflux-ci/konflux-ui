@@ -1,12 +1,12 @@
 import { useParams } from 'react-router-dom';
 import { RouterParams } from '@routes/utils';
-import { DependencyRunsListView } from '~/components/Components/ComponentDependencyManager/DependencyRunsListView';
 import { DetailsSection } from '~/components/DetailsPage';
+import { DependencyRunsListView } from '~/components/MintMaker/DependencyRuns/DependencyRunsListView';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 
-export const ComponentDependencyTab = () => {
+export const DependencyTab = () => {
   const params = useParams<RouterParams>();
-  const { componentName } = params;
+  const { applicationName, componentName } = params;
 
   return (
     <DetailsSection
@@ -16,7 +16,7 @@ export const ComponentDependencyTab = () => {
         </>
       }
     >
-      <DependencyRunsListView componentName={componentName} />
+      <DependencyRunsListView applicationName={applicationName} componentName={componentName} />
     </DetailsSection>
   );
 };

@@ -1,9 +1,9 @@
 import { useParams } from 'react-router-dom';
 import { screen } from '@testing-library/react';
+import { DependencyTab } from '~/components/MintMaker/DependencyRuns/DependencyTab';
 import { renderWithQueryClientAndRouter } from '~/unit-test-utils';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
-import { ComponentDependencyTab } from '../ComponentDependencyTab';
 
 jest.mock('~/hooks/useSearchParam', () => ({
   useSearchParamBatch: () => mockUseSearchParamBatch(),
@@ -14,19 +14,30 @@ jest.mock('react-router-dom', () => ({
   useParams: jest.fn(),
 }));
 
-jest.mock('~/components/Components/ComponentDependencyManager/DependencyRunsListView', () => ({
-  DependencyRunsListView: ({ componentName }: { componentName: string }) => (
-    <div data-test="mock-dependency-runs-list-view">{componentName}</div>
+jest.mock('~/components/MintMaker/DependencyRuns/DependencyRunsListView', () => ({
+  DependencyRunsListView: ({
+    applicationName,
+    componentName,
+  }: {
+    applicationName: string;
+    componentName: string;
+  }) => (
+    <div data-test="mock-dependency-runs-list-view">
+      {applicationName} - {componentName}
+    </div>
   ),
 }));
 
 const useParamsMock = useParams as jest.Mock;
 
-describe('ComponentDependencyTab', () => {
+describe('DependencyTab', () => {
   mockUseNamespaceHook('test-ns');
 
   beforeEach(() => {
-    useParamsMock.mockReturnValue({ componentName: 'test-component' });
+    useParamsMock.mockReturnValue({
+      componentName: 'test-component',
+      applicationName: 'test-application',
+    });
   });
 
   afterEach(() => {
@@ -34,14 +45,21 @@ describe('ComponentDependencyTab', () => {
   });
 
   it('renders the "Dependency updates" section heading', () => {
-    renderWithQueryClientAndRouter(<ComponentDependencyTab />);
+    renderWithQueryClientAndRouter(<DependencyTab />);
     expect(screen.getByRole('heading', { name: /Dependency updates/i })).toBeInTheDocument();
   });
 
   it('passes the componentName from route params to DependencyRunsListView', () => {
-    renderWithQueryClientAndRouter(<ComponentDependencyTab />);
+    renderWithQueryClientAndRouter(<DependencyTab />);
     expect(screen.getByTestId('mock-dependency-runs-list-view')).toHaveTextContent(
       'test-component',
+    );
+  });
+
+  it('passes the applicationName from route params to DependencyRunsListView', () => {
+    renderWithQueryClientAndRouter(<DependencyTab />);
+    expect(screen.getByTestId('mock-dependency-runs-list-view')).toHaveTextContent(
+      'test-application',
     );
   });
 });
