@@ -21,15 +21,18 @@ import {
   SecretType,
   SecretTypeDropdownLabel,
   SourceSecretType,
+  BuildTimeSecret,
 } from '../../types';
 import {
   createSecretResource,
   editSecretResource,
+  findExistingOpaqueSecretByName,
   getAnnotationForSecret,
   getKubernetesSecretType,
   getLabelsForSecret,
   getRegistryCreds,
   getSecretFormData,
+  isUsingExistingClusterSecret,
   normalizeDockerConfigForDockerconfigjson,
   getSupportedPartnerTaskKeyValuePairs,
   getSupportedPartnerTaskSecrets,
@@ -81,6 +84,82 @@ describe('isPartnerTask', () => {
     expect(isPartnerTask(null)).toBe(false);
     expect(isPartnerTask(undefined)).toBe(false);
     expect(isPartnerTask('invalid-partner-task')).toBe(false);
+  });
+});
+
+describe('findExistingOpaqueSecretByName', () => {
+  const clusterOpaqueSecret: BuildTimeSecret = {
+    type: SecretType.opaque,
+    name: 'cluster-secret',
+    providerUrl: '',
+    tokenKeyName: 'cluster-secret',
+    opaque: {
+      keyValuePairs: [{ key: 'token', value: 'value', readOnlyKey: true, readOnlyValue: true }],
+    },
+  };
+
+  it('returns matching opaque secret by name', () => {
+    expect(findExistingOpaqueSecretByName('cluster-secret', [clusterOpaqueSecret])).toEqual(
+      clusterOpaqueSecret,
+    );
+  });
+
+  it('returns undefined when no match exists', () => {
+    expect(findExistingOpaqueSecretByName('missing', [clusterOpaqueSecret])).toBeUndefined();
+  });
+});
+
+describe('isUsingExistingClusterSecret', () => {
+  const clusterOpaqueSecret: BuildTimeSecret = {
+    type: SecretType.opaque,
+    name: 'cluster-secret',
+    providerUrl: '',
+    tokenKeyName: 'cluster-secret',
+    opaque: {
+      keyValuePairs: [{ key: 'token', value: 'value', readOnlyKey: true, readOnlyValue: true }],
+    },
+  };
+
+  it('returns true for cluster-backed opaque secrets', () => {
+    expect(
+      isUsingExistingClusterSecret('cluster-secret', SecretTypeDropdownLabel.opaque, [
+        clusterOpaqueSecret,
+      ]),
+    ).toBe(true);
+  });
+
+  it('returns false for partner task templates not yet in cluster', () => {
+    expect(isUsingExistingClusterSecret('snyk-secret', SecretTypeDropdownLabel.opaque, [])).toBe(
+      false,
+    );
+  });
+
+  it('returns true for partner task secrets already in cluster with read-only values', () => {
+    const clusterSnykSecret: BuildTimeSecret = {
+      type: SecretType.opaque,
+      name: 'snyk-secret',
+      providerUrl: 'https://snyk.io/',
+      tokenKeyName: 'snyk_token',
+      opaque: {
+        keyValuePairs: [
+          { key: 'snyk_token', value: 'configured', readOnlyKey: true, readOnlyValue: true },
+        ],
+      },
+    };
+
+    expect(
+      isUsingExistingClusterSecret('snyk-secret', SecretTypeDropdownLabel.opaque, [
+        clusterSnykSecret,
+      ]),
+    ).toBe(true);
+  });
+
+  it('returns false for image and source secret types', () => {
+    expect(
+      isUsingExistingClusterSecret('cluster-secret', SecretTypeDropdownLabel.image, [
+        clusterOpaqueSecret,
+      ]),
+    ).toBe(false);
   });
 });
 
