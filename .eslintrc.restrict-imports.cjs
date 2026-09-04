@@ -40,26 +40,39 @@ module.exports = {
           // Zone 4: Files in `./src/k8s` may only import from `./src/k8s` or from `./src/types/k8s.ts`.
           {
             target: './src/k8s/**/*',
-            from: ['./src/!(k8s|types/k8s)/**/*'],
+            from: ['./src/!(k8s|types)/**/*', './src/types/!(k8s)/**/*', './src/types/!(k8s.ts)'],
             message:
               'Files in `./src/k8s` may only import from `./src/k8s` or from `./src/types/k8s`.',
           },
           // Zone 5: Files in `./src/shared` may only import from `./src/shared` or `./src/k8s`.
           {
             target: './src/shared/**/*',
-            from: ['./src/!(shared|k8s|types/k8s)/**/*'],
-            message: 'Files in `./src/shared` may only import from `./src/shared`, `./src/k8s` or `./src/types/k8s`.',
+            from: [
+              './src/!(shared|k8s|types)/**/*',
+              './src/types/!(k8s)/**/*',
+              './src/types/!(k8s.ts)',
+            ],
+            message:
+              'Files in `./src/shared` may only import from `./src/shared`, `./src/k8s` or `./src/types/k8s`.',
           },
           // Zone 6: 'Files in `./src/feature-flags` may only import from `./src/feature-flags`'.
           {
             target: './src/feature-flags/**/*',
-            from: ['./src/!(feature-flags|components/modal)/**/*'],
+            from: [
+              './src/!(feature-flags|components)/**/*',
+              './src/components/!(modal)/**/*',
+              './src/components/!(modal)',
+            ],
             message: 'Files in `./src/feature-flags` may only import from `./src/feature-flags`.',
           },
           // Zone 7: Files in `./src/kubearchive` may only import from `./src/kubearchive`, `./src/k8s` or `./src/types/k8s`.
           {
             target: './src/kubearchive/**/*',
-            from: ['./src/!(kubearchive|k8s|types/k8s)/**/*'],
+            from: [
+              './src/!(kubearchive|k8s|types)/**/*',
+              './src/types/!(k8s)/**/*',
+              './src/types/!(k8s.ts)',
+            ],
             message:
               'Files in `./src/kubearchive` may only import from `./src/kubearchive`, `./src/k8s` or `./src/types/k8s`.',
           },
