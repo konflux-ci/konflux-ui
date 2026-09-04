@@ -1,4 +1,4 @@
-name: UI Lint & Unit Tests
+name: UI Lint, Unit Tests & Bundle Size
 
 # Controls when the action will run.
 on:
@@ -52,6 +52,32 @@ jobs:
 
       - name: Type Checking
         run: yarn type-checks
+
+  # Production bundle size budgets — fails PRs that exceed per-chunk limits
+  size-limit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Enable Corepack 📦
+        run: corepack enable
+
+      - name: Setup ⚙️ Node.js 🔰
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24.x
+          cache: 'yarn'
+
+      - name: Install Dependencies 🥁
+        run: yarn install --immutable
+
+      - name: Build production bundle
+        run: yarn build
+
+      - name: Check bundle size budgets
+        run: yarn size-limit
 
   # Unit tests — sharded across 2 runners for parallel execution
   test:
