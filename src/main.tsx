@@ -34,33 +34,40 @@ forceEnableFlagsOnce(['kubearchive-logs', 'taskruns-kubearchive', 'pipelineruns-
   releaseId: '2025-11-17',
 });
 
-const App = () => {
+export const App = () => {
   const [publicInfo, loaded, error] = useKonfluxPublicInfo();
   const { onLogin } = useAuthAnalytics();
-  const { user } = useAuth();
+  const { isAuthenticated, user } = useAuth();
 
   React.useEffect(() => {
-    if (!loaded && !error) {
+    if (!loaded || error || !publicInfo) {
       return;
     }
 
-    if (loaded && !error && publicInfo) {
+    void (async () => {
       analyticsService.setCommonProperties({
-        clusterId: publicInfo.clusterId,
         clusterVersion: publicInfo.clusterVersion,
         konfluxVersion: publicInfo.konfluxVersion,
         kubernetesVersion: publicInfo.kubernetesVersion,
         openshiftVersion: publicInfo.openshiftVersion,
       });
-    }
 
-    void obfuscate(user.preferredUsername, publicInfo?.clusterId).then((userId) => {
-      analyticsService.setCommonProperties({ userId });
+      if (isAuthenticated && user.preferredUsername && publicInfo.clusterId) {
+        try {
+          analyticsService.identify(await obfuscate(user.preferredUsername, publicInfo.clusterId));
+        } catch (reason) {
+          logger.error(
+            'Failed to obfuscate analytics user ID',
+            reason instanceof Error ? reason : new Error(String(reason)),
+          );
+        }
+      }
+
       if (consumeLoginSignal()) {
         onLogin();
       }
-    });
-  }, [loaded, error, publicInfo, onLogin, user]);
+    })();
+  }, [loaded, error, publicInfo, isAuthenticated, onLogin, user.preferredUsername]);
 
   React.useEffect(() => {
     // webpack side effects to prevent tree-shaking
