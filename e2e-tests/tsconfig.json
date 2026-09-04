@@ -1,18 +1,10 @@
 {
   "compilerOptions": {
     "target": "es5",
-    "lib": [
-      "es5",
-      "dom"
-    ],
-    "types": [
-      "cypress",
-      "node",
-      "cypress-axe"
-    ],
-    "baseUrl": "https://localhost:8080"
+    "lib": ["es5", "dom"],
+    "types": ["cypress", "node", "cypress-axe"],
+    "baseUrl": "https://localhost:8080",
+    "sourceMap": true
   },
-  "include": [
-    "./**/*.ts"
-  ]
+  "include": ["./**/*.ts"]
 }
