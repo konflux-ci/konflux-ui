@@ -28,6 +28,11 @@ const getLastOnDownloadFullLogs = (): ((sectionIndex: number) => Promise<void>) 
   return lastCall.onDownloadFullLogs;
 };
 
+const getLastAllowExpandAllSections = (): boolean | undefined => {
+  const lastCall = mockLogViewer.mock.calls[mockLogViewer.mock.calls.length - 1][0];
+  return lastCall.allowExpandAllSections;
+};
+
 jest.mock('file-saver', () => ({
   saveAs: jest.fn(),
 }));
@@ -44,6 +49,7 @@ jest.mock('../LogViewer', () => {
     isLoading?: boolean;
     onScroll?: () => void;
     onDownloadFullLogs?: (sectionIndex: number) => Promise<void>;
+    allowExpandAllSections?: boolean;
   }) {
     mockLogViewer(props);
     return <div data-test="mock-log-viewer" />;
@@ -1450,6 +1456,39 @@ describe('Logs', () => {
       // Should not have fetched anything for an invalid section index
       expect(commonFetchText).not.toHaveBeenCalled();
       expect(saveAs).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('allowExpandAllSections', () => {
+    it('should pass allowExpandAllSections=false for cluster source', () => {
+      render(<Logs {...defaultProps} source={ResourceSource.Cluster} />);
+
+      expect(mockLogViewer).toHaveBeenCalledWith(
+        expect.objectContaining({ allowExpandAllSections: false }),
+      );
+      expect(getLastAllowExpandAllSections()).toBe(false);
+    });
+
+    it('should pass allowExpandAllSections=true for archive source when kubearchive is enabled', () => {
+      (useIsOnFeatureFlag as jest.Mock).mockReturnValue(true);
+
+      render(<Logs {...defaultProps} source={ResourceSource.Archive} />);
+
+      expect(mockLogViewer).toHaveBeenCalledWith(
+        expect.objectContaining({ allowExpandAllSections: true }),
+      );
+      expect(getLastAllowExpandAllSections()).toBe(true);
+    });
+
+    it('should pass allowExpandAllSections=false for archive source when kubearchive is disabled', () => {
+      (useIsOnFeatureFlag as jest.Mock).mockReturnValue(false);
+
+      render(<Logs {...defaultProps} source={ResourceSource.Archive} />);
+
+      expect(mockLogViewer).toHaveBeenCalledWith(
+        expect.objectContaining({ allowExpandAllSections: false }),
+      );
+      expect(getLastAllowExpandAllSections()).toBe(false);
     });
   });
 

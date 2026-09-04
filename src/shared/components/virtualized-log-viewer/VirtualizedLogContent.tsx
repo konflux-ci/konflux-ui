@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { forwardRef, useImperativeHandle } from 'react';
 import { Content } from '@patternfly/react-core';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { normalizeSection } from './log-viewer-utils';
@@ -44,317 +44,339 @@ export interface VirtualizedLogContentProps {
   lineNumberNavigationProps?: UseLineNumberNavigationResult;
 }
 
-export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
-  sections,
-  normalizedSections: normalizedSectionsProp,
-  height,
-  width,
-  scrollToRow,
-  onScroll,
-  searchText = '',
-  currentSearchMatch,
-  onDownloadFullLogs,
-  onViewFullLogs,
-  lineNumberNavigationProps,
-}) => {
-  const scrollRef = React.useRef<HTMLDivElement | null>(null);
-  const [itemSize, setItemSize] = React.useState(VIRTUALIZATION_CONFIG.FALLBACK_LINE_HEIGHT);
-  const charsPerLineRef = React.useRef(VIRTUALIZATION_CONFIG.FALLBACK_CHARS_PER_LINE);
-
-  const internalNormalizedSections = React.useMemo(
-    () => (normalizedSectionsProp ? null : sections.map(normalizeSection)),
-    [normalizedSectionsProp, sections],
-  );
-  const effectiveNormalizedSections = React.useMemo(
-    () => normalizedSectionsProp ?? internalNormalizedSections ?? [],
-    [normalizedSectionsProp, internalNormalizedSections],
-  );
-
-  const isMultiSection = effectiveNormalizedSections.length > 1;
-  const { expandedSections, toggleSection, expandSection } = useSectionFold(
-    effectiveNormalizedSections,
-  );
-
-  const {
-    displayRows,
-    allLines,
-    lineNumberToDisplayRow,
-    lineNumberToSectionIndex,
-    flatLineIndexToDisplayRow,
-  } = useSectionRows(effectiveNormalizedSections, expandedSections);
-
-  const rowCount = displayRows.length;
-
-  // Keep a ref so the expand-on-search effect always reads the latest map
-  // without listing it as a dep (which would re-trigger on every fold/unfold).
-  const lineNumberToSectionIndexRef = React.useRef(lineNumberToSectionIndex);
-  lineNumberToSectionIndexRef.current = lineNumberToSectionIndex;
-
-  useResizeObserverFix();
-
-  const deferredSearchText = React.useDeferredValue(searchText);
-  const searchRegex = useSearchRegex(deferredSearchText);
-  const { tokenizeLine } = useTokenization(allLines);
-
-  const renderLine = useLineRenderer({
-    tokenizeLine,
-    searchRegex,
-    currentSearchMatch,
-  });
-
-  const normalizedSectionsRef = React.useRef(effectiveNormalizedSections);
-  normalizedSectionsRef.current = effectiveNormalizedSections;
-
-  React.useEffect(() => {
-    if (!currentSearchMatch || currentSearchMatch.rowIndex < 0) return;
-    const flatIndex = currentSearchMatch.rowIndex;
-    const currentSections = normalizedSectionsRef.current;
-    let offset = 0;
-    for (let i = 0; i < currentSections.length; i++) {
-      const sectionLineCount = currentSections[i].lines.length;
-      if (flatIndex < offset + sectionLineCount) {
-        expandSection(i);
-        return;
-      }
-      offset += sectionLineCount;
-    }
-  }, [currentSearchMatch, expandSection]);
-
-  const measureCallbackRef = React.useCallback((node: HTMLDivElement | null) => {
-    if (node) {
-      const measured = node.offsetHeight;
-      if (measured > 0) setItemSize(measured);
-    }
-  }, []);
-
-  React.useEffect(() => {
-    if (!scrollRef.current) return;
-    const container = scrollRef.current;
-    const rafId = requestAnimationFrame(() => {
-      const style = getComputedStyle(container);
-      const font = style.font || `${style.fontSize} ${style.fontFamily}`;
-      charsPerLineRef.current = calculateCharsPerLine(container, measureAverageCharWidth(font));
-    });
-    return () => cancelAnimationFrame(rafId);
-  }, []);
-
-  const estimateRowHeight = React.useCallback(
-    (index: number): number => {
-      if (itemSize === 0) return VIRTUALIZATION_CONFIG.FALLBACK_LINE_HEIGHT;
-
-      const row = displayRows[index];
-      if (!row || row.kind !== 'content') return itemSize;
-      const text = allLines[row.flatLineIndex] || '';
-      const estimatedLines = Math.max(1, Math.ceil(text.length / charsPerLineRef.current));
-      return Math.ceil(itemSize * estimatedLines * getSafetyMargin(rowCount));
-    },
-    [displayRows, allLines, itemSize, rowCount],
-  );
-
-  const virtualizer = useVirtualizer<HTMLDivElement, Element>({
-    count: rowCount,
-    getScrollElement: () => scrollRef.current,
-    estimateSize: estimateRowHeight,
-    overscan: getOverscanCount(rowCount),
-    useFlushSync: false,
-  });
-
-  const effectiveScrollToRow = React.useMemo(() => {
-    if (!scrollToRow || scrollToRow <= 0) return undefined;
-    const flatIndex = scrollToRow - 1;
-    const displayIdx = flatLineIndexToDisplayRow.get(flatIndex);
-    if (displayIdx !== undefined) return displayIdx + 1;
-    // auto-scroll-to-bottom: scrollToRow >= total lines means "follo the tail"
-    return scrollToRow >= allLines.length ? displayRows.length : undefined;
-  }, [scrollToRow, flatLineIndexToDisplayRow, displayRows.length, allLines.length]);
-
-  const { clearScrollTracking } = useVirtualizedScroll({
-    virtualizer,
-    scrollToRow: effectiveScrollToRow,
-    onScroll,
-  });
-
-  const {
-    highlightedLines = null,
-    handleLineClick = () => {},
-    isLineHighlighted = () => false,
-  } = lineNumberNavigationProps ?? {};
-
-  React.useEffect(() => {
-    if (!highlightedLines) return;
-
-    const expanded = new Set<number>();
-    for (let line = highlightedLines.start; line <= highlightedLines.end; line++) {
-      const sectionIndex = lineNumberToSectionIndexRef.current.get(line);
-      if (sectionIndex === undefined || expanded.has(sectionIndex)) continue;
-      expanded.add(sectionIndex);
-      expandSection(sectionIndex);
-    }
-  }, [highlightedLines, expandSection]);
-
-  const highlightScrollTargetIndex = React.useMemo((): number | null => {
-    if (!highlightedLines || rowCount === 0) return null;
-    const displayIdx = lineNumberToDisplayRow.get(highlightedLines.start);
-    // Exact line found — scroll to it; if the requested line is beyond the available
-    // log (e.g. stale URL hash or log still streaming), fall back to the last row.
-    return displayIdx ?? rowCount - 1;
-  }, [highlightedLines, rowCount, lineNumberToDisplayRow]);
-
-  const lastScrolledHighlightRef = React.useRef<{
-    start: number;
-    end: number;
-    targetIndex: number;
-  } | null>(null);
-
-  React.useEffect(() => {
-    if (!highlightedLines || highlightScrollTargetIndex === null) return;
-
-    const displayIdx = lineNumberToDisplayRow.get(highlightedLines.start);
-    const targetIndex = displayIdx ?? highlightScrollTargetIndex;
-    const prev = lastScrolledHighlightRef.current;
-
-    const isNewHighlight =
-      prev?.start !== highlightedLines.start || prev?.end !== highlightedLines.end;
-    const targetImproved =
-      !isNewHighlight &&
-      displayIdx !== undefined &&
-      prev?.targetIndex !== targetIndex &&
-      lineNumberToDisplayRow.has(highlightedLines.start);
-
-    const sectionIndex = lineNumberToSectionIndexRef.current.get(highlightedLines.start);
-    const awaitingExpand =
-      displayIdx === undefined && sectionIndex !== undefined && !expandedSections.has(sectionIndex);
-
-    if (awaitingExpand) return;
-    if (!isNewHighlight && !targetImproved) return;
-
-    lastScrolledHighlightRef.current = {
-      start: highlightedLines.start,
-      end: highlightedLines.end,
-      targetIndex,
-    };
-
-    clearScrollTracking();
-
-    let isMounted = true;
-    let rafId2: number | undefined;
-    if (typeof window === 'undefined' || !window.requestAnimationFrame) return;
-    const rafId1 = requestAnimationFrame(() => {
-      if (!isMounted) return;
-      rafId2 = requestAnimationFrame(() => {
-        if (!isMounted) return;
-        virtualizer.scrollToIndex(targetIndex, { align: 'center', behavior: 'auto' });
-      });
-    });
-    return () => {
-      isMounted = false;
-      cancelAnimationFrame(rafId1);
-      if (rafId2 !== undefined) cancelAnimationFrame(rafId2);
-    };
-  }, [
-    highlightedLines,
-    highlightScrollTargetIndex,
-    lineNumberToDisplayRow,
-    virtualizer,
-    clearScrollTracking,
-    expandedSections,
-  ]);
-
-  const navRef = useKeyboardNavigation({
-    scrollElementRef: scrollRef,
-    lineHeight: itemSize,
-    enabled: true,
-  });
-
-  const scrollContainerRef = React.useCallback(
-    (node: HTMLDivElement | null) => {
-      scrollRef.current = node;
-      navRef(node);
-    },
-    [navRef],
-  );
-
-  const virtualItems = virtualizer.getVirtualItems();
-  const scrollTop = isMultiSection ? (virtualizer.scrollOffset ?? 0) : 0;
-  const { stickyRow, pushUpOffset } = computeStickySectionHeader({
-    enabled: isMultiSection,
-    scrollTop,
-    displayRows,
-    virtualItems,
-    itemSize,
-  });
-
-  return (
-    <div className="log-content__container">
-      <div
-        ref={measureCallbackRef}
-        className="pf-v6-c-log-viewer__list-item"
-        style={{ position: 'absolute', visibility: 'hidden', pointerEvents: 'none' }}
-      >
-        <Content component="small" className="pf-v6-c-log-viewer__text">
-          M
-        </Content>
-      </div>
-
-      <div
-        ref={scrollContainerRef}
-        className="log-content__list log-content__with-gutter"
-        tabIndex={0}
-        style={{
-          height: `${height}px`,
-          width: typeof width === 'number' ? `${width}px` : width,
-          overflow: 'auto',
-        }}
-        onClick={() => scrollRef.current?.focus({ preventScroll: true })}
-      >
-        <div
-          style={{
-            height: `${virtualizer.getTotalSize()}px`,
-            width: '100%',
-            position: 'relative',
-          }}
-        >
-          {virtualItems.map((virtualItem) => {
-            const row = displayRows[virtualItem.index];
-            if (!row) return null;
-            return (
-              <SectionedVirtualRow
-                key={virtualItem.key}
-                virtualIndex={virtualItem.index}
-                start={virtualItem.start}
-                row={row}
-                measureElement={virtualizer.measureElement}
-                isLineHighlighted={isLineHighlighted}
-                onToggleSection={toggleSection}
-                onDownloadFullLogs={onDownloadFullLogs}
-                onViewFullLogs={onViewFullLogs}
-                renderLogLine={renderLine}
-                onLineClick={handleLineClick}
-              />
-            );
-          })}
-        </div>
-      </div>
-
-      {stickyRow && (
-        <StickySectionHeaderBar
-          row={stickyRow}
-          pushUpOffset={pushUpOffset}
-          itemSize={itemSize}
-          onToggle={() => toggleSection(stickyRow.sectionIndex)}
-          onLineClick={handleLineClick}
-          onDownloadFullLogs={
-            stickyRow.isTailed && onDownloadFullLogs
-              ? () => onDownloadFullLogs(stickyRow.sectionIndex)
-              : undefined
-          }
-          onViewFullLogs={
-            stickyRow.isTailed && onViewFullLogs
-              ? () => onViewFullLogs(stickyRow.sectionIndex)
-              : undefined
-          }
-        />
-      )}
-    </div>
-  );
+export type VirtualizedLogContentImperativeHandleMethods = {
+  toggleAllSections: () => void;
 };
+
+export const VirtualizedLogContent = forwardRef<
+  VirtualizedLogContentImperativeHandleMethods,
+  VirtualizedLogContentProps
+>(
+  (
+    {
+      sections,
+      normalizedSections: normalizedSectionsProp,
+      height,
+      width,
+      scrollToRow,
+      onScroll,
+      searchText = '',
+      currentSearchMatch,
+      onDownloadFullLogs,
+      onViewFullLogs,
+      lineNumberNavigationProps,
+    },
+    ref,
+  ) => {
+    const scrollRef = React.useRef<HTMLDivElement | null>(null);
+    const [itemSize, setItemSize] = React.useState(VIRTUALIZATION_CONFIG.FALLBACK_LINE_HEIGHT);
+    const charsPerLineRef = React.useRef(VIRTUALIZATION_CONFIG.FALLBACK_CHARS_PER_LINE);
+
+    const internalNormalizedSections = React.useMemo(
+      () => (normalizedSectionsProp ? null : sections.map(normalizeSection)),
+      [normalizedSectionsProp, sections],
+    );
+    const effectiveNormalizedSections = React.useMemo(
+      () => normalizedSectionsProp ?? internalNormalizedSections ?? [],
+      [normalizedSectionsProp, internalNormalizedSections],
+    );
+
+    const isMultiSection = effectiveNormalizedSections.length > 1;
+    const { expandedSections, toggleSection, expandSection, toggleAllSections } = useSectionFold(
+      effectiveNormalizedSections,
+    );
+
+    useImperativeHandle(
+      ref,
+      () => ({
+        toggleAllSections,
+      }),
+      [toggleAllSections],
+    );
+
+    const {
+      displayRows,
+      allLines,
+      lineNumberToDisplayRow,
+      lineNumberToSectionIndex,
+      flatLineIndexToDisplayRow,
+    } = useSectionRows(effectiveNormalizedSections, expandedSections);
+
+    const rowCount = displayRows.length;
+
+    // Keep a ref so the expand-on-search effect always reads the latest map
+    // without listing it as a dep (which would re-trigger on every fold/unfold).
+    const lineNumberToSectionIndexRef = React.useRef(lineNumberToSectionIndex);
+    lineNumberToSectionIndexRef.current = lineNumberToSectionIndex;
+
+    useResizeObserverFix();
+
+    const deferredSearchText = React.useDeferredValue(searchText);
+    const searchRegex = useSearchRegex(deferredSearchText);
+    const { tokenizeLine } = useTokenization(allLines);
+
+    const renderLine = useLineRenderer({
+      tokenizeLine,
+      searchRegex,
+      currentSearchMatch,
+    });
+
+    const normalizedSectionsRef = React.useRef(effectiveNormalizedSections);
+    normalizedSectionsRef.current = effectiveNormalizedSections;
+
+    React.useEffect(() => {
+      if (!currentSearchMatch || currentSearchMatch.rowIndex < 0) return;
+      const flatIndex = currentSearchMatch.rowIndex;
+      const currentSections = normalizedSectionsRef.current;
+      let offset = 0;
+      for (let i = 0; i < currentSections.length; i++) {
+        const sectionLineCount = currentSections[i].lines.length;
+        if (flatIndex < offset + sectionLineCount) {
+          expandSection(i);
+          return;
+        }
+        offset += sectionLineCount;
+      }
+    }, [currentSearchMatch, expandSection]);
+
+    const measureCallbackRef = React.useCallback((node: HTMLDivElement | null) => {
+      if (node) {
+        const measured = node.offsetHeight;
+        if (measured > 0) setItemSize(measured);
+      }
+    }, []);
+
+    React.useEffect(() => {
+      if (!scrollRef.current) return;
+      const container = scrollRef.current;
+      const rafId = requestAnimationFrame(() => {
+        const style = getComputedStyle(container);
+        const font = style.font || `${style.fontSize} ${style.fontFamily}`;
+        charsPerLineRef.current = calculateCharsPerLine(container, measureAverageCharWidth(font));
+      });
+      return () => cancelAnimationFrame(rafId);
+    }, []);
+
+    const estimateRowHeight = React.useCallback(
+      (index: number): number => {
+        if (itemSize === 0) return VIRTUALIZATION_CONFIG.FALLBACK_LINE_HEIGHT;
+
+        const row = displayRows[index];
+        if (!row || row.kind !== 'content') return itemSize;
+        const text = allLines[row.flatLineIndex] || '';
+        const estimatedLines = Math.max(1, Math.ceil(text.length / charsPerLineRef.current));
+        return Math.ceil(itemSize * estimatedLines * getSafetyMargin(rowCount));
+      },
+      [displayRows, allLines, itemSize, rowCount],
+    );
+
+    const virtualizer = useVirtualizer<HTMLDivElement, Element>({
+      count: rowCount,
+      getScrollElement: () => scrollRef.current,
+      estimateSize: estimateRowHeight,
+      overscan: getOverscanCount(rowCount),
+      useFlushSync: false,
+    });
+
+    const effectiveScrollToRow = React.useMemo(() => {
+      if (!scrollToRow || scrollToRow <= 0) return undefined;
+      const flatIndex = scrollToRow - 1;
+      const displayIdx = flatLineIndexToDisplayRow.get(flatIndex);
+      if (displayIdx !== undefined) return displayIdx + 1;
+      // auto-scroll-to-bottom: scrollToRow >= total lines means "follo the tail"
+      return scrollToRow >= allLines.length ? displayRows.length : undefined;
+    }, [scrollToRow, flatLineIndexToDisplayRow, displayRows.length, allLines.length]);
+
+    const { clearScrollTracking } = useVirtualizedScroll({
+      virtualizer,
+      scrollToRow: effectiveScrollToRow,
+      onScroll,
+    });
+
+    const {
+      highlightedLines = null,
+      handleLineClick = () => {},
+      isLineHighlighted = () => false,
+    } = lineNumberNavigationProps ?? {};
+
+    React.useEffect(() => {
+      if (!highlightedLines) return;
+
+      const expanded = new Set<number>();
+      for (let line = highlightedLines.start; line <= highlightedLines.end; line++) {
+        const sectionIndex = lineNumberToSectionIndexRef.current.get(line);
+        if (sectionIndex === undefined || expanded.has(sectionIndex)) continue;
+        expanded.add(sectionIndex);
+        expandSection(sectionIndex);
+      }
+    }, [highlightedLines, expandSection]);
+
+    const highlightScrollTargetIndex = React.useMemo((): number | null => {
+      if (!highlightedLines || rowCount === 0) return null;
+      const displayIdx = lineNumberToDisplayRow.get(highlightedLines.start);
+      // Exact line found — scroll to it; if the requested line is beyond the available
+      // log (e.g. stale URL hash or log still streaming), fall back to the last row.
+      return displayIdx ?? rowCount - 1;
+    }, [highlightedLines, rowCount, lineNumberToDisplayRow]);
+
+    const lastScrolledHighlightRef = React.useRef<{
+      start: number;
+      end: number;
+      targetIndex: number;
+    } | null>(null);
+
+    React.useEffect(() => {
+      if (!highlightedLines || highlightScrollTargetIndex === null) return;
+
+      const displayIdx = lineNumberToDisplayRow.get(highlightedLines.start);
+      const targetIndex = displayIdx ?? highlightScrollTargetIndex;
+      const prev = lastScrolledHighlightRef.current;
+
+      const isNewHighlight =
+        prev?.start !== highlightedLines.start || prev?.end !== highlightedLines.end;
+      const targetImproved =
+        !isNewHighlight &&
+        displayIdx !== undefined &&
+        prev?.targetIndex !== targetIndex &&
+        lineNumberToDisplayRow.has(highlightedLines.start);
+
+      const sectionIndex = lineNumberToSectionIndexRef.current.get(highlightedLines.start);
+      const awaitingExpand =
+        displayIdx === undefined &&
+        sectionIndex !== undefined &&
+        !expandedSections.has(sectionIndex);
+
+      if (awaitingExpand) return;
+      if (!isNewHighlight && !targetImproved) return;
+
+      lastScrolledHighlightRef.current = {
+        start: highlightedLines.start,
+        end: highlightedLines.end,
+        targetIndex,
+      };
+
+      clearScrollTracking();
+
+      let isMounted = true;
+      let rafId2: number | undefined;
+      if (typeof window === 'undefined' || !window.requestAnimationFrame) return;
+      const rafId1 = requestAnimationFrame(() => {
+        if (!isMounted) return;
+        rafId2 = requestAnimationFrame(() => {
+          if (!isMounted) return;
+          virtualizer.scrollToIndex(targetIndex, { align: 'center', behavior: 'auto' });
+        });
+      });
+      return () => {
+        isMounted = false;
+        cancelAnimationFrame(rafId1);
+        if (rafId2 !== undefined) cancelAnimationFrame(rafId2);
+      };
+    }, [
+      highlightedLines,
+      highlightScrollTargetIndex,
+      lineNumberToDisplayRow,
+      virtualizer,
+      clearScrollTracking,
+      expandedSections,
+    ]);
+
+    const navRef = useKeyboardNavigation({
+      scrollElementRef: scrollRef,
+      lineHeight: itemSize,
+      enabled: true,
+    });
+
+    const scrollContainerRef = React.useCallback(
+      (node: HTMLDivElement | null) => {
+        scrollRef.current = node;
+        navRef(node);
+      },
+      [navRef],
+    );
+
+    const virtualItems = virtualizer.getVirtualItems();
+    const scrollTop = isMultiSection ? (virtualizer.scrollOffset ?? 0) : 0;
+    const { stickyRow, pushUpOffset } = computeStickySectionHeader({
+      enabled: isMultiSection,
+      scrollTop,
+      displayRows,
+      virtualItems,
+      itemSize,
+    });
+
+    return (
+      <div className="log-content__container">
+        <div
+          ref={measureCallbackRef}
+          className="pf-v6-c-log-viewer__list-item"
+          style={{ position: 'absolute', visibility: 'hidden', pointerEvents: 'none' }}
+        >
+          <Content component="small" className="pf-v6-c-log-viewer__text">
+            M
+          </Content>
+        </div>
+
+        <div
+          ref={scrollContainerRef}
+          className="log-content__list log-content__with-gutter"
+          tabIndex={0}
+          style={{
+            height: `${height}px`,
+            width: typeof width === 'number' ? `${width}px` : width,
+            overflow: 'auto',
+          }}
+          onClick={() => scrollRef.current?.focus({ preventScroll: true })}
+        >
+          <div
+            style={{
+              height: `${virtualizer.getTotalSize()}px`,
+              width: '100%',
+              position: 'relative',
+            }}
+          >
+            {virtualItems.map((virtualItem) => {
+              const row = displayRows[virtualItem.index];
+              if (!row) return null;
+              return (
+                <SectionedVirtualRow
+                  key={virtualItem.key}
+                  virtualIndex={virtualItem.index}
+                  start={virtualItem.start}
+                  row={row}
+                  measureElement={virtualizer.measureElement}
+                  isLineHighlighted={isLineHighlighted}
+                  onToggleSection={toggleSection}
+                  onDownloadFullLogs={onDownloadFullLogs}
+                  onViewFullLogs={onViewFullLogs}
+                  renderLogLine={renderLine}
+                  onLineClick={handleLineClick}
+                />
+              );
+            })}
+          </div>
+        </div>
+
+        {stickyRow && (
+          <StickySectionHeaderBar
+            row={stickyRow}
+            pushUpOffset={pushUpOffset}
+            itemSize={itemSize}
+            onToggle={() => toggleSection(stickyRow.sectionIndex)}
+            onLineClick={handleLineClick}
+            onDownloadFullLogs={
+              stickyRow.isTailed && onDownloadFullLogs
+                ? () => onDownloadFullLogs(stickyRow.sectionIndex)
+                : undefined
+            }
+            onViewFullLogs={
+              stickyRow.isTailed && onViewFullLogs
+                ? () => onViewFullLogs(stickyRow.sectionIndex)
+                : undefined
+            }
+          />
+        )}
+      </div>
+    );
+  },
+);

@@ -174,4 +174,90 @@ describe('useSectionFold', () => {
 
     expect([...result.current.expandedSections]).toEqual([]);
   });
+
+  describe('toggleAllSections', () => {
+    it('should expand all sections when none are expanded', () => {
+      const sections = [
+        section('build', 'done', true),
+        section('test', 'done', true),
+        section('push', 'done', true),
+      ];
+      const { result } = renderHook(() => useSectionFold(sections));
+
+      expect([...result.current.expandedSections]).toEqual([]);
+
+      act(() => {
+        result.current.toggleAllSections();
+      });
+
+      expect([...result.current.expandedSections].sort()).toEqual([0, 1, 2]);
+    });
+
+    it('should expand all sections when exactly one is expanded', () => {
+      const sections = [section('build', 'done', true), section('test', 'running', false)];
+      const { result } = renderHook(() => useSectionFold(sections));
+
+      expect([...result.current.expandedSections]).toEqual([1]);
+
+      act(() => {
+        result.current.toggleAllSections();
+      });
+
+      expect([...result.current.expandedSections].sort()).toEqual([0, 1]);
+    });
+
+    it('should collapse all sections when multiple are expanded', () => {
+      const sections = [section('build', 'running', false), section('test', 'running', false)];
+      const { result } = renderHook(() => useSectionFold(sections));
+
+      expect([...result.current.expandedSections].sort()).toEqual([0, 1]);
+
+      act(() => {
+        result.current.toggleAllSections();
+      });
+
+      expect([...result.current.expandedSections]).toEqual([]);
+    });
+
+    it('should toggle between expand-all and collapse-all on successive calls', () => {
+      const sections = [section('build', 'running', false), section('test', 'running', false)];
+      const { result } = renderHook(() => useSectionFold(sections));
+
+      act(() => {
+        result.current.toggleAllSections();
+      });
+      expect([...result.current.expandedSections]).toEqual([]);
+
+      act(() => {
+        result.current.toggleAllSections();
+      });
+      expect([...result.current.expandedSections].sort()).toEqual([0, 1]);
+    });
+
+    it('should expand a manually collapsed section when toggling all', () => {
+      const sections = [section('build', 'running', false), section('test', 'running', false)];
+      const { result } = renderHook(() => useSectionFold(sections));
+
+      act(() => {
+        result.current.toggleSection(0);
+      });
+      expect(result.current.expandedSections.has(0)).toBe(false);
+      expect(result.current.expandedSections.has(1)).toBe(true);
+
+      act(() => {
+        result.current.toggleAllSections();
+      });
+      expect([...result.current.expandedSections].sort()).toEqual([0, 1]);
+    });
+
+    it('should do nothing when there are no sections', () => {
+      const { result } = renderHook(() => useSectionFold([]));
+
+      act(() => {
+        result.current.toggleAllSections();
+      });
+
+      expect([...result.current.expandedSections]).toEqual([]);
+    });
+  });
 });
