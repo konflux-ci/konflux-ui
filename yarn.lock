@@ -3935,21 +3935,38 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@patternfly/react-core@npm:^6.6.2":
+  version: 6.6.2
+  resolution: "@patternfly/react-core@npm:6.6.2"
+  dependencies:
+    "@patternfly/react-icons": "npm:^6.6.1"
+    "@patternfly/react-styles": "npm:^6.6.1"
+    "@patternfly/react-tokens": "npm:^6.6.1"
+    focus-trap: "npm:7.6.6"
+    react-dropzone: "npm:^14.3.5"
+    tslib: "npm:^2.8.1"
+  peerDependencies:
+    react: ^17 || ^18 || ^19
+    react-dom: ^17 || ^18 || ^19
+  checksum: 10/5dad8fce985e4fcbd64eb6a95de47ec253fa97dc6fe3128a4910621d196816bf4a7a93bbca154c18842c0a808abf7b304da7bc0ffec01d077edf4a956791e77a
+  languageName: node
+  linkType: hard
+
 "@patternfly/react-drag-drop@npm:^6.5.1":
-  version: 6.6.1
-  resolution: "@patternfly/react-drag-drop@npm:6.6.1"
+  version: 6.6.2
+  resolution: "@patternfly/react-drag-drop@npm:6.6.2"
   dependencies:
     "@dnd-kit/core": "npm:^6.3.1"
     "@dnd-kit/modifiers": "npm:^9.0.0"
     "@dnd-kit/sortable": "npm:^10.0.0"
-    "@patternfly/react-core": "npm:^6.6.1"
+    "@patternfly/react-core": "npm:^6.6.2"
     "@patternfly/react-icons": "npm:^6.6.1"
     "@patternfly/react-styles": "npm:^6.6.1"
     resize-observer-polyfill: "npm:^1.5.1"
   peerDependencies:
     react: ^17 || ^18 || ^19
     react-dom: ^17 || ^18 || ^19
-  checksum: 10/9abb1601d9af5a9602be9c22c5a9b0e599a8a2127548918426548600b68825407ad090b94a1a0eefea4988829f2ab1d9e77b4fe328ba7acafded3dd822580ff0
+  checksum: 10/0805b24acc24e79dfb94ac20f930b3e5303d01fe0ec27d9a3118b2cfafa9a3ef89c61fb8ce20b355f1d4725689951504dd67db75b4afc2343a8a1102434aa50f
   languageName: node
   linkType: hard
 
@@ -15165,8 +15182,8 @@ __metadata:
   linkType: hard
 
 "nuqs@npm:^2.8.9":
-  version: 2.10.0
-  resolution: "nuqs@npm:2.10.0"
+  version: 2.10.1
+  resolution: "nuqs@npm:2.10.1"
   dependencies:
     "@standard-schema/spec": "npm:1.1.0"
   peerDependencies:
@@ -15187,7 +15204,7 @@ __metadata:
       optional: true
     react-router-dom:
       optional: true
-  checksum: 10/ee89a7e98303139d830916ec89cf15fe68064608c4ddd43827b26897c318bdfda9ff41a1bcebc7fb9fecc892e390f7a01453946fd21778b4181cdde5eae4c0f7
+  checksum: 10/de1b1fd3949e820ac2a3198f03e415aafb96f74bfdbd995b7cd522b06af1c901770480b624417db784d09a2352a4ab84ba84fe39f86071710274a42eeba7581c
   languageName: node
   linkType: hard
 
@@ -17548,8 +17565,8 @@ __metadata:
   linkType: hard
 
 "sass@npm:^1.77.8":
-  version: 1.102.0
-  resolution: "sass@npm:1.102.0"
+  version: 1.103.1
+  resolution: "sass@npm:1.103.1"
   dependencies:
     "@parcel/watcher": "npm:^2.4.1"
     chokidar: "npm:^5.0.0"
@@ -17560,7 +17577,7 @@ __metadata:
       optional: true
   bin:
     sass: sass.js
-  checksum: 10/c69c254db64274778cc2a7f00a0fd92c0c53b9c3d25e0e8e7cf8c18788ff998c1e51e1e16198a62f58513c8c406ecc2bb61c4f29f05a0f7109c2f26700161137
+  checksum: 10/b66acf027bbd0e6bfd9eb2a171779ae7c59115d10b2b55d52f547a7835bf63c108879ba699b47bcf5328042067a9e1b7f38141da3b8cd6af8d6805a9b5666609
   languageName: node
   linkType: hard
 
