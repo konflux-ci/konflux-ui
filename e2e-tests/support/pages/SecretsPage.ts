@@ -1,16 +1,36 @@
-import { UIhelper } from '../../utils/UIhelper';
-import { actions } from '../pageObjects/global-po';
+import { secretsPagePO } from '../pageObjects/pages-po';
 
 export class SecretsPage {
-  static searchSecret(secretName: string) {
-    cy.get('[name="nameInput"]').clear().type(secretName);
+  static checkValues(secretName: string, secretKey: string, secretValue: string) {
+    cy.get(secretsPagePO.rowKebabButton(secretName)).click();
+    cy.get(secretsPagePO.editButton).click();
+    cy.contains('button', secretsPagePO.showValuesButton).click();
+    cy.get(secretsPagePO.keyInputByValue(secretKey)).should('exist');
+    cy.get(secretsPagePO.valueInput).scrollIntoView().should('have.value', secretValue);
+    cy.get(secretsPagePO.cancelButton).click();
+  }
+
+  static addSecret(secretName: string, secretKey: string, secretValue: string) {
+    cy.contains('span', secretsPagePO.addSecretButtonLabel).click();
+    cy.get(secretsPagePO.nameFilter).clear().type(secretName);
+    cy.get(secretsPagePO.keyInput).scrollIntoView().clear().type(secretKey);
+    cy.get(secretsPagePO.valueInput).scrollIntoView().clear().type(secretValue);
+    cy.get(secretsPagePO.submitButton).click();
+  }
+
+  static searchSecret(secretName: string, isListed: boolean) {
+    cy.get(secretsPagePO.listNameInput).clear().type(secretName);
+    if (isListed) {
+      cy.get(secretsPagePO.secretRow(secretName)).should('exist');
+    } else {
+      cy.get(secretsPagePO.secretRow(secretName)).should('not.exist');
+    }
   }
 
   static deleteSecret(secretName: string) {
-    UIhelper.getTableRow('Secret List', secretName).find(actions.kebabButton).click();
-    cy.get(actions.delete).click();
-    UIhelper.inputValueInTextBoxByLabelName(`Type "${secretName}" to confirm deletion`, secretName);
-    UIhelper.clickButton('Delete').should('not.exist');
-    cy.contains(secretName).should('not.exist');
+    cy.get(secretsPagePO.rowKebabButton(secretName)).click();
+    cy.get(secretsPagePO.deleteButton).click();
+    cy.get(secretsPagePO.deleteConfirmInput).click().type(secretName);
+    cy.get(secretsPagePO.deleteResourceButton).click();
   }
 }
