@@ -28,7 +28,7 @@ spec:
     - name: slack-credentials-secret
       type: string
       default: 'slack-credentials'
-      description: 'Secret containing Slack token and channel ID'
+      description: 'Secret containing Slack webhook URL'
     - name: console-url
       type: string
       default: 'https://console.redhat.com/preview/application-pipeline'
@@ -51,16 +51,11 @@ spec:
           value: $(context.taskRun.namespace)
         - name: TEKTON_PIPELINE_RUN
           value: $(context.pipelineRun.name)
-        - name: SLACK_TOKEN
+        - name: SLACK_WEBHOOK_URL
           valueFrom:
             secretKeyRef:
               name: $(params.slack-credentials-secret)
-              key: token
-        - name: SLACK_CHANNEL_ID
-          valueFrom:
-            secretKeyRef:
-              name: $(params.slack-credentials-secret)
-              key: channel-id
+              key: webhook-url
       script: |
         #!/usr/bin/env bash
         set -euo pipefail
@@ -104,11 +99,10 @@ spec:
 
         # Construct job URL dynamically
         JOB_URL="${CONSOLE_URL}/workspaces/${TEKTON_NAMESPACE}/pipelineruns/${TEKTON_PIPELINE_RUN}"
-        MESSAGE="${MESSAGE} ${JOB_URL}"
+        MESSAGE="FROM KONFLUX: ${MESSAGE} ${JOB_URL}"
 
         echo "Status: ${EXIT_STATUS}"
         echo "Message: ${MESSAGE}"
-        echo "Channel: ${SLACK_CHANNEL_ID}"
 
         # Send Slack notification
         echo "=== Sending Slack notification ==="
@@ -116,15 +110,13 @@ spec:
         # Escape special characters for JSON
         MESSAGE_ESCAPED=$(printf '%s' "${MESSAGE}" | sed 's/\\/\\\\/g; s/"/\\"/g')
 
-        RESPONSE=$(curl -s --max-time 10 -X POST https://slack.com/api/chat.postMessage \
-          -H "Authorization: Bearer ${SLACK_TOKEN}" \
+        RESPONSE=$(curl -sS --max-time 10 -X POST "${SLACK_WEBHOOK_URL}" \
           -H "Content-Type: application/json; charset=utf-8" \
-          -d "{\"channel\": \"${SLACK_CHANNEL_ID}\", \"text\": \"${MESSAGE_ESCAPED}\"}") || RESPONSE='{"ok":false,"error":"curl_failed"}'
-
-        echo "Slack API Response: ${RESPONSE}"
+          -d "{\"text\": \"${MESSAGE_ESCAPED}\"}") || RESPONSE="curl_failed"
+        echo "Slack webhook response: ${RESPONSE}"
 
         # Check if message was sent successfully
-        if echo "${RESPONSE}" | grep -q '"ok":true'; then
+        if [[ "${RESPONSE}" == "ok" ]]; then
           echo "✅ Slack notification sent successfully"
         else
           echo "⚠️ Failed to send Slack notification"
