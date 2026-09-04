@@ -102,9 +102,9 @@ const InternalFLAGS = {
       visibleInFeatureFlagPanel: true,
     },
   },
-  'components-page': {
-    key: 'components-page',
-    description: 'New Application / Component model - Components page',
+  'component-model': {
+    key: 'component-model',
+    description: 'New Application / Component model',
     defaultEnabled: false,
     status: 'wip',
     guard: {

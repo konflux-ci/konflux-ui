@@ -41,11 +41,11 @@ const ComponentDetailsView: React.FC = () => {
 
   return (
     <IfFeature
-      flag="components-page"
+      flag="component-model"
       fallback={
         <AppEmptyState emptyStateImg={emptyStateImgUrl} title="Feature flag disabled">
           <EmptyStateBody>
-            {`To view this page, enable the "${FLAGS['components-page'].description}" feature flag.`}
+            {`To view this page, enable the "${FLAGS['component-model'].description}" feature flag.`}
           </EmptyStateBody>
         </AppEmptyState>
       }
@@ -55,7 +55,7 @@ const ComponentDetailsView: React.FC = () => {
         headTitle={component.metadata.name}
         title={
           <Content component={ContentVariants.h2}>
-            {component.metadata.name} <FeatureFlagIndicator flags={['components-page']} fullLabel />
+            {component.metadata.name} <FeatureFlagIndicator flags={['component-model']} fullLabel />
           </Content>
         }
         description={<GitRepoLink url={component.spec?.source?.url} />}
