@@ -6,11 +6,12 @@ import type { LogDisplayRow } from './types';
 import './LineNumberGutter.scss';
 import './VirtualizedLogContent.scss';
 
-const virtualRowStyle = (start: number): React.CSSProperties => ({
+const virtualRowStyle = (start: number, wrapLines: boolean): React.CSSProperties => ({
   position: 'absolute',
   top: 0,
   left: 0,
-  width: '100%',
+  width: wrapLines ? '100%' : 'max-content',
+  minWidth: '100%',
   display: 'flex',
   transform: `translateY(${start}px)`,
 });
@@ -25,6 +26,7 @@ type SectionedVirtualRowProps = {
   virtualIndex: number;
   start: number;
   row: LogDisplayRow;
+  wrapLines: boolean;
   measureElement: Virtualizer<HTMLDivElement, Element>['measureElement'];
   isLineHighlighted: (lineNumber: number) => boolean;
   onToggleSection: (sectionIndex: number) => void;
@@ -38,6 +40,7 @@ export const SectionedVirtualRow: React.FC<SectionedVirtualRowProps> = ({
   virtualIndex,
   start,
   row,
+  wrapLines,
   measureElement,
   isLineHighlighted,
   onToggleSection,
@@ -80,7 +83,7 @@ export const SectionedVirtualRow: React.FC<SectionedVirtualRowProps> = ({
     'data-index': virtualIndex,
     ref: measureElement,
     className: rowClassName,
-    style: virtualRowStyle(start),
+    style: virtualRowStyle(start, wrapLines),
   };
 
   if (row.kind === 'section-header') {

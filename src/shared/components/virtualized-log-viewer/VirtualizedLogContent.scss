@@ -4,6 +4,10 @@
   overflow-x: hidden !important;
   width: 100% !important;
 
+  &--nowrap {
+    overflow-x: auto !important;
+  }
+
   &.log-content__with-gutter {
     padding-bottom: var(--pf-t--global--spacer--xs);
 
@@ -26,7 +30,7 @@
   flex-shrink: 0;
   width: var(--pf-t--global--spacer--3xl);
   display: flex;
-  align-items: center;
+  align-items: start;
   justify-content: flex-end;
   padding-right: var(--pf-t--global--spacer--sm);
   background-color: var(
@@ -38,6 +42,10 @@
   user-select: none;
   overflow: hidden;
 
+  .log-content__list--nowrap & {
+    z-index: 2;
+  }
+  
   &--highlighted {
     background-color: var(--pf-t--global--color--status--warning--100);
   }

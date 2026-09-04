@@ -42,6 +42,8 @@ export interface VirtualizedLogContentProps {
   onDownloadFullLogs?: (sectionIndex: number) => Promise<void>;
   onViewFullLogs?: (sectionIndex: number) => void;
   lineNumberNavigationProps?: UseLineNumberNavigationResult;
+  /** When false, lines are not wrapped and scroll horizontally instead. */
+  wrapLines?: boolean;
 }
 
 export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
@@ -56,6 +58,7 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
   onDownloadFullLogs,
   onViewFullLogs,
   lineNumberNavigationProps,
+  wrapLines = true,
 }) => {
   const scrollRef = React.useRef<HTMLDivElement | null>(null);
   const [itemSize, setItemSize] = React.useState(VIRTUALIZATION_CONFIG.FALLBACK_LINE_HEIGHT);
@@ -143,12 +146,15 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
       if (itemSize === 0) return VIRTUALIZATION_CONFIG.FALLBACK_LINE_HEIGHT;
 
       const row = displayRows[index];
-      if (!row || row.kind !== 'content') return itemSize;
+      if (!row || row.kind !== 'content' || !wrapLines) return itemSize;
       const text = allLines[row.flatLineIndex] || '';
       const estimatedLines = Math.max(1, Math.ceil(text.length / charsPerLineRef.current));
+      if (estimatedLines === 1) {
+        return itemSize;
+      }      
       return Math.ceil(itemSize * estimatedLines * getSafetyMargin(rowCount));
     },
-    [displayRows, allLines, itemSize, rowCount],
+    [displayRows, allLines, itemSize, rowCount, wrapLines],
   );
 
   const virtualizer = useVirtualizer<HTMLDivElement, Element>({
@@ -158,6 +164,11 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
     overscan: getOverscanCount(rowCount),
     useFlushSync: false,
   });
+
+  // Remeasure rows when wrap mode changes so cached heights match the new layout.
+  React.useEffect(() => {
+    virtualizer.measure();
+  }, [wrapLines, virtualizer]);
 
   const effectiveScrollToRow = React.useMemo(() => {
     if (!scrollToRow || scrollToRow <= 0) return undefined;
@@ -298,7 +309,7 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
 
       <div
         ref={scrollContainerRef}
-        className="log-content__list log-content__with-gutter"
+        className={`log-content__list log-content__with-gutter${!wrapLines ? ' log-content__list--nowrap' : ''}`}
         tabIndex={0}
         style={{
           height: `${height}px`,
@@ -323,6 +334,7 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
                 virtualIndex={virtualItem.index}
                 start={virtualItem.start}
                 row={row}
+                wrapLines={wrapLines}
                 measureElement={virtualizer.measureElement}
                 isLineHighlighted={isLineHighlighted}
                 onToggleSection={toggleSection}
