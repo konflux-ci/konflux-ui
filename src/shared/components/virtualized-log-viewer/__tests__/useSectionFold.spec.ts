@@ -2,10 +2,16 @@ import { act, renderHook } from '@testing-library/react';
 import type { LogSection } from '../types';
 import { useSectionFold } from '../useSectionFold';
 
-const section = (containerName: string, data: string, isCompleted?: boolean): LogSection => ({
+const section = (
+  containerName: string,
+  data: string,
+  isCompleted?: boolean,
+  hasTerminatedWithError?: boolean,
+): LogSection => ({
   containerName,
   data,
   isCompleted,
+  hasTerminatedWithError,
 });
 
 describe('useSectionFold', () => {
@@ -154,6 +160,50 @@ describe('useSectionFold', () => {
 
     expect(result.current.expandedSections.has(0)).toBe(true);
     expect(result.current.expandedSections.has(2)).toBe(true);
+  });
+
+  it('should expand a completed section that terminated with an error', () => {
+    const sections = [section('build', 'log with error', true, true)];
+    const { result } = renderHook(() => useSectionFold(sections));
+
+    expect([...result.current.expandedSections]).toEqual([0]);
+  });
+
+  it('should keep errored sections expanded even when others complete', () => {
+    const sections = [
+      section('build', 'failed log', true, true),
+      section('test', 'done', true),
+      section('push', 'skipped', true),
+    ];
+    const { result } = renderHook(() => useSectionFold(sections));
+
+    expect([...result.current.expandedSections]).toEqual([0]);
+  });
+
+  it('should allow the user to fold an errored section they expanded by default', () => {
+    const sections = [section('build', 'failed log', true, true)];
+    const { result } = renderHook(() => useSectionFold(sections));
+
+    expect(result.current.expandedSections.has(0)).toBe(true);
+
+    act(() => {
+      result.current.toggleSection(0);
+    });
+
+    expect(result.current.expandedSections.has(0)).toBe(false);
+  });
+
+  it('should preserve the default expand policy when a section becomes errored but completed', () => {
+    const initialSections = [section('build', 'running', false)];
+    const { result, rerender } = renderHook(({ s }) => useSectionFold(s), {
+      initialProps: { s: initialSections },
+    });
+
+    expect(result.current.expandedSections.has(0)).toBe(true);
+
+    rerender({ s: [section('build', 'failed log', true, true)] });
+
+    expect(result.current.expandedSections.has(0)).toBe(true);
   });
 
   it('should reset overrides when section identity changes (task switch)', () => {
