@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { screen } from '@testing-library/react';
-import { DependencyTab } from '~/shared/components/DependencyManager/DependencyTab';
+import { DependencyTab } from '~/components/MintMaker/DependencyRuns/DependencyTab';
 import { renderWithQueryClientAndRouter } from '~/unit-test-utils';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
@@ -14,7 +14,7 @@ jest.mock('react-router-dom', () => ({
   useParams: jest.fn(),
 }));
 
-jest.mock('~/shared/components/DependencyManager/DependencyRunsListView', () => ({
+jest.mock('~/components/MintMaker/DependencyRuns/DependencyRunsListView', () => ({
   DependencyRunsListView: ({
     applicationName,
     componentName,
