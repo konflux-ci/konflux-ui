@@ -1,5 +1,7 @@
+import * as React from 'react';
 import { Navigate, useLocation, useParams } from 'react-router-dom';
 import { Bullseye, Flex, HelperText, HelperTextItem, Spinner } from '@patternfly/react-core';
+import { isKnownGitProvider, refineArrivalSource } from '~/analytics/arrival-source';
 import { usePipelineRunV2 } from '~/hooks/usePipelineRunsV2';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { PipelineRunLabel } from '../../consts/pipelinerun';
@@ -10,6 +12,20 @@ const GithubRedirect: React.FC = () => {
   const { ns, pipelineRunName, taskName } = useParams<GithubRedirectRouteParams>();
   const isLogsTabSelected = pathname.includes('/logs');
   const [pr, loaded, error] = usePipelineRunV2(ns, pipelineRunName);
+
+  // Pure derivation during render — the actual sessionStorage write happens
+  // in the effect below, never here, to keep render side-effect-free.
+  const gitProvider =
+    loaded && !error && pr
+      ? pr.metadata.labels?.[PipelineRunLabel.COMMIT_PROVIDER_LABEL] ??
+        pr.metadata.annotations?.[PipelineRunLabel.COMMIT_PROVIDER_LABEL]
+      : undefined;
+
+  React.useEffect(() => {
+    if (isKnownGitProvider(gitProvider)) {
+      refineArrivalSource(gitProvider);
+    }
+  }, [gitProvider]);
 
   if (error) {
     return getErrorState(error, loaded, 'pipeline run');
