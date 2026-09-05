@@ -34,9 +34,11 @@ Components
 | `src/analytics/hooks.ts` | `useTrackAnalyticsEvent` hook |
 | `src/analytics/gen/analytics-types.ts` | Auto-generated types from segment-bridge schema |
 | `src/analytics/obfuscate.ts` | SHA-256 hashing for PIA fields (`SHA256Hash` branded type) |
+| `src/routes/with-route-patterns.ts` | Stamps each route's privacy-safe pattern (e.g. `/ns/:workspaceName/applications`) onto `handle.routePattern`; `getRoutePatternFromMatches()` reads it back via `useMatches()` |
 | `src/analytics/load-config.ts` | Config resolution (API-first, runtime fallback) |
 | `src/analytics/conditional-checks.ts` | `isAnalyticsEnabled` condition + `useIsAnalyticsEnabled` hook |
 | `src/auth/useAuthAnalytics.ts` | `useAuthAnalytics` hook — `onLogin` / `onLogout` callbacks |
+| `src/feature-flags/useFeatureFlagAnalytics.ts` | Hook fired from `Panel.tsx` — diffs flag state on panel open vs. close and tracks `feature_flags_changed` |
 
 ---
 
@@ -139,6 +141,14 @@ On a page refresh there is no `logged_in` param, so no login event fires.
 ### Logout
 
 `onLogout(user)` is called in `AuthContext.signOut()` before the sign-out fetch. It tracks a `user_logout` event, then calls `analyticsService.reset()` to clear the Segment identity.
+
+---
+
+## Feature Flag Change Tracking
+
+`useFeatureFlagAnalytics()` in `FeatureFlagPanel` tracks `feature_flags_changed` on every panel close (including `changesCount: 0`), via the modal's `onClose` in `Panel.tsx` — not on unmount.
+
+On open it snapshots flag state (from `useFeatureFlags()`) and `pagePattern` (`getRoutePatternFromMatches()` / `with-route-patterns.ts`). On close, `computeFeatureFlagChanges()` diffs open vs. current state. Net-zero toggles are omitted; "Reset to Defaults" is included. URL param overrides (`?ff_flag=true`) are not tracked.
 
 ---
 
