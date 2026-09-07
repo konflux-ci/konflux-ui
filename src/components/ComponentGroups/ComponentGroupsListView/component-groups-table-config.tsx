@@ -32,14 +32,6 @@ export const getLatestPromotedBuild = (builds: ComponentState[]): ComponentState
     return buildTime > latestTime ? build : latest;
   }, undefined);
 
-export const enrichComponentGroupsForTable = (
-  groups: ComponentGroupKind[],
-): ComponentGroupTableRow[] =>
-  groups.map((group) => ({
-    ...group,
-    latestPromotedBuild: getLatestPromotedBuild(group.status?.globalCandidateList ?? []),
-  }));
-
 export const componentGroupsFilterConfig = defineFilters<ComponentGroupTableRow>()([
   {
     type: 'search',
@@ -52,7 +44,7 @@ export const componentGroupsFilterConfig = defineFilters<ComponentGroupTableRow>
 
 export const getComponentGroupsTableColumns = (
   namespace: string,
-): ColumnDefinition<ComponentGroupTableRow>[] => [
+): ColumnDefinition<ComponentGroupKind>[] => [
   {
     id: 'name',
     header: 'Name',
@@ -86,11 +78,14 @@ export const getComponentGroupsTableColumns = (
   {
     id: 'last-build',
     header: 'Last promoted build',
-    accessorFn: (row) => row.latestPromotedBuild,
+    accessorFn: (row) =>
+      getLatestPromotedBuild(row.status?.globalCandidateList ?? []).lastPromotedBuildTime,
     nonHidable: true,
     size: 2,
     cell: (info) => {
-      const latestBuild = info.getValue() as ComponentState | undefined;
+      const latestBuild = getLatestPromotedBuild(
+        info.row.original.status?.globalCandidateList ?? [],
+      );
 
       if (!latestBuild) {
         return <span data-test="component-group-no-build">No Builds yet</span>;
