@@ -208,12 +208,9 @@ describe('DependencyRunsListView', () => {
       expect(usePipelineRunsV2Mock).toHaveBeenCalledWith(null, expect.anything());
     });
 
-    it('does not require application data to render component-scoped runs', async () => {
-      useApplicationMock.mockReturnValue([undefined, false, new Error('Application unavailable')]);
+    it('disables the application hook', () => {
       renderWithQueryClient(<TestedComponent />);
-      await waitFor(() => {
-        expect(screen.getByText('dependency-run-alpha')).toBeInTheDocument();
-      });
+      expect(useApplicationMock).toHaveBeenCalledWith('test-ns', undefined);
     });
 
     it('shows loading skeleton rows while fetching the next page', async () => {
@@ -343,6 +340,11 @@ describe('DependencyRunsListView', () => {
           }),
         }),
       );
+    });
+
+    it('application hook is enabled', () => {
+      renderWithQueryClient(<TestedApplication />);
+      expect(useApplicationMock).toHaveBeenCalledWith('test-ns', 'test-application');
     });
 
     it('does not fetch pipeline runs until the application is loaded', () => {

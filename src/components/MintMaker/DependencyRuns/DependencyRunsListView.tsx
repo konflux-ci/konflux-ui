@@ -59,7 +59,7 @@ export const DependencyRunsListView = ({
   const [component, componentLoaded, componentError] = useComponent(namespace, componentName, true);
   const [application, applicationLoaded, applicationError] = useApplication(
     namespace,
-    applicationName,
+    !componentName ? applicationName : undefined,
   );
 
   const matchExpressions = React.useMemo(() => {
