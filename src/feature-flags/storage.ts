@@ -15,13 +15,7 @@ function createJSONStorage<Value>(
   getStringStorage: () => StringStorage | undefined = () => {
     try {
       return window.localStorage;
-    } catch (e) {
-      if (process.env.NODE_ENV !== 'production') {
-        if (typeof window !== 'undefined') {
-          // eslint-disable-next-line no-console
-          console.warn(e);
-        }
-      }
+    } catch (_e) {
       return undefined;
     }
   },
@@ -65,13 +59,7 @@ export function createKeyedJSONStorage<Value>(
   const getStorage = (): StringStorage | undefined => {
     try {
       return storageType === 'localStorage' ? window.localStorage : window.sessionStorage;
-    } catch (e) {
-      if (process.env.NODE_ENV !== 'production') {
-        if (typeof window !== 'undefined') {
-          // eslint-disable-next-line no-console
-          console.warn(`Failed to access ${storageType}:`, e);
-        }
-      }
+    } catch (_e) {
       return undefined;
     }
   };
