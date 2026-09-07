@@ -7,11 +7,8 @@ import {
   useMessages,
   useSendStreamMessage,
 } from '@redhat-cloud-services/ai-react-state';
-import { KONFLUX_ASSISTANT_NAME } from '~/components/AIChat/consts';
-import {
-  getUserFacingLightspeedErrorMessage,
-  stateMessagesToMessageProps,
-} from '~/components/AIChat/utils';
+import { LIGHTSPEED_ASSISTANT_NAME } from '~/lightspeed/const';
+import { getUserFacingErrorMessage, stateMessagesToMessageProps } from '~/lightspeed/utils';
 import { logger } from '~/monitoring/logger';
 
 type UseLightspeedChatResult = {
@@ -25,7 +22,7 @@ type UseLightspeedChatResult = {
 
 const getErrorMessage = (error: unknown, fallback: string): string => {
   if (error instanceof AIClientError) {
-    return getUserFacingLightspeedErrorMessage(error.status);
+    return getUserFacingErrorMessage(error.status);
   }
   if (error instanceof Error) {
     return error.message;
@@ -60,20 +57,20 @@ export const useLightspeedChat = (): UseLightspeedChatResult => {
 
       setBackendError(undefined);
       setAnnouncement(
-        `Message from you: ${trimmedMessage}. ${KONFLUX_ASSISTANT_NAME} is responding.`,
+        `Message from you: ${trimmedMessage}. ${LIGHTSPEED_ASSISTANT_NAME} is responding.`,
       );
 
       try {
         const response = await sendStreamMessage(trimmedMessage);
         if (response?.answer) {
-          setAnnouncement(`Message from ${KONFLUX_ASSISTANT_NAME}: ${response.answer}`);
+          setAnnouncement(`Message from ${LIGHTSPEED_ASSISTANT_NAME}: ${response.answer}`);
         }
       } catch (error) {
         const messageText = getErrorMessage(error, 'Failed to send message');
         setBackendError(messageText);
-        setAnnouncement(`Message from ${KONFLUX_ASSISTANT_NAME}: ${messageText}`);
+        setAnnouncement(`Message from ${LIGHTSPEED_ASSISTANT_NAME}: ${messageText}`);
         logger.error(
-          'Lightspeed streaming query failed',
+          'Konflux AI streaming query failed',
           error instanceof Error ? error : new Error(messageText),
         );
       }
