@@ -1,4 +1,3 @@
-import { createKeyedJSONStorage } from '~/shared/utils';
 import {
   type ConditionKey,
   type ConditionState,
@@ -6,6 +5,7 @@ import {
   guardSatisfied,
 } from './conditions';
 import { FLAGS, FlagKey } from './flags';
+import { createKeyedJSONStorage } from './storage';
 
 type FlagState = Record<FlagKey, boolean>;
 const FLAGS_LOCAL_STORAGE_KEY = '__ff_overrides__';

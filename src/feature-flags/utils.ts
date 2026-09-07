@@ -1,5 +1,5 @@
-import { HttpError } from '~/k8s/error';
 import { ConditionKey } from './conditions';
+import { HttpError } from './errors';
 import { FLAGS, type FlagKey } from './flags';
 import { FeatureFlagsStore } from './store';
 

@@ -1,4 +1,4 @@
-import { AnyObject } from '../../types/common';
+import { AnyObject } from '../../types/k8s';
 
 /**
  * Configuration that is used to configure WebSockets from a host app perspective.

@@ -1,5 +1,10 @@
-import { AnyObject } from '../types/common';
-import { K8sModelCommon, K8sResourceCommon, Patch, QueryOptionsWithSelector } from '../types/k8s';
+import {
+  AnyObject,
+  K8sModelCommon,
+  K8sResourceCommon,
+  Patch,
+  QueryOptionsWithSelector,
+} from '../types/k8s';
 import { commonFetchJSON } from './fetch';
 import { getK8sResourceURL } from './k8s-utils';
 

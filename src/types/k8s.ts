@@ -1,3 +1,5 @@
+export type { AnyObject } from './common';
+
 export type K8sVerb =
   | 'create'
   | 'get'
