@@ -1,10 +1,10 @@
 import { saveAs } from 'file-saver';
 import { FeatureFlagsStore } from '~/feature-flags/store';
 import { fetchResourceWithK8sAndKubeArchive } from '~/kubearchive/resource-utils';
+import { PipelineRunModel } from '~/models/pipelineruns';
 import { ResourceSource } from '~/types/k8s';
 import { commonFetchText } from '../../../../k8s';
 import { getK8sResourceURL } from '../../../../k8s/k8s-utils';
-import { PipelineRunModel } from '../../../../models';
 import { PodModel } from '../../../../models/pod';
 import { TaskRunKind } from '../../../../types';
 import { getTaskRunLog } from '../../../../utils/tekton-results';
