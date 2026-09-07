@@ -26,7 +26,7 @@ import {
   KONFLUX_AI_WELCOME_DESCRIPTION,
   KONFLUX_AI_WELCOME_TITLE,
 } from '~/components/AIChat/consts';
-import { useLightspeedChat } from '~/components/AIChat/hooks/useLightspeedChat';
+import { useLightspeedChat } from '~/lightspeed/useLightspeedChat';
 
 import '@patternfly/chatbot/dist/css/main.css';
 import './AIChat.scss';
