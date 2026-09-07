@@ -92,7 +92,7 @@ module.exports = {
               './src/components/!(modal)/**/*',
               './src/components/!(modal)',
               './src/k8s/!(error.ts)',
-              './src/shared/!(util.ts)',
+              './src/shared/!(utils.ts)',
             ],
             message: 'Files in `./src/feature-flags` may only import from `./src/feature-flags`.',
           },
