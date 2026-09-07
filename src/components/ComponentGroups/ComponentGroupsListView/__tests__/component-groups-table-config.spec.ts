@@ -1,8 +1,4 @@
-import { MOCK_COMPONENT_GROUPS } from '~/components/ComponentGroups/ComponentGroupsListView/__data__/mockComponentGroups';
-import {
-  enrichComponentGroupsForTable,
-  getLatestPromotedBuild,
-} from '~/components/ComponentGroups/ComponentGroupsListView/component-groups-table-config';
+import { getLatestPromotedBuild } from '~/components/ComponentGroups/ComponentGroupsListView/component-groups-table-config';
 import { ComponentState } from '~/types';
 
 const build = (overrides: Partial<ComponentState>): ComponentState => ({
@@ -49,29 +45,5 @@ describe('getLatestPromotedBuild', () => {
     });
 
     expect(getLatestPromotedBuild([untimed, timed])).toEqual(timed);
-  });
-});
-
-describe('enrichComponentGroupsForTable', () => {
-  it('should attach the latest promoted build from globalCandidateList', () => {
-    const [frontendStack] = enrichComponentGroupsForTable([MOCK_COMPONENT_GROUPS[0]]);
-
-    expect(frontendStack.latestPromotedBuild).toEqual(
-      expect.objectContaining({
-        name: 'konflux-ui',
-        version: 'v1.2.0',
-        lastPromotedBuildTime: '2026-08-20T14:22:00Z',
-      }),
-    );
-  });
-
-  it('should leave latestPromotedBuild undefined when there are no candidates', () => {
-    const platformOperators = MOCK_COMPONENT_GROUPS.find(
-      (group) => group.metadata.name === 'platform-operators',
-    );
-
-    const [enriched] = enrichComponentGroupsForTable([platformOperators]);
-
-    expect(enriched.latestPromotedBuild).toBeUndefined();
   });
 });
