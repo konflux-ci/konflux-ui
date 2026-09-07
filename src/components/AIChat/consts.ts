@@ -1,4 +1,6 @@
-export const LIGHTSPEED_API_BASE = '/api/lightspeed';
+import { ChatbotDisplayMode } from '@patternfly/chatbot/dist/dynamic/Chatbot';
+
+export const KONFLUX_AI_DISPLAY_MODE = ChatbotDisplayMode.default;
 
 export const KONFLUX_AI_FOOTNOTE =
   'Konflux AI is experimental. Always review AI-generated content before use.';
