@@ -1,4 +1,4 @@
-.konflux-ai-chat {
+.ai-chat {
   // Floating toggle — brand orange; icon matches text (black in light, light in dark)
   .pf-v6-c-button.pf-chatbot__button {
     z-index: var(--pf-t--global--z-index--2xl);
@@ -48,7 +48,7 @@
   }
 
   // Wordmark uses currentColor
-  .konflux-ai-chat__brand {
+  .ai-chat__brand {
     color: var(--pf-t--global--text--color--regular);
   }
 }

@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { createPortal } from 'react-dom';
-import Chatbot, { ChatbotDisplayMode } from '@patternfly/chatbot/dist/dynamic/Chatbot';
+import * as ReactDOM from 'react-dom';
+import Chatbot from '@patternfly/chatbot/dist/dynamic/Chatbot';
 import ChatbotContent from '@patternfly/chatbot/dist/dynamic/ChatbotContent';
 import ChatbotFooter, { ChatbotFootnote } from '@patternfly/chatbot/dist/dynamic/ChatbotFooter';
 import ChatbotHeader, {
@@ -15,6 +15,7 @@ import MessageBar from '@patternfly/chatbot/dist/dynamic/MessageBar';
 import MessageBox from '@patternfly/chatbot/dist/dynamic/MessageBox';
 import KonfluxLogo from '~/assets/konflux-logo.svg';
 import {
+  KONFLUX_AI_DISPLAY_MODE,
   KONFLUX_AI_FOOTNOTE,
   KONFLUX_AI_MESSAGE_PLACEHOLDER,
   KONFLUX_AI_TOGGLE_BUTTON_LABEL,
@@ -26,29 +27,27 @@ import {
 import '@patternfly/chatbot/dist/css/main.css';
 import './AIChat.scss';
 
-const displayMode = ChatbotDisplayMode.default;
-
 /**
  * Basic PatternFly chatbot shell with no backend/send behavior.
  */
 export const AIChatDock: React.FC = () => {
   const [isChatbotVisible, setIsChatbotVisible] = React.useState(false);
 
-  return createPortal(
-    <div className="konflux-ai-chat" data-test="ai-chat-dock">
+  return ReactDOM.createPortal(
+    <div className="ai-chat" data-test="ai-chat-dock">
       <ChatbotToggle
         tooltipLabel={KONFLUX_AI_TOGGLE_TOOLTIP}
         toggleButtonLabel={KONFLUX_AI_TOGGLE_BUTTON_LABEL}
         isChatbotVisible={isChatbotVisible}
         onToggleChatbot={() => setIsChatbotVisible((visible) => !visible)}
       />
-      <Chatbot displayMode={displayMode} isVisible={isChatbotVisible}>
+      <Chatbot displayMode={KONFLUX_AI_DISPLAY_MODE} isVisible={isChatbotVisible}>
         <ChatbotHeader>
           <ChatbotHeaderMain>
             <ChatbotHeaderTitle>
               <KonfluxLogo
                 aria-label="Konflux"
-                className="konflux-ai-chat__brand"
+                className="ai-chat__brand"
                 height={36}
               />
             </ChatbotHeaderTitle>
