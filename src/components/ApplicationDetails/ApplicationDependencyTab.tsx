@@ -23,20 +23,20 @@ export const ApplicationDependencyTab: React.FC = () => {
     true,
   );
 
+  if (!applicationLoaded || !componentsLoaded) {
+    return (
+      <Bullseye>
+        <Spinner data-test="dependency-runs-spinner" />
+      </Bullseye>
+    );
+  }
+
   const error = applicationError ?? componentsError;
   if (error) {
     return getErrorState(
       error,
       applicationError ? applicationLoaded : componentsLoaded,
       'dependency runs',
-    );
-  }
-
-  if (!applicationLoaded || !componentsLoaded) {
-    return (
-      <Bullseye>
-        <Spinner data-test="dependency-runs-spinner" />
-      </Bullseye>
     );
   }
 

@@ -1,6 +1,10 @@
 import { RouterParams } from '@routes/utils';
 import { ActivityTab } from '~/components/Activity';
-import { ApplicationDetails, ApplicationOverviewTab } from '~/components/ApplicationDetails';
+import {
+  ApplicationDependencyTab,
+  ApplicationDetails,
+  ApplicationOverviewTab,
+} from '~/components/ApplicationDetails';
 import { applicationPageLoader, ApplicationListView } from '~/components/Applications';
 import { ComponentListTab, componentsTabLoader } from '~/components/Components/ComponentsListView';
 import { ConformaResultsTab } from '~/components/Conforma/ConformaResultsTab/ConformaResultsTab';
@@ -94,11 +98,8 @@ const applicationRoutes = [
           ensureFeatureFlagOnLoader('mintmaker');
           return null;
         },
-        async lazy() {
-          const { ApplicationDependencyTab } =
-            await import('~/components/ApplicationDetails/ApplicationDependencyTab');
-          return { element: <ApplicationDependencyTab /> };
-        },
+        errorElement: <RouteErrorBoundry />,
+        element: <ApplicationDependencyTab />,
       },
     ],
   },

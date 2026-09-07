@@ -10,7 +10,6 @@ import {
   FilterToolbar,
   buildOptions,
 } from '~/shared/components/Filter';
-import { FilterOption } from '~/shared/components/Filter/types';
 import { Table, TableContainer } from '~/shared/components/TableV2';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
@@ -108,10 +107,7 @@ export const DependencyRunsListView = ({
 
   const { filteredData } = useFilteredData(filterConfig, dependencyRunsList, clientFilterValues);
 
-  const statusOptions: FilterOption[] = React.useMemo(
-    () => buildOptions(statuses, (s) => capitalize(s)),
-    [],
-  );
+  const statusOptions = React.useMemo(() => buildOptions(statuses, (s) => capitalize(s)), []);
 
   const componentOptions = React.useMemo(
     () => buildOptions(componentNames, (component) => component),

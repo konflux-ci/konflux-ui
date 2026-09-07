@@ -22,7 +22,7 @@ jest.mock('~/hooks/useComponents', () => ({
 jest.mock('~/components/MintMaker/DependencyRuns/DependencyRunsListView', () => ({
   DependencyRunsListView: (props: {
     applicationName?: string;
-    components: string[];
+    componentNames: string[];
     filterByCreationTimestampAfter?: string;
     isSingleComponent: boolean;
   }) => <div data-test="dependency-runs-props">{JSON.stringify(props)}</div>,
