@@ -37,43 +37,44 @@ module.exports = {
             message:
               'Files in `./src/models` may only import from `./src/models` or `./src/types`.',
           },
-          // Zone 4: Files in `./src/k8s` may only import from `./src/k8s` or from `./src/types`.
+          // Zone 4: Files in `./src/k8s` may only import from `./src/k8s` or from `./src/types/k8s.ts`.
           {
             target: './src/k8s/**/*',
-            from: ['./src/!(k8s|types)/**/*'],
+            from: ['./src/!(k8s|types)/**/*', './src/types/!(k8s)/**/*', './src/types/!(k8s.ts)'],
             message:
-              'Files in `./src/k8s` may only import from `./src/k8s` or from `./src/types`.',
+              'Files in `./src/k8s` may only import from `./src/k8s` or from `./src/types/k8s`.',
           },
-          // Zone 5: Files in `./src/shared` may only import from foundational modules.
-          // Restricted from importing: AppRoot, __tests__, analytics, assets, auth, kite.
+          // Zone 5: Files in `./src/shared` may only import from `./src/shared` or `./src/k8s`.
           {
             target: './src/shared/**/*',
             from: [
-              './src/!(shared|k8s|types|models|utils|consts|unit-test-utils|monitoring|routes|components|feature-flags|kubearchive|hooks|__data__|image-controller)/**/*',
+              './src/!(shared|k8s|types)/**/*',
+              './src/types/!(k8s)/**/*',
+              './src/types/!(k8s.ts)',
             ],
             message:
-              'Files in `./src/shared` may not import from `./src/AppRoot`, `./src/__tests__`, `./src/analytics`, `./src/assets`, `./src/auth`, or `./src/kite`.',
+              'Files in `./src/shared` may only import from `./src/shared`, `./src/k8s` or `./src/types/k8s`.',
           },
-          // Zone 6: Files in `./src/feature-flags` may only import from `./src/feature-flags`, `./src/shared`, `./src/k8s`, or `./src/components/modal`.
+          // Zone 6: 'Files in `./src/feature-flags` may only import from `./src/feature-flags`'.
           {
             target: './src/feature-flags/**/*',
             from: [
-              './src/!(feature-flags|shared|k8s|components)/**/*',
+              './src/!(feature-flags|components)/**/*',
               './src/components/!(modal)/**/*',
               './src/components/!(modal)',
             ],
-            message:
-              'Files in `./src/feature-flags` may only import from `./src/feature-flags`, `./src/shared`, `./src/k8s`, or `./src/components/modal`.',
+            message: 'Files in `./src/feature-flags` may only import from `./src/feature-flags`.',
           },
-          // Zone 7: Files in `./src/kubearchive` may only import from `./src/kubearchive`, `./src/k8s`,
-          // `./src/types`, `./src/feature-flags`, `./src/consts`, `./src/models`, `./src/utils`, or `./src/unit-test-utils`.
+          // Zone 7: Files in `./src/kubearchive` may only import from `./src/kubearchive`, `./src/k8s` or `./src/types/k8s`.
           {
             target: './src/kubearchive/**/*',
             from: [
-              './src/!(kubearchive|k8s|types|feature-flags|consts|models|utils|unit-test-utils)/**/*',
+              './src/!(kubearchive|k8s|types)/**/*',
+              './src/types/!(k8s)/**/*',
+              './src/types/!(k8s.ts)',
             ],
             message:
-              'Files in `./src/kubearchive` may only import from `./src/kubearchive`, `./src/k8s`, `./src/types`, `./src/feature-flags`, `./src/consts`, `./src/models`, `./src/utils`, or `./src/unit-test-utils`.',
+              'Files in `./src/kubearchive` may only import from `./src/kubearchive`, `./src/k8s` or `./src/types/k8s`.',
           },
         ],
       },
