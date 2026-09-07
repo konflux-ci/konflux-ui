@@ -19,7 +19,7 @@ const InitializeLightspeedState: React.FC = () => {
   return null;
 };
 
-export const AIChatStateProvider: React.FC<React.PropsWithChildren> = ({ children }) => (
+export const LightspeedStateProvider: React.FC<React.PropsWithChildren> = ({ children }) => (
   <AIStateProvider client={getLightspeedClient()}>
     <InitializeLightspeedState />
     {children}
