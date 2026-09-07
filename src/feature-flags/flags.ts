@@ -72,7 +72,8 @@ const InternalFLAGS = {
   },
   'conforma-policy': {
     key: 'conforma-policy',
-    description: 'Show the Conforma Results tab on application details and the Conforma violations card on the Issues Dashboard',
+    description:
+      'Show the Conforma Results tab on application details and the Conforma violations card on the Issues Dashboard',
     defaultEnabled: false,
     status: 'wip',
     guard: {
@@ -104,7 +105,7 @@ const InternalFLAGS = {
   },
   'component-model': {
     key: 'component-model',
-    description: 'New Application / Component model',
+    description: 'Use new component model',
     defaultEnabled: false,
     status: 'wip',
     guard: {
