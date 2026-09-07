@@ -203,8 +203,12 @@ export class DetailsTab {
       });
   }
 
-  static waitForPLRAndDownloadAllLogs(allTaskLogs = true, expectedStatus = 'Succeeded') {
-    DetailsTab.waitUntilStatusIsNotRunning();
+  static waitForPLRAndDownloadAllLogs(
+    timeoutDuration: number = 1800000,
+    allTaskLogs = true,
+    expectedStatus = 'Succeeded',
+  ) {
+    DetailsTab.waitUntilStatusIsNotRunning(timeoutDuration);
     LogsTab.downloadAllTaskLogs(allTaskLogs);
     UIhelper.verifyLabelAndValue('Status', expectedStatus);
   }
