@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Tooltip } from '@patternfly/react-core';
 import { getDuration, isValid, utcDateTimeFormatter } from '~/shared/components/timestamp/datetime';
+import { useCurrentTime } from '~/shared/hooks/useCurrentTime';
 
 export type CountdownProps = {
   timestamp: string | number;
@@ -27,47 +28,24 @@ const formatCountdown = (remainingMs: number): string => {
   return `${seconds}s`;
 };
 
-export const Countdown: React.FC<React.PropsWithChildren<CountdownProps>> = ({
-  timestamp,
-  isUnix,
-  simple,
-  className,
-}) => {
-  const [now, setNow] = React.useState<number>(() => Date.now());
-
+export const Countdown: React.FC<CountdownProps> = ({ timestamp, isUnix, simple, className }) => {
   const targetDate = React.useMemo(
-    () => (isUnix ? new Date((timestamp as number) * 1000) : new Date(timestamp)),
+    () => (isUnix ? new Date(Number(timestamp) * 1000) : new Date(timestamp)),
     [isUnix, timestamp],
   );
 
+  const isValidTarget = isValid(targetDate);
+  const now = useCurrentTime(isValidTarget && targetDate.getTime() > Date.now());
   const remainingMs = targetDate.getTime() - now;
 
-  React.useEffect(() => {
-    if (!isValid(targetDate) || targetDate.getTime() <= Date.now()) {
-      return;
-    }
-
-    const handle = setInterval(() => {
-      const remaining = targetDate.getTime() - Date.now();
-      if (remaining <= 0) {
-        clearInterval(handle);
-        setNow(Date.now());
-        return;
-      }
-      setNow(Date.now());
-    }, 1000);
-
-    return () => clearInterval(handle);
-  }, [targetDate]);
-
-  if ((typeof timestamp === 'string' && timestamp.length === 0) || !isValid(targetDate)) {
-    return <div>-</div>;
+  if ((typeof timestamp === 'string' && timestamp.length === 0) || !isValidTarget) {
+    return '-';
   }
 
   const countdown = formatCountdown(remainingMs);
 
   if (simple) {
-    return <>{countdown}</>;
+    return countdown;
   }
 
   return (
