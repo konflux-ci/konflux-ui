@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Truncate } from '@patternfly/react-core';
-import { COMPONENT_DETAILS_PATH } from '@routes/paths';
+import { COMPONENT_DETAILS_PATH, COMPONENT_DETAILS_V2_PATH } from '@routes/paths';
 import { StatusIconWithText } from '~/components/StatusIcon/StatusIcon';
 import { PipelineRunLabel, runStatus } from '~/consts/pipelinerun';
 import { Timestamp } from '~/shared';
@@ -36,7 +36,7 @@ export const getDependencyRunsFilterConfig = (isSingleComponent: boolean) =>
 
 export const getDependencyRunsTableColumns = (
   namespace: string,
-  applicationName: string,
+  applicationName: string | undefined,
   isSingleComponent: boolean,
 ): ColumnDefinition<PipelineRunKind>[] => [
   {
@@ -62,22 +62,20 @@ export const getDependencyRunsTableColumns = (
           nonHidable: true,
           cell: (info) => {
             const componentName = info.getValue() as string | undefined;
+            const path = applicationName
+              ? COMPONENT_DETAILS_PATH.createPath({
+                  workspaceName: namespace,
+                  applicationName,
+                  componentName,
+                })
+              : COMPONENT_DETAILS_V2_PATH.createPath({
+                  workspaceName: namespace,
+                  componentName,
+                });
 
             return (
               <span data-test="dependency-run-component">
-                {componentName ? (
-                  <Link
-                    to={COMPONENT_DETAILS_PATH.createPath({
-                      workspaceName: namespace,
-                      applicationName,
-                      componentName,
-                    })}
-                  >
-                    <Truncate content={componentName} />
-                  </Link>
-                ) : (
-                  '-'
-                )}
+                {componentName ? <Link to={path}>{componentName}</Link> : '-'}
               </span>
             );
           },

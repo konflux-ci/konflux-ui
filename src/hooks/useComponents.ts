@@ -25,7 +25,7 @@ export const useComponent = (
     ComponentModel,
   );
   return React.useMemo(() => {
-    if (!isLoading && !error && component?.metadata?.deletionTimestamp) {
+    if (!isLoading && !error && component?.metadata.deletionTimestamp) {
       return [null, !isLoading, { code: 404 }];
     }
     return [component, !isLoading, error];
@@ -34,7 +34,7 @@ export const useComponent = (
 
 export const useComponents = (
   namespace: string,
-  applicationName?: string,
+  applicationName: string,
   watch?: boolean,
 ): [ComponentKind[], boolean, unknown] => {
   const {
@@ -42,14 +42,12 @@ export const useComponents = (
     isLoading: componentsLoaded,
     error,
   } = useK8sWatchResource<ComponentKind[]>(
-    applicationName
-      ? {
-          groupVersionKind: ComponentGroupVersionKind,
-          namespace,
-          isList: true,
-          watch,
-        }
-      : undefined,
+    {
+      groupVersionKind: ComponentGroupVersionKind,
+      namespace,
+      isList: true,
+      watch,
+    },
     ComponentModel,
   );
   const appComponents: ComponentKind[] = React.useMemo(

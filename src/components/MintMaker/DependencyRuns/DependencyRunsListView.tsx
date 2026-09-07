@@ -1,9 +1,7 @@
 import React from 'react';
-import { Bullseye, capitalize, Flex, Spinner } from '@patternfly/react-core';
+import { capitalize, Flex } from '@patternfly/react-core';
 import { MINTMAKER_NAMESPACE } from '~/consts/constants';
 import { PipelineRunLabel } from '~/consts/pipelinerun';
-import { useApplication } from '~/hooks/useApplications';
-import { useComponent, useComponents } from '~/hooks/useComponents';
 import { usePipelineRunsV2 } from '~/hooks/usePipelineRunsV2';
 import FilteredEmptyState from '~/shared/components/empty-state/FilteredEmptyState';
 import {
@@ -24,17 +22,21 @@ import {
 } from './dependency-runs-table-config';
 import { DependencyRunsEmptyState } from './DependencyRunsEmptyState';
 
-type DependencyRunsListViewProps = {
-  applicationName: string;
-  componentName?: string;
+export type DependencyRunsListViewProps = {
+  applicationName?: string;
+  componentNames: string[];
+  isSingleComponent: boolean;
+  filterByCreationTimestampAfter?: string;
 };
 
 export const DependencyRunsListView = ({
   applicationName,
-  componentName,
+  componentNames,
+  isSingleComponent,
+  filterByCreationTimestampAfter,
 }: DependencyRunsListViewProps) => {
   const namespace = useNamespace();
-  const isSingleComponent = !!componentName;
+  const componentName = isSingleComponent ? componentNames[0] : undefined;
   const filterConfig = React.useMemo(
     () => getDependencyRunsFilterConfig(isSingleComponent),
     [isSingleComponent],
@@ -47,23 +49,13 @@ export const DependencyRunsListView = ({
 
   const nameFilter = filterValues.name ?? '';
   const selectedComponents = React.useMemo(
-    () => (componentName || !Array.isArray(filterValues.component) ? [] : filterValues.component),
-    [componentName, filterValues.component],
-  );
-
-  const [components, componentsLoaded, componentsError] = useComponents(
-    namespace,
-    !componentName ? applicationName : undefined,
-    true,
-  );
-  const [component, componentLoaded, componentError] = useComponent(namespace, componentName, true);
-  const [application, applicationLoaded, applicationError] = useApplication(
-    namespace,
-    !componentName ? applicationName : undefined,
+    () =>
+      !isSingleComponent && Array.isArray(filterValues.component) ? filterValues.component : [],
+    [filterValues.component, isSingleComponent],
   );
 
   const matchExpressions = React.useMemo(() => {
-    if (selectedComponents.length === 0) {
+    if (isSingleComponent || selectedComponents.length === 0) {
       return [];
     }
 
@@ -74,7 +66,35 @@ export const DependencyRunsListView = ({
         values: selectedComponents,
       },
     ];
-  }, [selectedComponents]);
+  }, [isSingleComponent, selectedComponents]);
+
+  const pipelineRunOptions = React.useMemo(
+    () => ({
+      selector: {
+        filterByCreationTimestampAfter,
+        filterByName: nameFilter || undefined,
+        matchLabels: {
+          ...(isSingleComponent && componentName
+            ? { [PipelineRunLabel.MINTMAKER_COMPONENT_LABEL]: componentName }
+            : {}),
+          ...(!isSingleComponent && applicationName
+            ? { [PipelineRunLabel.MINTMAKER_APPLICATION_LABEL]: applicationName }
+            : {}),
+          [PipelineRunLabel.MINTMAKER_NAMESPACE_LABEL]: namespace,
+        },
+        matchExpressions,
+      },
+    }),
+    [
+      applicationName,
+      componentName,
+      filterByCreationTimestampAfter,
+      isSingleComponent,
+      matchExpressions,
+      nameFilter,
+      namespace,
+    ],
+  );
 
   const [
     dependencyRuns,
@@ -82,40 +102,7 @@ export const DependencyRunsListView = ({
     dependencyRunsError,
     getNextPage,
     { isFetchingNextPage, hasNextPage },
-  ] = usePipelineRunsV2(
-    componentName
-      ? componentLoaded && !componentError
-        ? MINTMAKER_NAMESPACE
-        : null
-      : applicationLoaded && !applicationError
-        ? MINTMAKER_NAMESPACE
-        : null,
-    React.useMemo(
-      () => ({
-        selector: {
-          filterByCreationTimestampAfter: componentName
-            ? component?.metadata?.creationTimestamp
-            : application?.metadata?.creationTimestamp,
-          filterByName: nameFilter || undefined,
-          matchLabels: {
-            ...(componentName && { [PipelineRunLabel.MINTMAKER_COMPONENT_LABEL]: componentName }),
-            [PipelineRunLabel.MINTMAKER_APPLICATION_LABEL]: applicationName,
-            [PipelineRunLabel.MINTMAKER_NAMESPACE_LABEL]: namespace,
-          },
-          matchExpressions,
-        },
-      }),
-      [
-        application?.metadata?.creationTimestamp,
-        component?.metadata?.creationTimestamp,
-        componentName,
-        matchExpressions,
-        nameFilter,
-        namespace,
-        applicationName,
-      ],
-    ),
-  );
+  ] = usePipelineRunsV2(MINTMAKER_NAMESPACE, pipelineRunOptions);
 
   const dependencyRunsList = dependencyRuns ?? [];
 
@@ -127,35 +114,12 @@ export const DependencyRunsListView = ({
   );
 
   const componentOptions = React.useMemo(
-    () => buildOptions(components, (c) => c.metadata?.name ?? ''),
-    [components],
+    () => buildOptions(componentNames, (component) => component),
+    [componentNames],
   );
 
-  const scopedComponentError = componentName ? componentError : undefined;
-  const scopedComponentsError = componentName ? undefined : componentsError;
-  const scopedApplicationError = componentName ? undefined : applicationError;
-  const error =
-    scopedComponentError ?? scopedComponentsError ?? scopedApplicationError ?? dependencyRunsError;
-  if (error) {
-    const loaded = scopedComponentError
-      ? componentLoaded
-      : scopedComponentsError
-        ? componentsLoaded
-        : scopedApplicationError
-          ? applicationLoaded
-          : dependencyRunsLoaded;
-    return getErrorState(error, loaded, 'dependency runs');
-  }
-
-  if (
-    (componentName && !componentLoaded) ||
-    (!componentName && (!componentsLoaded || !applicationLoaded))
-  ) {
-    return (
-      <Bullseye>
-        <Spinner data-test="dependency-runs-spinner" />
-      </Bullseye>
-    );
+  if (dependencyRunsError) {
+    return getErrorState(dependencyRunsError, dependencyRunsLoaded, 'dependency runs');
   }
 
   return (

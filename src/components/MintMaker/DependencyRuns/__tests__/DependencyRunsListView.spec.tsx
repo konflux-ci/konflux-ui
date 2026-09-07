@@ -3,10 +3,8 @@ import { screen, waitFor } from '@testing-library/react';
 import { NuqsTestingAdapter } from 'nuqs/adapters/testing';
 import { MINTMAKER_NAMESPACE } from '~/consts/constants';
 import { PipelineRunLabel } from '~/consts/pipelinerun';
-import { useComponent, useComponents } from '~/hooks/useComponents';
 import { usePipelineRunsV2 } from '~/hooks/usePipelineRunsV2';
 import { PipelineRunKind, PipelineRunStatus } from '~/types';
-import { createUseApplicationMock } from '~/unit-test-utils/mock-application-hooks';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { renderWithQueryClient } from '~/unit-test-utils/mock-react-query';
 import { setupVirtualizerMock } from '~/unit-test-utils/mock-virtualizer';
@@ -25,43 +23,17 @@ jest.mock('react-router-dom', () => ({
   useLocation: jest.fn(() => ({ pathname: '/ns/test-ns' })),
 }));
 
-jest.mock('~/hooks/useComponents', () => ({
-  useComponent: jest.fn(),
-  useComponents: jest.fn(),
-}));
-
 jest.mock('~/hooks/usePipelineRunsV2', () => ({
   usePipelineRunsV2: jest.fn(),
 }));
 
-const useComponentMock = useComponent as jest.Mock;
-const useComponentsMock = useComponents as jest.Mock;
 const usePipelineRunsV2Mock = usePipelineRunsV2 as jest.Mock;
 
 mockUseNamespaceHook('test-ns');
 
-const mockComponentData = {
-  metadata: {
-    name: 'test-component',
-    creationTimestamp: '2023-01-01T00:00:00Z',
-  },
-};
-
-const mockApplicationData = {
-  metadata: {
-    name: 'test-application',
-    creationTimestamp: '2022-01-01T00:00:00Z',
-  },
-};
-
-const useApplicationMock = createUseApplicationMock([mockApplicationData, true, undefined]);
-
-const mockApplicationComponents = [
-  {
-    metadata: { name: 'component-alpha' },
-    spec: { application: 'test-application' },
-  },
-];
+const mockComponentName = 'test-component';
+const mockApplicationName = 'test-application';
+const mockApplicationComponents = ['component-alpha'];
 
 const makePipelineRun = (
   name: string,
@@ -96,33 +68,29 @@ const noNextPage = { isFetchingNextPage: false, hasNextPage: false };
 
 const TestedComponent = ({ searchParams }: { searchParams?: string }) => (
   <NuqsTestingAdapter searchParams={searchParams}>
-    <DependencyRunsListView applicationName="test-application" componentName="test-component" />
+    <DependencyRunsListView
+      componentNames={[mockComponentName]}
+      filterByCreationTimestampAfter="2023-01-01T00:00:00Z"
+      isSingleComponent
+    />
   </NuqsTestingAdapter>
 );
 
 const TestedApplication = ({ searchParams }: { searchParams?: string }) => (
   <NuqsTestingAdapter searchParams={searchParams}>
-    <DependencyRunsListView applicationName="test-application" />
+    <DependencyRunsListView
+      applicationName={mockApplicationName}
+      componentNames={mockApplicationComponents}
+      filterByCreationTimestampAfter="2022-01-01T00:00:00Z"
+      isSingleComponent={false}
+    />
   </NuqsTestingAdapter>
 );
 
 describe('DependencyRunsListView', () => {
   const setupSharedMocks = () => {
     setupVirtualizerMock();
-    useApplicationMock.mockReturnValue([mockApplicationData, true, undefined]);
     usePipelineRunsV2Mock.mockReturnValue([mockRuns, true, null, jest.fn(), noNextPage]);
-  };
-
-  const setupComponentScopedMocks = () => {
-    setupSharedMocks();
-    useComponentMock.mockReturnValue([mockComponentData, true, undefined]);
-    useComponentsMock.mockReturnValue([[], true, undefined]);
-  };
-
-  const setupApplicationScopedMocks = () => {
-    setupSharedMocks();
-    useComponentMock.mockReturnValue([undefined, true, undefined]);
-    useComponentsMock.mockReturnValue([[], true, undefined]);
   };
 
   afterEach(() => {
@@ -130,7 +98,7 @@ describe('DependencyRunsListView', () => {
   });
 
   describe('component-scoped runs', () => {
-    beforeEach(setupComponentScopedMocks);
+    beforeEach(setupSharedMocks);
 
     it('renders skeleton while data is not loaded', () => {
       usePipelineRunsV2Mock.mockReturnValue([[], false, null, jest.fn(), noNextPage]);
@@ -165,21 +133,6 @@ describe('DependencyRunsListView', () => {
       expect(screen.getByText('Unable to load dependency runs')).toBeInTheDocument();
     });
 
-    it('renders error state when component error occurs', () => {
-      useComponentMock.mockReturnValue([undefined, true, new Error('404: Not found')]);
-      usePipelineRunsV2Mock.mockReturnValue([[], false, null, jest.fn(), noNextPage]);
-      renderWithQueryClient(<TestedComponent />);
-      expect(screen.getByText('Unable to load dependency runs')).toBeInTheDocument();
-    });
-
-    it('renders a spinner while the component is loading', () => {
-      useComponentMock.mockReturnValue([undefined, false, undefined]);
-      renderWithQueryClient(<TestedComponent />);
-      expect(screen.getByTestId('dependency-runs-spinner')).toBeInTheDocument();
-      expect(screen.queryByTestId('table-container')).not.toBeInTheDocument();
-      expect(usePipelineRunsV2Mock).toHaveBeenCalledWith(null, expect.anything());
-    });
-
     it('shows the filter toolbar', () => {
       renderWithQueryClient(<TestedComponent />);
       expect(screen.queryByTestId('filter-toolbar')).toBeInTheDocument();
@@ -188,29 +141,6 @@ describe('DependencyRunsListView', () => {
     it('does not show the component filter', () => {
       renderWithQueryClient(<TestedComponent />);
       expect(screen.queryByTestId('multi-select-filter-component')).not.toBeInTheDocument();
-    });
-
-    it('does not fetch pipeline runs until the component is loaded', () => {
-      useComponentMock.mockReturnValue([undefined, false, undefined]);
-      renderWithQueryClient(<TestedComponent />);
-      expect(usePipelineRunsV2Mock).toHaveBeenCalledWith(null, expect.anything());
-    });
-
-    it('uses the component hook and disables the components hook', () => {
-      renderWithQueryClient(<TestedComponent />);
-      expect(useComponentMock).toHaveBeenCalledWith('test-ns', 'test-component', true);
-      expect(useComponentsMock).toHaveBeenCalledWith('test-ns', undefined, true);
-    });
-
-    it('does not fetch pipeline runs when component has an error', () => {
-      useComponentMock.mockReturnValue([undefined, true, new Error('Not found')]);
-      renderWithQueryClient(<TestedComponent />);
-      expect(usePipelineRunsV2Mock).toHaveBeenCalledWith(null, expect.anything());
-    });
-
-    it('disables the application hook', () => {
-      renderWithQueryClient(<TestedComponent />);
-      expect(useApplicationMock).toHaveBeenCalledWith('test-ns', undefined);
     });
 
     it('shows loading skeleton rows while fetching the next page', async () => {
@@ -245,7 +175,7 @@ describe('DependencyRunsListView', () => {
           selector: expect.objectContaining({
             filterByCreationTimestampAfter: '2023-01-01T00:00:00Z',
             matchLabels: expect.objectContaining({
-              [PipelineRunLabel.MINTMAKER_COMPONENT_LABEL]: 'test-component',
+              [PipelineRunLabel.MINTMAKER_COMPONENT_LABEL]: mockComponentName,
               [PipelineRunLabel.MINTMAKER_NAMESPACE_LABEL]: 'test-ns',
             }),
           }),
@@ -268,48 +198,11 @@ describe('DependencyRunsListView', () => {
   });
 
   describe('application-scoped runs', () => {
-    beforeEach(setupApplicationScopedMocks);
-
-    it('renders a spinner while application components are loading', () => {
-      useComponentsMock.mockReturnValue([[], false, undefined]);
-      renderWithQueryClient(<TestedApplication />);
-      expect(screen.getByTestId('dependency-runs-spinner')).toBeInTheDocument();
-      expect(screen.queryByTestId('table-container')).not.toBeInTheDocument();
-    });
-
-    it('renders a spinner while the application is loading', () => {
-      useApplicationMock.mockReturnValue([undefined, false, undefined]);
-      renderWithQueryClient(<TestedApplication />);
-      expect(screen.getByTestId('dependency-runs-spinner')).toBeInTheDocument();
-      expect(usePipelineRunsV2Mock).toHaveBeenCalledWith(null, expect.anything());
-    });
-
-    it('renders error state when application components fail to load', () => {
-      useComponentsMock.mockReturnValue([[], true, new Error('500: Components unavailable')]);
-      renderWithQueryClient(<TestedApplication />);
-      expect(screen.getByText('Unable to load dependency runs')).toBeInTheDocument();
-    });
-
-    it('renders error state when the application fails to load', () => {
-      useApplicationMock.mockReturnValue([
-        undefined,
-        true,
-        new Error('500: Application unavailable'),
-      ]);
-      renderWithQueryClient(<TestedApplication />);
-      expect(screen.getByText('Unable to load dependency runs')).toBeInTheDocument();
-    });
+    beforeEach(setupSharedMocks);
 
     it('shows the component filter', () => {
-      useComponentsMock.mockReturnValue([mockApplicationComponents, true, undefined]);
       renderWithQueryClient(<TestedApplication />);
       expect(screen.getByTestId('multi-select-filter-component')).toBeInTheDocument();
-    });
-
-    it('uses the components hook and disables the component hook', () => {
-      renderWithQueryClient(<TestedApplication />);
-      expect(useComponentMock).toHaveBeenCalledWith('test-ns', undefined, true);
-      expect(useComponentsMock).toHaveBeenCalledWith('test-ns', 'test-application', true);
     });
 
     it('passes the API name filter and application labels to usePipelineRunsV2', () => {
@@ -342,20 +235,7 @@ describe('DependencyRunsListView', () => {
       );
     });
 
-    it('application hook is enabled', () => {
-      renderWithQueryClient(<TestedApplication />);
-      expect(useApplicationMock).toHaveBeenCalledWith('test-ns', 'test-application');
-    });
-
-    it('does not fetch pipeline runs until the application is loaded', () => {
-      useApplicationMock.mockReturnValue([undefined, false, undefined]);
-      renderWithQueryClient(<TestedApplication />);
-
-      expect(usePipelineRunsV2Mock).toHaveBeenCalledWith(null, expect.anything());
-    });
-
     it('passes selected components as an API match expression', () => {
-      useComponentsMock.mockReturnValue([mockApplicationComponents, true, undefined]);
       renderWithQueryClient(
         <TestedApplication searchParams="?component=%5B%22component-alpha%22%5D" />,
       );
