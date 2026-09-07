@@ -95,9 +95,9 @@ const applicationRoutes = [
           return null;
         },
         async lazy() {
-          const { DependencyTab: ComponentDependencyTab } =
+          const { DependencyTab } =
             await import('~/components/MintMaker/DependencyRuns/DependencyTab');
-          return { element: <ComponentDependencyTab /> };
+          return { element: <DependencyTab /> };
         },
       },
     ],
