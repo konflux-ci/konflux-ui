@@ -2,7 +2,7 @@ import { EmptyStateBody } from '@patternfly/react-core';
 import emptyStateImgUrl from '~/assets/Pipeline.svg';
 import AppEmptyState from '~/shared/components/empty-state/AppEmptyState';
 
-const ComponentGroupsEmptyState = () => {
+const ComponentGroupsEmptyState: React.FC = () => {
   return (
     <AppEmptyState emptyStateImg={emptyStateImgUrl} title="Organize components for testing">
       <EmptyStateBody>

@@ -14,7 +14,7 @@ import {
 } from './component-groups-table-config';
 import ComponentGroupsEmptyState from './ComponentGroupsEmptyState';
 
-export const ComponentGroupsListView = () => {
+export const ComponentGroupsListView: React.FC = () => {
   const namespace = useNamespace();
   const [groups, loaded, error] = useComponentGroups(namespace, true);
   const columns = useMemo(() => getComponentGroupsTableColumns(namespace), [namespace]);

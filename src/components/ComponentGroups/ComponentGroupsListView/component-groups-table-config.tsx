@@ -11,10 +11,6 @@ import { ColumnDefinition } from '~/shared/components/TableV2';
 import { ComponentGroupKind, ComponentState } from '~/types';
 import { textMatch } from '~/utils/text-filter-utils';
 
-export type ComponentGroupTableRow = ComponentGroupKind & {
-  latestPromotedBuild?: ComponentState;
-};
-
 const parsePromotedBuildTime = (time?: string): number => {
   const parsed = Date.parse(time ?? '');
   return Number.isNaN(parsed) ? Number.NEGATIVE_INFINITY : parsed;
@@ -32,7 +28,7 @@ export const getLatestPromotedBuild = (builds: ComponentState[]): ComponentState
     return buildTime > latestTime ? build : latest;
   }, undefined);
 
-export const componentGroupsFilterConfig = defineFilters<ComponentGroupTableRow>()([
+export const componentGroupsFilterConfig = defineFilters<ComponentGroupKind>()([
   {
     type: 'search',
     param: 'name',
@@ -71,7 +67,7 @@ export const getComponentGroupsTableColumns = (
   {
     id: 'components',
     header: 'Components',
-    accessorFn: (row) => row.spec.components.length,
+    accessorFn: (row) => row.spec?.components?.length ?? 0,
     nonHidable: true,
     cell: (info) => <span data-test="component-group-components">{info.getValue() as number}</span>,
   },
@@ -79,7 +75,7 @@ export const getComponentGroupsTableColumns = (
     id: 'last-build',
     header: 'Last promoted build',
     accessorFn: (row) =>
-      getLatestPromotedBuild(row.status?.globalCandidateList ?? []).lastPromotedBuildTime,
+      getLatestPromotedBuild(row.status?.globalCandidateList ?? [])?.lastPromotedBuildTime,
     nonHidable: true,
     size: 2,
     cell: (info) => {
