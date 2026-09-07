@@ -1,8 +1,8 @@
 import type { MessageProps } from '@patternfly/chatbot/dist/dynamic/Message';
 import type { Message } from '@redhat-cloud-services/ai-client-state';
-import { KONFLUX_ASSISTANT_NAME } from '~/components/AIChat/consts';
+import { LIGHTSPEED_ASSISTANT_NAME } from '~/lightspeed/const';
 
-export const getUserFacingLightspeedErrorMessage = (status: number): string => {
+export const getUserFacingErrorMessage = (status: number): string => {
   switch (status) {
     case 401:
     case 403:
@@ -23,6 +23,7 @@ export const getUserFacingLightspeedErrorMessage = (status: number): string => {
 export const stateMessagesToMessageProps = (
   messages: Message[],
   isInProgress: boolean,
+  assistantName: string = LIGHTSPEED_ASSISTANT_NAME,
 ): MessageProps[] =>
   messages.map((message, index) => {
     const isUser = message.role === 'user';
@@ -34,7 +35,7 @@ export const stateMessagesToMessageProps = (
       id: message.id,
       role: isUser ? 'user' : 'bot',
       content: message.answer,
-      name: isUser ? 'You' : KONFLUX_ASSISTANT_NAME,
+      name: isUser ? 'You' : assistantName,
       timestamp: message.date.toLocaleString(),
       ...(isLoading ? { isLoading: true } : {}),
     };
