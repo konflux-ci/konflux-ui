@@ -17,7 +17,7 @@
 
     .pf-v6-c-button__icon {
       --pf-v6-c-button__icon--Color: color-mix(in srgb, var(--pf-t--color--white) 70%, black);
-        color: color-mix(in srgb, var(--pf-t--color--white) 70%, black);
+      color: color-mix(in srgb, var(--pf-t--color--white) 70%, black);
     }
 
     &:hover,
@@ -47,8 +47,8 @@
     color: var(--konflux-brand-primary);
   }
 
-  // Jump arrows default to 75%; center them horizontally
-  .pf-chatbot__jump {
+  // PF positions jump buttons at 75% with !important; matching !important is required here.
+  .pf-chatbot .pf-chatbot__jump {
     inset-inline-start: 50% !important;
   }
 
