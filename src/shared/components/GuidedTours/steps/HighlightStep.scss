@@ -1,0 +1,8 @@
+.guided-tours {
+  &__highlight-ring {
+    box-shadow: 0 0 0 4px var(--pf-t--global--color--brand--default);
+    border-radius: var(--pf-t--global--border--radius--small);
+    position: relative;
+    z-index: 1;
+  }
+}

@@ -10,6 +10,21 @@ import { FeatureFlagsStore } from '~/feature-flags/store';
 import { ModalProvider } from '../../modal/ModalProvider';
 import { HelpDropdown } from '../HelpDropdown';
 
+const mockStartTour = jest.fn();
+const mockGetToursByRoute = jest.fn().mockReturnValue([]);
+const mockCollectAndMerge = jest
+  .fn()
+  .mockReturnValue({ mergedSteps: [], sourceIds: [], hasPrompt: false });
+const mockUseTour = jest
+  .fn()
+  .mockReturnValue({ startTour: mockStartTour, currentRoute: undefined });
+
+jest.mock('~/shared/components/GuidedTours', () => ({
+  useTour: (...args: unknown[]) => mockUseTour(...args),
+  getToursByRoute: (...args: unknown[]) => mockGetToursByRoute(...args),
+  collectAndMerge: (...args: unknown[]) => mockCollectAndMerge(...args),
+}));
+
 const mockUseKonfluxPublicInfo = jest.fn();
 
 jest.mock('~/components/CLILogin/CliLoginModal', () => ({
@@ -53,6 +68,9 @@ describe('HelpDropdown Component', () => {
     jest.clearAllMocks();
     mockUseKonfluxPublicInfo.mockReturnValue([{ visibility: 'public' }]);
     mockFeatureFlagsStore.isOn.mockReturnValue(true);
+    mockUseTour.mockReturnValue({ startTour: mockStartTour, currentRoute: undefined });
+    mockGetToursByRoute.mockReturnValue([]);
+    mockCollectAndMerge.mockReturnValue({ mergedSteps: [], sourceIds: [], hasPrompt: false });
   });
 
   describe('Rendering', () => {
@@ -139,6 +157,35 @@ describe('HelpDropdown Component', () => {
         expect(docItem).toBeInTheDocument();
         expect(feedbackItem).toBeInTheDocument();
       });
+    });
+
+    it('should call startTour with merged steps when guided tour is clicked', async () => {
+      const fakeTour = { id: 'test-tour', steps: [] };
+      const mergedSteps = [{ type: 'modal', title: 'Welcome', content: 'Hello' }];
+      mockUseTour.mockReturnValue({
+        startTour: mockStartTour,
+        currentRoute: 'ns/:workspaceName/applications',
+      });
+      mockGetToursByRoute.mockReturnValue([fakeTour]);
+      mockCollectAndMerge.mockReturnValue({
+        mergedSteps,
+        sourceIds: ['test-tour'],
+        hasPrompt: false,
+      });
+
+      renderWithModalProvider(<HelpDropdown />);
+
+      const helpIcon = screen.getByLabelText('Help menu toggle');
+      fireEvent.click(helpIcon);
+
+      await waitFor(() => {
+        expect(screen.getByText('Guided tour')).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByText('Guided tour'));
+
+      expect(mockCollectAndMerge).toHaveBeenCalledWith([fakeTour]);
+      expect(mockStartTour).toHaveBeenCalledWith(mergedSteps, ['test-tour']);
     });
 
     it('should display external link icon for documentation item', async () => {
