@@ -8,6 +8,7 @@ import {
   useSendStreamMessage,
 } from '@redhat-cloud-services/ai-react-state';
 import { LIGHTSPEED_ASSISTANT_NAME } from '~/lightspeed/const';
+import { useLightspeedInitError } from '~/lightspeed/LightspeedStateProvider';
 import { getUserFacingErrorMessage, stateMessagesToMessageProps } from '~/lightspeed/utils';
 import { logger } from '~/monitoring/logger';
 
@@ -17,17 +18,16 @@ type UseLightspeedChatResult = {
   isSendButtonDisabled: boolean;
   isInitializing: boolean;
   backendError?: string;
-  sendMessage: (message: string | number) => Promise<void>;
+  clearBackendError: () => void;
+  sendMessage: (message: string) => Promise<void>;
 };
 
-const getErrorMessage = (error: unknown, fallback: string): string => {
+const getErrorMessage = (error: unknown): string => {
   if (error instanceof AIClientError) {
     return getUserFacingErrorMessage(error.status);
   }
-  if (error instanceof Error) {
-    return error.message;
-  }
-  return fallback;
+  // Never expose raw Error.message — network/fetch details may include internal URLs.
+  return getUserFacingErrorMessage(0);
 };
 
 /**
@@ -42,19 +42,27 @@ export const useLightspeedChat = (): UseLightspeedChatResult => {
   const sendStreamMessage = useSendStreamMessage();
   const isInProgress = useInProgress();
   const isInitializing = useIsInitializing();
+  const initError = useLightspeedInitError();
+  const hasInitFailed = initError !== undefined;
+  const isSendingRef = React.useRef(false);
 
   const messages = React.useMemo(
     () => stateMessagesToMessageProps(stateMessages, isInProgress),
     [isInProgress, stateMessages],
   );
 
+  const clearBackendError = React.useCallback(() => {
+    setBackendError(undefined);
+  }, []);
+
   const sendMessage = React.useCallback(
-    async (message: string | number) => {
-      const trimmedMessage = String(message).trim();
-      if (!trimmedMessage || isInProgress) {
+    async (message: string) => {
+      const trimmedMessage = message.trim();
+      if (!trimmedMessage || isInProgress || isSendingRef.current) {
         return;
       }
 
+      isSendingRef.current = true;
       setBackendError(undefined);
       setAnnouncement(
         `Message from you: ${trimmedMessage}. ${LIGHTSPEED_ASSISTANT_NAME} is responding.`,
@@ -66,13 +74,16 @@ export const useLightspeedChat = (): UseLightspeedChatResult => {
           setAnnouncement(`Message from ${LIGHTSPEED_ASSISTANT_NAME}: ${response.answer}`);
         }
       } catch (error) {
-        const messageText = getErrorMessage(error, 'Failed to send message');
-        setBackendError(messageText);
-        setAnnouncement(`Message from ${LIGHTSPEED_ASSISTANT_NAME}: ${messageText}`);
         logger.error(
           'Konflux AI streaming query failed',
-          error instanceof Error ? error : new Error(messageText),
+          error instanceof Error ? error : new Error(String(error)),
         );
+
+        const messageText = getErrorMessage(error);
+        setBackendError(messageText);
+        setAnnouncement(`Message from ${LIGHTSPEED_ASSISTANT_NAME}: ${messageText}`);
+      } finally {
+        isSendingRef.current = false;
       }
     },
     [isInProgress, sendStreamMessage],
@@ -81,9 +92,10 @@ export const useLightspeedChat = (): UseLightspeedChatResult => {
   return {
     messages,
     announcement,
-    isSendButtonDisabled: isInProgress || isInitializing,
-    isInitializing,
-    backendError,
+    isSendButtonDisabled: isInProgress || (hasInitFailed ? true : isInitializing),
+    isInitializing: hasInitFailed ? false : isInitializing,
+    backendError: backendError ?? initError,
+    clearBackendError,
     sendMessage,
   };
 };
