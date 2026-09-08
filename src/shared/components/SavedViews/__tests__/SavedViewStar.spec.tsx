@@ -1,10 +1,14 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { useQueryState } from 'nuqs';
+import { useNamespace } from '~/shared/providers/Namespace';
 import { SavedViewStar } from '../SavedViewStar';
 import { SavedView } from '../types';
 import { useSavedViews } from '../useSavedViews';
 
 jest.mock('../useSavedViews');
+jest.mock('~/shared/providers/Namespace', () => ({
+  useNamespace: jest.fn(),
+}));
 jest.mock('nuqs', () => ({
   useQueryState: jest.fn(),
   parseAsString: {},
@@ -25,6 +29,7 @@ const defaultProps = {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  jest.mocked(useNamespace).mockReturnValue('test-namespace');
   jest.mocked(useSavedViews).mockReturnValue({
     views: [],
     saveView: mockSaveView,
@@ -70,6 +75,7 @@ describe('SavedViewStar', () => {
       label: 'My View',
       searchParams: 'status=running',
       columnStateKey: 'cols-pipelines:my-view',
+      namespace: 'test-namespace',
     };
     render(<SavedViewStar {...defaultProps} isFiltered={true} activeSavedView={activeView} />);
     const button = screen.getByRole('button', { name: /save/i });
@@ -82,6 +88,7 @@ describe('SavedViewStar', () => {
       label: 'My View',
       searchParams: 'status=running',
       columnStateKey: 'cols-pipelines:my-view',
+      namespace: 'test-namespace',
     };
     render(<SavedViewStar {...defaultProps} isFiltered={false} activeSavedView={activeView} />);
     expect(screen.getByRole('button', { name: /save/i })).toBeInTheDocument();
@@ -108,6 +115,7 @@ describe('SavedViewStar', () => {
       label: 'My Filter',
       searchParams: 'status=running&type=build',
       currentColumnStateKey: 'cols-pipelines:current',
+      namespace: 'test-namespace',
     });
   });
 
@@ -135,6 +143,7 @@ describe('SavedViewStar', () => {
       label: 'My View',
       searchParams: 'status=running',
       columnStateKey: 'cols-pipelines:my-view',
+      namespace: 'test-namespace',
     };
 
     it('shows Save and Save As buttons in popover', () => {
@@ -178,6 +187,7 @@ describe('SavedViewStar', () => {
         label: 'New View',
         searchParams: 'status=running&type=build',
         currentColumnStateKey: 'cols-pipelines:current',
+        namespace: 'test-namespace',
       });
       expect(mockSetViewParam).toHaveBeenCalledWith('sv-test1234');
     });
@@ -197,7 +207,7 @@ describe('SavedViewStar', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
     expect(mockSaveView).toHaveBeenCalledWith(
-      expect.objectContaining({ slug: undefined, label: 'My View' }),
+      expect.objectContaining({ slug: undefined, label: 'My View', namespace: 'test-namespace' }),
     );
   });
 
@@ -212,7 +222,11 @@ describe('SavedViewStar', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
     expect(mockSaveView).toHaveBeenCalledWith(
-      expect.objectContaining({ slug: 'my-custom-slug', label: 'My View' }),
+      expect.objectContaining({
+        slug: 'my-custom-slug',
+        label: 'My View',
+        namespace: 'test-namespace',
+      }),
     );
   });
 });
