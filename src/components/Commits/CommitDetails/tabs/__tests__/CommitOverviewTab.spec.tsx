@@ -160,7 +160,7 @@ describe('CommitOverviewTab', () => {
         'test-app',
         'abc123456789012345678901234567890abcdefgh',
         1,
-        undefined,
+        false,
         'build',
       );
       expect(mockUseCommitStatus).toHaveBeenCalledWith(
