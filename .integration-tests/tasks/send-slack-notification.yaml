@@ -107,12 +107,12 @@ spec:
         # Send Slack notification
         echo "=== Sending Slack notification ==="
 
-        # Escape special characters for JSON
-        MESSAGE_ESCAPED=$(printf '%s' "${MESSAGE}" | sed 's/\\/\\\\/g; s/"/\\"/g')
+        # Build JSON payload properly using jq to avoid injection issues
+        PAYLOAD=$(jq -n --arg text "${MESSAGE}" '{text: $text}')
 
-        RESPONSE=$(curl -sS --max-time 10 -X POST "${SLACK_WEBHOOK_URL}" \
+        RESPONSE=$(curl -sf --max-time 10 -X POST "${SLACK_WEBHOOK_URL}" \
           -H "Content-Type: application/json; charset=utf-8" \
-          -d "{\"text\": \"${MESSAGE_ESCAPED}\"}") || RESPONSE="curl_failed"
+          -d "${PAYLOAD}") || RESPONSE="curl_failed"
         echo "Slack webhook response: ${RESPONSE}"
 
         # Check if message was sent successfully
