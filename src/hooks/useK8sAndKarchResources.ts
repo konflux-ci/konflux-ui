@@ -205,29 +205,40 @@ export function useK8sAndKarchResource<TResource extends K8sResourceCommon>(
 ): useK8sAndKarchResourceResult<TResource> {
   const memoizedResourceInit = useDeepCompareMemoize(resourceInit, true);
   const memoizedQueryOptions = useDeepCompareMemoize(queryOptions, true);
+  const memoizedWatchOptions = useDeepCompareMemoize(watchOptions);
   const queryEnabled = enabled && !!memoizedResourceInit;
   const { isKubearchiveEnabled } = useIsKubeArchiveEnabled();
 
-  const clusterQuery = useK8sWatchResource<TResource>(
-    memoizedResourceInit
-      ? {
-          groupVersionKind: {
-            group: memoizedResourceInit.model.apiGroup,
-            version: memoizedResourceInit.model.apiVersion,
-            kind: memoizedResourceInit.model.kind,
-          },
-          name: memoizedResourceInit.queryOptions?.name,
-          namespace: memoizedResourceInit.queryOptions?.ns,
-          watch: watch && queryEnabled,
-        }
-      : undefined,
-    memoizedResourceInit?.model,
-    {
+  const clusterResourceInit = React.useMemo<WatchK8sResource | undefined>(
+    () =>
+      memoizedResourceInit
+        ? {
+            groupVersionKind: {
+              group: memoizedResourceInit.model.apiGroup,
+              version: memoizedResourceInit.model.apiVersion,
+              kind: memoizedResourceInit.model.kind,
+            },
+            name: memoizedResourceInit.queryOptions?.name,
+            namespace: memoizedResourceInit.queryOptions?.ns,
+            watch: watch && queryEnabled,
+          }
+        : undefined,
+    [memoizedResourceInit, watch, queryEnabled],
+  );
+
+  const clusterQueryOptions = React.useMemo(
+    () => ({
       ...memoizedQueryOptions,
       enabled: queryEnabled,
-      ...(watch && queryEnabled ? { staleTime: Infinity } : {}),
-    },
-    watchOptions,
+    }),
+    [memoizedQueryOptions, queryEnabled],
+  );
+
+  const clusterQuery = useK8sWatchResource<TResource>(
+    clusterResourceInit,
+    memoizedResourceInit?.model,
+    clusterQueryOptions,
+    memoizedWatchOptions,
   );
 
   const clusterErrorIs404 =
@@ -235,18 +246,28 @@ export function useK8sAndKarchResource<TResource extends K8sResourceCommon>(
     clusterQuery.error instanceof HttpError &&
     clusterQuery.error.code === 404;
 
-  const archiveQuery = useQuery<TResource>(
-    memoizedResourceInit && queryEnabled && clusterErrorIs404 && isKubearchiveEnabled
-      ? {
-          ...createGetQueryOptions<TResource>(
-            withKubearchivePathPrefix(memoizedResourceInit),
-            memoizedQueryOptions,
-          ),
-          enabled: true,
-          staleTime: Infinity,
-        }
-      : { queryKey: ['disabled'], enabled: false },
+  const archiveQueryOptions = React.useMemo(
+    () =>
+      memoizedResourceInit && queryEnabled && clusterErrorIs404 && isKubearchiveEnabled
+        ? {
+            ...createGetQueryOptions<TResource>(
+              withKubearchivePathPrefix(memoizedResourceInit),
+              memoizedQueryOptions,
+            ),
+            enabled: true,
+            staleTime: Infinity,
+          }
+        : { queryKey: ['disabled'], enabled: false },
+    [
+      memoizedResourceInit,
+      queryEnabled,
+      clusterErrorIs404,
+      isKubearchiveEnabled,
+      memoizedQueryOptions,
+    ],
   );
+
+  const archiveQuery = useQuery<TResource>(archiveQueryOptions);
 
   const data = archiveQuery.data ?? clusterQuery.data;
   const source = archiveQuery.data
