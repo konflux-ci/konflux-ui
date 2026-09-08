@@ -42,6 +42,14 @@
     }
   }
 
+  .pf-chatbot__header .pf-chatbot__title {
+    overflow: visible;
+  }
+
+  .pf-chatbot__alert {
+    margin-inline: var(--pf-t--global--spacer--lg);
+  }
+
   // Welcome "Hello" — PF uses brand blue; portal is outside .konflux-ui__theme
   .pf-chatbot__hello {
     color: var(--konflux-brand-primary);
@@ -54,6 +62,7 @@
 
   // Wordmark uses currentColor
   .ai-chat__brand {
+    flex-shrink: 0;
     color: var(--pf-t--global--text--color--regular);
   }
 }

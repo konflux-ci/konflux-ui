@@ -1,31 +1,19 @@
 import * as React from 'react';
 import Chatbot from '@patternfly/chatbot/dist/dynamic/Chatbot';
-import ChatbotAlert from '@patternfly/chatbot/dist/dynamic/ChatbotAlert';
-import ChatbotContent from '@patternfly/chatbot/dist/dynamic/ChatbotContent';
-import ChatbotFooter, { ChatbotFootnote } from '@patternfly/chatbot/dist/dynamic/ChatbotFooter';
-import ChatbotHeader, {
-  ChatbotHeaderActions,
-  ChatbotHeaderCloseButton,
-  ChatbotHeaderMain,
-  ChatbotHeaderTitle,
-} from '@patternfly/chatbot/dist/dynamic/ChatbotHeader';
+import ChatbotConversationHistoryNav from '@patternfly/chatbot/dist/dynamic/ChatbotConversationHistoryNav';
 import ChatbotToggle from '@patternfly/chatbot/dist/dynamic/ChatbotToggle';
-import ChatbotWelcomePrompt from '@patternfly/chatbot/dist/dynamic/ChatbotWelcomePrompt';
-import Message from '@patternfly/chatbot/dist/dynamic/Message';
-import MessageBar from '@patternfly/chatbot/dist/dynamic/MessageBar';
-import MessageBox from '@patternfly/chatbot/dist/dynamic/MessageBox';
-import KonfluxLogo from '~/assets/konflux-logo.svg';
 import { AIChatPortal } from '~/components/AIChat/AIChatPortal';
-import { CHAT_MESSAGE_REHYPE_PLUGINS } from '~/components/AIChat/chatMessagePlugins';
+import { AIChatDrawerContent } from '~/components/AIChat/components/AIChatDrawerContent';
+import { AIChatDrawerFooter } from '~/components/AIChat/components/AIChatDrawerFooter';
+import { AIChatDrawerHeader } from '~/components/AIChat/components/AIChatDrawerHeader';
+import { AIChatRenameConversationModal } from '~/components/AIChat/components/AIChatRenameConversationModal';
 import {
   KONFLUX_AI_DISPLAY_MODE,
-  KONFLUX_AI_ERROR_TITLE,
-  KONFLUX_AI_FOOTNOTE,
-  KONFLUX_AI_MESSAGE_PLACEHOLDER,
+  KONFLUX_AI_HISTORY_NO_RESULTS_BODY,
+  KONFLUX_AI_HISTORY_NO_RESULTS_TITLE,
+  KONFLUX_AI_HISTORY_SEARCH_PLACEHOLDER,
   KONFLUX_AI_TOGGLE_BUTTON_LABEL,
   KONFLUX_AI_TOGGLE_TOOLTIP,
-  KONFLUX_AI_WELCOME_DESCRIPTION,
-  KONFLUX_AI_WELCOME_TITLE,
 } from '~/components/AIChat/const';
 import { useLightspeedChat } from '~/lightspeed/useLightspeedChat';
 
@@ -33,37 +21,63 @@ import '@patternfly/chatbot/dist/css/main.css';
 import './AIChat.scss';
 
 /**
- * PatternFly chatbot dock with Lightspeed SSE send/receive.
+ * PatternFly chatbot dock with Lightspeed SSE send/receive and conversation history.
  */
 export const AIChatDock: React.FC = () => {
   const [isChatbotVisible, setIsChatbotVisible] = React.useState(false);
-  const scrollToBottomRef = React.useRef<HTMLDivElement>(null);
+  const chatRootRef = React.useRef<HTMLDivElement>(null);
   const {
+    activeConversationId,
     messages,
+    conversations,
     announcement,
     isSendButtonDisabled,
-    isInitializing,
+    isDrawerOpen,
+    isLoadingConversation,
+    isRenamingConversation,
+    hasNoSearchResults,
     backendError,
-    clearBackendError,
+    renameConversationTarget,
+    setIsDrawerOpen,
+    refreshConversations,
+    startNewChat,
+    selectConversation,
+    filterConversations,
     sendMessage,
+    closeRenameConversation,
+    confirmRenameConversation,
   } = useLightspeedChat();
 
-  React.useEffect(() => {
-    if (isChatbotVisible) {
-      clearBackendError();
-    }
-  }, [clearBackendError, isChatbotVisible]);
+  const handleToggleDrawer = React.useCallback(() => {
+    setIsDrawerOpen((open) => {
+      const nextOpen = !open;
+      if (nextOpen) {
+        void refreshConversations();
+      }
+      return nextOpen;
+    });
+  }, [refreshConversations, setIsDrawerOpen]);
 
-  React.useEffect(() => {
-    if (messages.length === 0) {
-      return;
-    }
-    scrollToBottomRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'end' });
-  }, [messages]);
+  const handleNewChat = React.useCallback(() => {
+    startNewChat();
+    setIsDrawerOpen(false);
+    void refreshConversations();
+  }, [refreshConversations, setIsDrawerOpen, startNewChat]);
+
+  const handleSelectConversation = React.useCallback(
+    (_event: React.MouseEvent | undefined, conversationId?: string | number) => {
+      if (conversationId === undefined) {
+        return;
+      }
+      void selectConversation(String(conversationId));
+      setIsDrawerOpen(false);
+    },
+    [selectConversation, setIsDrawerOpen],
+  );
 
   return (
     <AIChatPortal>
-      <div className="ai-chat" data-test="ai-chat-dock">
+      <div ref={chatRootRef} className="ai-chat" data-test="ai-chat-dock">
         <ChatbotToggle
           tooltipLabel={KONFLUX_AI_TOGGLE_TOOLTIP}
           toggleButtonLabel={KONFLUX_AI_TOGGLE_BUTTON_LABEL}
@@ -71,49 +85,58 @@ export const AIChatDock: React.FC = () => {
           onToggleChatbot={() => setIsChatbotVisible((visible) => !visible)}
         />
         <Chatbot displayMode={KONFLUX_AI_DISPLAY_MODE} isVisible={isChatbotVisible}>
-          <ChatbotHeader>
-            <ChatbotHeaderMain>
-              <ChatbotHeaderTitle>
-                <KonfluxLogo aria-label="Konflux" className="ai-chat__brand" height={36} />
-              </ChatbotHeaderTitle>
-            </ChatbotHeaderMain>
-            <ChatbotHeaderActions>
-              <ChatbotHeaderCloseButton onClick={() => setIsChatbotVisible(false)} />
-            </ChatbotHeaderActions>
-          </ChatbotHeader>
-          <ChatbotContent>
-            {backendError ? (
-              <ChatbotAlert variant="danger" title={KONFLUX_AI_ERROR_TITLE} isInline>
-                {backendError}
-              </ChatbotAlert>
-            ) : null}
-            <MessageBox announcement={announcement}>
-              {messages.length === 0 && !isInitializing ? (
-                <ChatbotWelcomePrompt
-                  title={KONFLUX_AI_WELCOME_TITLE}
-                  description={KONFLUX_AI_WELCOME_DESCRIPTION}
+          <ChatbotConversationHistoryNav
+            displayMode={KONFLUX_AI_DISPLAY_MODE}
+            onDrawerToggle={handleToggleDrawer}
+            isDrawerOpen={isDrawerOpen}
+            setIsDrawerOpen={setIsDrawerOpen}
+            activeItemId={activeConversationId ?? undefined}
+            onSelectActiveItem={handleSelectConversation}
+            conversations={conversations}
+            onNewChat={handleNewChat}
+            handleTextInputChange={filterConversations}
+            searchInputPlaceholder={KONFLUX_AI_HISTORY_SEARCH_PLACEHOLDER}
+            noResultsState={
+              hasNoSearchResults
+                ? {
+                    titleText: KONFLUX_AI_HISTORY_NO_RESULTS_TITLE,
+                    bodyText: KONFLUX_AI_HISTORY_NO_RESULTS_BODY,
+                  }
+                : undefined
+            }
+            drawerContent={
+              <>
+                <AIChatDrawerHeader
+                  isDrawerOpen={isDrawerOpen}
+                  onToggleDrawer={handleToggleDrawer}
+                  onClose={() => setIsChatbotVisible(false)}
                 />
-              ) : null}
-              {messages.map((message, index) => (
-                <React.Fragment key={message.id}>
-                  <Message {...message} additionalRehypePlugins={CHAT_MESSAGE_REHYPE_PLUGINS} />
-                  {index === messages.length - 1 ? <div ref={scrollToBottomRef} /> : null}
-                </React.Fragment>
-              ))}
-            </MessageBox>
-          </ChatbotContent>
-          <ChatbotFooter>
-            <MessageBar
-              hasAttachButton={false}
-              isSendButtonDisabled={isSendButtonDisabled}
-              onSendMessage={(message) => {
-                void sendMessage(String(message));
-              }}
-              placeholder={KONFLUX_AI_MESSAGE_PLACEHOLDER}
-            />
-            <ChatbotFootnote label={KONFLUX_AI_FOOTNOTE} />
-          </ChatbotFooter>
+                <AIChatDrawerContent
+                  backendError={backendError}
+                  announcement={announcement}
+                  messages={messages}
+                  isLoadingConversation={isLoadingConversation}
+                />
+                <AIChatDrawerFooter
+                  isSendButtonDisabled={isSendButtonDisabled || isLoadingConversation}
+                  onSendMessage={(message) => {
+                    void sendMessage(message);
+                  }}
+                />
+              </>
+            }
+          />
         </Chatbot>
+        <AIChatRenameConversationModal
+          appendTo={() => chatRootRef.current ?? document.body}
+          currentName={renameConversationTarget?.currentName ?? ''}
+          isOpen={renameConversationTarget !== null}
+          isSubmitting={isRenamingConversation}
+          onClose={closeRenameConversation}
+          onRename={(newName) => {
+            void confirmRenameConversation(newName);
+          }}
+        />
       </div>
     </AIChatPortal>
   );

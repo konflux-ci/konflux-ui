@@ -17,3 +17,9 @@ export const KONFLUX_AI_ERROR_TITLE = 'Konflux AI is unavailable';
 export const KONFLUX_AI_TOGGLE_TOOLTIP = 'Konflux AI assistant';
 
 export const KONFLUX_AI_TOGGLE_BUTTON_LABEL = 'Open Konflux AI assistant';
+
+export const KONFLUX_AI_HISTORY_SEARCH_PLACEHOLDER = 'Search conversations';
+
+export const KONFLUX_AI_HISTORY_NO_RESULTS_TITLE = 'No results found';
+
+export const KONFLUX_AI_HISTORY_NO_RESULTS_BODY = 'Try a different search term.';
