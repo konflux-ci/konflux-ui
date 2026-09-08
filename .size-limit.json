@@ -26,5 +26,35 @@
     ],
     "limit": "40 kB",
     "gzip": true
+  },
+  {
+    "name": "main-css",
+    "path": "dist/main.css",
+    "limit": "8 kB",
+    "gzip": true
+  },
+  {
+    "name": "patternfly-css",
+    "path": "dist/patternfly.css",
+    "limit": "160 kB",
+    "gzip": true
+  },
+  {
+    "name": "monaco-css",
+    "path": "dist/monaco.css",
+    "limit": "18 kB",
+    "gzip": true
+  },
+  {
+    "name": "route-chunks-css",
+    "path": [
+      "dist/kubearchive-logs.css",
+      "dist/tekton-logs.css",
+      "dist/issues-list-page.css",
+      "dist/issues-overview.css",
+      "dist/[0-9]*.css"
+    ],
+    "limit": "6 kB",
+    "gzip": true
   }
 ]

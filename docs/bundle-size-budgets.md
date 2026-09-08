@@ -12,13 +12,17 @@ Production bundle sizes are enforced in CI via [size-limit](https://github.com/a
 
 Limits include ~10–15% headroom above current sizes so routine changes do not fail CI. Increase a limit only when the size growth is intentional (e.g. a new dependency or feature).
 
-| Chunk         | Gzip limit | What it covers                                              |
-| ------------- | ---------- | ----------------------------------------------------------- |
-| main          | 275 kB     | Application entry chunk (`dist/main.*.js`)                  |
-| vendor        | 650 kB     | Shared `node_modules` chunk (`dist/vendor.*.js`)            |
-| route-chunks  | 40 kB      | Combined gzip size of all lazy-loaded per-route async chunks |
+| Chunk            | Gzip limit | What it covers                                              |
+| ---------------- | ---------- | ----------------------------------------------------------- |
+| main             | 275 kB     | Application entry chunk (`dist/main.*.js`)                  |
+| vendor           | 650 kB     | Shared `node_modules` chunk (`dist/vendor.*.js`)            |
+| route-chunks     | 40 kB      | Combined gzip size of all lazy-loaded per-route async chunks |
+| main-css         | 8 kB       | Application styles (`dist/main.css`)                        |
+| patternfly-css   | 160 kB     | PatternFly styles (`dist/patternfly.css`)                   |
+| monaco-css       | 18 kB      | Monaco editor styles (`dist/monaco.css`, async)             |
+| route-chunks-css | 6 kB       | Combined gzip size of lazy-loaded route CSS chunks          |
 
-The `route-chunks` entry covers named route chunks (via `webpackChunkName`) and unnamed numeric async chunks (e.g. `214.*.js`).
+The `route-chunks` entry covers named route chunks (via `webpackChunkName`) and unnamed numeric async chunks (e.g. `214.*.js`). The `route-chunks-css` entry covers per-route CSS extracted alongside those async chunks (e.g. `405.css`).
 
 ## Local verification
 
