@@ -40,7 +40,11 @@ module.exports = {
           // Zone 4: Files in `./src/k8s` may only import from `./src/k8s`, `./src/types/k8s.ts` or `./src/types/common.ts`.
           {
             target: './src/k8s/**/*',
-            from: ['./src/!(k8s|types)/**/*', './src/types/!(k8s.ts|common.ts)'],
+            from: [
+              './src/!(k8s|types)/**/*',
+              './src/types/!(k8s.ts|common.ts)',
+              './src/types/!(k8s.ts|common.ts)/**/*',
+            ],
             message:
               'Files in `./src/k8s` may only import from `./src/k8s`, `./src/types/k8s` or `./src/types/common`.',
           },
@@ -53,6 +57,7 @@ module.exports = {
             from: [
               './src/!(shared|k8s|types|unit-test-utils|monitoring|feature-flags|__data__|models|consts|kubearchive|routes)/**/*',
               './src/models/!(pod.ts|pipelineruns.ts|release.ts|namespace.ts)',
+              './src/models/!(pod.ts|pipelineruns.ts|release.ts|namespace.ts)/**/*',
             ],
             // TODO: temporary whitelist until the shared consumers are decoupled
             // from `src/components`, `src/hooks`, `src/utils` and `src/image-controller`
@@ -112,10 +117,13 @@ module.exports = {
             from: [
               './src/!(kubearchive|k8s|types|feature-flags|consts|utils|models|unit-test-utils)/**/*',
               './src/consts/!(pipelinerun.ts)',
+              './src/consts/!(pipelinerun.ts)/**/*',
               './src/utils/!(test-utils.tsx|resource-utils.ts)',
               './src/utils/!(test-utils.tsx|resource-utils.ts)/**/*',
               './src/models/!(release.ts|pipelineruns.ts)',
+              './src/models/!(release.ts|pipelineruns.ts)/**/*',
               './src/types/!(release.ts|k8s.ts|pipeline-run.ts)',
+              './src/types/!(release.ts|k8s.ts|pipeline-run.ts)/**/*',
             ],
             message:
               'Files in `./src/kubearchive` may only import from `./src/kubearchive`, `./src/k8s`, `./src/feature-flags`, `./src/unit-test-utils`, `./src/types` (release, k8s, pipeline-run only), `./src/consts` (pipelinerun only), `./src/utils` (test-utils, resource-utils only) or `./src/models` (release, pipelineruns only).',
