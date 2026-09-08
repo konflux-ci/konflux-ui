@@ -5,6 +5,7 @@ import {
   pipelineRunDetailsViewLoader,
   PipelineRunSecurityTab,
   PipelineRunTaskRunsTab,
+  PipelineRunVulnerabilitiesTab,
 } from '../../components/PipelineRun/PipelineRunDetailsView';
 import { PIPELINE_RUNS_DETAILS_PATH } from '../paths';
 import { RouteErrorBoundry } from '../RouteErrorBoundary';
@@ -20,6 +21,7 @@ const pipelineRoutes = [
       { index: true, element: <PipelineRunDetailsTab /> },
       { path: 'taskruns', element: <PipelineRunTaskRunsTab /> },
       { path: 'logs', element: <PipelineRunDetailsLogsTab /> },
+      { path: 'vulnerabilities', element: <PipelineRunVulnerabilitiesTab /> },
       { path: 'security', element: <PipelineRunSecurityTab /> },
     ],
   },

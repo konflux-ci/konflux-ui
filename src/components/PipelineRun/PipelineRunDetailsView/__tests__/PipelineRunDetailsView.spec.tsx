@@ -3,7 +3,7 @@ import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { testPipelineRuns, DataState } from '~/__data__/pipelinerun-data';
 import { PipelineRunLabel, runStatus } from '~/consts/pipelinerun';
-import { CONFORMA_TASK, ENTERPRISE_CONTRACT_LABEL } from '~/consts/security';
+import { CONFORMA_TASK, ENTERPRISE_CONTRACT_LABEL, ROXCTL_SCAN_TASK } from '~/consts/security';
 import { useStatusOnFavicon } from '~/hooks/useStatusOnFavicon';
 import { PipelineRunKind } from '~/types';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
@@ -50,6 +50,17 @@ const mockConformaPipelineRun: PipelineRunKind = {
     pipelineSpec: {
       ...mockPipelineRun.status.pipelineSpec,
       tasks: [{ name: CONFORMA_TASK }],
+    },
+  },
+};
+
+const mockRoxctlPipelineRun: PipelineRunKind = {
+  ...mockPipelineRun,
+  status: {
+    ...mockPipelineRun.status,
+    pipelineSpec: {
+      ...mockPipelineRun.status.pipelineSpec,
+      tasks: [{ name: ROXCTL_SCAN_TASK }],
     },
   },
 };
@@ -220,6 +231,26 @@ describe('PipelineRunDetailsView', () => {
     expect(screen.getByRole('tab', { name: /task runs/i })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: /logs/i })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: /security/i })).toBeInTheDocument();
+  });
+
+  it('should render Vulnerabilities tab when roxctl-scan is in the pipeline', () => {
+    mockUsePipelineRunV2.mockReturnValue(mockPipelineRunStates.loaded(mockRoxctlPipelineRun));
+
+    routerRenderer(<PipelineRunDetailsView />);
+
+    expect(screen.getByRole('tab', { name: /details/i })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /task runs/i })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /logs/i })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /vulnerabilities/i })).toBeInTheDocument();
+    expect(screen.queryByRole('tab', { name: /security/i })).not.toBeInTheDocument();
+  });
+
+  it('should not render Vulnerabilities tab when roxctl-scan is not in the pipeline', () => {
+    mockUsePipelineRunV2.mockReturnValue(mockPipelineRunStates.loaded(mockPipelineRun));
+
+    routerRenderer(<PipelineRunDetailsView />);
+
+    expect(screen.queryByRole('tab', { name: /vulnerabilities/i })).not.toBeInTheDocument();
   });
 
   it('should check access review for PipelineRunModel', () => {
