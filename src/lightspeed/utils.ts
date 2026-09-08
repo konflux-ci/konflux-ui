@@ -34,6 +34,7 @@ export const stateMessagesToMessageProps = (
     return {
       id: message.id,
       role: isUser ? 'user' : 'bot',
+      alignment: isUser ? 'end' : 'start',
       content: message.answer,
       name: isUser ? 'You' : assistantName,
       timestamp: message.date.toLocaleString(),
