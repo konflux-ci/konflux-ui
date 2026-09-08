@@ -1,4 +1,4 @@
-import rehypeSanitize from 'rehype-sanitize';
+import rehypeSanitize, { defaultSchema } from 'rehype-sanitize';
 import type { PluggableList } from 'unified';
 
 /**
@@ -12,6 +12,17 @@ import type { PluggableList } from 'unified';
  * 5. `additionalRehypePlugins` (this list — always appended last)
  *
  * Registering rehype-sanitize here ensures sanitization runs after every
- * internal transform. The default schema follows GitHub/GMF rules.
+ * internal transform. The default schema follows GitHub/GMF rules, but strips
+ * `target` and `rel` that rehype-external-links adds in step 4.
  */
-export const CHAT_MESSAGE_REHYPE_PLUGINS: PluggableList = [rehypeSanitize];
+const chatMessageSanitizeSchema = {
+  ...defaultSchema,
+  attributes: {
+    ...defaultSchema.attributes,
+    a: [...defaultSchema.attributes.a, 'target', 'rel'],
+  },
+};
+
+export const CHAT_MESSAGE_REHYPE_PLUGINS: PluggableList = [
+  [rehypeSanitize, chatMessageSanitizeSchema],
+];

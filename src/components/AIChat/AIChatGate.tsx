@@ -1,6 +1,5 @@
 import * as React from 'react';
 import { IfFeature } from '~/feature-flags/hooks';
-import { useIsLightspeedAvailable } from '~/lightspeed/conditional-checks';
 import { LightspeedStateProvider } from '~/lightspeed/LightspeedStateProvider';
 
 const AIChatDock = React.lazy(() =>
@@ -9,20 +8,6 @@ const AIChatDock = React.lazy(() =>
   ).then((module) => ({ default: module.AIChatDock })),
 );
 
-const AIChatDockLoader: React.FC = () => {
-  const { isLightspeedAvailable } = useIsLightspeedAvailable();
-
-  if (!isLightspeedAvailable) {
-    return null;
-  }
-
-  return (
-    <React.Suspense fallback={null}>
-      <AIChatDock />
-    </React.Suspense>
-  );
-};
-
 /**
  * Renders the PatternFly chatbot dock when the experimental `ai-chat` flag is on.
  * Guarded by `isStagingCluster` and `isLightspeedAvailable` (see flags.ts).
@@ -30,7 +15,9 @@ const AIChatDockLoader: React.FC = () => {
 export const AIChatGate: React.FC = () => (
   <IfFeature flag="ai-chat">
     <LightspeedStateProvider>
-      <AIChatDockLoader />
+      <React.Suspense fallback={null}>
+        <AIChatDock />
+      </React.Suspense>
     </LightspeedStateProvider>
   </IfFeature>
 );
