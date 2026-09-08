@@ -13,8 +13,14 @@ describe('Countdown', () => {
   });
 
   it('renders a dash when timestamp is empty', () => {
-    renderWithQueryClientAndRouter(<Countdown timestamp="" />);
-    expect(screen.getByText('-')).toBeInTheDocument();
+    renderWithQueryClientAndRouter(
+      <span data-test="countdown-fallback">
+        <Countdown timestamp="" />
+      </span>,
+    );
+    const fallback = screen.getByTestId('countdown-fallback');
+    expect(fallback).toHaveTextContent('-');
+    expect(fallback.children).toHaveLength(0);
   });
 
   it('renders a dash for an invalid timestamp', () => {
@@ -29,7 +35,9 @@ describe('Countdown', () => {
   });
 
   it('renders days and hours when more than a day remains', () => {
-    const future = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000 + 3 * 60 * 60 * 1000).toISOString();
+    const future = new Date(
+      Date.now() + 2 * 24 * 60 * 60 * 1000 + 3 * 60 * 60 * 1000,
+    ).toISOString();
     renderWithQueryClientAndRouter(<Countdown timestamp={future} />);
     const el = screen.getByTestId('countdown');
     expect(el.textContent).toMatch(/2d \d+h \d+m/);

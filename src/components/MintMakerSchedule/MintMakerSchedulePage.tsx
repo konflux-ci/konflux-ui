@@ -2,14 +2,13 @@ import { PageSection, Stack, StackItem } from '@patternfly/react-core';
 import { mintMakerScheduleFilterConfig } from '~/components/MintMakerSchedule/mintmaker-schedule-table-config';
 import { MintMakerScheduleEmptyState } from '~/components/MintMakerSchedule/MintMakerScheduleEmptyState';
 import { MintMakerScheduleManagerCard } from '~/components/MintMakerSchedule/MintMakerScheduleManagerCard';
+import { MintMakerScheduleNotFoundState } from '~/components/MintMakerSchedule/MintMakerScheduleNotFoundState';
 import PageLayout from '~/components/PageLayout/PageLayout';
 import { useMintMakerSchedule } from '~/hooks/useMintMakerSchedule';
-import { HttpError } from '~/k8s/error';
 import FilteredEmptyState from '~/shared/components/empty-state/FilteredEmptyState';
 import { FilterToolbar, useFilteredData, useFilterState } from '~/shared/components/Filter';
 import { TableContainer } from '~/shared/components/TableV2';
 import { getErrorState } from '~/shared/utils/error-utils';
-import { MintMakerScheduleNotFoundState } from './MintMakerScheduleNotFoundState';
 
 export const MintMakerSchedulePage = () => {
   const [schedule, loaded, error] = useMintMakerSchedule();
@@ -25,8 +24,11 @@ export const MintMakerSchedulePage = () => {
 
   if (error) {
     const errorCode =
-      typeof error === 'object' && error !== null && 'code' in error
-        ? (error as HttpError).code
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      typeof error.code === 'number'
+        ? error.code
         : undefined;
     if (loaded && errorCode === 404) {
       return (
