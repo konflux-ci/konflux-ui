@@ -37,14 +37,17 @@ module.exports = {
             message:
               'Files in `./src/models` may only import from `./src/models` or `./src/types`.',
           },
-          // Zone 4: Files in `./src/k8s` may only import from `./src/k8s` or from `./src/types/k8s.ts`.
+          // Zone 4: Files in `./src/k8s` may only import from `./src/k8s`, `./src/types/k8s.ts` or `./src/types/common.ts`.
           {
             target: './src/k8s/**/*',
             from: ['./src/!(k8s|types)/**/*', './src/types/!(k8s.ts|common.ts)'],
             message:
-              'Files in `./src/k8s` may only import from `./src/k8s` or from `./src/types/k8s`.',
+              'Files in `./src/k8s` may only import from `./src/k8s`, `./src/types/k8s` or `./src/types/common`.',
           },
-          // Zone 5: Files in `./src/shared` may only import from `./src/shared` or `./src/k8s`.
+          // Zone 5: Files in `./src/shared` may import from `./src/shared`, `./src/k8s`,
+          // `./src/types`, `./src/unit-test-utils`, `./src/monitoring`, `./src/feature-flags`,
+          // `./src/__data__`, `./src/consts`, `./src/kubearchive`, `./src/routes`, selected
+          // `./src/models` files and the temporary `except` whitelist below.
           {
             target: './src/shared/**/*',
             from: [
@@ -82,9 +85,10 @@ module.exports = {
               '**/src/utils/validation-utils.ts',
             ],
             message:
-              'Files in `./src/shared` may only import from `./src/shared`, `./src/k8s` or `./src/types/k8s`.',
+              'Files in `./src/shared` may only import from `./src/shared`, `./src/k8s`, `./src/types`, `./src/unit-test-utils`, `./src/monitoring`, `./src/feature-flags`, `./src/__data__`, `./src/consts`, `./src/kubearchive`, `./src/routes`, `./src/models` (pod, pipelineruns, release, namespace only) or the temporary `except` whitelist (see TODO above).',
           },
-          // Zone 6: 'Files in `./src/feature-flags` may only import from `./src/feature-flags`'.
+          // Zone 6: Files in `./src/feature-flags` may only import from
+          // `./src/feature-flags`, `./src/components/modal`, `./src/k8s/error.ts` or `./src/shared/utils`.
           {
             target: './src/feature-flags/**/*',
             from: [
@@ -92,22 +96,29 @@ module.exports = {
               './src/components/!(modal)/**/*',
               './src/components/!(modal)',
               './src/k8s/!(error.ts)',
-              './src/shared/!(utils.ts)',
+              './src/k8s/!(error.ts)/**/*',
+              './src/shared/!(utils)',
+              './src/shared/!(utils)/**/*',
             ],
-            message: 'Files in `./src/feature-flags` may only import from `./src/feature-flags`.',
+            message:
+              'Files in `./src/feature-flags` may only import from `./src/feature-flags`, `./src/components/modal`, `./src/k8s/error` or `./src/shared/utils`.',
           },
-          // Zone 7: Files in `./src/kubearchive` may only import from `./src/kubearchive`, `./src/k8s` or `./src/types/k8s`.
+          // Zone 7: Files in `./src/kubearchive` may only import from `./src/kubearchive`,
+          // `./src/k8s`, `./src/feature-flags`, `./src/unit-test-utils`, `./src/types`
+          // (release, k8s, pipeline-run only), `./src/consts` (pipelinerun only), `./src/utils`
+          // (test-utils, resource-utils only) or `./src/models` (release, pipelineruns only).
           {
             target: './src/kubearchive/**/*',
             from: [
               './src/!(kubearchive|k8s|types|feature-flags|consts|utils|models|unit-test-utils)/**/*',
               './src/consts/!(pipelinerun.ts)',
               './src/utils/!(test-utils.tsx|resource-utils.ts)',
+              './src/utils/!(test-utils.tsx|resource-utils.ts)/**/*',
               './src/models/!(release.ts|pipelineruns.ts)',
               './src/types/!(release.ts|k8s.ts|pipeline-run.ts)',
             ],
             message:
-              'Files in `./src/kubearchive` may only import from `./src/kubearchive`, `./src/k8s` or `./src/types/k8s`.',
+              'Files in `./src/kubearchive` may only import from `./src/kubearchive`, `./src/k8s`, `./src/feature-flags`, `./src/unit-test-utils`, `./src/types` (release, k8s, pipeline-run only), `./src/consts` (pipelinerun only), `./src/utils` (test-utils, resource-utils only) or `./src/models` (release, pipelineruns only).',
           },
         ],
       },
