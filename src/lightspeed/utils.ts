@@ -1,6 +1,9 @@
+import type { Conversation } from '@patternfly/chatbot/dist/dynamic/ChatbotConversationHistoryNav';
 import type { MessageProps } from '@patternfly/chatbot/dist/dynamic/Message';
+import orderBy from 'lodash-es/orderBy';
 import type { Message } from '@redhat-cloud-services/ai-client-state';
 import { LIGHTSPEED_ASSISTANT_NAME } from '~/lightspeed/const';
+import type { LightspeedConversationDetails } from '~/lightspeed/types';
 
 export const getUserFacingErrorMessage = (status: number): string => {
   switch (status) {
@@ -41,3 +44,12 @@ export const stateMessagesToMessageProps = (
       ...(isLoading ? { isLoading: true } : {}),
     };
   });
+
+/** Map Lightspeed conversations to PatternFly history items (newest first). */
+export const toHistoryConversations = (
+  conversations: LightspeedConversationDetails[],
+): Conversation[] =>
+  orderBy(conversations, ['lastMessageAt'], ['desc']).map((conversation) => ({
+    id: conversation.conversationId,
+    text: conversation.topicSummary?.trim() || 'Untitled conversation',
+  }));
