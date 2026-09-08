@@ -1,7 +1,7 @@
 import type { HealthCheck } from '@redhat-cloud-services/lightspeed-client';
-import { getLightspeedClient } from '~/components/AIChat/lightspeedClient';
 import { createConditionsHook } from '~/feature-flags/hooks';
 import { ensureConditionIsOn } from '~/feature-flags/utils';
+import { getLightspeedClient } from '~/lightspeed/lightspeedClient';
 import { LIGHTSPEED_HEALTH_CHECK_TIMEOUT_MS } from '~/lightspeed/lightspeedConfig';
 import { logger } from '~/monitoring/logger';
 
