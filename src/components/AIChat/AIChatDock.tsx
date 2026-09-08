@@ -35,7 +35,7 @@ import './AIChat.scss';
 /**
  * PatternFly chatbot dock with Lightspeed SSE send/receive.
  */
-const AIChatDock: React.FC = () => {
+export const AIChatDock: React.FC = () => {
   const [isChatbotVisible, setIsChatbotVisible] = React.useState(false);
   const scrollToBottomRef = React.useRef<HTMLDivElement>(null);
   const {
@@ -122,5 +122,3 @@ const AIChatDock: React.FC = () => {
     </AIChatPortal>
   );
 };
-
-export default AIChatDock;
