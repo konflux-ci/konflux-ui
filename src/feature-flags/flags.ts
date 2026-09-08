@@ -133,7 +133,7 @@ const InternalFLAGS = {
   },
   'ai-chat': {
     key: 'ai-chat',
-    description: 'Enable experimental Konflux AI chat UI',
+    description: 'Enable Konflux AI chat bot',
     defaultEnabled: false,
     status: 'wip',
     guard: {
