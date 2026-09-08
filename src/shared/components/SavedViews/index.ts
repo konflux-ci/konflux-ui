@@ -8,5 +8,5 @@ export { STORAGE_KEY_PREFIX } from './utils';
 export { useActiveSavedView } from './useActiveSavedView';
 
 // Components
-export { SavedViewStar } from './SavedViewStar';
+export { SavedViewActions } from './SavedViewActions';
 export { SavedViewNavItems } from './SavedViewNavItems';
