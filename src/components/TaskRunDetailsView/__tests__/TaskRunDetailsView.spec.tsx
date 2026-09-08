@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { CONFORMA_TASK, ENTERPRISE_CONTRACT_LABEL } from '~/consts/security';
+import { CONFORMA_TASK, ENTERPRISE_CONTRACT_LABEL, ROXCTL_SCAN_TASK } from '~/consts/security';
 import { usePipelineRunV2 } from '~/hooks/usePipelineRunsV2';
 import { useStatusOnFavicon } from '~/hooks/useStatusOnFavicon';
 import { useTaskRunV2 } from '~/hooks/useTaskRunsV2';
@@ -156,6 +156,31 @@ describe('TaskRunDetailsView', () => {
 
     renderWithQueryClientAndRouter(<TaskRunDetailsView />);
     expect(screen.getByRole('tab', { name: /security/i })).toBeInTheDocument();
+  });
+
+  it('should render the vulnerabilities tab when it is a roxctl-scan task run', () => {
+    const mockRoxctlTaskRun = {
+      ...mockTaskRun,
+      metadata: {
+        ...mockTaskRun.metadata,
+        labels: {
+          ...mockTaskRun.metadata.labels,
+          [TektonResourceLabel.pipelineTask]: ROXCTL_SCAN_TASK,
+        },
+      },
+    };
+
+    useTaskRunMock.mockReturnValue([mockRoxctlTaskRun, true, undefined]);
+
+    renderWithQueryClientAndRouter(<TaskRunDetailsView />);
+    expect(screen.getByRole('tab', { name: /vulnerabilities/i })).toBeInTheDocument();
+  });
+
+  it('should not render the vulnerabilities tab for non-roxctl task runs', () => {
+    useTaskRunMock.mockReturnValue([mockTaskRun, true, undefined]);
+
+    renderWithQueryClientAndRouter(<TaskRunDetailsView />);
+    expect(screen.queryByRole('tab', { name: /vulnerabilities/i })).not.toBeInTheDocument();
   });
 
   it('should show displayName from childReferences when available', () => {
