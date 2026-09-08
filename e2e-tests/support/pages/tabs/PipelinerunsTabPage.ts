@@ -136,7 +136,7 @@ export class DetailsTab {
             );
             cy.reload();
             // 180000 ms = 3 minutes
-            this.waitUntilStatusIsNotRunning(180000, interval, retries - 1);
+            this.waitUntilStatusIsNotRunning(timeoutDuration, interval, retries - 1);
             return;
           }
           cy.wait(interval);
@@ -204,7 +204,7 @@ export class DetailsTab {
   }
 
   static waitForPLRAndDownloadAllLogs(
-    timeoutDuration: number = 1800000,
+    timeoutDuration: number = 1800000, // 30 minutes
     allTaskLogs = true,
     expectedStatus = 'Succeeded',
   ) {
