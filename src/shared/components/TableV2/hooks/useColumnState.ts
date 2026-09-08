@@ -1,14 +1,20 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useLocalStorage } from '~/shared/hooks/useLocalStorage';
-import { type ColumnDefinition, type ColumnState } from '../types';
+import { type ColumnDefinition, type ColumnState, type DefaultSort } from '../types';
 
 // Only the `id` field is needed — use Pick to avoid variance issues with TData
 type ColumnId = Pick<ColumnDefinition<never>, 'id'>;
 
-/** Derives the default column state from column definitions (all columns visible, no sort). */
-function deriveDefaultState(columns: ColumnId[]): ColumnState {
+/** Derives the default column state from column definitions, optionally with a default sort. */
+function deriveDefaultState(columns: ColumnId[], defaultSort?: DefaultSort): ColumnState {
   const ids = columns.map((c) => c.id);
-  return { visibleColumns: ids, columnOrder: ids };
+  return {
+    visibleColumns: ids,
+    columnOrder: ids,
+    ...(defaultSort
+      ? { sortColumn: defaultSort.column, sortDirection: defaultSort.direction }
+      : {}),
+  };
 }
 
 /**
@@ -18,7 +24,11 @@ function deriveDefaultState(columns: ColumnId[]): ColumnState {
  * inserts new columns at their definition-relative position,
  * and clears the sort if the sorted column was removed.
  */
-function migrateState(persisted: ColumnState, columns: ColumnId[]): ColumnState {
+function migrateState(
+  persisted: ColumnState,
+  columns: ColumnId[],
+  defaultSort?: DefaultSort,
+): ColumnState {
   const validIds = new Set(columns.map((c) => c.id));
   const definitionIds = columns.map((c) => c.id);
 
@@ -52,10 +62,18 @@ function migrateState(persisted: ColumnState, columns: ColumnId[]): ColumnState 
   // New columns are also visible by default
   const mergedVisible = [...existingVisible, ...newColumns];
 
-  // Clear sort if sorted column was removed
+  // Preserve persisted sort if still valid; fall back to defaultSort if no sort was persisted
   const sortColumn =
-    persisted.sortColumn && validIds.has(persisted.sortColumn) ? persisted.sortColumn : undefined;
-  const sortDirection = sortColumn ? persisted.sortDirection : undefined;
+    persisted.sortColumn && validIds.has(persisted.sortColumn)
+      ? persisted.sortColumn
+      : !persisted.sortColumn && defaultSort
+        ? defaultSort.column
+        : undefined;
+  const sortDirection = sortColumn
+    ? persisted.sortColumn && validIds.has(persisted.sortColumn)
+      ? persisted.sortDirection
+      : defaultSort?.direction
+    : undefined;
 
   return {
     visibleColumns: mergedVisible,
@@ -80,12 +98,19 @@ function migrateState(persisted: ColumnState, columns: ColumnId[]): ColumnState 
  * @typeParam TData - The row data type
  * @param key - LocalStorage key for persistence. Pass `undefined` for ephemeral mode.
  * @param columns - Current column definitions, used to derive defaults and migrate state.
+ * @param defaultSort - Optional default sort applied when no sort is persisted.
  * @returns An object with the current `columnState` and a `setColumnState` updater.
  *
  * @example
  * ```tsx
  * // Persisted column state
  * const { columnState, setColumnState } = useColumnState('my-table', columns);
+ *
+ * // With default sort
+ * const { columnState, setColumnState } = useColumnState('my-table', columns, {
+ *   column: 'createdAt',
+ *   direction: 'desc',
+ * });
  *
  * // Ephemeral column state (no persistence)
  * const { columnState, setColumnState } = useColumnState(undefined, columns);
@@ -94,8 +119,9 @@ function migrateState(persisted: ColumnState, columns: ColumnId[]): ColumnState 
 export function useColumnState<TData>(
   key: string | undefined,
   columns: ColumnDefinition<TData>[],
+  defaultSort?: DefaultSort,
 ): { columnState: ColumnState; setColumnState: (state: ColumnState) => void } {
-  const defaultState = useMemo(() => deriveDefaultState(columns), [columns]);
+  const defaultState = useMemo(() => deriveDefaultState(columns, defaultSort), [columns, defaultSort]);
 
   const isPersisted = !!key;
 
@@ -116,8 +142,8 @@ export function useColumnState<TData>(
     if (!persistedValue) {
       return defaultState;
     }
-    return migrateState(persistedValue, columns);
-  }, [isPersisted, ephemeralState, persistedValue, columns, defaultState]);
+    return migrateState(persistedValue, columns, defaultSort);
+  }, [isPersisted, ephemeralState, persistedValue, columns, defaultState, defaultSort]);
 
   const setColumnState = useCallback(
     (state: ColumnState) => {
