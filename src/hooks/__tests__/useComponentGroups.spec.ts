@@ -43,25 +43,21 @@ describe('useComponentGroups', () => {
     expect(result.current).toEqual([[], true, mockError]);
   });
 
-  it('should filter out groups that are being deleted', () => {
-    useK8sWatchResourceMock.mockReturnValue([
-      [
-        ...MOCK_COMPONENT_GROUPS,
-        {
-          ...MOCK_COMPONENT_GROUPS[0],
-          metadata: {
-            ...MOCK_COMPONENT_GROUPS[0].metadata,
-            name: 'deleting-group',
-            deletionTimestamp: '2026-08-22T00:00:00Z',
-          },
-        },
-      ],
-      true,
-      undefined,
-    ]);
+  it('should filter out groups that are being deleted before caching', () => {
+    renderHook(() => useComponentGroups('test-ns', true));
 
-    const { result } = renderHook(() => useComponentGroups('test-ns', true));
-    const [groups] = result.current;
+    const queryOptions = useK8sWatchResourceMock.mock.calls[0][2];
+    const groups = queryOptions.filterData([
+      ...MOCK_COMPONENT_GROUPS,
+      {
+        ...MOCK_COMPONENT_GROUPS[0],
+        metadata: {
+          ...MOCK_COMPONENT_GROUPS[0].metadata,
+          name: 'deleting-group',
+          deletionTimestamp: '2026-08-22T00:00:00Z',
+        },
+      },
+    ]);
 
     expect(groups).toHaveLength(4);
     expect(groups.map((group) => group.metadata.name)).not.toContain('deleting-group');
@@ -78,6 +74,7 @@ describe('useComponentGroups', () => {
         watch: true,
       },
       ComponentGroupModel,
+      { filterData: expect.any(Function) },
     );
   });
 
@@ -87,6 +84,7 @@ describe('useComponentGroups', () => {
     expect(useK8sWatchResourceMock).toHaveBeenCalledWith(
       expect.objectContaining({ watch: false }),
       ComponentGroupModel,
+      { filterData: expect.any(Function) },
     );
   });
 });

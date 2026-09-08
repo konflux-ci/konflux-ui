@@ -36,11 +36,9 @@ export const componentGroupsFilterConfig = defineFilters<ComponentGroupKind>()([
     mode: 'client',
     filterFn: (item, value) => textMatch(item.metadata?.name ?? '', value),
   },
-]);
+] as const);
 
-export const getComponentGroupsTableColumns = (
-  namespace: string,
-): ColumnDefinition<ComponentGroupKind>[] => [
+export const componentGroupsTableColumns: ColumnDefinition<ComponentGroupKind>[] = [
   {
     id: 'name',
     header: 'Name',
@@ -55,7 +53,7 @@ export const getComponentGroupsTableColumns = (
         <Link
           data-test="component-group-name"
           to={GROUP_DETAILS_PATH.createPath({
-            workspaceName: namespace,
+            workspaceName: info.row.original.metadata?.namespace,
             groupName,
           })}
         >
@@ -79,6 +77,7 @@ export const getComponentGroupsTableColumns = (
     nonHidable: true,
     size: 2,
     cell: (info) => {
+      const namespace = info.row.original.metadata?.namespace;
       const latestBuild = getLatestPromotedBuild(
         info.row.original.status?.globalCandidateList ?? [],
       );
@@ -117,4 +116,4 @@ export const getComponentGroupsTableColumns = (
       );
     },
   },
-];
+] as const;

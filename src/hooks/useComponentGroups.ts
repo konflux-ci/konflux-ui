@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useK8sWatchResource } from '~/k8s';
 import { ComponentGroupGroupVersionKind, ComponentGroupModel } from '~/models';
 import { ComponentGroupKind } from '~/types';
+import { filterDeletedResources } from '~/utils/resource-utils';
 
 export const useComponentGroup = (
   namespace: string,
@@ -41,13 +42,16 @@ export const useComponentGroups = (
       watch,
     },
     ComponentGroupModel,
+    {
+      filterData: filterDeletedResources as (
+        resource: ComponentGroupKind[],
+      ) => ComponentGroupKind[],
+    },
   );
 
   return useMemo(
     () => [
-      !isLoading && !error
-        ? (data?.filter((group) => !group.metadata?.deletionTimestamp) ?? [])
-        : [],
+      !isLoading && !error ? (data ?? []) : [],
       !isLoading,
       error,
     ],

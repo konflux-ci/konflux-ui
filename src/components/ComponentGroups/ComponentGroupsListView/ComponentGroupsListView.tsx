@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { PageSection } from '@patternfly/react-core';
 import PageLayout from '~/components/PageLayout/PageLayout';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
@@ -10,14 +9,13 @@ import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
 import {
   componentGroupsFilterConfig,
-  getComponentGroupsTableColumns,
+  componentGroupsTableColumns,
 } from './component-groups-table-config';
 import ComponentGroupsEmptyState from './ComponentGroupsEmptyState';
 
 export const ComponentGroupsListView: React.FC = () => {
   const namespace = useNamespace();
   const [groups, loaded, error] = useComponentGroups(namespace, true);
-  const columns = useMemo(() => getComponentGroupsTableColumns(namespace), [namespace]);
   const { clientFilterValues, clearAll, isFiltered } = useFilterState(componentGroupsFilterConfig);
 
   const { filteredData } = useFilteredData(componentGroupsFilterConfig, groups, clientFilterValues);
@@ -51,7 +49,7 @@ export const ComponentGroupsListView: React.FC = () => {
         >
           <Table
             data={filteredData}
-            columns={columns}
+            columns={componentGroupsTableColumns}
             getRowId={(row) => row.metadata?.name ?? '-'}
             aria-label="Component groups list"
             enableSorting
