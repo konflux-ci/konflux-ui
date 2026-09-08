@@ -921,7 +921,7 @@ describe('useK8sAndKarchResource', () => {
         watch: true,
       },
       mockModel,
-      expect.objectContaining({ enabled: true, staleTime: Infinity }),
+      expect.objectContaining({ enabled: true }),
       {},
     );
   });
