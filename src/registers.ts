@@ -2,7 +2,7 @@ import { checkIfAnalyticsIsEnabled } from '~/analytics/conditional-checks';
 import { checkIfLightspeedIsAvailable } from '~/components/AIChat/conditional-checks';
 import { checkIfSystemNotificationsAccessible } from '~/components/KonfluxSystemNotifications/conditional-checks';
 import { getKonfluxPublicInfo } from '~/hooks/useKonfluxPublicInfo';
-import { LIGHTSPEED_HEALTH_CHECK_TIMEOUT_MS } from '~/lightspeed/lightspeedConfig';
+import { LIGHTSPEED_CONDITION_TTL_MS } from '~/lightspeed/lightspeedConfig';
 import { KonfluxInstanceEnvironments } from '~/types/konflux-public-info';
 import { registerCondition } from './feature-flags/conditions';
 import { checkIfImageControllerIsEnabled } from './image-controller/conditional-checks';
@@ -14,7 +14,7 @@ registerCondition('isKiteServiceEnabled', checkIfKiteServiceIsEnabled);
 registerCondition('isImageControllerEnabled', checkIfImageControllerIsEnabled);
 registerCondition('isSystemNotificationsAccessible', checkIfSystemNotificationsAccessible);
 registerCondition('isAnalyticsEnabled', checkIfAnalyticsIsEnabled);
-registerCondition('isLightspeedAvailable', checkIfLightspeedIsAvailable, LIGHTSPEED_HEALTH_CHECK_TIMEOUT_MS);
+registerCondition('isLightspeedAvailable', checkIfLightspeedIsAvailable, LIGHTSPEED_CONDITION_TTL_MS);
 
 registerCondition('isStagingCluster', async () => {
   try {
