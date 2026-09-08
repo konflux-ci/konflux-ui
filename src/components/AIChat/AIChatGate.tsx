@@ -24,7 +24,8 @@ const AIChatDockLoader: React.FC = () => {
 };
 
 /**
- * Lazy-loads the PatternFly chatbot UI only when the experimental `ai-chat` flag is on.
+ * Renders the PatternFly chatbot dock when the experimental `ai-chat` flag is on.
+ * Guarded by `isStagingCluster` and `isLightspeedAvailable` (see flags.ts).
  */
 export const AIChatGate: React.FC = () => (
   <IfFeature flag="ai-chat">
