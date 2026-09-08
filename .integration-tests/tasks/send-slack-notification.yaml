@@ -108,11 +108,11 @@ spec:
         echo "=== Sending Slack notification ==="
 
         # Build JSON payload properly using jq to avoid injection issues
-        PAYLOAD=$(jq -n --arg text "${MESSAGE}" '{text: $text}')
+        PAYLOAD=$(printf '%s' "${MESSAGE}" | sed 's/\\/\\\\/g; s/"/\\"/g')
 
         RESPONSE=$(curl -sf --max-time 10 -X POST "${SLACK_WEBHOOK_URL}" \
           -H "Content-Type: application/json; charset=utf-8" \
-          -d "${PAYLOAD}") || RESPONSE="curl_failed"
+          -d "{\"text\": \"${PAYLOAD}\"}") || RESPONSE="curl_failed"
         echo "Slack webhook response: ${RESPONSE}"
 
         # Check if message was sent successfully
