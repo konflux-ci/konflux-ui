@@ -1,14 +1,14 @@
 import * as React from 'react';
-import Chatbot from '@patternfly/chatbot/dist/dynamic/Chatbot';
+import Chatbot, { ChatbotDisplayMode } from '@patternfly/chatbot/dist/dynamic/Chatbot';
 import ChatbotConversationHistoryNav from '@patternfly/chatbot/dist/dynamic/ChatbotConversationHistoryNav';
 import ChatbotToggle from '@patternfly/chatbot/dist/dynamic/ChatbotToggle';
-import { AIChatPortal } from '~/components/AIChat/AIChatPortal';
+import { AIChatPortal, getAIChatPortalContainer } from '~/components/AIChat/AIChatPortal';
 import { AIChatDrawerContent } from '~/components/AIChat/components/AIChatDrawerContent';
 import { AIChatDrawerFooter } from '~/components/AIChat/components/AIChatDrawerFooter';
 import { AIChatDrawerHeader } from '~/components/AIChat/components/AIChatDrawerHeader';
 import { AIChatRenameConversationModal } from '~/components/AIChat/components/AIChatRenameConversationModal';
 import {
-  KONFLUX_AI_DISPLAY_MODE,
+  KONFLUX_AI_DEFAULT_DISPLAY_MODE,
   KONFLUX_AI_HISTORY_NO_RESULTS_BODY,
   KONFLUX_AI_HISTORY_NO_RESULTS_TITLE,
   KONFLUX_AI_HISTORY_SEARCH_PLACEHOLDER,
@@ -25,7 +25,8 @@ import './AIChat.scss';
  */
 export const AIChatDock: React.FC = () => {
   const [isChatbotVisible, setIsChatbotVisible] = React.useState(false);
-  const chatRootRef = React.useRef<HTMLDivElement>(null);
+  const [displayMode, setDisplayMode] = React.useState(KONFLUX_AI_DEFAULT_DISPLAY_MODE);
+  const isMaximized = displayMode === ChatbotDisplayMode.fullscreen;
   const {
     activeConversationId,
     messages,
@@ -38,6 +39,7 @@ export const AIChatDock: React.FC = () => {
     hasNoSearchResults,
     backendError,
     renameConversationTarget,
+    historyMenuKey,
     setIsDrawerOpen,
     refreshConversations,
     startNewChat,
@@ -75,18 +77,32 @@ export const AIChatDock: React.FC = () => {
     [selectConversation, setIsDrawerOpen],
   );
 
+  const handleToggleDisplayMode = React.useCallback(() => {
+    setDisplayMode((mode) =>
+      mode === ChatbotDisplayMode.fullscreen
+        ? ChatbotDisplayMode.default
+        : ChatbotDisplayMode.fullscreen,
+    );
+  }, []);
+
+  const handleCloseChat = React.useCallback(() => {
+    setIsChatbotVisible(false);
+    setDisplayMode(KONFLUX_AI_DEFAULT_DISPLAY_MODE);
+  }, []);
+
   return (
     <AIChatPortal>
-      <div ref={chatRootRef} className="ai-chat" data-test="ai-chat-dock">
+      <div className="ai-chat" data-test="ai-chat-dock">
         <ChatbotToggle
           tooltipLabel={KONFLUX_AI_TOGGLE_TOOLTIP}
           toggleButtonLabel={KONFLUX_AI_TOGGLE_BUTTON_LABEL}
           isChatbotVisible={isChatbotVisible}
           onToggleChatbot={() => setIsChatbotVisible((visible) => !visible)}
         />
-        <Chatbot displayMode={KONFLUX_AI_DISPLAY_MODE} isVisible={isChatbotVisible}>
+        <Chatbot displayMode={displayMode} isVisible={isChatbotVisible}>
           <ChatbotConversationHistoryNav
-            displayMode={KONFLUX_AI_DISPLAY_MODE}
+            key={`chat-history-${historyMenuKey}`}
+            displayMode={displayMode}
             onDrawerToggle={handleToggleDrawer}
             isDrawerOpen={isDrawerOpen}
             setIsDrawerOpen={setIsDrawerOpen}
@@ -108,8 +124,10 @@ export const AIChatDock: React.FC = () => {
               <>
                 <AIChatDrawerHeader
                   isDrawerOpen={isDrawerOpen}
+                  isMaximized={isMaximized}
                   onToggleDrawer={handleToggleDrawer}
-                  onClose={() => setIsChatbotVisible(false)}
+                  onToggleDisplayMode={handleToggleDisplayMode}
+                  onClose={handleCloseChat}
                 />
                 <AIChatDrawerContent
                   backendError={backendError}
@@ -128,7 +146,7 @@ export const AIChatDock: React.FC = () => {
           />
         </Chatbot>
         <AIChatRenameConversationModal
-          appendTo={() => chatRootRef.current ?? document.body}
+          appendTo={getAIChatPortalContainer}
           currentName={renameConversationTarget?.currentName ?? ''}
           isOpen={renameConversationTarget !== null}
           isSubmitting={isRenamingConversation}

@@ -15,8 +15,7 @@ const createConversationMenuItems = (
   <DropdownList>
     <DropdownItem
       icon={<PencilAltIcon aria-hidden />}
-      onClick={(event) => {
-        event.stopPropagation();
+      onClick={() => {
         handlers.onRenameConversation(conversation.id, conversation.text);
       }}
     >
@@ -24,8 +23,7 @@ const createConversationMenuItems = (
     </DropdownItem>
     <DropdownItem
       icon={<TrashIcon aria-hidden />}
-      onClick={(event) => {
-        event.stopPropagation();
+      onClick={() => {
         handlers.onDeleteConversation(conversation.id);
       }}
     >
