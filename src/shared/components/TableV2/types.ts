@@ -124,6 +124,17 @@ export interface ColumnDefinition<TData, TValue = unknown> {
 }
 
 /**
+ * Default sort configuration for a table. Applied when no sort has been
+ * persisted in column state (e.g., first visit or after clearing storage).
+ */
+export interface DefaultSort {
+  /** Column ID to sort by. Must match a column with `sortable: true`. */
+  column: string;
+  /** Sort direction. */
+  direction: 'asc' | 'desc';
+}
+
+/**
  * Serializable column state used for persistence and state management.
  *
  * Stored in `localStorage` when a {@link TableProps.columnStateKey} is
@@ -237,6 +248,12 @@ export interface TableProps<TData> {
    * on unmount.
    */
   columnStateKey?: string;
+
+  /**
+   * Default sort applied when no sort is persisted in column state.
+   * Useful for tables that should start sorted (e.g., by creation date).
+   */
+  defaultSort?: DefaultSort;
 
   /**
    * External scroll container element. When provided, virtualization and

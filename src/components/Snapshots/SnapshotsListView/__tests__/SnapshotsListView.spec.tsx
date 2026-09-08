@@ -57,6 +57,25 @@ describe('SnapshotsListView - Column Headers', () => {
     jest.useFakeTimers();
   });
 
+  it('should render the sort indicator on the "Created at" column by default', () => {
+    useMockSnapshots.mockReturnValue({
+      data: mockSnapshots,
+      getSource: () => ResourceSource.Cluster,
+      isLoading: false,
+      hasError: false,
+    });
+
+    act(() => {
+      renderWithQueryClientAndRouter(createWrappedComponent());
+    });
+
+    // The "Created at" column header should have a sort indicator (descending arrow)
+    const createdAtHeader = screen.getByText('Created at').closest('th');
+    expect(createdAtHeader).toBeInTheDocument();
+    // The sort indicator renders an SVG icon inside the header
+    expect(createdAtHeader?.querySelector('svg')).toBeInTheDocument();
+  });
+
   it('should display all expected column headers correctly', () => {
     useMockSnapshots.mockReturnValue({
       data: mockSnapshots,

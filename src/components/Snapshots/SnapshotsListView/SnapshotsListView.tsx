@@ -145,6 +145,7 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
           getRowId={(obj) => obj.metadata.uid ?? obj.metadata.name}
           aria-label="Snapshots List"
           enableSorting
+          defaultSort={{ column: 'createdAt', direction: 'desc' }}
           hasNextPage={hasNextPage}
           isFetchingNextPage={isFetchingNextPage}
           fetchNextPage={fetchNextPage}
