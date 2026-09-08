@@ -99,12 +99,10 @@ describe('VirtualizedLogContent Integration Tests', () => {
       renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
 
       const items = document.querySelectorAll('.pf-v6-c-log-viewer__list-item');
-      // Virtual items should have positioning (either absolute position or transform)
+      // Virtual items should have absolute positioning with a top offset
       const itemsWithPositioning = Array.from(items).filter((item) => {
         if (!(item instanceof HTMLElement)) return false;
-        const hasAbsolutePosition = item.style.position === 'absolute';
-        const hasTransform = item.style.transform && item.style.transform !== '';
-        return hasAbsolutePosition || hasTransform;
+        return item.style.position === 'absolute' && item.style.top !== '';
       });
       expect(itemsWithPositioning.length).toBeGreaterThan(0);
     });
@@ -414,9 +412,18 @@ describe('VirtualizedLogContent Integration Tests', () => {
         <VirtualizedLogContent {...defaultProps} wrapLines={false} />,
       );
 
-      const listElement = document.querySelector('.log-content__list');
+      const listElement = document.querySelector('.log-content__list.log-content__list--nowrap');
       expect(listElement).toBeInTheDocument();
-      expect(listElement).toHaveClass('log-content__list--nowrap');
+    });
+
+    it('should render a split layout with a fixed gutter track when wrapLines is disabled', () => {
+      renderWithQueryClientAndRouter(
+        <VirtualizedLogContent {...defaultProps} wrapLines={false} />,
+      );
+
+      expect(document.querySelector('.log-content__nowrap-layout')).toBeInTheDocument();
+      expect(document.querySelector('.log-content__gutter-track')).toBeInTheDocument();
+      expect(document.querySelector('.log-content__content-scroll')).toBeInTheDocument();
     });
   });
 
