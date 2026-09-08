@@ -1,7 +1,13 @@
 import { saveAs } from 'file-saver';
 import { dump } from 'js-yaml';
 import { TaskRunKind } from '../../types';
-import { downloadYaml, downloadYamlAction, parseBoolean, parseNumber } from '../common-utils';
+import {
+  downloadYaml,
+  downloadYamlAction,
+  parseBoolean,
+  parseNumber,
+  sortByTime,
+} from '../common-utils';
 
 // Mock file-saver
 jest.mock('file-saver', () => ({
@@ -15,6 +21,20 @@ jest.mock('js-yaml', () => ({
 
 const mockSaveAs = saveAs as jest.Mock;
 const mockDump = dump as jest.Mock;
+
+describe('sortByTime', () => {
+  it('sorts a new array by the selected time in ascending order', () => {
+    const items = [
+      { name: 'later', timestamp: '2026-09-15T10:00:00Z' },
+      { name: 'earlier', timestamp: '2026-09-01T10:00:00Z' },
+    ];
+
+    const sorted = sortByTime(items, (item) => item.timestamp);
+
+    expect(sorted.map((item) => item.name)).toEqual(['earlier', 'later']);
+    expect(items.map((item) => item.name)).toEqual(['later', 'earlier']);
+  });
+});
 
 describe('downloadYaml', () => {
   beforeEach(() => {

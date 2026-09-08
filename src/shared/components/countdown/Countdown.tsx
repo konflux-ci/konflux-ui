@@ -39,7 +39,7 @@ export const Countdown: React.FC<CountdownProps> = ({ timestamp, isUnix, simple,
   const remainingMs = targetDate.getTime() - now;
 
   if ((typeof timestamp === 'string' && timestamp.length === 0) || !isValidTarget) {
-    return '-';
+    return <>-</>;
   }
 
   const countdown = formatCountdown(remainingMs);

@@ -1,4 +1,4 @@
-import { renderHook } from '@testing-library/react';
+import { act, renderHook } from '@testing-library/react';
 import { MINTMAKER_NAMESPACE, MINTMAKER_SCHEDULE_CONFIGMAP } from '~/consts/constants';
 import { useK8sWatchResource } from '~/k8s/hooks';
 import { useMintMakerSchedule } from '../useMintMakerSchedule';
@@ -13,6 +13,7 @@ const useK8sWatchResourceMock = useK8sWatchResource as jest.Mock;
 // not sensitive to when they run. The hook uses Date.now() internally, so we
 // freeze time to make assertions deterministic.
 const FIXED_NOW = new Date('2026-08-12T12:00:00Z').getTime();
+const EXPIRING_RUN = new Date(FIXED_NOW + 30_000).toISOString();
 const FUTURE_1 = '2026-09-01T10:00:00Z';
 const FUTURE_2 = '2026-09-08T10:00:00Z';
 const FUTURE_3 = '2026-09-15T10:00:00Z';
@@ -30,13 +31,17 @@ const makeConfigMap = (data: Record<string, string>) => ({
 });
 
 describe('useMintMakerSchedule', () => {
+  let currentTime = FIXED_NOW;
+
   beforeEach(() => {
-    jest.spyOn(Date, 'now').mockReturnValue(FIXED_NOW);
+    currentTime = FIXED_NOW;
+    jest.spyOn(Date, 'now').mockImplementation(() => currentTime);
   });
 
   afterEach(() => {
     jest.restoreAllMocks();
     jest.clearAllMocks();
+    jest.useRealTimers();
   });
 
   it('calls useK8sWatchResource with the correct resource config', () => {
@@ -129,6 +134,27 @@ describe('useMintMakerSchedule', () => {
 
     expect(schedule).toHaveLength(1);
     expect(schedule[0].manager).toBe('renovate');
+  });
+
+  it('removes expired runs after the schedule refresh interval', () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(FIXED_NOW);
+    useK8sWatchResourceMock.mockReturnValue({
+      data: makeConfigMap({
+        'renovate_scheduled_times.txt': EXPIRING_RUN,
+      }),
+      isLoading: false,
+      error: null,
+    });
+
+    const { result } = renderHook(() => useMintMakerSchedule());
+    expect(result.current[0]).toHaveLength(1);
+
+    act(() => {
+      jest.advanceTimersByTime(60_000);
+    });
+
+    expect(result.current[0]).toEqual([]);
   });
 
   it('skips configmap keys that do not end with the schedule suffix', () => {
