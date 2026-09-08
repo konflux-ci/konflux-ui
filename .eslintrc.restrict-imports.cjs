@@ -98,8 +98,8 @@ module.exports = {
             target: './src/feature-flags/**/*',
             from: [
               './src/!(feature-flags|components|k8s|shared)/**/*',
-              './src/components/!(modal)/**/*',
               './src/components/!(modal)',
+              './src/components/!(modal)/**/*',
               './src/k8s/!(error.ts)',
               './src/k8s/!(error.ts)/**/*',
               './src/shared/!(utils)',
