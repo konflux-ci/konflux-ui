@@ -7,17 +7,22 @@ import ChatbotHeader, {
   ChatbotHeaderTitle,
 } from '@patternfly/chatbot/dist/dynamic/ChatbotHeader';
 import KonfluxLogo from '~/assets/konflux-logo.svg';
+import { AIChatDisplayModeButton } from '~/components/AIChat/components/AIChatDisplayModeButton';
 
 type AIChatDrawerHeaderProps = {
   isDrawerOpen: boolean;
+  isMaximized: boolean;
   onClose: () => void;
   onToggleDrawer: () => void;
+  onToggleDisplayMode: () => void;
 };
 
 export const AIChatDrawerHeader: React.FC<AIChatDrawerHeaderProps> = ({
   isDrawerOpen,
+  isMaximized,
   onClose,
   onToggleDrawer,
+  onToggleDisplayMode,
 }) => (
   <ChatbotHeader>
     <ChatbotHeaderMain>
@@ -27,6 +32,7 @@ export const AIChatDrawerHeader: React.FC<AIChatDrawerHeaderProps> = ({
       </ChatbotHeaderTitle>
     </ChatbotHeaderMain>
     <ChatbotHeaderActions>
+      <AIChatDisplayModeButton isMaximized={isMaximized} onToggle={onToggleDisplayMode} />
       <ChatbotHeaderCloseButton onClick={onClose} />
     </ChatbotHeaderActions>
   </ChatbotHeader>

@@ -3,6 +3,9 @@ import * as ReactDOM from 'react-dom';
 
 const AI_CHAT_PORTAL_ID = 'konflux-ai-chat-container';
 
+export const getAIChatPortalContainer = (): HTMLElement =>
+  document.getElementById(AI_CHAT_PORTAL_ID) ?? document.body;
+
 const getOrCreatePortalContainer = (): HTMLElement => {
   const existing = document.getElementById(AI_CHAT_PORTAL_ID);
   if (existing) {

@@ -56,6 +56,7 @@ type UseLightspeedChatResult = {
   hasNoSearchResults: boolean;
   backendError?: string;
   renameConversationTarget: RenameConversationTarget | null;
+  historyMenuKey: number;
   setIsDrawerOpen: React.Dispatch<React.SetStateAction<boolean>>;
   refreshConversations: () => Promise<void>;
   startNewChat: () => void;
@@ -115,6 +116,7 @@ export const useLightspeedChat = (): UseLightspeedChatResult => {
   const [isRenamingConversation, setIsRenamingConversation] = React.useState(false);
   const [renameConversationTarget, setRenameConversationTarget] =
     React.useState<RenameConversationTarget | null>(null);
+  const [historyMenuKey, setHistoryMenuKey] = React.useState(0);
 
   const client = useClient<LightspeedClient>();
   const activeConversation = useActiveConversation();
@@ -245,6 +247,7 @@ export const useLightspeedChat = (): UseLightspeedChatResult => {
   );
 
   const renameConversationById = React.useCallback((conversationId: string, currentName: string) => {
+    setHistoryMenuKey((key) => key + 1);
     setRenameConversationTarget({ conversationId, currentName });
   }, []);
 
@@ -300,6 +303,7 @@ export const useLightspeedChat = (): UseLightspeedChatResult => {
     hasNoSearchResults: Boolean(conversationSearch.trim()) && conversations.length === 0,
     backendError: backendError ?? initError,
     renameConversationTarget,
+    historyMenuKey,
     setIsDrawerOpen,
     refreshConversations,
     startNewChat,
