@@ -245,6 +245,8 @@ const SelectInputField: React.FC<React.PropsWithChildren<SelectInputFieldProps>>
         onSelect={onSelect}
         onOpenChange={setIsOpen}
         toggle={toggle}
+        isScrollable
+        maxMenuHeight="40vh"
       >
         <SelectList id={`${fieldId}-listbox`}>
           {filteredOptions.map((op) => (
