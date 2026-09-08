@@ -15,7 +15,6 @@ import Message from '@patternfly/chatbot/dist/dynamic/Message';
 import MessageBar from '@patternfly/chatbot/dist/dynamic/MessageBar';
 import MessageBox from '@patternfly/chatbot/dist/dynamic/MessageBox';
 import KonfluxLogo from '~/assets/konflux-logo.svg';
-import { AIChatPortal } from '~/components/AIChat/AIChatPortal';
 import { CHAT_MESSAGE_REHYPE_PLUGINS } from '~/components/AIChat/chatMessagePlugins';
 import {
   KONFLUX_AI_DISPLAY_MODE,
@@ -62,63 +61,57 @@ export const AIChatDock: React.FC = () => {
   }, [messages]);
 
   return (
-    <AIChatPortal>
-      <div className="ai-chat" data-test="ai-chat-dock">
-        <ChatbotToggle
-          tooltipLabel={KONFLUX_AI_TOGGLE_TOOLTIP}
-          toggleButtonLabel={KONFLUX_AI_TOGGLE_BUTTON_LABEL}
-          isChatbotVisible={isChatbotVisible}
-          onToggleChatbot={() => setIsChatbotVisible((visible) => !visible)}
-        />
-        <Chatbot displayMode={KONFLUX_AI_DISPLAY_MODE} isVisible={isChatbotVisible}>
-          <ChatbotHeader>
-            <ChatbotHeaderMain>
-              <ChatbotHeaderTitle>
-                <KonfluxLogo
-                  aria-label="Konflux"
-                  className="ai-chat__brand"
-                  height={36}
-                />
-              </ChatbotHeaderTitle>
-            </ChatbotHeaderMain>
-            <ChatbotHeaderActions>
-              <ChatbotHeaderCloseButton onClick={() => setIsChatbotVisible(false)} />
-            </ChatbotHeaderActions>
-          </ChatbotHeader>
-          <ChatbotContent>
-            {backendError ? (
-              <ChatbotAlert variant="danger" title={KONFLUX_AI_ERROR_TITLE} isInline>
-                {backendError}
-              </ChatbotAlert>
+    <div className="ai-chat" data-test="ai-chat-dock">
+      <ChatbotToggle
+        tooltipLabel={KONFLUX_AI_TOGGLE_TOOLTIP}
+        toggleButtonLabel={KONFLUX_AI_TOGGLE_BUTTON_LABEL}
+        isChatbotVisible={isChatbotVisible}
+        onToggleChatbot={() => setIsChatbotVisible((visible) => !visible)}
+      />
+      <Chatbot displayMode={KONFLUX_AI_DISPLAY_MODE} isVisible={isChatbotVisible}>
+        <ChatbotHeader>
+          <ChatbotHeaderMain>
+            <ChatbotHeaderTitle>
+              <KonfluxLogo aria-label="Konflux" className="ai-chat__brand" height={36} />
+            </ChatbotHeaderTitle>
+          </ChatbotHeaderMain>
+          <ChatbotHeaderActions>
+            <ChatbotHeaderCloseButton onClick={() => setIsChatbotVisible(false)} />
+          </ChatbotHeaderActions>
+        </ChatbotHeader>
+        <ChatbotContent>
+          {backendError ? (
+            <ChatbotAlert variant="danger" title={KONFLUX_AI_ERROR_TITLE} isInline>
+              {backendError}
+            </ChatbotAlert>
+          ) : null}
+          <MessageBox announcement={announcement}>
+            {messages.length === 0 && !isInitializing ? (
+              <ChatbotWelcomePrompt
+                title={KONFLUX_AI_WELCOME_TITLE}
+                description={KONFLUX_AI_WELCOME_DESCRIPTION}
+              />
             ) : null}
-            <MessageBox announcement={announcement}>
-              {messages.length === 0 && !isInitializing ? (
-                <ChatbotWelcomePrompt
-                  title={KONFLUX_AI_WELCOME_TITLE}
-                  description={KONFLUX_AI_WELCOME_DESCRIPTION}
-                />
-              ) : null}
-              {messages.map((message, index) => (
-                <React.Fragment key={message.id}>
-                  <Message {...message} additionalRehypePlugins={CHAT_MESSAGE_REHYPE_PLUGINS} />
-                  {index === messages.length - 1 ? <div ref={scrollToBottomRef} /> : null}
-                </React.Fragment>
-              ))}
-            </MessageBox>
-          </ChatbotContent>
-          <ChatbotFooter>
-            <MessageBar
-              hasAttachButton={false}
-              isSendButtonDisabled={isSendButtonDisabled}
-              onSendMessage={(message) => {
-                void sendMessage(String(message));
-              }}
-              placeholder={KONFLUX_AI_MESSAGE_PLACEHOLDER}
-            />
-            <ChatbotFootnote label={KONFLUX_AI_FOOTNOTE} />
-          </ChatbotFooter>
-        </Chatbot>
-      </div>
-    </AIChatPortal>
+            {messages.map((message, index) => (
+              <React.Fragment key={message.id}>
+                <Message {...message} additionalRehypePlugins={CHAT_MESSAGE_REHYPE_PLUGINS} />
+                {index === messages.length - 1 ? <div ref={scrollToBottomRef} /> : null}
+              </React.Fragment>
+            ))}
+          </MessageBox>
+        </ChatbotContent>
+        <ChatbotFooter>
+          <MessageBar
+            hasAttachButton={false}
+            isSendButtonDisabled={isSendButtonDisabled}
+            onSendMessage={(message) => {
+              void sendMessage(String(message));
+            }}
+            placeholder={KONFLUX_AI_MESSAGE_PLACEHOLDER}
+          />
+          <ChatbotFootnote label={KONFLUX_AI_FOOTNOTE} />
+        </ChatbotFooter>
+      </Chatbot>
+    </div>
   );
 };
