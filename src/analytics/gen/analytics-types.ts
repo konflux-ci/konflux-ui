@@ -151,7 +151,6 @@ export interface JourneyStep {
 /** Branded type for SHA-256 obfuscated strings. Use `obfuscate()` to create. */
 export type SHA256Hash = string & { readonly __brand: 'SHA256Hash' };
 
-
 /**
  * Event names for Segment track() calls.
  * Values match the x-event-name field in the schema.
