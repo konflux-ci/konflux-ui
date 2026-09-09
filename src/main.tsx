@@ -9,8 +9,9 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { NuqsAdapter } from 'nuqs/adapters/react-router/v6';
 import ReactDOM from 'react-dom/client';
-import { initAnalytics } from '~/analytics';
+import { initAnalytics, TrackEvents } from '~/analytics';
 import { analyticsService, consumeLoginSignal } from '~/analytics/AnalyticsService';
+import { captureArrivalSourceOnce, markSessionStartedOnce, getArrivalSource } from '~/analytics/arrival-source';
 import { obfuscate } from '~/analytics/obfuscate';
 import { useKonfluxPublicInfo } from '~/hooks/useKonfluxPublicInfo';
 import { logger } from '~/monitoring/logger';
@@ -29,6 +30,11 @@ import '@patternfly/react-core/dist/styles/base.css';
 import '@patternfly/react-styles/css/utilities/Spacing/spacing.css';
 import './main.scss';
 
+// Must run before AuthProvider can mount and trigger the OAuth redirect,
+// otherwise document.referrer is overwritten before we can read it.
+// See src/analytics/arrival-source.ts for details.
+captureArrivalSourceOnce();
+
 // TEMP: Force-enable selected flags once per release/build
 forceEnableFlagsOnce(['kubearchive-logs', 'taskruns-kubearchive', 'pipelineruns-kubearchive'], {
   releaseId: '2025-11-17',
@@ -46,7 +52,6 @@ const App = () => {
 
     if (loaded && !error && publicInfo) {
       analyticsService.setCommonProperties({
-        clusterId: publicInfo.clusterId,
         clusterVersion: publicInfo.clusterVersion,
         konfluxVersion: publicInfo.konfluxVersion,
         kubernetesVersion: publicInfo.kubernetesVersion,
@@ -58,6 +63,14 @@ const App = () => {
       analyticsService.setCommonProperties({ userId });
       if (consumeLoginSignal()) {
         onLogin();
+      }
+      if (markSessionStartedOnce()) {
+        const arrivalSource = getArrivalSource();
+        analyticsService.track(TrackEvents.ui_session_started_event, { arrivalSource });
+        logger.info('UI session started', {
+          event: TrackEvents.ui_session_started_event,
+          arrivalSource,
+        });
       }
     });
   }, [loaded, error, publicInfo, onLogin, user]);

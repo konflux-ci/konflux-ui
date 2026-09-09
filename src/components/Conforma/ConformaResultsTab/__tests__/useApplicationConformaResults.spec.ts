@@ -1237,7 +1237,7 @@ describe('useApplicationConformaResults', () => {
     const compB = result.current.componentStatuses.find((c) => c.componentName === 'comp-b');
     expect(compB?.status).toBe('unknown');
     expect(logger.warn).toHaveBeenCalledWith(
-      'useApplicationConformaResults: fill-in query failed',
+      'useComponentsConformaResults: fill-in query failed',
       expect.objectContaining({ message: expect.any(String) }),
     );
   });

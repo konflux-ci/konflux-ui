@@ -2,6 +2,7 @@ export * from './application';
 export * from './commit';
 export * from './common-types';
 export * from './component';
+export * from './component-group';
 export * from './component-detection-query';
 export * from './coreTekton';
 export * from './pipeline';

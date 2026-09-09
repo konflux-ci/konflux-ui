@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import { PipelineRunKind } from '~/types';
 import {
   getPipelineRunStatusResults,
@@ -34,18 +34,12 @@ export const usePipelineRunTestOutputResult = (
 
   const taskRunNamespace = needsTaskRunFallback ? namespace : null;
 
-  const [taskRuns, loaded, error, getNextPage, nextPageProps] = useTaskRunsForPipelineRuns(
+  const [taskRuns, loaded, error] = useTaskRunsForPipelineRuns(
     taskRunNamespace,
     plr.metadata?.name ?? null,
     undefined,
     false,
   );
-
-  useEffect(() => {
-    if (nextPageProps.hasNextPage && !nextPageProps.isFetchingNextPage && loaded && !error) {
-      getNextPage();
-    }
-  }, [nextPageProps.hasNextPage, nextPageProps.isFetchingNextPage, loaded, getNextPage, error]);
 
   const testStatuses = useMemo<TaskTestResult[] | null>(() => {
     if (!plr) return null;
@@ -96,8 +90,7 @@ export const usePipelineRunTestOutputResult = (
   }, [testStatuses]);
 
   // when taskRunNamespace is null we are not fetching task runs (e.g. PLR has TEST_OUTPUT); treat as not loading
-  const isLoading =
-    taskRunNamespace !== null ? (!loaded && !error) || nextPageProps.isFetchingNextPage : false;
+  const isLoading = taskRunNamespace !== null && !loaded && !error;
 
   return [aggregatedTestResult, isLoading];
 };

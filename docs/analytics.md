@@ -34,9 +34,12 @@ Components
 | `src/analytics/hooks.ts` | `useTrackAnalyticsEvent` hook |
 | `src/analytics/gen/analytics-types.ts` | Auto-generated types from segment-bridge schema |
 | `src/analytics/obfuscate.ts` | SHA-256 hashing for PIA fields (`SHA256Hash` branded type) |
+| `src/routes/with-route-patterns.ts` | Stamps each route's privacy-safe pattern (e.g. `/ns/:workspaceName/applications`) onto `handle.routePattern`; `getRoutePatternFromMatches()` reads it back via `useMatches()` |
 | `src/analytics/load-config.ts` | Config resolution (API-first, runtime fallback) |
 | `src/analytics/conditional-checks.ts` | `isAnalyticsEnabled` condition + `useIsAnalyticsEnabled` hook |
+| `src/analytics/arrival-source.ts` | Classifies `document.referrer` into an `ArrivalSource` and persists it across the OAuth redirect |
 | `src/auth/useAuthAnalytics.ts` | `useAuthAnalytics` hook — `onLogin` / `onLogout` callbacks |
+| `src/feature-flags/useFeatureFlagAnalytics.ts` | Hook fired from `Panel.tsx` — diffs flag state on panel open vs. close and tracks `feature_flags_changed` |
 
 ---
 
@@ -94,9 +97,8 @@ analyticsService.setCommonProperties({
 });
 
 // Type-safe tracking — compiler enforces correct payload per event
-const userId = await obfuscate(rawUsername);
 analyticsService.track(TrackEvents.feedback_submitted_event, {
-  userId, rating: 5, feedback: 'Great experience',
+  rating: 5, feedback: 'Great experience',
 });
 
 // Page view
@@ -142,6 +144,35 @@ On a page refresh there is no `logged_in` param, so no login event fires.
 
 ---
 
+## Arrival Source
+
+`captureArrivalSourceOnce()` runs as the first statement in `main.tsx` to classify `document.referrer` before the OAuth redirect can overwrite it. The classified value is a `GitProvider` (`GITHUB`, `GITLAB`, `BITBUCKET`, or `UNSURE`/`'other'` — see `src/shared/utils/git-utils.tsx`), persisted to `sessionStorage` so it survives the redirect.
+
+`GithubRedirect` refines this further: when a PipelineRun loads, it reads the `git-provider` label and calls `refineArrivalSource()` to upgrade an `UNSURE` value to the real provider — including `FORGEJO`, which has no fixed domain and can't be detected from `document.referrer` alone.
+
+`markSessionStartedOnce()` is a separate guard that ensures the `ui_session_started` event fires exactly **once per new tab** — it returns `true` only the first time it's called per tab session. `sessionStorage` persists across reloads/navigation but is fresh for a new tab, which is what enforces the "new tab only" rule.
+
+```ts
+// In the App effect (main.tsx):
+if (markSessionStartedOnce()) {
+  trackEvent(TrackEvents.ui_session_started_event, { arrivalSource: getArrivalSource() });
+}
+```
+
+Why two guards:
+- `captureArrivalSourceOnce()` dedupes the *referrer capture* (runs at boot, before React).
+- `markSessionStartedOnce()` dedupes the *event fire* (runs inside the App effect, after auth/publicInfo settle).
+
+---
+
+## Feature Flag Change Tracking
+
+`useFeatureFlagAnalytics()` in `FeatureFlagPanel` tracks `feature_flags_changed` on every panel close (including `changesCount: 0`), via the modal's `onClose` in `Panel.tsx` — not on unmount.
+
+On open it snapshots flag state (from `useFeatureFlags()`) and `pagePattern` via `useMatches()` + `getRoutePatternFromMatches()` (`src/routes/with-route-patterns.ts`) — e.g. `/ns/:workspaceName/applications`, never the resolved URL. `withRoutePatterns()` stamps the pattern onto every route's `handle` at router creation (`src/routes/index.tsx`), so other route-aware analytics hooks can reuse the same helper. On close, `computeFeatureFlagChanges()` diffs open vs. current state and tracks `changes`, `changesCount`, and `pagePattern`. Net-zero toggles are omitted; "Reset to Defaults" is included. URL param overrides (`?ff_flag=true`) are not tracked.
+
+---
+
 ## Condition System Integration
 
 Analytics registers an `isAnalyticsEnabled` condition for the feature flags system:
@@ -177,14 +208,12 @@ This produces `src/analytics/gen/analytics-types.ts` with the event type, `Track
 ```ts
 import { useTrackAnalyticsEvent } from '~/analytics/hooks';
 import { TrackEvents } from '~/analytics';
-import { obfuscate } from '~/analytics/obfuscate';
 
 const trackEvent = useTrackAnalyticsEvent();
 
-const handleSubmit = async () => {
-  const userId = await obfuscate(username);
+const handleSubmit = () => {
   trackEvent(TrackEvents.feedback_submitted_event, {
-    userId, rating: 5, feedback: 'Great!',
+    rating: 5, feedback: 'Great!',
   });
 };
 ```
