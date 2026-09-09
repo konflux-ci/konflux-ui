@@ -1,0 +1,98 @@
+.ai-chat {
+  // Floating toggle — brand orange; icon matches text (black in light, light in dark)
+  .pf-v6-c-button.pf-chatbot__button {
+    z-index: var(--pf-t--global--z-index--2xl);
+    background-color: var(--konflux-brand-primary);
+    color: var(--pf-t--global--text--color--regular);
+
+    &:hover,
+    &:focus {
+      background-color: var(--konflux-brand-primary-hover);
+    }
+  }
+
+  // Send button — keep orange bg; white icon (PF defaults to brand blue)
+  .pf-v6-c-button.pf-chatbot__button--send {
+    background-color: var(--konflux-brand-primary);
+
+    .pf-v6-c-button__icon {
+      --pf-v6-c-button__icon--Color: color-mix(in srgb, var(--pf-t--color--white) 70%, black);
+      color: color-mix(in srgb, var(--pf-t--color--white) 70%, black);
+    }
+
+    &:hover,
+    &:focus {
+      background-color: var(--konflux-brand-primary);
+
+      .pf-v6-c-button__icon {
+        --pf-v6-c-button__icon--Color: var(--pf-t--color--white);
+        color: var(--pf-t--color--white);
+      }
+    }
+  }
+
+  .pf-chatbot--default {
+    z-index: var(--pf-t--global--z-index--xl);
+    // PF default is 30rem; widen the floating overlay panel
+    width: 45rem;
+
+    @media screen and (max-width: 47rem) {
+      width: 100vw;
+      inset-inline-end: 0;
+    }
+  }
+
+  .pf-chatbot--fullscreen {
+    z-index: var(--pf-t--global--z-index--xl);
+
+    // PF defaults to 60rem; use more horizontal space in fullscreen.
+    @media screen and (min-width: 64rem) {
+      .pf-chatbot__messagebox,
+      .pf-chatbot__footer-container {
+        width: 90%;
+        max-width: min(90rem, 90vw);
+      }
+    }
+  }
+
+  .pf-chatbot__header .pf-chatbot__title {
+    overflow: visible;
+  }
+
+  .pf-chatbot__alert {
+    margin-inline: var(--pf-t--global--spacer--lg);
+  }
+
+  // Welcome "Hello" — PF uses brand blue; portal is outside .konflux-ui__theme
+  .pf-chatbot__hello {
+    color: var(--konflux-brand-primary);
+  }
+
+  // PF positions jump buttons at 75% with !important; matching !important is required here.
+  .pf-chatbot .pf-chatbot__jump {
+    inset-inline-start: 50% !important;
+  }
+
+  // Wordmark uses currentColor
+  .ai-chat__brand {
+    flex-shrink: 0;
+    color: var(--pf-t--global--text--color--regular);
+  }
+}
+
+// Chatbot panel uses z-index xl; PF modal backdrop defaults to lg and modal box to xl.
+// Raise both so rename/delete modals render above the open chat panel.
+#konflux-ai-chat-container {
+  .pf-v6-c-backdrop {
+    --pf-v6-c-backdrop--ZIndex: var(--pf-t--global--z-index--2xl);
+  }
+
+  .pf-v6-c-modal-box {
+    --pf-v6-c-modal-box--ZIndex: var(--pf-t--global--z-index--2xl);
+  }
+
+  // Hide any open conversation action menus while the rename modal is open.
+  &:has([data-test='ai-chat-rename-conversation-modal']) .pf-chatbot__selections {
+    display: none !important;
+  }
+}
