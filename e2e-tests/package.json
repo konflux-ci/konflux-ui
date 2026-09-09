@@ -20,7 +20,7 @@
     "@types/fs-extra": "^9.0.13",
     "@types/node": "^24.0.0",
     "axe-core": "^4.10.2",
-    "cypress": "^15.20.0",
+    "cypress": "^16.0.0",
     "cypress-axe": "^1.6.0",
     "cypress-high-resolution": "^1.0.0",
     "cypress-mochawesome-reporter": "^3.4.0",
