@@ -1,5 +1,6 @@
 #!/bin/sh
-# Behavioral checks for scripts/container-yarn. Not part of `yarn test` (Jest roots are src/).
+# Behavioral checks for scripts/container-yarn. Jest does not pick this up (roots are src/);
+# the lint job in .github/workflows/main.yaml runs it.
 set -eu
 
 repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
