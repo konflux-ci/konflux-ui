@@ -1,5 +1,6 @@
 import { createBrowserRouter, type LoaderFunctionArgs } from 'react-router-dom';
 import { wrapCreateBrowserRouter } from '@sentry/react';
+import { TourAutoTrigger, TourProvider, TourRenderer } from '~/shared/components/GuidedTours';
 import { AppRoot } from '../AppRoot/AppRoot';
 import { GithubRedirect, githubRedirectLoader } from '../components/GithubRedirect';
 import { ModalProvider } from '../components/modal/ModalProvider';
@@ -40,7 +41,11 @@ const routes = [
     element: (
       <NamespaceProvider>
         <ModalProvider>
-          <AppRoot />
+          <TourProvider>
+            <AppRoot />
+            <TourRenderer />
+            <TourAutoTrigger />
+          </TourProvider>
         </ModalProvider>
       </NamespaceProvider>
     ),

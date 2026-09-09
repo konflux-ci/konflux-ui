@@ -1,13 +1,17 @@
 import React from 'react';
 import type { NormalizedLogSection } from './types';
 
-type FoldableSection = Pick<NormalizedLogSection, 'containerName' | 'isCompleted'>;
+type FoldableSection = Pick<
+  NormalizedLogSection,
+  'containerName' | 'isCompleted' | 'hasTerminatedWithError'
+>;
 
 const EMPTY_EXPANDED_SECTIONS = new Set<number>();
 const EMPTY_OVERRIDES: ReadonlyMap<number, boolean> = new Map();
 
 /** Default: in-progress open, completed folded. */
-const isExpandedByDefault = (section: FoldableSection): boolean => !section.isCompleted;
+const isExpandedByDefault = (section: FoldableSection): boolean =>
+  !section.isCompleted || !!section.hasTerminatedWithError;
 
 const resolveIsExpanded = (
   sections: readonly FoldableSection[],

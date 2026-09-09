@@ -1,13 +1,14 @@
 import { act } from 'react';
 import { fireEvent, screen, waitFor } from '@testing-library/react';
-import { supportedPartnerTasksSecrets } from '~/utils/secrets/secret-utils';
+import { userEvent } from '@testing-library/user-event';
 import {
   SecretTypeDropdownLabel,
   SecretType,
   SecretForComponentOption,
   SourceSecretType,
-} from '../../../types';
-import { formikRenderer } from '../../../utils/test-utils';
+} from '~/types';
+import { supportedPartnerTasksSecrets } from '~/utils/secrets/secret-utils';
+import { formikRenderer } from '~/utils/test-utils';
 import SecretModal, { SecretModalValues } from '../SecretModal';
 
 const initialValues: SecretModalValues = {
@@ -222,6 +223,33 @@ describe('SecretModal', () => {
     await waitFor(() => {
       fireEvent.click(screen.getByRole('button', { name: /Create/ }));
       expect(onSubmit).toHaveBeenCalled();
+    });
+  });
+
+  it('should show create-or-use title in create mode', async () => {
+    await renderSecretModal(initialValues);
+    expect(screen.getByText('Create or use new build secret')).toBeInTheDocument();
+  });
+
+  it('should show Use button when an existing opaque cluster secret is selected', async () => {
+    const user = userEvent.setup();
+    const clusterSecret: SecretModalValues['existingSecrets'][number] = {
+      type: SecretType.opaque,
+      name: 'cluster-secret',
+      providerUrl: '',
+      tokenKeyName: 'cluster-secret',
+      opaque: {
+        keyValuePairs: [{ key: 'token', value: 'value', readOnlyKey: true, readOnlyValue: true }],
+      },
+    };
+
+    await renderSecretModal(initialValues, [clusterSecret]);
+
+    await user.click(screen.getByRole('button', { name: 'secret-name-dropdown' }));
+    await user.click(screen.getByText('cluster-secret'));
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Use' })).toBeEnabled();
     });
   });
 });
