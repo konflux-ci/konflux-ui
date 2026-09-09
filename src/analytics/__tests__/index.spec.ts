@@ -35,6 +35,7 @@ describe('analytics initialization', () => {
   });
 
   afterEach(() => {
+    jest.useRealTimers();
     jest.restoreAllMocks();
     jest.clearAllMocks();
   });
@@ -120,4 +121,5 @@ describe('analytics initialization', () => {
     expect(analytics.getAnalytics()).toBeUndefined();
     await expect(analytics.whenAnalyticsReady()).resolves.toBe(false);
   });
+
 });
