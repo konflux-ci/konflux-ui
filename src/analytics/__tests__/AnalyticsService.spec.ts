@@ -1,5 +1,6 @@
 import { AnalyticsService, consumeLoginSignal } from '../AnalyticsService';
-import { SHA256Hash, TrackEvents } from '../gen/analytics-types';
+import { TrackEvents } from '../gen/analytics-types';
+import type { SHA256Hash } from '../obfuscate';
 
 jest.mock('..', () => ({
   ...jest.requireActual('../gen/analytics-types'),
@@ -8,13 +9,11 @@ jest.mock('..', () => ({
 
 const { getAnalytics }: { getAnalytics: jest.Mock } = jest.requireMock('..');
 
-const FAKE_HASH = 'abc123def456' as SHA256Hash;
-
 const mockSegment = {
-  track: jest.fn(),
-  page: jest.fn(),
   identify: jest.fn(),
+  track: jest.fn(),
   reset: jest.fn(),
+  setAnonymousId: jest.fn(),
 };
 
 const enableAnalytics = () => {
@@ -30,36 +29,42 @@ describe('AnalyticsService', () => {
     jest.clearAllMocks();
   });
 
-  describe('setCommonProperties / getCommonProperties', () => {
-    it('should start with empty common properties', () => {
-      expect(service.getCommonProperties()).toEqual({});
-    });
-
-    it('should set common properties', () => {
-      service.setCommonProperties({ clusterVersion: '4.14' });
-      expect(service.getCommonProperties()).toEqual({ clusterVersion: '4.14' });
-    });
-
-    it('should merge with existing properties', () => {
-      service.setCommonProperties({ clusterVersion: '4.14' });
-      service.setCommonProperties({ konfluxVersion: '1.0' });
+  describe('common properties', () => {
+    it('should start with an in-memory session ID', () => {
       expect(service.getCommonProperties()).toEqual({
-        clusterVersion: '4.14',
-        konfluxVersion: '1.0',
+        sessionId: expect.stringMatching(
+          /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+        ),
       });
     });
 
-    it('should override existing keys on merge', () => {
+    it('merges, overrides, and returns a defensive copy', () => {
       service.setCommonProperties({ clusterVersion: '4.14' });
+      service.setCommonProperties({ konfluxVersion: '1.0' });
       service.setCommonProperties({ clusterVersion: '4.15' });
-      expect(service.getCommonProperties()).toEqual({ clusterVersion: '4.15' });
-    });
-
-    it('should return a copy, not a reference', () => {
-      service.setCommonProperties({ clusterVersion: '4.14' });
       const props = service.getCommonProperties();
       (props as Record<string, string>).clusterVersion = 'mutated';
-      expect(service.getCommonProperties()).toEqual({ clusterVersion: '4.14' });
+      expect(service.getCommonProperties()).toEqual(expect.objectContaining({
+        clusterVersion: '4.15',
+        konfluxVersion: '1.0',
+      }));
+    });
+
+    it('returns required common properties only when all required versions are set', () => {
+      expect(service.getReadyCommonProperties()).toBeUndefined();
+
+      service.setCommonProperties({
+        clusterVersion: '4.14',
+        konfluxVersion: '1.0',
+        kubernetesVersion: '1.30',
+      });
+
+      expect(service.getReadyCommonProperties()).toEqual({
+        sessionId: service.getCommonProperties().sessionId,
+        clusterVersion: '4.14',
+        konfluxVersion: '1.0',
+        kubernetesVersion: '1.30',
+      });
     });
   });
 
@@ -72,81 +77,80 @@ describe('AnalyticsService', () => {
         kubernetesVersion: '1.30',
       });
 
-      service.track(TrackEvents.user_login_event, { userId: FAKE_HASH });
+      const sent = service.track(TrackEvents.user_login_event, {});
 
       expect(mockSegment.track).toHaveBeenCalledWith(TrackEvents.user_login_event, {
+        sessionId: service.getCommonProperties().sessionId,
         clusterVersion: '4.14',
         konfluxVersion: '1.0',
         kubernetesVersion: '1.30',
-        userId: FAKE_HASH,
       });
+      expect(sent).toBe(true);
     });
 
-    it('should not throw when analytics is undefined', () => {
-      getAnalytics.mockReturnValue(undefined);
-      expect(() =>
-        service.track(TrackEvents.user_login_event, { userId: FAKE_HASH }),
-      ).not.toThrow();
+    it.each([
+      ['required common properties are unavailable', mockSegment],
+      ['analytics is unavailable', undefined],
+    ])('withholds events when %s', (_reason, analytics) => {
+      getAnalytics.mockReturnValue(analytics);
+      expect(service.track(TrackEvents.user_login_event, {})).toBe(false);
       expect(mockSegment.track).not.toHaveBeenCalled();
     });
   });
 
-  describe('page', () => {
-    it('should call analytics.page with name and merged properties', () => {
+  describe('reset', () => {
+    it('should rotate the session ID and Segment anonymous ID while preserving versions', () => {
       enableAnalytics();
       service.setCommonProperties({
         clusterVersion: '4.14',
         konfluxVersion: '1.0',
         kubernetesVersion: '1.30',
       });
+      const previousSessionId = service.getCommonProperties().sessionId;
 
-      service.page('Dashboard', { section: 'overview' });
-
-      expect(mockSegment.page).toHaveBeenCalledWith('Dashboard', {
-        clusterVersion: '4.14',
-        konfluxVersion: '1.0',
-        kubernetesVersion: '1.30',
-        section: 'overview',
-      });
-    });
-
-    it('should work without name or properties', () => {
-      enableAnalytics();
-      service.page();
-      expect(mockSegment.page).toHaveBeenCalledWith(undefined, {});
-    });
-
-    it('should not throw when analytics is undefined', () => {
-      getAnalytics.mockReturnValue(undefined);
-      expect(() => service.page('Test')).not.toThrow();
-      expect(mockSegment.page).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('identify', () => {
-    it('should call analytics.identify with userId', () => {
-      enableAnalytics();
-      service.identify(FAKE_HASH);
-
-      expect(mockSegment.identify).toHaveBeenCalledWith(FAKE_HASH);
-    });
-
-    it('should not throw when analytics is undefined', () => {
-      getAnalytics.mockReturnValue(undefined);
-      expect(() => service.identify(FAKE_HASH)).not.toThrow();
-    });
-  });
-
-  describe('reset', () => {
-    it('should call analytics.reset', () => {
-      enableAnalytics();
       service.reset();
+
+      const properties = service.getCommonProperties();
+      expect(properties.sessionId).not.toBe(previousSessionId);
+      expect(properties).toEqual(
+        expect.objectContaining({
+          clusterVersion: '4.14',
+          konfluxVersion: '1.0',
+          kubernetesVersion: '1.30',
+        }),
+      );
       expect(mockSegment.reset).toHaveBeenCalled();
+      expect(mockSegment.setAnonymousId).toHaveBeenCalledWith(properties.sessionId);
+    });
+  });
+
+  describe('identity', () => {
+    const userId = 'pseudonymous-user-id' as SHA256Hash;
+
+    it('retains identity until Segment is available', () => {
+      getAnalytics.mockReturnValue(undefined);
+      service.identify(userId);
+
+      expect(service.getUserId()).toBe(userId);
+      expect(mockSegment.identify).not.toHaveBeenCalled();
     });
 
-    it('should not throw when analytics is undefined', () => {
-      getAnalytics.mockReturnValue(undefined);
-      expect(() => service.reset()).not.toThrow();
+    it('identifies immediately when Segment is available', () => {
+      enableAnalytics();
+
+      service.identify(userId);
+
+      expect(service.getUserId()).toBe(userId);
+      expect(mockSegment.identify).toHaveBeenCalledWith(userId);
+    });
+
+    it('clears identity on reset', () => {
+      enableAnalytics();
+      service.identify(userId);
+
+      service.reset();
+
+      expect(service.getUserId()).toBeUndefined();
     });
   });
 });
@@ -170,33 +174,19 @@ describe('consumeLoginSignal', () => {
     });
   };
 
-  it('should return true and strip the param when logged_in is present', () => {
-    setLocation('?logged_in=1');
-    expect(consumeLoginSignal()).toBe(true);
-    expect(replaceStateSpy).toHaveBeenCalledWith({}, '', '/app');
-  });
-
-  it('should preserve other query params when stripping logged_in', () => {
-    setLocation('?logged_in=1&foo=bar');
-    expect(consumeLoginSignal()).toBe(true);
-    expect(replaceStateSpy).toHaveBeenCalledWith({}, '', '/app?foo=bar');
-  });
-
-  it('should return false when logged_in is not present', () => {
-    setLocation('?foo=bar');
-    expect(consumeLoginSignal()).toBe(false);
-    expect(replaceStateSpy).not.toHaveBeenCalled();
-  });
-
-  it('should return false when there are no query params', () => {
-    setLocation('');
-    expect(consumeLoginSignal()).toBe(false);
-    expect(replaceStateSpy).not.toHaveBeenCalled();
-  });
-
-  it('should preserve the hash fragment', () => {
-    setLocation('?logged_in=1', '/app', '#section');
-    expect(consumeLoginSignal()).toBe(true);
-    expect(replaceStateSpy).toHaveBeenCalledWith({}, '', '/app#section');
+  it.each([
+    ['?logged_in=1', '', true, '/app'],
+    ['?logged_in=1&foo=bar', '', true, '/app?foo=bar'],
+    ['?logged_in=1', '#section', true, '/app#section'],
+    ['?foo=bar', '', false, undefined],
+    ['', '', false, undefined],
+  ])('consumes login signal from %s', (search, hash, consumed, replacement) => {
+    setLocation(search, '/app', hash);
+    expect(consumeLoginSignal()).toBe(consumed);
+    if (replacement) {
+      expect(replaceStateSpy).toHaveBeenCalledWith({}, '', replacement);
+    } else {
+      expect(replaceStateSpy).not.toHaveBeenCalled();
+    }
   });
 });

@@ -12,17 +12,13 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
 // Pinned commit hash for stable schema reference. Update this when adopting new schema changes.
-const SCHEMA_COMMIT = 'main'; // TODO: replace with merge commit hash once segment-bridge PR is merged
+const SCHEMA_COMMIT = '997c657148feb9d9d23754e12ebe1dd860fced7e';
 const SCHEMA_URL = `https://raw.githubusercontent.com/konflux-ci/segment-bridge/${SCHEMA_COMMIT}/schema/ui.json`;
 
-const LOCAL_SCHEMA_PATH = join(
-  import.meta.dirname,
-  '..',
-  '..',
-  'segment-bridge',
-  'schema',
-  'ui.json',
-);
+const LOCAL_SCHEMA_PATHS = [
+  join(import.meta.dirname, '..', '..', 'segment-bridge', 'schema', 'ui.json'),
+  join(import.meta.dirname, '..', '..', '..', 'segment-bridge', 'schema', 'ui.json'),
+];
 
 const OUTPUT_DIR = join(import.meta.dirname, '..', 'src', 'analytics', 'gen');
 const OUTPUT_FILE = join(OUTPUT_DIR, 'analytics-types.ts');
@@ -40,7 +36,15 @@ const HEADER = `/**
  * from schema instead of editing this file directly.
  */`;
 
+const SHA256_HASH_IMPORT = "import type { SHA256Hash } from '../obfuscate';";
+
 async function fetchSchema() {
+  const localSchemaPath = LOCAL_SCHEMA_PATHS.find(existsSync);
+  if (process.env.ANALYTICS_SCHEMA_LOCAL === '1' && localSchemaPath) {
+    console.log('  Using local schema (ANALYTICS_SCHEMA_LOCAL=1):', localSchemaPath);
+    return JSON.parse(await readFile(localSchemaPath, 'utf-8'));
+  }
+
   try {
     const res = await fetch(SCHEMA_URL);
     if (res.ok) return res.json();
@@ -48,13 +52,13 @@ async function fetchSchema() {
     // Fall through to local file
   }
 
-  if (existsSync(LOCAL_SCHEMA_PATH)) {
-    console.log('  Remote fetch failed, using local schema:', LOCAL_SCHEMA_PATH);
-    return JSON.parse(await readFile(LOCAL_SCHEMA_PATH, 'utf-8'));
+  if (localSchemaPath) {
+    console.log('  Remote fetch failed, using local schema:', localSchemaPath);
+    return JSON.parse(await readFile(localSchemaPath, 'utf-8'));
   }
 
   throw new Error(
-    `Failed to fetch schema from ${SCHEMA_URL} and no local fallback found at ${LOCAL_SCHEMA_PATH}`,
+    `Failed to fetch schema from ${SCHEMA_URL} and no local fallback found at ${LOCAL_SCHEMA_PATHS.join(' or ')}`,
   );
 }
 
@@ -79,14 +83,9 @@ async function main() {
   }
 
   const ts = await compile(schema, 'KonfluxUISegmentEvents', {
-    bannerComment: HEADER,
+    bannerComment: '',
     additionalProperties: false,
   });
-
-  // SHA256Hash branded type — referenced by tsType in the schema
-  const sha256Type =
-    '/** Branded type for SHA-256 obfuscated strings. Use `obfuscate()` to create. */\n' +
-    "export type SHA256Hash = string & { readonly __brand: 'SHA256Hash' };\n\n";
 
   // Collect event defs that have x-event-name
   const defs = schema.$defs || {};
@@ -115,14 +114,20 @@ async function main() {
 
   // Generate EventPropertiesMap — maps each TrackEvents value to its event-specific
   // properties with CommonFields excluded (they are merged via commonProperties).
-  const mapEntries = eventDefs.map(
-    ([key]) => `  [TrackEvents.${key}]: Omit<${toPascalCase(key)}, keyof CommonFields>;`,
-  );
+  const mapEntries = eventDefs.map(([key, def]) => {
+    const hasEventProperties = (def.allOf || []).some(
+      (schemaEntry) => Object.keys(schemaEntry.properties || {}).length > 0,
+    );
+    const propertiesType = hasEventProperties
+      ? `Omit<${toPascalCase(key)}, keyof CommonFields>`
+      : 'Record<string, never>';
+    return `  [TrackEvents.${key}]: ${propertiesType};`;
+  });
 
   const mapBlock = [
     '',
     '/**',
-    ' * Maps each TrackEvents value to the event-specific properties callers must supply.',
+    ' * Maps each TrackEvents value to its event-specific properties callers must supply.',
     ' * CommonFields are excluded — they are merged automatically from commonProperties.',
     ' */',
     'export type EventPropertiesMap = {',
@@ -131,7 +136,12 @@ async function main() {
     '',
   ].join('\n');
 
-  await writeFile(OUTPUT_FILE, ts + sha256Type + enumBlock + mapBlock);
+  let output = `${HEADER}\n\n${ts}${enumBlock}${mapBlock}`;
+  if (output.includes('SHA256Hash')) {
+    output = `${HEADER}\n\n${SHA256_HASH_IMPORT}\n\n${ts}${enumBlock}${mapBlock}`;
+  }
+
+  await writeFile(OUTPUT_FILE, output);
   console.log('  Generated: analytics-types.ts');
 }
 

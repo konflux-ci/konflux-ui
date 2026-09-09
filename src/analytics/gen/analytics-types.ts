@@ -2,7 +2,7 @@
  * ⚠️  AUTO-GENERATED FILE — DO NOT EDIT MANUALLY ⚠️
  *
  * This file was generated from the Konflux analytics schema.
- * Schema: https://github.com/konflux-ci/segment-bridge/blob/main/schema/ui.json
+ * Schema: https://github.com/konflux-ci/segment-bridge/blob/997c657148feb9d9d23754e12ebe1dd860fced7e/schema/ui.json
  * Docs:   docs/analytics.md
  *
  * To regenerate, run: yarn generate:analytics-types
@@ -10,6 +10,8 @@
  * LLM INSTRUCTIONS: If asked to modify analytics types, always regenerate
  * from schema instead of editing this file directly.
  */
+
+import type { SHA256Hash } from '../obfuscate';
 
 /**
  * Union of all Konflux UI analytics event types
@@ -24,15 +26,29 @@ export type KonfluxUISegmentEvents =
 /**
  * Fired when a user successfully authenticates into Konflux
  */
-export type UserLoginEvent = CommonFields & {};
+export type UserLoginEvent = CommonFields & {
+  /**
+   * Unique identifier of the user. Obfuscated via sha256 with `clusterId` as salt.
+   */
+  userId: SHA256Hash;
+};
 /**
  * Fired when a user session ends, either by explicit logout or session expiry
  */
-export type UserLogoutEvent = CommonFields & {};
+export type UserLogoutEvent = CommonFields & {
+  /**
+   * Unique identifier of the user. Obfuscated via sha256 with `clusterId` as salt.
+   */
+  userId: SHA256Hash;
+};
 /**
  * Fired when a user submits feedback through the Konflux UI
  */
 export type FeedbackSubmittedEvent = CommonFields & {
+  /**
+   * Unique identifier of the user. Obfuscated via sha256 with `clusterId` as salt.
+   */
+  userId: SHA256Hash;
   /**
    * User satisfaction rating, typically on a 1-5 scale
    */
@@ -51,6 +67,10 @@ export type FeedbackSubmittedEvent = CommonFields & {
  */
 export type UiSessionStartedEvent = CommonFields & {
   /**
+   * Unique identifier of the user. Obfuscated via sha256 with `clusterId` as salt.
+   */
+  userId: SHA256Hash;
+  /**
    * Classification of document.referrer on first load, e.g. 'github' if the referrer host is github.com (or a subdomain).
    */
   arrivalSource: string;
@@ -59,6 +79,10 @@ export type UiSessionStartedEvent = CommonFields & {
  * Fired every time the Feature Flag Panel modal is closed. Contains only the flags whose effective state changed between panel open and panel close. changesCount may be 0 when user opened the panel but did not change anything (tracks panel awareness).
  */
 export type FeatureFlagsChangedEvent = CommonFields & {
+  /**
+   * Unique identifier of the user. Obfuscated via sha256 with `clusterId` as salt.
+   */
+  userId: SHA256Hash;
   /**
    * Map of changed flag keys to their new boolean value. Empty object if no flags were changed.
    */
@@ -78,6 +102,10 @@ export type FeatureFlagsChangedEvent = CommonFields & {
  * Fired once per session, or once per part when the payload is auto-split, capturing the navigation path and per-page dwell times
  */
 export type UserJourneyEvent = CommonFields & {
+  /**
+   * Unique identifier of the user. Obfuscated via sha256 with `clusterId` as salt.
+   */
+  userId: SHA256Hash;
   /**
    * ISO-8601 timestamp of when the session started
    */
@@ -148,9 +176,6 @@ export interface JourneyStep {
    */
   hiddenMs?: number;
 }
-/** Branded type for SHA-256 obfuscated strings. Use `obfuscate()` to create. */
-export type SHA256Hash = string & { readonly __brand: 'SHA256Hash' };
-
 
 /**
  * Event names for Segment track() calls.
@@ -166,7 +191,7 @@ export enum TrackEvents {
 }
 
 /**
- * Maps each TrackEvents value to the event-specific properties callers must supply.
+ * Maps each TrackEvents value to its event-specific properties callers must supply.
  * CommonFields are excluded — they are merged automatically from commonProperties.
  */
 export type EventPropertiesMap = {
