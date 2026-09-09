@@ -1,5 +1,6 @@
 import { RouteErrorBoundry } from '@routes/RouteErrorBoundary';
 import { RouterParams } from '@routes/utils';
+import { ComponentDependencyTab } from '~/components/ComponentsPage/tabs/ComponentDependencyTab';
 import { ComponentVersionsTab } from '~/components/ComponentsPage/tabs/ComponentVersionsTab';
 import { ensureFeatureFlagOnLoader } from '~/feature-flags/utils';
 import { ActivityTabV2 } from '~/shared/components/activity-tab/ActivityTabV2';
@@ -43,6 +44,14 @@ const componentsPageRoutes = [
       {
         path: `versions`,
         element: <ComponentVersionsTab />,
+      },
+      {
+        path: `dep-updates`,
+        loader: () => {
+          ensureFeatureFlagOnLoader('mintmaker');
+          return null;
+        },
+        element: <ComponentDependencyTab />,
       },
     ],
   },

@@ -46,6 +46,7 @@ export enum PipelineRunLabel {
 
   MINTMAKER_COMPONENT_LABEL = 'mintmaker.appstudio.redhat.com/component',
   MINTMAKER_NAMESPACE_LABEL = 'mintmaker.appstudio.redhat.com/namespace',
+  MINTMAKER_APPLICATION_LABEL = 'mintmaker.appstudio.redhat.com/application',
 }
 
 export enum PipelineRunType {
