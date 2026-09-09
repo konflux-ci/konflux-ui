@@ -103,6 +103,36 @@ export const isPartnerTask = (
   return !!Object.values(arr).find((secret) => secret.name === secretName);
 };
 
+export const findExistingOpaqueSecretByName = (
+  name: string,
+  existingSecrets: BuildTimeSecret[],
+): BuildTimeSecret | undefined => {
+  return existingSecrets.find(
+    (secret) => secret.name === name && secret.type === SecretType.opaque,
+  );
+};
+
+export const isUsingExistingClusterSecret = (
+  name: string,
+  type: string,
+  existingSecrets: BuildTimeSecret[],
+): boolean => {
+  if (!name || type !== SecretTypeDropdownLabel.opaque) {
+    return false;
+  }
+
+  const matched = findExistingOpaqueSecretByName(name, existingSecrets);
+  if (!matched) {
+    return false;
+  }
+
+  if (isPartnerTask(name, supportedPartnerTasksSecrets)) {
+    return matched.opaque?.keyValuePairs?.some((kv) => kv.readOnlyValue) ?? false;
+  }
+
+  return true;
+};
+
 export const getAuthType = (
   type: SecretType,
 ): ImagePullSecretType | SourceSecretType | SecretTypeDropdownLabel | undefined => {
