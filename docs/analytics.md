@@ -1,12 +1,63 @@
 # Analytics (Segment) Integration
 
-Konflux UI uses Segment Analytics.js 2.0 for product analytics. Analytics is code-split, non-blocking, and disabled when configuration is unavailable.
+Konflux UI uses [Segment](https://segment.com/) (Analytics.js 2.0) for product analytics. Segment routes events to downstream destinations (Amplitude, Mixpanel, BigQuery, etc.) configured in the Segment dashboard.
+
+---
+
+## Architecture
+
+```
+main.tsx
+  └── initAnalytics()                        # SDK init (non-blocking, code-split)
+        └── loadAnalyticsConfig()             # Config resolution
+              ├── fetch /segment/key + /segment/url   # Production
+              └── window.KONFLUX_RUNTIME              # Local dev fallback
+
+App (main.tsx)                                 # Renders after auth
+  ├── useKonfluxPublicInfo()                   # Fetch version data from ConfigMap
+  ├── analyticsService.setCommonProperties()   # Set CommonFields when available
+  ├── analyticsService.identify()              # Transport-level pseudonymous userId
+  └── consumeLoginSignal() → onLogin()         # Login event on real OAuth login
+
+AuthContext.tsx
+  └── onLogout()                               # Logout event on sign out
+
+Components
+  └── useTrackAnalyticsEvent()                 # Type-safe track hook
+```
+
+### Key files
+
+| File | Purpose |
+|------|---------|
+| `src/analytics/index.ts` | SDK init, Segment transport configuration, `getAnalytics()`, `whenAnalyticsReady()`, re-exports generated types |
+| `src/analytics/AnalyticsService.ts` | Typed tracking, common fields, and session identity — `track()`, `identify()`, `reset()` |
+| `src/analytics/hooks.ts` | `useTrackAnalyticsEvent` hook |
+| `src/analytics/gen/analytics-types.ts` | Auto-generated types from segment-bridge schema |
+| `src/analytics/obfuscate.ts` | SHA-256 hashing for PIA fields (`SHA256Hash` branded type) |
+| `src/routes/with-route-patterns.ts` | Stamps each route's privacy-safe pattern (e.g. `/ns/:workspaceName/applications`) onto `handle.routePattern`; `getRoutePatternFromMatches()` reads it back via `useMatches()` |
+| `src/analytics/load-config.ts` | Config resolution (API-first, runtime fallback) |
+| `src/analytics/conditional-checks.ts` | `isAnalyticsEnabled` condition + `useIsAnalyticsEnabled` hook |
+| `src/analytics/arrival-source.ts` | Classifies `document.referrer` into an `ArrivalSource` and persists it across the OAuth redirect |
+| `src/auth/useAuthAnalytics.ts` | `useAuthAnalytics` hook — `onLogin` / `onLogout` callbacks |
+| `src/feature-flags/useFeatureFlagAnalytics.ts` | Hook fired from `Panel.tsx` — diffs flag state on panel open vs. close and tracks `feature_flags_changed` |
+
+---
 
 ## Configuration
 
-Production and staging read the write key and API host from `GET /segment/key` and `GET /segment/url`. `/segment/url` returns a bare host and path without scheme (for example `api.segment.io/v1`). `initAnalytics()` preserves that path when configuring the Segment SDK as `apiHost`; the SDK posts to `https://${apiHost}/t`.
+### Production / Staging
 
-Local development can use:
+Two backend endpoints provide the Segment config:
+
+- `GET /segment/key` — write key (`text/plain`)
+- `GET /segment/url` — API host and path (`text/plain`), without scheme (for example `api.segment.io/v1`)
+
+`initAnalytics()` preserves that path when configuring the Segment SDK as `apiHost`; the SDK posts to `https://${apiHost}/t`.
+
+### Local Development
+
+Set values in `public/runtime-config.js`:
 
 ```js
 window.KONFLUX_RUNTIME.ANALYTICS_ENABLED = 'true';
@@ -14,24 +65,34 @@ window.KONFLUX_RUNTIME.ANALYTICS_WRITE_KEY = 'LOCAL_DEV_DUMMY_KEY';
 window.KONFLUX_RUNTIME.ANALYTICS_API_URL = 'localhost/analytics';
 ```
 
-The API values take precedence over runtime configuration. Missing or disabled configuration leaves the SDK unloaded and tracking calls become no-ops. `whenAnalyticsReady()` resolves after initialization so feature conditions do not race SDK loading.
+With dummy keys the SDK initializes but won't send real data. Verify in the console: `Analytics loaded` on startup, logger output for login/logout.
 
-Key files:
+### Resolution order
 
-- `src/analytics/index.ts`: SDK initialization and Segment transport configuration
-- `src/analytics/AnalyticsService.ts`: typed tracking, common fields, and session identity
-- `src/analytics/gen/analytics-types.ts`: generated schema types
-- `src/auth/useAuthAnalytics.ts`: login and logout tracking
+1. Fetch `/segment/key` + `/segment/url` (must be `text/plain`, non-empty key)
+2. Fall back to `window.KONFLUX_RUNTIME.ANALYTICS_*`
+3. If disabled or missing — SDK is not loaded, all calls become no-ops
 
-## Identity, privacy, and common fields
+---
 
-Analytics uses two identifiers. `AnalyticsService` generates an in-memory `sessionId` for each page/tab load, installs it as Segment's transport-level `anonymousId`, and rotates it on logout. After authentication, it derives a stable, cluster-scoped pseudonymous `userId` by SHA-256 hashing `preferredUsername:clusterId` and sends it through Segment's transport-level `identify()` API. This lets downstream analytics link sessions for the same user within a cluster.
+## Initialization
 
-Segment client persistence remains disabled: the pseudonymous identity is never stored in the browser and is recomputed on each authenticated load. A refresh therefore has a new `sessionId` but the same `userId`; a second tab has its own `sessionId` and the same `userId`. `clusterId`, the raw username, resolved URLs, workspace names, resource names, and other identifying values must not be sent. The hash is pseudonymous, not anonymous: `clusterId` is not a secret and usernames may be guessable. A server-side keyed HMAC is required if resistance to that re-identification risk becomes necessary.
+Analytics initializes in `main.tsx`. It is **non-blocking** (app renders immediately), **code-split** (SDK loaded only when enabled), and **failure-safe** (errors are logged, app continues).
 
-`setCommonProperties()` receives version metadata from `useKonfluxPublicInfo()`. Events are withheld until `clusterVersion`, `konfluxVersion`, and `kubernetesVersion` are available so every emitted payload satisfies the schema. `konflux-public-info` does not emit `clusterVersion`; the app falls back to `openshiftVersion`, then `kubernetesVersion`.
+`whenAnalyticsReady()` returns a promise that resolves to `true`/`false` once init settles. The conditions system awaits this to avoid race conditions.
+
+Segment client persistence is disabled (`disableClientPersistence: true`). `AnalyticsService` generates an in-memory `sessionId` per tab, installs it as Segment's transport-level `anonymousId`, and rotates it on logout.
+
+---
+
+## AnalyticsService
+
+The `AnalyticsService` singleton is the primary interface for tracking.
 
 ```ts
+import { analyticsService } from '~/analytics/AnalyticsService';
+import { TrackEvents } from '~/analytics';
+
 analyticsService.setCommonProperties({
   clusterVersion: '4.14',
   konfluxVersion: '1.2.3',
@@ -44,26 +105,167 @@ analyticsService.track(TrackEvents.feedback_submitted_event, {
 });
 ```
 
-`EventPropertiesMap` excludes common fields and `userId` from call-site payloads; `AnalyticsService.track()` merges both automatically after `identify()`. Login and logout pass empty objects. A real login is detected by the one-time `logged_in=1` redirect parameter; refreshes do not emit login events, but they do identify the pseudonymous user so sessions remain linked. Logout resets the collector and clears the analytics identity.
+### Type-safe `track()`
 
-## Schema and type generation
+```ts
+track<E extends TrackEvents>(
+  event: E,
+  properties: Omit<EventPropertiesMap[E], 'userId'>,
+): boolean
+```
 
-Event schemas live in [segment-bridge](https://github.com/konflux-ci/segment-bridge/tree/main/schema), not in UI code. The generator uses a pinned schema commit for reproducibility:
+`EventPropertiesMap` maps each event to its event-specific properties, including `userId`. `AnalyticsService.track()` omits `userId` from the caller's payload and injects the identified value into the event properties, while common fields are merged automatically. The call returns `false` when analytics is unavailable, the user has not been identified, or required common fields are missing.
+
+### Common properties and version gating
+
+`setCommonProperties()` receives version metadata from `useKonfluxPublicInfo()`. Events are withheld until `clusterVersion`, `konfluxVersion`, and `kubernetesVersion` are available so every emitted payload satisfies the schema. `konflux-public-info` does not emit `clusterVersion`; the app falls back to `openshiftVersion`, then `kubernetesVersion`.
+
+### Identity and privacy
+
+After authentication, `main.tsx` derives a stable, cluster-scoped pseudonymous `userId` by SHA-256 hashing `preferredUsername:clusterId`. `AnalyticsService.identify()` sets that value as Segment's transport-level identity, and `AnalyticsService.track()` adds the same obfuscated value to each event's `userId` property. The raw username and `clusterId` must not appear in event payloads.
+
+A refresh has a new `sessionId` but the same `userId`; a second tab has its own `sessionId` and the same `userId`. The hash is pseudonymous, not anonymous.
+
+---
+
+## Login / Logout Events
+
+### Login detection
+
+The challenge is distinguishing a real OAuth login from a page refresh (both call `/oauth2/userinfo`). The solution uses a URL query parameter:
+
+1. `/oauth2/userinfo` returns 401 → redirect to `/oauth2/sign_in?rd=/path?logged_in=1`
+2. After OAuth, user is redirected back with `?logged_in=1`
+3. `AuthProvider` confirms auth → renders `App`
+4. `App` waits for `useKonfluxPublicInfo()` to settle
+5. Sets common properties and calls `analyticsService.identify()` when authenticated
+6. `consumeLoginSignal()` detects and strips the `logged_in` param → `onLogin()` fires
+
+On a page refresh there is no `logged_in` param, so no login event fires. Login and logout pass empty objects to `track()`; the service supplies the identified `userId` and common fields.
+
+### Logout
+
+`onLogout()` is called in `AuthContext.signOut()` before the sign-out fetch. It tracks a `user_logout` event, then calls `analyticsService.reset()` to rotate the session ID and clear the transport identity.
+
+---
+
+## Arrival Source
+
+`captureArrivalSourceOnce()` runs as the first statement in `main.tsx` to classify `document.referrer` before the OAuth redirect can overwrite it. The classified value is a `GitProvider` (`GITHUB`, `GITLAB`, `BITBUCKET`, or `UNSURE`/`'other'` — see `src/shared/utils/git-utils.tsx`), persisted to `sessionStorage` so it survives the redirect.
+
+`GithubRedirect` refines this further: when a PipelineRun loads, it reads the `git-provider` label and calls `refineArrivalSource()` to upgrade an `UNSURE` value to the real provider — including `FORGEJO`, which has no fixed domain and can't be detected from `document.referrer` alone.
+
+`markSessionStartedOnce()` is a separate guard that ensures the `ui_session_started` event fires exactly **once per new tab** — it returns `true` only the first time it's called per tab session. `sessionStorage` persists across reloads/navigation but is fresh for a new tab, which is what enforces the "new tab only" rule.
+
+```ts
+// In the App effect (main.tsx):
+if (markSessionStartedOnce()) {
+  trackEvent(TrackEvents.ui_session_started_event, { arrivalSource: getArrivalSource() });
+}
+```
+
+Why two guards:
+- `captureArrivalSourceOnce()` dedupes the *referrer capture* (runs at boot, before React).
+- `markSessionStartedOnce()` dedupes the *event fire* (runs inside the App effect, after auth/publicInfo settle).
+
+---
+
+## Feature Flag Change Tracking
+
+`useFeatureFlagAnalytics()` in `FeatureFlagPanel` tracks `feature_flags_changed` on every panel close (including `changesCount: 0`), via the modal's `onClose` in `Panel.tsx` — not on unmount.
+
+On open it snapshots flag state (from `useFeatureFlags()`) and `pagePattern` via `useMatches()` + `getRoutePatternFromMatches()` (`src/routes/with-route-patterns.ts`) — e.g. `/ns/:workspaceName/applications`, never the resolved URL. `withRoutePatterns()` stamps the pattern onto every route's `handle` at router creation (`src/routes/index.tsx`), so other route-aware analytics hooks can reuse the same helper. On close, `computeFeatureFlagChanges()` diffs open vs. current state and tracks `changes`, `changesCount`, and `pagePattern`. Net-zero toggles are omitted; "Reset to Defaults" is included. URL param overrides (`?ff_flag=true`) are not tracked.
+
+---
+
+## Condition System Integration
+
+Analytics registers an `isAnalyticsEnabled` condition for the feature flags system:
+
+```ts
+const { isAnalyticsEnabled } = useIsAnalyticsEnabled();
+```
+
+This can guard features that require analytics:
+
+```ts
+guard: { allOf: ['isAnalyticsEnabled'] }
+```
+
+The condition awaits `whenAnalyticsReady()`, so it returns the correct value regardless of initialization timing.
+
+---
+
+## Adding New Events
+
+### 1. Define in schema
+
+New events are defined in the [segment-bridge schema](https://github.com/konflux-ci/segment-bridge/tree/main/schema). After the schema PR merges, regenerate types:
 
 ```bash
 yarn generate:analytics-types
 ```
 
-This updates `src/analytics/gen/analytics-types.ts`, including `CommonFields`, event interfaces, `TrackEvents`, and `EventPropertiesMap`. To adopt a schema revision, update `SCHEMA_COMMIT` in `scripts/generate-analytics-types.mjs`, regenerate, verify, and commit both files. When the remote is unavailable, the generator checks supported sibling-checkout paths for `segment-bridge/schema/ui.json`. Set `ANALYTICS_SCHEMA_LOCAL=1` to prefer a local checkout during development.
+This produces `src/analytics/gen/analytics-types.ts` with the event type, `TrackEvents` enum entry, and `EventPropertiesMap` mapping.
 
-When adding an event:
+### 2. Track in a component
 
-1. Add it to the segment-bridge schema and regenerate types.
-2. Track it with `useTrackAnalyticsEvent()` and only its event-specific properties.
-3. Add focused coverage for its schema contract or lifecycle behavior.
+```ts
+import { useTrackAnalyticsEvent } from '~/analytics/hooks';
+import { TrackEvents } from '~/analytics';
+
+const trackEvent = useTrackAnalyticsEvent();
+
+const handleSubmit = () => {
+  trackEvent(TrackEvents.feedback_submitted_event, {
+    rating: 5,
+    feedback: 'Great!',
+  });
+};
+```
+
+### Guidelines
+
+- Event schemas live in segment-bridge, not in UI code
+- PIA fields must be obfuscated via `obfuscate()` (returns `SHA256Hash` branded type — raw strings cannot be assigned)
+- Events are no-ops when analytics is disabled — no `if` guards needed
+- Use `setCommonProperties()` for fields that apply to all events
+
+---
+
+## Type Generation
+
+Types are generated from the [segment-bridge analytics schema](https://github.com/konflux-ci/segment-bridge/tree/main/schema) using `json-schema-to-typescript`.
+
+### Generated output
+
+`src/analytics/gen/analytics-types.ts` contains:
+
+- `CommonFields` — base interface for every event
+- Per-event types (e.g. `UserLoginEvent`) — `CommonFields & { ...event-specific fields }`
+- `TrackEvents` — enum of event names
+- `EventPropertiesMap` — maps each `TrackEvents` value to its event-specific properties
+
+`SHA256Hash` is defined in `src/analytics/obfuscate.ts` and imported by the generated file.
+
+### Schema pinning
+
+The generator fetches from a **pinned commit hash** (not `main`) for reproducible builds. Update the hash in `scripts/generate-analytics-types.mjs`:
+
+```js
+const SCHEMA_COMMIT = '<commit-hash>';
+```
+
+To update: change the hash → `yarn generate:analytics-types` → verify → commit.
+
+If the remote URL is unreachable, the generator checks supported sibling-checkout paths for `segment-bridge/schema/ui.json`. Set `ANALYTICS_SCHEMA_LOCAL=1` to prefer a local checkout during development.
+
+---
 
 ## Troubleshooting
 
-- Initialization failure: verify `/segment/key` and `/segment/url` return non-empty `text/plain` values, or check `KONFLUX_RUNTIME`.
-- Missing login event: verify the OAuth return URL contained `logged_in=1`; no event on refresh is expected.
-- Disabled analytics condition: verify `whenAnalyticsReady()` and the condition registration in `src/registers.ts`.
+| Symptom | Check |
+|---------|-------|
+| Analytics not initializing | Console for `Error loading Analytics`; verify `/segment/key` and `/segment/url` return `text/plain` (not HTML); check `window.KONFLUX_RUNTIME` values |
+| Login event not firing | Network tab: redirect URL should contain `?logged_in=1`; `consumeLoginSignal()` strips it after first call; no event on page refresh is correct |
+| Condition always false | `await whenAnalyticsReady()` in console; verify condition registered in `src/registers.ts`; check `FeatureFlagsStore.conditions` |

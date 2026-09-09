@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
+import { getAnalytics } from './analytics-client';
+import type { CommonFields, EventPropertiesMap, TrackEvents } from './gen/analytics-types';
 import type { SHA256Hash } from './obfuscate';
-import { CommonFields, EventPropertiesMap, getAnalytics, TrackEvents } from '.';
 
 export const LOGGED_IN_QUERY_PARAM = 'logged_in';
 
@@ -22,14 +23,14 @@ export class AnalyticsService {
   ): boolean {
     const analytics = getAnalytics();
     const commonProperties = this.getReadyCommonProperties();
-    if (!analytics || !commonProperties) {
+    if (!analytics || !commonProperties || !this.userId) {
       return false;
     }
 
     void analytics.track(event, {
       ...commonProperties,
       ...properties,
-      ...(this.userId ? { userId: this.userId } : {}),
+      userId: this.userId,
     });
     return true;
   }
@@ -40,13 +41,13 @@ export class AnalyticsService {
   }
 
   reset(): void {
-    const sessionId = uuidv4() as string;
+    const sessionId = uuidv4();
     this.commonProperties = { ...this.commonProperties, sessionId };
     this.userId = undefined;
 
     const analytics = getAnalytics();
-    analytics?.reset();
-    analytics?.setAnonymousId(sessionId);
+    void analytics?.reset();
+    void analytics?.setAnonymousId(this.commonProperties.sessionId);
   }
 
   getCommonProperties(): CommonProperties {

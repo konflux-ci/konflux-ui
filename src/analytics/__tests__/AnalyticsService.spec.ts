@@ -1,13 +1,14 @@
-import { AnalyticsService, consumeLoginSignal } from '../AnalyticsService';
-import { TrackEvents } from '../gen/analytics-types';
-import type { SHA256Hash } from '../obfuscate';
+import { AnalyticsService, consumeLoginSignal } from '~/analytics/AnalyticsService';
+import { TrackEvents } from '~/analytics/gen/analytics-types';
+import type { SHA256Hash } from '~/analytics/obfuscate';
 
-jest.mock('..', () => ({
-  ...jest.requireActual('../gen/analytics-types'),
+jest.mock('~/analytics/analytics-client', () => ({
   getAnalytics: jest.fn(),
 }));
 
-const { getAnalytics }: { getAnalytics: jest.Mock } = jest.requireMock('..');
+const { getAnalytics }: { getAnalytics: jest.Mock } = jest.requireMock(
+  '~/analytics/analytics-client',
+);
 
 const mockSegment = {
   identify: jest.fn(),
@@ -44,10 +45,12 @@ describe('AnalyticsService', () => {
       service.setCommonProperties({ clusterVersion: '4.15' });
       const props = service.getCommonProperties();
       (props as Record<string, string>).clusterVersion = 'mutated';
-      expect(service.getCommonProperties()).toEqual(expect.objectContaining({
-        clusterVersion: '4.15',
-        konfluxVersion: '1.0',
-      }));
+      expect(service.getCommonProperties()).toEqual(
+        expect.objectContaining({
+          clusterVersion: '4.15',
+          konfluxVersion: '1.0',
+        }),
+      );
     });
 
     it('returns required common properties only when all required versions are set', () => {
@@ -69,8 +72,10 @@ describe('AnalyticsService', () => {
   });
 
   describe('track', () => {
-    it('should call analytics.track with merged properties', () => {
+    it('should inject the identified user ID into analytics.track properties', () => {
       enableAnalytics();
+      const userId = 'pseudonymous-user-id' as SHA256Hash;
+      service.identify(userId);
       service.setCommonProperties({
         clusterVersion: '4.14',
         konfluxVersion: '1.0',
@@ -84,15 +89,25 @@ describe('AnalyticsService', () => {
         clusterVersion: '4.14',
         konfluxVersion: '1.0',
         kubernetesVersion: '1.30',
+        userId,
       });
       expect(sent).toBe(true);
     });
 
-    it.each([
-      ['required common properties are unavailable', mockSegment],
-      ['analytics is unavailable', undefined],
-    ])('withholds events when %s', (_reason, analytics) => {
-      getAnalytics.mockReturnValue(analytics);
+    it('withholds events until a user ID is established', () => {
+      enableAnalytics();
+      service.setCommonProperties({
+        clusterVersion: '4.14',
+        konfluxVersion: '1.0',
+        kubernetesVersion: '1.30',
+      });
+
+      expect(service.track(TrackEvents.user_login_event, {})).toBe(false);
+      expect(mockSegment.track).not.toHaveBeenCalled();
+    });
+
+    it('withholds events when analytics or common properties are unavailable', () => {
+      getAnalytics.mockReturnValue(undefined);
       expect(service.track(TrackEvents.user_login_event, {})).toBe(false);
       expect(mockSegment.track).not.toHaveBeenCalled();
     });

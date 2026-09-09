@@ -4,6 +4,7 @@ import { analyticsService } from '~/analytics/AnalyticsService';
 import { useTrackAnalyticsEvent } from '~/analytics/hooks';
 import { logger } from '~/monitoring/logger';
 
+/** Provides analytics callbacks for authentication lifecycle events. */
 export const useAuthAnalytics = () => {
   const trackEvent = useTrackAnalyticsEvent();
 

@@ -11,7 +11,12 @@ import { NuqsAdapter } from 'nuqs/adapters/react-router/v6';
 import ReactDOM from 'react-dom/client';
 import { initAnalytics, TrackEvents } from '~/analytics';
 import { analyticsService, consumeLoginSignal } from '~/analytics/AnalyticsService';
-import { captureArrivalSourceOnce, markSessionStartedOnce, getArrivalSource } from '~/analytics/arrival-source';
+import {
+  captureArrivalSourceOnce,
+  getArrivalSource,
+  hasSessionStarted,
+  markSessionStartedOnce,
+} from '~/analytics/arrival-source';
 import { obfuscate } from '~/analytics/obfuscate';
 import { useKonfluxPublicInfo } from '~/hooks/useKonfluxPublicInfo';
 import { logger } from '~/monitoring/logger';
@@ -76,13 +81,17 @@ export const App = () => {
         onLogin();
       }
 
-      if (markSessionStartedOnce()) {
+      if (!hasSessionStarted()) {
         const arrivalSource = getArrivalSource();
-        analyticsService.track(TrackEvents.ui_session_started_event, { arrivalSource });
-        logger.info('UI session started', {
-          event: TrackEvents.ui_session_started_event,
-          arrivalSource,
-        });
+        if (
+          analyticsService.track(TrackEvents.ui_session_started_event, { arrivalSource }) &&
+          markSessionStartedOnce()
+        ) {
+          logger.info('UI session started', {
+            event: TrackEvents.ui_session_started_event,
+            arrivalSource,
+          });
+        }
       }
     })();
   }, [loaded, error, publicInfo, isAuthenticated, onLogin, user.preferredUsername]);
@@ -113,7 +122,10 @@ export const App = () => {
 
 void (() => {
   void initAnalytics().catch((reason) => {
-    logger.error('Failed to initialize analytics', reason as Error);
+    logger.error(
+      'Failed to initialize analytics',
+      reason instanceof Error ? reason : new Error(String(reason)),
+    );
   });
 
   ReactDOM.createRoot(document.getElementById('root')).render(

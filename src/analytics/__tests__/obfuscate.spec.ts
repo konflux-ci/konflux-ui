@@ -1,7 +1,7 @@
 /**
  * @jest-environment node
  */
-import { obfuscate, SHA256Hash } from '../obfuscate';
+import { obfuscate, type SHA256Hash } from '~/analytics/obfuscate';
 
 describe('obfuscate', () => {
   it('returns a branded 64-character hex string', async () => {
@@ -17,6 +17,11 @@ describe('obfuscate', () => {
   it('should match a known SHA-256 hash', async () => {
     const result = await obfuscate('');
     expect(result).toBe('e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855');
+  });
+
+  it('should handle unicode input', async () => {
+    const result = await obfuscate('日本語テスト');
+    expect(result).toMatch(/^[0-9a-f]{64}$/);
   });
 
   it('should hash value:salt when salt is provided', async () => {

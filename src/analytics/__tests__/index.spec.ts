@@ -1,14 +1,21 @@
-import { mockConsole, MockConsole } from '~/unit-test-utils';
-import type { SHA256Hash } from '../obfuscate';
-import type { AnalyticsConfig } from '../types';
+import type { SHA256Hash } from '~/analytics/obfuscate';
+import type { AnalyticsConfig } from '~/analytics/types';
 
 const mockAnalyticsInstance = {
-  track: jest.fn(), identify: jest.fn(), page: jest.fn(), group: jest.fn(), alias: jest.fn(), setAnonymousId: jest.fn(),
+  track: jest.fn(),
+  identify: jest.fn(),
+  page: jest.fn(),
+  group: jest.fn(),
+  alias: jest.fn(),
+  setAnonymousId: jest.fn(),
 };
 const mockAnalyticsBrowser = { load: jest.fn().mockResolvedValue([mockAnalyticsInstance, {}]) };
 
 jest.mock('@segment/analytics-next', () => ({ AnalyticsBrowser: mockAnalyticsBrowser }));
-jest.mock('../load-config', () => ({ loadAnalyticsConfig: jest.fn() }));
+jest.mock('~/analytics/load-config', () => ({ loadAnalyticsConfig: jest.fn() }));
+jest.mock('~/monitoring/logger', () => ({
+  logger: { info: jest.fn(), error: jest.fn() },
+}));
 
 const validConfig: AnalyticsConfig = {
   enabled: true,
@@ -17,25 +24,24 @@ const validConfig: AnalyticsConfig = {
 };
 
 describe('analytics initialization', () => {
-  let consoleMock: MockConsole;
   let loadAnalyticsConfig: jest.Mock;
+  let logger: { info: jest.Mock; error: jest.Mock };
 
   beforeEach(() => {
-    consoleMock = mockConsole();
     jest.resetModules();
-    loadAnalyticsConfig = jest.requireMock('../load-config').loadAnalyticsConfig;
+    logger = jest.requireMock('~/monitoring/logger').logger;
+    loadAnalyticsConfig = jest.requireMock('~/analytics/load-config').loadAnalyticsConfig;
     mockAnalyticsBrowser.load.mockResolvedValue([mockAnalyticsInstance, {}]);
   });
 
   afterEach(() => {
-    consoleMock.restore();
     jest.restoreAllMocks();
     jest.clearAllMocks();
   });
 
   const init = async (config: AnalyticsConfig = validConfig) => {
     loadAnalyticsConfig.mockResolvedValue(config);
-    const analytics = await import('../index');
+    const analytics = await import('~/analytics/index');
     await analytics.initAnalytics();
     return analytics;
   };
@@ -53,7 +59,7 @@ describe('analytics initialization', () => {
     expect(mockAnalyticsInstance.setAnonymousId).toHaveBeenCalledWith(expect.any(String));
     expect(analytics.getAnalytics()).toBe(mockAnalyticsInstance);
     await expect(analytics.whenAnalyticsReady()).resolves.toBe(true);
-    expect(consoleMock.info).toHaveBeenCalledWith('Analytics loaded');
+    expect(logger.info).toHaveBeenCalledWith('Analytics loaded');
   });
 
   it('normalizes a bare host/path apiUrl from /segment/url', async () => {
@@ -69,8 +75,8 @@ describe('analytics initialization', () => {
 
   it('identifies an identity supplied before Segment initialization', async () => {
     loadAnalyticsConfig.mockResolvedValue(validConfig);
-    const analytics = await import('../index');
-    const { analyticsService } = await import('../AnalyticsService');
+    const analytics = await import('~/analytics/index');
+    const { analyticsService } = await import('~/analytics/AnalyticsService');
     const userId = 'pseudonymous-user-id' as SHA256Hash;
 
     analyticsService.identify(userId);
@@ -110,7 +116,7 @@ describe('analytics initialization', () => {
 
     const analytics = await init();
 
-    expect(consoleMock.error).toHaveBeenCalledWith('Error loading Analytics', error);
+    expect(logger.error).toHaveBeenCalledWith('Error loading Analytics', error);
     expect(analytics.getAnalytics()).toBeUndefined();
     await expect(analytics.whenAnalyticsReady()).resolves.toBe(false);
   });

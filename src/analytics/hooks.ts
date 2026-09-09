@@ -1,7 +1,7 @@
 import React from 'react';
 import { analyticsService } from './AnalyticsService';
 import { useIsAnalyticsEnabled } from './conditional-checks';
-import { EventPropertiesMap, TrackEvents } from './gen/analytics-types';
+import type { EventPropertiesMap, TrackEvents } from './gen/analytics-types';
 
 export const useTrackAnalyticsEvent = (): (<E extends TrackEvents>(
   event: E,

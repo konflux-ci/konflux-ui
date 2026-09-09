@@ -1,7 +1,7 @@
 import { renderHook, act } from '@testing-library/react';
 import { TrackEvents } from '~/analytics/gen/analytics-types';
+import { useAuthAnalytics } from '~/auth/useAuthAnalytics';
 import { mockAnalyticsServiceFn } from '~/unit-test-utils';
-import { useAuthAnalytics } from '../useAuthAnalytics';
 
 jest.mock('~/analytics/hooks', () => ({
   useTrackAnalyticsEvent: jest.fn(),
