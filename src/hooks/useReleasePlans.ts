@@ -12,7 +12,7 @@ export const useReleasePlans = (namespace: string): [ReleasePlanKind[], boolean,
     ReleasePlanModel,
   );
 
-  return [data, !isLoading, error];
+  return [data ?? [], !isLoading, error];
 };
 
 export const useReleasePlan = (

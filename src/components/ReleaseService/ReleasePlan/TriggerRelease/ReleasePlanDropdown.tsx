@@ -18,7 +18,7 @@ export const ReleasePlanDropdown: React.FC<React.PropsWithChildren<ReleasePlanDr
   const [{ value }, , { setValue }] = useField<string>(props.name);
   const dropdownItems = React.useMemo(
     () =>
-      props.loaded
+      props.loaded && props.releasePlans
         ? props.releasePlans.map((a) => ({ key: a.metadata.name, value: a.metadata.name }))
         : [],
     [props.releasePlans, props.loaded],

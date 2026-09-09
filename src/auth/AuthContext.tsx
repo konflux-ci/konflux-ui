@@ -41,8 +41,6 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = React.memo(({ chi
 
           monitoringService?.setUser({
             id: data.preferredUsername ?? undefined,
-            username: data.preferredUsername ?? undefined,
-            email: data.email ?? undefined,
           });
         }
       } catch (err) {

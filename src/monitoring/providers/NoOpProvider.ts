@@ -6,10 +6,10 @@ export class NoOpProvider implements IMonitoringProvider<MonitoringConfig> {
     // Intentionally no-op
   }
 
-  captureException(error: unknown, context?: Record<string, unknown>): void {
+  captureException(error: unknown, context?: Record<string, unknown>): undefined {
     // eslint-disable-next-line no-console
     console.error('captureException', error, context);
-    // Intentionally no-op
+    return undefined;
   }
 
   captureMessage(message: string, level?: LogLevel, context?: Record<string, unknown>): void {

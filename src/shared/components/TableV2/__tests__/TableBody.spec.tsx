@@ -129,4 +129,23 @@ describe('TableBody', () => {
 
     expect(screen.queryByTestId('table-loading-more')).not.toBeInTheDocument();
   });
+
+  it('attaches measureElement ref and data-index to per-row tbody wrappers', () => {
+    mockMeasureElement.mockClear();
+    const rows = [createMockRow('r-0'), createMockRow('r-1')];
+    const virtualRows = createMockVirtualRows(2);
+
+    renderTableBody({ rows: rows as never[], virtualRows });
+
+    // measureElement should be called once per virtual row
+    expect(mockMeasureElement).toHaveBeenCalledTimes(2);
+
+    // Each call should receive a <tbody> element with the correct data-index
+    const calls = mockMeasureElement.mock.calls;
+    for (let i = 0; i < calls.length; i++) {
+      const el = calls[i][0] as HTMLElement;
+      expect(el.tagName).toBe('TBODY');
+      expect(el).toHaveAttribute('data-index', String(i));
+    }
+  });
 });

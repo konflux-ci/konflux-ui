@@ -19,6 +19,14 @@ jest.mock('../../IntegrationTests/IntegrationTestForm/utils/create-utils', () =>
   createIntegrationTest: jest.fn(),
 }));
 
+// Mock getKonfluxPublicInfo — default to image controller enabled
+const mockGetKonfluxPublicInfo = jest.fn().mockResolvedValue({
+  integrations: { image_controller: { enabled: true } },
+});
+jest.mock('~/hooks/useKonfluxPublicInfo', () => ({
+  getKonfluxPublicInfo: (...args: unknown[]) => mockGetKonfluxPublicInfo(...args),
+}));
+
 const createApplicationMock = createApplication as jest.Mock;
 const createComponentMock = createComponent as jest.Mock;
 const createIntegrationTestMock = createIntegrationTest as jest.Mock;
@@ -219,7 +227,83 @@ describe('Submit Utils: createResources', () => {
     expect(createSecretWithLinkingComponentsMock).not.toHaveBeenCalled();
   });
 
+  it('should not create image repository when image controller is disabled', async () => {
+    mockGetKonfluxPublicInfo.mockResolvedValue({
+      integrations: { image_controller: { enabled: false } },
+    });
+    createApplicationMock.mockResolvedValue({ metadata: { name: 'test-app' } });
+    createComponentMock.mockResolvedValue({ metadata: { name: 'test-component' } });
+    await createResourcesWithLinkingComponents(
+      {
+        application: 'test-app',
+        inAppContext: false,
+        showComponent: true,
+        isPrivateRepo: false,
+        source: {
+          git: {
+            url: 'https://github.com/',
+          },
+        },
+        pipeline: 'dbcd',
+        componentName: 'component',
+      },
+      'test-ws-tenant',
+      [],
+    );
+    expect(createApplicationMock).toHaveBeenCalledTimes(2);
+    expect(createComponentMock).toHaveBeenCalledTimes(2);
+    expect(createImageRepositoryMock).toHaveBeenCalledTimes(0);
+  });
+
+  it('should create image repository when the image controller check fails', async () => {
+    mockGetKonfluxPublicInfo.mockRejectedValue(new Error('network error'));
+    createApplicationMock.mockResolvedValue({ metadata: { name: 'test-app' } });
+    createComponentMock.mockResolvedValue({ metadata: { name: 'test-component' } });
+    await createResourcesWithLinkingComponents(
+      {
+        application: 'test-app',
+        inAppContext: false,
+        showComponent: true,
+        isPrivateRepo: false,
+        source: {
+          git: {
+            url: 'https://github.com/',
+          },
+        },
+        pipeline: 'dbcd',
+        componentName: 'component',
+      },
+      'test-ws-tenant',
+      [],
+    );
+    expect(createApplicationMock).toHaveBeenCalledTimes(2);
+    expect(createComponentMock).toHaveBeenCalledTimes(2);
+    expect(createImageRepositoryMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('should bypass React Query cache by passing staleTime: 0', async () => {
+    createApplicationMock.mockResolvedValue({ metadata: { name: 'test-app' } });
+    createComponentMock.mockResolvedValue({ metadata: { name: 'test-component' } });
+    await createResourcesWithLinkingComponents(
+      {
+        application: 'test-app',
+        inAppContext: true,
+        showComponent: true,
+        isPrivateRepo: false,
+        source: { git: { url: 'https://github.com/' } },
+        pipeline: 'dbcd',
+        componentName: 'component',
+      },
+      'test-ws-tenant',
+      [],
+    );
+    expect(mockGetKonfluxPublicInfo).toHaveBeenCalledWith({ staleTime: 0 });
+  });
+
   afterEach(() => {
     jest.clearAllMocks();
+    mockGetKonfluxPublicInfo.mockResolvedValue({
+      integrations: { image_controller: { enabled: true } },
+    });
   });
 });

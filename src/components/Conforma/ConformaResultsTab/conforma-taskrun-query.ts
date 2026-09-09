@@ -9,11 +9,11 @@ import type { Selector, WatchK8sResource } from '~/types/k8s';
  * Shared by both the K8s watch path and the on-demand fetcher path.
  */
 export const buildConformaSecurityTaskRunSelector = (
-  applicationName: string,
+  applicationName?: string,
   componentName?: string,
 ): Selector => ({
   matchLabels: {
-    [PipelineRunLabel.APPLICATION]: applicationName,
+    ...(applicationName ? { [PipelineRunLabel.APPLICATION]: applicationName } : {}),
     ...(componentName ? { [PipelineRunLabel.COMPONENT]: componentName } : {}),
     [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.TEST,
   },
@@ -33,7 +33,7 @@ export const buildConformaSecurityTaskRunSelector = (
  */
 export const buildConformaSecurityTaskRunWatchOptions = (
   namespace: string,
-  applicationName: string,
+  applicationName?: string,
 ): WatchK8sResource => ({
   groupVersionKind: TaskRunGroupVersionKind,
   namespace,

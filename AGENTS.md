@@ -29,6 +29,7 @@ One-command setup: `yarn setup` or `./setup.sh` (checks Node.js >= 24, enables C
 - Before writing any test file, read `docs/guidelines/unit-testing.md`. Use `userEvent.setup()` for user interactions (`fireEvent` only for simple synchronous events per Pattern 7), and use shared render utilities from `~/unit-test-utils/` (e.g., `renderWithQueryClientAndRouter`) instead of custom wrappers.
 - New list/table views **must** use `TableV2` from `~/shared/components/TableV2` (see `docs/guidelines/table-v2.md`). Do not inline PatternFly table primitives (`Table`, `Thead`, `Tbody`, `Tr`, `Td`) directly. If TableV2 lacks a needed capability (e.g., row selection), extend it rather than building a bespoke table.
 - Prefer shared utilities over inline reimplementations -- e.g., use `textMatch` / `filterByText` from `~/utils/text-filter-utils` for case-insensitive string filtering instead of hand-rolling `.toLowerCase().includes()`.
+- No manual `addEventListener`/`removeEventListener` -- use `useEventListener` from `~/shared/hooks/useEventListener` for browser event listeners. Exceptions: `ResizeObserver`/`IntersectionObserver` callbacks (use `useResizeObserver`/`useLayoutResizeObserver` for `ResizeObserver`), `useSyncExternalStore` subscriptions, and listeners on dynamically created or non-React-managed DOM nodes. See `docs/best-practices.md` for details.
 - `noUnusedLocals` and `noUnusedParameters` enforced -- prefix unused params with `_`
 - Never add `Co-Authored-By` to commit messages; use `Assisted-by: Claude` trailer instead
 
@@ -77,19 +78,20 @@ Always use the `--json` flag for deterministic parsing.
 
 Detailed guides for AI agents and developers:
 
-| Document                                      | Use When                                                                               |
-| --------------------------------------------- | -------------------------------------------------------------------------------------- |
-| `docs/guidelines/component-guidelines.md`     | Creating new components (imports, architecture, conventions)                           |
-| `docs/guidelines/table-component.md`          | Legacy table system (pre-TableV2) — reference only for unmigrated views                |
-| `docs/guidelines/table-v2.md`                 | **TableV2 system** — building list views with `@tanstack/react-table` + virtual scroll |
-| `docs/guidelines/filter-system.md`            | **Filter system** — config-driven URL-synced filters with `defineFilters` + nuqs       |
-| `docs/guidelines/layout-and-pages.md`         | Creating pages (list, detail, form, modal patterns)                                    |
-| `docs/guidelines/hooks-and-data-fetching.md`  | Using K8s hooks, React Query, RBAC, state management                                   |
-| `docs/guidelines/patternfly-guidelines.md`    | PatternFly components, layout, design tokens, SCSS                                     |
-| `docs/guidelines/unit-testing.md`             | Writing unit tests (mocks, renderers, patterns)                                        |
-| `docs/guidelines/single-file-verification.md` | Fast per-file lint/type-check workflow (overview)                                      |
-| `docs/guidelines/single-file-lint.md`         | Lint one `.ts`, `.tsx`, or `.scss` file                                                |
-| `docs/guidelines/single-file-type-check.md`   | Type-check one file (or fall back to project-wide)                                     |
+| Document                                      | Use When                                                                                |
+| --------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `docs/guidelines/component-guidelines.md`     | Creating new components (imports, architecture, conventions)                            |
+| `docs/guidelines/table-component.md`          | Legacy table system (pre-TableV2) — reference only for unmigrated views                 |
+| `docs/guidelines/table-v2.md`                 | **TableV2 system** — building list views with `@tanstack/react-table` + virtual scroll  |
+| `docs/guidelines/filter-system.md`            | **Filter system** — config-driven URL-synced filters with `defineFilters` + nuqs        |
+| `docs/guidelines/layout-and-pages.md`         | Creating pages (list, detail, form, modal patterns)                                     |
+| `docs/guidelines/hooks-and-data-fetching.md`  | Using K8s hooks, React Query, RBAC, state management                                    |
+| `docs/guidelines/patternfly-guidelines.md`    | PatternFly components, layout, design tokens, SCSS                                      |
+| `docs/guidelines/unit-testing.md`             | Writing unit tests (mocks, renderers, patterns)                                         |
+| `docs/guidelines/single-file-verification.md` | Fast per-file lint/type-check workflow (overview)                                       |
+| `docs/guidelines/single-file-lint.md`         | Lint one `.ts`, `.tsx`, or `.scss` file                                                 |
+| `docs/guidelines/single-file-type-check.md`   | Type-check one file (or fall back to project-wide)                                      |
+| `docs/guidelines/guided-tours.md`             | **Guided Tours** — config-driven interactive walkthroughs (step types, registry, merge) |
 
 ## Other Documentation (docs/)
 

@@ -9,7 +9,8 @@ import {
   Skeleton,
   Tooltip,
 } from '@patternfly/react-core';
-import { EyeIcon, EyeSlashIcon } from '@patternfly/react-icons/dist/esm/icons';
+import { EyeIcon } from '@patternfly/react-icons/dist/esm/icons/eye-icon';
+import { EyeSlashIcon } from '@patternfly/react-icons/dist/esm/icons/eye-slash-icon';
 import { useModalLauncher } from '~/components/modal/ModalProvider';
 import { useImageRepository } from '~/hooks/useImageRepository';
 import { ImageRepositoryModel } from '~/models';

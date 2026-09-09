@@ -1,10 +1,8 @@
 // Include the cypress customized commands related files
 import './hooks';
 import './a11y';
-import 'cypress-mochawesome-reporter/register';
-import '@cypress/code-coverage/support';
 import { Result } from 'axe-core';
-import { initPerfMeasuring } from './perf';
+import { registerRunPlugins } from './registerRunPlugins';
 
 declare global {
   namespace Cypress {
@@ -18,14 +16,11 @@ declare global {
 }
 
 // Handling errors from application
-// eslint-disable-next-line no-unused-vars,@typescript-eslint/no-unused-vars
-Cypress.on('uncaught:exception', (err) => {
+Cypress.on('uncaught:exception', () => {
   return false;
 });
 
-// Add browser logs collector
-const logOptions = {
-  enableExtendedCollector: true,
-};
-require('cypress-terminal-report/src/installLogsCollector')(logOptions);
-initPerfMeasuring('cypress/perfstats.json');
+// Plugins that hook command:start/end break Cypress Studio recording.
+if (!Cypress.env('STUDIO_MODE')) {
+  registerRunPlugins();
+}

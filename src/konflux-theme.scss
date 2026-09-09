@@ -39,6 +39,23 @@ html.pf-v6-theme-dark {
     );
   }
 
+  // Solid Konflux primary for selected toggle-group segments (matches primary buttons)
+  .pf-v6-c-toggle-group {
+    --pf-v6-c-toggle-group__button--m-selected--BackgroundColor: var(--konflux-brand-primary);
+    --pf-v6-c-toggle-group__button--m-selected--Color: var(
+      --pf-t--global--text--color--on-brand--default
+    );
+    --pf-v6-c-toggle-group__button--m-selected--before--BorderColor: var(--konflux-brand-primary);
+    --pf-v6-c-toggle-group__button--m-selected--after--BorderColor: var(--konflux-brand-primary);
+    // Unselected hover stays transparent (no subtle brand fill)
+    --pf-v6-c-toggle-group__button--hover--BackgroundColor: transparent;
+    --pf-v6-c-toggle-group__button--hover--Color: var(--pf-t--global--text--color--regular);
+    --pf-v6-c-toggle-group__button--hover--before--BorderColor: var(
+      --pf-t--global--border--color--control--default
+    );
+    --pf-v6-c-toggle-group__button--hover--after--BorderWidth: 0;
+  }
+
   // experimental theme not used anywhere yet, for future use
   &:where(.pf-v6-theme-glass) {
     --pf-t--global--background--image--glass: url(./assets/theme/global-background.svg);

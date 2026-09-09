@@ -9,7 +9,6 @@ spec:
     - name: SNAPSHOT
       description: 'The JSON string representing the snapshot of the application under test.'
       # Should there be test image or UI builded image? Or are there both? Where to find out?
-      # Should be verified during https://redhat.atlassian.net/browse/KFLUXUI-1497
       default: '{"components": [{"name":"konflux-ui", "containerImage": "quay.io/konflux_ui_qe/konflux-ui-tests:latest"}]}'
       type: string
     - name: konflux-test-infra-secret
@@ -185,7 +184,6 @@ spec:
           - name: pathInRepo
             value: .integration-tests/tasks/run-e2e-konflux-ui.yaml
       params:
-        # says if it is PR check or periodic job
         - name: job-type
           value: '$(params.job-type)'
           # oci for storing artefacts
@@ -203,6 +201,14 @@ spec:
           value: $(params.cypress-credentials-secret)
         - name: cypress-cloud-secret
           value: $(params.cypress-cloud-secret)
+        - name: source-repo-url
+          value: $(tasks.test-metadata.results.source-repo-url)
+        - name: git-revision
+          value: $(tasks.test-metadata.results.git-revision)
+        - name: target-branch
+          value: $(tasks.test-metadata.results.target-repo-branch)
+        - name: target-repo-url
+          value: https://github.com/$(tasks.test-metadata.results.git-org)/$(tasks.test-metadata.results.git-repo)
   finally:
     - name: deprovision-kind-cluster
       when:

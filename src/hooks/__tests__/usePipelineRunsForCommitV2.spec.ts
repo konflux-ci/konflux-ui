@@ -17,6 +17,7 @@ jest.mock('~/kubearchive/conditional-checks', () => ({
 }));
 jest.mock('~/feature-flags/hooks', () => ({
   useIsOnFeatureFlag: jest.fn(),
+  createConditionsHook: jest.fn(() => jest.fn()),
 }));
 
 createUseApplicationMock([{ metadata: { name: 'test' } }, true]);
@@ -214,6 +215,30 @@ describe('usePipelineRunsForCommitV2', () => {
         { hasNextPage: false, isFetchingNextPage: false },
       ]);
     });
+
+    it('should not report loaded until components are also loaded when filtering by components', () => {
+      mockUseComponents.mockReturnValue([[], false]);
+
+      mockUseKubearchiveListResourceQuery.mockReturnValue({
+        data: {
+          pages: [[resultMock[0]]],
+          pageParams: [],
+        },
+        isLoading: false,
+        error: null,
+        hasNextPage: false,
+        isFetchingNextPage: false,
+        fetchNextPage: undefined,
+      } as ReturnType<typeof useKubearchiveListResourceQuery>);
+
+      const { result } = renderHook(() =>
+        usePipelineRunsForCommitV2('test-ns', 'test-app', 'sample-sha'),
+      );
+
+      // Pipeline runs are loaded but components are not — should NOT be loaded yet
+      expect(result.current[1]).toBe(false);
+    });
+
     it('should handle error', () => {
       const error = new Error('Kubearchive error');
       mockUseComponents.mockReturnValue([[], false]);
@@ -351,6 +376,24 @@ describe('usePipelineRunsForCommitV2', () => {
         undefined,
         { hasNextPage: false, isFetchingNextPage: false },
       ]);
+    });
+
+    it('should not report loaded until components are also loaded when filtering by components', () => {
+      mockUseComponents.mockReturnValue([[], false]);
+      mockUseTRPipelineRuns.mockReturnValue([
+        [resultMock[0]],
+        true,
+        null,
+        undefined,
+        { hasNextPage: false, isFetchingNextPage: false },
+      ]);
+
+      const { result } = renderHook(() =>
+        usePipelineRunsForCommitV2('test-ns', 'test-app', 'sample-sha'),
+      );
+
+      // Pipeline runs are loaded but components are not — should NOT be loaded yet
+      expect(result.current[1]).toBe(false);
     });
 
     it('should handle error', () => {

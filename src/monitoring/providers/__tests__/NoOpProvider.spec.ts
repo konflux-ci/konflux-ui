@@ -26,13 +26,14 @@ describe('NoOpProvider', () => {
     expect(consoleMock.info).not.toHaveBeenCalled();
   });
 
-  it('should log captureException to console.error', () => {
+  it('should log captureException to console.error and return undefined', () => {
     const error = new Error('test error');
     const context = { userId: '123' };
 
-    provider.captureException(error, context);
+    const result = provider.captureException(error, context);
 
     expect(consoleMock.error).toHaveBeenCalledWith('captureException', error, context);
+    expect(result).toBeUndefined();
   });
 
   it('should log captureMessage to appropriate console level', () => {

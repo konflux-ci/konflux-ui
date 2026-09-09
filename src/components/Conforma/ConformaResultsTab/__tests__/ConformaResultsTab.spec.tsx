@@ -1,10 +1,15 @@
 import { act, fireEvent, screen } from '@testing-library/react';
 import type { ApplicationConformaResults, ConformaResultRow } from '~/types/conforma';
 import { CONFORMA_RESULT_STATUS } from '~/types/conforma';
+import { setupVirtualizerMock } from '~/unit-test-utils';
 import { routerRenderer } from '~/unit-test-utils/mock-react-router';
 import { ConformaResultsTab } from '../ConformaResultsTab';
 import { useApplicationConformaResults } from '../useApplicationConformaResults';
 import '@testing-library/jest-dom';
+
+jest.mock('@tanstack/react-virtual', () => ({
+  useVirtualizer: jest.fn(),
+}));
 
 jest.mock('../useApplicationConformaResults', () => ({
   useApplicationConformaResults: jest.fn(),
@@ -141,6 +146,7 @@ const populatedResults: ApplicationConformaResults = {
 describe('ConformaResultsTab', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    setupVirtualizerMock();
   });
 
   afterEach(() => {

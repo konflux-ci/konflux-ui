@@ -1,11 +1,9 @@
 import * as React from 'react';
-import {
-  CriticalRiskIcon,
-  AngleDoubleDownIcon,
-  AngleDoubleUpIcon,
-  EqualsIcon,
-  UnknownIcon as PFUnknownIcon,
-} from '@patternfly/react-icons/dist/esm/icons';
+import { AngleDoubleDownIcon } from '@patternfly/react-icons/dist/esm/icons/angle-double-down-icon';
+import { AngleDoubleUpIcon } from '@patternfly/react-icons/dist/esm/icons/angle-double-up-icon';
+import { CriticalRiskIcon } from '@patternfly/react-icons/dist/esm/icons/critical-risk-icon';
+import { EqualsIcon } from '@patternfly/react-icons/dist/esm/icons/equals-icon';
+import { UnknownIcon as PFUnknownIcon } from '@patternfly/react-icons/dist/esm/icons/unknown-icon';
 import { t_global_color_severity_critical_100 as redColor } from '@patternfly/react-tokens/dist/js/t_global_color_severity_critical_100'; // critical
 import { t_global_color_severity_important_100 as orangeColor } from '@patternfly/react-tokens/dist/js/t_global_color_severity_important_100'; // important
 import { t_global_color_severity_minor_100 as blueColor } from '@patternfly/react-tokens/dist/js/t_global_color_severity_minor_100'; // minor

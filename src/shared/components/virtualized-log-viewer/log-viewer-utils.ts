@@ -15,15 +15,21 @@ export function normalizeLogLines(data: string): string[] {
 }
 
 export function normalizeSection(section: LogSection): NormalizedLogSection {
-  return { containerName: section.containerName, lines: normalizeLogLines(section.data) };
+  return {
+    containerName: section.containerName,
+    lines: normalizeLogLines(section.data),
+    isCompleted: section.isCompleted,
+    hasTerminatedWithError: section.hasTerminatedWithError,
+  };
 }
 
 export function singleLogSection(
   data: string,
   containerName = 'log',
   isCompleted = false,
+  hasTerminatedWithError = false,
 ): LogSection {
-  return { containerName, data, isCompleted };
+  return { containerName, data, isCompleted, hasTerminatedWithError };
 }
 
 /** Recursively flattens nested Prism tokens into plain text */

@@ -301,7 +301,32 @@ const useApplicationData = (namespace: string) => {
 };
 ```
 
-4. **Always memoize functions returned from custom hooks.** Even if they seem cheap, callers may use them in dependency arrays.
+4. **Use `useEventListener` for browser event listeners.** Do not manually call `addEventListener`/`removeEventListener` in `useEffect`. The shared `useEventListener` hook (`~/shared/hooks/useEventListener`) handles lifecycle cleanup automatically and stabilizes the callback reference via `useEvent`.
+
+```tsx
+// BAD -- manual listener management
+useEffect(() => {
+  const handler = (e: HashChangeEvent) => { /* ... */ };
+  window.addEventListener('hashchange', handler);
+  return () => window.removeEventListener('hashchange', handler);
+}, []);
+
+// GOOD -- shared hook
+import { useEventListener } from '~/shared/hooks/useEventListener';
+
+useEventListener('hashchange', (e) => { /* ... */ }, window);
+```
+
+**Justified exceptions** where manual `addEventListener` is acceptable:
+
+- **Observer-based APIs** (`ResizeObserver`, `IntersectionObserver`, `MutationObserver`) -- these are not standard DOM events and have their own lifecycle patterns. For `ResizeObserver`, prefer the shared hooks `useResizeObserver` or `useLayoutResizeObserver` from `~/shared/hooks/` instead of creating observers manually.
+- **`useSyncExternalStore` subscriptions** -- the subscribe function follows React's external store contract rather than the event listener pattern (e.g., `useLocalStorage`).
+- **Dynamically created or non-React-managed DOM nodes** -- when the target element is obtained via a callback ref or created outside React's tree and its lifecycle does not align with a component mount/unmount cycle (e.g., fullscreen API with ref callbacks).
+- **`MediaQueryList` listeners in non-React contexts** -- when tracking multiple `matchMedia` queries in a single effect with paired setup/teardown (e.g., `useResponsiveColumns`).
+
+When in doubt, prefer `useEventListener`. If the hook does not support a use case, consider extending it rather than falling back to manual listeners.
+
+5. **Always memoize functions returned from custom hooks.** Even if they seem cheap, callers may use them in dependency arrays.
 
 ```tsx
 // BAD

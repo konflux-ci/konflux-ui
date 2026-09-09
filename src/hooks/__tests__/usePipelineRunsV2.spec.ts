@@ -25,6 +25,7 @@ jest.mock('~/kubearchive/conditional-checks', () => ({
 }));
 jest.mock('~/feature-flags/hooks', () => ({
   useIsOnFeatureFlag: jest.fn(),
+  createConditionsHook: jest.fn(() => jest.fn()),
 }));
 
 createUseApplicationMock([{ metadata: { name: 'test' } }, true]);

@@ -32,6 +32,9 @@ type ComponentSelectMenuProps = {
   defaultAriaLabel?: string;
   linkedSecrets?: (data: string[]) => void;
   entity?: string;
+  showCountBadge?: boolean;
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
 };
 
 export const ComponentSelectMenu: React.FC<ComponentSelectMenuProps> = ({
@@ -48,6 +51,9 @@ export const ComponentSelectMenu: React.FC<ComponentSelectMenuProps> = ({
   defaultAriaLabel = 'Search components',
   linkedSecrets,
   entity,
+  showCountBadge = true,
+  isOpen,
+  onOpenChange,
 }) => {
   const [{ value }, , { setValue }] = useField<string[] | string>(name);
   const [searchQuery, setSearchQuery] = React.useState<string>('');
@@ -109,12 +115,15 @@ export const ComponentSelectMenu: React.FC<ComponentSelectMenuProps> = ({
   }, [isGrouped, options, searchQuery]);
 
   const toggleText = React.useMemo(() => {
-    const selectedComponents = value as string[];
+    const hasSelection = isMulti
+      ? Array.isArray(value) && value.length > 0
+      : Boolean(value);
+
     if (typeof selectedToggleText === 'function') {
-      return selectedToggleText(value);
+      return hasSelection ? selectedToggleText(value) : defaultToggleText;
     }
-    return selectedComponents?.length > 0 ? selectedToggleText : defaultToggleText;
-  }, [defaultToggleText, value, selectedToggleText]);
+    return hasSelection ? selectedToggleText : defaultToggleText;
+  }, [defaultToggleText, isMulti, value, selectedToggleText]);
 
   useEffect(() => {
     if (!defaultSelected || defaultSelected.length === 0) return;
@@ -145,7 +154,9 @@ export const ComponentSelectMenu: React.FC<ComponentSelectMenuProps> = ({
         toggleText={toggleText}
         onSelect={handleSelect}
         closeOnSelect={!isMulti}
-        badgeValue={isMulti ? (value as string[])?.length : undefined}
+        badgeValue={isMulti && showCountBadge ? (value as string[])?.length : undefined}
+        isOpen={isOpen}
+        onOpenChange={onOpenChange}
       >
         <MenuSearch>
           <MenuSearchInput>

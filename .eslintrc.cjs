@@ -122,6 +122,11 @@ module.exports = {
           "Don't use group imports. Use @patternfly/react-icons/dist/esm/icons/(kebab-case-name) instead.",
       },
       {
+        name: '@patternfly/react-icons/dist/esm/icons',
+        message:
+          "Don't use barrel import. Use @patternfly/react-icons/dist/esm/icons/<kebab-case-name> instead.",
+      },
+      {
         name: 'lodash',
         message: "Don't use group imports. Use lodash/(funcName) instead.",
       },
@@ -148,6 +153,15 @@ module.exports = {
     'require-atomic-updates': 0,
     'rulesdir/forbid-pf-relative-imports': 'off', // We don't need this rule after https://github.com/patternfly/patternfly-react/pull/9298.
   },
+  overrides: [
+    {
+      files: ['src/analytics/gen/**'],
+      rules: {
+        '@typescript-eslint/ban-types': 'off',
+        '@typescript-eslint/no-duplicate-type-constituents': 'off',
+      },
+    },
+  ],
   settings: {
     'import/extensions': ['.js', '.jsx', '.ts', '.tsx'],
     'import/parsers': {
