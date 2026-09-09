@@ -34,10 +34,12 @@ Components
 | `src/analytics/hooks.ts` | `useTrackAnalyticsEvent` hook |
 | `src/analytics/gen/analytics-types.ts` | Auto-generated types from segment-bridge schema |
 | `src/analytics/obfuscate.ts` | SHA-256 hashing for PIA fields (`SHA256Hash` branded type) |
+| `src/routes/with-route-patterns.ts` | Stamps each route's privacy-safe pattern (e.g. `/ns/:workspaceName/applications`) onto `handle.routePattern`; `getRoutePatternFromMatches()` reads it back via `useMatches()` |
 | `src/analytics/load-config.ts` | Config resolution (API-first, runtime fallback) |
 | `src/analytics/conditional-checks.ts` | `isAnalyticsEnabled` condition + `useIsAnalyticsEnabled` hook |
 | `src/analytics/arrival-source.ts` | Classifies `document.referrer` into an `ArrivalSource` and persists it across the OAuth redirect |
 | `src/auth/useAuthAnalytics.ts` | `useAuthAnalytics` hook — `onLogin` / `onLogout` callbacks |
+| `src/feature-flags/useFeatureFlagAnalytics.ts` | Hook fired from `Panel.tsx` — diffs flag state on panel open vs. close and tracks `feature_flags_changed` |
 
 ---
 
@@ -160,6 +162,14 @@ if (markSessionStartedOnce()) {
 Why two guards:
 - `captureArrivalSourceOnce()` dedupes the *referrer capture* (runs at boot, before React).
 - `markSessionStartedOnce()` dedupes the *event fire* (runs inside the App effect, after auth/publicInfo settle).
+
+---
+
+## Feature Flag Change Tracking
+
+`useFeatureFlagAnalytics()` in `FeatureFlagPanel` tracks `feature_flags_changed` on every panel close (including `changesCount: 0`), via the modal's `onClose` in `Panel.tsx` — not on unmount.
+
+On open it snapshots flag state (from `useFeatureFlags()`) and `pagePattern` via `useMatches()` + `getRoutePatternFromMatches()` (`src/routes/with-route-patterns.ts`) — e.g. `/ns/:workspaceName/applications`, never the resolved URL. `withRoutePatterns()` stamps the pattern onto every route's `handle` at router creation (`src/routes/index.tsx`), so other route-aware analytics hooks can reuse the same helper. On close, `computeFeatureFlagChanges()` diffs open vs. current state and tracks `changes`, `changesCount`, and `pagePattern`. Net-zero toggles are omitted; "Reset to Defaults" is included. URL param overrides (`?ff_flag=true`) are not tracked.
 
 ---
 
