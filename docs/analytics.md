@@ -41,6 +41,7 @@ Components
 | `src/auth/useAuthAnalytics.ts` | `useAuthAnalytics` hook — `onLogin` / `onLogout` callbacks |
 | `src/feature-flags/useFeatureFlagAnalytics.ts` | Hook fired from `Panel.tsx` — diffs flag state on panel open vs. close and tracks `feature_flags_changed` |
 | `src/components/PipelineRun/PipelineRunListView/pipelinerun-actions.tsx` | Tracks `integration_test_rerun_triggered` when a user clicks Rerun on an integration test pipeline |
+| `src/components/Issues/ConformaViolationsCard.tsx` | Tracks `conforma_violations_link_clicked` when a user clicks an application link on the Issues Dashboard Conforma policy results card |
 
 ---
 
@@ -171,6 +172,14 @@ Why two guards:
 `useFeatureFlagAnalytics()` in `FeatureFlagPanel` tracks `feature_flags_changed` on every panel close (including `changesCount: 0`), via the modal's `onClose` in `Panel.tsx` — not on unmount.
 
 On open it snapshots flag state (from `useFeatureFlags()`) and `pagePattern` via `useMatches()` + `getRoutePatternFromMatches()` (`src/routes/with-route-patterns.ts`) — e.g. `/ns/:workspaceName/applications`, never the resolved URL. `withRoutePatterns()` stamps the pattern onto every route's `handle` at router creation (`src/routes/index.tsx`), so other route-aware analytics hooks can reuse the same helper. On close, `computeFeatureFlagChanges()` diffs open vs. current state and tracks `changes`, `changesCount`, and `pagePattern`. Net-zero toggles are omitted; "Reset to Defaults" is included. URL param overrides (`?ff_flag=true`) are not tracked.
+
+---
+
+## Conforma Violations Link Tracking
+
+`ConformaViolationsCard.tsx` tracks `conforma_violations_link_clicked` when a user clicks an application link in the **Conforma policy results** card on the Issues Dashboard overview. The link navigates to that application's Conforma Results tab.
+
+Fires on click, before navigation. No event-specific properties beyond `userId` (from auth). Requires the `conforma-policy` feature flag.
 
 ---
 
