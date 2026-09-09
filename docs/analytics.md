@@ -30,9 +30,10 @@ Components
 
 | File | Purpose |
 |------|---------|
-| `src/analytics/index.ts` | SDK init, Segment transport configuration, `getAnalytics()`, `whenAnalyticsReady()`, re-exports generated types |
+| `src/analytics/index.ts` | SDK init, Segment transport configuration, lifecycle listeners, `getAnalytics()`, `whenAnalyticsReady()`, re-exports generated types |
 | `src/analytics/AnalyticsService.ts` | Typed tracking, common fields, and session identity — `track()`, `identify()`, `reset()` |
-| `src/analytics/hooks.ts` | `useTrackAnalyticsEvent` hook |
+| `src/analytics/hooks.ts` | `useTrackAnalyticsEvent` and `useJourneyTracker` hooks |
+| `src/analytics/JourneyCollector.ts` | Journey accumulation and flushing |
 | `src/analytics/gen/analytics-types.ts` | Auto-generated types from segment-bridge schema |
 | `src/analytics/obfuscate.ts` | SHA-256 hashing for PIA fields (`SHA256Hash` branded type) |
 | `src/routes/with-route-patterns.ts` | Stamps each route's privacy-safe pattern (e.g. `/ns/:workspaceName/applications`) onto `handle.routePattern`; `getRoutePatternFromMatches()` reads it back via `useMatches()` |
@@ -126,6 +127,8 @@ After authentication, `main.tsx` derives a stable, cluster-scoped pseudonymous `
 
 A refresh has a new `sessionId` but the same `userId`; a second tab has its own `sessionId` and the same `userId`. The hash is pseudonymous, not anonymous.
 
+Journeys use route patterns such as `/ns/:workspaceName/applications`; unmatched routes use `/unknown`, never the raw pathname.
+
 ---
 
 ## Login / Logout Events
@@ -145,7 +148,40 @@ On a page refresh there is no `logged_in` param, so no login event fires. Login 
 
 ### Logout
 
-`onLogout()` is called in `AuthContext.signOut()` before the sign-out fetch. It tracks a `user_logout` event, then calls `analyticsService.reset()` to rotate the session ID and clear the transport identity.
+`AuthContext.signOut()` is immediately followed by a synchronous redirect to the login page (`redirectToLogin()` / `window.location.replace`). Because Segment's `analytics.track()` is async, firing it and navigating away in the same tick risks the browser tearing the page down before the request is ever dispatched, silently dropping the event.
+
+To avoid this, `signOut()` `await`s `onLogout()` before doing the sign-out fetch and redirect. `onLogout()` sends the `user_logout` event via `AnalyticsService.trackAndWait()` and force-flushes the current journey via `JourneyCollector.flushAndWait()`. These await the Segment SDK dispatch/queue operation, not a durable storage acknowledgement from Segment. Both are wrapped in a short timeout (`LOGOUT_FLUSH_TIMEOUT_MS`, 2s) so a stalled network never blocks logout indefinitely. Once that settles (or times out), `onLogout()` resets the collector and calls `analyticsService.reset()` to rotate the session ID and clear the transport identity.
+
+---
+
+## User journey telemetry
+
+`user_journey` captures ordered route patterns and dwell time in `steps`:
+
+- `pagePattern`: the current privacy-safe route pattern
+- `toPagePattern`: the next route pattern, absent on the open step
+- `durationMs`: elapsed time on the step
+
+`useJourneyTracker()` records route changes through the shared `JourneyCollector`. Checkpoints are non-destructive: later flushes may repeat steps with longer durations or a newly known `toPagePattern`.
+
+Journeys flush on:
+
+- logout through `JourneyCollector.flushAndWait()`, awaited before navigation, forced past checkpoint deduplication (see [Logout](#logout))
+- payload splitting, before a journey exceeds the downstream destination's property limit
+
+Flushes return `false`/resolve `false` when there are no steps or required common fields are missing.
+
+Background-tab and browser-close delivery are deliberately out of scope until a supported, end-to-end tested lifecycle transport is available.
+
+### Payload splitting
+
+When closed steps exceed the 80 KB estimate, the collector flushes a part and starts another without duplicating the boundary step. Split parts keep `sessionStartedAt` and `journeyId` stable, increment `journeyPartIndex`, and use an independent duration clock. `journeyId` and `journeyPartIndex` are omitted until a split occurs to avoid adding bytes to normal sessions.
+
+### Downstream queries
+
+Checkpoint events overlap. Do not sum all `durationMs` values for a session. Group by `sessionStartedAt` and select the latest event. For split journeys, select the latest event per `journeyPartIndex`, group parts by `journeyId`, then concatenate parts in index order.
+
+Queries must use `steps.pagePattern` and `steps.toPagePattern`; the old `steps.path` and `steps.toPath` names are no longer emitted.
 
 ---
 

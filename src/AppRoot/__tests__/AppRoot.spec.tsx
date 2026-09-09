@@ -11,6 +11,10 @@ jest.mock('../../hooks/useActiveRouteChecker', () => ({
   useActiveRouteChecker: jest.fn(),
 }));
 
+jest.mock('~/analytics/hooks', () => ({
+  useJourneyTracker: jest.fn(),
+}));
+
 jest.mock('../../hooks/useKonfluxPublicInfo', () => ({
   useKonfluxPublicInfo: jest.fn(() => [{ visibility: 'private' }]),
 }));

@@ -27,6 +27,7 @@ describe('AnalyticsService', () => {
   beforeEach(() => {
     service = new AnalyticsService();
     jest.clearAllMocks();
+    mockSegment.track.mockResolvedValue(undefined);
   });
 
   describe('common properties', () => {
@@ -95,6 +96,61 @@ describe('AnalyticsService', () => {
       getAnalytics.mockReturnValue(analytics);
       expect(service.track(TrackEvents.user_login_event, {})).toBe(false);
       expect(mockSegment.track).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('trackAndWait', () => {
+    it('resolves true only after analytics.track()\'s network call resolves', async () => {
+      enableAnalytics();
+      service.setCommonProperties({
+        clusterVersion: '4.14',
+        konfluxVersion: '1.0',
+        kubernetesVersion: '1.30',
+      });
+      let resolveTrack: () => void = () => {};
+      mockSegment.track.mockReturnValue(
+        new Promise<void>((resolve) => {
+          resolveTrack = resolve;
+        }),
+      );
+
+      let sent: boolean | undefined;
+      const pending = service
+        .trackAndWait(TrackEvents.user_logout_event, {})
+        .then((result) => {
+          sent = result;
+        });
+
+      expect(mockSegment.track).toHaveBeenCalledWith(TrackEvents.user_logout_event, {
+        sessionId: service.getCommonProperties().sessionId,
+        clusterVersion: '4.14',
+        konfluxVersion: '1.0',
+        kubernetesVersion: '1.30',
+      });
+      expect(sent).toBeUndefined();
+
+      resolveTrack();
+      await pending;
+
+      expect(sent).toBe(true);
+    });
+
+    it('resolves false when required common properties are unavailable', async () => {
+      enableAnalytics();
+      await expect(service.trackAndWait(TrackEvents.user_logout_event, {})).resolves.toBe(false);
+      expect(mockSegment.track).not.toHaveBeenCalled();
+    });
+
+    it('resolves false when analytics.track() rejects', async () => {
+      enableAnalytics();
+      service.setCommonProperties({
+        clusterVersion: '4.14',
+        konfluxVersion: '1.0',
+        kubernetesVersion: '1.30',
+      });
+      mockSegment.track.mockRejectedValue(new Error('network error'));
+
+      await expect(service.trackAndWait(TrackEvents.user_logout_event, {})).resolves.toBe(false);
     });
   });
 

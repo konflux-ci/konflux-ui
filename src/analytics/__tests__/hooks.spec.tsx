@@ -1,7 +1,8 @@
 import { renderHook, act } from '@testing-library/react';
-import { mockAnalyticsServiceFn } from '~/unit-test-utils';
+import { createReactRouterMock, mockAnalyticsServiceFn } from '~/unit-test-utils';
 import { TrackEvents } from '../gen/analytics-types';
-import { useTrackAnalyticsEvent } from '../hooks';
+import { useJourneyTracker, useTrackAnalyticsEvent } from '../hooks';
+import { journeyCollector } from '../JourneyCollector';
 
 jest.mock('../conditional-checks', () => ({
   useIsAnalyticsEnabled: jest.fn(),
@@ -38,5 +39,54 @@ describe('useTrackAnalyticsEvent', () => {
     });
 
     expect(trackMock).not.toHaveBeenCalled();
+  });
+
+});
+
+describe('useJourneyTracker', () => {
+  const useMatchesMock = createReactRouterMock('useMatches');
+  const recordStepSpy = jest.spyOn(journeyCollector, 'recordStep').mockImplementation(jest.fn());
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    useIsAnalyticsEnabled.mockReturnValue({ isAnalyticsEnabled: true });
+    useMatchesMock.mockReturnValue([
+      { handle: { routePattern: '/' } },
+      { handle: { routePattern: '/ns/:workspaceName/applications' } },
+    ]);
+  });
+
+  it('records route patterns on mount and navigation', () => {
+    const { rerender } = renderHook(() => useJourneyTracker());
+
+    expect(recordStepSpy).toHaveBeenCalledWith('/ns/:workspaceName/applications');
+
+    useMatchesMock.mockReturnValue([
+      { handle: { routePattern: '/' } },
+      { handle: { routePattern: '/ns/:workspaceName/applications/:applicationName' } },
+    ]);
+    rerender();
+
+    expect(recordStepSpy).toHaveBeenCalledTimes(2);
+    expect(recordStepSpy).toHaveBeenLastCalledWith(
+      '/ns/:workspaceName/applications/:applicationName',
+    );
+  });
+
+  it('does not record when analytics is disabled', () => {
+    const { rerender } = renderHook(() => useJourneyTracker());
+
+    useIsAnalyticsEnabled.mockReturnValue({ isAnalyticsEnabled: false });
+    rerender();
+
+    expect(recordStepSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('uses a safe fallback when the matched route has no pattern', () => {
+    useMatchesMock.mockReturnValue([{ handle: {} }]);
+
+    renderHook(() => useJourneyTracker());
+
+    expect(recordStepSpy).toHaveBeenCalledWith('/unknown');
   });
 });

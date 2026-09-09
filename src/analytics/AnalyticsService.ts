@@ -34,6 +34,34 @@ export class AnalyticsService {
     return true;
   }
 
+  /**
+   * Like `track()`, but waits for Segment's SDK dispatch/queue operation to
+   * settle. The SDK may queue a failed request for retry and still resolve, so
+   * this is not proof that Segment has durably stored the event. Use this when
+   * a synchronous navigation follows immediately (e.g. logout).
+   */
+  async trackAndWait<E extends TrackEvents>(
+    event: E,
+    properties: Omit<EventPropertiesMap[E], 'userId'>,
+  ): Promise<boolean> {
+    const analytics = getAnalytics();
+    const commonProperties = this.getReadyCommonProperties();
+    if (!analytics || !commonProperties) {
+      return false;
+    }
+
+    try {
+      await analytics.track(event, {
+        ...commonProperties,
+        ...properties,
+        ...(this.userId ? { userId: this.userId } : {}),
+      });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   identify(userId: SHA256Hash): void {
     this.userId = userId;
     void getAnalytics()?.identify(userId);

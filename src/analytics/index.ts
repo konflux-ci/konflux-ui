@@ -13,8 +13,8 @@ const analyticsReady: Promise<boolean> = new Promise((r) => {
 
 /**
  * Converts a configured Segment API URL into the host-and-path form expected
- * by the Segment SDK. Segment's default is `api.segment.io/v1`; dropping the
- * path sends events to `/t` instead of `/v1/t`.
+ * by the Segment SDK. Segment's default is
+ * `api.segment.io/v1`; dropping the path sends events to `/t` instead of `/v1/t`.
  */
 function normalizeApiHost(apiUrl: string): string {
   const url = new URL(/^https?:\/\//i.test(apiUrl) ? apiUrl : `https://${apiUrl}`);
