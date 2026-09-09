@@ -50,6 +50,7 @@ export const ApplicationDetails: React.FC<React.PropsWithChildren> = () => {
   );
   const track = useTrackEvent();
   const isConformaPolicyEnabled = useIsOnFeatureFlag('conforma-policy');
+  const isMintMakerEnabled = useIsOnFeatureFlag('mintmaker');
   const appDisplayName = application?.spec?.displayName || application?.metadata?.name || '';
   const applicationBreadcrumbs = useApplicationBreadcrumbs(appDisplayName, false);
 
@@ -212,6 +213,9 @@ export const ApplicationDetails: React.FC<React.PropsWithChildren> = () => {
                   isFilled: true,
                 },
               ]
+            : []),
+          ...(isMintMakerEnabled
+            ? [{ key: 'dep-updates', label: 'Dependency updates', isFilled: true }]
             : []),
         ]}
       />

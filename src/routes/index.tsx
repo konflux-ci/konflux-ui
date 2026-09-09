@@ -28,10 +28,11 @@ import taskRunRoutes from './page-routes/taskrun';
 import userAccessRoutes from './page-routes/user-access';
 import { RouteErrorBoundry } from './RouteErrorBoundary';
 import { GithubRedirectRouteParams } from './utils';
+import { withRoutePatterns } from './with-route-patterns';
 
 const sentryCreateBrowserRouter = wrapCreateBrowserRouter(createBrowserRouter);
 
-export const router = sentryCreateBrowserRouter([
+const routes = [
   {
     path: '/',
     loader: async (params: LoaderFunctionArgs) => {
@@ -89,4 +90,6 @@ export const router = sentryCreateBrowserRouter([
     path: '*',
     element: <ErrorEmptyState httpError={HttpError.fromCode(404)} />,
   },
-]);
+];
+
+export const router = sentryCreateBrowserRouter(withRoutePatterns(routes));

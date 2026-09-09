@@ -11,7 +11,7 @@ import { getErrorState } from '~/shared/utils/error-utils';
 import emptyStateImgUrl from '../../../assets/Components.svg';
 import { FeatureFlagIndicator } from '../../../feature-flags/FeatureFlagIndicator';
 import { FLAGS } from '../../../feature-flags/flags';
-import { IfFeature } from '../../../feature-flags/hooks';
+import { IfFeature, useIsOnFeatureFlag } from '../../../feature-flags/hooks';
 import { useComponent } from '../../../hooks/useComponents';
 import { COMPONENTS_PATH, COMPONENT_DETAILS_V2_PATH } from '../../../routes/paths';
 import { RouterParams } from '../../../routes/utils';
@@ -26,6 +26,7 @@ const ComponentDetailsView: React.FC = () => {
   const { componentName } = useParams<RouterParams>();
   const namespace = useNamespace();
   const [component, loaded, componentError] = useComponent(namespace, componentName);
+  const isMintMakerEnabled = useIsOnFeatureFlag('mintmaker');
 
   if (!loaded) {
     return (
@@ -90,6 +91,7 @@ const ComponentDetailsView: React.FC = () => {
             key: 'versions',
             label: 'Versions',
           },
+          ...(isMintMakerEnabled ? [{ key: 'dep-updates', label: 'Dependency updates' }] : []),
         ]}
       />
     </IfFeature>

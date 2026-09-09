@@ -214,9 +214,9 @@ describe('Basic Happy Path', () => {
       // We encountered problems with EC checks on a local deployment,
       // so we only check for Succeeded status on the stage job
       if (Cypress.env('PERIODIC_RUN_STAGE') === 'true') {
-        DetailsTab.waitForPLRAndDownloadAllLogs(false, 'Succeeded');
+        DetailsTab.waitForPLRAndDownloadAllLogs(300000, false, 'Succeeded');
       } else {
-        DetailsTab.waitForPLRAndDownloadAllLogs(false, '(Succeeded|Failed)');
+        DetailsTab.waitForPLRAndDownloadAllLogs(300000, false, '(Succeeded|Failed)');
       }
     });
 
