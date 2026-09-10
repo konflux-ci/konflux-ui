@@ -18,13 +18,10 @@ const isHealthCheckResponse = (health: unknown): health is HealthCheck => {
   );
 };
 
-export const useIsLightspeedAvailable = createConditionsHook(['isLightspeedAvailable']);
-
-export const isLightspeedAvailable = ensureConditionIsOn(['isLightspeedAvailable']);
-
 /**
- * Discovers whether Konflux Lightspeed is available via the client health check
+ * Runtime liveness re-validation for Konflux Lightspeed via the client health check
  * (`GET /liveness` and `GET /readiness` on the Lightspeed service).
+ * Re-run periodically through the `isLightspeedAvailable` condition TTL.
  */
 export const checkIfLightspeedIsAvailable = async (): Promise<boolean> => {
   const abortController = new AbortController();
@@ -44,3 +41,7 @@ export const checkIfLightspeedIsAvailable = async (): Promise<boolean> => {
     clearTimeout(timeoutId);
   }
 };
+
+export const useIsLightspeedAvailable = createConditionsHook(['isLightspeedAvailable']);
+
+export const isLightspeedAvailable = ensureConditionIsOn(['isLightspeedAvailable']);

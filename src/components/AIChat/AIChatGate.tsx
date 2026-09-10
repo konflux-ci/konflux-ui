@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { useIsLightspeedAvailable } from '~/components/AIChat/conditional-checks';
 import { IfFeature } from '~/feature-flags/hooks';
+import { useIsLightspeedAvailable } from '~/lightspeed/conditional-checks';
 
 const AIChatDock = React.lazy(() =>
   import(
