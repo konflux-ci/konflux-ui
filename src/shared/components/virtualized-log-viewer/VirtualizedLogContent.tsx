@@ -42,6 +42,7 @@ export interface VirtualizedLogContentProps {
   onDownloadFullLogs?: (sectionIndex: number) => Promise<void>;
   onViewFullLogs?: (sectionIndex: number) => void;
   lineNumberNavigationProps?: UseLineNumberNavigationResult;
+  setExpanded?: (expanded: boolean) => void;
 }
 
 export type VirtualizedLogContentImperativeHandleMethods = {
@@ -65,6 +66,7 @@ export const VirtualizedLogContent = forwardRef<
       onDownloadFullLogs,
       onViewFullLogs,
       lineNumberNavigationProps,
+      setExpanded,
     },
     ref,
   ) => {
@@ -93,6 +95,11 @@ export const VirtualizedLogContent = forwardRef<
       }),
       [toggleAllSections],
     );
+
+    React.useEffect(() => {
+      const expanded = expandedSections.size === effectiveNormalizedSections.length;
+      setExpanded?.(expanded);
+    }, [expandedSections.size, effectiveNormalizedSections.length, setExpanded]);
 
     const {
       displayRows,

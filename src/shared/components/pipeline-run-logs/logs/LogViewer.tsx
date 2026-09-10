@@ -19,6 +19,8 @@ import {
   ToolbarItem,
   Truncate,
 } from '@patternfly/react-core';
+import { AngleDownIcon } from '@patternfly/react-icons/dist/esm/icons/angle-down-icon';
+import { AngleUpIcon } from '@patternfly/react-icons/dist/esm/icons/angle-up-icon';
 import { CompressIcon } from '@patternfly/react-icons/dist/esm/icons/compress-icon';
 import { DownloadIcon } from '@patternfly/react-icons/dist/esm/icons/download-icon';
 import { ExpandIcon } from '@patternfly/react-icons/dist/esm/icons/expand-icon';
@@ -174,6 +176,7 @@ const LogViewer: React.FC<Props> = ({
 
   const childRef = React.useRef<VirtualizedLogContentImperativeHandleMethods | null>(null);
 
+  const [sectionsExpanded, setSectionsExpanded] = React.useState<boolean | null>(null);
   const handleOnToggleAllSections = () => {
     childRef?.current?.toggleAllSections();
   };
@@ -228,8 +231,9 @@ const LogViewer: React.FC<Props> = ({
                     variant="link"
                     aria-label="Expand/Collapse all"
                     onClick={handleOnToggleAllSections}
+                    icon={sectionsExpanded ? <AngleUpIcon /> : <AngleDownIcon />}
                   >
-                    Expand/Collapse all
+                    {sectionsExpanded ? 'Collapse' : 'Expand'} all
                   </Button>
                 </ToolbarItem>
               )}
@@ -384,6 +388,7 @@ const LogViewer: React.FC<Props> = ({
                     : lineNumberNavigationProps
                   : undefined
               }
+              setExpanded={setSectionsExpanded}
             />
           </div>
         )}
