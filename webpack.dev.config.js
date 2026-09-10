@@ -75,11 +75,11 @@ export default merge(commonConfig, {
         // pathRewrite: { '^/wss/k8s': '' },
       },
       {
-        context: ['/api/lightspeed'],
+        context: ['/api/plugins/lightspeed'],
         target: process.env.LIGHTSPEED_URL,
         secure: false,
         changeOrigin: true,
-        pathRewrite: (path) => path.replace(/^\/api\/lightspeed/, ''),
+        pathRewrite: (path) => path.replace(/^\/api\/plugins\/lightspeed/, ''),
       },
     ],
   },
