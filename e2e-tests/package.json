@@ -6,8 +6,9 @@
   "packageManager": "yarn@4.12.0",
   "scripts": {
     "clean-reports": "rm -rf cypress/",
-    "cy:run": "cypress run -b chrome --spec 'tests/component-lifecycle.spec.ts','tests/environment-config.spec.ts'",
+    "cy:run": "cypress run -b chrome --parallel --spec 'tests/component-lifecycle.spec.ts','tests/environment-config.spec.ts'",
     "cy:run:env": "cypress run -b chrome --spec 'tests/environment-config.spec.ts'",
+    "cy:run:lif": "cypress run -b chrome --spec 'tests/component-lifecycle.spec.ts'",
     "cy:run:coverage": "cypress run -b chrome --env coverage=true",
     "cy:open": "cypress open",
     "cy:open:studio": "cypress open --env STUDIO_MODE=true",

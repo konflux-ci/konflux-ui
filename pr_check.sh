@@ -109,7 +109,7 @@ execute_test() {
             SPEC_FILE="/e2e/tests/features.spec.ts"
             ;;
         *)
-            SPEC_FILE="/e2e/tests/basic-happy-path.spec.ts"
+            SPEC_FILE="/e2e/tests/component-lifecycle.spec.ts,/e2e/tests/environment-config.spec.ts --parallel"
             ;;
     esac
     echo "Running tests from ${SPEC_FILE}"
