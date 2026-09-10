@@ -33,6 +33,20 @@ const getMockedResources = (mocks) => (params, model) => {
 };
 
 describe('IntegrationTestOverviewTab', () => {
+  it('should render nothing when integration test is not available', () => {
+    useParamsMock.mockReturnValue({
+      integrationTestName: 'nonexistent-test',
+      applicationName: 'test-app',
+    });
+    watchResourceMock.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: undefined,
+    });
+    const { container } = routerRenderer(<IntegrationTestOverviewTab />);
+    expect(container.firstChild).toBeNull();
+  });
+
   it('should render correct details', () => {
     useParamsMock.mockReturnValue({
       integrationTestName: 'test-app-test-1',

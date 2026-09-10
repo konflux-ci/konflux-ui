@@ -41,10 +41,14 @@ const IntegrationTestOverviewTab: React.FC<React.PropsWithChildren> = () => {
     integrationTestName,
   );
 
+  const showModal = useModalLauncher();
+
+  if (!integrationTest) {
+    return null;
+  }
+
   const optionalReleaseLabel =
     integrationTest.metadata.labels?.[IntegrationTestLabels.OPTIONAL] === 'true';
-
-  const showModal = useModalLauncher();
 
   const params = integrationTest?.spec?.params;
   const contexts = integrationTest?.spec?.contexts;
