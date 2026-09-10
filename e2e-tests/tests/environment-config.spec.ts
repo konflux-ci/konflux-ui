@@ -37,10 +37,53 @@ describe('Basic Happy Path', () => {
     Features.resetToDefault();
   });
 
+  let networkLogs: {
+    method: string;
+    url: string;
+    headers: Record<string, string | string[]>;
+    timestamp: number;
+    status?: number;
+    statusText?: string;
+    responseHeaders?: Record<string, string | string[]>;
+  }[] = [];
+
+  beforeEach(() => {
+    networkLogs = [];
+
+    // Capture every request/response that goes through Cypress's network proxy
+    // (Images, CSS, JS, XHR, Fetch, Docs) using cy.intercept instead of raw CDP
+    // events, since Cypress.automation('remote:debugger:protocol', ...) only
+    // forwards CDP *commands* and has no support for subscribing to CDP *events*
+    // such as 'Network.onRequestWillBeSent'.
+    cy.intercept('**/*', (req) => {
+      const timestamp = Date.now();
+      req.continue((res) => {
+        networkLogs.push({
+          method: req.method,
+          url: req.url,
+          headers: req.headers,
+          timestamp,
+          status: res.statusCode,
+          statusText: res.statusMessage,
+          responseHeaders: res.headers,
+        });
+      });
+    });
+  });
+
   afterEach(function () {
-    if (this.currentTest?.state === 'failed') {
-      hasTestFailed = true;
-    }
+    // Extract and inspect the full network log in afterEach()
+    cy.then(() => {
+      if (this.currentTest?.state === 'failed') {
+        hasTestFailed = true;
+
+        cy.log(`Captured total network events: ${networkLogs.length}`);
+
+        // Save complete traffic to a file
+        const safeTestName = Cypress.currentTest.title.replace(/[^a-zA-Z0-9]/g, '_');
+        cy.writeFile(`cypress/network-logs/nl-${safeTestName}.json`, networkLogs);
+      }
+    });
   });
 
   describe('Check Secrets Page', () => {
