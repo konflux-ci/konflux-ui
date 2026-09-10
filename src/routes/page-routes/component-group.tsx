@@ -1,10 +1,11 @@
 import { GROUP_DETAILS_PATH, GROUPS_PATH } from '@routes/paths';
 import { RouteErrorBoundry } from '@routes/RouteErrorBoundary';
-import { ensureFeatureFlagOnLoader } from '~/feature-flags/utils';
 import {
   ComponentGroupDetailsViewLayout,
+  componentGroupDetailsViewLoader,
   ComponentGroupIntegrationTestsTab,
-} from '../../components/ComponentGroups/ComponentGroupDetails';
+} from '~/components/ComponentGroups/ComponentGroupDetails';
+import { ensureFeatureFlagOnLoader } from '~/feature-flags/utils';
 
 const componentGroupRoutes = [
   {
@@ -21,6 +22,7 @@ const componentGroupRoutes = [
   },
   {
     path: GROUP_DETAILS_PATH.path,
+    loader: componentGroupDetailsViewLoader,
     errorElement: <RouteErrorBoundry />,
     element: <ComponentGroupDetailsViewLayout />,
     children: [
