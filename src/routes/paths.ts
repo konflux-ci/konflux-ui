@@ -164,3 +164,5 @@ export const USER_ACCESS_EDIT_PAGE = USER_ACCESS_LIST_PAGE.extend(
 );
 
 export const PIPELINE_RUNS_PAGE_PATH = WORKSPACE_PATH.extend('prns');
+
+export const MINTMAKER_SCHEDULE_PATH = buildRoute('mintmaker-schedule');
