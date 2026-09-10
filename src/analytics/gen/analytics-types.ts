@@ -20,7 +20,9 @@ export type KonfluxUISegmentEvents =
   | FeedbackSubmittedEvent
   | UiSessionStartedEvent
   | FeatureFlagsChangedEvent
-  | UserJourneyEvent;
+  | UserJourneyEvent
+  | ConformaViolationsLinkClickedEvent
+  | IntegrationTestRerunTriggeredEvent;
 /**
  * Fired when a user successfully authenticates into Konflux
  */
@@ -127,6 +129,24 @@ export type UserJourneyEvent = CommonFields & {
    */
   journeyPartIndex?: number;
 };
+/**
+ * Fired when a user clicks an application link in the Conforma policy results card on the Issues Dashboard, navigating to that application's Conforma results tab
+ */
+export type ConformaViolationsLinkClickedEvent = CommonFields & {
+  /**
+   * Unique identifier of the user. Obfuscated via sha256 with `clusterId` as salt.
+   */
+  userId: SHA256Hash;
+};
+/**
+ * Fired when a user clicks the Rerun button for an integration test pipeline in the Activity / PipelineRuns list.
+ */
+export type IntegrationTestRerunTriggeredEvent = CommonFields & {
+  /**
+   * Unique identifier of the user. Obfuscated via sha256 with `clusterId` as salt.
+   */
+  userId: SHA256Hash;
+};
 
 /**
  * Base fields required on every Segment event sent from Konflux UI
@@ -189,6 +209,8 @@ export enum TrackEvents {
   feedback_submitted_event = 'feedback_submitted',
   ui_session_started_event = 'ui_session_started',
   feature_flags_changed_event = 'feature_flags_changed',
+  conforma_violations_link_clicked_event = 'conforma_violations_link_clicked',
+  integration_test_rerun_triggered_event = 'integration_test_rerun_triggered',
 }
 
 /**
@@ -202,4 +224,6 @@ export type EventPropertiesMap = {
   [TrackEvents.feedback_submitted_event]: Omit<FeedbackSubmittedEvent, keyof CommonFields>;
   [TrackEvents.ui_session_started_event]: Omit<UiSessionStartedEvent, keyof CommonFields>;
   [TrackEvents.feature_flags_changed_event]: Omit<FeatureFlagsChangedEvent, keyof CommonFields>;
+  [TrackEvents.conforma_violations_link_clicked_event]: Omit<ConformaViolationsLinkClickedEvent, keyof CommonFields>;
+  [TrackEvents.integration_test_rerun_triggered_event]: Omit<IntegrationTestRerunTriggeredEvent, keyof CommonFields>;
 };
