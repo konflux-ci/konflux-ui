@@ -12,5 +12,5 @@ export const resolveLightspeedClientBaseUrl = (): string => {
   }
 
   // LightspeedClient.buildUrl() uses `new URL(baseUrl)`, which requires an absolute URL.
-  return new URL(LIGHTSPEED_API_BASE, window.location.origin).href
+  return new URL(LIGHTSPEED_API_BASE, window.location.origin).href;
 };
