@@ -1,6 +1,10 @@
 import * as React from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ButtonVariant, EmptyStateBody, Truncate, EmptyStateActions } from '@patternfly/react-core';
+import emptyStateImgUrl from '~/assets/Integration-test.svg';
+import { useIntegrationTestScenariosV2 } from '~/hooks/useIntegrationTestScenariosV2';
+import { IntegrationTestScenarioModel } from '~/models';
+import { RouterParams } from '~/routes/utils';
 import AppEmptyState from '~/shared/components/empty-state/AppEmptyState';
 import FilteredEmptyState from '~/shared/components/empty-state/FilteredEmptyState';
 import {
@@ -14,13 +18,9 @@ import ListLayout from '~/shared/components/list-layout/ListLayout';
 import { Table, TableContainer, type ColumnDefinition } from '~/shared/components/TableV2';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
+import { IntegrationTestScenarioKind } from '~/types/coreBuildService';
+import { useAccessReviewForModel } from '~/utils/rbac';
 import { textMatch } from '~/utils/text-filter-utils';
-import emptyStateImgUrl from '../../../assets/Integration-test.svg';
-import { useIntegrationTestScenariosV2 } from '../../../hooks/useIntegrationTestScenariosV2';
-import { IntegrationTestScenarioModel } from '../../../models';
-import { RouterParams } from '../../../routes/utils';
-import { IntegrationTestScenarioKind } from '../../../types/coreBuildService';
-import { useAccessReviewForModel } from '../../../utils/rbac';
 import { ButtonWithAccessTooltip } from '../../ButtonWithAccessTooltip';
 import { IntegrationTestLabels } from '../IntegrationTestForm/types';
 import { ResolverRefParams, getURLForParam } from '../IntegrationTestForm/utils/create-utils';
