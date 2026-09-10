@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { useMintmakerLogViewerModal } from '~/components/LogViewer/MintmakerLogViewer';
 import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { COMPONENT_DETAILS_PATH } from '~/routes/paths';
@@ -192,30 +193,12 @@ describe('Dependency runs column renderers', () => {
     expect(screen.getByTestId('view-logs-test-dependency-run')).toBeInTheDocument();
   });
 
-  it('calls the modal launcher when "View logs" is clicked', () => {
+  it('calls the modal launcher when "View logs" is clicked', async () => {
     const openModal = jest.fn();
     useMintmakerLogViewerModalMock.mockReturnValue(openModal);
     renderRow(makePipelineRun());
-    fireEvent.click(screen.getByText('View logs'));
-    expect(openModal).toHaveBeenCalledTimes(1);
-  });
-
-  it('passes the pipeline run object to useMintmakerLogViewerModal', () => {
-    const run = makePipelineRun();
-    renderRow(run);
-    expect(useMintmakerLogViewerModalMock).toHaveBeenCalledWith(run);
-  });
-
-  it('renders the "View logs" button with a data-test attribute containing the run name', () => {
-    renderRow(makePipelineRun());
-    expect(screen.getByTestId('view-logs-test-dependency-run')).toBeInTheDocument();
-  });
-
-  it('calls the modal launcher when "View logs" is clicked', () => {
-    const openModal = jest.fn();
-    useMintmakerLogViewerModalMock.mockReturnValue(openModal);
-    renderRow(makePipelineRun());
-    fireEvent.click(screen.getByText('View logs'));
+    const user = userEvent.setup();
+    await user.click(screen.getByText('View logs'));
     expect(openModal).toHaveBeenCalledTimes(1);
   });
 
