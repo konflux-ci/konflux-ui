@@ -22,7 +22,7 @@ import {
   KONFLUX_AI_TOGGLE_TOOLTIP,
   KONFLUX_AI_WELCOME_DESCRIPTION,
   KONFLUX_AI_WELCOME_TITLE,
-} from '~/components/AIChat/consts';
+} from '~/components/AIChat/const';
 
 import '@patternfly/chatbot/dist/css/main.css';
 import './AIChat.scss';
