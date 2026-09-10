@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { Flex, FlexItem, ModalVariant, Panel } from '@patternfly/react-core';
+import { analyticsService } from '~/analytics/AnalyticsService';
 import { TrackEvents } from '~/analytics/gen/analytics-types';
 import { useTrackAnalyticsEvent } from '~/analytics/hooks';
 import { ComponentProps, createModalLauncher } from '~/components/modal/createModalLauncher';
@@ -65,7 +66,9 @@ const FeedbackModal: React.FC<React.PropsWithChildren<ComponentProps>> = ({ onCl
 
   const handleFeedbackSubmit = React.useCallback(
     (values: FeedbackValues) => {
+      const { userId } = analyticsService.getCommonProperties();
       trackEvent(TrackEvents.feedback_submitted_event, {
+        userId,
         email: values.email || undefined,
         rating: values.scale || undefined,
         feedback: values.description,
