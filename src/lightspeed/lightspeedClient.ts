@@ -6,7 +6,7 @@ let lightspeedClient: LightspeedClient | undefined;
 export const getLightspeedClient = (): LightspeedClient => {
   if (!lightspeedClient) {
     // Auth is not configured on LightspeedClient. Requests target same-origin
-    // `/api/lightspeed`, so the browser forwards session cookies and the proxy
+    // `/api/plugins/lightspeed`, so the browser forwards session cookies and the proxy
     // (dev) or cluster ingress (deployed) forwards credentials to Lightspeed.
     lightspeedClient = new LightspeedClient({
       baseUrl: resolveLightspeedClientBaseUrl(),
