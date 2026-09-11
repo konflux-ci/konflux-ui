@@ -1,5 +1,7 @@
 import * as React from 'react';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { useMintmakerLogViewerModal } from '~/components/LogViewer/MintmakerLogViewer';
 import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { COMPONENT_DETAILS_PATH } from '~/routes/paths';
 import { Table, TableContainer } from '~/shared/components/TableV2';
@@ -17,6 +19,12 @@ jest.mock('react-router-dom', () => ({
     <a href={to}>{children}</a>
   ),
 }));
+
+jest.mock('~/components/LogViewer/MintmakerLogViewer', () => ({
+  useMintmakerLogViewerModal: jest.fn(),
+}));
+
+const useMintmakerLogViewerModalMock = useMintmakerLogViewerModal as jest.Mock;
 
 const makePipelineRun = (overrides: Partial<PipelineRunKind> = {}): PipelineRunKind => ({
   kind: 'PipelineRun',
@@ -49,9 +57,16 @@ const renderTable = (data: PipelineRunKind[], isSingleComponent = true) =>
     </TableContainer>,
   );
 
+const renderRow = (run: PipelineRunKind) => renderTable([run]);
+
 describe('Dependency runs column renderers', () => {
   beforeEach(() => {
     setupVirtualizerMock();
+    useMintmakerLogViewerModalMock.mockReturnValue(jest.fn());
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   it('renders the pipeline run name', () => {
@@ -171,5 +186,25 @@ describe('Dependency runs column renderers', () => {
     });
     renderTable([run]);
     expect(screen.getByTestId('dependency-run-duration')).toHaveTextContent('-');
+  });
+
+  it('renders the "View logs" button with a data-test attribute containing the run name', () => {
+    renderRow(makePipelineRun());
+    expect(screen.getByTestId('view-logs-test-dependency-run')).toBeInTheDocument();
+  });
+
+  it('calls the modal launcher when "View logs" is clicked', async () => {
+    const openModal = jest.fn();
+    useMintmakerLogViewerModalMock.mockReturnValue(openModal);
+    renderRow(makePipelineRun());
+    const user = userEvent.setup();
+    await user.click(screen.getByText('View logs'));
+    expect(openModal).toHaveBeenCalledTimes(1);
+  });
+
+  it('passes the pipeline run object to useMintmakerLogViewerModal', () => {
+    const run = makePipelineRun();
+    renderRow(run);
+    expect(useMintmakerLogViewerModalMock).toHaveBeenCalledWith(run);
   });
 });
