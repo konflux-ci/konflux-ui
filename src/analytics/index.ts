@@ -1,7 +1,7 @@
-import type { Analytics } from '@segment/analytics-next';
+import { logger } from '~/monitoring/logger';
+import { setAnalytics } from './analytics-client';
+import { analyticsService } from './AnalyticsService';
 import { loadAnalyticsConfig } from './load-config';
-
-let analyticsInstance: Analytics | undefined;
 
 // Deferred promise that resolves to true/false once init settles.
 // Condition resolvers await this instead of polling a boolean flag.
@@ -11,12 +11,20 @@ const analyticsReady: Promise<boolean> = new Promise((r) => {
 });
 
 /**
+ * Converts a configured Segment API URL into the host-and-path form expected
+ * by the Segment SDK. Segment's default is `api.segment.io/v1`; dropping the
+ * path sends events to `/t` instead of `/v1/t`.
+ */
+function normalizeApiHost(apiUrl: string): string {
+  const url = new URL(/^https?:\/\//i.test(apiUrl) ? apiUrl : `https://${apiUrl}`);
+  return `${url.host}${url.pathname.replace(/\/+$/, '')}`;
+}
+
+/**
  * Returns the initialized Segment analytics instance, or undefined if analytics
  * is disabled or not yet initialized. Callers must handle the undefined case.
  */
-export function getAnalytics(): Analytics | undefined {
-  return analyticsInstance;
-}
+export { getAnalytics } from './analytics-client';
 
 /**
  * Returns a promise that resolves to true if analytics was successfully
@@ -37,11 +45,12 @@ export async function initAnalytics(): Promise<void> {
     const config = await loadAnalyticsConfig();
 
     const writeKey = config.writeKey?.trim();
-    const apiHost = config.apiUrl?.trim();
-    if (!config.enabled || !writeKey || !apiHost) {
+    const apiUrl = config.apiUrl?.trim();
+    if (!config.enabled || !writeKey || !apiUrl) {
       resolveReady(false);
       return;
     }
+    const apiHost = normalizeApiHost(apiUrl);
 
     const { AnalyticsBrowser } = await import(
       '@segment/analytics-next' /* webpackChunkName: "segment-analytics" */
@@ -52,6 +61,7 @@ export async function initAnalytics(): Promise<void> {
         writeKey,
       },
       {
+        disableClientPersistence: true,
         integrations: {
           'Segment.io': {
             apiHost,
@@ -61,14 +71,20 @@ export async function initAnalytics(): Promise<void> {
       },
     );
 
-    analyticsInstance = analytics;
+    setAnalytics(analytics);
+    void analytics.setAnonymousId(analyticsService.getCommonProperties().sessionId);
+    const userId = analyticsService.getUserId();
+    if (userId) {
+      void analytics.identify(userId);
+    }
     resolveReady(true);
-    // eslint-disable-next-line no-console
-    console.info('Analytics loaded');
+    logger.info('Analytics loaded');
   } catch (error) {
     resolveReady(false);
-    // eslint-disable-next-line no-console
-    console.error('Error loading Analytics', error);
+    logger.error(
+      'Error loading Analytics',
+      error instanceof Error ? error : new Error(String(error)),
+    );
   }
 }
 

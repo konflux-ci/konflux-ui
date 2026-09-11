@@ -11,7 +11,12 @@ import { NuqsAdapter } from 'nuqs/adapters/react-router/v6';
 import ReactDOM from 'react-dom/client';
 import { initAnalytics, TrackEvents } from '~/analytics';
 import { analyticsService, consumeLoginSignal } from '~/analytics/AnalyticsService';
-import { captureArrivalSourceOnce, markSessionStartedOnce, getArrivalSource } from '~/analytics/arrival-source';
+import {
+  captureArrivalSourceOnce,
+  getArrivalSource,
+  hasSessionStarted,
+  markSessionStartedOnce,
+} from '~/analytics/arrival-source';
 import { obfuscate } from '~/analytics/obfuscate';
 import { useKonfluxPublicInfo } from '~/hooks/useKonfluxPublicInfo';
 import { logger } from '~/monitoring/logger';
@@ -40,40 +45,56 @@ forceEnableFlagsOnce(['kubearchive-logs', 'taskruns-kubearchive', 'pipelineruns-
   releaseId: '2025-11-17',
 });
 
-const App = () => {
+export const App = () => {
   const [publicInfo, loaded, error] = useKonfluxPublicInfo();
   const { onLogin } = useAuthAnalytics();
-  const { user } = useAuth();
+  const { isAuthenticated, user } = useAuth();
 
   React.useEffect(() => {
-    if (!loaded && !error) {
+    if (!loaded || error || !publicInfo) {
       return;
     }
 
-    if (loaded && !error && publicInfo) {
+    void (async () => {
       analyticsService.setCommonProperties({
-        clusterVersion: publicInfo.clusterVersion,
+        // konflux-public-info does not emit clusterVersion; use the best available
+        // cluster-type version so CommonFields are populated on all environments.
+        clusterVersion:
+          publicInfo.clusterVersion ?? publicInfo.openshiftVersion ?? publicInfo.kubernetesVersion,
         konfluxVersion: publicInfo.konfluxVersion,
         kubernetesVersion: publicInfo.kubernetesVersion,
         openshiftVersion: publicInfo.openshiftVersion,
       });
-    }
 
-    void obfuscate(user.preferredUsername, publicInfo?.clusterId).then((userId) => {
-      analyticsService.setCommonProperties({ userId });
+      if (isAuthenticated && user.preferredUsername && publicInfo.clusterId) {
+        try {
+          analyticsService.identify(await obfuscate(user.preferredUsername, publicInfo.clusterId));
+        } catch (reason) {
+          logger.error(
+            'Failed to obfuscate analytics user ID',
+            reason instanceof Error ? reason : new Error(String(reason)),
+          );
+        }
+      }
+
       if (consumeLoginSignal()) {
         onLogin();
       }
-      if (markSessionStartedOnce()) {
+
+      if (!hasSessionStarted()) {
         const arrivalSource = getArrivalSource();
-        analyticsService.track(TrackEvents.ui_session_started_event, { arrivalSource });
-        logger.info('UI session started', {
-          event: TrackEvents.ui_session_started_event,
-          arrivalSource,
-        });
+        if (
+          analyticsService.track(TrackEvents.ui_session_started_event, { arrivalSource }) &&
+          markSessionStartedOnce()
+        ) {
+          logger.info('UI session started', {
+            event: TrackEvents.ui_session_started_event,
+            arrivalSource,
+          });
+        }
       }
-    });
-  }, [loaded, error, publicInfo, onLogin, user]);
+    })();
+  }, [loaded, error, publicInfo, isAuthenticated, onLogin, user.preferredUsername]);
 
   React.useEffect(() => {
     // webpack side effects to prevent tree-shaking
@@ -101,7 +122,10 @@ const App = () => {
 
 void (() => {
   void initAnalytics().catch((reason) => {
-    logger.error('Failed to initialize analytics', reason as Error);
+    logger.error(
+      'Failed to initialize analytics',
+      reason instanceof Error ? reason : new Error(String(reason)),
+    );
   });
 
   ReactDOM.createRoot(document.getElementById('root')).render(
