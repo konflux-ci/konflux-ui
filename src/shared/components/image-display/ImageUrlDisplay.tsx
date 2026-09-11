@@ -5,7 +5,7 @@ import { useImageRepository } from '~/hooks/useImageRepository';
 import { useIsImageControllerEnabled } from '~/image-controller/conditional-checks';
 import { CopyIconButton } from '~/shared/components/CopyIconButton';
 import ExternalLink from '~/shared/components/links/ExternalLink';
-import { ImageRepositoryVisibility } from '~/types';
+import { ImageRepositoryVisibility } from '~/types/image-repository';
 import { getImageUrlForVisibility } from '~/utils/component-utils';
 
 export interface ImageUrlDisplayProps {
