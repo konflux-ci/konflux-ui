@@ -7,7 +7,7 @@ import { createDetailsPageAction } from '~/components/DetailsPage/utils';
 import { usePipelinererunAction } from '~/components/PipelineRun/PipelineRunListView/pipelinerun-actions';
 import { StatusIconWithTextLabel } from '~/components/topology/StatusIcon';
 import { PipelineRunLabel } from '~/consts/pipelinerun';
-import { CONFORMA_TASK } from '~/consts/security';
+import { CONFORMA_TASK, ROXCTL_SCAN_TASK } from '~/consts/security';
 import { usePipelineRunV2 } from '~/hooks/usePipelineRunsV2';
 import { useStatusOnFavicon } from '~/hooks/useStatusOnFavicon';
 import { PipelineRunModel } from '~/models';
@@ -17,7 +17,6 @@ import {
   PIPELINE_RUNS_LIST_PATH,
   RELEASE_PIPELINE_LIST_PATH,
 } from '~/routes/paths';
-import { RouterParams } from '~/routes/utils';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { downloadYamlAction } from '~/utils/common-utils';
@@ -27,7 +26,7 @@ import { isTaskRunInPipelineRun, pipelineRunStatus } from '~/utils/pipeline-util
 import { useAccessReviewForModel } from '~/utils/rbac';
 
 export const PipelineRunDetailsView: React.FC = () => {
-  const { pipelineRunName } = useParams<RouterParams>();
+  const { pipelineRunName = '' } = useParams();
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const releaseName = queryParams.get('releaseName') || '';
@@ -50,6 +49,10 @@ export const PipelineRunDetailsView: React.FC = () => {
     () => isTaskRunInPipelineRun(pipelineRun, CONFORMA_TASK),
     [pipelineRun],
   );
+  const showVulnerabilitiesTab = React.useMemo(
+    () => isTaskRunInPipelineRun(pipelineRun, ROXCTL_SCAN_TASK),
+    [pipelineRun],
+  );
 
   if (!loaded) {
     return (
@@ -65,7 +68,8 @@ export const PipelineRunDetailsView: React.FC = () => {
 
   const showSecurityTab = isResourceEnterpriseContract(pipelineRun) || hasConformaTaskRun;
 
-  const applicationName = pipelineRun.metadata?.labels[PipelineRunLabel.APPLICATION];
+  const applicationName = pipelineRun.metadata?.labels?.[PipelineRunLabel.APPLICATION];
+  const resolvedPipelineRunName = pipelineRun.metadata?.name ?? pipelineRunName;
   const integrationTestName = queryParams.get('integrationTestName') || '';
 
   const getDynamicPipelineRunsBreadcrumb = () => ({
@@ -97,7 +101,7 @@ export const PipelineRunDetailsView: React.FC = () => {
   return (
     <DetailsPage
       data-test="pipelinerun-details-test-id"
-      headTitle={pipelineRunName}
+      headTitle={resolvedPipelineRunName}
       featureFlags={['pipelineruns-kubearchive', 'taskruns-kubearchive']}
       breadcrumbs={[
         ...applicationBreadcrumbs,
@@ -106,15 +110,15 @@ export const PipelineRunDetailsView: React.FC = () => {
           path: PIPELINE_RUNS_DETAILS_PATH.createPath({
             workspaceName: namespace,
             applicationName,
-            pipelineRunName,
+            pipelineRunName: resolvedPipelineRunName,
           }),
-          name: pipelineRunName,
+          name: resolvedPipelineRunName,
         },
       ]}
       title={
         <>
-          <span className="pf-v6-u-mr-sm">{pipelineRunName}</span>
-          <StatusIconWithTextLabel status={plrStatus} />
+          <span className="pf-v6-u-mr-sm">{resolvedPipelineRunName}</span>
+          {plrStatus ? <StatusIconWithTextLabel status={plrStatus} /> : null}
         </>
       }
       actions={[
@@ -152,7 +156,7 @@ export const PipelineRunDetailsView: React.FC = () => {
       baseURL={PIPELINE_RUNS_DETAILS_PATH.createPath({
         workspaceName: namespace,
         applicationName,
-        pipelineRunName,
+        pipelineRunName: resolvedPipelineRunName,
       })}
       tabs={[
         {
@@ -169,6 +173,14 @@ export const PipelineRunDetailsView: React.FC = () => {
           label: 'Logs',
           isFilled: true,
         },
+        ...(showVulnerabilitiesTab
+          ? [
+              {
+                key: 'vulnerabilities',
+                label: 'Vulnerabilities',
+              },
+            ]
+          : []),
         ...(showSecurityTab
           ? [
               {
