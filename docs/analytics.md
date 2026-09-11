@@ -40,6 +40,8 @@ Components
 | `src/analytics/arrival-source.ts` | Classifies `document.referrer` into an `ArrivalSource` and persists it across the OAuth redirect |
 | `src/auth/useAuthAnalytics.ts` | `useAuthAnalytics` hook — `onLogin` / `onLogout` callbacks |
 | `src/feature-flags/useFeatureFlagAnalytics.ts` | Hook fired from `Panel.tsx` — diffs flag state on panel open vs. close and tracks `feature_flags_changed` |
+| `src/components/PipelineRun/PipelineRunListView/pipelinerun-actions.tsx` | Tracks `integration_test_rerun_triggered` when a user clicks Rerun on an integration test pipeline |
+| `src/components/Issues/ConformaViolationsCard.tsx` | Tracks `conforma_violations_link_clicked` when a user clicks an application link on the Issues Dashboard Conforma policy results card |
 
 ---
 
@@ -173,6 +175,25 @@ On open it snapshots flag state (from `useFeatureFlags()`) and `pagePattern` via
 
 ---
 
+## Conforma Violations Link Tracking
+
+`ConformaViolationsCard.tsx` tracks `conforma_violations_link_clicked` when a user clicks an application link in the **Conforma policy results** card on the Issues Dashboard overview. The link navigates to that application's Conforma Results tab.
+
+Fires on click, before navigation. No event-specific properties beyond `userId` (from auth). Requires the `conforma-policy` feature flag.
+
+---
+
+## Integration Test Rerun Tracking
+
+`pipelinerun-actions.tsx` tracks `integration_test_rerun_triggered` when a user clicks **Rerun** on a test-type pipeline run:
+
+- **List views** — `useRerunActionLazy` (pipeline runs list row action menu, including Activity → PipelineRuns)
+- **Detail page** — `usePipelinererunAction` (pipeline run details header action)
+
+Fires on click, before `rerunTestPipeline()` runs. No event-specific properties beyond `userId` (from auth).
+
+---
+
 ## Condition System Integration
 
 Analytics registers an `isAnalyticsEnabled` condition for the feature flags system:
@@ -223,7 +244,8 @@ const handleSubmit = () => {
 - Event schemas live in segment-bridge, not in UI code
 - PIA fields must be obfuscated via `obfuscate()` (returns `SHA256Hash` branded type — raw strings cannot be assigned)
 - Events are no-ops when analytics is disabled — no `if` guards needed
-- Use `setCommonProperties()` for fields that apply to all events
+- Use `setCommonProperties()` for fields that apply to all events (`CommonFields` plus `userId`)
+- Do not pass `userId` in `trackEvent()` payloads — it is merged automatically from common properties
 
 ---
 
