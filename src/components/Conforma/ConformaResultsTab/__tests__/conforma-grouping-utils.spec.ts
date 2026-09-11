@@ -3,6 +3,7 @@ import {
   collapseArchDuplicates,
   countResultsByStatus,
   filterResults,
+  filterUpcomingPolicyChanges,
   getCommonImageName,
   groupByComponent,
   groupByRule,
@@ -645,6 +646,123 @@ describe('conforma-grouping-utils', () => {
 
     it('returns empty when filtering by a nonexistent component', () => {
       expect(filterResults(sampleRows, '', [], ['nonexistent'])).toHaveLength(0);
+    });
+  });
+
+  describe('filterUpcomingPolicyChanges', () => {
+    it('returns only warnings with upcoming policy change codes', () => {
+      const rows = [
+        mockRow({
+          status: CONFORMA_RESULT_STATUS.warnings,
+          code: 'volatile_config.expiring_rule',
+          title: 'Rule is expiring',
+        }),
+        mockRow({
+          status: CONFORMA_RESULT_STATUS.warnings,
+          code: 'volatile_config.pending_rule',
+          title: 'Rule is pending',
+        }),
+        mockRow({
+          status: CONFORMA_RESULT_STATUS.warnings,
+          code: 'volatile_config.no_expiration',
+          title: 'Rule has no expiration',
+        }),
+        mockRow({
+          status: CONFORMA_RESULT_STATUS.warnings,
+          code: 'cve.unpatched_cve_warnings',
+          title: 'Unpatched CVE',
+        }),
+      ];
+
+      const results = filterUpcomingPolicyChanges(rows);
+
+      expect(results).toHaveLength(3);
+      expect(results[0].code).toBe('volatile_config.expiring_rule');
+      expect(results[1].code).toBe('volatile_config.pending_rule');
+      expect(results[2].code).toBe('volatile_config.no_expiration');
+    });
+
+    it('excludes violations even if they have upcoming policy change codes', () => {
+      const rows = [
+        mockRow({
+          status: CONFORMA_RESULT_STATUS.violations,
+          code: 'volatile_config.expiring_rule',
+          title: 'Rule is expiring',
+        }),
+        mockRow({
+          status: CONFORMA_RESULT_STATUS.warnings,
+          code: 'volatile_config.expiring_rule',
+          title: 'Rule is expiring',
+        }),
+      ];
+
+      const results = filterUpcomingPolicyChanges(rows);
+
+      expect(results).toHaveLength(1);
+      expect(results[0].status).toBe(CONFORMA_RESULT_STATUS.warnings);
+    });
+
+    it('excludes warnings without upcoming policy change codes', () => {
+      const rows = [
+        mockRow({
+          status: CONFORMA_RESULT_STATUS.warnings,
+          code: 'cve.unpatched_cve_warnings',
+          title: 'Unpatched CVE',
+        }),
+        mockRow({
+          status: CONFORMA_RESULT_STATUS.warnings,
+          code: 'volatile_config.expiring_rule',
+          title: 'Rule is expiring',
+        }),
+      ];
+
+      const results = filterUpcomingPolicyChanges(rows);
+
+      expect(results).toHaveLength(1);
+      expect(results[0].code).toBe('volatile_config.expiring_rule');
+    });
+
+    it('returns empty array when no warnings have upcoming policy change codes', () => {
+      const rows = [
+        mockRow({
+          status: CONFORMA_RESULT_STATUS.warnings,
+          code: 'cve.unpatched_cve_warnings',
+          title: 'Unpatched CVE',
+        }),
+        mockRow({
+          status: CONFORMA_RESULT_STATUS.violations,
+          code: 'volatile_config.expiring_rule',
+          title: 'Rule is expiring',
+        }),
+      ];
+
+      const results = filterUpcomingPolicyChanges(rows);
+
+      expect(results).toHaveLength(0);
+    });
+
+    it('returns empty array for empty input', () => {
+      expect(filterUpcomingPolicyChanges([])).toHaveLength(0);
+    });
+
+    it('excludes warnings with no code field', () => {
+      const rows = [
+        mockRow({
+          status: CONFORMA_RESULT_STATUS.warnings,
+          code: undefined,
+          title: 'Warning without code',
+        }),
+        mockRow({
+          status: CONFORMA_RESULT_STATUS.warnings,
+          code: 'volatile_config.pending_rule',
+          title: 'Rule is pending',
+        }),
+      ];
+
+      const results = filterUpcomingPolicyChanges(rows);
+
+      expect(results).toHaveLength(1);
+      expect(results[0].code).toBe('volatile_config.pending_rule');
     });
   });
 });

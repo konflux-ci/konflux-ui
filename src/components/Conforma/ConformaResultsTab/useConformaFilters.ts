@@ -6,6 +6,7 @@ export type ConformaFilters = {
   name: string;
   status: string[];
   component: string[];
+  policyExceptionOnly: boolean;
 };
 
 export const useConformaFilters = (): ConformaFilters => {
@@ -14,5 +15,6 @@ export const useConformaFilters = (): ConformaFilters => {
     name: filters.name ? (filters.name as string) : '',
     status: filters.status ? (filters.status as string[]) : [],
     component: filters.component ? (filters.component as string[]) : [],
+    policyExceptionOnly: filters.policy_exception_only === true,
   });
 };

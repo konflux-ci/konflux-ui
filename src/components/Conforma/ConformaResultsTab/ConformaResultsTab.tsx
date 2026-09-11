@@ -11,14 +11,16 @@ import {
   Spinner,
   Title,
 } from '@patternfly/react-core';
-import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
+import { FilterContext, FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { RouterParams } from '~/routes/utils';
 import { getErrorState } from '~/shared/utils/error-utils';
+import { CONFORMA_RESULT_STATUS } from '~/types/conforma';
 import type { GroupByMode } from './conforma-grouping-utils';
 import {
   collapseArchDuplicates,
   countResultsByStatus,
   filterResults,
+  filterUpcomingPolicyChanges,
   groupByComponent,
   groupByRule,
 } from './conforma-grouping-utils';
@@ -28,13 +30,20 @@ import { ConformaSettlingAnnouncement } from './ConformaSettlingAnnouncement';
 import { ConformaSummaryBar } from './ConformaSummaryBar';
 import { useApplicationConformaResults } from './useApplicationConformaResults';
 import { useConformaFilters } from './useConformaFilters';
+import { usePolicyException } from './usePolicyException';
 import './ConformaResultsTab.scss';
+
+// URL query param used to persist the "show policy exceptions only" toggle so it
+// can be shared/bookmarked. Kept as a constant so the FilterContext registration
+// and the toggle handler stay in sync.
+const POLICY_EXCEPTION_ONLY_PARAM = 'policy_exception_only';
 
 /**
  * Inner content component that reads filter state from FilterContext.
  * Separated so it can be a consumer within the FilterContextProvider that
  * ConformaResultsTab provides.
  */
+
 const ConformaResultsTabContent: React.FC = () => {
   const { applicationName } = useParams<RouterParams>();
   const {
@@ -53,7 +62,13 @@ const ConformaResultsTabContent: React.FC = () => {
     name: nameFilter,
     status: statusFilter,
     component: componentFilter,
+    policyExceptionOnly: showPolicyExceptionsOnly,
   } = useConformaFilters();
+
+  // The policy-exceptions toggle is URL-synced (?policy_exception_only=true) via
+  // FilterContext so it can be shared/bookmarked, matching the name/status/
+  // component filters.
+  const { setFilters } = React.useContext(FilterContext);
 
   const [groupBy, setGroupBy] = React.useState<GroupByMode>('rule');
   const [expandedGroups, setExpandedGroups] = React.useState<Set<string>>(new Set());
@@ -63,6 +78,23 @@ const ConformaResultsTabContent: React.FC = () => {
     setGroupBy(mode);
     setExpandedGroups(new Set());
   }, []);
+
+  const handleShowPolicyExceptionsOnlyChange = React.useCallback(
+    (checked: boolean) => {
+      setFilters({
+        name: nameFilter,
+        component: componentFilter,
+        // Policy exceptions are warnings, so enabling the toggle also ticks the
+        // "warnings" status filter to keep the visible filters consistent.
+        status:
+          checked && !statusFilter.includes(CONFORMA_RESULT_STATUS.warnings)
+            ? [...statusFilter, CONFORMA_RESULT_STATUS.warnings]
+            : statusFilter,
+        [POLICY_EXCEPTION_ONLY_PARAM]: checked,
+      });
+    },
+    [setFilters, nameFilter, componentFilter, statusFilter],
+  );
 
   const displayResults = React.useMemo(
     () => (showDuplicates ? allResults : collapseArchDuplicates(allResults)),
@@ -76,10 +108,24 @@ const ConformaResultsTabContent: React.FC = () => {
   const displayCounts = React.useMemo(() => countResultsByStatus(displayResults), [displayResults]);
   const rawCounts = React.useMemo(() => countResultsByStatus(allResults), [allResults]);
 
+  const upcomingChanges = React.useMemo(
+    () => filterUpcomingPolicyChanges(displayResults),
+    [displayResults],
+  );
+  const upcomingChangesRaw = React.useMemo(
+    () => filterUpcomingPolicyChanges(allResults),
+    [allResults],
+  );
+
   const filteredResults = React.useMemo(
     () => filterResults(displayResults, nameFilter, statusFilter, componentFilter),
     [displayResults, nameFilter, statusFilter, componentFilter],
   );
+
+  // When the policy-exceptions toggle is on, restrict the table to only the
+  // policy-exception warnings within the current filtered view.
+  const policyExceptionResults = usePolicyException(filteredResults);
+  const tableResults = showPolicyExceptionsOnly ? policyExceptionResults : filteredResults;
 
   const allComponentNames = React.useMemo(
     () => componentStatuses.map((c) => c.componentName),
@@ -97,9 +143,9 @@ const ConformaResultsTabContent: React.FC = () => {
   const groups = React.useMemo(
     () =>
       groupBy === 'rule'
-        ? groupByRule(filteredResults)
-        : groupByComponent(filteredResults, visibleComponentNames),
-    [groupBy, filteredResults, visibleComponentNames],
+        ? groupByRule(tableResults)
+        : groupByComponent(tableResults, visibleComponentNames),
+    [groupBy, tableResults, visibleComponentNames],
   );
 
   const allExpanded = groups.length > 0 && groups.every((g) => expandedGroups.has(g.groupKey));
@@ -152,6 +198,8 @@ const ConformaResultsTabContent: React.FC = () => {
             totalViolationsRaw={rawCounts.totalViolations}
             totalWarningsRaw={rawCounts.totalWarnings}
             totalSuccessesRaw={rawCounts.totalSuccesses}
+            upcomingChanges={upcomingChanges.length}
+            upcomingChangesRaw={upcomingChangesRaw.length}
           />
           {settling ? (
             <Flex justifyContent={{ default: 'justifyContentCenter' }}>
@@ -170,6 +218,8 @@ const ConformaResultsTabContent: React.FC = () => {
           onToggleExpandAll={handleToggleExpandAll}
           showDuplicates={showDuplicates}
           onShowDuplicatesChange={setShowDuplicates}
+          showPolicyExceptionsOnly={showPolicyExceptionsOnly}
+          onShowPolicyExceptionsOnlyChange={handleShowPolicyExceptionsOnlyChange}
           refresh={refresh}
         />
 
@@ -220,7 +270,9 @@ const ConformaResultsTabContent: React.FC = () => {
  * same pattern used by CommitsListViewV2 and PipelineRunsListViewV2.
  */
 export const ConformaResultsTab: React.FC = () => (
-  <FilterContextProvider filterParams={['name', 'status', 'component']}>
+  <FilterContextProvider
+    filterParams={['name', 'status', 'component', POLICY_EXCEPTION_ONLY_PARAM]}
+  >
     <ConformaResultsTabContent />
   </FilterContextProvider>
 );
