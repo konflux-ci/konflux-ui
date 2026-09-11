@@ -113,8 +113,12 @@ const ReleasePipelineRunTab: React.FC = () => {
     );
   }
 
-  if (error || !release) {
+  if (error) {
     return getErrorState(error, loaded, 'release');
+  }
+
+  if (!release) {
+    return getErrorState({ code: 404 }, loaded, 'release');
   }
 
   const allRuns: PipelineRunProcessing[] = [

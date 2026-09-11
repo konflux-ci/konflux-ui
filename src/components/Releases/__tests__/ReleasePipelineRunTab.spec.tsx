@@ -233,17 +233,17 @@ describe('ReleasePipelineRunTab', () => {
     expect(screen.getByText('404: Page not found')).toBeInTheDocument();
   });
 
-  it('should not crash when release is undefined after loading', () => {
+  it('should show 404 error state when release is undefined after loading', () => {
     mockUseRelease.mockReturnValue([undefined, true, undefined, undefined, false]);
     mockUseReleasePlan.mockReturnValue([null, true, undefined]);
 
-    expect(() => {
-      render(
-        <TestWrapper>
-          <ReleasePipelineRunTab />
-        </TestWrapper>,
-      );
-    }).not.toThrow();
+    render(
+      <TestWrapper>
+        <ReleasePipelineRunTab />
+      </TestWrapper>,
+    );
+
+    expect(screen.getByText('404: Page not found')).toBeInTheDocument();
   });
 
   it('should filter pipeline runs based on name filter', async () => {
