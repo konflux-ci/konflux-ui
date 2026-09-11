@@ -1,0 +1,29 @@
+.ai-chat {
+  .pf-v6-c-button.pf-chatbot__button {
+    z-index: var(--pf-t--global--z-index--2xl);
+  }
+
+  // PF chatbot hardcodes a blue hover tint on the send button; use Konflux brand instead
+  .pf-v6-c-button.pf-chatbot__button--send {
+    &:hover,
+    &:focus {
+      background-color: color-mix(in srgb, var(--konflux-brand-primary) 25%, transparent);
+    }
+  }
+
+  .pf-chatbot {
+    z-index: var(--pf-t--global--z-index--xl);
+    // PF default is 30rem; widen the floating overlay panel
+    width: 45rem;
+
+    @media screen and (max-width: 47rem) {
+      width: 100vw;
+      inset-inline-end: 0;
+    }
+  }
+
+  // Wordmark uses currentColor
+  .ai-chat__brand {
+    color: var(--pf-t--global--text--color--regular);
+  }
+}
