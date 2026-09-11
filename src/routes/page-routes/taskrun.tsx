@@ -4,6 +4,7 @@ import {
   taskRunDetailsViewLoader,
   TaskRunLogsTab,
   TaskRunSecurityTab,
+  TaskRunVulnerabilitiesTab,
 } from '../../components/TaskRunDetailsView';
 import { TASKRUN_DETAILS_PATH } from '../paths';
 import { RouteErrorBoundry } from '../RouteErrorBoundary';
@@ -18,6 +19,7 @@ const taskRunRoutes = [
       { index: true, element: <TaskRunDetailsTab /> },
       { path: 'logs', element: <TaskRunLogsTab /> },
       { path: 'security', element: <TaskRunSecurityTab /> },
+      { path: 'vulnerabilities', element: <TaskRunVulnerabilitiesTab /> },
     ],
   },
 ];
