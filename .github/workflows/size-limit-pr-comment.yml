@@ -1,0 +1,85 @@
+name: Size Limit PR Comment
+
+# Runs on main after CI fails. Posts a PR comment when the size-limit job fails.
+# Fork and same-repo PRs are supported (workflow_run has write access).
+on:
+  workflow_run:
+    workflows: ['UI Lint, Unit Tests & Bundle Size']
+    types: [completed]
+
+jobs:
+  comment:
+    if: >-
+      github.event.workflow_run.conclusion == 'failure' &&
+      github.event.workflow_run.event == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      pull-requests: write
+      issues: write
+    steps:
+      - name: Check if size-limit job failed
+        id: check
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const runId = context.payload.workflow_run.id;
+            const { data: { jobs } } = await github.rest.actions.listJobsForWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: runId,
+            });
+            const sizeLimitJob = jobs.find((job) => job.name === 'size-limit');
+            core.setOutput(
+              'should_comment',
+              sizeLimitJob?.conclusion === 'failure' ? 'true' : 'false',
+            );
+
+      - name: Checkout comment script
+        if: steps.check.outputs.should_comment == 'true'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: .github/scripts/format-size-limit-comment.mjs
+
+      - name: Download size-limit log
+        id: download
+        if: steps.check.outputs.should_comment == 'true'
+        continue-on-error: true
+        uses: actions/download-artifact@cc203a76641edee3691beb1ea2ce8f566e2072ec # v4.1.9
+        with:
+          name: size-limit-log
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+
+      - name: Comment on PR
+        if: steps.check.outputs.should_comment == 'true' && steps.download.outcome == 'success'
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const { execFileSync } = require('node:child_process');
+            const run = context.payload.workflow_run;
+
+            const { data: prs } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: run.head_sha,
+            });
+            const openPr = prs.find((pr) => pr.state === 'open');
+            if (!openPr?.number) {
+              core.info('No open PR found for workflow run');
+              return;
+            }
+
+            const body = execFileSync(
+              'node',
+              ['.github/scripts/format-size-limit-comment.mjs', 'size-limit.log'],
+              { encoding: 'utf8', env: { ...process.env, GITHUB_REPOSITORY: `${context.repo.owner}/${context.repo.repo}` } },
+            );
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: openPr.number,
+              body,
+            });
