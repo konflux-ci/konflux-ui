@@ -2,6 +2,7 @@ import { renderHook } from '@testing-library/react';
 import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { ReleaseKind } from '~/types';
 import { downloadYaml } from '~/utils/common-utils';
+import { useAccessReviewForModel } from '~/utils/rbac';
 import { releaseRerun } from '../../../utils/release-actions';
 import { useReleaseActions } from '../release-actions';
 
@@ -31,8 +32,13 @@ jest.mock('~/shared/providers/Namespace/useNamespaceInfo', () => ({
   useNamespace: jest.fn(() => 'test-ns'),
 }));
 
+jest.mock('~/utils/rbac', () => ({
+  useAccessReviewForModel: jest.fn(() => [true, true]),
+}));
+
 const downloadYamlMock = downloadYaml as jest.Mock;
 const releaseRerunMock = releaseRerun as jest.Mock;
+const useAccessReviewForModelMock = useAccessReviewForModel as jest.Mock;
 
 describe('useReleaseActions', () => {
   const mockRelease: ReleaseKind = {
@@ -122,6 +128,35 @@ describe('useReleaseActions', () => {
     expect(rerunAction.analytics).toEqual(
       expect.objectContaining({
         app_name: '',
+      }),
+    );
+  });
+
+  it('should disable re-run release action when user lacks create permission', () => {
+    useAccessReviewForModelMock.mockReturnValue([false, true]);
+    const { result } = renderHook(() => useReleaseActions(mockRelease));
+    const rerunAction = result.current[1];
+
+    expect(rerunAction).toEqual(
+      expect.objectContaining({
+        id: 're-run-release',
+        label: 'Re-run release',
+        disabled: true,
+        disabledTooltip: 'You do not have access to re-run release',
+      }),
+    );
+  });
+
+  it('should enable re-run release action when user has create permission', () => {
+    useAccessReviewForModelMock.mockReturnValue([true, true]);
+    const { result } = renderHook(() => useReleaseActions(mockRelease));
+    const rerunAction = result.current[1];
+
+    expect(rerunAction).toEqual(
+      expect.objectContaining({
+        id: 're-run-release',
+        label: 'Re-run release',
+        disabled: false,
       }),
     );
   });
