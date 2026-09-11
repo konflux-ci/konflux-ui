@@ -10,6 +10,7 @@ import { Table } from '~/shared';
 import FilteredEmptyState from '~/shared/components/empty-state/FilteredEmptyState';
 import ColumnManagement, { ColumnDefinition } from '~/shared/components/table/ColumnManagement';
 import { useNamespace } from '~/shared/providers/Namespace';
+import { getErrorState } from '~/shared/utils/error-utils';
 import {
   getFinalFromRelease,
   getManagedProcessingFromRelease,
@@ -100,7 +101,7 @@ const ReleasePipelineRunTab: React.FC = () => {
     defaultVisibleColumns,
   );
   const [isColumnManagementOpen, setIsColumnManagementOpen] = React.useState(false);
-  const [release, loaded] = useRelease(namespace, releaseName);
+  const [release, loaded, error] = useRelease(namespace, releaseName);
 
   const [releasePlan, releasePlanLoaded] = useReleasePlan(namespace, release?.spec?.releasePlan);
 
@@ -110,6 +111,10 @@ const ReleasePipelineRunTab: React.FC = () => {
         <Spinner size="lg" />
       </Bullseye>
     );
+  }
+
+  if (error || !release) {
+    return getErrorState(error, loaded, 'release') ?? <></>;
   }
 
   const allRuns: PipelineRunProcessing[] = [

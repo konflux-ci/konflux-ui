@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-dom';
+import { useParams, MemoryRouter } from 'react-router-dom';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { mockReleasePlans } from '~/components/ReleaseService/ReleasePlan/__data__/release-plan.mock';
@@ -11,6 +11,7 @@ import ReleasePipelineRunTab from '../ReleasePipelineRunTab';
 
 // Mock dependencies
 jest.mock('react-router-dom', () => ({
+  ...jest.requireActual('react-router-dom'),
   useParams: jest.fn(),
 }));
 
@@ -32,7 +33,9 @@ const mockFilterContextValue = {
 };
 
 const TestWrapper = ({ children }) => (
-  <FilterContext.Provider value={mockFilterContextValue}>{children}</FilterContext.Provider>
+  <MemoryRouter>
+    <FilterContext.Provider value={mockFilterContextValue}>{children}</FilterContext.Provider>
+  </MemoryRouter>
 );
 
 describe('ReleasePipelineRunTab', () => {
@@ -217,6 +220,32 @@ describe('ReleasePipelineRunTab', () => {
     expect(screen.getByRole('progressbar')).toBeInTheDocument();
   });
 
+  it('should show error state when release data fails to load', () => {
+    mockUseRelease.mockReturnValue([undefined, true, { code: 404 }, undefined, true]);
+    mockUseReleasePlan.mockReturnValue([null, true, undefined]);
+
+    render(
+      <TestWrapper>
+        <ReleasePipelineRunTab />
+      </TestWrapper>,
+    );
+
+    expect(screen.getByText('404: Page not found')).toBeInTheDocument();
+  });
+
+  it('should not crash when release is undefined after loading', () => {
+    mockUseRelease.mockReturnValue([undefined, true, undefined, undefined, false]);
+    mockUseReleasePlan.mockReturnValue([null, true, undefined]);
+
+    expect(() => {
+      render(
+        <TestWrapper>
+          <ReleasePipelineRunTab />
+        </TestWrapper>,
+      );
+    }).not.toThrow();
+  });
+
   it('should filter pipeline runs based on name filter', async () => {
     const filterContextWithName = {
       ...mockFilterContextValue,
@@ -224,7 +253,9 @@ describe('ReleasePipelineRunTab', () => {
     };
 
     const TestWrapperWithFilter = ({ children }) => (
-      <FilterContext.Provider value={filterContextWithName}>{children}</FilterContext.Provider>
+      <MemoryRouter>
+        <FilterContext.Provider value={filterContextWithName}>{children}</FilterContext.Provider>
+      </MemoryRouter>
     );
 
     render(
