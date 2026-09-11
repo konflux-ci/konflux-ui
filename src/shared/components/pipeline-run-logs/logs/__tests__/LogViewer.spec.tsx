@@ -8,6 +8,7 @@ import { mockConsole, MockConsole } from '~/unit-test-utils';
 import { renderWithQueryClientAndRouter as render } from '~/unit-test-utils/rendering-utils';
 import LogViewer from '../LogViewer';
 import { useAutoScrollWithResume } from '../useAutoScrollWithResume';
+import { LOG_WRAP_LINES_STORAGE_KEY } from '../useLineWrap';
 import { useLogViewerTheme } from '../useLogViewerTheme';
 
 jest.mock('~/shared/hooks/useContainerHeight', () => ({
@@ -87,6 +88,7 @@ describe('LogViewer Integration Tests', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    window.localStorage.removeItem(LOG_WRAP_LINES_STORAGE_KEY);
 
     // Setup DOM dimensions for virtualization to work properly
     Object.defineProperty(HTMLElement.prototype, 'offsetHeight', {
@@ -174,6 +176,7 @@ describe('LogViewer Integration Tests', () => {
       render(<LogViewer {...defaultProps} />);
 
       expect(screen.getByLabelText('Dark theme')).toBeInTheDocument();
+      expect(screen.getByLabelText('Wrap lines')).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /download logs/i })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /expand/i })).toBeInTheDocument();
     });
@@ -322,6 +325,47 @@ describe('LogViewer Integration Tests', () => {
 
       const themeCheckbox = screen.getByLabelText('Dark theme');
       expect(themeCheckbox).not.toBeDisabled();
+    });
+  });
+
+  describe('Wrap lines toggle', () => {
+    it('should be checked by default and toggle pf-m-nowrap on the log viewer', async () => {
+      const user = userEvent.setup();
+      const { container } = render(<LogViewer {...defaultProps} />);
+
+      const wrapCheckbox = screen.getByLabelText('Wrap lines');
+      const logViewer = container.querySelector('.pf-v6-c-log-viewer');
+
+      expect(wrapCheckbox).toBeChecked();
+      expect(logViewer).not.toHaveClass('pf-m-nowrap');
+
+      await user.click(wrapCheckbox);
+
+      await waitFor(() => {
+        expect(wrapCheckbox).not.toBeChecked();
+        expect(logViewer).toHaveClass('pf-m-nowrap');
+      });
+
+      await user.click(wrapCheckbox);
+
+      await waitFor(() => {
+        expect(wrapCheckbox).toBeChecked();
+        expect(logViewer).not.toHaveClass('pf-m-nowrap');
+      });
+    });
+
+    it('should toggle log-content__list--nowrap on the log list', async () => {
+      const user = userEvent.setup();
+      const { container } = render(<LogViewer {...defaultProps} />);
+
+      const logList = container.querySelector('.log-content__list');
+      expect(logList).not.toHaveClass('log-content__list--nowrap');
+
+      await user.click(screen.getByLabelText('Wrap lines'));
+
+      await waitFor(() => {
+        expect(logList).toHaveClass('log-content__list--nowrap');
+      });
     });
   });
 
