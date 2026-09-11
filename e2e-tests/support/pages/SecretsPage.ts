@@ -20,6 +20,7 @@ export class SecretsPage {
 
   static searchSecret(secretName: string, isListed: boolean) {
     cy.get(secretsPagePO.listNameInput).clear().type(secretName);
+    cy.url().should('include', `name=${secretName}`);
     if (isListed) {
       cy.get(secretsPagePO.secretRow(secretName)).should('exist');
     } else {
