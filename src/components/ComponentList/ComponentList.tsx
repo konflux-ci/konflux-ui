@@ -84,7 +84,7 @@ const ComponentList: React.FC = () => {
         <>
           Components
           <span className="pf-v6-u-ml-sm">
-            <FeatureFlagIndicator flags={['components-page']} />
+            <FeatureFlagIndicator flags={['component-model']} />
           </span>
         </>
       }

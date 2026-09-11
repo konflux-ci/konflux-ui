@@ -10,6 +10,7 @@ import ErrorEmptyState from '../shared/components/empty-state/ErrorEmptyState';
 import { namespaceLoader, NamespaceProvider } from '../shared/providers/Namespace';
 import applicationRoutes from './page-routes/application';
 import commitRoutes from './page-routes/commit';
+import componentGroupRoutes from './page-routes/component-group';
 import componentVersionRoutes from './page-routes/component-version';
 import componentRoutes from './page-routes/components';
 import componentsPageRoutes from './page-routes/components-page';
@@ -71,6 +72,7 @@ const routes = [
       ...taskRunRoutes,
       ...userAccessRoutes,
       ...pipelineRunsPageRoutes,
+      ...componentGroupRoutes,
       // '/ns/:ns',
       //   '/ns/:ns/pipelinerun/:pipelineRun',
       //   '/ns/:ns/pipelinerun/:pipelineRun/logs',
