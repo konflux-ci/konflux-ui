@@ -33,7 +33,7 @@ const getMockedResources = (mocks) => (params, model) => {
 };
 
 describe('IntegrationTestOverviewTab', () => {
-  it('should render nothing when integration test is not available', () => {
+  it('should show error state when integration test is not available', () => {
     useParamsMock.mockReturnValue({
       integrationTestName: 'nonexistent-test',
       applicationName: 'test-app',
@@ -43,8 +43,8 @@ describe('IntegrationTestOverviewTab', () => {
       isLoading: false,
       error: undefined,
     });
-    const { container } = routerRenderer(<IntegrationTestOverviewTab />);
-    expect(container.firstChild).toBeNull();
+    routerRenderer(<IntegrationTestOverviewTab />);
+    screen.getByText('404: Page not found');
   });
 
   it('should render correct details', () => {
