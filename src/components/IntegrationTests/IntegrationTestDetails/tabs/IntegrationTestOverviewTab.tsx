@@ -14,6 +14,7 @@ import {
   pluralize,
 } from '@patternfly/react-core';
 import { OutlinedQuestionCircleIcon } from '@patternfly/react-icons/dist/esm/icons/outlined-question-circle-icon';
+import { getErrorState } from '~/shared/utils/error-utils';
 import { useIntegrationTestScenario } from '../../../../hooks/useIntegrationTestScenarios';
 import { APPLICATION_DETAILS_PATH } from '../../../../routes/paths';
 import { RouterParams } from '../../../../routes/utils';
@@ -35,16 +36,20 @@ const IntegrationTestOverviewTab: React.FC<React.PropsWithChildren> = () => {
   const namespace = useNamespace();
   const { integrationTestName, applicationName } = useParams<RouterParams>();
 
-  const [integrationTest] = useIntegrationTestScenario(
+  const [integrationTest, loaded, error] = useIntegrationTestScenario(
     namespace,
     applicationName,
     integrationTestName,
   );
 
+  const showModal = useModalLauncher();
+
+  if (error) {
+    return getErrorState(error, loaded, 'integration test');
+  }
+
   const optionalReleaseLabel =
     integrationTest.metadata.labels?.[IntegrationTestLabels.OPTIONAL] === 'true';
-
-  const showModal = useModalLauncher();
 
   const params = integrationTest?.spec?.params;
   const contexts = integrationTest?.spec?.contexts;

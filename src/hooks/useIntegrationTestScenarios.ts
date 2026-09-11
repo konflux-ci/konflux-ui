@@ -24,6 +24,9 @@ export const useIntegrationTestScenario = (
 
   return React.useMemo(() => {
     if (!isLoading && !error) {
+      if (!test) {
+        return [null, true, { code: 404 }];
+      }
       const integrationTest =
         test.spec.application === applicationName && !test.metadata.deletionTimestamp ? test : null;
       if (!integrationTest) {

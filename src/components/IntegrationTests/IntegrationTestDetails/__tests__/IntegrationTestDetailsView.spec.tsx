@@ -55,6 +55,17 @@ describe('IntegrationTestDetailsView', () => {
     screen.getByRole('progressbar');
   });
 
+  it('should show error state if test data is undefined', () => {
+    watchResourceMock.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: undefined,
+    });
+    useParamsMock.mockReturnValue({ integrationTestName: 'int-test', applicationName: 'test-app' });
+    renderComponent();
+    screen.getByText('404: Page not found');
+  });
+
   it('should show error state if test cannot be loaded', () => {
     watchResourceMock.mockReturnValue([
       [],
