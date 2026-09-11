@@ -729,6 +729,132 @@ describe('LogViewer Integration Tests', () => {
     });
   });
 
+  describe('Expand/Collapse all sections', () => {
+    const foldedSections = [
+      { containerName: 'BUILD', data: 'compile\nlink', isCompleted: true },
+      { containerName: 'TEST', data: 'runningtests', isCompleted: true },
+    ];
+
+    const expandedSections = [
+      { containerName: 'BUILD', data: 'compile\nlink', isCompleted: false },
+      { containerName: 'TEST', data: 'runningtests', isCompleted: false },
+    ];
+
+    it('should not render the expand all button by default', () => {
+      render(<LogViewer {...defaultProps} />);
+
+      expect(screen.queryByRole('button', { name: 'Expand/Collapse all' })).not.toBeInTheDocument();
+    });
+
+    it('should render the expand/collapse button with dynamic label when allowExpandAllSections is true', () => {
+      render(<LogViewer {...defaultProps} allowExpandAllSections />);
+
+      // Accessible name stays stable via aria-label
+      const toggleButton = screen.getByRole('button', { name: 'Expand/Collapse all' });
+      expect(toggleButton).toBeInTheDocument();
+      // Default single section is in-progress (expanded), so the visible label is "Collapse all"
+      expect(screen.getByText('Collapse all')).toBeInTheDocument();
+      expect(toggleButton).toHaveAttribute('aria-label', 'Expand/Collapse all');
+    });
+
+    it('should show "Expand all" initially when sections start folded', () => {
+      render(<LogViewer {...defaultProps} sections={foldedSections} allowExpandAllSections />);
+
+      expect(screen.getByText('Expand all')).toBeInTheDocument();
+      expect(screen.queryByText('Collapse all')).not.toBeInTheDocument();
+    });
+
+    it('should show "Collapse all" initially when sections start expanded', () => {
+      render(<LogViewer {...defaultProps} sections={expandedSections} allowExpandAllSections />);
+
+      expect(screen.getByText('Collapse all')).toBeInTheDocument();
+      expect(screen.queryByText('Expand all')).not.toBeInTheDocument();
+    });
+
+    it('should toggle the label from "Expand all" to "Collapse all" and back', async () => {
+      const user = userEvent.setup();
+      render(<LogViewer {...defaultProps} sections={foldedSections} allowExpandAllSections />);
+
+      const toggleButton = screen.getByRole('button', { name: 'Expand/Collapse all' });
+      expect(screen.getByText('Expand all')).toBeInTheDocument();
+
+      await user.click(toggleButton);
+      expect(screen.getByText('Collapse all')).toBeInTheDocument();
+
+      await user.click(toggleButton);
+      expect(screen.getByText('Expand all')).toBeInTheDocument();
+    });
+
+    it('should toggle the label from "Collapse all" to "Expand all" and back', async () => {
+      const user = userEvent.setup();
+      render(<LogViewer {...defaultProps} sections={expandedSections} allowExpandAllSections />);
+
+      const toggleButton = screen.getByRole('button', { name: 'Expand/Collapse all' });
+      expect(screen.getByText('Collapse all')).toBeInTheDocument();
+
+      await user.click(toggleButton);
+      expect(screen.getByText('Expand all')).toBeInTheDocument();
+
+      await user.click(toggleButton);
+      expect(screen.getByText('Collapse all')).toBeInTheDocument();
+    });
+
+    it('should render a direction icon inside the expand/collapse button', () => {
+      const { rerender } = render(
+        <LogViewer {...defaultProps} sections={foldedSections} allowExpandAllSections />,
+      );
+
+      let toggleButton = screen.getByRole('button', { name: 'Expand/Collapse all' });
+      // AngleDownIcon when collapsed ("Expand all")
+      expect(toggleButton.querySelector('.pf-v6-c-button__icon')).toBeInTheDocument();
+
+      rerender(<LogViewer {...defaultProps} sections={expandedSections} allowExpandAllSections />);
+
+      toggleButton = screen.getByRole('button', { name: 'Expand/Collapse all' });
+      // AngleUpIcon when expanded ("Collapse all")
+      expect(toggleButton.querySelector('.pf-v6-c-button__icon')).toBeInTheDocument();
+    });
+
+    it('should expand all folded sections when the button is clicked', async () => {
+      const user = userEvent.setup();
+      render(<LogViewer {...defaultProps} sections={foldedSections} allowExpandAllSections />);
+
+      expect(screen.queryByText('compile')).not.toBeInTheDocument();
+      expect(screen.queryByText('runningtests')).not.toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: 'Expand/Collapse all' }));
+
+      expect(screen.getByText('compile')).toBeInTheDocument();
+      expect(screen.getByText('runningtests')).toBeInTheDocument();
+    });
+
+    it('should collapse all expanded sections when the button is clicked', async () => {
+      const user = userEvent.setup();
+      render(<LogViewer {...defaultProps} sections={expandedSections} allowExpandAllSections />);
+
+      expect(screen.getByText('compile')).toBeInTheDocument();
+      expect(screen.getByText('runningtests')).toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: 'Expand/Collapse all' }));
+
+      expect(screen.queryByText('compile')).not.toBeInTheDocument();
+      expect(screen.queryByText('runningtests')).not.toBeInTheDocument();
+    });
+
+    it('should toggle back to collapsed on a second click', async () => {
+      const user = userEvent.setup();
+      render(<LogViewer {...defaultProps} sections={foldedSections} allowExpandAllSections />);
+
+      const toggleButton = screen.getByRole('button', { name: 'Expand/Collapse all' });
+      await user.click(toggleButton);
+      expect(screen.getByText('compile')).toBeInTheDocument();
+
+      await user.click(toggleButton);
+      expect(screen.queryByText('compile')).not.toBeInTheDocument();
+      expect(screen.queryByText('runningtests')).not.toBeInTheDocument();
+    });
+  });
+
   describe('Task information display', () => {
     it('should display task name with truncation', () => {
       const longTaskName = 'very-long-task-name-that-should-be-truncated-in-the-ui';

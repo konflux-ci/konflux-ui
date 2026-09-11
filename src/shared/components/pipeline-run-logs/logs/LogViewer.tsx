@@ -19,6 +19,8 @@ import {
   ToolbarItem,
   Truncate,
 } from '@patternfly/react-core';
+import { AngleDownIcon } from '@patternfly/react-icons/dist/esm/icons/angle-down-icon';
+import { AngleUpIcon } from '@patternfly/react-icons/dist/esm/icons/angle-up-icon';
 import { CompressIcon } from '@patternfly/react-icons/dist/esm/icons/compress-icon';
 import { DownloadIcon } from '@patternfly/react-icons/dist/esm/icons/download-icon';
 import { ExpandIcon } from '@patternfly/react-icons/dist/esm/icons/expand-icon';
@@ -38,6 +40,7 @@ import { LoadingInline } from '~/shared/components/status-box/StatusBox';
 import {
   type LogSection,
   type NormalizedLogSection,
+  type VirtualizedLogContentImperativeHandleMethods,
   normalizeSection,
   useLineNumberNavigation,
   VirtualizedLogContent,
@@ -80,6 +83,7 @@ export type Props = {
     scrollUpdateWasRequested: boolean;
   }) => void;
   enableLineNavigation?: boolean;
+  allowExpandAllSections?: boolean;
 };
 
 const LogViewer: React.FC<Props> = ({
@@ -96,6 +100,7 @@ const LogViewer: React.FC<Props> = ({
   errorMessage,
   onScroll: onScrollProp,
   enableLineNavigation = true,
+  allowExpandAllSections = false,
 }) => {
   const taskName = taskRun?.spec.taskRef?.name ?? taskRun?.metadata.name;
   const [logTheme, setLogTheme] = useLogViewerTheme();
@@ -169,6 +174,13 @@ const LogViewer: React.FC<Props> = ({
 
   const scrollToRow = searchScrollToRow || (autoScroll ? allLines.length : 0);
 
+  const childRef = React.useRef<VirtualizedLogContentImperativeHandleMethods | null>(null);
+
+  const [sectionsExpanded, setSectionsExpanded] = React.useState<boolean | null>(null);
+  const handleOnToggleAllSections = () => {
+    childRef?.current?.toggleAllSections();
+  };
+
   return (
     <div
       ref={fullscreenRef}
@@ -213,6 +225,18 @@ const LogViewer: React.FC<Props> = ({
               </ToolbarGroup>
             )}
             <ToolbarGroup align={{ default: 'alignEnd' }}>
+              {!!allowExpandAllSections && (
+                <ToolbarItem>
+                  <Button
+                    variant="link"
+                    aria-label="Expand/Collapse all"
+                    onClick={handleOnToggleAllSections}
+                    icon={sectionsExpanded ? <AngleUpIcon /> : <AngleDownIcon />}
+                  >
+                    {sectionsExpanded ? 'Collapse' : 'Expand'} all
+                  </Button>
+                </ToolbarItem>
+              )}
               <ToolbarItem>
                 <Checkbox
                   id={themeCheckboxId}
@@ -345,6 +369,7 @@ const LogViewer: React.FC<Props> = ({
         {containerHeight && (
           <div className="pf-v6-c-log-viewer__main">
             <VirtualizedLogContent
+              ref={childRef}
               key={taskRun?.metadata?.uid || 'default'}
               sections={sections ?? []}
               normalizedSections={normalizedSections}
@@ -363,6 +388,7 @@ const LogViewer: React.FC<Props> = ({
                     : lineNumberNavigationProps
                   : undefined
               }
+              setExpanded={setSectionsExpanded}
             />
           </div>
         )}
