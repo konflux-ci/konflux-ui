@@ -36,7 +36,7 @@ const IntegrationTestOverviewTab: React.FC<React.PropsWithChildren> = () => {
   const namespace = useNamespace();
   const { integrationTestName, applicationName } = useParams<RouterParams>();
 
-  const [integrationTest, loaded, loadErr] = useIntegrationTestScenario(
+  const [integrationTest, loaded, error] = useIntegrationTestScenario(
     namespace,
     applicationName,
     integrationTestName,
@@ -44,12 +44,8 @@ const IntegrationTestOverviewTab: React.FC<React.PropsWithChildren> = () => {
 
   const showModal = useModalLauncher();
 
-  if (loadErr) {
-    return getErrorState(loadErr, loaded, 'integration test');
-  }
-
-  if (!integrationTest) {
-    return null;
+  if (error) {
+    return getErrorState(error, loaded, 'integration test');
   }
 
   const optionalReleaseLabel =
