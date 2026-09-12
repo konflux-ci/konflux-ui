@@ -329,7 +329,7 @@ __metadata:
     axe-core: "npm:^4.10.2"
     cypress: "npm:^15.20.0"
     cypress-axe: "npm:^1.6.0"
-    cypress-high-resolution: "npm:^1.0.0"
+    cypress-high-resolution: "npm:^2.0.0"
     cypress-mochawesome-reporter: "npm:^3.4.0"
     cypress-multi-reporters: "npm:^1.6.0"
     cypress-terminal-report: "npm:^7.3.0"
@@ -1072,12 +1072,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cypress-high-resolution@npm:^1.0.0":
-  version: 1.0.0
-  resolution: "cypress-high-resolution@npm:1.0.0"
+"cypress-high-resolution@npm:^2.0.0":
+  version: 2.1.0
+  resolution: "cypress-high-resolution@npm:2.1.0"
   dependencies:
-    debug: "npm:^4.3.2"
-  checksum: 10/818f5e2aa8949a87cb007b3dac816c4683bd1aab1f80f7ee3df63379ccb1f7a24285b6e0299c505dbe58d421dafd1338f12e499ad61b654cb410e4a604cf35ca
+    debug: "npm:^4.4.3"
+    image-size: "npm:^2.0.2"
+  checksum: 10/60aacb193386da575a243707c1a578786be2bb8f2384eb3ae8ab066cbec0c342da90b7aa5303fce99b3bf74cb42f2571ff23f8197279ec08cd38ed4278f51e45
   languageName: node
   linkType: hard
 
@@ -1256,7 +1257,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"debug@npm:^4.1.0, debug@npm:^4.1.1, debug@npm:^4.3.1, debug@npm:^4.3.2, debug@npm:^4.3.4":
+"debug@npm:^4.1.0, debug@npm:^4.1.1, debug@npm:^4.3.1, debug@npm:^4.3.4, debug@npm:^4.4.3":
   version: 4.4.3
   resolution: "debug@npm:4.4.3"
   dependencies:
@@ -2046,6 +2047,15 @@ __metadata:
   version: 1.2.1
   resolution: "ieee754@npm:1.2.1"
   checksum: 10/d9f2557a59036f16c282aaeb107832dc957a93d73397d89bbad4eb1130560560eb695060145e8e6b3b498b15ab95510226649a0b8f52ae06583575419fe10fc4
+  languageName: node
+  linkType: hard
+
+"image-size@npm:^2.0.2":
+  version: 2.0.2
+  resolution: "image-size@npm:2.0.2"
+  bin:
+    image-size: bin/image-size.js
+  checksum: 10/d15203279fe7ada01252d8c56ba97516385d6d5ac2cbf3d734580fc88db4f5272b9b3f7f378ad63abc7d06b5500c43b90d9f84626e2bda1cab403c16eb469592
   languageName: node
   linkType: hard
 

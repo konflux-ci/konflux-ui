@@ -22,7 +22,7 @@
     "axe-core": "^4.10.2",
     "cypress": "^15.20.0",
     "cypress-axe": "^1.6.0",
-    "cypress-high-resolution": "^1.0.0",
+    "cypress-high-resolution": "^2.0.0",
     "cypress-mochawesome-reporter": "^3.4.0",
     "cypress-multi-reporters": "^1.6.0",
     "cypress-terminal-report": "^7.3.0",
