@@ -1,4 +1,7 @@
 #!/bin/sh
+# IMPORTANT: This file must stay byte-for-byte identical with scripts/container-yarn.
+# Any changes to the Yarn resolution logic must be made in both locations.
+#
 # Resolve the bundled Yarn Berry release at invocation time so container
 # files do not hardcode yarn-<version>.cjs (Renovate cannot update those paths).
 # KONFLUX_YARN_RELEASES_DIR must not be named YARN_*: Yarn Berry maps YARN_* onto yarnrc keys.
