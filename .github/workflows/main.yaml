@@ -36,6 +36,10 @@ jobs:
           node-version: 24.x
           cache: 'yarn'
 
+      # Does not need yarn install: the wrapper execs node against stub .cjs files.
+      - name: Container Yarn wrapper tests 🧪
+        run: sh scripts/container-yarn.test.sh
+
       # e2e-tests install is needed because eslint resolves eslint-plugin-cypress from e2e-tests/.eslintrc.cjs
       - name: Install Dependencies 🥁
         run: |
