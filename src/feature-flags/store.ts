@@ -129,7 +129,7 @@ const applyGuards = (
  * The flags are stored in localStorage in the format:
  * - __ff_overrides__ = {"flag1": true, "flag2": false}
  */
-let _conditions: ConditionState = conditionsLocalStorage.get({});
+const _conditions: ConditionState = conditionsLocalStorage.get({});
 let _state: FlagState = applyGuards(compose(location.search), _conditions);
 const subs = new Set<() => void>();
 
@@ -153,19 +153,20 @@ export const FeatureFlagsStore = {
   async ensureConditions(keys: ConditionKey[], ctx = {}) {
     const fresh = await evaluateConditions(keys, ctx);
 
-    const updates: Partial<ConditionState> = {};
+    // Merge; detect if any condition actually changed
     let condsChanged = false;
     for (const k of Object.keys(fresh) as ConditionKey[]) {
       if (_conditions[k] !== fresh[k]) {
-        updates[k] = fresh[k];
+        _conditions[k] = fresh[k];
         condsChanged = true;
       }
     }
     if (!condsChanged) return;
 
-    _conditions = { ..._conditions, ...updates };
+    // Persist for next boot
     conditionsLocalStorage.set(_conditions);
 
+    // Re-apply guards and notify only if flags changed
     const next = applyGuards(compose(location.search), _conditions);
     let flagsChanged = false;
     for (const k of Object.keys(next) as FlagKey[]) {
@@ -176,18 +177,16 @@ export const FeatureFlagsStore = {
     }
     if (flagsChanged) {
       _state = next;
+      notify();
     }
-
-    notify();
   },
 
   set(key: FlagKey, value: boolean) {
-    const overrides = flagsLocalStorage.get({}) as Partial<FlagState>;
-    const storedValue = overrides[key] ?? FLAGS[key].defaultEnabled;
-    if (_state[key] === value && storedValue === value) {
+    if (_state[key] === value) {
       return;
     }
-    flagsLocalStorage.set({ ...overrides, [key]: value });
+    const next = { ..._state, [key]: value };
+    flagsLocalStorage.set(next);
     updateUrlSearchParams(key, value);
     _state = applyGuards(compose(location.search), _conditions);
     notify();
