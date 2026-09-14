@@ -53,18 +53,16 @@ describe('AnalyticsService', () => {
       );
     });
 
-    it('returns required common properties only when all required versions are set', () => {
+    it('returns required common properties without clusterVersion when it is unavailable', () => {
       expect(service.getReadyCommonProperties()).toBeUndefined();
 
       service.setCommonProperties({
-        clusterVersion: '4.14',
         konfluxVersion: '1.0',
         kubernetesVersion: '1.30',
       });
 
       expect(service.getReadyCommonProperties()).toEqual({
         sessionId: service.getCommonProperties().sessionId,
-        clusterVersion: '4.14',
         konfluxVersion: '1.0',
         kubernetesVersion: '1.30',
       });
@@ -87,6 +85,27 @@ describe('AnalyticsService', () => {
       expect(mockSegment.track).toHaveBeenCalledWith(TrackEvents.user_login_event, {
         sessionId: service.getCommonProperties().sessionId,
         clusterVersion: '4.14',
+        konfluxVersion: '1.0',
+        kubernetesVersion: '1.30',
+        userId,
+      });
+      expect(sent).toBe(true);
+    });
+
+    it('omits an empty clusterVersion from Segment payloads', () => {
+      enableAnalytics();
+      const userId = 'pseudonymous-user-id' as SHA256Hash;
+      service.identify(userId);
+      service.setCommonProperties({
+        clusterVersion: '',
+        konfluxVersion: '1.0',
+        kubernetesVersion: '1.30',
+      });
+
+      const sent = service.track(TrackEvents.user_login_event, {});
+
+      expect(mockSegment.track).toHaveBeenCalledWith(TrackEvents.user_login_event, {
+        sessionId: service.getCommonProperties().sessionId,
         konfluxVersion: '1.0',
         kubernetesVersion: '1.30',
         userId,

@@ -12,7 +12,7 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
 // Pinned commit hash for stable schema reference. Update this when adopting new schema changes.
-const SCHEMA_COMMIT = '997c657148feb9d9d23754e12ebe1dd860fced7e';
+const SCHEMA_COMMIT = '4d4a967d781a9ce387bd1803a0b7abf356a4c31e';
 const SCHEMA_URL = `https://raw.githubusercontent.com/konflux-ci/segment-bridge/${SCHEMA_COMMIT}/schema/ui.json`;
 
 const LOCAL_SCHEMA_PATHS = [

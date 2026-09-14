@@ -57,10 +57,7 @@ export const App = () => {
 
     void (async () => {
       analyticsService.setCommonProperties({
-        // konflux-public-info does not emit clusterVersion; use the best available
-        // cluster-type version so CommonFields are populated on all environments.
-        clusterVersion:
-          publicInfo.clusterVersion ?? publicInfo.openshiftVersion ?? publicInfo.kubernetesVersion,
+        ...(publicInfo.clusterVersion ? { clusterVersion: publicInfo.clusterVersion } : {}),
         konfluxVersion: publicInfo.konfluxVersion,
         kubernetesVersion: publicInfo.kubernetesVersion,
         openshiftVersion: publicInfo.openshiftVersion,

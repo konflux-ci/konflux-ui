@@ -101,7 +101,7 @@ describe('App analytics initialization', () => {
     expect(onLogin).not.toHaveBeenCalled();
   });
 
-  it('falls back clusterVersion to openshiftVersion when clusterVersion is absent', async () => {
+  it('omits clusterVersion when it is unavailable', async () => {
     useKonfluxPublicInfoMock.mockReturnValue([
       {
         clusterId: 'test-cluster',
@@ -117,9 +117,11 @@ describe('App analytics initialization', () => {
     render(<App />);
 
     await waitFor(() =>
-      expect(setCommonPropertiesMock).toHaveBeenCalledWith(
-        expect.objectContaining({ clusterVersion: '4.20' }),
-      ),
+      expect(setCommonPropertiesMock).toHaveBeenCalledWith({
+        konfluxVersion: '1.0',
+        kubernetesVersion: '1.33',
+        openshiftVersion: '4.20',
+      }),
     );
   });
 

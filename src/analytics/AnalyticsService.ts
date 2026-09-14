@@ -61,15 +61,15 @@ export class AnalyticsService {
   getReadyCommonProperties(): CommonFields | undefined {
     const { sessionId, clusterVersion, konfluxVersion, kubernetesVersion, openshiftVersion } =
       this.commonProperties;
-    if (!clusterVersion || !konfluxVersion || !kubernetesVersion) {
+    if (!konfluxVersion || !kubernetesVersion) {
       return undefined;
     }
 
     return {
       sessionId,
-      clusterVersion,
       konfluxVersion,
       kubernetesVersion,
+      ...(clusterVersion ? { clusterVersion } : {}),
       ...(openshiftVersion ? { openshiftVersion } : {}),
     };
   }
