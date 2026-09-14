@@ -1,4 +1,9 @@
 .ai-chat {
+  // PF chatbot uses global brand tokens; scope Konflux orange to the portaled chat only
+  --pf-t--global--color--brand--clicked: var(--konflux-brand-primary-clicked);
+  --pf-t--global--color--brand--default: var(--konflux-brand-primary);
+  --pf-t--global--color--brand--hover: var(--konflux-brand-primary-hover);
+
   .pf-v6-c-button.pf-chatbot__button {
     z-index: var(--pf-t--global--z-index--2xl);
   }
