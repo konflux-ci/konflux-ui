@@ -1,5 +1,8 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { TrackEvents } from '~/analytics';
+import { analyticsService } from '~/analytics/AnalyticsService';
+import { useTrackAnalyticsEvent } from '~/analytics/hooks';
 import { useSnapshot } from '~/hooks/useSnapshots';
 import { PIPELINE_RUNS_LIST_PATH } from '~/routes/paths';
 import { useNamespace } from '~/shared/providers/Namespace';
@@ -68,6 +71,7 @@ export const usePipelinererunAction = (pipelineRun: PipelineRunKind): RerunActio
   const namespace = useNamespace();
   const [canPatchComponent] = useAccessReviewForModel(ComponentModel, 'patch');
   const [canPatchSnapshot] = useAccessReviewForModel(SnapshotModel, 'patch');
+  const trackEvent = useTrackAnalyticsEvent();
 
   const [component, componentLoaded, componentError] = useComponent(
     namespace,
@@ -144,8 +148,10 @@ export const usePipelinererunAction = (pipelineRun: PipelineRunKind): RerunActio
 
         return {
           ...defaultEmptyAction,
-          cta: () =>
-            rerunTestPipeline(snapshot, scenario).then(() => {
+          cta: () => {
+            const { userId } = analyticsService.getCommonProperties();
+            trackEvent(TrackEvents.integration_test_rerun_triggered_event, { userId });
+            return rerunTestPipeline(snapshot, scenario).then(() => {
               if (isIntegrationTestsPage || isSnapshotsPage) return;
               navigate(
                 PIPELINE_RUNS_LIST_PATH.createPath({
@@ -153,7 +159,8 @@ export const usePipelinererunAction = (pipelineRun: PipelineRunKind): RerunActio
                   applicationName: snapshot.spec.application,
                 }),
               );
-            }),
+            });
+          },
           isDisabled: isCancelling,
           disabledTooltip: isCancelling ? PIPELINE_RUN_CANCELLING_MESSAGE : null,
         };
@@ -190,6 +197,7 @@ export const usePipelinererunAction = (pipelineRun: PipelineRunKind): RerunActio
     isSnapshotsPage,
     isPR,
     isCancelling,
+    trackEvent,
   ]);
 };
 
@@ -241,6 +249,7 @@ export const useRerunActionLazy = (pipelineRun: PipelineRunKind): LazyActionHook
   const [canPatchComponent] = useAccessReviewForModel(ComponentModel, 'patch');
   const [canPatchSnapshot] = useAccessReviewForModel(SnapshotModel, 'patch');
   const canPatchCompSnap = canPatchComponent && canPatchSnapshot;
+  const trackEvent = useTrackAnalyticsEvent();
 
   const labels = pipelineRun?.metadata?.labels ?? {};
   const runType = labels[PipelineRunLabel.PIPELINE_TYPE];
@@ -363,8 +372,10 @@ export const useRerunActionLazy = (pipelineRun: PipelineRunKind): LazyActionHook
             {
               id: 'rerun',
               label: 'Rerun',
-              cta: () =>
-                rerunTestPipeline(rerunCtx.snapshot, scenario).then(() => {
+              cta: () => {
+                const { userId } = analyticsService.getCommonProperties();
+                trackEvent(TrackEvents.integration_test_rerun_triggered_event, { userId });
+                return rerunTestPipeline(rerunCtx.snapshot, scenario).then(() => {
                   if (isIntegrationTestsPage || isSnapshotsPage) return;
                   navigate(
                     PIPELINE_RUNS_LIST_PATH.createPath({
@@ -372,7 +383,8 @@ export const useRerunActionLazy = (pipelineRun: PipelineRunKind): LazyActionHook
                       applicationName: rerunCtx.snapshot?.spec.application,
                     }),
                   );
-                }),
+                });
+              },
               disabled: isCancelling,
               disabledTooltip:
                 status === runStatus.Cancelling ? PIPELINE_RUN_CANCELLING_MESSAGE : null,
