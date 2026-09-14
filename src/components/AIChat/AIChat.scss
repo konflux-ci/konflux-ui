@@ -3,7 +3,7 @@
     z-index: var(--pf-t--global--z-index--2xl);
   }
 
-  // PF chatbot hardcodes a blue hover tint on the send button; use Konflux brand instead
+  // PF hardcodes blue hover on send button (SendButton.scss)
   .pf-v6-c-button.pf-chatbot__button--send {
     &:hover,
     &:focus {
@@ -20,6 +20,11 @@
       width: 100vw;
       inset-inline-end: 0;
     }
+  }
+
+  // PF positions jump buttons at 75% with !important; matching !important is required here.
+  .pf-chatbot .pf-chatbot__jump {
+    inset-inline-start: 50% !important;
   }
 
   // Wordmark uses currentColor
