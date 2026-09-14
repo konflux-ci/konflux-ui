@@ -93,11 +93,11 @@ module.exports = {
               'Files in `./src/shared` may only import from `./src/shared`, `./src/k8s`, `./src/types`, `./src/unit-test-utils`, `./src/monitoring`, `./src/feature-flags`, `./src/__data__`, `./src/consts`, `./src/kubearchive`, `./src/routes`, `./src/models` (pod, pipelineruns, release, namespace only) or the temporary `except` whitelist (see TODO above).',
           },
           // Zone 6: Files in `./src/feature-flags` may only import from
-          // `./src/feature-flags`, `./src/components/modal`, `./src/k8s/error.ts` or `./src/shared/utils`.
+          // `./src/feature-flags`, `./src/components/modal`, `./src/k8s/error.ts`, `./src/shared/utils` or `./src/analytics`.
           {
             target: './src/feature-flags/**/*',
             from: [
-              './src/!(feature-flags|components|k8s|shared)/**/*',
+              './src/!(feature-flags|components|k8s|shared|analytics)/**/*',
               './src/components/!(modal)',
               './src/components/!(modal)/**/*',
               './src/k8s/!(error.ts)',
