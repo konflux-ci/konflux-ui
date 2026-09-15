@@ -8,7 +8,10 @@ import {
   useSendStreamMessage,
 } from '@redhat-cloud-services/ai-react-state';
 import { LIGHTSPEED_ASSISTANT_NAME } from '~/lightspeed/const';
-import { useLightspeedInitError } from '~/lightspeed/LightspeedStateProvider';
+import {
+  useClearLightspeedInitError,
+  useLightspeedInitError,
+} from '~/lightspeed/LightspeedStateProvider';
 import { getUserFacingErrorMessage, stateMessagesToMessageProps } from '~/lightspeed/utils';
 import { logger } from '~/monitoring/logger';
 
@@ -43,6 +46,7 @@ export const useLightspeedChat = (): UseLightspeedChatResult => {
   const isInProgress = useInProgress();
   const isInitializing = useIsInitializing();
   const initError = useLightspeedInitError();
+  const clearInitError = useClearLightspeedInitError();
   const hasInitFailed = initError !== undefined;
   const isSendingRef = React.useRef(false);
 
@@ -53,7 +57,8 @@ export const useLightspeedChat = (): UseLightspeedChatResult => {
 
   const clearBackendError = React.useCallback(() => {
     setBackendError(undefined);
-  }, []);
+    clearInitError();
+  }, [clearInitError]);
 
   const sendMessage = React.useCallback(
     async (message: string) => {
