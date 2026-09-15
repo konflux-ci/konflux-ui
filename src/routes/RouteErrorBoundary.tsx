@@ -20,6 +20,7 @@ export type ErrorBoundaryFallbackProps = {
   componentStack?: string;
   stack: string;
   title: string;
+  sentryEventId?: string;
 };
 
 export const ErrorBoundaryFallback: React.FC<
@@ -29,16 +30,28 @@ export const ErrorBoundaryFallback: React.FC<
     <PageSection hasBodyWrapper={false}>
       <PageLayout title="Oh no! Something went wrong.">
         <PageSection hasBodyWrapper={false}>
-          <ExpandableSection toggleText="Show details">
+          <Content>
+            <Content component={ContentVariants.p}>{props.errorMessage}</Content>
+            {props.sentryEventId ? (
+              <Content component={ContentVariants.p} data-test="sentry-event-id">
+                If reporting this issue, reference ID:{' '}
+                <ClipboardCopy
+                  isReadOnly
+                  hoverTip="Copy"
+                  clickTip="Copied"
+                  variant="inline-compact"
+                >
+                  {props.sentryEventId}
+                </ClipboardCopy>
+              </Content>
+            ) : null}
+          </Content>
+          <ExpandableSection toggleText="Show more details">
             <Content>
               <Content component={ContentVariants.h3}>{props.title}</Content>
 
-              <Content component={ContentVariants.h4}>Description:</Content>
-              <Content component={ContentVariants.pre}>{props.errorMessage}</Content>
-
               {props.componentStack ? (
                 <>
-                  {' '}
                   <Content component={ContentVariants.h4}>Component trace:</Content>
                   <ClipboardCopy
                     tabIndex={0}
@@ -75,9 +88,11 @@ export const ErrorBoundaryFallback: React.FC<
 
 export const RouteErrorBoundry: React.FC<React.PropsWithChildren> = () => {
   const error = useRouteError() as ErrorResponse;
+  const [sentryEventId, setSentryEventId] = React.useState<string | undefined>();
 
   React.useEffect(() => {
-    monitoringService?.captureException(error);
+    const eventId = monitoringService?.captureException(error);
+    setSentryEventId(eventId);
   }, [error]);
   if (error.status === 403) {
     return <NoAccessState />;
@@ -102,6 +117,7 @@ export const RouteErrorBoundry: React.FC<React.PropsWithChildren> = () => {
       title={unknownError.name}
       errorMessage={unknownError.message}
       stack={unknownError.stack}
+      sentryEventId={sentryEventId}
     />
   );
 };

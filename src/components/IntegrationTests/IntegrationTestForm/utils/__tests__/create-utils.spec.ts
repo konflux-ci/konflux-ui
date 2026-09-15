@@ -260,6 +260,35 @@ describe('Create Utils formatParams', () => {
     expect(formattedParams.length).toBe(3);
     expect(formattedParams[0].value).toBe('val1');
   });
+
+  it('Should trim whitespace from param names and values', () => {
+    const formattedParams = formatParams([
+      { name: '  apple  ', values: ['  val1  ', ' val2 '] },
+      { name: 'mango', values: ['val1'] },
+    ]);
+    expect(formattedParams).toEqual([
+      { name: 'apple', values: ['val1', 'val2'] },
+      { name: 'mango', value: 'val1' },
+    ]);
+  });
+
+  it('Should skip params whose trimmed name is blank', () => {
+    const formattedParams = formatParams([
+      { name: '', values: ['val1'] },
+      { name: '   ', values: ['val2'] },
+      { name: 'apple', values: ['val3'] },
+    ]);
+    expect(formattedParams).toEqual([{ name: 'apple', value: 'val3' }]);
+  });
+
+  it('Should skip params whose values are all blank after trimming', () => {
+    const formattedParams = formatParams([
+      { name: 'apple', values: ['', '   '] },
+      { name: 'mango', values: ['  ', null, undefined] },
+      { name: 'orange', values: [' val1 '] },
+    ]);
+    expect(formattedParams).toEqual([{ name: 'orange', value: 'val1' }]);
+  });
 });
 
 describe('Create Utils formatContexts', () => {

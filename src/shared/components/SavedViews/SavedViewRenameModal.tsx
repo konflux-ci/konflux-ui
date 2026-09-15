@@ -5,6 +5,7 @@ import {
   Form,
   FormGroup,
   ModalVariant,
+  Flex,
   TextInput,
 } from '@patternfly/react-core';
 import { ComponentProps, createModalLauncher } from '~/shared/components/modal/createModalLauncher';
@@ -37,17 +38,19 @@ export const SavedViewRenameModal: React.FC<SavedViewRenameModalProps> = ({
           isRequired
         />
       </FormGroup>
-      <Button
-        variant={ButtonVariant.primary}
-        onClick={handleRename}
-        isDisabled={!name.trim()}
-        data-test="saved-view-rename-confirm"
-      >
-        Rename
-      </Button>
-      <Button variant={ButtonVariant.link} onClick={() => onClose()}>
-        Cancel
-      </Button>
+      <Flex>
+        <Button
+          variant={ButtonVariant.primary}
+          onClick={handleRename}
+          isDisabled={!name.trim()}
+          data-test="saved-view-rename-confirm"
+        >
+          Rename
+        </Button>
+        <Button variant={ButtonVariant.link} onClick={() => onClose()}>
+          Cancel
+        </Button>
+      </Flex>
     </Form>
   );
 };

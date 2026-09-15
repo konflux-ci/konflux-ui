@@ -1,4 +1,4 @@
-name: "Periodic job: STAGE (test Konflux UI against stage cluster)"
+name: 'Periodic job: STAGE (test Konflux UI against stage cluster)'
 
 on:
   workflow_dispatch:
@@ -13,8 +13,7 @@ jobs:
       REF_BRANCH: ${{ github.ref_name}}
       HEAD_SHA: ${{ github.sha }}
       JOB_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-      SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_JOB_REPORT_ID }}
-      SLACK_TOKEN: ${{ secrets.SLACK_TOKEN_PERIODIC_REPORT }}
+      PERIODIC_JOBS_SLACK_WEBHOOK_URL: ${{ secrets.PERIODIC_JOBS_SLACK_WEBHOOK_URL }}
       # secrets
       CYPRESS_GH_TOKEN: ${{ secrets.HAC_TEST_GH_TOKEN }}
       GH_APP_ID: ${{ secrets.GH_APP_ID }}
@@ -23,7 +22,7 @@ jobs:
       QUAY_TEST_ORG: ${{ secrets.QUAY_TEST_ORG }}
       CYPRESS_USERNAME: ${{ secrets.STAGE_CYPRESS_USERNAME }}
       CYPRESS_PASSWORD: ${{ secrets.STAGE_CYPRESS_PASSWORD }}
-      CYPRESS_KONFLUX_BASE_URL: "https://konflux-ui.apps.stone-stg-rh01.l2vh.p1.openshiftapps.com"
+      CYPRESS_KONFLUX_BASE_URL: 'https://konflux-ui.apps.stone-stg-rh01.l2vh.p1.openshiftapps.com'
       JOB_TYPE: 'periodic-stage'
       CYPRESS_PROJECT_ID: ${{ secrets.PROJECT_ID }}
       CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
@@ -31,7 +30,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: ${{ github.repository }}
-          ref: "${{ env.HEAD_SHA }}"
+          ref: '${{ env.HEAD_SHA }}'
 
       - name: Konflux-ui e2e test
         uses: ./.github/actions/konflux-ui-e2e-test

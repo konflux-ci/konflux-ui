@@ -5,8 +5,14 @@ import KeyValueFileInputField, { KeyValueEntry } from '../KeyValueFileInputField
 
 const onSubmit = jest.fn();
 const TestKeyValueInputField: React.FC<
-  React.PropsWithChildren<FormikConfig<Record<string, unknown>> & { disableRemoveAction?: boolean }>
-> = ({ initialValues, disableRemoveAction }) => (
+  React.PropsWithChildren<
+    FormikConfig<Record<string, unknown>> & {
+      disableRemoveAction?: boolean;
+      disableAddAction?: boolean;
+      disableValueFields?: boolean;
+    }
+  >
+> = ({ initialValues, disableRemoveAction, disableAddAction, disableValueFields }) => (
   <Formik
     onSubmit={onSubmit}
     initialValues={initialValues}
@@ -23,6 +29,8 @@ const TestKeyValueInputField: React.FC<
     <KeyValueFileInputField
       name={'keyValueInput'}
       disableRemoveAction={disableRemoveAction}
+      disableAddAction={disableAddAction}
+      disableValueFields={disableValueFields}
       entries={initialValues.keyValueInput as KeyValueEntry[]}
     />
   </Formik>
@@ -113,5 +121,38 @@ test('should add new entry on clicking Add key/value button', async () => {
   await waitFor(() => {
     const keyValuePair = screen.queryAllByTestId('key-value-pair');
     expect(keyValuePair).toHaveLength(2);
+  });
+});
+
+test('should hide Add key/value button when disableAddAction is true', async () => {
+  render(
+    <TestKeyValueInputField
+      onSubmit={onSubmit}
+      disableAddAction
+      initialValues={{
+        keyValueInput: [{ key: 'key-three', value: 'value-three' }],
+      }}
+    />,
+  );
+
+  await waitFor(() => {
+    expect(screen.queryByTestId('add-key-value-button')).not.toBeInTheDocument();
+  });
+});
+
+test('should apply read-only styling class when disableValueFields is true', async () => {
+  render(
+    <TestKeyValueInputField
+      onSubmit={onSubmit}
+      disableValueFields
+      initialValues={{
+        keyValueInput: [{ key: 'key-three', value: 'value-three' }],
+      }}
+    />,
+  );
+
+  await waitFor(() => {
+    expect(screen.getByTestId('key-value-pair')).toHaveClass('key-value--value-read-only');
+    expect(screen.getByTestId('file-upload-value').querySelector('textarea')).toBeDisabled();
   });
 });

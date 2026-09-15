@@ -102,18 +102,6 @@ const ConformaResultsTabContent: React.FC = () => {
     [groupBy, filteredResults, visibleComponentNames],
   );
 
-  const handleToggleGroup = React.useCallback((groupKey: string) => {
-    setExpandedGroups((prev) => {
-      const next = new Set(prev);
-      if (next.has(groupKey)) {
-        next.delete(groupKey);
-      } else {
-        next.add(groupKey);
-      }
-      return next;
-    });
-  }, []);
-
   const allExpanded = groups.length > 0 && groups.every((g) => expandedGroups.has(g.groupKey));
 
   const handleToggleExpandAll = React.useCallback(() => {
@@ -216,7 +204,7 @@ const ConformaResultsTabContent: React.FC = () => {
             groups={groups}
             groupBy={groupBy}
             expandedGroups={expandedGroups}
-            onToggleGroup={handleToggleGroup}
+            onExpandedGroupsChange={setExpandedGroups}
           />
         )}
       </PageSection>

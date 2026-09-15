@@ -1,0 +1,17 @@
+.conforma-violations-card {
+  &__app-list {
+    margin-block-start: var(--pf-t--global--spacer--sm);
+  }
+
+  &__badge {
+    font-size: var(--pf-t--global--font--size--sm);
+
+    &--violation {
+      color: var(--pf-t--global--icon--color--status--danger--default);
+    }
+
+    &--warning {
+      color: var(--pf-t--global--icon--color--status--warning--default);
+    }
+  }
+}

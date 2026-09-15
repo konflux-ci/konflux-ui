@@ -5,7 +5,6 @@ export { normalizeSection } from './log-viewer-utils';
 export { useLineNumberNavigation } from './useLineNumberNavigation';
 export type {
   UseLineNumberNavigationResult,
-  UseLineNumberNavigationOptions,
   HighlightedLineRange,
 } from './useLineNumberNavigation';
 export { useKeyboardNavigation } from './useKeyboardNavigation';

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useEventListener } from '~/shared/hooks/useEventListener';
 
 export interface HighlightedLineRange {
   start: number;
@@ -12,15 +13,6 @@ export interface UseLineNumberNavigationResult {
   isLineHighlighted: (lineNumber: number) => boolean;
 }
 
-export interface UseLineNumberNavigationOptions {
-  /**
-   * When false, URL hash line navigation (highlighting + auto-scroll) is deferred until this
-   * becomes true — e.g. while logs are still being fetched and line numbers/sections are
-   * unstable. Manual line clicks are unaffected and always apply immediately. Defaults to true.
-   */
-  readyToNavigate?: boolean;
-}
-
 /**
  * Custom hook to manage line number navigation and highlighting
  *
@@ -29,13 +21,8 @@ export interface UseLineNumberNavigationOptions {
  * - Range selection with shift-click (#L10-L20)
  * - URL hash parsing and updates
  * - Highlight state management
- * - Deferring URL hash navigation until logs are fully fetched (`readyToNavigate`)
  */
-export const useLineNumberNavigation = (
-  options: UseLineNumberNavigationOptions = {},
-): UseLineNumberNavigationResult => {
-  const { readyToNavigate = true } = options;
-
+export const useLineNumberNavigation = (): UseLineNumberNavigationResult => {
   // Track the first selected line for range selection
   const [firstSelectedLine, setFirstSelectedLine] = React.useState<number | null>(null);
 
@@ -72,93 +59,21 @@ export const useLineNumberNavigation = (
     return null;
   };
 
-  // Use lazy initialization to avoid calling getHighlightedLines on every render.
-  // While navigation is deferred, don't apply any hash-derived highlight yet.
+  // Lazy initialization — parse hash once on mount, only on eligible pages.
   const [highlightedLines, setHighlightedLines] = React.useState<HighlightedLineRange | null>(() =>
-    readyToNavigate ? getHighlightedLines() : null,
+    shouldEnableUrlHash() ? getHighlightedLines() : null,
   );
 
   // Track the last hash to detect changes (including when hash is cleared)
   const lastHashRef = React.useRef(window.location.hash);
 
-  // Once navigation becomes ready, apply whatever hash is currently in the URL — it may have
-  // changed while navigation was deferred (e.g. logs were still being fetched).
-  const prevReadyToNavigateRef = React.useRef(readyToNavigate);
-  React.useEffect(() => {
-    if (readyToNavigate && !prevReadyToNavigateRef.current) {
-      lastHashRef.current = window.location.hash;
-      setHighlightedLines(getHighlightedLines());
-    }
-    prevReadyToNavigateRef.current = readyToNavigate;
-  }, [readyToNavigate]);
+  useEventListener('hashchange', () => {
+    if (!shouldEnableUrlHash()) return;
 
-  // Effect to detect hash changes on every render (including changes without hashchange event)
-  // This runs frequently but the ref comparison prevents unnecessary state updates
-  // Only syncs from hash when URL hash navigation is enabled (on logs page)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  React.useEffect(() => {
-    const currentHash = window.location.hash;
-
-    // Only sync from hash if we're on a page that supports URL hash navigation
-    if (!shouldEnableUrlHash()) {
-      // In side panel mode (no URL hash), don't sync from hash
-      // Just update the ref to prevent stale comparisons
-      lastHashRef.current = currentHash;
-
-      return;
-    }
-
-    if (!readyToNavigate) {
-      // Remember that the hash changed; it's applied once ready (see effect above).
-      lastHashRef.current = currentHash;
-      return;
-    }
-
-    // Check if this was an internal navigation using history.state
-    const isInternalNavigation = window.history.state?.source === 'line-click';
-
-    // Only update if hash actually changed (ref comparison prevents infinite loops)
-    if (currentHash !== lastHashRef.current) {
-      lastHashRef.current = currentHash;
-      const newHighlight = getHighlightedLines();
-      setHighlightedLines(newHighlight);
-
-      // Reset firstSelectedLine if:
-      // 1. Hash was cleared (switching views), OR
-      // 2. This was NOT an internal navigation (external hash change or browser navigation)
-      if (!currentHash || !newHighlight || !isInternalNavigation) {
-        setFirstSelectedLine(null);
-      }
-    }
+    lastHashRef.current = window.location.hash;
+    setHighlightedLines(getHighlightedLines());
+    setFirstSelectedLine(null);
   });
-
-  // Separate effect for hashchange event listener (browser back/forward)
-  // Only active when URL hash navigation is enabled
-  React.useEffect(() => {
-    const handleHashChange = () => {
-      // Only handle hashchange if we're on a page that supports URL hash navigation
-      if (!shouldEnableUrlHash()) {
-        return;
-      }
-
-      const newHash = window.location.hash;
-      lastHashRef.current = newHash;
-
-      if (!readyToNavigate) {
-        // Applied once ready (see effect above).
-        return;
-      }
-
-      const newHighlight = getHighlightedLines();
-      setHighlightedLines(newHighlight);
-
-      // Always reset firstSelectedLine on hashchange event (external navigation)
-      setFirstSelectedLine(null);
-    };
-
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
-  }, [shouldEnableUrlHash, readyToNavigate]);
 
   // Handle line number click for hash navigation
   const handleLineClick = React.useCallback(

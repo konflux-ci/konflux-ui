@@ -43,7 +43,7 @@
  *
  * ENVIRONMENT VARIABLES:
  * - GITHUB_TOKEN: Required - GitHub API authentication token
- * - SLACK_WEBHOOK_URL: Required (unless TEST_MODE) - cwf-cue Slack incoming webhook URL
+ * - PR_REPORT_SLACK_WEBHOOK_URL: Required (unless TEST_MODE) - cwf-cue Slack incoming webhook URL
  * - TEST_MODE: Optional - Set to 'true' to log output instead of sending to Slack
  */
 
@@ -58,13 +58,13 @@ const REPO_NAME = 'konflux-ui';
 
 /** Environment variables */
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
-const SLACK_WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL; // Slack webhook for cwf-cue notifications
+const PR_REPORT_SLACK_WEBHOOK_URL = process.env.PR_REPORT_SLACK_WEBHOOK_URL; // Slack webhook for cwf-cue notifications
 const TEST_MODE = process.env.TEST_MODE === 'true';
 
 /** Validate required environment variables */
 if (!GITHUB_TOKEN) throw new Error('GITHUB_TOKEN is not set');
-if (!TEST_MODE && !SLACK_WEBHOOK_URL)
-  throw new Error('Set the SLACK_WEBHOOK_URL or TEST_MODE=true.');
+if (!TEST_MODE && !PR_REPORT_SLACK_WEBHOOK_URL)
+  throw new Error('Set the PR_REPORT_SLACK_WEBHOOK_URL or TEST_MODE=true.');
 
 /** Initialize GitHub API client */
 const octokit = new Octokit({ auth: GITHUB_TOKEN });
@@ -488,7 +488,7 @@ const checkNeedsAuthorFollowupPRs = async () => {
       console.log('--- End of test output ---');
     } else {
       // Production mode: Send formatted report to Slack webhook
-      const response = await fetch(SLACK_WEBHOOK_URL, {
+      const response = await fetch(PR_REPORT_SLACK_WEBHOOK_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

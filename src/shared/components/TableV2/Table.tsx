@@ -62,12 +62,15 @@ export const Table = <TData,>({
   columns,
   getRowId,
   'aria-label': ariaLabel,
+  'data-test': dataTest = 'table-v2',
   meta,
   enableSorting,
   enableExpansion,
   enableRowSelection,
   onRowSelectionChange,
   expandedContent,
+  expanded,
+  onExpandedChange,
   hasNextPage,
   isFetchingNextPage,
   fetchNextPage,
@@ -110,6 +113,8 @@ export const Table = <TData,>({
     enableRowSelection,
     onRowSelectionChange,
     meta,
+    expanded,
+    onExpandedChange,
   });
 
   const { virtualizer, virtualRows } = useVirtualization({
@@ -133,7 +138,7 @@ export const Table = <TData,>({
   if (enableRowSelection) visibleColumnCount += 1;
 
   return (
-    <div data-test="table-v2" ref={tableRef}>
+    <div data-test={dataTest} ref={tableRef}>
       <PfTable aria-label={ariaLabel} variant="compact" isExpandable={enableExpansion}>
         <TableHeader
           table={table}

@@ -30,11 +30,11 @@ jobs:
       - name: Run PR checker
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          PR_REPORT_SLACK_WEBHOOK_URL: ${{ secrets.PR_REPORT_SLACK_WEBHOOK_URL }}
         run: node .github/scripts/check-prs.js
 
       - name: Check infra-deployments PRs
         env:
           GH_TOKEN: ${{ secrets.HAC_TEST_GH_TOKEN }}
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          PR_REPORT_SLACK_WEBHOOK_URL: ${{ secrets.PR_REPORT_SLACK_WEBHOOK_URL }}
         run: ./.github/scripts/check-infra-deployments-prs.sh

@@ -1,6 +1,10 @@
 import { RouterParams } from '@routes/utils';
 import { ActivityTab } from '~/components/Activity';
-import { ApplicationDetails, ApplicationOverviewTab } from '~/components/ApplicationDetails';
+import {
+  ApplicationDependencyTab,
+  ApplicationDetails,
+  ApplicationOverviewTab,
+} from '~/components/ApplicationDetails';
 import { applicationPageLoader, ApplicationListView } from '~/components/Applications';
 import { ComponentListTab, componentsTabLoader } from '~/components/Components/ComponentsListView';
 import { ConformaResultsTab } from '~/components/Conforma/ConformaResultsTab/ConformaResultsTab';
@@ -87,6 +91,15 @@ const applicationRoutes = [
         ),
         errorElement: <RouteErrorBoundry />,
         element: <ConformaResultsTab />,
+      },
+      {
+        path: `dep-updates`,
+        loader: () => {
+          ensureFeatureFlagOnLoader('mintmaker');
+          return null;
+        },
+        errorElement: <RouteErrorBoundry />,
+        element: <ApplicationDependencyTab />,
       },
     ],
   },

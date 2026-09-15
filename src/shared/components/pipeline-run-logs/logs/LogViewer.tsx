@@ -4,8 +4,12 @@ import {
   Banner,
   Button,
   Checkbox,
+  Dropdown,
+  DropdownItem,
+  DropdownList,
   Flex,
   FlexItem,
+  MenuToggle,
   Popover,
   SearchInput,
   Spinner,
@@ -22,7 +26,6 @@ import { OutlinedKeyboardIcon } from '@patternfly/react-icons/dist/esm/icons/out
 import { OutlinedPlayCircleIcon } from '@patternfly/react-icons/dist/esm/icons/outlined-play-circle-icon';
 import classNames from 'classnames';
 import { saveAs } from 'file-saver';
-import { debounce } from 'lodash-es';
 import { v4 as uuidv4 } from 'uuid';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { logger } from '~/monitoring/logger';
@@ -34,10 +37,12 @@ import { useAutoScrollWithResume } from '~/shared/components/pipeline-run-logs/l
 import { LoadingInline } from '~/shared/components/status-box/StatusBox';
 import {
   type LogSection,
+  type NormalizedLogSection,
   normalizeSection,
   useLineNumberNavigation,
   VirtualizedLogContent,
 } from '~/shared/components/virtualized-log-viewer';
+import { useContainerHeight } from '~/shared/hooks';
 import { useFullscreen } from '~/shared/hooks/fullscreen';
 import { TaskRunKind } from '~/types';
 import { useLogSearch } from '../useLogSearch';
@@ -59,10 +64,13 @@ const LOG_VIEWER_SHORTCUTS: ShortcutEntry[] = [
 
 export type Props = {
   showSearch?: boolean;
-  sections: LogSection[];
+  sections?: LogSection[];
+  normalizedSections?: NormalizedLogSection[];
   allowAutoScroll?: boolean;
   downloadAllLabel?: string;
   onDownloadAll?: () => Promise<Error>;
+  onDownloadFullLogs?: (sectionIndex: number) => Promise<void>;
+  onViewFullLogs?: (sectionIndex: number) => void;
   taskRun: TaskRunKind | null;
   isLoading: boolean;
   errorMessage: string | null;
@@ -71,35 +79,39 @@ export type Props = {
     scrollOffset: number;
     scrollUpdateWasRequested: boolean;
   }) => void;
+  enableLineNavigation?: boolean;
 };
 
 const LogViewer: React.FC<Props> = ({
   showSearch = true,
   allowAutoScroll,
   sections,
-  downloadAllLabel,
+  normalizedSections: normalizedSectionsProp,
+  downloadAllLabel = 'Download all task logs',
   onDownloadAll,
+  onDownloadFullLogs,
+  onViewFullLogs,
   taskRun,
   isLoading,
   errorMessage,
   onScroll: onScrollProp,
+  enableLineNavigation = true,
 }) => {
   const taskName = taskRun?.spec.taskRef?.name ?? taskRun?.metadata.name;
   const [logTheme, setLogTheme] = useLogViewerTheme();
   const themeCheckboxId = React.useId();
 
-  const normalizedSections = React.useMemo(() => sections.map(normalizeSection), [sections]);
+  const normalizedSections = React.useMemo(
+    () => normalizedSectionsProp ?? sections?.map(normalizeSection) ?? [],
+    [normalizedSectionsProp, sections],
+  );
 
-  // Tracks the line currently targeted via URL hash navigation (e.g. `#L20000`). Computed here
-  // (rather than read from VirtualizedLogContent) so it's available in the very same render —
-  // no round-trip delay through child effects/callbacks — and used to pause auto-scroll-to-bottom
-  // so it doesn't keep fighting the scroll-to-that-line navigation as new log lines stream in.
-  const { highlightedLines: activeLineTarget } = useLineNumberNavigation();
+  const lineNumberNavigationProps = useLineNumberNavigation();
 
   const { autoScroll, showResumeStreamButton, handleScroll, handleResumeClick } =
     useAutoScrollWithResume({
       allowAutoScroll,
-      activeLineTarget,
+      activeLineTarget: enableLineNavigation ? lineNumberNavigationProps.highlightedLines : null,
       onScroll: onScrollProp,
     });
 
@@ -107,12 +119,15 @@ const LogViewer: React.FC<Props> = ({
     useFullscreen<HTMLDivElement>();
 
   const downloadData = React.useMemo(() => {
-    return sections
-      .map((s) => (s.containerName ? `${s.containerName}\n${s.data}` : s.data))
+    return normalizedSections
+      .map((s) =>
+        s.containerName ? `${s.containerName}\n${s.lines.join('\n')}` : s.lines.join('\n'),
+      )
       .join('\n\n');
-  }, [sections]);
+  }, [normalizedSections]);
 
   const [downloadAllStatus, setDownloadAllStatus] = React.useState(false);
+  const [isDownloadOpen, setIsDownloadOpen] = React.useState(false);
 
   const downloadLogs = () => {
     if (!downloadData) return;
@@ -134,41 +149,8 @@ const LogViewer: React.FC<Props> = ({
       });
   };
 
-  // Use containerRef to measure actual height for VirtualizedLogContent
-  const containerRef = React.useRef<HTMLDivElement>(null);
-  const [viewerHeight, setViewerHeight] = React.useState<number | undefined>(undefined);
-
-  React.useEffect(() => {
-    const updateHeight = (immediate = false) => {
-      if (containerRef.current) {
-        const measured = containerRef.current.clientHeight;
-        if (measured > 0) {
-          if (immediate) {
-            // Immediate update for fullscreen toggle and initial mount
-            setViewerHeight(measured);
-          } else {
-            // Use requestAnimationFrame for resize events to avoid ResizeObserver warnings
-            requestAnimationFrame(() => {
-              setViewerHeight(measured);
-            });
-          }
-        }
-      }
-    };
-
-    // Update immediately on mount and fullscreen changes
-    updateHeight(true);
-
-    // Debounced resize handler for better performance (150ms delay)
-    const debouncedUpdateHeight = debounce(() => updateHeight(false), 150);
-
-    // Update on window resize
-    window.addEventListener('resize', debouncedUpdateHeight);
-    return () => {
-      window.removeEventListener('resize', debouncedUpdateHeight);
-      debouncedUpdateHeight.cancel();
-    };
-  }, [isFullscreen]);
+  // Use containerRef to measure actual height for VirtualizedLogViewer
+  const { containerRef, containerHeight } = useContainerHeight();
 
   const allLines = React.useMemo(
     () => normalizedSections.flatMap((s) => s.lines),
@@ -206,7 +188,7 @@ const LogViewer: React.FC<Props> = ({
             alignItems="center"
           >
             <ToolbarGroup>
-              <ToolbarItem>
+              <ToolbarItem className="log-viewer__toolbar-item--padded">
                 <FeatureFlagIndicator flags={['kubearchive-logs', 'taskruns-kubearchive']} />
               </ToolbarItem>
             </ToolbarGroup>
@@ -241,44 +223,55 @@ const LogViewer: React.FC<Props> = ({
               </ToolbarItem>
               <ToolbarItem variant="separator" className="log-viewer__divider" />
               <ToolbarItem>
-                <Button variant="link" onClick={downloadLogs}>
-                  <DownloadIcon className="log-viewer__icon" />
-                  Download
-                </Button>
+                <Dropdown
+                  isOpen={isDownloadOpen}
+                  onSelect={() => setIsDownloadOpen(false)}
+                  onOpenChange={setIsDownloadOpen}
+                  toggle={(toggleRef) => (
+                    <MenuToggle
+                      ref={toggleRef}
+                      variant="plain"
+                      onClick={() => setIsDownloadOpen(!isDownloadOpen)}
+                      isExpanded={isDownloadOpen}
+                      aria-label="Download logs"
+                      data-test="download-logs-toggle"
+                    >
+                      <DownloadIcon />
+                    </MenuToggle>
+                  )}
+                >
+                  <DropdownList>
+                    <DropdownItem key="download" onClick={downloadLogs} data-test="download-log">
+                      Download
+                    </DropdownItem>
+                    {onDownloadAll && (
+                      <DropdownItem
+                        key="download-all"
+                        onClick={startDownloadAll}
+                        isDisabled={downloadAllStatus}
+                        data-test="download-all-logs"
+                      >
+                        <span className="log-viewer__download-all-label">
+                          {downloadAllLabel}
+                          {downloadAllStatus && <LoadingInline />}
+                        </span>
+                      </DropdownItem>
+                    )}
+                  </DropdownList>
+                </Dropdown>
               </ToolbarItem>
-              <ToolbarItem variant="separator" className="log-viewer__divider" />
-              {onDownloadAll && (
+              {fullscreenToggle && isFullscreenSupported && (
                 <>
+                  <ToolbarItem variant="separator" className="log-viewer__divider" />
                   <ToolbarItem>
                     <Button
-                      variant="link"
-                      onClick={startDownloadAll}
-                      isDisabled={downloadAllStatus}
-                    >
-                      <DownloadIcon className="log-viewer__icon" />
-                      {downloadAllLabel}
-                      {downloadAllStatus && <LoadingInline />}
-                    </Button>
+                      icon={isFullscreen ? <CompressIcon /> : <ExpandIcon />}
+                      variant="plain"
+                      onClick={fullscreenToggle}
+                      aria-label={isFullscreen ? 'Collapse' : 'Expand'}
+                    />
                   </ToolbarItem>
-                  <ToolbarItem variant="separator" className="log-viewer__divider" />
                 </>
-              )}
-              {fullscreenToggle && isFullscreenSupported && (
-                <ToolbarItem gap={{ default: 'gapMd' }}>
-                  <Button variant="link" onClick={fullscreenToggle}>
-                    {isFullscreen ? (
-                      <>
-                        <CompressIcon className="log-viewer__icon" />
-                        Collapse
-                      </>
-                    ) : (
-                      <>
-                        <ExpandIcon className="log-viewer__icon" />
-                        Expand
-                      </>
-                    )}
-                  </Button>
-                </ToolbarItem>
               )}
               <ToolbarItem variant="separator" className="log-viewer__divider" />
               <ToolbarItem>
@@ -297,6 +290,7 @@ const LogViewer: React.FC<Props> = ({
                   hasAutoWidth
                 >
                   <Button
+                    className="log-viewer__toolbar-item--padded"
                     icon={<OutlinedKeyboardIcon />}
                     variant="plain"
                     aria-label="Show keyboard shortcuts"
@@ -348,19 +342,27 @@ const LogViewer: React.FC<Props> = ({
 
       {/* Log Viewer */}
       <div ref={containerRef} className="log-viewer__content">
-        {viewerHeight && (
+        {containerHeight && (
           <div className="pf-v6-c-log-viewer__main">
             <VirtualizedLogContent
               key={taskRun?.metadata?.uid || 'default'}
-              sections={sections}
+              sections={sections ?? []}
               normalizedSections={normalizedSections}
-              height={viewerHeight}
+              height={containerHeight}
               width="100%"
               scrollToRow={scrollToRow}
               onScroll={handleScroll}
               searchText={searchText}
               currentSearchMatch={currentMatch}
-              readyToNavigate={!isLoading}
+              onDownloadFullLogs={onDownloadFullLogs}
+              onViewFullLogs={onViewFullLogs}
+              lineNumberNavigationProps={
+                enableLineNavigation
+                  ? isLoading
+                    ? { ...lineNumberNavigationProps, highlightedLines: null }
+                    : lineNumberNavigationProps
+                  : undefined
+              }
             />
           </div>
         )}

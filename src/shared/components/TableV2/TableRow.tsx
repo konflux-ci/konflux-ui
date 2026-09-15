@@ -7,10 +7,8 @@ interface TableRowProps<TData> {
   row: Row<TData>;
   /** Unique row identifier, set as `data-id` on the `<Tr>`. */
   rowId: string;
-  /** Virtual index used by TanStack Virtual for measurement tracking. */
+  /** Virtual index used by PatternFly expand/select controls. */
   virtualIndex: number;
-  /** Callback from virtualizer to measure this row's actual DOM height. */
-  measureElement: (el: HTMLElement | null) => void;
   /** Whether to render an expand/collapse toggle cell. */
   enableExpansion?: boolean;
   /** Whether to render a row selection checkbox cell. */
@@ -30,7 +28,6 @@ export const TableRow = <TData,>({
   row,
   rowId,
   virtualIndex,
-  measureElement,
   enableExpansion,
   enableRowSelection,
 }: TableRowProps<TData>) => {
@@ -39,8 +36,6 @@ export const TableRow = <TData,>({
       role="row"
       data-test="table-row"
       data-id={rowId}
-      data-index={virtualIndex}
-      ref={measureElement}
     >
       {enableRowSelection && (
         <Td

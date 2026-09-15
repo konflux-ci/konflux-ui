@@ -113,6 +113,26 @@ By default, the UI uses the stage cluster for API calls. However, if you want to
 
 ```
 
+### Copy login command on a local cluster
+
+On OpenShift, the UI derives the API server and OAuth URLs from a `*.apps.<clusterDomain>` hostname. You do not need extra ConfigMap fields for that case.
+
+For Kind or a custom UI hostname, **merge** a `cliLogin` object into the existing `info.json` of ConfigMap `konflux-public-info` (namespace `konflux-info`). Do not replace `info.json` entirely — that document also holds `rbac` and other required fields.
+
+konflux-operator reconciles this ConfigMap and will drop unknown fields, including `cliLogin`, unless the operator is extended to emit them. For a local cluster you can scale the operator deployment to 0 before patching, or wait for operator support.
+
+Example field to merge into the current `info.json`:
+
+```json
+{
+  "cliLogin": {
+    "apiServerUrl": "https://127.0.0.1:<kind-api-port>",
+    "authMode": "kubernetes",
+    "kubeContext": "kind-konflux"
+  }
+}
+```
+
 ## Available Scripts
 
 In the project directory, you can run:

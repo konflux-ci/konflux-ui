@@ -7,7 +7,7 @@ import { StickySectionHeaderBar } from './SectionLogUI';
 import { computeStickySectionHeader } from './sticky-section-header';
 import type { LogSection, NormalizedLogSection, SearchedWord } from './types';
 import { useKeyboardNavigation } from './useKeyboardNavigation';
-import { useLineNumberNavigation } from './useLineNumberNavigation';
+import { UseLineNumberNavigationResult } from './useLineNumberNavigation';
 import { useLineRenderer } from './useLineRenderer';
 import { useResizeObserverFix } from './useResizeObserverFix';
 import { useSearchRegex } from './useSearchRegex';
@@ -39,12 +39,9 @@ export interface VirtualizedLogContentProps {
   }) => void;
   searchText?: string;
   currentSearchMatch?: SearchedWord;
-  /**
-   * When false, URL hash line navigation (`#L123`) is deferred until logs are fully fetched,
-   * so we don't highlight/scroll to a line before the log content has stabilized. Defaults to
-   * true.
-   */
-  readyToNavigate?: boolean;
+  onDownloadFullLogs?: (sectionIndex: number) => Promise<void>;
+  onViewFullLogs?: (sectionIndex: number) => void;
+  lineNumberNavigationProps?: UseLineNumberNavigationResult;
 }
 
 export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
@@ -56,13 +53,13 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
   onScroll,
   searchText = '',
   currentSearchMatch,
-  readyToNavigate = true,
+  onDownloadFullLogs,
+  onViewFullLogs,
+  lineNumberNavigationProps,
 }) => {
   const scrollRef = React.useRef<HTMLDivElement | null>(null);
   const [itemSize, setItemSize] = React.useState(VIRTUALIZATION_CONFIG.FALLBACK_LINE_HEIGHT);
   const charsPerLineRef = React.useRef(VIRTUALIZATION_CONFIG.FALLBACK_CHARS_PER_LINE);
-
-  const { expandedSections, toggleSection, expandSection } = useSectionFold(sections);
 
   const internalNormalizedSections = React.useMemo(
     () => (normalizedSectionsProp ? null : sections.map(normalizeSection)),
@@ -74,6 +71,9 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
   );
 
   const isMultiSection = effectiveNormalizedSections.length > 1;
+  const { expandedSections, toggleSection, expandSection } = useSectionFold(
+    effectiveNormalizedSections,
+  );
 
   const {
     displayRows,
@@ -174,9 +174,11 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
     onScroll,
   });
 
-  const { highlightedLines, handleLineClick, isLineHighlighted } = useLineNumberNavigation({
-    readyToNavigate,
-  });
+  const {
+    highlightedLines = null,
+    handleLineClick = () => {},
+    isLineHighlighted = () => false,
+  } = lineNumberNavigationProps ?? {};
 
   React.useEffect(() => {
     if (!highlightedLines) return;
@@ -324,6 +326,8 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
                 measureElement={virtualizer.measureElement}
                 isLineHighlighted={isLineHighlighted}
                 onToggleSection={toggleSection}
+                onDownloadFullLogs={onDownloadFullLogs}
+                onViewFullLogs={onViewFullLogs}
                 renderLogLine={renderLine}
                 onLineClick={handleLineClick}
               />
@@ -339,6 +343,16 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
           itemSize={itemSize}
           onToggle={() => toggleSection(stickyRow.sectionIndex)}
           onLineClick={handleLineClick}
+          onDownloadFullLogs={
+            stickyRow.isTailed && onDownloadFullLogs
+              ? () => onDownloadFullLogs(stickyRow.sectionIndex)
+              : undefined
+          }
+          onViewFullLogs={
+            stickyRow.isTailed && onViewFullLogs
+              ? () => onViewFullLogs(stickyRow.sectionIndex)
+              : undefined
+          }
         />
       )}
     </div>

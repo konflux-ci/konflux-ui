@@ -130,3 +130,24 @@ export const issuesPagePO = {
   serviceUnavailableState: '[data-test="service-unavailable-state"]',
   serviceUnavailableTitle: 'Service unavailable',
 };
+
+export const secretsPagePO = {
+  page: 'main',
+  pageDescription: 'Manage your secrets and their related configurations',
+  secretsTab: '[aria-label="Secret List"], [data-test="secrets-empty-state"]',
+  addSecretButtonLabel: 'Add secret',
+  nameFilter: '[aria-label="Type to filter"]',
+  keyInput: `[data-test="key-0"]`,
+  valueInput: '#value',
+  submitButton: '[data-test="submit-button"]',
+  listNameInput: '[name="nameInput"]',
+  secretRow: (secretName: string) => `[data-test="${secretName}"]`,
+  rowKebabButton: (secretName: string) => `[data-test="${secretName}"] [data-test="kebab-button"]`,
+  editButton: '[data-test="Edit"]',
+  showValuesButton: 'Show values',
+  keyInputByValue: (value: string) => `[value="${value}"]`,
+  cancelButton: '[data-test="cancel-button"]',
+  deleteButton: '[data-test="Delete"]',
+  deleteConfirmInput: '[name="resourceName"]',
+  deleteResourceButton: '[data-test="delete-resource"]',
+};

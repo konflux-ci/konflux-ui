@@ -11,6 +11,8 @@ export const SESSION_STORAGE_KEYS = {
   COMMITS_VISIBLE_COLUMNS: 'commits-visible-columns',
   RELEASES_VISIBLE_COLUMNS: 'releases-visible-columns',
   RELEASE_PIPELINE_VISIBLE_COLUMNS: 'release-pipeline-visible-columns',
+  ARRIVAL_SOURCE: 'konflux-arrival-source',
+  SESSION_STARTED_FIRED: 'konflux-session-started-fired',
 } as const;
 
 export const TEXT_SEARCH_TYPES = {
@@ -19,3 +21,4 @@ export const TEXT_SEARCH_TYPES = {
 } as const;
 
 export const MINTMAKER_NAMESPACE = 'mintmaker';
+export const MINTMAKER_TASK_NAME = 'build';
