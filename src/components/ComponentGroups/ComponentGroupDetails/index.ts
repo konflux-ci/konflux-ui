@@ -20,7 +20,7 @@ export const componentGroupDetailsViewLoader = createLoaderWithAccessCheck(
   },
   {
     model: ComponentGroupModel,
-    verb: 'list',
+    verb: 'get',
   },
 );
 
