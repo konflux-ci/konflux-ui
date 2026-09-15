@@ -150,9 +150,11 @@ const IntegrationTestsListViewV2: React.FC<React.PropsWithChildren> = () => {
         cell: (info) => {
           const obj = info.row.original;
           if (!obj?.spec?.resolverRef?.params) return '-';
+          const href = getURLForParam(obj.spec.resolverRef.params, ResolverRefParams.REVISION);
+          if (!href) return '-';
           return (
             <ExternalLink
-              href={getURLForParam(obj.spec.resolverRef.params, ResolverRefParams.REVISION)}
+              href={href}
               text={
                 obj.spec.resolverRef.params.find(
                   (param) => param.name === ResolverRefParams.REVISION,
