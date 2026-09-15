@@ -48,7 +48,7 @@ export const AIChatDock: React.FC = () => {
   } = useLightspeedChat();
 
   React.useEffect(() => {
-    if (isChatbotVisible) {
+    if (!isChatbotVisible) {
       clearBackendError();
     }
   }, [clearBackendError, isChatbotVisible]);
