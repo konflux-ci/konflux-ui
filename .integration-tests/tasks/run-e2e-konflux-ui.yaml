@@ -13,12 +13,11 @@ spec:
     - name: job-type
       type: string
       default: 'pr-check'
-    - name: test-image-tag
+    - name: test-image
       type: string
-      default: 'latest'
       description: >-
-        Tag for the E2E test image (quay.io/konflux_ui_qe/konflux-ui-tests:<tag>).
-        Repository is fixed so PipelineRuns cannot point the secret-bearing step at an arbitrary image.
+        E2E test image built by the ui pipeline for this revision
+        (repository:on-pr-<sha> for pr-check).
     - name: cypress-credentials-secret
       type: string
       default: 'cypress-credentials'
@@ -54,6 +53,9 @@ spec:
       type: string
       default: ''
       description: 'Upstream Git URL (git-org/git-repo). Required for fork -> upstream PR overlay.'
+    - name: pipeline-run-name
+      type: string
+      description: 'Integration pipeline run name; used to locate the Kind kubeconfig secret.'
   volumes:
     # Enlarge /dev/shm for Cypress/Chrome; default container shm (~64MB) causes flaky browser crashes
     - name: dshm
@@ -98,7 +100,7 @@ spec:
 
         echo "=== Getting PipelineRun name and kubeconfig ==="
 
-        PIPELINE_RUN_NAME="$(context.pipelineRun.name)"
+        PIPELINE_RUN_NAME="$(params.pipeline-run-name)"
         NAMESPACE="${TEKTON_NAMESPACE}"
         echo "PipelineRun name: ${PIPELINE_RUN_NAME}"
         echo "Namespace: ${NAMESPACE}"
@@ -193,7 +195,7 @@ spec:
         echo "Staged $(find /e2e -type f | wc -l) files under /e2e"
 
     - name: run-e2e-test
-      image: quay.io/konflux_ui_qe/konflux-ui-tests:$(params.test-image-tag)
+      image: $(params.test-image)
       onError: continue
       # workingDir is set dynamically in the script: /e2e when PR sources are staged, /tmp/e2e otherwise.
       computeResources:
@@ -245,6 +247,13 @@ spec:
 
         echo "=== Loading configuration ==="
 
+        echo "=========================================="
+        echo "[KONFLUX-E2E-IMAGE] Running Cypress in rebuilt test runner image"
+        echo "[KONFLUX-E2E-IMAGE] Pull spec: $(params.test-image)"
+        echo "[KONFLUX-E2E-IMAGE] Git revision under test: $(params.git-revision)"
+        echo "[KONFLUX-E2E-IMAGE] Job type: $(params.job-type)"
+        echo "=========================================="
+
         if [ "$(params.job-type)" = "periodic-stage" ]; then
           export CYPRESS_KONFLUX_BASE_URL="https://konflux-ui.apps.stone-stg-rh01.l2vh.p1.openshiftapps.com"
           export CYPRESS_LOCAL_CLUSTER=false
@@ -260,6 +269,7 @@ spec:
         echo "Konflux base URL: ${CYPRESS_KONFLUX_BASE_URL}"
 
         echo "=== Selecting E2E test sources ==="
+        echo "[KONFLUX-E2E-IMAGE] Test image pull spec: $(params.test-image)"
         SPEC_FILE="$(params.spec-file)"
 
         # prepare-e2e-sources stages PR e2e-tests/ at /e2e when the folder changed; otherwise /e2e stays empty.
@@ -270,7 +280,8 @@ spec:
           yarn cypress install
           E2E_DIR=/e2e
         else
-          echo "No PR e2e overlay — using image-baked sources at /tmp/e2e"
+          echo "[KONFLUX-E2E-IMAGE] No PR e2e overlay — using image-baked sources at /tmp/e2e"
+          echo "[KONFLUX-E2E-IMAGE] Source tree from rebuilt image (not from git checkout)"
           cd /tmp/e2e
           E2E_DIR=/tmp/e2e
         fi

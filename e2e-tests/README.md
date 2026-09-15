@@ -87,11 +87,11 @@ Run tests by using the command `$ yarn run cy:open` or pick some other way descr
 
 The `e2e-tests` folder contains two Containerfiles used mainly for the test automation.
 
-**BaseContainerfile** is based on a Cypress image `cypress/factory` as it contains all dependencies required for the Cypress tests to run. In the BaseContainerfile we install some additional dependencies due to additional logic that needs to be performed during the tests (e.g. skopeo to check deployed image). The base image serves as a base image for building test images used in the automation. The base image should be updated just occasionally.
+**BaseContainerfile** is based on a Cypress image `cypress/factory` as it contains all dependencies required for the Cypress tests to run. In the BaseContainerfile we install some additional dependencies due to additional logic that needs to be performed during the tests (e.g. skopeo to check deployed image). The base image serves as a base image for building test images used in the automation. The base image should be updated just occasionally. It is still published separately for GitHub Actions and local builds that want a pre-built base.
 
 Image is pushed to quay.io https://quay.io/repository/konflux_ui_qe/konflux-ui-tests-base by [GitHub Action](https://github.com/konflux-ci/konflux-ui/blob/main/.github/workflows/base-test-image.yaml).
 
-**Containerfile** is based on BaseContainerfile and contains some additional dependencies such as kubectl or cosign. It contains files from the `e2e-tests` folder so tests can be run directly from the image. It is available on quay.io https://quay.io/repository/konflux_ui_qe/konflux-ui-tests and should be updated by [GitHub Action](https://github.com/konflux-ci/konflux-ui/blob/main/.github/workflows/post-merge.yaml#L47) once PR is merged to main.
+**Containerfile** inlines the same base layers as BaseContainerfile (from public `cypress/factory`) so Konflux builds do not need pull access to `quay.io/konflux_ui_qe/konflux-ui-tests-base`. It adds kubectl, cosign, and copies files from the `e2e-tests` folder so tests can be run directly from the image. Konflux builds the test image in parallel with the UI image via the `konflux-ui` component build pipeline (`.tekton/konflux-ui-*.yaml`), tagged `e2e-on-pr-<sha>` on pull requests and `e2e-<sha>` on push (same Quay repository as the UI image). Integration tests resolve the matching tag from the snapshot event type. It is also available on quay.io https://quay.io/repository/konflux_ui_qe/konflux-ui-tests and should be updated by [GitHub Action](https://github.com/konflux-ci/konflux-ui/blob/main/.github/workflows/post-merge.yaml#L47) once PR is merged to main.
 
 If there are no changes in your local test code, you can pull and run the image from quay, providing the required environment variables. Feel free to use docker or podman, we will be using podman in this example:
 
@@ -195,12 +195,48 @@ The test step executes `pr_check.sh` file which does the tests setup and runs te
 
 #### Konflux integration pipeline
 
-Konflux also runs E2E tests via the integration pipeline (`.integration-tests/pipelines/e2e-main-pipeline.yaml`) using the `run-e2e-konflux-ui` Tekton task. For `pr-check` jobs on **fork → upstream** PRs only, the task may overlay PR `e2e-tests/` sources:
+Konflux also runs E2E tests via the integration pipeline (`.integration-tests/pipelines/e2e-main-pipeline.yaml`) using the `run-e2e-konflux-ui` Tekton task. The test runner image is built in parallel with the UI image by the `konflux-ui` component build pipeline and referenced by revision tag (`e2e-on-pr-<sha>` for pull requests, `e2e-<sha>` for push). The integration test must use context **`component_konflux-ui`** so it runs against `konflux-ui` component builds (not `application` or a separate `e2e` component). For `pr-check` jobs on **fork → upstream** PRs only, the task may overlay PR `e2e-tests/` sources:
 
 1. **`prepare-e2e-sources` step** — Skipped for same-repo PRs (uses image-baked tests, like `pr_check.sh` on upstream). For fork → upstream PRs, fetches the PR commit from the fork and compares `e2e-tests/` against upstream `main`; stages changed files into `/e2e` when needed.
 2. **`run-e2e-test` step** — If `/e2e` contains staged sources, installs dependencies and runs Cypress from `/e2e`. Otherwise uses image-baked sources at `/tmp/e2e`.
 
 The container entrypoint performs a similar `/e2e` vs `/tmp/e2e` check for manual runs only.
+
+##### Verifying the rebuilt test image is used
+
+Search logs for the prefix **`[KONFLUX-E2E-IMAGE]`**.
+
+**1. Image was rebuilt (konflux-ui component build PipelineRun)**
+
+Konflux UI → Application `konflux-ui` → Component `konflux-ui` → **Activity** → latest `konflux-ui-on-push` or `konflux-ui-on-pull-request` PipelineRun:
+
+| Where                                                 | What to look for                                                      |
+| ----------------------------------------------------- | --------------------------------------------------------------------- |
+| Task **`build-e2e-container`** → logs → **STEP-PUSH** | `Pushed .../konflux-ui:e2e-<sha>` or `.../konflux-ui:e2e-on-pr-<sha>` |
+| PipelineRun **Results** (bottom of run page)          | `E2E_IMAGE_URL` and `E2E_IMAGE_DIGEST`                                |
+
+**2. IT selected the matching tag (integration test PipelineRun)**
+
+Konflux UI → Application `konflux-ui` → **Integration tests** (context **`component_konflux-ui`**) → latest PipelineRun:
+
+| Task                        | Step              | Log lines                                                       |
+| --------------------------- | ----------------- | --------------------------------------------------------------- |
+| **`format-e2e-test-image`** | STEP-FORMAT       | `[KONFLUX-E2E-IMAGE] Pull spec: quay.io/.../konflux-ui:e2e-...` |
+| **`run-e2e-konflux-ui`**    | STEP-RUN-E2E-TEST | `[KONFLUX-E2E-IMAGE] Pull spec:` (must match step 1 tag)        |
+| **`run-e2e-konflux-ui`**    | STEP-RUN-E2E-TEST | `No PR e2e overlay — using image-baked sources` (same-repo PRs) |
+
+The git `<sha>` in both PipelineRuns should match, and the pull spec in IT should match `E2E_IMAGE_URL` from the build (tag may differ by `@digest` vs `:tag`, same digest is ideal).
+
+**3. CLI alternative**
+
+```bash
+# Build produced e2e image
+kubectl get pipelinerun -n konflux-ui-tenant -l appstudio.openshift.io/component=konflux-ui \
+  -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.status.results[?(@.name=="E2E_IMAGE_URL")].value}{"\n"}{end}'
+
+# IT resolved pull spec (from task log)
+# Open run-e2e-konflux-ui pod logs and grep KONFLUX-E2E-IMAGE
+```
 
 ### Periodic tests
 

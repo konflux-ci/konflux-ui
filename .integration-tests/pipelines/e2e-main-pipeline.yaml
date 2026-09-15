@@ -58,11 +58,11 @@ spec:
       description: 'Skip sending the Slack notification'
       default: 'false'
       type: string
-    - name: test-image-tag
+    - name: test-image-repository
       description: >-
-        Tag for the E2E test image (quay.io/konflux_ui_qe/konflux-ui-tests:<tag>).
-        Repository is fixed so PipelineRuns cannot point the secret-bearing step at an arbitrary image.
-      default: 'latest'
+        E2E test image repository without tag. Must match e2e-output-image from
+        the konflux-ui build pipeline (e2e-on-pr-<sha> for pull_request, e2e-<sha> for push).
+      default: 'quay.io/redhat-user-workloads/konflux-ui-tenant/konflux-ui/konflux-ui'
       type: string
   tasks:
     - name: test-metadata
@@ -78,6 +78,59 @@ spec:
       params:
         - name: SNAPSHOT
           value: $(params.SNAPSHOT)
+
+    - name: format-e2e-test-image
+      runAfter:
+        - test-metadata
+      taskSpec:
+        params:
+          - name: test-image-repository
+            type: string
+          - name: git-revision
+            type: string
+          - name: test-event-type
+            type: string
+        results:
+          - name: test-image
+            type: string
+        steps:
+          - name: format
+            image: registry.access.redhat.com/ubi9/ubi@sha256:4406835b776f05688a823ff532203587b9238510817645c9f37e0fdac1743b8c
+            computeResources:
+              limits:
+                memory: 128Mi
+              requests:
+                cpu: 10m
+                memory: 64Mi
+            script: |
+              #!/bin/bash
+              set -euo pipefail
+              event_type="$(params.test-event-type)"
+              git_revision="$(params.git-revision)"
+              repository="$(params.test-image-repository)"
+              if [[ "${event_type}" == "pull_request" ]]; then
+                tag="e2e-on-pr-${git_revision}"
+              else
+                tag="e2e-${git_revision}"
+              fi
+              image_ref="${repository}:${tag}"
+              echo "=========================================="
+              echo "[KONFLUX-E2E-IMAGE] Resolved test runner image for IT"
+              echo "[KONFLUX-E2E-IMAGE] Event type: ${event_type}"
+              echo "[KONFLUX-E2E-IMAGE] Git revision: ${git_revision}"
+              echo "[KONFLUX-E2E-IMAGE] Repository: ${repository}"
+              echo "[KONFLUX-E2E-IMAGE] Tag: ${tag}"
+              echo "[KONFLUX-E2E-IMAGE] Pull spec: ${image_ref}"
+              echo "[KONFLUX-E2E-IMAGE] Match this tag to konflux-ui build PipelineRun results E2E_IMAGE_URL"
+              echo "=========================================="
+              printf '%s' "${image_ref}" > "$(results.test-image.path)"
+      params:
+        - name: test-image-repository
+          value: $(params.test-image-repository)
+        - name: git-revision
+          value: $(tasks.test-metadata.results.git-revision)
+        - name: test-event-type
+          value: $(tasks.test-metadata.results.test-event-type)
 
     - name: provision-kind-cluster
       runAfter:
@@ -137,7 +190,7 @@ spec:
         - name: cluster-access-secret
           value: kfg-$(context.pipelineRun.name)
         - name: component-name
-          value: ui
+          value: konflux-ui
         - name: component-pr-owner
           value: $(tasks.test-metadata.results.pull-request-author)
         - name: component-pr-sha
@@ -178,9 +231,9 @@ spec:
         resolver: git
         params:
           - name: url
-            value: https://github.com/konflux-ci/konflux-ui
+            value: https://github.com/milantaky/konflux-ui
           - name: revision
-            value: main
+            value: feat/docker-component
           - name: pathInRepo
             value: .integration-tests/tasks/run-e2e-konflux-ui.yaml
       params:
@@ -191,8 +244,8 @@ spec:
           value: $(params.oci-container-repo):$(context.pipelineRun.name)
         - name: oci-credentials
           value: $(params.oci-credentials-secret)
-        - name: test-image-tag
-          value: $(params.test-image-tag)
+        - name: test-image
+          value: $(tasks.format-e2e-test-image.results.test-image)
         - name: spec-file
           value: $(params.spec-file)
         - name: github-credentials-secret
@@ -209,6 +262,8 @@ spec:
           value: $(tasks.test-metadata.results.target-repo-branch)
         - name: target-repo-url
           value: https://github.com/$(tasks.test-metadata.results.git-org)/$(tasks.test-metadata.results.git-repo)
+        - name: pipeline-run-name
+          value: $(context.pipelineRun.name)
   finally:
     - name: deprovision-kind-cluster
       when:
