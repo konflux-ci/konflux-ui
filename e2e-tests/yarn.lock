@@ -329,7 +329,7 @@ __metadata:
     axe-core: "npm:^4.10.2"
     cypress: "npm:^15.20.0"
     cypress-axe: "npm:^1.6.0"
-    cypress-high-resolution: "npm:^1.0.0"
+    cypress-high-resolution: "npm:^2.0.0"
     cypress-mochawesome-reporter: "npm:^3.4.0"
     cypress-multi-reporters: "npm:^1.6.0"
     cypress-terminal-report: "npm:^7.3.0"
@@ -1072,13 +1072,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cypress-high-resolution@npm:^1.0.0":
-  version: 1.0.1
-  resolution: "cypress-high-resolution@npm:1.0.1"
+"cypress-high-resolution@npm:^2.0.0":
+  version: 2.1.0
+  resolution: "cypress-high-resolution@npm:2.1.0"
   dependencies:
     debug: "npm:^4.4.3"
     image-size: "npm:^2.0.2"
-  checksum: 10/554d8ce9b3c5abe3d7e14a272014e70c4404bafa2bf4ab51812ad633feb99ecf7202fd1b0b16209269b5ae19d8fae61cf9418a8dbe025731f1c986ea1cb8c703
+  checksum: 10/60aacb193386da575a243707c1a578786be2bb8f2384eb3ae8ab066cbec0c342da90b7aa5303fce99b3bf74cb42f2571ff23f8197279ec08cd38ed4278f51e45
   languageName: node
   linkType: hard
 
