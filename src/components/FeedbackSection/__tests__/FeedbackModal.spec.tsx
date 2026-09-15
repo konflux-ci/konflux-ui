@@ -1,7 +1,8 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { TrackEvents } from '~/analytics/gen/analytics-types';
+import { SHA256Hash, TrackEvents } from '~/analytics/gen/analytics-types';
+import { mockAnalyticsServiceFn } from '~/unit-test-utils';
 import FeedbackModal from '../FeedbackModal';
 
 jest.mock('~/feature-flags/hooks', () => {
@@ -23,6 +24,9 @@ jest.mock('~/analytics/hooks', () => ({
 const useTrackAnalyticsEventMock = jest.requireMock('~/analytics/hooks')
   .useTrackAnalyticsEvent as jest.Mock;
 
+const FAKE_HASH = 'abc123def456' as SHA256Hash;
+const getCommonPropertiesMock = mockAnalyticsServiceFn('getCommonProperties');
+
 describe('FeedbackModal', () => {
   let trackEventMock: jest.Mock;
 
@@ -30,6 +34,7 @@ describe('FeedbackModal', () => {
     jest.clearAllMocks();
     trackEventMock = jest.fn();
     useTrackAnalyticsEventMock.mockReturnValue(trackEventMock);
+    getCommonPropertiesMock.mockReturnValue({ userId: FAKE_HASH });
   });
 
   it('should initialize with BeginingSection Cards', () => {
@@ -59,6 +64,7 @@ describe('FeedbackModal', () => {
 
     await waitFor(() => {
       expect(trackEventMock).toHaveBeenCalledWith(TrackEvents.feedback_submitted_event, {
+        userId: FAKE_HASH,
         email: 'user@example.com',
         rating: 5,
         feedback: 'Great product',
@@ -79,6 +85,7 @@ describe('FeedbackModal', () => {
 
     await waitFor(() => {
       expect(trackEventMock).toHaveBeenCalledWith(TrackEvents.feedback_submitted_event, {
+        userId: FAKE_HASH,
         email: undefined,
         rating: undefined,
         feedback: 'Feedback without score',
@@ -100,6 +107,7 @@ describe('FeedbackModal', () => {
 
     await waitFor(() => {
       expect(trackEventMock).toHaveBeenCalledWith(TrackEvents.feedback_submitted_event, {
+        userId: FAKE_HASH,
         email: undefined,
         rating: 3,
         feedback: 'Short feedback',

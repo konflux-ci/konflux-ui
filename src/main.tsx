@@ -66,7 +66,7 @@ const App = () => {
       }
       if (markSessionStartedOnce()) {
         const arrivalSource = getArrivalSource();
-        analyticsService.track(TrackEvents.ui_session_started_event, { arrivalSource });
+        analyticsService.track(TrackEvents.ui_session_started_event, { userId, arrivalSource });
         logger.info('UI session started', {
           event: TrackEvents.ui_session_started_event,
           arrivalSource,

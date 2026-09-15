@@ -2,6 +2,7 @@ import * as React from 'react';
 import { useMatches } from 'react-router-dom';
 import { getRoutePatternFromMatches } from '@routes/with-route-patterns';
 import { TrackEvents } from '~/analytics';
+import { analyticsService } from '~/analytics/AnalyticsService';
 import { useTrackAnalyticsEvent } from '~/analytics/hooks';
 import { logger } from '~/monitoring/logger';
 import { FlagKey } from './flags';
@@ -61,8 +62,10 @@ export const useFeatureFlagAnalytics = (flags: Record<FlagKey, boolean>): (() =>
       latestFlagsRef.current,
     );
     const pagePattern = openPagePatternRef.current;
+    const { userId } = analyticsService.getCommonProperties();
 
     trackEvent(TrackEvents.feature_flags_changed_event, {
+      userId,
       changes,
       changesCount,
       pagePattern,
