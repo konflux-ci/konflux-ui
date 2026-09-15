@@ -1,4 +1,4 @@
-import { QueryOptions as ReactQueryOptions, UseQueryOptions } from '@tanstack/react-query';
+import { UseQueryOptions } from '@tanstack/react-query';
 import { isPlainObject } from 'lodash-es';
 import { K8sModelCommon, K8sResourceCommon, QueryOptionsWithSelector } from '../../types/k8s';
 import {
@@ -44,13 +44,15 @@ export const createQueryKeys = ({
 
 export const createGetQueryOptions = <TResource extends K8sResourceCommon>(
   args: K8sResourceBaseOptions,
-  options: Omit<ReactQueryOptions<TResource>, 'queryKey' | 'queryFn'> = {},
+  options: Omit<TQueryOptions<TResource>, 'filterData'> = {},
 ): UseQueryOptions<TResource> => {
+  const { queryKey, queryFn, ...rest } = options;
   return {
-    queryKey: createQueryKeys({ ...args, prefix: args.fetchOptions?.requestInit?.pathPrefix }),
-    queryFn: () => {
-      return K8sGetResource(args);
-    },
+    queryKey: queryKey ?? createQueryKeys({ ...args, prefix: args.fetchOptions?.requestInit?.pathPrefix }),
+    queryFn: queryFn ??
+      (() => {
+        return K8sGetResource(args);
+      }),
     initialData: () => {
       const name = args.queryOptions?.name;
       return name
@@ -61,19 +63,20 @@ export const createGetQueryOptions = <TResource extends K8sResourceCommon>(
             ?.find((res) => res.metadata.name === name)
         : null;
     },
-    ...options,
+    ...rest,
   };
 };
 
 export const createListqueryOptions = <TResource extends K8sResourceCommon[]>(
   args: K8sResourceListOptions,
-  { filterData = (a: TResource) => a, ...options }: TQueryOptions<TResource> = {},
+  { filterData = (a: TResource) => a, queryKey, queryFn, ...options }: TQueryOptions<TResource> = {},
 ): UseQueryOptions<TResource> => {
   return {
-    queryKey: createQueryKeys({ ...args, prefix: args.fetchOptions?.requestInit?.pathPrefix }),
-    queryFn: () => {
-      return K8sListResourceItems(args).then(filterData);
-    },
+    queryKey: queryKey ?? createQueryKeys({ ...args, prefix: args.fetchOptions?.requestInit?.pathPrefix }),
+    queryFn: queryFn ??
+      (() => {
+        return K8sListResourceItems(args).then(filterData);
+      }),
     ...options,
   };
 };
