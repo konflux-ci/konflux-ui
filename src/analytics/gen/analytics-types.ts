@@ -20,19 +20,35 @@ export type KonfluxUISegmentEvents =
   | FeedbackSubmittedEvent
   | UiSessionStartedEvent
   | FeatureFlagsChangedEvent
-  | UserJourneyEvent;
+  | UserJourneyEvent
+  | ConformaViolationsLinkClickedEvent
+  | IntegrationTestRerunTriggeredEvent;
 /**
  * Fired when a user successfully authenticates into Konflux
  */
-export type UserLoginEvent = CommonFields & {};
+export type UserLoginEvent = CommonFields & {
+  /**
+   * Unique identifier of the user. Obfuscated via sha256 with `clusterId` as salt.
+   */
+  userId: SHA256Hash;
+};
 /**
  * Fired when a user session ends, either by explicit logout or session expiry
  */
-export type UserLogoutEvent = CommonFields & {};
+export type UserLogoutEvent = CommonFields & {
+  /**
+   * Unique identifier of the user. Obfuscated via sha256 with `clusterId` as salt.
+   */
+  userId: SHA256Hash;
+};
 /**
  * Fired when a user submits feedback through the Konflux UI
  */
 export type FeedbackSubmittedEvent = CommonFields & {
+  /**
+   * Unique identifier of the user. Obfuscated via sha256 with `clusterId` as salt.
+   */
+  userId: SHA256Hash;
   /**
    * User satisfaction rating, typically on a 1-5 scale
    */
@@ -51,6 +67,10 @@ export type FeedbackSubmittedEvent = CommonFields & {
  */
 export type UiSessionStartedEvent = CommonFields & {
   /**
+   * Unique identifier of the user. Obfuscated via sha256 with `clusterId` as salt.
+   */
+  userId: SHA256Hash;
+  /**
    * Classification of document.referrer on first load, e.g. 'github' if the referrer host is github.com (or a subdomain).
    */
   arrivalSource: string;
@@ -59,6 +79,10 @@ export type UiSessionStartedEvent = CommonFields & {
  * Fired every time the Feature Flag Panel modal is closed. Contains only the flags whose effective state changed between panel open and panel close. changesCount may be 0 when user opened the panel but did not change anything (tracks panel awareness).
  */
 export type FeatureFlagsChangedEvent = CommonFields & {
+  /**
+   * Unique identifier of the user. Obfuscated via sha256 with `clusterId` as salt.
+   */
+  userId: SHA256Hash;
   /**
    * Map of changed flag keys to their new boolean value. Empty object if no flags were changed.
    */
@@ -78,6 +102,10 @@ export type FeatureFlagsChangedEvent = CommonFields & {
  * Fired once per session, or once per part when the payload is auto-split, capturing the navigation path and per-page dwell times
  */
 export type UserJourneyEvent = CommonFields & {
+  /**
+   * Unique identifier of the user. Obfuscated via sha256 with `clusterId` as salt.
+   */
+  userId: SHA256Hash;
   /**
    * ISO-8601 timestamp of when the session started
    */
@@ -100,6 +128,24 @@ export type UserJourneyEvent = CommonFields & {
    * Zero-based index of this part within a split journey. Only present when auto-split fires.
    */
   journeyPartIndex?: number;
+};
+/**
+ * Fired when a user clicks an application link in the Conforma policy results card on the Issues Dashboard, navigating to that application's Conforma results tab
+ */
+export type ConformaViolationsLinkClickedEvent = CommonFields & {
+  /**
+   * Unique identifier of the user. Obfuscated via sha256 with `clusterId` as salt.
+   */
+  userId: SHA256Hash;
+};
+/**
+ * Fired when a user clicks the Rerun button for an integration test pipeline in the Activity / PipelineRuns list.
+ */
+export type IntegrationTestRerunTriggeredEvent = CommonFields & {
+  /**
+   * Unique identifier of the user. Obfuscated via sha256 with `clusterId` as salt.
+   */
+  userId: SHA256Hash;
 };
 
 /**
@@ -151,6 +197,7 @@ export interface JourneyStep {
 /** Branded type for SHA-256 obfuscated strings. Use `obfuscate()` to create. */
 export type SHA256Hash = string & { readonly __brand: 'SHA256Hash' };
 
+
 /**
  * Event names for Segment track() calls.
  * Values match the x-event-name field in the schema.
@@ -162,6 +209,8 @@ export enum TrackEvents {
   feedback_submitted_event = 'feedback_submitted',
   ui_session_started_event = 'ui_session_started',
   feature_flags_changed_event = 'feature_flags_changed',
+  conforma_violations_link_clicked_event = 'conforma_violations_link_clicked',
+  integration_test_rerun_triggered_event = 'integration_test_rerun_triggered',
 }
 
 /**
@@ -175,4 +224,6 @@ export type EventPropertiesMap = {
   [TrackEvents.feedback_submitted_event]: Omit<FeedbackSubmittedEvent, keyof CommonFields>;
   [TrackEvents.ui_session_started_event]: Omit<UiSessionStartedEvent, keyof CommonFields>;
   [TrackEvents.feature_flags_changed_event]: Omit<FeatureFlagsChangedEvent, keyof CommonFields>;
+  [TrackEvents.conforma_violations_link_clicked_event]: Omit<ConformaViolationsLinkClickedEvent, keyof CommonFields>;
+  [TrackEvents.integration_test_rerun_triggered_event]: Omit<IntegrationTestRerunTriggeredEvent, keyof CommonFields>;
 };

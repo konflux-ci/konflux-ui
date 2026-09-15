@@ -1,5 +1,6 @@
 import { act, renderHook } from '@testing-library/react';
-import { TrackEvents } from '~/analytics';
+import { SHA256Hash, TrackEvents } from '~/analytics';
+import { mockAnalyticsServiceFn } from '~/unit-test-utils';
 import { FlagKey } from '../flags';
 import { useFeatureFlags } from '../hooks';
 import { FeatureFlagsStore } from '../store';
@@ -28,6 +29,9 @@ jest.mock('../flags', () => {
 const { useTrackAnalyticsEvent }: { useTrackAnalyticsEvent: jest.Mock } =
   jest.requireMock('~/analytics/hooks');
 const { useMatches }: { useMatches: jest.Mock } = jest.requireMock('react-router-dom');
+
+const FAKE_HASH = 'abc123def456' as SHA256Hash;
+const getCommonPropertiesMock = mockAnalyticsServiceFn('getCommonProperties');
 
 /** Mocks useMatches() so the hook resolves `pattern` via getRoutePatternFromMatches. */
 const mockPagePattern = (pattern: string) =>
@@ -127,6 +131,7 @@ describe('useFeatureFlagAnalytics', () => {
   beforeEach(() => {
     trackEventMock = jest.fn();
     useTrackAnalyticsEvent.mockReturnValue(trackEventMock);
+    getCommonPropertiesMock.mockReturnValue({ userId: FAKE_HASH });
     mockPagePattern('/');
     localStorage.clear();
     history.replaceState(null, '', '/');
@@ -166,6 +171,7 @@ describe('useFeatureFlagAnalytics', () => {
 
     expect(trackEventMock).toHaveBeenCalledTimes(1);
     expect(trackEventMock).toHaveBeenCalledWith(TrackEvents.feature_flags_changed_event, {
+      userId: FAKE_HASH,
       changes: {},
       changesCount: 0,
       pagePattern: '/',
@@ -181,6 +187,7 @@ describe('useFeatureFlagAnalytics', () => {
     result.current();
 
     expect(trackEventMock).toHaveBeenCalledWith(TrackEvents.feature_flags_changed_event, {
+      userId: FAKE_HASH,
       changes: { alpha: true },
       changesCount: 1,
       pagePattern: '/',
@@ -197,6 +204,7 @@ describe('useFeatureFlagAnalytics', () => {
     result.current();
 
     expect(trackEventMock).toHaveBeenCalledWith(TrackEvents.feature_flags_changed_event, {
+      userId: FAKE_HASH,
       changes: { alpha: true, beta: false },
       changesCount: 2,
       pagePattern: '/',
@@ -213,6 +221,7 @@ describe('useFeatureFlagAnalytics', () => {
     result.current();
 
     expect(trackEventMock).toHaveBeenCalledWith(TrackEvents.feature_flags_changed_event, {
+      userId: FAKE_HASH,
       changes: {},
       changesCount: 0,
       pagePattern: '/',
@@ -242,6 +251,7 @@ describe('useFeatureFlagAnalytics', () => {
     result.current();
 
     expect(trackEventMock).toHaveBeenCalledWith(TrackEvents.feature_flags_changed_event, {
+      userId: FAKE_HASH,
       changes: {},
       changesCount: 0,
       pagePattern: '/',
@@ -288,7 +298,7 @@ describe('useFeatureFlagAnalytics', () => {
     expect(calls).toHaveLength(1);
     expect(calls[0]).toEqual([
       TrackEvents.feature_flags_changed_event,
-      { changes: { alpha: true }, changesCount: 1, pagePattern: '/' },
+      { userId: FAKE_HASH, changes: { alpha: true }, changesCount: 1, pagePattern: '/' },
     ]);
   });
 
@@ -308,6 +318,7 @@ describe('useFeatureFlagAnalytics', () => {
 
     expect(trackEventMock).toHaveBeenCalledTimes(1);
     expect(trackEventMock).toHaveBeenCalledWith(TrackEvents.feature_flags_changed_event, {
+      userId: FAKE_HASH,
       changes: { alpha: true },
       changesCount: 1,
       pagePattern: '/',

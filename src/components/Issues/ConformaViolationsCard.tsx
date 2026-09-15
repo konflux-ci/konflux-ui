@@ -20,6 +20,9 @@ import { ExclamationTriangleIcon } from '@patternfly/react-icons/dist/esm/icons/
 import { t_global_icon_color_status_danger_default as dangerColor } from '@patternfly/react-tokens/dist/js/t_global_icon_color_status_danger_default';
 import { t_global_icon_color_status_success_default as successColor } from '@patternfly/react-tokens/dist/js/t_global_icon_color_status_success_default';
 import { t_global_icon_color_status_warning_default as warningColor } from '@patternfly/react-tokens/dist/js/t_global_icon_color_status_warning_default';
+import { TrackEvents } from '~/analytics';
+import { analyticsService } from '~/analytics/AnalyticsService';
+import { useTrackAnalyticsEvent } from '~/analytics/hooks';
 import {
   type ApplicationViolationSummary,
   useWorkspaceConformaViolations,
@@ -34,9 +37,10 @@ import './ConformaViolationsCard.scss';
 type AppListProps = {
   applications: ApplicationViolationSummary[];
   namespace: string;
+  onLinkClick: () => void;
 };
 
-const AppBreakdownList: React.FC<AppListProps> = ({ applications, namespace }) => (
+const AppBreakdownList: React.FC<AppListProps> = ({ applications, namespace, onLinkClick }) => (
   <List isPlain className="conforma-violations-card__app-list">
     {applications.map(({ applicationName, violationCount, warningCount }) => (
       <ListItem key={applicationName}>
@@ -45,6 +49,7 @@ const AppBreakdownList: React.FC<AppListProps> = ({ applications, namespace }) =
             workspaceName: namespace,
             applicationName,
           })}
+          onClick={onLinkClick}
         >
           {applicationName}
         </Link>
@@ -65,8 +70,14 @@ const AppBreakdownList: React.FC<AppListProps> = ({ applications, namespace }) =
 
 export const ConformaViolationsCard: React.FC = () => {
   const namespace = useNamespace();
+  const trackEvent = useTrackAnalyticsEvent();
   const { totalViolations, totalWarnings, applications, loaded, settling, error, partialError } =
     useWorkspaceConformaViolations();
+
+  const handleLinkClick = React.useCallback(() => {
+    const { userId } = analyticsService.getCommonProperties();
+    trackEvent(TrackEvents.conforma_violations_link_clicked_event, { userId });
+  }, [trackEvent]);
 
   const hasError = loaded && !!error;
   const hasViolations = totalViolations > 0;
@@ -139,7 +150,11 @@ export const ConformaViolationsCard: React.FC = () => {
               )}
             </Flex>
             {applications.length > 0 && (
-              <AppBreakdownList applications={applications} namespace={namespace} />
+              <AppBreakdownList
+                applications={applications}
+                namespace={namespace}
+                onLinkClick={handleLinkClick}
+              />
             )}
           </>
         )}

@@ -1,4 +1,7 @@
 import { screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { SHA256Hash, TrackEvents } from '~/analytics';
+import { mockAnalyticsServiceFn } from '~/unit-test-utils';
 import { renderWithQueryClientAndRouter } from '~/unit-test-utils/rendering-utils';
 import { ConformaViolationsCard } from '../ConformaViolationsCard';
 import { useWorkspaceConformaViolations } from '../useWorkspaceConformaViolations';
@@ -7,15 +10,30 @@ jest.mock('~/shared/providers/Namespace', () => ({
   useNamespace: () => 'test-ns',
 }));
 
+jest.mock('~/analytics/hooks', () => ({
+  useTrackAnalyticsEvent: jest.fn(),
+}));
+
+const useTrackAnalyticsEventMock = jest.requireMock('~/analytics/hooks')
+  .useTrackAnalyticsEvent as jest.Mock;
+
 jest.mock('../useWorkspaceConformaViolations');
 
 const mockHook = jest.mocked(useWorkspaceConformaViolations);
+
+let trackEventMock: jest.Mock;
+
+const FAKE_HASH = 'abc123def456' as SHA256Hash;
+const getCommonPropertiesMock = mockAnalyticsServiceFn('getCommonProperties');
 
 const renderCard = () => renderWithQueryClientAndRouter(<ConformaViolationsCard />);
 
 describe('ConformaViolationsCard', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    trackEventMock = jest.fn();
+    useTrackAnalyticsEventMock.mockReturnValue(trackEventMock);
+    getCommonPropertiesMock.mockReturnValue({ userId: FAKE_HASH });
   });
 
   it('shows a loading skeleton while data is not loaded', () => {
@@ -89,7 +107,9 @@ describe('ConformaViolationsCard', () => {
 
     renderCard();
     expect(
-      screen.getByText('One or more policy result fetches failed. Results shown may be incomplete.'),
+      screen.getByText(
+        'One or more policy result fetches failed. Results shown may be incomplete.',
+      ),
     ).toBeInTheDocument();
   });
 
@@ -223,5 +243,30 @@ describe('ConformaViolationsCard', () => {
     renderCard();
     const link = screen.getByRole('link', { name: 'my-app' });
     expect(link).toHaveAttribute('href', expect.stringContaining('/conforma-results'));
+  });
+
+  it('tracks a conforma_violations_link_clicked event when an app link is clicked', async () => {
+    const user = userEvent.setup();
+    mockHook.mockReturnValue({
+      totalViolations: 2,
+      totalWarnings: 0,
+      applications: [
+        { applicationName: 'app-one', violationCount: 1, warningCount: 0 },
+        { applicationName: 'app-two', violationCount: 1, warningCount: 0 },
+      ],
+      loaded: true,
+      settling: false,
+    });
+
+    renderCard();
+    await user.click(screen.getByRole('link', { name: 'app-one' }));
+
+    expect(trackEventMock).toHaveBeenCalledTimes(1);
+    expect(trackEventMock).toHaveBeenCalledWith(
+      TrackEvents.conforma_violations_link_clicked_event,
+      {
+        userId: FAKE_HASH,
+      },
+    );
   });
 });
