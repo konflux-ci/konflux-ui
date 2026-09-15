@@ -1,0 +1,66 @@
+# IntegrationTestScenarios bound to product-grp1 ComponentGroup
+# Variables are substituted from config.env via envsubst
+---
+apiVersion: appstudio.redhat.com/v1beta2
+kind: IntegrationTestScenario
+metadata:
+  name: enterprise-contract
+spec:
+  componentGroup: product-grp1
+  resolverRef:
+    resolver: git
+    params:
+      - name: url
+        value: ${EC_PIPELINE_REPO}
+      - name: revision
+        value: ${EC_PIPELINE_REVISION}
+      - name: pathInRepo
+        value: ${EC_PIPELINE_PATH}
+---
+apiVersion: appstudio.redhat.com/v1beta2
+kind: IntegrationTestScenario
+metadata:
+  name: integration-tests
+spec:
+  componentGroup: product-grp1
+  resolverRef:
+    resolver: git
+    params:
+      - name: url
+        value: ${ITS_PIPELINE_REPO}
+      - name: revision
+        value: ${ITS_PIPELINE_REVISION}
+      - name: pathInRepo
+        value: ${INTEGRATION_TESTS_PATH}
+---
+apiVersion: appstudio.redhat.com/v1beta2
+kind: IntegrationTestScenario
+metadata:
+  name: e2e-tests
+spec:
+  componentGroup: product-grp1
+  resolverRef:
+    resolver: git
+    params:
+      - name: url
+        value: ${ITS_PIPELINE_REPO}
+      - name: revision
+        value: ${ITS_PIPELINE_REVISION}
+      - name: pathInRepo
+        value: ${E2E_TESTS_PATH}
+---
+apiVersion: appstudio.redhat.com/v1beta2
+kind: IntegrationTestScenario
+metadata:
+  name: release-gate
+spec:
+  componentGroup: product-grp1
+  resolverRef:
+    resolver: git
+    params:
+      - name: url
+        value: ${ITS_PIPELINE_REPO}
+      - name: revision
+        value: ${ITS_PIPELINE_REVISION}
+      - name: pathInRepo
+        value: ${RELEASE_GATE_PATH}

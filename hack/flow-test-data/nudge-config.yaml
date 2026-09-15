@@ -1,0 +1,52 @@
+# NudgeConfig singleton for flow visualization testing
+# Matches the fan-in layout mockup:
+#   - product-grp1 (6) + platform-infra (2) + logging-svc (1) → operator-bundle (batched, 9 edges)
+#   - platform-infra (3) → shared-config (batched)
+#   - operator-bundle → fbc-catalog (immediate)
+#   - auth-service → user-service (simple immediate)
+---
+apiVersion: appstudio.redhat.com/v1beta2
+kind: NudgeConfig
+metadata:
+  name: nudge-config
+spec:
+  nudges:
+    # === product-grp1 → operator-bundle (batched) ===
+    - from: backend-api
+      to: operator-bundle
+    - from: frontend-app
+      to: operator-bundle
+    - from: worker-svc
+      to: operator-bundle
+    - from: scheduler
+      to: operator-bundle
+    - from: migration-job
+      to: operator-bundle
+    - from: cron-runner
+      to: operator-bundle
+
+    # === platform-infra → operator-bundle (cross-group, batched) ===
+    - from: auth-proxy
+      to: operator-bundle
+    - from: rate-limiter
+      to: operator-bundle
+
+    # === ungrouped → operator-bundle (cross-boundary, batched) ===
+    - from: logging-svc
+      to: operator-bundle
+
+    # === operator-bundle → fbc-catalog (immediate) ===
+    - from: operator-bundle
+      to: fbc-catalog
+
+    # === platform-infra → shared-config (batched) ===
+    - from: tls-manager
+      to: shared-config
+    - from: cert-rotator
+      to: shared-config
+    - from: dns-resolver
+      to: shared-config
+
+    # === simple ungrouped nudge ===
+    - from: auth-service
+      to: user-service

@@ -1,0 +1,60 @@
+# ComponentGroups for flow visualization testing
+---
+apiVersion: appstudio.redhat.com/v1beta2
+kind: ComponentGroup
+metadata:
+  name: product-grp1
+spec:
+  components:
+    - name: backend-api
+      componentVersion:
+        name: "main"
+    - name: frontend-app
+      componentVersion:
+        name: "main"
+    - name: worker-svc
+      componentVersion:
+        name: "main"
+    - name: scheduler
+      componentVersion:
+        name: "main"
+    - name: migration-job
+      componentVersion:
+        name: "main"
+    - name: cron-runner
+      componentVersion:
+        name: "release-v2"
+  testGraph:
+    # enterprise-contract and integration-tests have no dependencies (run in parallel)
+    # e2e-tests depends on integration-tests
+    # release-gate depends on enterprise-contract (failFast) and e2e-tests
+    enterprise-contract: []
+    integration-tests: []
+    e2e-tests:
+      - name: integration-tests
+    release-gate:
+      - name: enterprise-contract
+        failFast: true
+      - name: e2e-tests
+---
+apiVersion: appstudio.redhat.com/v1beta2
+kind: ComponentGroup
+metadata:
+  name: platform-infra
+spec:
+  components:
+    - name: auth-proxy
+      componentVersion:
+        name: "main"
+    - name: rate-limiter
+      componentVersion:
+        name: "main"
+    - name: tls-manager
+      componentVersion:
+        name: "main"
+    - name: cert-rotator
+      componentVersion:
+        name: "main"
+    - name: dns-resolver
+      componentVersion:
+        name: "main"

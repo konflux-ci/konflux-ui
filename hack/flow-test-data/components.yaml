@@ -1,0 +1,266 @@
+# Components for flow visualization testing
+# 20 components: 6 in product-grp1, 5 in platform-infra, 9 ungrouped
+# Variables are substituted from config.env via envsubst
+---
+# === product-grp1 components ===
+apiVersion: appstudio.redhat.com/v1alpha1
+kind: Component
+metadata:
+  name: backend-api
+spec:
+  componentName: backend-api
+  application: product-grp1
+  source:
+    git:
+      url: ${BACKEND_API_REPO}
+      revision: ${BACKEND_API_REVISION}
+  containerImage: ${IMAGE_REGISTRY}/backend-api
+---
+apiVersion: appstudio.redhat.com/v1alpha1
+kind: Component
+metadata:
+  name: frontend-app
+spec:
+  componentName: frontend-app
+  application: product-grp1
+  source:
+    git:
+      url: ${FRONTEND_APP_REPO}
+      revision: ${FRONTEND_APP_REVISION}
+  containerImage: ${IMAGE_REGISTRY}/frontend-app
+---
+apiVersion: appstudio.redhat.com/v1alpha1
+kind: Component
+metadata:
+  name: worker-svc
+spec:
+  componentName: worker-svc
+  application: product-grp1
+  source:
+    git:
+      url: ${WORKER_SVC_REPO}
+      revision: ${WORKER_SVC_REVISION}
+  containerImage: ${IMAGE_REGISTRY}/worker-svc
+---
+apiVersion: appstudio.redhat.com/v1alpha1
+kind: Component
+metadata:
+  name: scheduler
+spec:
+  componentName: scheduler
+  application: product-grp1
+  source:
+    git:
+      url: ${SCHEDULER_REPO}
+      revision: ${SCHEDULER_REVISION}
+  containerImage: ${IMAGE_REGISTRY}/scheduler
+---
+apiVersion: appstudio.redhat.com/v1alpha1
+kind: Component
+metadata:
+  name: migration-job
+spec:
+  componentName: migration-job
+  application: product-grp1
+  source:
+    git:
+      url: ${MIGRATION_JOB_REPO}
+      revision: ${MIGRATION_JOB_REVISION}
+  containerImage: ${IMAGE_REGISTRY}/migration-job
+---
+apiVersion: appstudio.redhat.com/v1alpha1
+kind: Component
+metadata:
+  name: cron-runner
+spec:
+  componentName: cron-runner
+  application: product-grp1
+  source:
+    git:
+      url: ${CRON_RUNNER_REPO}
+      revision: ${CRON_RUNNER_REVISION}
+  containerImage: ${IMAGE_REGISTRY}/cron-runner
+---
+# === platform-infra components ===
+apiVersion: appstudio.redhat.com/v1alpha1
+kind: Component
+metadata:
+  name: auth-proxy
+spec:
+  componentName: auth-proxy
+  application: platform-infra
+  source:
+    git:
+      url: ${AUTH_PROXY_REPO}
+      revision: ${AUTH_PROXY_REVISION}
+  containerImage: ${IMAGE_REGISTRY}/auth-proxy
+---
+apiVersion: appstudio.redhat.com/v1alpha1
+kind: Component
+metadata:
+  name: rate-limiter
+spec:
+  componentName: rate-limiter
+  application: platform-infra
+  source:
+    git:
+      url: ${RATE_LIMITER_REPO}
+      revision: ${RATE_LIMITER_REVISION}
+  containerImage: ${IMAGE_REGISTRY}/rate-limiter
+---
+apiVersion: appstudio.redhat.com/v1alpha1
+kind: Component
+metadata:
+  name: tls-manager
+spec:
+  componentName: tls-manager
+  application: platform-infra
+  source:
+    git:
+      url: ${TLS_MANAGER_REPO}
+      revision: ${TLS_MANAGER_REVISION}
+  containerImage: ${IMAGE_REGISTRY}/tls-manager
+---
+apiVersion: appstudio.redhat.com/v1alpha1
+kind: Component
+metadata:
+  name: cert-rotator
+spec:
+  componentName: cert-rotator
+  application: platform-infra
+  source:
+    git:
+      url: ${CERT_ROTATOR_REPO}
+      revision: ${CERT_ROTATOR_REVISION}
+  containerImage: ${IMAGE_REGISTRY}/cert-rotator
+---
+apiVersion: appstudio.redhat.com/v1alpha1
+kind: Component
+metadata:
+  name: dns-resolver
+spec:
+  componentName: dns-resolver
+  application: platform-infra
+  source:
+    git:
+      url: ${DNS_RESOLVER_REPO}
+      revision: ${DNS_RESOLVER_REVISION}
+  containerImage: ${IMAGE_REGISTRY}/dns-resolver
+---
+# === Ungrouped components ===
+apiVersion: appstudio.redhat.com/v1alpha1
+kind: Component
+metadata:
+  name: operator-bundle
+spec:
+  componentName: operator-bundle
+  application: operator-bundle-app
+  source:
+    git:
+      url: ${OPERATOR_BUNDLE_REPO}
+      revision: ${OPERATOR_BUNDLE_REVISION}
+  containerImage: ${IMAGE_REGISTRY}/operator-bundle
+---
+apiVersion: appstudio.redhat.com/v1alpha1
+kind: Component
+metadata:
+  name: fbc-catalog
+spec:
+  componentName: fbc-catalog
+  application: fbc-catalog-app
+  source:
+    git:
+      url: ${FBC_CATALOG_REPO}
+      revision: ${FBC_CATALOG_REVISION}
+  containerImage: ${IMAGE_REGISTRY}/fbc-catalog
+---
+apiVersion: appstudio.redhat.com/v1alpha1
+kind: Component
+metadata:
+  name: shared-config
+spec:
+  componentName: shared-config
+  application: shared-config-app
+  source:
+    git:
+      url: ${SHARED_CONFIG_REPO}
+      revision: ${SHARED_CONFIG_REVISION}
+  containerImage: ${IMAGE_REGISTRY}/shared-config
+---
+apiVersion: appstudio.redhat.com/v1alpha1
+kind: Component
+metadata:
+  name: logging-svc
+spec:
+  componentName: logging-svc
+  application: observability
+  source:
+    git:
+      url: ${LOGGING_SVC_REPO}
+      revision: ${LOGGING_SVC_REVISION}
+  containerImage: ${IMAGE_REGISTRY}/logging-svc
+---
+apiVersion: appstudio.redhat.com/v1alpha1
+kind: Component
+metadata:
+  name: auth-service
+spec:
+  componentName: auth-service
+  application: auth-app
+  source:
+    git:
+      url: ${AUTH_SERVICE_REPO}
+      revision: ${AUTH_SERVICE_REVISION}
+  containerImage: ${IMAGE_REGISTRY}/auth-service
+---
+apiVersion: appstudio.redhat.com/v1alpha1
+kind: Component
+metadata:
+  name: user-service
+spec:
+  componentName: user-service
+  application: auth-app
+  source:
+    git:
+      url: ${USER_SERVICE_REPO}
+      revision: ${USER_SERVICE_REVISION}
+  containerImage: ${IMAGE_REGISTRY}/user-service
+---
+apiVersion: appstudio.redhat.com/v1alpha1
+kind: Component
+metadata:
+  name: notification-svc
+spec:
+  componentName: notification-svc
+  application: notifications
+  source:
+    git:
+      url: ${NOTIFICATION_SVC_REPO}
+      revision: ${NOTIFICATION_SVC_REVISION}
+  containerImage: ${IMAGE_REGISTRY}/notification-svc
+---
+apiVersion: appstudio.redhat.com/v1alpha1
+kind: Component
+metadata:
+  name: cache-proxy
+spec:
+  componentName: cache-proxy
+  application: infra
+  source:
+    git:
+      url: ${CACHE_PROXY_REPO}
+      revision: ${CACHE_PROXY_REVISION}
+  containerImage: ${IMAGE_REGISTRY}/cache-proxy
+---
+apiVersion: appstudio.redhat.com/v1alpha1
+kind: Component
+metadata:
+  name: data-pipeline
+spec:
+  componentName: data-pipeline
+  application: data-platform
+  source:
+    git:
+      url: ${DATA_PIPELINE_REPO}
+      revision: ${DATA_PIPELINE_REVISION}
+  containerImage: ${IMAGE_REGISTRY}/data-pipeline
