@@ -69,6 +69,10 @@ export function getArrivalSource(): ArrivalSource {
   return arrivalSourceStorage.get() ?? GitProvider.UNSURE;
 }
 
+export function hasSessionStarted(): boolean {
+  return sessionStartedStorage.get() === true;
+}
+
 // Every ArrivalSource except UNSURE.
 const KNOWN_GIT_PROVIDERS = new Set<GitProvider>(
   Object.values(GitProvider).filter(
@@ -101,7 +105,7 @@ export function refineArrivalSource(source: ArrivalSource): void {
  * double-invoke — returns `false`.
  */
 export function markSessionStartedOnce(): boolean {
-  if (sessionStartedStorage.get() === true) {
+  if (hasSessionStarted()) {
     return false;
   }
   sessionStartedStorage.set(true);
