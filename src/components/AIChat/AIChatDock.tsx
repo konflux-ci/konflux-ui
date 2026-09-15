@@ -42,16 +42,16 @@ export const AIChatDock: React.FC = () => {
     announcement,
     isSendButtonDisabled,
     isInitializing,
-    backendError,
-    clearBackendError,
+    chatError,
+    clearChatError,
     sendMessage,
   } = useLightspeedChat();
 
   React.useEffect(() => {
     if (!isChatbotVisible) {
-      clearBackendError();
+      clearChatError();
     }
-  }, [clearBackendError, isChatbotVisible]);
+  }, [clearChatError, isChatbotVisible]);
 
   React.useEffect(() => {
     if (messages.length === 0) {
@@ -80,9 +80,9 @@ export const AIChatDock: React.FC = () => {
           </ChatbotHeaderActions>
         </ChatbotHeader>
         <ChatbotContent>
-          {backendError ? (
+          {chatError ? (
             <ChatbotAlert variant="danger" title={KONFLUX_AI_ERROR_TITLE} isInline>
-              {backendError}
+              {chatError}
             </ChatbotAlert>
           ) : null}
           <MessageBox announcement={announcement}>

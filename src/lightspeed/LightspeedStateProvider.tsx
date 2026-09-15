@@ -6,27 +6,31 @@ import { logger } from '~/monitoring/logger';
 
 type LightspeedInitContextValue = {
   initError?: string;
-  clearInitError: () => void;
+  retryInit: () => void;
 };
 
 const LightspeedInitContext = React.createContext<LightspeedInitContextValue>({
-  clearInitError: () => undefined,
+  retryInit: () => undefined,
 });
 
 export const useLightspeedInitError = (): string | undefined =>
   React.useContext(LightspeedInitContext).initError;
 
-export const useClearLightspeedInitError = (): (() => void) =>
-  React.useContext(LightspeedInitContext).clearInitError;
+export const useRetryLightspeedInit = (): (() => void) =>
+  React.useContext(LightspeedInitContext).retryInit;
 
 type InitializeLightspeedStateProps = {
   onInitError: (message: string) => void;
+  retryInitRef: React.MutableRefObject<() => void>;
 };
 
-const InitializeLightspeedState: React.FC<InitializeLightspeedStateProps> = ({ onInitError }) => {
+const InitializeLightspeedState: React.FC<InitializeLightspeedStateProps> = ({
+  onInitError,
+  retryInitRef,
+}) => {
   const { getState } = React.useContext(AIStateContext);
 
-  React.useEffect(() => {
+  const runInit = React.useCallback(() => {
     void getState()
       .init()
       .catch((error: unknown) => {
@@ -38,24 +42,34 @@ const InitializeLightspeedState: React.FC<InitializeLightspeedStateProps> = ({ o
       });
   }, [getState, onInitError]);
 
+  React.useEffect(() => {
+    retryInitRef.current = runInit;
+  }, [retryInitRef, runInit]);
+
+  React.useEffect(() => {
+    runInit();
+  }, [runInit]);
+
   return null;
 };
 
 export const LightspeedStateProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
   const [initError, setInitError] = React.useState<string>();
-
-  const clearInitError = React.useCallback(() => {
-    setInitError(undefined);
-  }, []);
+  const retryInitRef = React.useRef<() => void>(() => undefined);
 
   const onInitError = React.useCallback((message: string) => {
     setInitError(message);
   }, []);
 
+  const retryInit = React.useCallback(() => {
+    setInitError(undefined);
+    retryInitRef.current();
+  }, []);
+
   return (
-    <LightspeedInitContext.Provider value={{ initError, clearInitError }}>
+    <LightspeedInitContext.Provider value={{ initError, retryInit }}>
       <AIStateProvider client={getLightspeedClient()}>
-        <InitializeLightspeedState onInitError={onInitError} />
+        <InitializeLightspeedState onInitError={onInitError} retryInitRef={retryInitRef} />
         {children}
       </AIStateProvider>
     </LightspeedInitContext.Provider>
