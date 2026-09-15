@@ -8,6 +8,7 @@ import {
 } from '@patternfly/react-core';
 import { parseAsString, useQueryState } from 'nuqs';
 import { useModalLauncher } from '~/shared/components/modal/ModalProvider';
+import { useNamespace } from '~/shared/providers/Namespace';
 import { createSavedViewDeleteModal } from './SavedViewDeleteModal';
 import { createSavedViewRenameModal } from './SavedViewRenameModal';
 import { createSavedViewSaveModal } from './SavedViewSaveModal';
@@ -29,11 +30,15 @@ export const SavedViewActions: React.FC<SavedViewActionsProps> = ({
   isFiltered,
   activeSavedView,
 }) => {
-  const { saveView, deleteView, renameView, updateView } = useSavedViews({
-    resourceKey,
-    columnKeyPrefix,
-    routePath: '',
-  });
+  const namespace = useNamespace();
+  const { saveView, deleteView, renameView, updateView } = useSavedViews(
+    {
+      resourceKey,
+      columnKeyPrefix,
+      routePathBuilder: () => '',
+    },
+    namespace,
+  );
   const [, setViewParam] = useQueryState('view', parseAsString);
   const showModal = useModalLauncher();
   const [isOpen, setIsOpen] = React.useState(false);
@@ -60,6 +65,7 @@ export const SavedViewActions: React.FC<SavedViewActionsProps> = ({
             label: name,
             searchParams: getSearchParams(),
             currentColumnStateKey,
+            namespace: namespace ?? '',
           });
           void setViewParam(savedSlug);
         },

@@ -3,10 +3,11 @@ export type SavedView = {
   label: string;
   searchParams: string;
   columnStateKey: string;
+  namespace: string;
 };
 
 export type SavedViewsConfig = {
   resourceKey: string;
   columnKeyPrefix: string;
-  routePath: string;
+  routePathBuilder: (namespace: string) => string;
 };
