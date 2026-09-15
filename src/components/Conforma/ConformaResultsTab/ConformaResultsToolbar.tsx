@@ -9,6 +9,7 @@ import {
   SelectList,
   SelectOption,
   Switch,
+  ToolbarFilter,
 } from '@patternfly/react-core';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { MultiSelect } from '~/components/Filter/generic/MultiSelect';
@@ -33,6 +34,8 @@ type ConformaResultsToolbarProps = {
   onToggleExpandAll: () => void;
   showDuplicates: boolean;
   onShowDuplicatesChange: (checked: boolean) => void;
+  showPolicyExceptionsOnly: boolean;
+  onShowPolicyExceptionsOnlyChange: (checked: boolean) => void;
   refresh: ConformaRefreshState;
 };
 
@@ -50,6 +53,12 @@ const groupByLabels: Record<GroupByMode, string> = {
 const SHOW_DUPLICATES_HELP_TEXT =
   'When enabled, policy violations that share the same rule, message, and component but differ only by image digest (e.g. multi-arch builds) are shown as separate rows instead of being merged.';
 
+const SHOW_POLICY_EXCEPTIONS_HELP_TEXT =
+  'When enabled, the table shows only rules with policy exceptions — warnings for upcoming or volatile policy changes.';
+
+const POLICY_EXCEPTION_FILTER_CATEGORY = 'Policy exception';
+const POLICY_EXCEPTION_FILTER_LABEL = 'Policy exceptions only';
+
 export const ConformaResultsToolbar: React.FC<ConformaResultsToolbarProps> = ({
   allResults,
   groupBy,
@@ -58,6 +67,8 @@ export const ConformaResultsToolbar: React.FC<ConformaResultsToolbarProps> = ({
   onToggleExpandAll,
   showDuplicates,
   onShowDuplicatesChange,
+  showPolicyExceptionsOnly,
+  onShowPolicyExceptionsOnlyChange,
   refresh,
 }) => {
   const { setFilters, onClearFilters } = React.useContext(FilterContext);
@@ -132,6 +143,27 @@ export const ConformaResultsToolbar: React.FC<ConformaResultsToolbarProps> = ({
       >
         {allExpanded ? 'Collapse all' : 'Expand all'}
       </Button>
+      <ToolbarFilter
+        labels={showPolicyExceptionsOnly ? [POLICY_EXCEPTION_FILTER_LABEL] : []}
+        deleteLabel={() => onShowPolicyExceptionsOnlyChange(false)}
+        deleteLabelGroup={() => onShowPolicyExceptionsOnlyChange(false)}
+        categoryName={POLICY_EXCEPTION_FILTER_CATEGORY}
+      >
+        <Flex alignItems={{ default: 'alignItemsCenter' }} gap={{ default: 'gapSm' }}>
+          <FlexItem>
+            <Switch
+              id="conforma-show-policy-exceptions"
+              label="Show policy exceptions only"
+              isChecked={showPolicyExceptionsOnly}
+              onChange={(_event, checked) => onShowPolicyExceptionsOnlyChange(checked)}
+              data-test="conforma-show-policy-exceptions"
+            />
+          </FlexItem>
+          <FlexItem>
+            <HelpTooltipIcon content={SHOW_POLICY_EXCEPTIONS_HELP_TEXT} />
+          </FlexItem>
+        </Flex>
+      </ToolbarFilter>
       <Flex alignItems={{ default: 'alignItemsCenter' }} gap={{ default: 'gapSm' }}>
         <FlexItem>
           <Switch

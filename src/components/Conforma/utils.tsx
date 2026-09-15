@@ -2,15 +2,15 @@ import * as React from 'react';
 import { CheckCircleIcon } from '@patternfly/react-icons/dist/esm/icons/check-circle-icon';
 import { DotCircleIcon } from '@patternfly/react-icons/dist/esm/icons/dot-circle-icon';
 import { ExclamationCircleIcon } from '@patternfly/react-icons/dist/esm/icons/exclamation-circle-icon';
-import { ExclamationTriangleIcon } from '@patternfly/react-icons/dist/esm/icons/exclamation-triangle-icon';
 import { t_global_icon_color_status_danger_default as redColor } from '@patternfly/react-tokens/dist/js/t_global_icon_color_status_danger_default';
 import { t_global_icon_color_status_success_default as greenColor } from '@patternfly/react-tokens/dist/js/t_global_icon_color_status_success_default';
-import { t_global_icon_color_status_warning_default as yellowColor } from '@patternfly/react-tokens/dist/js/t_global_icon_color_status_warning_default';
+import { WarningIcon } from '~/shared/components/status/icons';
 import { CONFORMA_RESULT_STATUS, ConformaResult } from '~/types/conforma';
 
 export type RuleStatusConfig = {
   Icon: React.ComponentType<{ color?: string }>;
-  iconColor: string;
+  // Omitted when the Icon self-colors (e.g. WarningIcon uses PatternFly classes).
+  iconColor?: string;
   labelColor: 'red' | 'yellow' | 'green' | 'grey';
   statusText: string;
 };
@@ -23,8 +23,7 @@ export const RULE_STATUS_CONFIG: Record<CONFORMA_RESULT_STATUS, RuleStatusConfig
     statusText: CONFORMA_RESULT_STATUS.violations,
   },
   [CONFORMA_RESULT_STATUS.warnings]: {
-    Icon: ExclamationTriangleIcon,
-    iconColor: yellowColor.value,
+    Icon: WarningIcon,
     labelColor: 'yellow',
     statusText: CONFORMA_RESULT_STATUS.warnings,
   },

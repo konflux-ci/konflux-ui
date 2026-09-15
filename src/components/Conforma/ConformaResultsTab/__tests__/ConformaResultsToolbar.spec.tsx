@@ -38,6 +38,7 @@ describe('ConformaResultsToolbar', () => {
   const onToggleExpandAll = jest.fn();
 
   const onShowDuplicatesChange = jest.fn();
+  const onShowPolicyExceptionsOnlyChange = jest.fn();
 
   const defaultProps = {
     allResults,
@@ -47,6 +48,8 @@ describe('ConformaResultsToolbar', () => {
     onToggleExpandAll,
     showDuplicates: false,
     onShowDuplicatesChange,
+    showPolicyExceptionsOnly: false,
+    onShowPolicyExceptionsOnlyChange,
     refresh: makeRefresh(),
   };
 
@@ -90,6 +93,48 @@ describe('ConformaResultsToolbar', () => {
     fireEvent.click(screen.getByRole('switch', { name: /show multi-arch duplicates/i }));
 
     expect(onShowDuplicatesChange).toHaveBeenCalledWith(false);
+  });
+
+  it('renders show policy exceptions switch as unchecked by default', () => {
+    renderToolbar({ showPolicyExceptionsOnly: false });
+
+    const switchEl = screen.getByRole('switch', { name: /show policy exceptions only/i });
+    expect(switchEl).not.toBeChecked();
+  });
+
+  it('renders show policy exceptions switch as checked when showPolicyExceptionsOnly is true', () => {
+    renderToolbar({ showPolicyExceptionsOnly: true });
+
+    const switchEl = screen.getByRole('switch', { name: /show policy exceptions only/i });
+    expect(switchEl).toBeChecked();
+  });
+
+  it('calls onShowPolicyExceptionsOnlyChange with true when an unchecked switch is clicked', () => {
+    renderToolbar({ showPolicyExceptionsOnly: false, onShowPolicyExceptionsOnlyChange });
+
+    fireEvent.click(screen.getByRole('switch', { name: /show policy exceptions only/i }));
+
+    expect(onShowPolicyExceptionsOnlyChange).toHaveBeenCalledWith(true);
+  });
+
+  it('renders a policy exception filter label group when the toggle is on', () => {
+    renderToolbar({ showPolicyExceptionsOnly: true });
+
+    expect(screen.getByText('Policy exceptions only')).toBeInTheDocument();
+  });
+
+  it('does not render the policy exception filter label group when the toggle is off', () => {
+    renderToolbar({ showPolicyExceptionsOnly: false });
+
+    expect(screen.queryByText('Policy exceptions only')).not.toBeInTheDocument();
+  });
+
+  it('turns the toggle off when the policy exception label close button is clicked', () => {
+    renderToolbar({ showPolicyExceptionsOnly: true, onShowPolicyExceptionsOnlyChange });
+
+    fireEvent.click(screen.getByRole('button', { name: /close policy exceptions only/i }));
+
+    expect(onShowPolicyExceptionsOnlyChange).toHaveBeenCalledWith(false);
   });
 
   it('renders the toolbar with the correct data-test attribute', () => {
