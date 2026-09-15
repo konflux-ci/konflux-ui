@@ -116,9 +116,11 @@ const IntegrationTestsListViewV2: React.FC<React.PropsWithChildren> = () => {
         cell: (info) => {
           const obj = info.row.original;
           if (!obj?.spec?.resolverRef?.params) return '-';
+          const href = getURLForParam(obj.spec.resolverRef.params, ResolverRefParams.URL);
+          if (!href) return '-';
           return (
             <ExternalLink
-              href={getURLForParam(obj.spec.resolverRef.params, ResolverRefParams.URL)}
+              href={href}
               text={
                 <Truncate
                   content={
