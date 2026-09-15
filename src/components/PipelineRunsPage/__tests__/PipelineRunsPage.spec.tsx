@@ -79,12 +79,13 @@ const defaultFilterState = {
     eventType: [],
     name: '',
     prNumber: '',
+    commitSha: '',
     searchField: '',
     status: [],
     type: [],
     archive: false,
   },
-  clientFilterValues: { name: '', prNumber: '', searchField: '', status: [] },
+  clientFilterValues: { name: '', prNumber: '', commitSha: '', searchField: '', status: [] },
   isFiltered: false,
   clearAll: jest.fn(),
 };
@@ -168,6 +169,7 @@ describe('PipelineRunsPage', () => {
         eventType: [],
         name: '',
         prNumber: '',
+        commitSha: '',
         searchField: '',
         status: [],
         type: [],
@@ -177,6 +179,22 @@ describe('PipelineRunsPage', () => {
     } as unknown as ReturnType<typeof useFilterState>);
     mockUseFilteredData.mockReturnValue({
       filteredData: [{ metadata: { uid: 'uid-1', name: 'plr-1', labels: {} } }] as never[],
+    });
+    renderPage();
+    expect(screen.getByTestId('table-v2')).toBeInTheDocument();
+  });
+
+  it('renders table when commit SHA filter is provided', () => {
+    mockUseFilterState.mockReturnValue({
+      ...defaultFilterState,
+      filterValues: {
+        ...defaultFilterState.filterValues,
+        commitSha: 'abc123def456',
+      },
+      isFiltered: true,
+    } as unknown as ReturnType<typeof useFilterState>);
+    mockUseFilteredData.mockReturnValue({
+      filteredData: [{ metadata: { uid: 'uid-2', name: 'plr-2', labels: {} } }] as never[],
     });
     renderPage();
     expect(screen.getByTestId('table-v2')).toBeInTheDocument();

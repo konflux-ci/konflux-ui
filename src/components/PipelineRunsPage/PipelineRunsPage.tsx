@@ -51,6 +51,15 @@ const filterConfigs = defineFilters<PipelineRunKind>()([
         filterFn: (item, value) =>
           (item.metadata?.labels?.[PipelineRunLabel.PULL_REQUEST_NUMBER_LABEL] ?? '') === value,
       },
+      {
+        label: 'Commit SHA',
+        value: 'commitSha',
+        param: 'commitSha',
+        filterFn: (item, value) =>
+          (item.metadata?.labels?.[PipelineRunLabel.COMMIT_LABEL] ?? '')
+            .toLowerCase()
+            .includes(value.toLowerCase()),
+      },
     ],
   },
   {
@@ -108,9 +117,13 @@ export const PipelineRunsPage: React.FC = () => {
   const prNumbers = filterValues.prNumber;
   const hasPrNumbers = Array.isArray(prNumbers) && prNumbers.length > 0;
 
-  // Fetch when at least one app, component, or PR number is selected
+  // Commit SHA from switchable search
+  const commitSha = filterValues.commitSha;
+  const hasCommitSha = typeof commitSha === 'string' && commitSha.length > 0;
+
+  // Fetch when at least one app, component, PR number, or commit SHA is selected
   const hasRequiredFilters =
-    selectedApps.length > 0 || selectedComponents.length > 0 || hasPrNumbers;
+    selectedApps.length > 0 || selectedComponents.length > 0 || hasPrNumbers || hasCommitSha;
 
   // API-mode filter values
   const selectedEventTypes = React.useMemo(
@@ -142,6 +155,13 @@ export const PipelineRunsPage: React.FC = () => {
         values: prNumbers as string[],
       });
     }
+    if (hasCommitSha) {
+      expressions.push({
+        key: PipelineRunLabel.COMMIT_LABEL,
+        operator: 'In',
+        values: [commitSha],
+      });
+    }
     if (selectedEventTypes.length > 0) {
       expressions.push({
         key: PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL,
@@ -162,6 +182,8 @@ export const PipelineRunsPage: React.FC = () => {
     selectedComponents,
     hasPrNumbers,
     prNumbers,
+    hasCommitSha,
+    commitSha,
     selectedEventTypes,
     selectedTypes,
   ]);
