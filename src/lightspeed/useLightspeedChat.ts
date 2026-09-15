@@ -9,8 +9,8 @@ import {
 } from '@redhat-cloud-services/ai-react-state';
 import { LIGHTSPEED_ASSISTANT_NAME } from '~/lightspeed/const';
 import {
-  useClearLightspeedInitError,
   useLightspeedInitError,
+  useRetryLightspeedInit,
 } from '~/lightspeed/LightspeedStateProvider';
 import { getUserFacingErrorMessage, stateMessagesToMessageProps } from '~/lightspeed/utils';
 import { logger } from '~/monitoring/logger';
@@ -20,8 +20,8 @@ type UseLightspeedChatResult = {
   announcement?: string;
   isSendButtonDisabled: boolean;
   isInitializing: boolean;
-  backendError?: string;
-  clearBackendError: () => void;
+  chatError?: string;
+  clearChatError: () => void;
   sendMessage: (message: string) => Promise<void>;
 };
 
@@ -38,7 +38,7 @@ const getErrorMessage = (error: unknown): string => {
  * and map client-state messages into PatternFly Chatbot message props.
  */
 export const useLightspeedChat = (): UseLightspeedChatResult => {
-  const [backendError, setBackendError] = React.useState<string>();
+  const [sendError, setSendError] = React.useState<string>();
   const [announcement, setAnnouncement] = React.useState<string>();
 
   const stateMessages = useMessages();
@@ -46,7 +46,7 @@ export const useLightspeedChat = (): UseLightspeedChatResult => {
   const isInProgress = useInProgress();
   const isInitializing = useIsInitializing();
   const initError = useLightspeedInitError();
-  const clearInitError = useClearLightspeedInitError();
+  const retryInit = useRetryLightspeedInit();
   const hasInitFailed = initError !== undefined;
   const isSendingRef = React.useRef(false);
 
@@ -55,10 +55,10 @@ export const useLightspeedChat = (): UseLightspeedChatResult => {
     [isInProgress, stateMessages],
   );
 
-  const clearBackendError = React.useCallback(() => {
-    setBackendError(undefined);
-    clearInitError();
-  }, [clearInitError]);
+  const clearChatError = React.useCallback(() => {
+    setSendError(undefined);
+    retryInit();
+  }, [retryInit]);
 
   const sendMessage = React.useCallback(
     async (message: string) => {
@@ -68,7 +68,7 @@ export const useLightspeedChat = (): UseLightspeedChatResult => {
       }
 
       isSendingRef.current = true;
-      setBackendError(undefined);
+      setSendError(undefined);
       setAnnouncement(
         `Message from you: ${trimmedMessage}. ${LIGHTSPEED_ASSISTANT_NAME} is responding.`,
       );
@@ -85,7 +85,7 @@ export const useLightspeedChat = (): UseLightspeedChatResult => {
         );
 
         const messageText = getErrorMessage(error);
-        setBackendError(messageText);
+        setSendError(messageText);
         setAnnouncement(`Message from ${LIGHTSPEED_ASSISTANT_NAME}: ${messageText}`);
       } finally {
         isSendingRef.current = false;
@@ -99,8 +99,8 @@ export const useLightspeedChat = (): UseLightspeedChatResult => {
     announcement,
     isSendButtonDisabled: isInProgress || (hasInitFailed ? true : isInitializing),
     isInitializing: hasInitFailed ? false : isInitializing,
-    backendError: backendError ?? initError,
-    clearBackendError,
+    chatError: sendError ?? initError,
+    clearChatError,
     sendMessage,
   };
 };
