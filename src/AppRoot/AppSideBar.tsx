@@ -120,6 +120,7 @@ export const AppSideBar: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
                       ? PIPELINE_RUNS_PAGE_PATH.createPath({ workspaceName: namespace })
                       : undefined
                   }
+                  data-tour="pipeline-runs-nav-link"
                 >
                   Pipeline Runs{' '}
                   <FeatureFlagIndicator

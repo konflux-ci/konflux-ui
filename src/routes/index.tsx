@@ -1,5 +1,6 @@
 import { createBrowserRouter, type LoaderFunctionArgs } from 'react-router-dom';
 import { wrapCreateBrowserRouter } from '@sentry/react';
+import '~/components/PipelineRunsPage/pipeline-runs.tour';
 import { TourAutoTrigger, TourProvider, TourRenderer } from '~/shared/components/GuidedTours';
 import { AppRoot } from '../AppRoot/AppRoot';
 import { GithubRedirect, githubRedirectLoader } from '../components/GithubRedirect';
