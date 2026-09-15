@@ -19,6 +19,16 @@
   }
 }
 
+// --- Nowrap split layout ---
+// In nowrap mode the log viewer splits into a fixed gutter track and
+// a sticky content-scroll area. The gutter scrolls vertically with
+// the outer container; the content-scroll sticks to the viewport top
+// so its horizontal scrollbar stays visible.
+
+.log-content__nowrap-layout {
+  display: flex;
+}
+
 // Per-row gutter cell — sticky left column rendered inline within each virtual row.
 .log-content__gutter {
   position: sticky;
@@ -26,13 +36,9 @@
   flex-shrink: 0;
   width: var(--pf-t--global--spacer--3xl);
   display: flex;
-  align-items: center;
+  align-items: start;
   justify-content: flex-end;
   padding-right: var(--pf-t--global--spacer--sm);
-  background-color: var(
-    --pf-v6-c-log-viewer__main--BackgroundColor,
-    var(--pf-t--global--background--color--primary--default)
-  );
   border-right: var(--pf-t--global--border--width--box--default) solid
     var(--pf-t--global--border--color--default);
   user-select: none;
@@ -45,6 +51,37 @@
   .pf-m-dark &--highlighted {
     background-color: var(--pf-t--global--color--status--warning--200);
   }
+}
+
+.log-content__gutter-track {
+  flex-shrink: 0;
+  width: var(--pf-t--global--spacer--3xl);
+  position: sticky;
+  top: 0;
+  overflow: hidden;
+  border-right: var(--pf-t--global--border--width--box--default) solid
+    var(--pf-t--global--border--color--default);
+
+  .log-content__gutter {
+    position: static;
+    left: auto;
+    width: 100%;
+    border-right: none;
+  }
+}
+
+.log-content__content-inner {
+  min-width: 100%;
+  position: relative;
+}
+
+.log-content__content-scroll {
+  flex: 1;
+  min-width: 0;
+  position: sticky;
+  top: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 
 // Content cell within each virtual row (flex sibling of .log-content__gutter)
@@ -63,5 +100,18 @@
 
   .pf-m-dark & {
     background-color: var(--pf-t--global--color--nonstatus--yellow--hover);
+  }
+}
+
+// In the nowrap split layout, each content row is only as wide as its text.
+// Extend the highlight to the full scrollable width so short highlighted lines
+// appear highlighted edge-to-edge. box-shadow doesn't create scrollable overflow,
+// so the highlight never extends beyond the widest actual line.
+.log-content__content-scroll .log-content__line--highlighted {
+  box-shadow: 0 0 0 9999px var(--pf-t--global--color--status--warning--default);
+  clip-path: inset(0 -9999px 0 0);
+
+  .pf-m-dark & {
+    box-shadow: 0 0 0 9999px var(--pf-t--global--color--nonstatus--yellow--hover);
   }
 }
