@@ -63,6 +63,10 @@ export const PipelineRunDetailsView: React.FC = () => {
     return getErrorState(error, loaded, 'pipeline run');
   }
 
+  if (!pipelineRun) {
+    return getErrorState({ code: 404, message: 'Pipeline run not found' }, true, 'pipeline run');
+  }
+
   const showSecurityTab = isResourceEnterpriseContract(pipelineRun) || hasConformaTaskRun;
 
   const applicationName = pipelineRun.metadata?.labels[PipelineRunLabel.APPLICATION];
