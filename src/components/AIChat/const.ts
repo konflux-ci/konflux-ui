@@ -28,3 +28,8 @@ export const KONFLUX_AI_HISTORY_SEARCH_PLACEHOLDER = 'Search conversations';
 export const KONFLUX_AI_HISTORY_NO_RESULTS_TITLE = 'No results found';
 
 export const KONFLUX_AI_HISTORY_NO_RESULTS_BODY = 'Try a different search term.';
+
+/** Lightspeed API limit for topic summary. */
+export const KONFLUX_AI_MAX_TOPIC_SUMMARY_LENGTH = 1000;
+
+export const KONFLUX_AI_RENAME_CONVERSATION_TITLE_ID = 'ai-chat-rename-conversation-title';

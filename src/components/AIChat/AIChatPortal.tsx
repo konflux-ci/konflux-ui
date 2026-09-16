@@ -6,24 +6,37 @@ const AI_CHAT_PORTAL_ID = 'konflux-ai-chat-container';
 export const getAIChatPortalContainer = (): HTMLElement =>
   document.getElementById(AI_CHAT_PORTAL_ID) ?? document.body;
 
-const getOrCreatePortalContainer = (): HTMLElement => {
-  const existing = document.getElementById(AI_CHAT_PORTAL_ID);
-  if (existing) {
-    return existing;
-  }
-
+const createPortalContainer = (): HTMLElement => {
   const container = document.createElement('div');
   container.id = AI_CHAT_PORTAL_ID;
-  document.body.appendChild(container);
   return container;
 };
 
 export const AIChatPortal: React.FC<React.PropsWithChildren> = ({ children }) => {
-  const containerRef = React.useRef<HTMLElement | null>(null);
+  const [container, setContainer] = React.useState<HTMLElement | null>(null);
 
-  if (!containerRef.current?.isConnected) {
-    containerRef.current = getOrCreatePortalContainer();
+  React.useEffect(() => {
+    const existing = document.getElementById(AI_CHAT_PORTAL_ID);
+    const portalContainer = existing ?? createPortalContainer();
+    const isOwner = !existing;
+
+    if (!portalContainer.isConnected) {
+      document.body.appendChild(portalContainer);
+    }
+
+    setContainer(portalContainer);
+
+    return () => {
+      if (isOwner && portalContainer.parentNode) {
+        portalContainer.parentNode.removeChild(portalContainer);
+      }
+      setContainer(null);
+    };
+  }, []);
+
+  if (!container?.isConnected) {
+    return null;
   }
 
-  return ReactDOM.createPortal(children, containerRef.current);
+  return ReactDOM.createPortal(children, container);
 };

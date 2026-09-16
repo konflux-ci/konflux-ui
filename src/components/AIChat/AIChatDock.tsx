@@ -58,14 +58,11 @@ export const AIChatDock: React.FC = () => {
   }, [clearChatError, isChatbotVisible]);
 
   const handleToggleDrawer = React.useCallback(() => {
-    setIsDrawerOpen((open) => {
-      const nextOpen = !open;
-      if (nextOpen) {
-        void refreshConversations();
-      }
-      return nextOpen;
-    });
-  }, [refreshConversations, setIsDrawerOpen]);
+    if (!isDrawerOpen) {
+      void refreshConversations();
+    }
+    setIsDrawerOpen((open) => !open);
+  }, [isDrawerOpen, refreshConversations, setIsDrawerOpen]);
 
   const handleNewChat = React.useCallback(() => {
     startNewChat();

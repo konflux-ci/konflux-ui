@@ -14,13 +14,10 @@ import {
   useSetActiveConversation,
 } from '@redhat-cloud-services/ai-react-state';
 import type { ConversationDetails } from '@redhat-cloud-services/lightspeed-client';
-import {
-  LightspeedClient,
-  TEMP_CONVERSATION_ID as LIGHTSPEED_TEMP_CONVERSATION_ID,
-} from '@redhat-cloud-services/lightspeed-client';
+import { TEMP_CONVERSATION_ID as LIGHTSPEED_TEMP_CONVERSATION_ID } from '@redhat-cloud-services/lightspeed-client';
 import { withConversationMenuActions } from '~/components/AIChat/conversationActions';
-import { updateConversationTopicSummary } from '~/components/AIChat/lightspeedConversationApi';
 import { LIGHTSPEED_ASSISTANT_NAME } from '~/lightspeed/const';
+import type { KonfluxLightspeedClient } from '~/lightspeed/konfluxLightspeedClient';
 import {
   useLightspeedInitError,
   useRetryLightspeedInit,
@@ -122,7 +119,7 @@ export const useLightspeedChat = (): UseLightspeedChatResult => {
     React.useState<RenameConversationTarget | null>(null);
   const [historyMenuKey, setHistoryMenuKey] = React.useState(0);
 
-  const client = useClient<LightspeedClient>();
+  const client = useClient<KonfluxLightspeedClient>();
   const activeConversation = useActiveConversation();
   const stateMessages = useMessages();
   const sendStreamMessage = useSendStreamMessage();
@@ -156,14 +153,15 @@ export const useLightspeedChat = (): UseLightspeedChatResult => {
         mapConversationDetails(response.conversations),
       );
       setAllConversations(historyConversations);
-      setConversationSearch('');
-      setConversations(historyConversations);
+      setConversations(
+        filterByText(historyConversations, conversationSearch, (item) => item.text),
+      );
     } catch (error) {
       logger.warn('Failed to load Lightspeed conversations', {
         error: getErrorMessage(error),
       });
     }
-  }, [client]);
+  }, [client, conversationSearch]);
 
   const filterConversations = React.useCallback(
     (searchValue: string) => {
@@ -276,7 +274,7 @@ export const useLightspeedChat = (): UseLightspeedChatResult => {
       setSendError(undefined);
 
       try {
-        await updateConversationTopicSummary(conversationId, { topicSummary: newName });
+        await client.updateConversationTopicSummary(conversationId, newName);
         await refreshConversations();
         setRenameConversationTarget(null);
       } catch (error) {
@@ -287,7 +285,7 @@ export const useLightspeedChat = (): UseLightspeedChatResult => {
         setIsRenamingConversation(false);
       }
     },
-    [refreshConversations, renameConversationTarget],
+    [client, refreshConversations, renameConversationTarget],
   );
 
   const conversationsWithMenuActions = React.useMemo(

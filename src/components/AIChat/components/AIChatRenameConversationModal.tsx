@@ -11,9 +11,10 @@ import {
   ModalVariant,
   TextInput,
 } from '@patternfly/react-core';
-
-const MAX_TOPIC_SUMMARY_LENGTH = 1000; // Lightspeed API limit for topic summary
-const RENAME_CONVERSATION_TITLE_ID = 'ai-chat-rename-conversation-title';
+import {
+  KONFLUX_AI_MAX_TOPIC_SUMMARY_LENGTH,
+  KONFLUX_AI_RENAME_CONVERSATION_TITLE_ID,
+} from '~/components/AIChat/const';
 
 export type AIChatRenameConversationModalProps = {
   appendTo: () => HTMLElement;
@@ -49,25 +50,37 @@ export const AIChatRenameConversationModal: React.FC<AIChatRenameConversationMod
     onRename(trimmedName);
   };
 
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (isSubmitting || !name.trim()) {
+      return;
+    }
+
+    handleRename();
+  };
+
   return (
     <Modal
       appendTo={appendTo}
-      aria-labelledby={RENAME_CONVERSATION_TITLE_ID}
+      aria-labelledby={KONFLUX_AI_RENAME_CONVERSATION_TITLE_ID}
       data-test="ai-chat-rename-conversation-modal"
       isOpen={isOpen}
       onClose={onClose}
       variant={ModalVariant.small}
     >
-      <ModalHeader labelId={RENAME_CONVERSATION_TITLE_ID} title="Rename conversation" />
+      <ModalHeader
+        labelId={KONFLUX_AI_RENAME_CONVERSATION_TITLE_ID}
+        title="Rename conversation"
+      />
       <ModalBody>
-        <Form>
+        <Form onSubmit={handleSubmit}>
           <FormGroup fieldId="ai-chat-conversation-name" isRequired label="Name">
             <TextInput
               autoFocus
               id="ai-chat-conversation-name"
               data-test="ai-chat-conversation-name-input"
               isRequired
-              maxLength={MAX_TOPIC_SUMMARY_LENGTH}
+              maxLength={KONFLUX_AI_MAX_TOPIC_SUMMARY_LENGTH}
               name="ai-chat-conversation-name"
               onChange={(_event, value) => setName(value)}
               value={name}
@@ -76,9 +89,6 @@ export const AIChatRenameConversationModal: React.FC<AIChatRenameConversationMod
         </Form>
       </ModalBody>
       <ModalFooter>
-        <Button variant={ButtonVariant.link} onClick={onClose}>
-          Cancel
-        </Button>
         <Button
           data-test="ai-chat-rename-conversation-confirm"
           isDisabled={!name.trim() || isSubmitting}
@@ -87,6 +97,9 @@ export const AIChatRenameConversationModal: React.FC<AIChatRenameConversationMod
           variant={ButtonVariant.primary}
         >
           Rename
+        </Button>
+        <Button variant={ButtonVariant.link} onClick={onClose}>
+          Cancel
         </Button>
       </ModalFooter>
     </Modal>
