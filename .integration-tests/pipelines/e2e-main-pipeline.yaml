@@ -79,50 +79,6 @@ spec:
         - name: SNAPSHOT
           value: $(params.SNAPSHOT)
 
-    - name: format-e2e-test-image
-      runAfter:
-        - test-metadata
-      taskSpec:
-        params:
-          - name: test-image-repository
-            type: string
-          - name: git-revision
-            type: string
-          - name: test-event-type
-            type: string
-        results:
-          - name: test-image
-            type: string
-        steps:
-          - name: format
-            image: registry.access.redhat.com/ubi9/ubi@sha256:4406835b776f05688a823ff532203587b9238510817645c9f37e0fdac1743b8c
-            computeResources:
-              limits:
-                memory: 128Mi
-              requests:
-                cpu: 10m
-                memory: 64Mi
-            script: |
-              #!/bin/bash
-              set -euo pipefail
-              event_type="$(params.test-event-type)"
-              git_revision="$(params.git-revision)"
-              repository="$(params.test-image-repository)"
-              if [[ "${event_type}" == "pull_request" ]]; then
-                tag="e2e-on-pr-${git_revision}"
-              else
-                tag="e2e-${git_revision}"
-              fi
-              image_ref="${repository}:${tag}"
-              printf '%s' "${image_ref}" > "$(results.test-image.path)"
-      params:
-        - name: test-image-repository
-          value: $(params.test-image-repository)
-        - name: git-revision
-          value: $(tasks.test-metadata.results.git-revision)
-        - name: test-event-type
-          value: $(tasks.test-metadata.results.test-event-type)
-
     - name: provision-kind-cluster
       runAfter:
         - test-metadata
@@ -215,9 +171,57 @@ spec:
         - name: monitoring-duration
           value: '5m'
 
-    - name: run-e2e-konflux-ui
+    - name: format-e2e-test-image
       runAfter:
         - deploy-konflux
+      when:
+        - input: '$(params.job-type)'
+          operator: notin
+          values: ['periodic-stage']
+      taskSpec:
+        params:
+          - name: test-image-repository
+            type: string
+          - name: git-revision
+            type: string
+          - name: test-event-type
+            type: string
+        results:
+          - name: test-image
+            type: string
+        steps:
+          - name: format
+            image: registry.access.redhat.com/ubi9/ubi@sha256:4406835b776f05688a823ff532203587b9238510817645c9f37e0fdac1743b8c
+            computeResources:
+              limits:
+                memory: 128Mi
+              requests:
+                cpu: 10m
+                memory: 64Mi
+            script: |
+              #!/bin/bash
+              set -euo pipefail
+              event_type="$(params.test-event-type)"
+              git_revision="$(params.git-revision)"
+              repository="$(params.test-image-repository)"
+              if [[ "${event_type}" == "pull_request" ]]; then
+                tag="e2e-on-pr-${git_revision}"
+              else
+                tag="e2e-${git_revision}"
+              fi
+              image_ref="${repository}:${tag}"
+              printf '%s' "${image_ref}" > "$(results.test-image.path)"
+      params:
+        - name: test-image-repository
+          value: $(params.test-image-repository)
+        - name: git-revision
+          value: $(tasks.test-metadata.results.git-revision)
+        - name: test-event-type
+          value: $(tasks.test-metadata.results.test-event-type)
+
+    - name: run-e2e-konflux-ui
+      runAfter:
+        - format-e2e-test-image
       taskRef:
         resolver: git
         params:
