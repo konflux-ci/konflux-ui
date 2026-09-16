@@ -114,15 +114,6 @@ spec:
                 tag="e2e-${git_revision}"
               fi
               image_ref="${repository}:${tag}"
-              echo "=========================================="
-              echo "[KONFLUX-E2E-IMAGE] Resolved test runner image for IT"
-              echo "[KONFLUX-E2E-IMAGE] Event type: ${event_type}"
-              echo "[KONFLUX-E2E-IMAGE] Git revision: ${git_revision}"
-              echo "[KONFLUX-E2E-IMAGE] Repository: ${repository}"
-              echo "[KONFLUX-E2E-IMAGE] Tag: ${tag}"
-              echo "[KONFLUX-E2E-IMAGE] Pull spec: ${image_ref}"
-              echo "[KONFLUX-E2E-IMAGE] Match this tag to konflux-ui build PipelineRun results E2E_IMAGE_URL"
-              echo "=========================================="
               printf '%s' "${image_ref}" > "$(results.test-image.path)"
       params:
         - name: test-image-repository

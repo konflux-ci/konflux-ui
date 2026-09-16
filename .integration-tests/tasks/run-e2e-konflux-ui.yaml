@@ -247,13 +247,6 @@ spec:
 
         echo "=== Loading configuration ==="
 
-        echo "=========================================="
-        echo "[KONFLUX-E2E-IMAGE] Running Cypress in rebuilt test runner image"
-        echo "[KONFLUX-E2E-IMAGE] Pull spec: $(params.test-image)"
-        echo "[KONFLUX-E2E-IMAGE] Git revision under test: $(params.git-revision)"
-        echo "[KONFLUX-E2E-IMAGE] Job type: $(params.job-type)"
-        echo "=========================================="
-
         if [ "$(params.job-type)" = "periodic-stage" ]; then
           export CYPRESS_KONFLUX_BASE_URL="https://konflux-ui.apps.stone-stg-rh01.l2vh.p1.openshiftapps.com"
           export CYPRESS_LOCAL_CLUSTER=false
@@ -269,7 +262,6 @@ spec:
         echo "Konflux base URL: ${CYPRESS_KONFLUX_BASE_URL}"
 
         echo "=== Selecting E2E test sources ==="
-        echo "[KONFLUX-E2E-IMAGE] Test image pull spec: $(params.test-image)"
         SPEC_FILE="$(params.spec-file)"
 
         # prepare-e2e-sources stages PR e2e-tests/ at /e2e when the folder changed; otherwise /e2e stays empty.
@@ -280,8 +272,7 @@ spec:
           yarn cypress install
           E2E_DIR=/e2e
         else
-          echo "[KONFLUX-E2E-IMAGE] No PR e2e overlay — using image-baked sources at /tmp/e2e"
-          echo "[KONFLUX-E2E-IMAGE] Source tree from rebuilt image (not from git checkout)"
+          echo "No PR e2e overlay — using image-baked sources at /tmp/e2e"
           cd /tmp/e2e
           E2E_DIR=/tmp/e2e
         fi
