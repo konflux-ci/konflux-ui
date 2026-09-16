@@ -6,6 +6,17 @@ import type {
   RoxctlSeverity,
 } from './types';
 
+export const isRoxctlCveTableRow = (item: unknown): item is RoxctlCveTableRow => {
+  if (typeof item !== 'object' || item === null) {
+    return false;
+  }
+  if (!('cve' in item) || !('components' in item) || !('severity' in item)) {
+    return false;
+  }
+  const { cve, components } = item;
+  return typeof cve === 'string' && Array.isArray(components);
+};
+
 /**
  * Regex to extract the content of the `step-proccess-output` section from
  * a full Tekton Results log. Captures everything between the step header
