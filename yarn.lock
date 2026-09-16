@@ -5863,13 +5863,13 @@ __metadata:
   linkType: hard
 
 "@types/jest-image-snapshot@npm:^6":
-  version: 6.4.1
-  resolution: "@types/jest-image-snapshot@npm:6.4.1"
+  version: 6.4.2
+  resolution: "@types/jest-image-snapshot@npm:6.4.2"
   dependencies:
     "@types/jest": "npm:*"
-    "@types/pixelmatch": "npm:*"
+    "@types/pixelmatch": "npm:<7"
     ssim.js: "npm:^3.1.1"
-  checksum: 10/b3cc10cfe82ca34484b6a735b7c4015446782b6884f43fa2d405a26307513b6a402160f8c04d16d020c7cd5907c16aaa8fc97de7c883ac2af7164ee36ca505a8
+  checksum: 10/cda0269429852fbe1f37b623104e538ad1a4f6ba3b01feb70cfda1bc3b25d00c712ae58d86e82274322abe430086053dfa1da4e856383d5dabd5d3e923e8b735
   languageName: node
   linkType: hard
 
@@ -5957,7 +5957,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/pixelmatch@npm:*":
+"@types/pixelmatch@npm:<7":
   version: 5.2.6
   resolution: "@types/pixelmatch@npm:5.2.6"
   dependencies:
