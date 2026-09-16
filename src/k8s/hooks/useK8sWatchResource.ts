@@ -14,6 +14,18 @@ import { useK8sQueryWatch } from './useK8sQueryWatch';
 
 const POLLING_INTERVAL = 10000;
 
+export type UseK8sWatchResourceResult<R> = Pick<
+  UseQueryResult<R>,
+  | 'data'
+  | 'error'
+  | 'isLoading'
+  | 'isError'
+  | 'isFetched'
+  | 'isFetching'
+  | 'dataUpdatedAt'
+  | 'refetch'
+> & { wsError: unknown };
+
 export const useK8sWatchResource = <R extends K8sResourceCommon | K8sResourceCommon[]>(
   resourceInit?: WatchK8sResource,
   model?: K8sModelCommon,
@@ -21,7 +33,7 @@ export const useK8sWatchResource = <R extends K8sResourceCommon | K8sResourceCom
   options: Partial<
     WebSocketOptions & RequestInit & { wsPrefix?: string; pathPrefix?: string }
   > = {},
-): UseQueryResult<R> & { wsError: unknown } => {
+): UseK8sWatchResourceResult<R> => {
   const k8sQueryOptions = convertToK8sQueryParams(resourceInit);
   const wsError = useK8sQueryWatch(
     resourceInit?.watch ? { model, queryOptions: k8sQueryOptions } : null,
@@ -52,6 +64,18 @@ export const useK8sWatchResource = <R extends K8sResourceCommon | K8sResourceCom
     ) as UseQueryOptions<R>;
   };
 
-  const result = useQuery<R>(getQueryOptions());
-  return { ...result, wsError };
+  const { data, error, isLoading, isError, isFetched, isFetching, dataUpdatedAt, refetch } =
+    useQuery<R>(getQueryOptions());
+
+  return {
+    data,
+    error,
+    isLoading,
+    isError,
+    isFetched,
+    isFetching,
+    dataUpdatedAt,
+    refetch,
+    wsError,
+  };
 };
