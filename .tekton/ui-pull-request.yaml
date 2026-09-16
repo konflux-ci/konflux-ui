@@ -237,8 +237,6 @@ spec:
         params:
           - name: input
             value: $(params.e2e-prefetch-input)
-          - name: enable-package-registry-proxy
-            value: $(params.enable-package-registry-proxy)
           - name: SOURCE_ARTIFACT
             value: $(tasks.clone-repository.results.SOURCE_ARTIFACT)
           - name: ociStorage
@@ -334,16 +332,10 @@ spec:
               - $(params.build-args[*])
           - name: BUILD_ARGS_FILE
             value: $(params.build-args-file)
-          - name: PRIVILEGED_NESTED
-            value: $(params.privileged-nested)
           - name: SOURCE_URL
             value: $(tasks.clone-repository.results.url)
           - name: BUILDAH_FORMAT
             value: $(params.buildah-format)
-          - name: HTTP_PROXY
-            value: $(tasks.init.results.http-proxy)
-          - name: NO_PROXY
-            value: $(tasks.init.results.no-proxy)
           - name: SOURCE_DATE_EPOCH
             value: $(params.source-date-epoch)
           - name: REWRITE_TIMESTAMP
