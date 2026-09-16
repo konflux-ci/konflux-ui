@@ -35,7 +35,7 @@ jest.mock('~/feature-flags/hooks', () => {
       fallback?: React.ReactNode;
     }) => {
       const isEnabled = useIsOnFeatureFlagMock(flag);
-      return isEnabled ? children : fallback ?? null;
+      return isEnabled ? children : (fallback ?? null);
     },
   };
 });
@@ -79,7 +79,7 @@ describe('ComponentVersionDetailsView', () => {
     });
     useComponentMock.mockReturnValue([mockComponent, true, undefined]);
     mockUseIsOnFeatureFlag.mockReturnValue(true);
-    mockUseFeatureFlags.mockReturnValue([{ 'components-page': true }, jest.fn()]);
+    mockUseFeatureFlags.mockReturnValue([{ 'component-model': true }, jest.fn()]);
   });
 
   afterEach(() => {
@@ -133,7 +133,7 @@ describe('ComponentVersionDetailsView', () => {
     expect(screen.getByText('Feature flag disabled')).toBeInTheDocument();
     expect(
       screen.getByText(
-        `To view this page, enable the "${FLAGS['components-page'].description}" feature flag.`,
+        `To view this page, enable the "${FLAGS['component-model'].description}" feature flag.`,
       ),
     ).toBeInTheDocument();
   });
