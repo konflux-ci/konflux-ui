@@ -60,7 +60,7 @@ type UseLightspeedChatResult = {
   historyMenuKey: number;
   setIsDrawerOpen: React.Dispatch<React.SetStateAction<boolean>>;
   refreshConversations: () => Promise<void>;
-  startNewChat: () => void;
+  startNewChat: () => Promise<void>;
   selectConversation: (conversationId: string) => Promise<void>;
   filterConversations: (searchValue: string) => void;
   sendMessage: (message: string | number) => Promise<void>;
@@ -171,18 +171,16 @@ export const useLightspeedChat = (): UseLightspeedChatResult => {
     [allConversations],
   );
 
-  const startNewChat = React.useCallback(() => {
-    void (async () => {
-      try {
-        const conversation: IConversation = await createNewConversation();
-        await setActiveConversation(conversation.id);
-        setSendError(undefined);
-      } catch (error) {
-        const message = getErrorMessage(error);
-        setSendError(message);
-        logger.warn('Failed to start new Lightspeed chat', { error: message });
-      }
-    })();
+  const startNewChat = React.useCallback(async () => {
+    try {
+      const conversation: IConversation = await createNewConversation();
+      await setActiveConversation(conversation.id);
+      setSendError(undefined);
+    } catch (error) {
+      const message = getErrorMessage(error);
+      setSendError(message);
+      logger.warn('Failed to start new Lightspeed chat', { error: message });
+    }
   }, [createNewConversation, setActiveConversation]);
 
   const selectConversation = React.useCallback(
@@ -241,7 +239,7 @@ export const useLightspeedChat = (): UseLightspeedChatResult => {
         await client.deleteConversation(conversationId);
 
         if (activeConversationId === conversationId) {
-          startNewChat();
+          await startNewChat();
         }
 
         await refreshConversations();

@@ -1,17 +1,11 @@
 import * as React from 'react';
 import Chatbot, { ChatbotDisplayMode } from '@patternfly/chatbot/dist/dynamic/Chatbot';
-import ChatbotConversationHistoryNav from '@patternfly/chatbot/dist/dynamic/ChatbotConversationHistoryNav';
 import ChatbotToggle from '@patternfly/chatbot/dist/dynamic/ChatbotToggle';
 import { AIChatPortal, getAIChatPortalContainer } from '~/components/AIChat/AIChatPortal';
-import { AIChatDrawerContent } from '~/components/AIChat/components/AIChatDrawerContent';
-import { AIChatDrawerFooter } from '~/components/AIChat/components/AIChatDrawerFooter';
-import { AIChatDrawerHeader } from '~/components/AIChat/components/AIChatDrawerHeader';
+import { AIChatHistoryNav } from '~/components/AIChat/components/AIChatHistoryNav';
 import { AIChatRenameConversationModal } from '~/components/AIChat/components/AIChatRenameConversationModal';
 import {
   KONFLUX_AI_DEFAULT_DISPLAY_MODE,
-  KONFLUX_AI_HISTORY_NO_RESULTS_BODY,
-  KONFLUX_AI_HISTORY_NO_RESULTS_TITLE,
-  KONFLUX_AI_HISTORY_SEARCH_PLACEHOLDER,
   KONFLUX_AI_TOGGLE_BUTTON_LABEL,
   KONFLUX_AI_TOGGLE_TOOLTIP,
 } from '~/components/AIChat/const';
@@ -57,30 +51,6 @@ export const AIChatDock: React.FC = () => {
     }
   }, [clearChatError, isChatbotVisible]);
 
-  const handleToggleDrawer = React.useCallback(() => {
-    if (!isDrawerOpen) {
-      void refreshConversations();
-    }
-    setIsDrawerOpen((open) => !open);
-  }, [isDrawerOpen, refreshConversations, setIsDrawerOpen]);
-
-  const handleNewChat = React.useCallback(() => {
-    startNewChat();
-    setIsDrawerOpen(false);
-    void refreshConversations();
-  }, [refreshConversations, setIsDrawerOpen, startNewChat]);
-
-  const handleSelectConversation = React.useCallback(
-    (_event: React.MouseEvent | undefined, conversationId?: string | number) => {
-      if (conversationId === undefined) {
-        return;
-      }
-      void selectConversation(String(conversationId));
-      setIsDrawerOpen(false);
-    },
-    [selectConversation, setIsDrawerOpen],
-  );
-
   const handleToggleDisplayMode = React.useCallback(() => {
     setDisplayMode((mode) =>
       mode === ChatbotDisplayMode.fullscreen
@@ -104,49 +74,27 @@ export const AIChatDock: React.FC = () => {
           onToggleChatbot={() => setIsChatbotVisible((visible) => !visible)}
         />
         <Chatbot displayMode={displayMode} isVisible={isChatbotVisible}>
-          <ChatbotConversationHistoryNav
-            key={`chat-history-${historyMenuKey}`}
+          <AIChatHistoryNav
             displayMode={displayMode}
-            onDrawerToggle={handleToggleDrawer}
-            isDrawerOpen={isDrawerOpen}
-            setIsDrawerOpen={setIsDrawerOpen}
-            activeItemId={activeConversationId ?? undefined}
-            onSelectActiveItem={handleSelectConversation}
+            isMaximized={isMaximized}
+            activeConversationId={activeConversationId}
+            messages={messages}
             conversations={conversations}
-            onNewChat={handleNewChat}
-            handleTextInputChange={filterConversations}
-            searchInputPlaceholder={KONFLUX_AI_HISTORY_SEARCH_PLACEHOLDER}
-            noResultsState={
-              hasNoSearchResults
-                ? {
-                    titleText: KONFLUX_AI_HISTORY_NO_RESULTS_TITLE,
-                    bodyText: KONFLUX_AI_HISTORY_NO_RESULTS_BODY,
-                  }
-                : undefined
-            }
-            drawerContent={
-              <>
-                <AIChatDrawerHeader
-                  isDrawerOpen={isDrawerOpen}
-                  isMaximized={isMaximized}
-                  onToggleDrawer={handleToggleDrawer}
-                  onToggleDisplayMode={handleToggleDisplayMode}
-                  onClose={handleCloseChat}
-                />
-                <AIChatDrawerContent
-                  chatError={chatError}
-                  announcement={announcement}
-                  messages={messages}
-                  isLoadingConversation={isLoadingConversation}
-                />
-                <AIChatDrawerFooter
-                  isSendButtonDisabled={isSendButtonDisabled || isLoadingConversation}
-                  onSendMessage={(message) => {
-                    void sendMessage(message);
-                  }}
-                />
-              </>
-            }
+            announcement={announcement}
+            isSendButtonDisabled={isSendButtonDisabled}
+            isDrawerOpen={isDrawerOpen}
+            isLoadingConversation={isLoadingConversation}
+            hasNoSearchResults={hasNoSearchResults}
+            chatError={chatError}
+            historyMenuKey={historyMenuKey}
+            setIsDrawerOpen={setIsDrawerOpen}
+            refreshConversations={refreshConversations}
+            startNewChat={startNewChat}
+            selectConversation={selectConversation}
+            filterConversations={filterConversations}
+            sendMessage={sendMessage}
+            onToggleDisplayMode={handleToggleDisplayMode}
+            onCloseChat={handleCloseChat}
           />
         </Chatbot>
         <AIChatRenameConversationModal
