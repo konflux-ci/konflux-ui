@@ -1,5 +1,5 @@
 import React from 'react';
-import { PipelineRunLabel } from '~/consts/pipelinerun';
+import { ReleaseLabel } from '~/consts/release';
 import { ReleaseGroupVersionKind, ReleaseModel } from '~/models';
 import { ReleaseKind } from '~/types';
 import {
@@ -20,7 +20,7 @@ export const useReleasesV2 = (
       selector: groupName
         ? {
             matchLabels: {
-              [PipelineRunLabel.COMPONENT_GROUP]: groupName,
+              [ReleaseLabel.COMPONENT_GROUP]: groupName,
             },
           }
         : undefined,
