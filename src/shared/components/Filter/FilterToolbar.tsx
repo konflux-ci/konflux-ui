@@ -112,7 +112,7 @@ export const FilterToolbar = <C extends readonly FilterConfig<unknown>[]>({
 
   return (
     <Toolbar data-test="filter-toolbar" data-tour={dataTour} clearAllFilters={clearAll}>
-      <ToolbarContent>
+      <ToolbarContent alignItems="start">
         {Array.from(groupedConfigs.entries()).map(([groupName, groupConfigs_]) => {
           const variant = groupName
             ? (groupConfigs[groupName]?.variant ?? 'filter-group')
@@ -124,7 +124,6 @@ export const FilterToolbar = <C extends readonly FilterConfig<unknown>[]>({
               variant={variant}
               data-test={groupName ? `filter-group-${groupName}` : 'filter-group-default'}
               data-tour={groupTour}
-              alignSelf="center"
             >
               {groupConfigs_.map((config) => renderControl(config, options))}
             </ToolbarGroup>
