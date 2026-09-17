@@ -1,13 +1,6 @@
 import * as React from 'react';
-import { Link, NavLink, useNavigate } from 'react-router-dom';
-import {
-  Nav,
-  NavExpandable,
-  NavItem,
-  NavList,
-  PageSidebar,
-  PageSidebarBody,
-} from '@patternfly/react-core';
+import { Link, NavLink } from 'react-router-dom';
+import { Nav, NavItem, NavList, PageSidebar, PageSidebarBody } from '@patternfly/react-core';
 import { css } from '@patternfly/react-styles';
 import {
   APPLICATION_LIST_PATH,
@@ -24,7 +17,7 @@ import {
 import IssuesNavItemContent from '~/components/Issues/IssuesNavItemContent';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { IfFeature } from '~/feature-flags/hooks';
-import { SavedViewNavItems, SavedViewsConfig } from '~/shared/components/SavedViews';
+import { SavedViewNavSection, type SavedViewsConfig } from '~/shared/components/SavedViews';
 import { useActiveRouteChecker } from '../../src/hooks/useActiveRouteChecker';
 import { useNamespace } from '../shared/providers/Namespace';
 import './AppSideBar.scss';
@@ -32,10 +25,7 @@ import './AppSideBar.scss';
 export const AppSideBar: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
   const isActive = useActiveRouteChecker();
   const namespace = useNamespace();
-  const navigate = useNavigate();
   const disabled = !namespace;
-  const isPipelineRunsActive = isActive(PIPELINE_RUNS_PAGE_PATH.path);
-  const [isPipelineRunsExpanded, setIsPipelineRunsExpanded] = React.useState(true);
 
   const pipelineRunsSavedViewsConfig = React.useMemo<SavedViewsConfig>(
     () => ({
@@ -136,7 +126,7 @@ export const AppSideBar: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
             </NavItem>
 
             <IfFeature flag="pipeline-runs-page">
-              <NavExpandable
+              <SavedViewNavSection
                 title={
                   <>
                     Pipeline Runs{' '}
@@ -147,22 +137,16 @@ export const AppSideBar: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
                     />
                   </>
                 }
-                isActive={isPipelineRunsActive}
-                isExpanded={isPipelineRunsExpanded}
-                onExpand={(e) => {
-                  const target = e.target as HTMLElement;
-                  const isToggleArrow = target.closest('.pf-v6-c-nav__toggle-icon');
-                  if (isToggleArrow) {
-                    setIsPipelineRunsExpanded((prev) => !prev);
-                  } else if (namespace) {
-                    navigate(PIPELINE_RUNS_PAGE_PATH.createPath({ workspaceName: namespace }));
-                  }
-                }}
-                className={css({ 'app-side-bar__nav-item--disabled': disabled })}
+                config={pipelineRunsSavedViewsConfig}
+                isActive={isActive(PIPELINE_RUNS_PAGE_PATH.path)}
+                disabled={disabled}
+                href={
+                  namespace
+                    ? PIPELINE_RUNS_PAGE_PATH.createPath({ workspaceName: namespace })
+                    : undefined
+                }
                 data-test="pipeline-runs-nav-group"
-              >
-                {namespace && <SavedViewNavItems config={pipelineRunsSavedViewsConfig} />}
-              </NavExpandable>
+              />
             </IfFeature>
 
             <NavItem

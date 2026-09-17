@@ -16,7 +16,11 @@ jest.mock('../../shared/providers/Namespace', () => ({
 }));
 
 jest.mock('~/shared/components/SavedViews', () => ({
-  SavedViewNavItems: () => null,
+  SavedViewNavSection: ({ title, 'data-test': dataTest, ...rest }: Record<string, unknown>) => (
+    <li data-test={dataTest} className={rest.disabled ? 'app-side-bar__nav-item--disabled' : ''}>
+      {typeof title === 'string' ? title : 'Pipeline Runs'}
+    </li>
+  ),
 }));
 
 jest.mock('~/feature-flags/hooks', () => ({
@@ -157,10 +161,7 @@ describe('AppSideBar', () => {
       'href',
       '/ns/test-namespace/applications',
     );
-    expect(screen.getByText('Components')).toHaveAttribute(
-      'href',
-      '/ns/test-namespace/components',
-    );
+    expect(screen.getByText('Components')).toHaveAttribute('href', '/ns/test-namespace/components');
     expect(screen.getByText('Groups')).toHaveAttribute('href', '/ns/test-namespace/groups');
     expect(screen.getByText('Issues')).toHaveAttribute('href', '/ns/test-namespace/issues');
     expect(screen.getByText('Secrets')).toHaveAttribute('href', '/ns/test-namespace/secrets');
