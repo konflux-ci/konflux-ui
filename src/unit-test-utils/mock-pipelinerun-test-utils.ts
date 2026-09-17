@@ -11,6 +11,7 @@ import { PipelineRunKind, TaskRunKind } from '~/types';
 export const createPipelineRunMockStates = () => ({
   loading: () => [null, false, undefined] as const,
   loaded: (data: PipelineRunKind) => [data, true, undefined] as const,
+  notFound: () => [undefined, true, undefined] as const,
   error: (error: { message: string; code: number }) => [null, true, error] as const,
 });
 

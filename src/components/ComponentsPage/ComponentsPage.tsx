@@ -10,11 +10,11 @@ import PageLayout from '../PageLayout/PageLayout';
 
 const ComponentsPage: React.FC = () => {
   return (
-    <IfFeature flag="components-page">
+    <IfFeature flag="component-model">
       <PageLayout
         title={
           <Title headingLevel="h1" size="2xl">
-            Components <FeatureFlagIndicator flags={['components-page']} fullLabel />
+            Components <FeatureFlagIndicator flags={['component-model']} fullLabel />
           </Title>
         }
         description={
