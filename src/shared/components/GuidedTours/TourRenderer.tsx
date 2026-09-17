@@ -38,6 +38,7 @@ export const TourRenderer: React.FC = () => {
     case STEP_TYPES.MODAL:
       return (
         <ModalStep
+          key={`step-${currentStepIndex}-modal`}
           title={currentStep.title}
           content={currentStep.content}
           variant={currentStep.variant}
@@ -47,6 +48,7 @@ export const TourRenderer: React.FC = () => {
     case STEP_TYPES.SPOTLIGHT:
       return (
         <SpotlightStep
+          key={`step-${currentStepIndex}-${currentStep.target}`}
           title={currentStep.title}
           content={currentStep.content}
           target={currentStep.target}
@@ -57,6 +59,7 @@ export const TourRenderer: React.FC = () => {
     case STEP_TYPES.HIGHLIGHT:
       return (
         <HighlightStep
+          key={`step-${currentStepIndex}-${currentStep.target}`}
           title={currentStep.title}
           content={currentStep.content}
           target={currentStep.target}

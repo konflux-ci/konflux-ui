@@ -1,4 +1,4 @@
-import { loadAnalyticsConfig } from '../load-config';
+import { loadAnalyticsConfig } from '~/analytics/load-config';
 
 const plainTextHeaders = { get: (h: string) => (h === 'content-type' ? 'text/plain' : null) };
 const htmlHeaders = {

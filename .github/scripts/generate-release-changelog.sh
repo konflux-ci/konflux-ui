@@ -8,14 +8,16 @@ set -euo pipefail
 # based on conventional commit prefixes in the PR title.
 #
 # Usage:
-#   generate-release-changelog.sh -r <owner/repo> -b <base_sha> -t <target_sha> [-d <repo_dir>] -o <out_file>
+#   generate-release-changelog.sh -r <owner/repo> -b <base_sha> -t <target_sha> [-d <repo_dir>] [-o <out_file>]
 #
 # Arguments:
 #   -r  Repository in owner/repo format (e.g., konflux-ci/konflux-ui)
 #   -b  Base SHA (older commit)
 #   -t  Target SHA (newer commit)
 #   -d  Optional: existing git repository directory
-#   -o  Output file path for changelog
+#   -o  Optional: output file path for the changelog. When omitted, CHANGELOG_PATH is used instead.
+#
+# CHANGELOG_PATH (environment variable) - Fallback output file when -o is not provided. The script exits with an error if neither -o nor CHANGELOG_PATH is set.
 
 # --- Helper Functions ---
 log_info() { echo "[INFO] $(date '+%Y-%m-%d %H:%M:%S') $*"; }
@@ -24,14 +26,18 @@ log_warn() { echo "[WARN] $(date '+%Y-%m-%d %H:%M:%S') $*" >&2; }
 
 usage() {
   cat >&2 << 'USAGE'
-Usage: generate-release-changelog.sh -r <owner/repo> -b <base_sha> -t <target_sha> [-d <repo_dir>] -o <out_file>
+Usage: generate-release-changelog.sh -r <owner/repo> -b <base_sha> -t <target_sha> [-d <repo_dir>] [-o <out_file>]
 
 Arguments:
   -r  Repository in owner/repo format (e.g., konflux-ci/konflux-ui)
   -b  Base SHA (older commit, production)
   -t  Target SHA (newer commit, staging)
   -d  Optional: existing git repository directory (skips clone)
-  -o  Output file path for changelog
+  -o  Optional: output file path for the changelog. When omitted, CHANGELOG_PATH is used instead.
+
+Environment variables:
+  CHANGELOG_PATH  Fallback output file when -o is not provided. The script exits with an error
+                  if neither -o nor CHANGELOG_PATH is set.
 USAGE
 }
 
@@ -70,6 +76,10 @@ while getopts ":r:b:t:d:o:h" opt; do
     *) log_error "Unknown option: -$OPTARG"; usage; exit 2 ;;
   esac
 done
+
+if [[ -z "$OUT_FILE" ]]; then
+  OUT_FILE="${CHANGELOG_PATH:-}"
+fi
 
 # --- Validate Inputs ---
 if [[ -z "$REPO" || -z "$BASE_SHA" || -z "$TARGET_SHA" || -z "$OUT_FILE" ]]; then
@@ -148,6 +158,8 @@ done
 # --- Extract PR numbers from git log ---
 log_info "Extracting PRs from $BASE_SHA to $TARGET_SHA"
 
+JIRA_ISSUES_FILE="/tmp/jira_issues.md"
+> "$JIRA_ISSUES_FILE"
 TMPDIR=$(mktemp -d)
 trap 'rm -rf "$TMPDIR"; [[ "$CLEANUP_CLONE" == true ]] && rm -rf "$WORK_DIR" 2>/dev/null || true' EXIT
 
@@ -197,6 +209,7 @@ while IFS= read -r subject; do
   if [[ -n "$cc_scope" ]]; then
     if [[ "$cc_scope" =~ ^[A-Z][A-Z0-9]+-[0-9]+$ ]]; then
       scope_ref="[${cc_scope}](${JIRA_BASE_URL}/browse/${cc_scope})"
+      echo "$cc_scope" >> "$JIRA_ISSUES_FILE"
     elif [[ "$cc_scope" =~ ^#([0-9]+)$ ]]; then
       scope_ref="${REPO}#${BASH_REMATCH[1]}"
     fi
@@ -208,8 +221,11 @@ while IFS= read -r subject; do
     author_suffix=" @${pr_author}"
   fi
 
+
+
   if [[ -n "$scope_ref" ]]; then
     entry="- [${scope_ref}] ${description} (${REPO}#${pr_num})${author_suffix}"
+    
   else
     entry="- ${description} (${REPO}#${pr_num})${author_suffix}"
   fi
