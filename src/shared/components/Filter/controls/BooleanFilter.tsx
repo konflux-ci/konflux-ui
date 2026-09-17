@@ -17,7 +17,7 @@ type BooleanFilterProps = {
  * from the URL entirely.
  */
 export const BooleanFilter = ({ config }: BooleanFilterProps) => {
-  const { param, label } = config;
+  const { param, label, dataTour } = config;
 
   const [isChecked, setIsChecked] = useQueryState(param, parseAsBoolean.withDefault(false));
 
@@ -26,7 +26,7 @@ export const BooleanFilter = ({ config }: BooleanFilterProps) => {
   };
 
   return (
-    <ToolbarItem>
+    <ToolbarItem data-tour={dataTour}>
       <Switch
         label={label}
         isChecked={isChecked}

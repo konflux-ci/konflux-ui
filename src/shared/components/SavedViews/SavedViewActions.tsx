@@ -20,6 +20,7 @@ type SavedViewActionsProps = {
   currentColumnStateKey: string;
   isFiltered: boolean;
   activeSavedView: SavedView | undefined;
+  'data-tour'?: string;
 };
 
 export const SavedViewActions: React.FC<SavedViewActionsProps> = ({
@@ -28,6 +29,7 @@ export const SavedViewActions: React.FC<SavedViewActionsProps> = ({
   currentColumnStateKey,
   isFiltered,
   activeSavedView,
+  'data-tour': dataTour,
 }) => {
   const { saveView, deleteView, renameView, updateView } = useSavedViews({
     resourceKey,
@@ -117,6 +119,7 @@ export const SavedViewActions: React.FC<SavedViewActionsProps> = ({
       isExpanded={isOpen}
       isDisabled={isDisabled}
       data-test="saved-view-actions-toggle"
+      data-tour={dataTour}
     >
       Actions
     </MenuToggle>

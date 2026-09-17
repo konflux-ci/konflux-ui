@@ -12,6 +12,8 @@ import { SwitchableSearchFilter } from './controls/SwitchableSearchFilter';
 export type ToolbarGroupConfig = {
   /** PF ToolbarGroup variant. Defaults to 'filter-group'. */
   variant?: 'filter-group' | 'action-group-plain' | 'action-group';
+  /** Optional `data-tour` attribute for guided tour targeting. */
+  'data-tour'?: string;
 };
 
 /**
@@ -28,6 +30,8 @@ type FilterToolbarProps<C extends readonly FilterConfig<unknown>[]> = {
   groups?: Record<string, ToolbarGroupConfig>;
   /** Extra toolbar items rendered after the filter controls (e.g. action buttons). */
   children?: React.ReactNode;
+  /** Tour anchor attribute applied to the root Toolbar element. */
+  'data-tour'?: string;
 };
 
 /**
@@ -87,6 +91,7 @@ export const FilterToolbar = <C extends readonly FilterConfig<unknown>[]>({
   options = {},
   groups: groupConfigs = {},
   children,
+  'data-tour': dataTour,
 }: FilterToolbarProps<C>) => {
   const { clearAll } = useFilterState(configs);
 
@@ -106,17 +111,19 @@ export const FilterToolbar = <C extends readonly FilterConfig<unknown>[]>({
   }, [configs]);
 
   return (
-    <Toolbar data-test="filter-toolbar" clearAllFilters={clearAll}>
+    <Toolbar data-test="filter-toolbar" data-tour={dataTour} clearAllFilters={clearAll}>
       <ToolbarContent>
         {Array.from(groupedConfigs.entries()).map(([groupName, groupConfigs_]) => {
           const variant = groupName
             ? (groupConfigs[groupName]?.variant ?? 'filter-group')
             : 'filter-group';
+          const groupTour = groupName ? groupConfigs[groupName]?.['data-tour'] : undefined;
           return (
             <ToolbarGroup
               key={groupName ?? '__default'}
               variant={variant}
               data-test={groupName ? `filter-group-${groupName}` : 'filter-group-default'}
+              data-tour={groupTour}
               alignSelf="center"
             >
               {groupConfigs_.map((config) => renderControl(config, options))}
