@@ -22,6 +22,7 @@ export interface LogSection {
   containerName: string;
   data: string;
   isCompleted?: boolean;
+  hasTerminatedWithError?: boolean;
 }
 
 /** A LogSection whose data has been normalized (ANSI stripped, line endings unified, split into lines) */
@@ -30,6 +31,7 @@ export interface NormalizedLogSection {
   lines: string[];
   isCompleted?: boolean;
   isTailed?: boolean;
+  hasTerminatedWithError?: boolean;
 }
 
 export type SectionHeaderRow = {

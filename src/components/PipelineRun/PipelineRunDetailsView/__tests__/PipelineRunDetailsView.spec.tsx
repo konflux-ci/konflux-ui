@@ -138,6 +138,14 @@ describe('PipelineRunDetailsView', () => {
     expect(screen.getByText('404: Page not found')).toBeInTheDocument();
   });
 
+  it('should render error state when pipeline run is not found', () => {
+    mockUsePipelineRunV2.mockReturnValue(mockPipelineRunStates.notFound());
+
+    routerRenderer(<PipelineRunDetailsView />);
+
+    expect(screen.getByText('404: Page not found')).toBeInTheDocument();
+  });
+
   it('should render DetailsPage when pipeline run is loaded', () => {
     mockUsePipelineRunV2.mockReturnValue(mockPipelineRunStates.loaded(mockPipelineRun));
 

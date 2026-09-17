@@ -180,12 +180,7 @@ const Logs: React.FC<LogsProps> = ({
                 // Show the error with ANSI styling if available; otherwise mark the
                 // container as fetched with empty content so folding can evaluate it
                 // after load (and so the section still appears in the viewer).
-                appendLog(
-                  name,
-                  message
-                    ? `\x1b[1;31mLOG FETCH ERROR:\n${message}\x1b[0m\n`
-                    : '',
-                );
+                appendLog(name, message ? `\x1b[1;31mLOG FETCH ERROR:\n${message}\x1b[0m\n` : '');
                 return;
               }
 
@@ -260,11 +255,15 @@ const Logs: React.FC<LogsProps> = ({
       .filter((c) => buffersRef.current.has(c.name))
       .map((c) => {
         const buf = buffersRef.current.get(c.name);
+        const lines = buf?.getLines() ?? [];
         return {
           containerName: c.name.toUpperCase(),
-          lines: buf?.getLines() ?? [],
+          lines,
           isCompleted: isContainerStepCompleted(statusByName.get(c.name)),
           isTailed: tailedContainersRef.current.has(c.name),
+          hasTerminatedWithError:
+            lines.some((line) => line.startsWith('LOG FETCH ERROR')) ||
+            (statusByName.get(c.name)?.state?.terminated?.exitCode ?? 0) !== 0,
         };
       });
   }, [renderTick, resource?.status?.containerStatuses, containers]);

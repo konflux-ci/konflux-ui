@@ -6,7 +6,7 @@
 # PRs from being forgotten.
 #
 # Environment Variables (required):
-#   SLACK_WEBHOOK_URL - Slack incoming webhook URL for notifications
+#   PR_REPORT_SLACK_WEBHOOK_URL - Slack incoming webhook URL for notifications
 #   GH_TOKEN          - GitHub token for API access
 #
 # Environment Variables (optional):
@@ -34,8 +34,8 @@ if [ -z "${GH_TOKEN:-}" ]; then
     exit 1
 fi
 
-if [ "$TEST_MODE" != "true" ] && [ -z "${SLACK_WEBHOOK_URL:-}" ]; then
-    echo "Error: SLACK_WEBHOOK_URL is not set (or set TEST_MODE=true for testing)" >&2
+if [ "$TEST_MODE" != "true" ] && [ -z "${PR_REPORT_SLACK_WEBHOOK_URL:-}" ]; then
+    echo "Error: PR_REPORT_SLACK_WEBHOOK_URL is not set (or set TEST_MODE=true for testing)" >&2
     exit 1
 fi
 
@@ -186,7 +186,7 @@ send_to_slack() {
     response=$(curl -s -X POST \
         -H "Content-Type: application/json" \
         -d "$message" \
-        "${SLACK_WEBHOOK_URL}")
+        "${PR_REPORT_SLACK_WEBHOOK_URL}")
 
     if [ "$response" != "ok" ]; then
         echo "Warning: Slack API returned: $response" >&2

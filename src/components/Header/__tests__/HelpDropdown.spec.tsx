@@ -1,4 +1,6 @@
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import {
   EXTERNAL_DOCUMENTATION_BASE_URL,
@@ -8,7 +10,26 @@ import { FeatureFlagsStore } from '~/feature-flags/store';
 import { ModalProvider } from '../../modal/ModalProvider';
 import { HelpDropdown } from '../HelpDropdown';
 
+const mockStartTour = jest.fn();
+const mockGetToursByRoute = jest.fn().mockReturnValue([]);
+const mockCollectAndMerge = jest
+  .fn()
+  .mockReturnValue({ mergedSteps: [], sourceIds: [], hasPrompt: false });
+const mockUseTour = jest
+  .fn()
+  .mockReturnValue({ startTour: mockStartTour, currentRoute: undefined });
+
+jest.mock('~/shared/components/GuidedTours', () => ({
+  useTour: (...args: unknown[]) => mockUseTour(...args),
+  getToursByRoute: (...args: unknown[]) => mockGetToursByRoute(...args),
+  collectAndMerge: (...args: unknown[]) => mockCollectAndMerge(...args),
+}));
+
 const mockUseKonfluxPublicInfo = jest.fn();
+
+jest.mock('~/components/CLILogin/CliLoginModal', () => ({
+  createCliLoginModal: jest.fn(() => () => <div data-test="cli-login-modal" />),
+}));
 
 jest.mock('~/hooks/useKonfluxPublicInfo', () => ({
   useKonfluxPublicInfo: () => mockUseKonfluxPublicInfo(),
@@ -31,8 +52,15 @@ jest.mock('~/feature-flags/store', () => ({
 
 const mockFeatureFlagsStore = FeatureFlagsStore as jest.Mocked<typeof FeatureFlagsStore>;
 
-const renderWithModalProvider = (component: React.ReactElement) => {
-  return render(<ModalProvider>{component}</ModalProvider>);
+const renderWithModalProvider = (component: React.ReactElement, path = '/') => {
+  return render(
+    <MemoryRouter initialEntries={[path]}>
+      <Routes>
+        <Route path="/ns/:workspaceName/*" element={<ModalProvider>{component}</ModalProvider>} />
+        <Route path="*" element={<ModalProvider>{component}</ModalProvider>} />
+      </Routes>
+    </MemoryRouter>,
+  );
 };
 
 describe('HelpDropdown Component', () => {
@@ -40,6 +68,9 @@ describe('HelpDropdown Component', () => {
     jest.clearAllMocks();
     mockUseKonfluxPublicInfo.mockReturnValue([{ visibility: 'public' }]);
     mockFeatureFlagsStore.isOn.mockReturnValue(true);
+    mockUseTour.mockReturnValue({ startTour: mockStartTour, currentRoute: undefined });
+    mockGetToursByRoute.mockReturnValue([]);
+    mockCollectAndMerge.mockReturnValue({ mergedSteps: [], sourceIds: [], hasPrompt: false });
   });
 
   describe('Rendering', () => {
@@ -58,6 +89,7 @@ describe('HelpDropdown Component', () => {
       renderWithModalProvider(<HelpDropdown />);
 
       expect(screen.queryByText('About Konflux')).not.toBeInTheDocument();
+      expect(screen.queryByText('Copy login command')).not.toBeInTheDocument();
       expect(screen.queryByText('Documentation')).not.toBeInTheDocument();
       expect(screen.queryByText('Share feedback')).not.toBeInTheDocument();
     });
@@ -84,6 +116,7 @@ describe('HelpDropdown Component', () => {
 
       await waitFor(() => {
         expect(screen.getByText('About Konflux')).toBeInTheDocument();
+        expect(screen.getByText('Copy login command')).toBeInTheDocument();
         expect(screen.getByText('Documentation')).toBeInTheDocument();
         expect(screen.getByText('Share feedback')).toBeInTheDocument();
       });
@@ -115,13 +148,44 @@ describe('HelpDropdown Component', () => {
 
       await waitFor(() => {
         const aboutItem = screen.getByTestId('help-dropdown-about');
+        const cliLoginItem = screen.getByTestId('help-dropdown-cli-login');
         const docItem = screen.getByTestId('help-dropdown-documentation');
         const feedbackItem = screen.getByTestId('help-dropdown-feedback');
 
         expect(aboutItem).toBeInTheDocument();
+        expect(cliLoginItem).toBeInTheDocument();
         expect(docItem).toBeInTheDocument();
         expect(feedbackItem).toBeInTheDocument();
       });
+    });
+
+    it('should call startTour with merged steps when guided tour is clicked', async () => {
+      const fakeTour = { id: 'test-tour', steps: [] };
+      const mergedSteps = [{ type: 'modal', title: 'Welcome', content: 'Hello' }];
+      mockUseTour.mockReturnValue({
+        startTour: mockStartTour,
+        currentRoute: 'ns/:workspaceName/applications',
+      });
+      mockGetToursByRoute.mockReturnValue([fakeTour]);
+      mockCollectAndMerge.mockReturnValue({
+        mergedSteps,
+        sourceIds: ['test-tour'],
+        hasPrompt: false,
+      });
+
+      renderWithModalProvider(<HelpDropdown />);
+
+      const helpIcon = screen.getByLabelText('Help menu toggle');
+      fireEvent.click(helpIcon);
+
+      await waitFor(() => {
+        expect(screen.getByText('Guided tour')).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByText('Guided tour'));
+
+      expect(mockCollectAndMerge).toHaveBeenCalledWith([fakeTour]);
+      expect(mockStartTour).toHaveBeenCalledWith(mergedSteps, ['test-tour']);
     });
 
     it('should display external link icon for documentation item', async () => {
@@ -134,6 +198,32 @@ describe('HelpDropdown Component', () => {
         const docItem = screen.getByTestId('help-dropdown-documentation');
         expect(docItem.querySelector('svg')).toBeInTheDocument();
       });
+    });
+  });
+
+  describe('Copy login command', () => {
+    it('shows Copy login command as the second menu item', async () => {
+      renderWithModalProvider(<HelpDropdown />);
+
+      fireEvent.click(screen.getByLabelText('Help menu toggle'));
+
+      const items = await screen.findAllByRole('menuitem');
+      expect(items).toHaveLength(4);
+      expect(items[0]).toHaveTextContent('About Konflux');
+      expect(items[1]).toHaveTextContent('Copy login command');
+      expect(items[2]).toHaveTextContent('Documentation');
+      expect(items[3]).toHaveTextContent('Share feedback');
+      expect(screen.queryByRole('link', { name: /Copy login command/i })).not.toBeInTheDocument();
+    });
+
+    it('opens the CLI login modal when Copy login command is clicked', async () => {
+      const user = userEvent.setup();
+      renderWithModalProvider(<HelpDropdown />, '/ns/my-tenant/applications');
+
+      await user.click(screen.getByLabelText('Help menu toggle'));
+      await user.click(await screen.findByRole('menuitem', { name: /Copy login command/i }));
+
+      expect(await screen.findByTestId('cli-login-modal')).toBeInTheDocument();
     });
   });
 

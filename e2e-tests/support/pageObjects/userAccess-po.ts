@@ -1,0 +1,16 @@
+export const userAccessPO = {
+  listTableRow: '[aria-label="User access list"] tr',
+  searchInput: 'input[name*="usernameInput"]',
+  changeAccessButton: 'button:contains("Change access")',
+  rowKebab: '[data-test="kebab-button"]',
+  revokeAccessItem: '[data-test="Revoke access"]',
+  revokeAccessModal: '[data-test="revoke-access-modal"]',
+  revokeAccessConfirm: '[data-test="revoke-access"]',
+  changeRoleModal: '[aria-label="Change role"]',
+  changeRoleSelect: '[data-test="user-access-change-role-select"]',
+  usernameInput: '[data-test="username-input"]',
+  roleDropdownToggle: 'button[data-test="dropdown-toggle"]',
+  roleDropdownListbox: '#basic-dropdown-listbox',
+  submitButton: '[data-test="submit-button"]',
+  rowCheckbox: 'input[type="checkbox"]',
+};

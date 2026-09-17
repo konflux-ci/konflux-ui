@@ -174,7 +174,7 @@ describe('LogViewer Integration Tests', () => {
       render(<LogViewer {...defaultProps} />);
 
       expect(screen.getByLabelText('Dark theme')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /download/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /download logs/i })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /expand/i })).toBeInTheDocument();
     });
 
@@ -326,12 +326,24 @@ describe('LogViewer Integration Tests', () => {
   });
 
   describe('Download functionality', () => {
-    it('should download logs with correct filename', async () => {
+    it('should show download dropdown with Download option', async () => {
       const user = userEvent.setup();
       render(<LogViewer {...defaultProps} />);
 
-      const downloadButton = screen.getByRole('button', { name: /^Download$/i });
-      await user.click(downloadButton);
+      const toggleButton = screen.getByRole('button', { name: /download logs/i });
+      await user.click(toggleButton);
+
+      expect(screen.getByText('Download')).toBeVisible();
+    });
+
+    it('should download logs with correct filename from dropdown', async () => {
+      const user = userEvent.setup();
+      render(<LogViewer {...defaultProps} />);
+
+      // Open dropdown
+      await user.click(screen.getByRole('button', { name: /download logs/i }));
+      // Click Download option
+      await user.click(screen.getByText('Download'));
 
       expect(mockSaveAs).toHaveBeenCalledWith(expect.any(Blob), 'test-task.log');
       const [blob] = mockSaveAs.mock.calls[0];
@@ -342,16 +354,53 @@ describe('LogViewer Integration Tests', () => {
       const user = userEvent.setup();
       render(<LogViewer {...defaultProps} sections={[{ containerName: '', data: '' }]} />);
 
-      const downloadButton = screen.getByRole('button', { name: /^Download$/i });
-      await user.click(downloadButton);
+      await user.click(screen.getByRole('button', { name: /download logs/i }));
+      await user.click(screen.getByText('Download'));
 
       expect(mockSaveAs).not.toHaveBeenCalled();
     });
 
-    it('should not render download all button when onDownloadAll is not provided', () => {
-      render(<LogViewer {...defaultProps} downloadAllLabel="Download All Logs" />);
+    it('should show download all option when onDownloadAll is provided', async () => {
+      const user = userEvent.setup();
+      const onDownloadAll = jest.fn().mockResolvedValue(undefined);
 
-      expect(screen.queryByText('Download All Logs')).not.toBeInTheDocument();
+      render(
+        <LogViewer
+          {...defaultProps}
+          onDownloadAll={onDownloadAll}
+          downloadAllLabel="Download all task logs"
+        />,
+      );
+
+      await user.click(screen.getByRole('button', { name: /download logs/i }));
+
+      expect(screen.getByText('Download')).toBeVisible();
+      expect(screen.getByText('Download all task logs')).toBeVisible();
+    });
+
+    it('should hide download all option when onDownloadAll is not provided', async () => {
+      const user = userEvent.setup();
+      render(<LogViewer {...defaultProps} />);
+
+      await user.click(screen.getByRole('button', { name: /download logs/i }));
+
+      expect(screen.getByText('Download')).toBeVisible();
+      expect(screen.queryByText('Download all task logs')).not.toBeInTheDocument();
+    });
+
+    it('should close dropdown after selecting download option', async () => {
+      const user = userEvent.setup();
+      render(<LogViewer {...defaultProps} />);
+
+      const toggleButton = screen.getByRole('button', { name: /download logs/i });
+      await user.click(toggleButton);
+      expect(screen.getByText('Download')).toBeVisible();
+
+      await user.click(screen.getByText('Download'));
+
+      await waitFor(() => {
+        expect(toggleButton).toHaveAttribute('aria-expanded', 'false');
+      });
     });
 
     it('should handle download all functionality', async () => {
@@ -362,17 +411,22 @@ describe('LogViewer Integration Tests', () => {
         <LogViewer
           {...defaultProps}
           onDownloadAll={onDownloadAll}
-          downloadAllLabel="Download All Logs"
+          downloadAllLabel="Download all task logs"
         />,
       );
 
-      const downloadAllButton = screen.getByRole('button', { name: /download all logs/i });
-      await user.click(downloadAllButton);
+      // Open dropdown and click download all
+      await user.click(screen.getByRole('button', { name: /download logs/i }));
+      await user.click(screen.getByText('Download all task logs'));
 
       expect(onDownloadAll).toHaveBeenCalled();
 
+      // Wait for the async download to complete (promise resolves, state resets)
+      // then reopen dropdown and verify item is re-enabled
+      await user.click(screen.getByRole('button', { name: /download logs/i }));
       await waitFor(() => {
-        expect(downloadAllButton).not.toBeDisabled();
+        const downloadAllItem = screen.getByText('Download all task logs');
+        expect(downloadAllItem.closest('button')).not.toBeDisabled();
       });
     });
 
@@ -385,19 +439,35 @@ describe('LogViewer Integration Tests', () => {
         <LogViewer
           {...defaultProps}
           onDownloadAll={onDownloadAll}
-          downloadAllLabel="Download All"
+          downloadAllLabel="Download all task logs"
         />,
       );
 
-      const downloadAllButton = screen.getByRole('button', { name: /download all/i });
-      await user.click(downloadAllButton);
+      // Open dropdown and click download all
+      await user.click(screen.getByRole('button', { name: /download logs/i }));
+      await user.click(screen.getByText('Download all task logs'));
 
+      // Wait for the async error handler to complete, then reopen dropdown
+      // and verify item is re-enabled
+      await user.click(screen.getByRole('button', { name: /download logs/i }));
       await waitFor(() => {
-        expect(downloadAllButton).not.toBeDisabled();
+        const downloadAllItem = screen.getByText('Download all task logs');
+        expect(downloadAllItem.closest('button')).not.toBeDisabled();
       });
 
       expect(consoleSpy).toHaveBeenCalledWith('[WARN] Download failed', '');
       consoleSpy.mockRestore();
+    });
+
+    it('should use default downloadAllLabel when not provided', async () => {
+      const user = userEvent.setup();
+      const onDownloadAll = jest.fn().mockResolvedValue(undefined);
+
+      render(<LogViewer {...defaultProps} onDownloadAll={onDownloadAll} />);
+
+      await user.click(screen.getByRole('button', { name: /download logs/i }));
+
+      expect(screen.getByText('Download all task logs')).toBeVisible();
     });
   });
 
@@ -430,8 +500,8 @@ describe('LogViewer Integration Tests', () => {
 
       render(<LogViewer {...defaultProps} />);
 
-      expect(screen.getByRole('button', { name: /collapse/i })).toBeInTheDocument();
-      expect(screen.queryByRole('button', { name: /expand/i })).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Collapse' })).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Expand' })).not.toBeInTheDocument();
     });
 
     it('should apply fullscreen height styles', () => {
@@ -652,8 +722,8 @@ describe('LogViewer Integration Tests', () => {
       const user = userEvent.setup();
       render(<LogViewer {...sectionProps} />);
 
-      const downloadButton = screen.getByRole('button', { name: /^Download$/i });
-      await user.click(downloadButton);
+      await user.click(screen.getByRole('button', { name: /download logs/i }));
+      await user.click(screen.getByText('Download'));
 
       expect(mockSaveAs).toHaveBeenCalledWith(expect.any(Blob), 'test-task.log');
     });

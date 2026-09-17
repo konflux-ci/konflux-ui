@@ -4,8 +4,12 @@ import {
   Banner,
   Button,
   Checkbox,
+  Dropdown,
+  DropdownItem,
+  DropdownList,
   Flex,
   FlexItem,
+  MenuToggle,
   Popover,
   SearchInput,
   Spinner,
@@ -83,7 +87,7 @@ const LogViewer: React.FC<Props> = ({
   allowAutoScroll,
   sections,
   normalizedSections: normalizedSectionsProp,
-  downloadAllLabel,
+  downloadAllLabel = 'Download all task logs',
   onDownloadAll,
   onDownloadFullLogs,
   onViewFullLogs,
@@ -123,6 +127,7 @@ const LogViewer: React.FC<Props> = ({
   }, [normalizedSections]);
 
   const [downloadAllStatus, setDownloadAllStatus] = React.useState(false);
+  const [isDownloadOpen, setIsDownloadOpen] = React.useState(false);
 
   const downloadLogs = () => {
     if (!downloadData) return;
@@ -183,7 +188,7 @@ const LogViewer: React.FC<Props> = ({
             alignItems="center"
           >
             <ToolbarGroup>
-              <ToolbarItem>
+              <ToolbarItem className="log-viewer__toolbar-item--padded">
                 <FeatureFlagIndicator flags={['kubearchive-logs', 'taskruns-kubearchive']} />
               </ToolbarItem>
             </ToolbarGroup>
@@ -218,44 +223,55 @@ const LogViewer: React.FC<Props> = ({
               </ToolbarItem>
               <ToolbarItem variant="separator" className="log-viewer__divider" />
               <ToolbarItem>
-                <Button variant="link" onClick={downloadLogs}>
-                  <DownloadIcon className="log-viewer__icon" />
-                  Download
-                </Button>
+                <Dropdown
+                  isOpen={isDownloadOpen}
+                  onSelect={() => setIsDownloadOpen(false)}
+                  onOpenChange={setIsDownloadOpen}
+                  toggle={(toggleRef) => (
+                    <MenuToggle
+                      ref={toggleRef}
+                      variant="plain"
+                      onClick={() => setIsDownloadOpen(!isDownloadOpen)}
+                      isExpanded={isDownloadOpen}
+                      aria-label="Download logs"
+                      data-test="download-logs-toggle"
+                    >
+                      <DownloadIcon />
+                    </MenuToggle>
+                  )}
+                >
+                  <DropdownList>
+                    <DropdownItem key="download" onClick={downloadLogs} data-test="download-log">
+                      Download
+                    </DropdownItem>
+                    {onDownloadAll && (
+                      <DropdownItem
+                        key="download-all"
+                        onClick={startDownloadAll}
+                        isDisabled={downloadAllStatus}
+                        data-test="download-all-logs"
+                      >
+                        <span className="log-viewer__download-all-label">
+                          {downloadAllLabel}
+                          {downloadAllStatus && <LoadingInline />}
+                        </span>
+                      </DropdownItem>
+                    )}
+                  </DropdownList>
+                </Dropdown>
               </ToolbarItem>
-              <ToolbarItem variant="separator" className="log-viewer__divider" />
-              {onDownloadAll && (
+              {fullscreenToggle && isFullscreenSupported && (
                 <>
+                  <ToolbarItem variant="separator" className="log-viewer__divider" />
                   <ToolbarItem>
                     <Button
-                      variant="link"
-                      onClick={startDownloadAll}
-                      isDisabled={downloadAllStatus}
-                    >
-                      <DownloadIcon className="log-viewer__icon" />
-                      {downloadAllLabel}
-                      {downloadAllStatus && <LoadingInline />}
-                    </Button>
+                      icon={isFullscreen ? <CompressIcon /> : <ExpandIcon />}
+                      variant="plain"
+                      onClick={fullscreenToggle}
+                      aria-label={isFullscreen ? 'Collapse' : 'Expand'}
+                    />
                   </ToolbarItem>
-                  <ToolbarItem variant="separator" className="log-viewer__divider" />
                 </>
-              )}
-              {fullscreenToggle && isFullscreenSupported && (
-                <ToolbarItem gap={{ default: 'gapMd' }}>
-                  <Button variant="link" onClick={fullscreenToggle}>
-                    {isFullscreen ? (
-                      <>
-                        <CompressIcon className="log-viewer__icon" />
-                        Collapse
-                      </>
-                    ) : (
-                      <>
-                        <ExpandIcon className="log-viewer__icon" />
-                        Expand
-                      </>
-                    )}
-                  </Button>
-                </ToolbarItem>
               )}
               <ToolbarItem variant="separator" className="log-viewer__divider" />
               <ToolbarItem>
@@ -274,6 +290,7 @@ const LogViewer: React.FC<Props> = ({
                   hasAutoWidth
                 >
                   <Button
+                    className="log-viewer__toolbar-item--padded"
                     icon={<OutlinedKeyboardIcon />}
                     variant="plain"
                     aria-label="Show keyboard shortcuts"

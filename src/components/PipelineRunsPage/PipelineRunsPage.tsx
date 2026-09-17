@@ -14,8 +14,8 @@ import {
   FilterToolbar,
   buildOptions,
 } from '~/shared/components/Filter';
-import { useActiveSavedView, SavedViewStar } from '~/shared/components/SavedViews';
-import { Table, TableContainer } from '~/shared/components/TableV2';
+import { useActiveSavedView, SavedViewActions } from '~/shared/components/SavedViews';
+import { Table, TableContainer, SortDropdown } from '~/shared/components/TableV2';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { PipelineRunKind, ComponentKind } from '~/types';
 import {
@@ -35,6 +35,7 @@ const filterConfigs = defineFilters<PipelineRunKind>()([
     type: 'switchableSearch',
     param: 'searchField',
     label: 'Search',
+    group: 'search',
     fields: [
       {
         label: 'Name',
@@ -78,6 +79,7 @@ const TopFilter = defineFilters<PipelineRunKind>()([
     param: 'archive',
     label: 'Include archived',
     group: 'archive',
+    dataTour: 'pipeline-runs-archive-toggle',
   },
 ]);
 
@@ -233,12 +235,13 @@ export const PipelineRunsPage: React.FC = () => {
       description="Monitor pipeline runs across applications and components."
       customActions={
         <FilterToolbar configs={TopFilter}>
-          <SavedViewStar
+          <SavedViewActions
             resourceKey="pipeline-runs"
             columnKeyPrefix="prns-columns"
             currentColumnStateKey={columnStateKey}
             isFiltered={isFiltered}
             activeSavedView={activeSavedView}
+            data-tour="pipeline-runs-saved-view-actions"
           />
         </FilterToolbar>
       }
@@ -247,16 +250,33 @@ export const PipelineRunsPage: React.FC = () => {
         <FilterToolbar
           configs={filterConfigs}
           options={optionsMap}
+          data-tour="pipeline-runs-filter-toolbar"
           groups={{
-            resource: { variant: 'filter-group' },
-            attributes: { variant: 'filter-group' },
+            search: {
+              variant: 'filter-group',
+              'data-tour': 'pipeline-runs-search-filter',
+            },
+            resource: {
+              variant: 'filter-group',
+              'data-tour': 'pipeline-runs-server-filters',
+            },
+            attributes: {
+              variant: 'filter-group',
+              'data-tour': 'pipeline-runs-client-filters',
+            },
             archive: { variant: 'filter-group' },
           }}
         >
+          <SortDropdown
+            columns={columns}
+            columnStateKey={columnStateKey}
+            data-tour="pipeline-runs-sort-dropdown"
+          />
           <ColumnManagement
             columns={columns}
             columnStateKey={columnStateKey}
             showColumnManagement
+            data-tour="pipeline-runs-column-management"
           />
         </FilterToolbar>
         {hasRequiredFilters ? (

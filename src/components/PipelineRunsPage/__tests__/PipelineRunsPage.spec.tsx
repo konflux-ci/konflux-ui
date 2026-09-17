@@ -18,7 +18,7 @@ jest.mock('~/components/ColumnManagement/ColumnManagement', () => ({
 jest.mock('~/shared/components/SavedViews', () => ({
   ...jest.requireActual('~/shared/components/SavedViews'),
   useActiveSavedView: jest.fn(),
-  SavedViewStar: () => <div data-test="saved-view-star" />,
+  SavedViewActions: () => <div data-test="saved-view-actions" />,
 }));
 
 jest.mock('~/hooks/useApplications', () => ({
@@ -143,9 +143,9 @@ describe('PipelineRunsPage', () => {
     expect(screen.getAllByTestId('filter-toolbar')).toHaveLength(2);
   });
 
-  it('renders saved view star inside toolbar', () => {
+  it('renders saved view actions inside toolbar', () => {
     renderPage();
-    expect(screen.getByTestId('saved-view-star')).toBeInTheDocument();
+    expect(screen.getByTestId('saved-view-actions')).toBeInTheDocument();
   });
 
   it('uses saved view label as page title when active', () => {

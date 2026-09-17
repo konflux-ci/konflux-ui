@@ -38,10 +38,22 @@ spec:
       type: string
       default: 'quay-secret'
       description: 'Secret name for OCI registry authentication'
-    - name: konflux-base-url
+    - name: source-repo-url
       type: string
       default: ''
-      description: 'Konflux base URL for Cypress tests (from prepare-e2e-resources pipeline task)'
+      description: 'Git URL of the PR source repo, from test-metadata'
+    - name: git-revision
+      type: string
+      default: ''
+      description: 'PR head commit SHA, from test-metadata'
+    - name: target-branch
+      type: string
+      default: ''
+      description: 'PR target branch (e.g. main), from test-metadata'
+    - name: target-repo-url
+      type: string
+      default: ''
+      description: 'Upstream Git URL (git-org/git-repo). Required for fork -> upstream PR overlay.'
   volumes:
     # Enlarge /dev/shm for Cypress/Chrome; default container shm (~64MB) causes flaky browser crashes
     - name: dshm
@@ -49,6 +61,8 @@ spec:
         medium: Memory
         sizeLimit: 3Gi
     - name: test-artifacts
+      emptyDir: {}
+    - name: e2e-overlay
       emptyDir: {}
     - name: oci-credentials
       secret:
@@ -62,12 +76,126 @@ spec:
       - name: test-artifacts
         mountPath: /artifacts
   steps:
+    - name: retrieve-local-url
+      results:
+        - name: base-url
+          description: 'Konflux base URL for Cypress tests (https://<kind-ip>:9443)'
+      image: docker.io/bitnami/kubectl@sha256:95de17e6eb92da83a58c90a9df0c4cede634f898d2e6b92ea04f4a6ee6ace08d # kubectl 1.36.3
+      env:
+        - name: TEKTON_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+      script: |
+        #!/usr/bin/env bash
+        set -euo pipefail
+
+        if [ "$(params.job-type)" = "periodic-stage" ]; then
+          echo "Skipping Kind cluster setup for periodic-stage"
+          : > "$(step.results.base-url.path)"
+          exit 0
+        fi
+
+        echo "=== Getting PipelineRun name and kubeconfig ==="
+
+        PIPELINE_RUN_NAME="$(context.pipelineRun.name)"
+        NAMESPACE="${TEKTON_NAMESPACE}"
+        echo "PipelineRun name: ${PIPELINE_RUN_NAME}"
+        echo "Namespace: ${NAMESPACE}"
+
+        # Construct the secret name
+        SECRET_NAME="kfg-${PIPELINE_RUN_NAME}"
+        echo "Looking for secret: ${SECRET_NAME}"
+
+        # Extract kubeconfig from the secret (0600 so it is not world-readable)
+        kubectl get secret "${SECRET_NAME}" -n "${NAMESPACE}" -o jsonpath='{.data.kubeconfig}' \
+          | base64 -d \
+          | install -m 0600 /dev/stdin /tmp/kubeconfig
+
+        # Switch to Kind cluster context
+        export KUBECONFIG=/tmp/kubeconfig
+
+        echo "=== Extracting Konflux base URL from kubeconfig ==="
+
+        KUBE_SERVER=$(kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}')
+        echo "Kubernetes API server: ${KUBE_SERVER}"
+
+        # Extract IP address (remove https:// prefix and :6443 port)
+        KUBE_IP=$(echo "${KUBE_SERVER}" | sed -E 's|https?://([^:]+):.*|\1|')
+        echo "Extracted IP: ${KUBE_IP}"
+
+        CYPRESS_KONFLUX_BASE_URL="https://${KUBE_IP}:9443"
+        echo "Konflux base URL: ${CYPRESS_KONFLUX_BASE_URL}"
+
+        echo -n "${CYPRESS_KONFLUX_BASE_URL}" > "$(step.results.base-url.path)"
+
+        echo "Setup complete. Ready for E2E tests."
+
+    - name: prepare-e2e-sources
+      when:
+        - input: '$(params.job-type)'
+          operator: in
+          values: ['pr-check']
+      image: quay.io/konflux-qe-incubator/konflux-qe-tools@sha256:88d70f9c61d2059e3a084fe6f2fb3ac341bc65efe9c6ba994e42a61bbb54fcba
+      volumeMounts:
+        - name: e2e-overlay
+          mountPath: /e2e
+      env:
+        - name: GIT_TERMINAL_PROMPT
+          value: '0'
+      script: |
+        #!/usr/bin/env bash
+        set -euo pipefail
+
+        SOURCE_REPO_URL="$(params.source-repo-url)"
+        TARGET_REPO_URL="$(params.target-repo-url)"
+        GIT_REVISION="$(params.git-revision)"
+        TARGET_BRANCH="$(params.target-branch)"
+        TARGET_BRANCH="${TARGET_BRANCH#refs/heads/}"
+
+        echo "=== Checking for e2e-tests/ changes (pr-check) ==="
+        echo "Source repo: ${SOURCE_REPO_URL}"
+        echo "Target repo: ${TARGET_REPO_URL}"
+        echo "PR revision: ${GIT_REVISION}"
+        echo "Target branch: ${TARGET_BRANCH}"
+
+        # PR overlay applies only to fork -> upstream PRs (same as pr_check scope on konflux-ci/konflux-ui).
+        if [ "${SOURCE_REPO_URL}" = "${TARGET_REPO_URL}" ]; then
+          echo "Same-repo PR — skipping e2e overlay, run-e2e will use image sources"
+          exit 0
+        fi
+
+        git config --global init.defaultBranch main
+        git init /tmp/repo
+        cd /tmp/repo
+        git remote add origin "${SOURCE_REPO_URL}"
+
+        echo "Fetching PR revision ${GIT_REVISION} from fork..."
+        git fetch --depth=1 origin "${GIT_REVISION}"
+        git remote add upstream "${TARGET_REPO_URL}"
+        echo "Fetching upstream/${TARGET_BRANCH}..."
+        git fetch --depth=1 upstream \
+          "refs/heads/${TARGET_BRANCH}:refs/remotes/upstream/${TARGET_BRANCH}"
+        echo "Fetch complete"
+
+        if git diff --quiet "upstream/${TARGET_BRANCH}" "${GIT_REVISION}" -- e2e-tests/; then
+          echo "No e2e-tests/ changes detected — run-e2e will use image sources"
+          exit 0
+        fi
+
+        echo "e2e-tests/ changed — staging PR sources at /e2e"
+        git checkout "${GIT_REVISION}" -- e2e-tests/
+        cp -a e2e-tests/. /e2e/
+
+        # run-e2e-test runs as non-root (OpenShift arbitrary UID); root-owned files block yarn install.
+        chmod -R a+rwX /e2e
+
+        echo "Staged $(find /e2e -type f | wc -l) files under /e2e"
+
     - name: run-e2e-test
       image: quay.io/konflux_ui_qe/konflux-ui-tests:$(params.test-image-tag)
       onError: continue
-      workingDir: /tmp/e2e
-      # We should set the appropriate requests/limits based on our future observing
-      # Setting default values for memory and cpu by a guess
+      # workingDir is set dynamically in the script: /e2e when PR sources are staged, /tmp/e2e otherwise.
       computeResources:
         limits:
           memory: 8Gi
@@ -80,6 +208,8 @@ spec:
         # Chromium-based browsers (such as Cypress and Playwright) require /dev/shm for reliable operation inside containers.
         - name: dshm
           mountPath: /dev/shm
+        - name: e2e-overlay
+          mountPath: /e2e
       env:
         - name: CYPRESS_USERNAME
           valueFrom:
@@ -106,6 +236,8 @@ spec:
             secretKeyRef:
               name: $(params.cypress-cloud-secret)
               key: record-key
+        - name: LOCAL_KONFLUX_BASE_URL
+          value: $(steps.retrieve-local-url.results.base-url)
       script: |
         #!/usr/bin/env bash
         # Note: NOT using 'set -e' so script continues after test failure
@@ -118,18 +250,33 @@ spec:
           export CYPRESS_LOCAL_CLUSTER=false
           export CYPRESS_PERIODIC_RUN_STAGE=true
         else
-          if [ -z "$(params.konflux-base-url)" ]; then
-            echo "ERROR: konflux-base-url param is missing or empty (prepare-e2e-resources task failed?)"
+          if [ -z "${LOCAL_KONFLUX_BASE_URL}" ]; then
+            echo "ERROR: LOCAL_KONFLUX_BASE_URL is missing or empty (retrieve-local-url step failed?)"
             exit 1
           fi
-          export CYPRESS_KONFLUX_BASE_URL="$(params.konflux-base-url)"
+          export CYPRESS_KONFLUX_BASE_URL="${LOCAL_KONFLUX_BASE_URL}"
           export CYPRESS_LOCAL_CLUSTER=true
         fi
         echo "Konflux base URL: ${CYPRESS_KONFLUX_BASE_URL}"
 
-        echo "=== Running E2E tests ==="
+        echo "=== Selecting E2E test sources ==="
         SPEC_FILE="$(params.spec-file)"
 
+        # prepare-e2e-sources stages PR e2e-tests/ at /e2e when the folder changed; otherwise /e2e stays empty.
+        if [ -n "$(ls -A /e2e 2>/dev/null)" ]; then
+          echo "PR e2e sources detected at /e2e — installing dependencies"
+          cd /e2e
+          yarn install --immutable || { echo 'ERROR: yarn install failed'; exit 1; }
+          yarn cypress install
+          E2E_DIR=/e2e
+        else
+          echo "No PR e2e overlay — using image-baked sources at /tmp/e2e"
+          cd /tmp/e2e
+          E2E_DIR=/tmp/e2e
+        fi
+
+        echo "=== Running E2E tests ==="
+        echo "Working directory: ${E2E_DIR}"
         echo "Running test spec: ${SPEC_FILE}"
 
         # Run tests and capture exit code (don't exit on failure)
@@ -147,19 +294,19 @@ spec:
         echo "=== Collecting test artifacts ==="
         mkdir -p /artifacts
 
-        # Copy Cypress artifacts if they exist
-        if [ -d "cypress/videos" ]; then
+        # Copy Cypress artifacts from whichever source tree was used for the run
+        if [ -d "${E2E_DIR}/cypress/videos" ]; then
           echo "Copying videos..."
-          cp -r cypress/videos /artifacts/ || true
+          cp -r "${E2E_DIR}/cypress/videos" /artifacts/ || true
         fi
 
-        if [ -d "cypress/screenshots" ]; then
+        if [ -d "${E2E_DIR}/cypress/screenshots" ]; then
           echo "Copying screenshots..."
-          cp -r cypress/screenshots /artifacts/ || true
+          cp -r "${E2E_DIR}/cypress/screenshots" /artifacts/ || true
         fi
 
         # Copy test reports
-        for f in cypress/junit-*.xml; do
+        for f in "${E2E_DIR}"/cypress/junit-*.xml; do
           if [ -f "$f" ]; then
             echo "Copying JUnit report: $f"
             cp "$f" /artifacts/ || true

@@ -54,6 +54,25 @@ jest.mock('../src/hooks/useKonfluxPublicInfo', () => ({
   ...jest.requireActual('../src/hooks/useKonfluxPublicInfo'),
 }));
 
+jest.mock('../src/shared/components/GuidedTours/hooks/useTour', () => ({
+  __esModule: true,
+  useTour: jest.fn(() => ({
+    isActive: false,
+    currentStep: undefined,
+    currentStepIndex: 0,
+    totalSteps: 0,
+    isFirstStep: false,
+    isLastStep: false,
+    currentRoute: undefined,
+    startTour: jest.fn(),
+    next: jest.fn(),
+    prev: jest.fn(),
+    skip: jest.fn(),
+    done: jest.fn(),
+    seen: {},
+  })),
+}));
+
 global.ResizeObserver = jest.fn().mockImplementation(() => ({
   observe: jest.fn(),
   unobserve: jest.fn(),

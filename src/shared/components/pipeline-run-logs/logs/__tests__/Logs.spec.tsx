@@ -357,6 +357,151 @@ describe('Logs', () => {
         expect(lastCall.normalizedSections[1].containerName).toBe('CONTAINER2');
         expect(lastCall.normalizedSections[1].lines).toEqual([]);
       });
+
+      await act(async () => {
+        await Promise.resolve();
+      });
+
+      const lastCall = mockLogViewer.mock.calls[mockLogViewer.mock.calls.length - 1][0];
+      expect(lastCall.normalizedSections).toHaveLength(2);
+      expect(lastCall.normalizedSections[0]).toEqual(
+        expect.objectContaining({
+          containerName: 'CONTAINER1',
+          lines: ['has logs'],
+          isCompleted: true,
+          hasTerminatedWithError: false,
+        }),
+      );
+      expect(lastCall.normalizedSections[1]).toEqual(
+        expect.objectContaining({
+          containerName: 'CONTAINER2',
+          lines: [],
+          isCompleted: true,
+          hasTerminatedWithError: false,
+        }),
+      );
+    });
+
+    it('should mark sections with hasTerminatedWithError as true when a container exits with a non-zero code', async () => {
+      const failedContainer: ContainerStatus = {
+        name: 'container1',
+        state: { terminated: { exitCode: 1 } },
+        ready: false,
+        restartCount: 0,
+        image: 'test-image',
+        imageID: 'test-image-id',
+      };
+
+      const resourceWithStatus: PodKind = {
+        ...mockResource,
+        status: {
+          phase: 'Failed',
+          containerStatuses: [failedContainer],
+        },
+      };
+
+      (containerToLogSourceStatus as jest.Mock).mockReturnValue('terminated');
+      (commonFetchText as jest.Mock).mockResolvedValueOnce('failed step logs\n');
+
+      render(
+        <Logs
+          {...defaultProps}
+          resource={resourceWithStatus}
+          containers={[{ name: 'container1' }]}
+        />,
+      );
+
+      await waitFor(() => {
+        const lastCall = mockLogViewer.mock.calls[mockLogViewer.mock.calls.length - 1][0];
+        expect(lastCall.normalizedSections[0]).toEqual(
+          expect.objectContaining({
+            containerName: 'CONTAINER1',
+            isCompleted: true,
+            hasTerminatedWithError: true,
+          }),
+        );
+      });
+    });
+
+    it('should mark a section with hasTerminatedWithError as true when log fetching fails', async () => {
+      const terminatedContainer: ContainerStatus = {
+        name: 'container1',
+        state: { terminated: { exitCode: 0 } },
+        ready: false,
+        restartCount: 0,
+        image: 'test-image',
+        imageID: 'test-image-id',
+      };
+
+      const resourceWithStatus: PodKind = {
+        ...mockResource,
+        status: {
+          phase: 'Failed',
+          containerStatuses: [terminatedContainer],
+        },
+      };
+
+      (containerToLogSourceStatus as jest.Mock).mockReturnValue('terminated');
+      (commonFetchText as jest.Mock).mockRejectedValue(new Error('Network error'));
+
+      render(
+        <Logs
+          {...defaultProps}
+          resource={resourceWithStatus}
+          containers={[{ name: 'container1' }]}
+        />,
+      );
+
+      await waitFor(() => {
+        const lastCall = mockLogViewer.mock.calls[mockLogViewer.mock.calls.length - 1][0];
+        expect(lastCall.normalizedSections[0].hasTerminatedWithError).toBe(true);
+      });
+    });
+
+    it('should not mark sections with hasTerminatedWithError for running containers', async () => {
+      const runningContainer: ContainerStatus = {
+        name: 'container1',
+        state: { running: { startedAt: new Date().toISOString() } },
+        ready: true,
+        restartCount: 0,
+        image: 'test-image',
+        imageID: 'test-image-id',
+      };
+
+      const resourceWithStatus: PodKind = {
+        ...mockResource,
+        status: {
+          phase: 'Running',
+          containerStatuses: [runningContainer],
+        },
+      };
+
+      (containerToLogSourceStatus as jest.Mock).mockReturnValue('running');
+
+      render(
+        <Logs
+          {...defaultProps}
+          resource={resourceWithStatus}
+          containers={[{ name: 'container1' }]}
+        />,
+      );
+
+      // Simulate websocket message so a section appears in the viewer
+      const messageHandler = mockWebSocketInstance.onMessage.mock.calls[0][0];
+      act(() => {
+        messageHandler('aGVsbG8gd29ybGQ=');
+      });
+
+      await waitFor(() => {
+        const lastCall = mockLogViewer.mock.calls[mockLogViewer.mock.calls.length - 1][0];
+        expect(lastCall.normalizedSections[0]).toEqual(
+          expect.objectContaining({
+            containerName: 'CONTAINER1',
+            isCompleted: false,
+            hasTerminatedWithError: false,
+          }),
+        );
+      });
     });
 
     it('should pass empty sections when no containers have logs', () => {

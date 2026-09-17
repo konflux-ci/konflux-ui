@@ -1,6 +1,7 @@
 import { screen } from '@testing-library/react';
 import { Issue, IssueState, IssueSeverity, IssueType } from '~/kite/issue-type';
 import { useIssues } from '~/kite/kite-hooks';
+import * as dateTime from '~/shared/components/timestamp/datetime';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { renderWithQueryClientAndRouter } from '~/unit-test-utils/rendering-utils';
 import { LatestIssuesCard } from '../LatestIssuesCard';
@@ -253,10 +254,11 @@ describe('LatestIssuesCard', () => {
     });
 
     it('should format timestamps correctly', () => {
+      const detectedAt = '2023-10-15T14:30:45Z';
       const mockIssue = createMockIssue({
         id: 'time-test',
         title: 'Timestamp Test Issue',
-        detectedAt: '2023-10-15T14:30:45Z', // Sunday, October 15, 2023, 2:30:45 PM UTC
+        detectedAt,
       });
 
       mockUseIssues.mockReturnValue({
@@ -267,16 +269,17 @@ describe('LatestIssuesCard', () => {
 
       renderWithQueryClientAndRouter(<LatestIssuesCard />);
 
-      // The timestamp should be formatted according to the formatTimestamp function
-      // This will vary based on the user's locale, so we just check that some timestamp is present
-      expect(screen.getByText(/Oct 15.*\d{1,2}:\d{2}.*[AP]M/)).toBeInTheDocument();
+      expect(screen.getByTestId('timestamp')).toHaveTextContent(
+        dateTime.dateTimeFormatter.format(new Date(detectedAt)),
+      );
     });
 
     it('should format timestamps with minutes correctly', () => {
+      const detectedAt = '2023-10-15T14:32:45Z';
       const mockIssue = createMockIssue({
         id: 'time-with-minutes',
         title: 'Timestamp With Minutes Test',
-        detectedAt: '2023-10-15T14:32:45Z', // Should include minutes
+        detectedAt,
       });
 
       mockUseIssues.mockReturnValue({
@@ -287,8 +290,9 @@ describe('LatestIssuesCard', () => {
 
       renderWithQueryClientAndRouter(<LatestIssuesCard />);
 
-      // This should show minutes as well
-      expect(screen.getByText(/Oct 15.*\d{1,2}:\d{2}.*[AP]M/)).toBeInTheDocument();
+      expect(screen.getByTestId('timestamp')).toHaveTextContent(
+        dateTime.dateTimeFormatter.format(new Date(detectedAt)),
+      );
     });
   });
 
