@@ -127,9 +127,17 @@ const PipelineRunsListViewV2: React.FC<React.PropsWithChildren<PipelineRunsListV
 
   const error = compError ?? plrError;
   if (error) {
-    return getErrorState(error, plrLoaded, 'pipeline runs', false, {
-      504: "Couldn't load pipeline history (request timed out). Recent runs on the cluster may still exist. This is usually a slow history/archive query, not a cluster outage.",
-    });
+    return getErrorState(
+      error,
+      compError ? compLoaded : plrLoaded,
+      'pipeline runs',
+      false,
+      compError
+        ? undefined
+        : {
+            504: "Couldn't load pipeline history (request timed out). Recent runs on the cluster may still exist. This is usually a slow history/archive query, not a cluster outage.",
+          },
+    );
   }
 
   const isFiltered =

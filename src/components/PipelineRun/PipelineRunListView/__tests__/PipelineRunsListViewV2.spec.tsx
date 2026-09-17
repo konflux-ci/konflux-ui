@@ -283,6 +283,16 @@ describe('PipelineRunsListViewV2', () => {
     screen.getByText('Unable to load pipeline runs');
   });
 
+  it('should not show pipeline-specific 504 message for component errors', () => {
+    useComponentMock.mockReturnValue([undefined, true, { code: 504, message: 'Gateway Timeout' }]);
+    renderWithQueryClient(<TestedComponentV2 />);
+    expect(screen.getByText('Unable to load pipeline runs')).toBeInTheDocument();
+    expect(screen.getByText('Gateway Timeout')).toBeInTheDocument();
+    expect(
+      screen.queryByText(/Couldn't load pipeline history/),
+    ).not.toBeInTheDocument();
+  });
+
   it('should render empty state if no pipeline runs are present', () => {
     usePipelineRunsV2Mock.mockReturnValue([
       [],
