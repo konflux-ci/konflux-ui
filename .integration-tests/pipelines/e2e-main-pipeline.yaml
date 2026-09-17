@@ -210,6 +210,7 @@ spec:
                 tag="e2e-${git_revision}"
               fi
               image_ref="${repository}:${tag}"
+              echo "Image reference: ${image_ref}"
               printf '%s' "${image_ref}" > "$(results.test-image.path)"
       params:
         - name: test-image-repository
