@@ -46,13 +46,12 @@ const IntegrationTestsEmptyState: React.FC<
       emptyStateImg={emptyStateImgUrl}
       title="Test any code changes"
     >
-      {/* TODO: we might want to update the text, since it mentions "application" */}
       <EmptyStateBody>
         Integration tests run in parallel, validating each new component build with the latest
-        version of all other application components.
+        version of all other component group components.
         <br />
         To add an integration test, link to a Git repository containing code that can test how your
-        application components work together.
+        component group components work together.
       </EmptyStateBody>
       <EmptyStateActions>
         <ButtonWithAccessTooltip
@@ -85,6 +84,7 @@ const IntegrationTestsListViewV2: React.FC<React.PropsWithChildren> = () => {
 
   const handleAddTest = React.useCallback(() => {
     // TODO: update to open page to add a ComponentGroup's IntegrationTestScenario page once implemented
+    // will be done on https://redhat.atlassian.net/browse/KFLUXUI-1716
     // eslint-disable-next-line no-alert
     alert('TODO');
   }, []);
@@ -100,6 +100,7 @@ const IntegrationTestsListViewV2: React.FC<React.PropsWithChildren> = () => {
           return (
             // TODO: update route path to open ComponentGroup's IntegrationTestScenario
             // Details page once implemented
+            // will be done on https://redhat.atlassian.net/browse/KFLUXUI-1717
             // eslint-disable-next-line no-alert
             <Link to="#" data-test="integration-tests__row-name" onClick={() => alert('TODO')}>
               {obj.metadata?.name}
