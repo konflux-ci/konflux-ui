@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, To } from 'react-router-dom';
 import {
   Button,
   ButtonVariant,
@@ -15,12 +15,9 @@ import {
 } from '@patternfly/react-core';
 import { OutlinedQuestionCircleIcon } from '@patternfly/react-icons/dist/esm/icons/outlined-question-circle-icon';
 import { getErrorState } from '~/shared/utils/error-utils';
-import { useIntegrationTestScenario } from '../../../../hooks/useIntegrationTestScenarios';
-import { APPLICATION_DETAILS_PATH } from '../../../../routes/paths';
-import { RouterParams } from '../../../../routes/utils';
+import { IntegrationTestScenarioKind } from '~/types/coreBuildService';
 import { Timestamp } from '../../../../shared';
 import ExternalLink from '../../../../shared/components/links/ExternalLink';
-import { useNamespace } from '../../../../shared/providers/Namespace';
 import MetadataList from '../../../MetadataList';
 import { useModalLauncher } from '../../../modal/ModalProvider';
 import { createEditContextsModal } from '../../EditContextsModal';
@@ -32,16 +29,18 @@ import {
   ResolverRefParams,
 } from '../../IntegrationTestForm/utils/create-utils';
 
-const IntegrationTestOverviewTab: React.FC<React.PropsWithChildren> = () => {
-  const namespace = useNamespace();
-  const { integrationTestName, applicationName } = useParams<RouterParams>();
+type IntegrationTestOverviewTabProps = {
+  integrationTest: IntegrationTestScenarioKind | undefined | null;
+  loaded: boolean;
+  error: unknown;
+  contextTitle: string;
+  contextDetailsPath: To;
+  contextName: string;
+};
 
-  const [integrationTest, loaded, error] = useIntegrationTestScenario(
-    namespace,
-    applicationName,
-    integrationTestName,
-  );
-
+const IntegrationTestOverviewTab: React.FC<
+  React.PropsWithChildren<IntegrationTestOverviewTabProps>
+> = ({ integrationTest, loaded, error, contextTitle, contextDetailsPath, contextName }) => {
   const showModal = useModalLauncher();
 
   if (error) {
@@ -49,7 +48,7 @@ const IntegrationTestOverviewTab: React.FC<React.PropsWithChildren> = () => {
   }
 
   const optionalReleaseLabel =
-    integrationTest.metadata.labels?.[IntegrationTestLabels.OPTIONAL] === 'true';
+    integrationTest?.metadata?.labels?.[IntegrationTestLabels.OPTIONAL] === 'true';
 
   const params = integrationTest?.spec?.params;
   const contexts = integrationTest?.spec?.contexts;
@@ -71,31 +70,31 @@ const IntegrationTestOverviewTab: React.FC<React.PropsWithChildren> = () => {
               <DescriptionListGroup>
                 <DescriptionListTerm>Name</DescriptionListTerm>
                 <DescriptionListDescription>
-                  {integrationTest.metadata.name ?? '-'}
+                  {integrationTest?.metadata?.name ?? '-'}
                 </DescriptionListDescription>
               </DescriptionListGroup>
               <DescriptionListGroup>
                 <DescriptionListTerm>Namespace</DescriptionListTerm>
                 <DescriptionListDescription>
-                  {integrationTest.metadata.namespace ?? '-'}
+                  {integrationTest?.metadata?.namespace ?? '-'}
                 </DescriptionListDescription>
               </DescriptionListGroup>
               <DescriptionListGroup>
                 <DescriptionListTerm>Labels</DescriptionListTerm>
                 <DescriptionListDescription>
-                  <MetadataList metadata={integrationTest.metadata.labels} />
+                  <MetadataList metadata={integrationTest?.metadata?.labels} />
                 </DescriptionListDescription>
               </DescriptionListGroup>
               <DescriptionListGroup>
                 <DescriptionListTerm>Annotations</DescriptionListTerm>
                 <DescriptionListDescription>
-                  <MetadataList metadata={integrationTest.metadata.annotations} />
+                  <MetadataList metadata={integrationTest?.metadata?.annotations} />
                 </DescriptionListDescription>
               </DescriptionListGroup>
               <DescriptionListGroup>
                 <DescriptionListTerm>Created at</DescriptionListTerm>
                 <DescriptionListDescription>
-                  <Timestamp timestamp={integrationTest.metadata.creationTimestamp ?? '-'} />
+                  <Timestamp timestamp={integrationTest?.metadata?.creationTimestamp ?? '-'} />
                 </DescriptionListDescription>
               </DescriptionListGroup>
             </DescriptionList>
@@ -110,7 +109,7 @@ const IntegrationTestOverviewTab: React.FC<React.PropsWithChildren> = () => {
                 default: '1Col',
               }}
             >
-              {integrationTest.spec.resolverRef && (
+              {integrationTest?.spec.resolverRef && (
                 <>
                   <DescriptionListGroup>
                     <DescriptionListTerm>Type</DescriptionListTerm>
@@ -120,7 +119,7 @@ const IntegrationTestOverviewTab: React.FC<React.PropsWithChildren> = () => {
                   </DescriptionListGroup>
                   {integrationTest.spec.resolverRef.params.map((param) => {
                     const paramLink = getURLForParam(
-                      integrationTest.spec.resolverRef.params,
+                      integrationTest?.spec.resolverRef?.params ?? [],
                       param.name,
                     );
                     if (!param.value) {
@@ -216,16 +215,9 @@ const IntegrationTestOverviewTab: React.FC<React.PropsWithChildren> = () => {
                 </DescriptionListDescription>
               </DescriptionListGroup>
               <DescriptionListGroup>
-                <DescriptionListTerm>Application</DescriptionListTerm>
+                <DescriptionListTerm>{contextTitle}</DescriptionListTerm>
                 <DescriptionListDescription>
-                  <Link
-                    to={APPLICATION_DETAILS_PATH.createPath({
-                      workspaceName: namespace,
-                      applicationName: integrationTest.spec.application,
-                    })}
-                  >
-                    {integrationTest.spec.application}
-                  </Link>
+                  <Link to={contextDetailsPath}>{contextName}</Link>
                 </DescriptionListDescription>
               </DescriptionListGroup>
             </DescriptionList>

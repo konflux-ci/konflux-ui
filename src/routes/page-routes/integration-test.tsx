@@ -1,8 +1,8 @@
 import {
   integrationDetailsPageLoader,
-  IntegrationTestDetailsView,
-  IntegrationTestOverviewTab,
-  IntegrationTestPipelineRunTab,
+  IntegrationTestDetailsByApplication,
+  IntegrationTestOverviewTabByApplication,
+  IntegrationTestPipelineRunTabByApplication,
 } from '../../components/IntegrationTests/IntegrationTestDetails';
 import {
   IntegrationTestCreateForm,
@@ -39,15 +39,15 @@ const integrationTestRoutes = [
     path: INTEGRATION_TEST_DETAILS_PATH.path,
     loader: integrationDetailsPageLoader,
     errorElement: <RouteErrorBoundry />,
-    element: <IntegrationTestDetailsView />,
+    element: <IntegrationTestDetailsByApplication />,
     children: [
       {
         index: true,
-        element: <IntegrationTestOverviewTab />,
+        element: <IntegrationTestOverviewTabByApplication />,
       },
       {
         path: 'pipelineruns',
-        element: <IntegrationTestPipelineRunTab />,
+        element: <IntegrationTestPipelineRunTabByApplication />,
       },
     ],
   },

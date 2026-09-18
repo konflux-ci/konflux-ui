@@ -1,29 +1,28 @@
 import React from 'react';
-import { useNavigate, Link, useParams } from 'react-router-dom';
+import { useNavigate, Link, To } from 'react-router-dom';
 import { Bullseye, Spinner, Content, ContentVariants } from '@patternfly/react-core';
 import { getErrorState } from '~/shared/utils/error-utils';
-import { useIntegrationTestScenario } from '../../../hooks/useIntegrationTestScenarios';
+import { IntegrationTestScenarioKind } from '~/types/coreBuildService';
 import { IntegrationTestScenarioModel } from '../../../models';
-import {
-  INTEGRATION_TEST_DETAILS_PATH,
-  INTEGRATION_TEST_EDIT_PATH,
-  INTEGRATION_TEST_LIST_PATH,
-} from '../../../routes/paths';
-import { RouterParams } from '../../../routes/utils';
-import { useNamespace } from '../../../shared/providers/Namespace';
 import { useAccessReviewForModel } from '../../../utils/rbac';
-import { useApplicationBreadcrumbs } from '../../Applications/breadcrumbs/breadcrumb-utils';
 import { DetailsPage } from '../../DetailsPage';
 import { useModalLauncher } from '../../modal/ModalProvider';
 import { integrationTestDeleteModalAndNavigate } from '../IntegrationTestsListView/useIntegrationTestActions';
 
-const IntegrationTestDetailsView: React.FC<React.PropsWithChildren> = () => {
-  const namespace = useNamespace();
-  const { integrationTestName, applicationName } = useParams<RouterParams>();
+type IntegrationTestDetailsViewProps = {
+  integrationTest: IntegrationTestScenarioKind | undefined | null;
+  loaded: boolean;
+  error: unknown;
+  breadcrumbs: ({ name: string; path: string } | React.ReactElement)[];
+  editPath: To;
+  listPath: To;
+};
 
+const IntegrationTestDetailsView: React.FC<
+  React.PropsWithChildren<IntegrationTestDetailsViewProps>
+> = ({ integrationTest, loaded, error, breadcrumbs, editPath, listPath }) => {
   const showModal = useModalLauncher();
   const navigate = useNavigate();
-  const applicationBreadcrumbs = useApplicationBreadcrumbs();
   const [canUpdateIntegrationTest] = useAccessReviewForModel(
     IntegrationTestScenarioModel,
     'update',
@@ -33,38 +32,15 @@ const IntegrationTestDetailsView: React.FC<React.PropsWithChildren> = () => {
     'delete',
   );
 
-  const [integrationTest, loaded, loadErr] = useIntegrationTestScenario(
-    namespace,
-    applicationName,
-    integrationTestName,
-  );
-
-  if (loadErr) {
-    return getErrorState(loadErr, loaded, 'integration test');
+  if (error) {
+    return getErrorState(error, loaded, 'integration test');
   }
 
   if (integrationTest?.metadata) {
     return (
       <DetailsPage
-        headTitle={integrationTest.metadata.name}
-        breadcrumbs={[
-          ...applicationBreadcrumbs,
-          {
-            path: INTEGRATION_TEST_LIST_PATH.createPath({
-              applicationName,
-              workspaceName: namespace,
-            }),
-            name: 'Integration tests',
-          },
-          {
-            path: INTEGRATION_TEST_DETAILS_PATH.createPath({
-              applicationName,
-              integrationTestName,
-              workspaceName: namespace,
-            }),
-            name: integrationTest.metadata.name,
-          },
-        ]}
+        headTitle={integrationTest.metadata.name ?? ''}
+        breadcrumbs={breadcrumbs}
         title={
           <Content component={ContentVariants.h2}>
             <b data-test="test-name">{integrationTest.metadata.name}</b>
@@ -74,17 +50,7 @@ const IntegrationTestDetailsView: React.FC<React.PropsWithChildren> = () => {
           {
             key: 'edit',
             label: 'Edit',
-            component: (
-              <Link
-                to={INTEGRATION_TEST_EDIT_PATH.createPath({
-                  applicationName,
-                  integrationTestName,
-                  workspaceName: namespace,
-                })}
-              >
-                Edit
-              </Link>
-            ),
+            component: <Link to={editPath}>Edit</Link>,
             isDisabled: !canUpdateIntegrationTest,
             disabledTooltip: "You don't have access to edit this integration test",
           },
@@ -92,16 +58,10 @@ const IntegrationTestDetailsView: React.FC<React.PropsWithChildren> = () => {
             onClick: () =>
               showModal<{ submitClicked: boolean }>(
                 integrationTestDeleteModalAndNavigate(integrationTest),
-              ).closed.then(({ submitClicked }) => {
-                if (submitClicked)
-                  navigate(
-                    INTEGRATION_TEST_LIST_PATH.createPath({
-                      applicationName,
-                      workspaceName: namespace,
-                    }),
-                  );
+              ).closed?.then(({ submitClicked }) => {
+                if (submitClicked) navigate(listPath);
               }),
-            key: `delete-${integrationTest.metadata.name.toLowerCase()}`,
+            key: `delete-${integrationTest.metadata?.name?.toLowerCase()}`,
             label: 'Delete',
             isDisabled: !canDeleteIntegrationTest,
             disabledTooltip: "You don't have access to delete this integration test",
