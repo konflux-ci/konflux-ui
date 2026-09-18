@@ -100,7 +100,7 @@ const ActionCell: React.FC<{ plr: PipelineRunKind }> = ({ plr }) => {
   return <ActionMenu actions={actions} onOpen={onOpen} />;
 };
 
-export const getPipelineRunsColumns = (namespace: string): ColumnDefinition<PipelineRunKind>[] => [
+export const pipelineRunsColumns: ColumnDefinition<PipelineRunKind>[] = [
   {
     id: 'name',
     header: 'Name',
@@ -114,7 +114,7 @@ export const getPipelineRunsColumns = (namespace: string): ColumnDefinition<Pipe
       const applicationName = plr.metadata?.labels?.[PipelineRunLabel.APPLICATION] ?? '';
       const pipelineRunName = plr.metadata?.name ?? '';
       const isFinished = !UNFINISHED_PLR_STATUSES.includes(pipelineRunStatus(plr));
-
+      const namespace = plr.metadata?.namespace ?? '';
       return (
         <>
           <Link
@@ -181,7 +181,11 @@ export const getPipelineRunsColumns = (namespace: string): ColumnDefinition<Pipe
     id: 'testOutput',
     header: 'Test output',
     visibleFrom: 'xl',
-    cell: (info) => <TestOutputCell plr={info.row.original} namespace={namespace} />,
+    cell: (info) => {
+      const plr = info.row.original;
+      const namespace = plr.metadata?.namespace ?? '';
+      return <TestOutputCell plr={plr} namespace={namespace} />;
+    },
   },
   {
     id: 'type',
@@ -201,7 +205,7 @@ export const getPipelineRunsColumns = (namespace: string): ColumnDefinition<Pipe
       const plr = info.row.original;
       const componentName = plr.metadata?.labels?.[PipelineRunLabel.COMPONENT];
       const applicationName = plr.metadata?.labels?.[PipelineRunLabel.APPLICATION];
-
+      const namespace = plr.metadata?.namespace ?? '';
       if (!componentName) {
         return <>-</>;
       }

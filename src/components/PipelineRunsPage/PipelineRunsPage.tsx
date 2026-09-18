@@ -26,7 +26,7 @@ import {
 } from '~/utils/pipeline-run-filter-utils';
 import { PLRStatus } from '~/utils/plr-status-config';
 import PageLayout from '../PageLayout/PageLayout';
-import { getPipelineRunsColumns } from './PipelineRunsColumns';
+import { pipelineRunsColumns } from './PipelineRunsColumns';
 import { PipelineRunsEmptyState } from './PipelineRunsEmptyState';
 
 const filterConfigs = defineFilters<PipelineRunKind>()([
@@ -187,7 +187,6 @@ export const PipelineRunsPage: React.FC = () => {
   const { filteredData } = useFilteredData(filterConfigs, pipelineRuns, clientFilterValues);
 
   // Column definitions
-  const columns = React.useMemo(() => getPipelineRunsColumns(namespace), [namespace]);
 
   // Column state key: saved view's key or default
   const columnStateKey = activeSavedView?.columnStateKey ?? 'prns-columns';
@@ -273,12 +272,12 @@ export const PipelineRunsPage: React.FC = () => {
           }}
         >
           <SortDropdown
-            columns={columns}
+            columns={pipelineRunsColumns}
             columnStateKey={columnStateKey}
             data-tour="pipeline-runs-sort-dropdown"
           />
           <ColumnManagement
-            columns={columns}
+            columns={pipelineRunsColumns}
             columnStateKey={columnStateKey}
             showColumnManagement
             data-tour="pipeline-runs-column-management"
@@ -295,13 +294,14 @@ export const PipelineRunsPage: React.FC = () => {
           >
             <Table
               data={filteredData}
-              columns={columns}
+              columns={pipelineRunsColumns}
               getRowId={(row) => row.metadata?.uid ?? row.metadata?.name ?? ''}
               aria-label="Pipeline runs"
               columnStateKey={columnStateKey}
               hasNextPage={hasNextPage}
               isFetchingNextPage={isFetchingNextPage}
               fetchNextPage={getNextPage}
+              enableSorting
             />
           </TableContainer>
         ) : (
