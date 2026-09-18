@@ -20,12 +20,11 @@ import { useNamespace } from '~/shared/providers/Namespace';
 import { PipelineRunKind, ComponentKind } from '~/types';
 import {
   PIPELINE_RUN_EVENT_TYPE_OPTIONS,
-  PIPELINE_RUN_STATUS_OPTIONS,
   PIPELINE_RUN_TYPE_OPTIONS,
   eventTypeFilterConfig,
   pipelineTypeFilterConfig,
-  statusFilterConfig,
 } from '~/utils/pipeline-run-filter-utils';
+import { PLRStatus } from '~/utils/plr-status-config';
 import PageLayout from '../PageLayout/PageLayout';
 import { getPipelineRunsColumns } from './PipelineRunsColumns';
 import { PipelineRunsEmptyState } from './PipelineRunsEmptyState';
@@ -69,7 +68,13 @@ const filterConfigs = defineFilters<PipelineRunKind>()([
     group: 'resource',
   },
   { ...eventTypeFilterConfig, group: 'resource' },
-  { ...statusFilterConfig, group: 'attributes' },
+  {
+    type: 'multiSelect',
+    param: 'status',
+    label: 'Status',
+    filterFn: PLRStatus.statusFilterFn,
+    group: 'attributes',
+  },
   { ...pipelineTypeFilterConfig, group: 'attributes' },
 ] as const);
 
@@ -225,7 +230,7 @@ export const PipelineRunsPage: React.FC = () => {
     app: appOptions,
     component: componentOptions,
     eventType: PIPELINE_RUN_EVENT_TYPE_OPTIONS,
-    status: PIPELINE_RUN_STATUS_OPTIONS,
+    status: PLRStatus.filterOptions,
     type: PIPELINE_RUN_TYPE_OPTIONS,
   };
 

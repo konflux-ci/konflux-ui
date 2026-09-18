@@ -7,7 +7,6 @@ import capitalize from 'lodash-es/capitalize';
 import { usePipelinerunActionsLazy } from '~/components/PipelineRun/PipelineRunListView/pipelinerun-actions';
 import { PipelineRunTestOutputResult } from '~/components/PipelineRun/PipelineRunListView/PipelineRunTestOutputResult';
 import { ScanStatus } from '~/components/PipelineRun/PipelineRunListView/ScanStatus';
-import { StatusIconWithText } from '~/components/StatusIcon/StatusIcon';
 import {
   PipelineRunLabel,
   PipelineRunType,
@@ -26,6 +25,7 @@ import { PipelineRunKind } from '~/types';
 import { createCommitObjectFromPLR } from '~/utils/commits-utils';
 import { PipelineRunEventTypeLabel } from '~/utils/pipeline-run-filter-utils';
 import { pipelineRunStatus } from '~/utils/pipeline-utils';
+import { PLRStatus } from '~/utils/plr-status-config';
 
 const PipelineRunAttestation: React.FC<{ plr: PipelineRunKind }> = ({ plr }) => {
   const hasAttestation =
@@ -173,9 +173,9 @@ export const getPipelineRunsColumns = (namespace: string): ColumnDefinition<Pipe
   {
     id: 'status',
     header: 'Status',
-    accessorFn: (row) => pipelineRunStatus(row),
+    accessorFn: (row) => PLRStatus.registry.deriveStatus(row),
     sortable: true,
-    cell: (info) => <StatusIconWithText status={info.getValue() as runStatus} />,
+    cell: (info) => <PLRStatus.StatusIconWithText status={info.getValue() as runStatus} />,
   },
   {
     id: 'testOutput',
