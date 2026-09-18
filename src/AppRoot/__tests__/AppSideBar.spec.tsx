@@ -16,7 +16,11 @@ jest.mock('../../shared/providers/Namespace', () => ({
 }));
 
 jest.mock('~/shared/components/SavedViews', () => ({
-  SavedViewNavItems: () => null,
+  SavedViewNavSection: ({ title, 'data-test': dataTest, ...rest }: Record<string, unknown>) => (
+    <li data-test={dataTest} className={rest.disabled ? 'app-side-bar__nav-item--disabled' : ''}>
+      {typeof title === 'string' ? title : 'Pipeline Runs'}
+    </li>
+  ),
 }));
 
 jest.mock('~/feature-flags/hooks', () => ({
@@ -124,10 +128,16 @@ describe('AppSideBar', () => {
     expect(screen.getByText('Applications').closest('li')).toHaveClass(
       'app-side-bar__nav-item--disabled',
     );
+    expect(screen.getByText('Components').closest('li')).toHaveClass(
+      'app-side-bar__nav-item--disabled',
+    );
+    expect(screen.getByText('Groups').closest('li')).toHaveClass(
+      'app-side-bar__nav-item--disabled',
+    );
     expect(screen.getByText('Issues').closest('li')).toHaveClass(
       'app-side-bar__nav-item--disabled',
     );
-    expect(screen.getByText('Pipeline Runs').closest('li')).toHaveClass(
+    expect(screen.getByTestId('pipeline-runs-nav-group')).toHaveClass(
       'app-side-bar__nav-item--disabled',
     );
     expect(screen.getByText('Secrets').closest('li')).toHaveClass(
@@ -151,35 +161,29 @@ describe('AppSideBar', () => {
       'href',
       '/ns/test-namespace/applications',
     );
+    expect(screen.getByText('Components')).toHaveAttribute('href', '/ns/test-namespace/components');
+    expect(screen.getByText('Groups')).toHaveAttribute('href', '/ns/test-namespace/groups');
     expect(screen.getByText('Issues')).toHaveAttribute('href', '/ns/test-namespace/issues');
-    expect(screen.getByText('Pipeline Runs')).toHaveAttribute('href', '/ns/test-namespace/prns');
     expect(screen.getByText('Secrets')).toHaveAttribute('href', '/ns/test-namespace/secrets');
     expect(screen.getByText('Releases')).toHaveAttribute('href', '/ns/test-namespace/release');
     expect(screen.getByText('User Access')).toHaveAttribute('href', '/ns/test-namespace/access');
   });
 
-  it('should render the Pipeline Runs nav item', () => {
+  it('should render the Pipeline Runs nav expandable group', () => {
     (useActiveRouteChecker as jest.Mock).mockReturnValue(() => false);
     (useNamespace as jest.Mock).mockReturnValue('test-namespace');
 
     routerRenderer(<AppSideBar isOpen={true} />);
+    expect(screen.getByTestId('pipeline-runs-nav-group')).toBeInTheDocument();
     expect(screen.getByText('Pipeline Runs')).toBeInTheDocument();
   });
 
-  it('should have correct href for Pipeline Runs when namespace is selected', () => {
-    (useActiveRouteChecker as jest.Mock).mockReturnValue(() => false);
-    (useNamespace as jest.Mock).mockReturnValue('test-namespace');
-
-    routerRenderer(<AppSideBar isOpen={true} />);
-    expect(screen.getByText('Pipeline Runs')).toHaveAttribute('href', '/ns/test-namespace/prns');
-  });
-
-  it('should disable Pipeline Runs when no namespace is selected', () => {
+  it('should disable Pipeline Runs group when no namespace is selected', () => {
     (useActiveRouteChecker as jest.Mock).mockReturnValue(() => false);
     (useNamespace as jest.Mock).mockReturnValue(null);
 
     routerRenderer(<AppSideBar isOpen={true} />);
-    expect(screen.getByText('Pipeline Runs').closest('li')).toHaveClass(
+    expect(screen.getByTestId('pipeline-runs-nav-group')).toHaveClass(
       'app-side-bar__nav-item--disabled',
     );
   });
@@ -192,11 +196,20 @@ describe('AppSideBar', () => {
 
     expect(screen.getByText('Namespaces')).toHaveAttribute('href', '/ns');
     expect(screen.getByText('Applications')).toHaveAttribute('href', '/');
+    expect(screen.getByText('Components')).toHaveAttribute('href', '/');
+    expect(screen.getByText('Groups')).toHaveAttribute('href', '/');
     expect(screen.getByText('Issues')).toHaveAttribute('href', '/');
-    expect(screen.getByText('Pipeline Runs')).toHaveAttribute('href', '/');
     expect(screen.getByText('Secrets')).toHaveAttribute('href', '/');
     expect(screen.getByText('Releases')).toHaveAttribute('href', '/');
     expect(screen.getByText('User Access')).toHaveAttribute('href', '/');
+  });
+
+  it('should render the Groups nav item', () => {
+    (useActiveRouteChecker as jest.Mock).mockReturnValue(() => false);
+    (useNamespace as jest.Mock).mockReturnValue('test-namespace');
+
+    routerRenderer(<AppSideBar isOpen={true} />);
+    expect(screen.getByText('Groups')).toBeInTheDocument();
   });
 
   it('should render critical issues icon when active critical issues exist', () => {

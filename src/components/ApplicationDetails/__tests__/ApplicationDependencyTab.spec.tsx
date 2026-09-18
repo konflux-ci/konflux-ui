@@ -1,5 +1,7 @@
 import { useParams } from 'react-router-dom';
 import { screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { useFeatureFlags, useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useApplication } from '~/hooks/useApplications';
 import { useComponents } from '~/hooks/useComponents';
 import { renderWithQueryClientAndRouter } from '~/unit-test-utils';
@@ -19,6 +21,12 @@ jest.mock('~/hooks/useComponents', () => ({
   useComponents: jest.fn(),
 }));
 
+jest.mock('~/feature-flags/hooks', () => ({
+  ...jest.requireActual('~/feature-flags/hooks'),
+  useFeatureFlags: jest.fn(),
+  useIsOnFeatureFlag: jest.fn(),
+}));
+
 jest.mock('~/components/MintMaker/DependencyRuns/DependencyRunsListView', () => ({
   DependencyRunsListView: (props: {
     applicationName?: string;
@@ -31,6 +39,9 @@ jest.mock('~/components/MintMaker/DependencyRuns/DependencyRunsListView', () => 
 const useParamsMock = useParams as jest.Mock;
 const useApplicationMock = useApplication as jest.Mock;
 const useComponentsMock = useComponents as jest.Mock;
+const useFeatureFlagsMock = useFeatureFlags as jest.Mock;
+const useIsOnFeatureFlagMock = useIsOnFeatureFlag as jest.Mock;
+const setFlagMock = jest.fn();
 
 const application = {
   metadata: {
@@ -55,10 +66,24 @@ describe('ApplicationDependencyTab', () => {
     useParamsMock.mockReturnValue({ applicationName: 'test-application' });
     useApplicationMock.mockReturnValue([application, true, undefined]);
     useComponentsMock.mockReturnValue([components, true, undefined]);
+    useFeatureFlagsMock.mockReturnValue([{ mintmaker: true }, setFlagMock]);
+    useIsOnFeatureFlagMock.mockReturnValue(true);
   });
 
   afterEach(() => {
     jest.clearAllMocks();
+  });
+
+  it('shows an alert when PipelineRuns are not fetched from KubeArchive', async () => {
+    const user = userEvent.setup();
+    useIsOnFeatureFlagMock.mockReturnValue(false);
+
+    renderWithQueryClientAndRouter(<ApplicationDependencyTab />);
+
+    expect(screen.getByTestId('mintmaker-plr-alert')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Use KubeArchive for pipeline runs' }));
+
+    expect(setFlagMock).toHaveBeenCalledWith('pipelineruns-kubearchive', true);
   });
 
   it('shows a spinner while either application resource is loading', () => {

@@ -27,6 +27,10 @@ jest.mock('~/hooks/usePipelineRunsV2', () => ({
   usePipelineRunsV2: jest.fn(),
 }));
 
+jest.mock('~/components/LogViewer/MintmakerLogViewer', () => ({
+  useMintmakerLogViewerModal: jest.fn(() => jest.fn()),
+}));
+
 const usePipelineRunsV2Mock = usePipelineRunsV2 as jest.Mock;
 
 mockUseNamespaceHook('test-ns');

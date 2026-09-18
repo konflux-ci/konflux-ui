@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
-import { Truncate } from '@patternfly/react-core';
+import { Button, Truncate } from '@patternfly/react-core';
 import { COMPONENT_DETAILS_PATH, COMPONENT_DETAILS_V2_PATH } from '@routes/paths';
+import { useMintmakerLogViewerModal } from '~/components/LogViewer/MintmakerLogViewer';
 import { StatusIconWithText } from '~/components/StatusIcon/StatusIcon';
 import { PipelineRunLabel, runStatus } from '~/consts/pipelinerun';
 import { Timestamp } from '~/shared';
@@ -12,6 +13,21 @@ import { statusFilterConfig } from '~/utils/pipeline-run-filter-utils';
 import { pipelineRunStatus } from '~/utils/pipeline-utils';
 
 export const DEPENDENCY_RUNS_COLUMN_STATE_KEY = 'dependency-runs-list';
+
+const ViewLogsCell = ({ pipelineRun }: { pipelineRun: PipelineRunKind }) => {
+  const openModal = useMintmakerLogViewerModal(pipelineRun);
+  return (
+    <Button
+      variant="link"
+      isInline
+      size="sm"
+      data-test={`view-logs-${pipelineRun.metadata?.name}`}
+      onClick={openModal}
+    >
+      View logs
+    </Button>
+  );
+};
 
 export const getDependencyRunsFilterConfig = (isSingleComponent: boolean) =>
   defineFilters<PipelineRunKind>()([
@@ -122,5 +138,11 @@ export const getDependencyRunsTableColumns = (
         <StatusIconWithText status={info.getValue() as runStatus} />
       </span>
     ),
+  },
+  {
+    id: 'logs',
+    header: 'Logs',
+    size: 1,
+    cell: (info) => <ViewLogsCell pipelineRun={info.row.original} />,
   },
 ];
