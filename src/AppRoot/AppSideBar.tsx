@@ -2,7 +2,6 @@ import * as React from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { Nav, NavItem, NavList, PageSidebar, PageSidebarBody } from '@patternfly/react-core';
 import { css } from '@patternfly/react-styles';
-import { parseAsString, useQueryState } from 'nuqs';
 import {
   APPLICATION_LIST_PATH,
   COMPONENTS_PATH,
@@ -18,14 +17,13 @@ import {
 import IssuesNavItemContent from '~/components/Issues/IssuesNavItemContent';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { IfFeature } from '~/feature-flags/hooks';
-import { SavedViewNavItems, SavedViewsConfig } from '~/shared/components/SavedViews';
+import { SavedViewNavSection, type SavedViewsConfig } from '~/shared/components/SavedViews';
 import { useActiveRouteChecker } from '../../src/hooks/useActiveRouteChecker';
 import { useNamespace } from '../shared/providers/Namespace';
 import './AppSideBar.scss';
 
 export const AppSideBar: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
   const isActive = useActiveRouteChecker();
-  const [viewParam] = useQueryState('view', parseAsString.withDefault(''));
   const namespace = useNamespace();
   const disabled = !namespace;
 
@@ -33,9 +31,9 @@ export const AppSideBar: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
     () => ({
       resourceKey: 'pipeline-runs',
       columnKeyPrefix: 'prns-columns',
-      routePath: PIPELINE_RUNS_PAGE_PATH.createPath({ workspaceName: namespace }),
+      routePathBuilder: (ns: string) => PIPELINE_RUNS_PAGE_PATH.createPath({ workspaceName: ns }),
     }),
-    [namespace],
+    [],
   );
 
   return (
@@ -128,27 +126,27 @@ export const AppSideBar: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
             </NavItem>
 
             <IfFeature flag="pipeline-runs-page">
-              <NavItem
-                className={css({ 'app-side-bar__nav-item--disabled': disabled })}
-                isActive={isActive(PIPELINE_RUNS_PAGE_PATH.path) && !viewParam}
-                data-test="pipeline-runs-nav"
-              >
-                <Link
-                  to={
-                    namespace
-                      ? PIPELINE_RUNS_PAGE_PATH.createPath({ workspaceName: namespace })
-                      : undefined
-                  }
-                  data-tour="pipeline-runs-nav-link"
-                >
-                  Pipeline Runs{' '}
-                  <FeatureFlagIndicator
-                    flags={['pipeline-runs-page']}
-                    hasNoPadding
-                    popOverTriggerAction="hover"
-                  />
-                </Link>
-              </NavItem>
+              <SavedViewNavSection
+                title={
+                  <>
+                    Pipeline Runs{' '}
+                    <FeatureFlagIndicator
+                      flags={['pipeline-runs-page']}
+                      hasNoPadding
+                      popOverTriggerAction="hover"
+                    />
+                  </>
+                }
+                config={pipelineRunsSavedViewsConfig}
+                isActive={isActive(PIPELINE_RUNS_PAGE_PATH.path)}
+                disabled={disabled}
+                href={
+                  namespace
+                    ? PIPELINE_RUNS_PAGE_PATH.createPath({ workspaceName: namespace })
+                    : undefined
+                }
+                data-test="pipeline-runs-nav-group"
+              />
             </IfFeature>
 
             <NavItem
@@ -191,10 +189,6 @@ export const AppSideBar: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
                 User Access
               </NavLink>
             </NavItem>
-
-            <IfFeature flag="pipeline-runs-page">
-              {namespace && <SavedViewNavItems config={pipelineRunsSavedViewsConfig} />}
-            </IfFeature>
           </NavList>
         </Nav>
       </PageSidebarBody>
