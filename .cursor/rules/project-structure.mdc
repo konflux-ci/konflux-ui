@@ -13,6 +13,7 @@ See `docs/guidelines/` for detailed guides:
 - [docs/guidelines/hooks-and-data-fetching.md](mdc:docs/guidelines/hooks-and-data-fetching.md) -- Data fetching hooks
 - [docs/guidelines/patternfly-guidelines.md](mdc:docs/guidelines/patternfly-guidelines.md) -- PatternFly usage
 - [docs/guidelines/unit-testing.md](mdc:docs/guidelines/unit-testing.md) -- Unit test patterns
+- [docs/guidelines/saved-views.md](mdc:docs/guidelines/saved-views.md) -- Saved views system
 
 See `docs/` for other references:
 
