@@ -8,6 +8,7 @@ import {
 } from '@patternfly/react-core';
 import { parseAsString, useQueryState } from 'nuqs';
 import { useModalLauncher } from '~/shared/components/modal/ModalProvider';
+import { useNamespace } from '~/shared/providers/Namespace';
 import { createSavedViewDeleteModal } from './SavedViewDeleteModal';
 import { createSavedViewRenameModal } from './SavedViewRenameModal';
 import { createSavedViewSaveModal } from './SavedViewSaveModal';
@@ -20,6 +21,7 @@ type SavedViewActionsProps = {
   currentColumnStateKey: string;
   isFiltered: boolean;
   activeSavedView: SavedView | undefined;
+  'data-tour'?: string;
 };
 
 export const SavedViewActions: React.FC<SavedViewActionsProps> = ({
@@ -28,12 +30,17 @@ export const SavedViewActions: React.FC<SavedViewActionsProps> = ({
   currentColumnStateKey,
   isFiltered,
   activeSavedView,
+  'data-tour': dataTour,
 }) => {
-  const { saveView, deleteView, renameView, updateView } = useSavedViews({
-    resourceKey,
-    columnKeyPrefix,
-    routePath: '',
-  });
+  const namespace = useNamespace();
+  const { saveView, deleteView, renameView, updateView } = useSavedViews(
+    {
+      resourceKey,
+      columnKeyPrefix,
+      routePathBuilder: () => '',
+    },
+    namespace,
+  );
   const [, setViewParam] = useQueryState('view', parseAsString);
   const showModal = useModalLauncher();
   const [isOpen, setIsOpen] = React.useState(false);
@@ -60,6 +67,7 @@ export const SavedViewActions: React.FC<SavedViewActionsProps> = ({
             label: name,
             searchParams: getSearchParams(),
             currentColumnStateKey,
+            namespace: namespace ?? '',
           });
           void setViewParam(savedSlug);
         },
@@ -117,6 +125,7 @@ export const SavedViewActions: React.FC<SavedViewActionsProps> = ({
       isExpanded={isOpen}
       isDisabled={isDisabled}
       data-test="saved-view-actions-toggle"
+      data-tour={dataTour}
     >
       Actions
     </MenuToggle>

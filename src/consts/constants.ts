@@ -21,3 +21,4 @@ export const TEXT_SEARCH_TYPES = {
 } as const;
 
 export const MINTMAKER_NAMESPACE = 'mintmaker';
+export const MINTMAKER_TASK_NAME = 'build';

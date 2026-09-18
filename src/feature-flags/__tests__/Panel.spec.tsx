@@ -1,0 +1,160 @@
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { TrackEvents } from '~/analytics';
+import { createFeatureFlagPanelModal } from '../Panel';
+import { FeatureFlagsStore } from '../store';
+
+// Delta-computation edge cases (multi-flag, net-zero toggles, etc.) are
+// covered at the hook level in useFeatureFlagAnalytics.spec.ts. These tests
+// only verify that the real Panel UI is wired to that hook correctly, by
+// exercising the actual modal launcher and its close affordances.
+jest.mock('~/analytics/hooks', () => ({
+  useTrackAnalyticsEvent: jest.fn(),
+}));
+
+jest.mock('react-router-dom', () => ({
+  ...jest.requireActual('react-router-dom'),
+  useMatches: jest.fn(),
+}));
+
+const useTrackAnalyticsEventMock = jest.requireMock('~/analytics/hooks')
+  .useTrackAnalyticsEvent as jest.Mock;
+const useMatchesMock = jest.requireMock('react-router-dom').useMatches as jest.Mock;
+
+/** Mocks useMatches() so the hook resolves its page pattern via getRoutePatternFromMatches. */
+const mockPagePattern = (pattern: string) =>
+  useMatchesMock.mockReturnValue([{ handle: { routePattern: pattern } }]);
+
+jest.mock('../flags', () => {
+  const actual = jest.requireActual('../flags');
+  return {
+    ...actual,
+    FLAGS: {
+      alpha: {
+        key: 'alpha',
+        description: 'Alpha flag',
+        defaultEnabled: false,
+        status: 'wip',
+      },
+      beta: {
+        key: 'beta',
+        description: 'Beta flag',
+        defaultEnabled: true,
+        status: 'ready',
+      },
+    },
+  };
+});
+
+const getSwitch = (name: string | RegExp) => screen.getByRole('switch', { name });
+
+const renderPanel = () =>
+  render(createFeatureFlagPanelModal()(jest.fn()), {
+    wrapper: ({ children }) => (
+      <div>
+        <div id="hacDev-modal-container" />
+        {children}
+      </div>
+    ),
+  });
+
+const closePanel = async (user: ReturnType<typeof userEvent.setup>) => {
+  await user.click(screen.getByRole('button', { name: 'Close' }));
+};
+
+describe('FeatureFlagPanel analytics', () => {
+  let trackEventMock: jest.Mock;
+
+  beforeEach(() => {
+    trackEventMock = jest.fn();
+    useTrackAnalyticsEventMock.mockReturnValue(trackEventMock);
+    mockPagePattern('/');
+    localStorage.clear();
+    history.replaceState(null, '', '/');
+    FeatureFlagsStore.refresh();
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('does not fire while open, nor on a plain unmount -- only on a real close', () => {
+    const { unmount } = renderPanel();
+    expect(trackEventMock).not.toHaveBeenCalled();
+
+    unmount();
+    expect(trackEventMock).not.toHaveBeenCalled();
+  });
+
+  it('fires the event with changesCount 0 and empty changes when nothing was toggled', async () => {
+    const user = userEvent.setup();
+    renderPanel();
+
+    await closePanel(user);
+
+    expect(trackEventMock).toHaveBeenCalledTimes(1);
+    expect(trackEventMock).toHaveBeenCalledWith(TrackEvents.feature_flags_changed_event, {
+      changes: {},
+      changesCount: 0,
+      pagePattern: '/',
+    });
+  });
+
+  it('reports a flag toggled via the real Switch control, with its new value, on close', async () => {
+    const user = userEvent.setup();
+    renderPanel();
+
+    await user.click(getSwitch(/Alpha flag/i));
+    await closePanel(user);
+
+    expect(trackEventMock).toHaveBeenCalledWith(TrackEvents.feature_flags_changed_event, {
+      changes: { alpha: true },
+      changesCount: 1,
+      pagePattern: '/',
+    });
+  });
+
+  it('uses the page pattern captured when the panel opened', async () => {
+    mockPagePattern('/ns/:workspaceName/applications');
+    const user = userEvent.setup();
+    renderPanel();
+
+    await closePanel(user);
+
+    expect(trackEventMock).toHaveBeenCalledWith(
+      TrackEvents.feature_flags_changed_event,
+      expect.objectContaining({ pagePattern: '/ns/:workspaceName/applications' }),
+    );
+  });
+
+  it('captures changes made via the real "Reset to Defaults" button, which does not close the panel', async () => {
+    const user = userEvent.setup();
+    renderPanel();
+
+    await user.click(getSwitch(/Alpha flag/i)); // alpha: false -> true
+    await user.click(screen.getByTestId('reset-feature-overrides-button'));
+    await closePanel(user);
+
+    expect(trackEventMock).toHaveBeenCalledWith(TrackEvents.feature_flags_changed_event, {
+      changes: {},
+      changesCount: 0,
+      pagePattern: '/',
+    });
+  });
+
+  it('fires exactly once even if the modal is closed more than once', async () => {
+    const user = userEvent.setup();
+    renderPanel();
+
+    await user.click(getSwitch(/Alpha flag/i));
+    await closePanel(user);
+    await closePanel(user); // e.g. Escape + backdrop click racing
+
+    expect(trackEventMock).toHaveBeenCalledTimes(1);
+    expect(trackEventMock).toHaveBeenCalledWith(TrackEvents.feature_flags_changed_event, {
+      changes: { alpha: true },
+      changesCount: 1,
+      pagePattern: '/',
+    });
+  });
+});

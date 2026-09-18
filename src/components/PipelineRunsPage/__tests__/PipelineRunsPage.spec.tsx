@@ -154,6 +154,7 @@ describe('PipelineRunsPage', () => {
       label: 'My Custom View',
       searchParams: 'app=%5B%22my-app%22%5D',
       columnStateKey: 'prns-columns-my-view',
+      namespace: 'test-namespace',
     });
     renderPage();
     expect(screen.getByText('My Custom View')).toBeInTheDocument();

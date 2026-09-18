@@ -1,5 +1,6 @@
 import { createBrowserRouter, type LoaderFunctionArgs } from 'react-router-dom';
 import { wrapCreateBrowserRouter } from '@sentry/react';
+import '~/components/PipelineRunsPage/pipeline-runs.tour';
 import { TourAutoTrigger, TourProvider, TourRenderer } from '~/shared/components/GuidedTours';
 import { AppRoot } from '../AppRoot/AppRoot';
 import { GithubRedirect, githubRedirectLoader } from '../components/GithubRedirect';
@@ -10,6 +11,7 @@ import ErrorEmptyState from '../shared/components/empty-state/ErrorEmptyState';
 import { namespaceLoader, NamespaceProvider } from '../shared/providers/Namespace';
 import applicationRoutes from './page-routes/application';
 import commitRoutes from './page-routes/commit';
+import componentGroupRoutes from './page-routes/component-group';
 import componentVersionRoutes from './page-routes/component-version';
 import componentRoutes from './page-routes/components';
 import componentsPageRoutes from './page-routes/components-page';
@@ -27,10 +29,11 @@ import taskRunRoutes from './page-routes/taskrun';
 import userAccessRoutes from './page-routes/user-access';
 import { RouteErrorBoundry } from './RouteErrorBoundary';
 import { GithubRedirectRouteParams } from './utils';
+import { withRoutePatterns } from './with-route-patterns';
 
 const sentryCreateBrowserRouter = wrapCreateBrowserRouter(createBrowserRouter);
 
-export const router = sentryCreateBrowserRouter([
+const routes = [
   {
     path: '/',
     loader: async (params: LoaderFunctionArgs) => {
@@ -70,6 +73,7 @@ export const router = sentryCreateBrowserRouter([
       ...taskRunRoutes,
       ...userAccessRoutes,
       ...pipelineRunsPageRoutes,
+      ...componentGroupRoutes,
       // '/ns/:ns',
       //   '/ns/:ns/pipelinerun/:pipelineRun',
       //   '/ns/:ns/pipelinerun/:pipelineRun/logs',
@@ -87,4 +91,6 @@ export const router = sentryCreateBrowserRouter([
     path: '*',
     element: <ErrorEmptyState httpError={HttpError.fromCode(404)} />,
   },
-]);
+];
+
+export const router = sentryCreateBrowserRouter(withRoutePatterns(routes));

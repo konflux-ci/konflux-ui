@@ -7,7 +7,7 @@ import { analyticsService } from '~/analytics/AnalyticsService';
  * @example
  * const trackMock = mockAnalyticsServiceFn('track');
  * // render component that fires analyticsService.track(...)
- * expect(trackMock).toHaveBeenCalledWith(TrackEvents.user_login_event, { userId });
+ * expect(trackMock).toHaveBeenCalledWith(TrackEvents.user_login_event, {});
  */
 export const mockAnalyticsServiceFn = (name: string) => {
   // Lazy import avoids eagerly loading the analytics module tree

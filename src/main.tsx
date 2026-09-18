@@ -9,15 +9,11 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { NuqsAdapter } from 'nuqs/adapters/react-router/v6';
 import ReactDOM from 'react-dom/client';
-import { initAnalytics, TrackEvents } from '~/analytics';
-import { analyticsService, consumeLoginSignal } from '~/analytics/AnalyticsService';
-import { captureArrivalSourceOnce, markSessionStartedOnce, getArrivalSource } from '~/analytics/arrival-source';
-import { obfuscate } from '~/analytics/obfuscate';
-import { useKonfluxPublicInfo } from '~/hooks/useKonfluxPublicInfo';
+import { initAnalytics } from '~/analytics';
+import { captureArrivalSourceOnce } from '~/analytics/arrival-source';
+import { useAnalyticsInitialization } from '~/analytics/useAnalyticsInitialization';
 import { logger } from '~/monitoring/logger';
 import { AuthProvider } from './auth/AuthContext';
-import { useAuth } from './auth/useAuth';
-import { useAuthAnalytics } from './auth/useAuthAnalytics';
 import { forceEnableFlagsOnce } from './feature-flags/forceEnableFlagsOnce';
 import { FeatureFlagsStore } from './feature-flags/store';
 import { getAllConditionsKeysFromFlags } from './feature-flags/utils';
@@ -40,40 +36,8 @@ forceEnableFlagsOnce(['kubearchive-logs', 'taskruns-kubearchive', 'pipelineruns-
   releaseId: '2025-11-17',
 });
 
-const App = () => {
-  const [publicInfo, loaded, error] = useKonfluxPublicInfo();
-  const { onLogin } = useAuthAnalytics();
-  const { user } = useAuth();
-
-  React.useEffect(() => {
-    if (!loaded && !error) {
-      return;
-    }
-
-    if (loaded && !error && publicInfo) {
-      analyticsService.setCommonProperties({
-        clusterVersion: publicInfo.clusterVersion,
-        konfluxVersion: publicInfo.konfluxVersion,
-        kubernetesVersion: publicInfo.kubernetesVersion,
-        openshiftVersion: publicInfo.openshiftVersion,
-      });
-    }
-
-    void obfuscate(user.preferredUsername, publicInfo?.clusterId).then((userId) => {
-      analyticsService.setCommonProperties({ userId });
-      if (consumeLoginSignal()) {
-        onLogin();
-      }
-      if (markSessionStartedOnce()) {
-        const arrivalSource = getArrivalSource();
-        analyticsService.track(TrackEvents.ui_session_started_event, { arrivalSource });
-        logger.info('UI session started', {
-          event: TrackEvents.ui_session_started_event,
-          arrivalSource,
-        });
-      }
-    });
-  }, [loaded, error, publicInfo, onLogin, user]);
+export const App = () => {
+  useAnalyticsInitialization();
 
   React.useEffect(() => {
     // webpack side effects to prevent tree-shaking
@@ -101,7 +65,10 @@ const App = () => {
 
 void (() => {
   void initAnalytics().catch((reason) => {
-    logger.error('Failed to initialize analytics', reason as Error);
+    logger.error(
+      'Failed to initialize analytics',
+      reason instanceof Error ? reason : new Error(String(reason)),
+    );
   });
 
   ReactDOM.createRoot(document.getElementById('root')).render(

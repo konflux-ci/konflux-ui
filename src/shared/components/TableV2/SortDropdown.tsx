@@ -12,6 +12,8 @@ export interface SortDropdownProps<TData> {
   columns: ColumnDefinition<TData>[];
   /** LocalStorage key for persisting column/sort state. */
   columnStateKey: string;
+  /** Tour anchor attribute passed through to the root element. */
+  'data-tour'?: string;
 }
 
 /**
@@ -23,7 +25,11 @@ export interface SortDropdownProps<TData> {
  *
  * @typeParam TData - The row data type
  */
-export const SortDropdown = <TData,>({ columns, columnStateKey }: SortDropdownProps<TData>) => {
+export const SortDropdown = <TData,>({
+  columns,
+  columnStateKey,
+  'data-tour': dataTour,
+}: SortDropdownProps<TData>) => {
   const { columnState, setColumnState } = useColumnState(columnStateKey, columns);
 
   const sortableColumns = React.useMemo(() => columns.filter((col) => col.sortable), [columns]);
@@ -83,6 +89,7 @@ export const SortDropdown = <TData,>({ columns, columnStateKey }: SortDropdownPr
       onSelect={handleSelect}
       multiple
       data-test="sort-dropdown"
+      data-tour={dataTour}
     />
   );
 };

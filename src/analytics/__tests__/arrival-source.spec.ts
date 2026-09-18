@@ -1,14 +1,14 @@
-import { SESSION_STORAGE_KEYS } from '~/consts/constants';
-import { GitProvider } from '~/shared/utils/git-utils';
 import {
-  ArrivalSource,
   captureArrivalSourceOnce,
   classifyReferrer,
   getArrivalSource,
   isKnownGitProvider,
   markSessionStartedOnce,
   refineArrivalSource,
-} from '../arrival-source';
+} from '~/analytics/arrival-source';
+import type { ArrivalSource } from '~/analytics/arrival-source';
+import { SESSION_STORAGE_KEYS } from '~/consts/constants';
+import { GitProvider } from '~/shared/utils/git-utils';
 
 const setReferrer = (referrer: string) => {
   Object.defineProperty(document, 'referrer', {
