@@ -301,6 +301,10 @@ spec:
             value: $(tasks.build-e2e-container.results.IMAGE_URL)
           - name: IMAGE_DIGEST
             value: $(tasks.build-e2e-container.results.IMAGE_DIGEST)
+          # Merge-queue (push) resolves e2e-{{revision}}; PRs keep e2e-on-pr-{{revision}}.
+          - name: ADDITIONAL_TAGS
+            value:
+              - e2e-{{revision}}
         runAfter:
           - build-e2e-container
         taskRef:
