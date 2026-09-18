@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { useParams } from 'react-router-dom';
 import { Bullseye, Spinner, Title } from '@patternfly/react-core';
+import { GetNextPage, NextPageProps } from '~/hooks/useTektonResults';
 import { getErrorState } from '~/shared/utils/error-utils';
 import {
   INTEGRATION_TEST_PIPELINE_RUN_COLUMNS_DEFINITIONS,
@@ -8,46 +9,41 @@ import {
   NON_HIDABLE_PIPELINE_RUN_COLUMNS,
   PipelineRunColumnKeys,
 } from '../../../../consts/pipeline';
-import { PipelineRunLabel } from '../../../../consts/pipelinerun';
 import { FeatureFlagIndicator } from '../../../../feature-flags/FeatureFlagIndicator';
-import { usePipelineRunsV2 } from '../../../../hooks/usePipelineRunsV2';
 import { RouterParams } from '../../../../routes/utils';
 import { Table } from '../../../../shared';
 import ColumnManagement from '../../../../shared/components/table/ColumnManagement';
 import { useLocalStorage } from '../../../../shared/hooks/useLocalStorage';
-import { useNamespace } from '../../../../shared/providers/Namespace';
 import { PipelineRunKind } from '../../../../types';
 import { BaseTextFilterToolbar } from '../../../Filter/toolbars/BaseTextFIlterToolbar';
-import PipelineRunEmptyState from '../../../PipelineRun/PipelineRunEmptyState';
 import { getPipelineRunListHeader } from '../../../PipelineRun/PipelineRunListView/PipelineRunListHeader';
 import { PipelineRunListRowWithColumns } from '../../../PipelineRun/PipelineRunListView/PipelineRunListRow';
-import { IntegrationTestLabels } from '../../IntegrationTestForm/types';
 
-const IntegrationTestPipelineRunTab: React.FC<React.PropsWithChildren> = () => {
-  const { applicationName, integrationTestName } = useParams<RouterParams>();
-  const namespace = useNamespace();
+type IntegrationTestPipelineRunTabProps = {
+  pipelineRuns: PipelineRunKind[];
+  loaded: boolean;
+  error: unknown;
+  getNextPage: GetNextPage;
+  nextPageProps: NextPageProps;
+  persistedColumnKey: string;
+  PipelineRunEmptyState: React.ElementType;
+};
 
-  // Todo add errors here
-  const [pipelineRuns, loaded, error, getNextPage, { isFetchingNextPage, hasNextPage }] =
-    usePipelineRunsV2(
-      namespace,
-      React.useMemo(
-        () => ({
-          selector: {
-            matchLabels: {
-              [PipelineRunLabel.APPLICATION]: applicationName,
-              [IntegrationTestLabels.SCENARIO]: integrationTestName,
-            },
-          },
-        }),
-        [applicationName, integrationTestName],
-      ),
-    );
+const IntegrationTestPipelineRunTab: React.FC<
+  React.PropsWithChildren<IntegrationTestPipelineRunTabProps>
+> = ({
+  pipelineRuns,
+  loaded,
+  error,
+  getNextPage,
+  nextPageProps: { isFetchingNextPage, hasNextPage },
+  persistedColumnKey,
+  PipelineRunEmptyState,
+}) => {
+  const { integrationTestName } = useParams<RouterParams>();
 
   const [isColumnManagementOpen, setIsColumnManagementOpen] = React.useState(false);
-  const [persistedColumns, setPersistedColumns] = useLocalStorage<string[]>(
-    `integration-test-pipeline-runs-columns-${applicationName}-${integrationTestName}`,
-  );
+  const [persistedColumns, setPersistedColumns] = useLocalStorage<string[]>(persistedColumnKey);
 
   const safeVisibleColumns = React.useMemo((): Set<PipelineRunColumnKeys> => {
     if (Array.isArray(persistedColumns) && persistedColumns.length > 0) {
@@ -69,7 +65,7 @@ const IntegrationTestPipelineRunTab: React.FC<React.PropsWithChildren> = () => {
   }
 
   if (!pipelineRuns || pipelineRuns.length === 0) {
-    return <PipelineRunEmptyState applicationName={applicationName} />;
+    return <PipelineRunEmptyState />;
   }
 
   return (
@@ -107,7 +103,7 @@ const IntegrationTestPipelineRunTab: React.FC<React.PropsWithChildren> = () => {
         )}
         loaded={loaded}
         getRowProps={(obj: PipelineRunKind) => ({
-          id: obj.metadata.name,
+          id: obj.metadata?.name,
         })}
         onRowsRendered={({ stopIndex }) => {
           if (

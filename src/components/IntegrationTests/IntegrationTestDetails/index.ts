@@ -20,6 +20,9 @@ export const integrationDetailsPageLoader = createLoaderWithAccessCheck(
   },
 );
 
-export { default as IntegrationTestDetailsView } from './IntegrationTestDetailsView';
-export { default as IntegrationTestOverviewTab } from './tabs/IntegrationTestOverviewTab';
-export { default as IntegrationTestPipelineRunTab } from './tabs/IntegrationTestPipelineRunTab';
+export { default as IntegrationTestDetailsByApplication } from './IntegrationTestDetailsByApplication';
+export { default as IntegrationTestDetailsByGroup } from './IntegrationTestDetailsByGroup';
+export { default as IntegrationTestOverviewTabByApplication } from './tabs/IntegrationTestOverviewTabByApplication';
+export { default as IntegrationTestOverviewTabByGroup } from './tabs/IntegrationTestOverviewTabByGroup';
+export { default as IntegrationTestPipelineRunTabByApplication } from './tabs/IntegrationTestPipelineRunTabByApplication';
+export { default as IntegrationTestPipelineRunTabByGroup } from './tabs/IntegrationTestPipelineRunTabByGroup';
