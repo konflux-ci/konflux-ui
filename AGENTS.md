@@ -84,6 +84,7 @@ Detailed guides for AI agents and developers:
 | `docs/guidelines/table-component.md`          | Legacy table system (pre-TableV2) — reference only for unmigrated views                 |
 | `docs/guidelines/table-v2.md`                 | **TableV2 system** — building list views with `@tanstack/react-table` + virtual scroll  |
 | `docs/guidelines/filter-system.md`            | **Filter system** — config-driven URL-synced filters with `defineFilters` + nuqs        |
+| `docs/guidelines/saved-views.md`              | **Saved views** — bookmarking filter + column configs, sidebar nav integration          |
 | `docs/guidelines/layout-and-pages.md`         | Creating pages (list, detail, form, modal patterns)                                     |
 | `docs/guidelines/hooks-and-data-fetching.md`  | Using K8s hooks, React Query, RBAC, state management                                    |
 | `docs/guidelines/patternfly-guidelines.md`    | PatternFly components, layout, design tokens, SCSS                                      |

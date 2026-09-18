@@ -40,7 +40,7 @@ export const HighlightStep: React.FC<HighlightStepProps> = ({
   const { targetEl, triggerRef } = useTargetElement(target);
 
   // Add/remove highlight ring class
-  React.useEffect(() => {
+  React.useLayoutEffect(() => {
     if (!targetEl) return undefined;
     targetEl.classList.add(HIGHLIGHT_CLASS);
     return () => {

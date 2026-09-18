@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import { matchPath, useLocation } from 'react-router-dom';
 import { collectAndMerge } from '../merge-utils';
 import { getRegisteredRoutes, getToursByRoute } from '../registry';
@@ -31,7 +31,7 @@ export const useTourAutoTrigger = (): void => {
     setCurrentRoute(currentRoute);
   }, [currentRoute, setCurrentRoute]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (isActive || !currentRoute) return;
     if (triggeredRef.current === currentRoute) return;
 
