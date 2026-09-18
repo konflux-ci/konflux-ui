@@ -6,14 +6,32 @@ import type { LogDisplayRow } from './types';
 import './LineNumberGutter.scss';
 import './VirtualizedLogContent.scss';
 
-const virtualRowStyle = (start: number): React.CSSProperties => ({
-  position: 'absolute',
-  top: 0,
-  left: 0,
-  width: '100%',
-  display: 'flex',
-  transform: `translateY(${start}px)`,
-});
+/** Which slice of a row to render in the nowrap split layout. */
+export type VirtualRowPart = 'full' | 'gutter' | 'content';
+
+const virtualRowStyle = (
+  start: number,
+  rowPart: VirtualRowPart = 'full',
+): React.CSSProperties => {
+  const baseStyle: React.CSSProperties = {
+    position: 'absolute',
+    top: `${start}px`,
+    left: 0,
+  };
+
+  switch (rowPart) {
+    case 'gutter':
+      return { ...baseStyle, right: 0 };
+    case 'content':
+      return { ...baseStyle, width: 'max-content', minWidth: '100%' };
+    default:
+      return {
+        ...baseStyle,
+        width: '100%',
+        display: 'flex',
+      };
+  }
+};
 
 function getRowLineNumber(row: LogDisplayRow): number | null {
   if (row.kind === 'section-header') return row.lineNumber;
@@ -21,11 +39,50 @@ function getRowLineNumber(row: LogDisplayRow): number | null {
   return null;
 }
 
+type RowContentProps = {
+  row: LogDisplayRow;
+  onToggleSection: (sectionIndex: number) => void;
+  onDownloadFullLogs?: (sectionIndex: number) => Promise<void>;
+  onViewFullLogs?: (sectionIndex: number) => void;
+  renderLogLine: (flatLineIndex: number) => React.ReactNode;
+};
+
+/** Log text / section chrome without the line-number gutter. */
+function RowContent({
+  row,
+  onToggleSection,
+  onDownloadFullLogs,
+  onViewFullLogs,
+  renderLogLine,
+}: RowContentProps) {
+  if (row.kind === 'section-header') {
+    return (
+      <SectionHeaderButton
+        row={row}
+        onToggle={() => onToggleSection(row.sectionIndex)}
+        onDownloadFullLogs={
+          row.isTailed && onDownloadFullLogs ? () => onDownloadFullLogs(row.sectionIndex) : undefined
+        }
+        onViewFullLogs={
+          row.isTailed && onViewFullLogs ? () => onViewFullLogs(row.sectionIndex) : undefined
+        }
+      />
+    );
+  }
+
+  if (row.kind === 'fold-indicator') {
+    return <FoldIndicatorLine lineCount={row.lineCount} />;
+  }
+
+  return renderLogLine(row.flatLineIndex);
+}
+
 type SectionedVirtualRowProps = {
   virtualIndex: number;
   start: number;
   row: LogDisplayRow;
-  measureElement: Virtualizer<HTMLDivElement, Element>['measureElement'];
+  rowPart?: VirtualRowPart;
+  measureElement?: Virtualizer<HTMLDivElement, Element>['measureElement'];
   isLineHighlighted: (lineNumber: number) => boolean;
   onToggleSection: (sectionIndex: number) => void;
   onDownloadFullLogs?: (sectionIndex: number) => Promise<void>;
@@ -38,6 +95,7 @@ export const SectionedVirtualRow: React.FC<SectionedVirtualRowProps> = ({
   virtualIndex,
   start,
   row,
+  rowPart = 'full',
   measureElement,
   isLineHighlighted,
   onToggleSection,
@@ -80,46 +138,37 @@ export const SectionedVirtualRow: React.FC<SectionedVirtualRowProps> = ({
     'data-index': virtualIndex,
     ref: measureElement,
     className: rowClassName,
-    style: virtualRowStyle(start),
+    style: virtualRowStyle(start, rowPart),
   };
 
-  if (row.kind === 'section-header') {
+  const rowContentProps = {
+    row,
+    onToggleSection,
+    onDownloadFullLogs,
+    onViewFullLogs,
+    renderLogLine,
+  };
+
+  // Nowrap split layout: render only the gutter or content column.
+  if (rowPart === 'gutter') {
+    return <div {...rowProps}>{gutterCell}</div>;
+  }
+
+  if (rowPart === 'content') {
     return (
-      <div {...rowProps}>
-        {gutterCell}
-        <div className="log-content__row-content">
-          <SectionHeaderButton
-            row={row}
-            onToggle={() => onToggleSection(row.sectionIndex)}
-            onDownloadFullLogs={
-              row.isTailed && onDownloadFullLogs
-                ? () => onDownloadFullLogs(row.sectionIndex)
-                : undefined
-            }
-            onViewFullLogs={
-              row.isTailed && onViewFullLogs ? () => onViewFullLogs(row.sectionIndex) : undefined
-            }
-          />
-        </div>
+      <div {...rowProps} className={`${rowClassName} log-content__row-content`}>
+        <RowContent {...rowContentProps} />
       </div>
     );
   }
 
-  if (row.kind === 'fold-indicator') {
-    return (
-      <div {...rowProps}>
-        {gutterCell}
-        <div className="log-content__row-content">
-          <FoldIndicatorLine lineCount={row.lineCount} />
-        </div>
-      </div>
-    );
-  }
-
+  // Full row: gutter + content side by side (used in wrap mode).
   return (
     <div {...rowProps}>
       {gutterCell}
-      <div className="log-content__row-content">{renderLogLine(row.flatLineIndex)}</div>
+      <div className="log-content__row-content">
+        <RowContent {...rowContentProps} />
+      </div>
     </div>
   );
 };
