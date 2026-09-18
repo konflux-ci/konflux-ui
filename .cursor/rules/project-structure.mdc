@@ -21,5 +21,6 @@ See `docs/` for other references:
 - [docs/conditions.md](mdc:docs/conditions.md) -- Feature flag conditions
 - [docs/analytics.md](mdc:docs/analytics.md) -- Analytics integration
 - [docs/kubearchive.md](mdc:docs/kubearchive.md) -- KubeArchive dual-source data
+- [docs/status-registry.md](mdc:docs/status-registry.md) -- Config-driven status display
 - [docs/best-practices.md](mdc:docs/best-practices.md) -- Coding standards
 - [docs/pr-review-guidelines.md](mdc:docs/pr-review-guidelines.md) -- PR review checklist

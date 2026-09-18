@@ -104,4 +104,5 @@ Detailed guides for AI agents and developers:
 | `docs/conditions.md`           | Feature flag conditions (`allOf`/`anyOf` guards, `registerCondition`) |
 | `docs/analytics.md`            | Segment analytics (events, config, codegen, obfuscation)              |
 | `docs/kubearchive.md`          | KubeArchive dual-source data (cluster + archive hooks, deduplication) |
+| `docs/status-registry.md`      | Config-driven status display (registry, components, filters)          |
 | `docs/e2e-coverage.md`         | E2E coverage via Istanbul + Cypress                                   |
