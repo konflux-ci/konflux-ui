@@ -8,6 +8,7 @@ import { RouterParams } from '~/routes/utils';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { DetailsPage } from '../../DetailsPage';
+import { useComponentGroupBreadcrumbs } from '../breadcrumb-utils';
 
 export const COMPONENTS_GS_LOCAL_STORAGE_KEY = 'components-getting-started-modal';
 
@@ -16,6 +17,8 @@ const ComponentGroupDetailsView: React.FC = () => {
   const namespace = useNamespace();
 
   const [componentGroup, loaded, componentError] = useComponentGroup(namespace, groupName);
+
+  const componentGroupsBreadcrumbs = useComponentGroupBreadcrumbs();
 
   if (!loaded) {
     return (
@@ -41,6 +44,7 @@ const ComponentGroupDetailsView: React.FC = () => {
             <FeatureFlagIndicator flags={['component-model']} />
           </Content>
         }
+        breadcrumbs={componentGroupsBreadcrumbs}
         baseURL={GROUP_DETAILS_PATH.createPath({ workspaceName: namespace, groupName })}
         tabs={[
           {

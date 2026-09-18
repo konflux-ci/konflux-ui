@@ -4,6 +4,7 @@ import { ButtonVariant, EmptyStateBody, Truncate, EmptyStateActions } from '@pat
 import emptyStateImgUrl from '~/assets/Integration-test.svg';
 import { useIntegrationTestScenariosV2 } from '~/hooks/useIntegrationTestScenariosV2';
 import { IntegrationTestScenarioModel } from '~/models';
+import { GROUP_INTEGRATION_TEST_DETAILS_PATH } from '~/routes/paths';
 import { RouterParams } from '~/routes/utils';
 import AppEmptyState from '~/shared/components/empty-state/AppEmptyState';
 import FilteredEmptyState from '~/shared/components/empty-state/FilteredEmptyState';
@@ -98,11 +99,14 @@ const IntegrationTestsListViewV2: React.FC<React.PropsWithChildren> = () => {
         cell: (info) => {
           const obj = info.row.original;
           return (
-            // TODO: update route path to open ComponentGroup's IntegrationTestScenario
-            // Details page once implemented
-            // will be done on https://redhat.atlassian.net/browse/KFLUXUI-1717
-            // eslint-disable-next-line no-alert
-            <Link to="#" data-test="integration-tests__row-name" onClick={() => alert('TODO')}>
+            <Link
+              to={GROUP_INTEGRATION_TEST_DETAILS_PATH.createPath({
+                groupName,
+                integrationTestName: obj.metadata?.name,
+                workspaceName: namespace,
+              })}
+              data-test="integration-tests__row-name"
+            >
               {obj.metadata?.name}
             </Link>
           );
@@ -169,7 +173,7 @@ const IntegrationTestsListViewV2: React.FC<React.PropsWithChildren> = () => {
         },
       },
     ],
-    [],
+    [groupName, namespace],
   );
 
   if (integrationTestsError) {

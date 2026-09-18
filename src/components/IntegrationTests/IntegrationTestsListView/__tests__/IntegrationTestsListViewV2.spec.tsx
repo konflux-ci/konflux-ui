@@ -193,6 +193,16 @@ describe('IntegrationTestsListViewV2', () => {
     expect(screen.queryByText('group-test-2')).not.toBeInTheDocument();
   });
 
+  it('should link each row to the group integration test details page', () => {
+    renderWithQueryClient(<TestedComponent />);
+
+    const rowLink = screen.getByText('group-test-1').closest('a');
+    expect(rowLink).toHaveAttribute(
+      'href',
+      '/ns/test-ns/groups/test-group/integrationtests/group-test-1',
+    );
+  });
+
   it('should trigger the add handler from the toolbar button', () => {
     renderWithQueryClient(<TestedComponent />);
 
