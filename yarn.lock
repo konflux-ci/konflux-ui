@@ -14534,7 +14534,7 @@ __metadata:
     react-dom: "npm:^18.3.1"
     react-hotkeys-hook: "npm:^5.2.4"
     react-i18next: "npm:15.0.1"
-    react-refresh: "npm:^0.18.0"
+    react-refresh: "npm:^0.19.0"
     react-router-dom: "npm:6.25.1"
     sanitize-html: "npm:^2.13.0"
     sass: "npm:^1.77.8"
@@ -18076,10 +18076,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-refresh@npm:^0.18.0":
-  version: 0.18.0
-  resolution: "react-refresh@npm:0.18.0"
-  checksum: 10/504c331c19776bf8320c23bad7f80b3a28de03301ed7523b0dd21d3f02bf2b53bbdd5aa52469b187bc90f358614b2ba303c088a0765c95f4f0a68c43a7d67b1d
+"react-refresh@npm:^0.19.0":
+  version: 0.19.0
+  resolution: "react-refresh@npm:0.19.0"
+  checksum: 10/ec21ca69561017d555a9a1d194f1372e83b82ed0fb33180f2a082501b64c016a43453b1dde2c04bcacdef5c61133339395b79f072a490d90af48fb86b0cc2913
   languageName: node
   linkType: hard
 
