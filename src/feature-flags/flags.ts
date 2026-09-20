@@ -146,13 +146,8 @@ const InternalFLAGS = {
     key: 'pipeline-runs-page',
     description:
       'Cross-application Pipeline Runs page with saved views, advanced filters, and column management',
-    defaultEnabled: false,
+    defaultEnabled: true,
     status: 'wip',
-    guard: {
-      allOf: ['isStagingCluster'],
-      failureReason: 'Not a staging cluster',
-      visibleInFeatureFlagPanel: false,
-    },
   },
   mintmaker: {
     key: 'mintmaker',
