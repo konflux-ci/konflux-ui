@@ -4,7 +4,7 @@
  */
 
 import * as React from 'react';
-import { Label } from '@patternfly/react-core';
+import { Label, Tooltip } from '@patternfly/react-core';
 import { ExclamationTriangleIcon } from '@patternfly/react-icons/dist/esm/icons/exclamation-triangle-icon';
 import { css } from '@patternfly/react-styles';
 import {
@@ -15,6 +15,8 @@ import {
 import pipelineStyles from '@patternfly/react-topology/dist/esm/css/topology-pipelines';
 import type { FilterOption } from '~/shared/components/Filter/types';
 import type { StatusCategory, StatusRegistry } from '~/shared/utils/status-registry';
+
+import './StatusRegistryComponents.scss';
 
 // ---------------------------------------------------------------------------
 // Hook
@@ -27,6 +29,7 @@ type StatusDisplayResult<TStatus extends string> = {
   color: string;
   colorName: string;
   runStatus: RunStatus;
+  message: string | undefined;
 };
 
 export function useStatusDisplay<TStatus extends string, TResource, TContext>(
@@ -42,6 +45,7 @@ export function useStatusDisplay<TStatus extends string, TResource, TContext>(
         color: '',
         colorName: '',
         runStatus: RunStatus.Pending,
+        message: undefined,
       };
     }
     const status = registry.deriveStatus(resource);
@@ -52,6 +56,7 @@ export function useStatusDisplay<TStatus extends string, TResource, TContext>(
       color: registry.getColor(status),
       colorName: registry.getColorName(status),
       runStatus: registry.getRunStatus(status),
+      message: registry.getReason(resource),
     };
   }, [registry, resource]);
 }
@@ -95,6 +100,7 @@ type RegistryStatusIconWithTextProps<TStatus extends string, TResource, TContext
   registry: StatusRegistry<TStatus, TResource, TContext>;
   status: TStatus;
   text?: string;
+  tooltip?: string;
   dataTestAttribute?: string;
 };
 
@@ -102,14 +108,15 @@ export function RegistryStatusIconWithText<TStatus extends string, TResource, TC
   registry,
   status,
   text,
+  tooltip,
   dataTestAttribute,
 }: RegistryStatusIconWithTextProps<TStatus, TResource, TContext>): React.ReactElement {
   const pfRunStatus = registry.getRunStatus(status);
   const label = text ?? registry.getLabel(status);
   const isActive = registry.hasTag(status, 'active');
 
-  return (
-    <span className="status-icon-with-text">
+  const content = (
+    <span className="registry-status-icon-with-text">
       <span
         className={css(
           'pf-v6-u-mr-xs status-icon',
@@ -120,25 +127,42 @@ export function RegistryStatusIconWithText<TStatus extends string, TResource, TC
       >
         <RegistryStatusIcon registry={registry} status={status} />
       </span>
-      <span data-test={dataTestAttribute}>{label}</span>
+      <span
+        data-test={dataTestAttribute}
+        className={tooltip ? 'registry-status-icon-with-text__help-text' : undefined}
+      >
+        {label}
+      </span>
     </span>
   );
+
+  if (tooltip) {
+    return <Tooltip content={tooltip}>{content}</Tooltip>;
+  }
+  return content;
 }
 
 type RegistryStatusIconWithTextLabelProps<TStatus extends string, TResource, TContext> = {
   registry: StatusRegistry<TStatus, TResource, TContext>;
   status: TStatus;
   text?: string;
+  tooltip?: string;
 };
 
 export function RegistryStatusIconWithTextLabel<TStatus extends string, TResource, TContext>({
   registry,
   status,
   text,
+  tooltip,
 }: RegistryStatusIconWithTextLabelProps<TStatus, TResource, TContext>): React.ReactElement {
   return (
     <Label color={registry.getColorName(status)} variant="outline">
-      <RegistryStatusIconWithText registry={registry} status={status} text={text} />
+      <RegistryStatusIconWithText
+        registry={registry}
+        status={status}
+        text={text}
+        tooltip={tooltip}
+      />
     </Label>
   );
 }
@@ -155,17 +179,6 @@ export function buildStatusFilterOptions<TStatus extends string, TResource, TCon
   return configs.map((config) => ({
     label: config.label,
     value: config.status as string,
-    icon: (
-      <span
-        style={{
-          color: registry.getColor(config.status),
-          display: 'inline-flex',
-          alignItems: 'center',
-        }}
-      >
-        <PfStatusIcon status={registry.getRunStatus(config.status)} height={12} width={12} />
-      </span>
-    ),
   }));
 }
 
@@ -182,12 +195,14 @@ type BoundStatusIconProps<TStatus extends string> = {
 type BoundStatusIconWithTextProps<TStatus extends string> = {
   status: TStatus;
   text?: string;
+  tooltip?: string;
   dataTestAttribute?: string;
 };
 
 type BoundStatusIconWithTextLabelProps<TStatus extends string> = {
   status: TStatus;
   text?: string;
+  tooltip?: string;
 };
 
 /**

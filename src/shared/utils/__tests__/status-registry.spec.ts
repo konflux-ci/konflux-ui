@@ -36,6 +36,7 @@ const testRegistry = createStatusRegistry<TestStatus, TestResource, TestContext>
       weight: 30,
       label: 'On Hold',
       tags: ['unfinished'],
+      reason: () => 'Paused by admin',
     },
     {
       status: 'Active',
@@ -50,6 +51,7 @@ const testRegistry = createStatusRegistry<TestStatus, TestResource, TestContext>
       category: 'danger',
       weight: 5,
       tags: ['terminal', 'error'],
+      reason: (obj) => `Error: ${obj.reason ?? 'unknown'}`,
     },
     {
       status: 'Done',
@@ -294,6 +296,26 @@ describe('createStatusRegistry', () => {
       });
 
       expect(registryWithOverride.getRunStatus('Custom')).toBe(RunStatus.Idle);
+    });
+  });
+
+  describe('getReason', () => {
+    it('returns the reason string when the matching entry has a reason fn', () => {
+      expect(testRegistry.getReason({ state: 'paused' })).toBe('Paused by admin');
+    });
+
+    it('passes the resource and context to the reason fn', () => {
+      expect(testRegistry.getReason({ state: 'error', reason: 'disk full' })).toBe(
+        'Error: disk full',
+      );
+    });
+
+    it('returns undefined when the matching entry has no reason fn', () => {
+      expect(testRegistry.getReason({ state: 'active' })).toBeUndefined();
+    });
+
+    it('returns undefined for the catch-all entry with no reason', () => {
+      expect(testRegistry.getReason({ state: 'something-else' })).toBeUndefined();
     });
   });
 

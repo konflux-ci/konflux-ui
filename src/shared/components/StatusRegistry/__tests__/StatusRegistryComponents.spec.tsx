@@ -1,4 +1,5 @@
 import { screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { createStatusRegistry } from '~/shared/utils/status-registry';
 import { renderWithQueryClientAndRouter } from '~/unit-test-utils';
 import {
@@ -14,11 +15,17 @@ import {
 // ---------------------------------------------------------------------------
 
 type TestStatus = 'Active' | 'Done' | 'Unknown';
-type TestResource = { state: string };
+type TestResource = { state: string; detail?: string };
 
 const testRegistry = createStatusRegistry<TestStatus, TestResource>()({
   statuses: [
-    { status: 'Active', match: (obj) => obj.state === 'active', category: 'info', weight: 10 },
+    {
+      status: 'Active',
+      match: (obj) => obj.state === 'active',
+      category: 'info',
+      weight: 10,
+      reason: (obj) => obj.detail,
+    },
     {
       status: 'Done',
       match: (obj) => obj.state === 'done',
@@ -43,6 +50,7 @@ describe('useStatusDisplay', () => {
         <span data-test="label">{display.label}</span>
         <span data-test="category">{display.category}</span>
         <span data-test="color">{display.color}</span>
+        <span data-test="message">{display.message ?? 'none'}</span>
       </div>
     );
   };
@@ -62,6 +70,23 @@ describe('useStatusDisplay', () => {
   it('returns null status for null resource', () => {
     renderWithQueryClientAndRouter(<TestHookConsumer resource={null} />);
     expect(screen.getByTestId('status')).toHaveTextContent('null');
+  });
+
+  it('returns message from reason fn when present', () => {
+    renderWithQueryClientAndRouter(
+      <TestHookConsumer resource={{ state: 'active', detail: 'Waiting for pods' }} />,
+    );
+    expect(screen.getByTestId('message')).toHaveTextContent('Waiting for pods');
+  });
+
+  it('returns undefined message when reason fn is not defined', () => {
+    renderWithQueryClientAndRouter(<TestHookConsumer resource={{ state: 'done' }} />);
+    expect(screen.getByTestId('message')).toHaveTextContent('none');
+  });
+
+  it('returns undefined message for null resource', () => {
+    renderWithQueryClientAndRouter(<TestHookConsumer resource={null} />);
+    expect(screen.getByTestId('message')).toHaveTextContent('none');
   });
 });
 
@@ -106,6 +131,27 @@ describe('RegistryStatusIconWithText', () => {
       />,
     );
     expect(screen.getByTestId('test-status')).toBeInTheDocument();
+  });
+
+  it('renders without Tooltip when tooltip prop is undefined', () => {
+    const { container } = renderWithQueryClientAndRouter(
+      <RegistryStatusIconWithText registry={testRegistry} status="Active" />,
+    );
+    expect(container.querySelector('[id^="pf-tooltip"]')).not.toBeInTheDocument();
+  });
+
+  it('renders with Tooltip when tooltip prop is a non-empty string', async () => {
+    const user = userEvent.setup();
+    renderWithQueryClientAndRouter(
+      <RegistryStatusIconWithText
+        registry={testRegistry}
+        status="Active"
+        tooltip="Waiting for resources"
+      />,
+    );
+    const statusElement = screen.getByText('Active');
+    await user.hover(statusElement);
+    expect(await screen.findByText('Waiting for resources')).toBeInTheDocument();
   });
 });
 

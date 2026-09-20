@@ -26,6 +26,7 @@ import { createCommitObjectFromPLR } from '~/utils/commits-utils';
 import { PipelineRunEventTypeLabel } from '~/utils/pipeline-run-filter-utils';
 import { pipelineRunStatus } from '~/utils/pipeline-utils';
 import { PLRStatus } from '~/utils/plr-status-config';
+import PipelineRunStatusCell from './PipelineRunStatus';
 
 const PipelineRunAttestation: React.FC<{ plr: PipelineRunKind }> = ({ plr }) => {
   const hasAttestation =
@@ -175,7 +176,7 @@ export const pipelineRunsColumns: ColumnDefinition<PipelineRunKind>[] = [
     header: 'Status',
     accessorFn: (row) => PLRStatus.registry.deriveStatus(row),
     sortable: true,
-    cell: (info) => <PLRStatus.StatusIconWithText status={info.getValue() as runStatus} />,
+    cell: (info) => <PipelineRunStatusCell plr={info.row.original} />,
   },
   {
     id: 'testOutput',

@@ -86,6 +86,17 @@ export const PIPELINE_RUN_STATUS_REGISTRY = createStatusRegistry<
       category: 'warning',
       weight: 15,
       tags: ['unfinished'],
+      reason: (_plr, ctx) => ctx.succeededCond?.message,
+    },
+    {
+      status: runStatus.Queued,
+      match: (plr, ctx) =>
+        ctx.specStatus === SucceedConditionReason.PipelineRunPending &&
+        (plr.metadata?.labels?.['pipelinesascode.tekton.dev/state'] === 'queued' ||
+          plr.metadata?.labels?.['kueue.x-k8s.io/queue-name'] !== undefined),
+      category: 'neutral',
+      weight: 18,
+      tags: ['unfinished'],
     },
     {
       status: runStatus.Pending,
@@ -94,6 +105,7 @@ export const PIPELINE_RUN_STATUS_REGISTRY = createStatusRegistry<
       category: 'neutral',
       weight: 20,
       tags: ['unfinished'],
+      reason: (_plr, ctx) => ctx.succeededCond?.message,
     },
     {
       status: runStatus.Cancelled,
@@ -101,6 +113,7 @@ export const PIPELINE_RUN_STATUS_REGISTRY = createStatusRegistry<
       category: 'warning',
       weight: 60,
       tags: ['terminal'],
+      reason: (_plr, ctx) => ctx.succeededCond?.message,
     },
     {
       status: runStatus.Skipped,
@@ -110,6 +123,7 @@ export const PIPELINE_RUN_STATUS_REGISTRY = createStatusRegistry<
       weight: 66,
       pfRunStatus: RunStatus.Skipped,
       tags: ['terminal'],
+      reason: (_plr, ctx) => ctx.succeededCond?.message,
     },
     {
       status: runStatus.Running,
@@ -138,6 +152,7 @@ export const PIPELINE_RUN_STATUS_REGISTRY = createStatusRegistry<
       category: 'danger',
       weight: 41,
       tags: ['terminal', 'error'],
+      reason: (_plr, ctx) => ctx.succeededCond?.message,
     },
     {
       status: runStatus.Succeeded,

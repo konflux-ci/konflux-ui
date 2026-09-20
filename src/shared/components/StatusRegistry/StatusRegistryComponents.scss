@@ -1,0 +1,16 @@
+.registry-status-icon.icon-spin > svg {
+  animation: status-spin 2s infinite linear;
+}
+
+.registry-status-icon-with-text {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: nowrap;
+
+  &__help-text {
+    text-decoration-line: var(--pf-t--global--text-decoration--help-text--line--default);
+    text-decoration-style: var(--pf-t--global--text-decoration--help-text--style--default);
+    text-underline-offset: 0.25rem;
+    cursor: pointer;
+  }
+}
