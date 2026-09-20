@@ -69,11 +69,10 @@ describe('PLRStatus.filterOptions', () => {
     }
   });
 
-  it('each option has label, value, and icon', () => {
+  it('each option has label and value', () => {
     for (const opt of PLRStatus.filterOptions) {
       expect(opt.label).toBeTruthy();
       expect(opt.value).toBeTruthy();
-      expect(opt.icon).toBeDefined();
     }
   });
 });

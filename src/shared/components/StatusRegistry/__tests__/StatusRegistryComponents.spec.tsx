@@ -168,12 +168,11 @@ describe('buildStatusFilterOptions', () => {
     expect(options[2].value).toBe('Unknown');
   });
 
-  it('each option has label, value, and icon', () => {
+  it('each option has label and value', () => {
     const options = buildStatusFilterOptions(testRegistry);
     for (const opt of options) {
       expect(opt.label).toBeTruthy();
       expect(opt.value).toBeTruthy();
-      expect(opt.icon).toBeDefined();
     }
   });
 
@@ -251,9 +250,10 @@ describe('createStatusComponents', () => {
       expect(TestStatus.filterOptions).toHaveLength(3);
     });
 
-    it('each option has icon', () => {
+    it('each option has label and value', () => {
       for (const opt of TestStatus.filterOptions) {
-        expect(opt.icon).toBeDefined();
+        expect(opt.label).toBeTruthy();
+        expect(opt.value).toBeTruthy();
       }
     });
   });

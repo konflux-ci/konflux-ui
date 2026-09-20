@@ -37,7 +37,13 @@ describe('PipelineRunStatus', () => {
     expect(mockUseTaskRuns).toHaveBeenCalledWith(null, null, undefined, false);
   });
 
-  it('fetches TaskRuns for failed PLRs', () => {
+  it('does not eagerly fetch TaskRuns for failed PLRs when tooltip is hidden', () => {
+    const plr = testPipelineRuns[DataState.FAILED];
+    renderWithQueryClientAndRouter(<PipelineRunStatus plr={plr} isTooltipVisible={false} />);
+    expect(mockUseTaskRuns).toHaveBeenCalledWith(null, null, undefined, false);
+  });
+
+  it('fetches TaskRuns for failed PLRs when tooltip is visible', () => {
     const plr = testPipelineRuns[DataState.FAILED];
     renderWithQueryClientAndRouter(<PipelineRunStatus plr={plr} />);
     expect(mockUseTaskRuns).toHaveBeenCalledWith('test-ns', plr.metadata?.name, undefined, false);

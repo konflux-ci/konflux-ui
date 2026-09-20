@@ -18,9 +18,11 @@ const PipelineRunStatus: React.FC<PipelineRunStatusProps> = React.memo(
     const { status, message } = PLRStatus.useStatusDisplay(plr);
 
     const isFailed = status === runStatus.Failed;
+    const shouldFetchTaskRuns = isFailed && isTooltipVisible;
+
     const [taskRuns, taskRunsLoaded] = useTaskRunsForPipelineRuns(
-      isFailed ? namespace : null,
-      isFailed ? (plr.metadata?.name ?? null) : null,
+      shouldFetchTaskRuns ? namespace : null,
+      shouldFetchTaskRuns ? (plr.metadata?.name ?? null) : null,
       undefined,
       false,
     );
