@@ -146,13 +146,12 @@ export const SNAPSHOTS_LIST_COLUMNS: ColumnDefinition<Snapshot>[] = [
       const commit = createCommitObjectFromSnapshot(info.row.original);
       return (
         <TriggerColumnData
-          repoOrg={commit?.repoOrg}
-          repoName={commit?.repoName}
           repoURL={commit?.repoURL}
           prNumber={commit?.pullRequestNumber}
           eventType={commit?.eventType}
           commitSha={commit?.sha}
           shaUrl={commit?.shaURL}
+          gitProvider={commit?.gitProvider}
         />
       );
     },
@@ -166,8 +165,7 @@ export const SNAPSHOTS_LIST_COLUMNS: ColumnDefinition<Snapshot>[] = [
     nonHidable: true,
     cell: (info) => {
       const getSourceFn = info.table.options.meta?.getSource as
-        | ((item: Snapshot) => ResourceSource | undefined)
-        | undefined;
+        ((item: Snapshot) => ResourceSource | undefined) | undefined;
       const source = getSourceFn?.(info.row.original);
       return <SnapshotActionCell snapshot={info.row.original} source={source} />;
     },

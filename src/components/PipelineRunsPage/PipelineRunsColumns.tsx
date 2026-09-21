@@ -23,7 +23,7 @@ import { Timestamp } from '~/shared/components/timestamp/Timestamp';
 import { TriggerColumnData } from '~/shared/components/trigger-column-data/trigger-column-data';
 import { PipelineRunKind } from '~/types';
 import { createCommitObjectFromPLR } from '~/utils/commits-utils';
-import { PipelineRunEventTypeLabel } from '~/utils/pipeline-run-filter-utils';
+import { getEventTypeLabel } from '~/utils/pipeline-run-filter-utils';
 import { pipelineRunStatus } from '~/utils/pipeline-utils';
 import { PLRStatus } from '~/utils/plr-status-config';
 
@@ -229,24 +229,24 @@ export const pipelineRunsColumns: ColumnDefinition<PipelineRunKind>[] = [
     id: 'triggerReference',
     header: 'Trigger / Reference',
     visibleFrom: 'xl',
+    size: 2,
     cell: (info) => {
       const plr = info.row.original;
       const commit = createCommitObjectFromPLR(plr);
       if (!commit) {
         return <>-</>;
       }
-      const eventTypeLabel = PipelineRunEventTypeLabel[commit.eventType] ?? '-';
+      const eventTypeLabel = getEventTypeLabel(commit.eventType, commit.gitProvider);
       return (
         <>
           {eventTypeLabel}{' '}
           <TriggerColumnData
-            repoOrg={commit.repoOrg}
-            repoName={commit.repoName}
             repoURL={commit.repoURL}
             prNumber={commit.pullRequestNumber}
             eventType={commit.eventType}
             commitSha={commit.sha}
             shaUrl={commit.shaURL}
+            gitProvider={commit.gitProvider}
           />
         </>
       );
