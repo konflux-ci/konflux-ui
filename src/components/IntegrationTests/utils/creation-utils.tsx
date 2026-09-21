@@ -51,6 +51,11 @@ export const defaultSelectedContextOption = {
   selected: true,
 };
 
+export const defaultSelectedContextOptionForComponentGroups = {
+  ...contextOptions.find((ctx) => ctx.name === 'group'),
+  selected: true,
+};
+
 /**
  * Maps over the provided context options and assigns a `selected` property to each context
  * based on whether its `name` is present in the array of selected context names.

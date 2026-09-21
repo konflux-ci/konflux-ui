@@ -2,6 +2,8 @@ import {
   GROUP_DETAILS_PATH,
   GROUPS_PATH,
   GROUP_INTEGRATION_TEST_DETAILS_PATH,
+  GROUP_INTEGRATION_TEST_ADD_PATH,
+  GROUP_INTEGRATION_TEST_EDIT_PATH,
 } from '@routes/paths';
 import { RouteErrorBoundry } from '@routes/RouteErrorBoundary';
 import {
@@ -15,6 +17,12 @@ import {
   IntegrationTestOverviewTabByGroup,
   IntegrationTestPipelineRunTabByGroup,
 } from '~/components/IntegrationTests/IntegrationTestDetails';
+import {
+  IntegrationTestCreateFormByGroup,
+  integrationTestCreateFormLoader,
+  IntegrationTestEditFormByGroup,
+  integrationTestEditFormLoader,
+} from '~/components/IntegrationTests/IntegrationTestForm';
 import { ensureFeatureFlagOnLoader } from '~/feature-flags/utils';
 
 const componentGroupRoutes = [
@@ -45,6 +53,18 @@ const componentGroupRoutes = [
         element: <ComponentGroupIntegrationTestsTab />,
       },
     ],
+  },
+  {
+    path: GROUP_INTEGRATION_TEST_ADD_PATH.path,
+    loader: integrationTestCreateFormLoader,
+    errorElement: <RouteErrorBoundry />,
+    element: <IntegrationTestCreateFormByGroup />,
+  },
+  {
+    path: GROUP_INTEGRATION_TEST_EDIT_PATH.path,
+    loader: integrationTestEditFormLoader,
+    errorElement: <RouteErrorBoundry />,
+    element: <IntegrationTestEditFormByGroup />,
   },
   {
     path: GROUP_INTEGRATION_TEST_DETAILS_PATH.path,

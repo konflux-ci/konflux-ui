@@ -4,6 +4,7 @@ import { useComponentGroupBreadcrumbs } from '~/components/ComponentGroups/bread
 import { useIntegrationTestScenarioV2 } from '~/hooks/useIntegrationTestScenariosV2';
 import {
   GROUP_INTEGRATION_TEST_DETAILS_PATH,
+  GROUP_INTEGRATION_TEST_EDIT_PATH,
   GROUP_INTEGRATION_TEST_LIST_PATH,
 } from '~/routes/paths';
 import { RouterParams } from '~/routes/utils';
@@ -56,7 +57,11 @@ const IntegrationTestDetailsByGroup: React.FC = () => {
       loaded={loaded}
       error={error}
       breadcrumbs={breadcrumbs}
-      editPath="#" // TODO: will be implemented as part of https://redhat.atlassian.net/browse/KFLUXUI-1716
+      editPath={GROUP_INTEGRATION_TEST_EDIT_PATH.createPath({
+        groupName,
+        integrationTestName,
+        workspaceName: namespace,
+      })}
       listPath={GROUP_INTEGRATION_TEST_LIST_PATH.createPath({
         groupName,
         workspaceName: namespace,

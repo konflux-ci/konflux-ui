@@ -12,6 +12,7 @@ import { IntegrationTestAnnotations, IntegrationTestLabels } from '../../types';
 import {
   ResolverRefParams,
   createIntegrationTest,
+  createIntegrationTestForComponentGroup,
   editIntegrationTest,
   getLabelForParam,
   getURLForParam,
@@ -212,6 +213,117 @@ describe('Create Utils', () => {
         resourceKind: 'pipelinerun',
       },
       'Test Application',
+      'test-ns',
+    );
+    expect(resource.metadata.annotations).toStrictEqual({
+      [IntegrationTestAnnotations.KIND]: EC_INTEGRATION_TEST_KIND,
+    });
+  });
+});
+
+describe('Create Utils for ComponentGroup', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('Should call k8sCreateResource with componentGroup in spec instead of application', async () => {
+    createResourceMock.mockImplementation(({ resource }) => resource);
+    const resource = await createIntegrationTestForComponentGroup(
+      {
+        name: 'group-test',
+        revision: 'test-revision',
+        url: 'test-url',
+        path: 'test-path',
+        optional: false,
+        resourceKind: 'pipeline',
+        contexts: [
+          {
+            name: 'group',
+            description: 'execute the integration test for a Snapshot of the `group` type',
+          },
+        ],
+      },
+      'test-group',
+      'test-ns',
+    );
+
+    expect(createResourceMock).toHaveBeenCalledWith({
+      model: IntegrationTestScenarioModel,
+      queryOptions: {
+        name: 'group-test',
+        ns: 'test-ns',
+      },
+      resource: expect.objectContaining({
+        metadata: expect.objectContaining({ name: 'group-test', namespace: 'test-ns' }),
+        spec: expect.objectContaining({
+          componentGroup: 'test-group',
+        }),
+      }),
+    });
+    expect(resource.spec.componentGroup).toBe('test-group');
+    expect(resource.spec.application).toBeUndefined();
+    expect(resource.spec.resolverRef.params).toEqual([
+      { name: 'url', value: 'test-url' },
+      { name: 'revision', value: 'test-revision' },
+      { name: 'pathInRepo', value: 'test-path' },
+    ]);
+  });
+
+  it('Should contain the optional test value in the labels', async () => {
+    createResourceMock.mockImplementation(({ resource }) => resource);
+    const resource = await createIntegrationTestForComponentGroup(
+      {
+        name: 'group-test',
+        revision: 'test-revision',
+        url: 'test-url',
+        path: 'test-path',
+        optional: true,
+        resourceKind: 'pipeline',
+      },
+      'test-group',
+      'test-ns',
+    );
+    expect(resource.metadata.labels).toBeDefined();
+    expect(resource.metadata.labels[IntegrationTestLabels.OPTIONAL]).toBe('true');
+  });
+
+  it('Should pass dryRun query param when dryRun is true', async () => {
+    createResourceMock.mockImplementation(({ resource }) => resource);
+    await createIntegrationTestForComponentGroup(
+      {
+        name: 'group-test',
+        revision: 'test-revision',
+        url: 'test-url',
+        path: 'test-path',
+        optional: false,
+        resourceKind: 'pipeline',
+      },
+      'test-group',
+      'test-ns',
+      true,
+    );
+
+    expect(createResourceMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        queryOptions: expect.objectContaining({
+          queryParams: { dryRun: 'All' },
+        }),
+      }),
+    );
+  });
+
+  it('Should set EC kind annotation for enterprise contract tests', async () => {
+    createResourceMock.mockImplementation(({ resource }) => resource);
+    const resource = await createIntegrationTestForComponentGroup(
+      {
+        name: 'group-enterprise-contract',
+        revision: EC_INTEGRATION_TEST_REVISION,
+        url: EC_INTEGRATION_TEST_URL,
+        path: EC_INTEGRATION_TEST_PATH,
+        optional: false,
+        resourceKind: 'pipelinerun',
+      },
+      'test-group',
       'test-ns',
     );
     expect(resource.metadata.annotations).toStrictEqual({

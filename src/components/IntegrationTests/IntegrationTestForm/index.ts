@@ -27,4 +27,6 @@ export const integrationTestEditFormLoader = createLoaderWithAccessCheck(
 );
 
 export { default as IntegrationTestCreateFormByApplication } from './IntegrationTestCreateFormByApplication';
+export { default as IntegrationTestCreateFormByGroup } from './IntegrationTestCreateFormByGroup';
 export { default as IntegrationTestEditFormByApplication } from './IntegrationTestEditFormByApplication';
+export { default as IntegrationTestEditFormByGroup } from './IntegrationTestEditFormByGroup';

@@ -1,28 +1,20 @@
-import * as React from 'react';
-import { act, fireEvent, screen } from '@testing-library/react';
+import { act, fireEvent, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { NuqsTestingAdapter } from 'nuqs/adapters/testing';
 import { useIntegrationTestScenariosV2 } from '~/hooks/useIntegrationTestScenariosV2';
 import { IntegrationTestScenarioKind, ResolverType } from '~/types/coreBuildService';
 import {
+  createReactRouterMock,
+  createUseParamsMock,
   mockAccessReviewUtil,
   mockUseNamespaceHook,
-  renderWithQueryClient,
+  renderWithQueryClientAndRouter,
   setupVirtualizerMock,
 } from '~/unit-test-utils';
 import IntegrationTestsListViewV2 from '../IntegrationTestsListViewV2';
 
 jest.mock('@tanstack/react-virtual', () => ({
   useVirtualizer: jest.fn(),
-}));
-
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
-  Link: ({ children, to, ...props }: { children: React.ReactNode; to: string }) => (
-    <a href={to} {...props}>
-      {children}
-    </a>
-  ),
-  useParams: () => ({ groupName: 'test-group' }),
 }));
 
 jest.mock('~/hooks/useIntegrationTestScenariosV2', () => ({
@@ -32,6 +24,9 @@ jest.mock('~/hooks/useIntegrationTestScenariosV2', () => ({
 const useIntegrationTestScenariosV2Mock = useIntegrationTestScenariosV2 as jest.Mock;
 const accessReviewMock = mockAccessReviewUtil('useAccessReviewForModel', [true, true]);
 mockUseNamespaceHook('test-ns');
+const useNavigateMock = createReactRouterMock('useNavigate');
+const navigateMock = jest.fn();
+const useParamsMock = createUseParamsMock({ groupName: 'test-group' });
 
 const createMockScenario = (
   name: string,
@@ -88,25 +83,24 @@ const TestedComponent = ({ searchParams }: { searchParams?: string }) => (
 );
 
 describe('IntegrationTestsListViewV2', () => {
-  const alertMock = jest.spyOn(window, 'alert').mockImplementation(jest.fn());
-
   beforeEach(() => {
     jest.useFakeTimers();
     setupVirtualizerMock();
     useIntegrationTestScenariosV2Mock.mockReturnValue([mockTestsV2, true, undefined]);
     accessReviewMock.mockReturnValue([true, true]);
+    useNavigateMock.mockReturnValue(navigateMock);
+    useParamsMock.mockReturnValue({ groupName: 'test-group' });
   });
 
   afterEach(() => {
     jest.clearAllMocks();
     jest.useRealTimers();
-    alertMock.mockClear();
   });
 
   it('should show a loading skeleton while tests are loading', () => {
     useIntegrationTestScenariosV2Mock.mockReturnValue([[], false, undefined]);
 
-    renderWithQueryClient(<TestedComponent />);
+    renderWithQueryClientAndRouter(<TestedComponent />);
 
     expect(screen.getByTestId('table-container')).toBeInTheDocument();
     expect(screen.getByTestId('table-skeleton')).toBeInTheDocument();
@@ -116,7 +110,7 @@ describe('IntegrationTestsListViewV2', () => {
   it('should show an error state when loading tests fails', () => {
     useIntegrationTestScenariosV2Mock.mockReturnValue([[], true, { code: 500 }]);
 
-    renderWithQueryClient(<TestedComponent />);
+    renderWithQueryClientAndRouter(<TestedComponent />);
 
     expect(screen.getByText('Unable to load integration tests')).toBeInTheDocument();
   });
@@ -124,7 +118,7 @@ describe('IntegrationTestsListViewV2', () => {
   it('should show the empty state when there are no tests', () => {
     useIntegrationTestScenariosV2Mock.mockReturnValue([[], true, undefined]);
 
-    renderWithQueryClient(<TestedComponent />);
+    renderWithQueryClientAndRouter(<TestedComponent />);
 
     expect(screen.getByTestId('integration-tests__empty')).toBeInTheDocument();
     expect(screen.getByText('Test any code changes')).toBeInTheDocument();
@@ -132,13 +126,13 @@ describe('IntegrationTestsListViewV2', () => {
   });
 
   it('should call the hook with the current namespace and group', () => {
-    renderWithQueryClient(<TestedComponent />);
+    renderWithQueryClientAndRouter(<TestedComponent />);
 
     expect(useIntegrationTestScenariosV2Mock).toHaveBeenCalledWith('test-ns', 'test-group');
   });
 
   it('should render test rows with name, git url, release flag, and revision', () => {
-    renderWithQueryClient(<TestedComponent />);
+    renderWithQueryClientAndRouter(<TestedComponent />);
 
     expect(screen.getByTestId('table-v2')).toBeInTheDocument();
     expect(screen.getByText('group-test-1')).toBeInTheDocument();
@@ -160,28 +154,28 @@ describe('IntegrationTestsListViewV2', () => {
       undefined,
     ]);
 
-    renderWithQueryClient(<TestedComponent />);
+    renderWithQueryClientAndRouter(<TestedComponent />);
 
     expect(screen.getByText('no-resolver-test')).toBeInTheDocument();
     expect(screen.getAllByText('-').length).toBeGreaterThan(0);
   });
 
   it('should filter tests by name from the URL', () => {
-    renderWithQueryClient(<TestedComponent searchParams="?name=group-test-1" />);
+    renderWithQueryClientAndRouter(<TestedComponent searchParams="?name=group-test-1" />);
 
     expect(screen.getByText('group-test-1')).toBeInTheDocument();
     expect(screen.queryByText('group-test-2')).not.toBeInTheDocument();
   });
 
   it('should show the filtered empty state when the name filter matches nothing', () => {
-    renderWithQueryClient(<TestedComponent searchParams="?name=does-not-exist" />);
+    renderWithQueryClientAndRouter(<TestedComponent searchParams="?name=does-not-exist" />);
 
     expect(screen.getByText('No results found')).toBeInTheDocument();
     expect(screen.queryByTestId('table-v2')).not.toBeInTheDocument();
   });
 
   it('should filter the table when a name is entered', () => {
-    renderWithQueryClient(<TestedComponent />);
+    renderWithQueryClientAndRouter(<TestedComponent />);
 
     const filter = screen.getByRole<HTMLInputElement>('textbox', { name: 'Name' });
     fireEvent.change(filter, { target: { value: 'group-test-1' } });
@@ -194,7 +188,7 @@ describe('IntegrationTestsListViewV2', () => {
   });
 
   it('should link each row to the group integration test details page', () => {
-    renderWithQueryClient(<TestedComponent />);
+    renderWithQueryClientAndRouter(<TestedComponent />);
 
     const rowLink = screen.getByText('group-test-1').closest('a');
     expect(rowLink).toHaveAttribute(
@@ -203,29 +197,48 @@ describe('IntegrationTestsListViewV2', () => {
     );
   });
 
-  it('should trigger the add handler from the toolbar button', () => {
-    renderWithQueryClient(<TestedComponent />);
+  it('should navigate to the group add page from the toolbar button', () => {
+    renderWithQueryClientAndRouter(<TestedComponent />);
 
     fireEvent.click(screen.getByTestId('add-integration-test-toolbar'));
 
-    expect(alertMock).toHaveBeenCalledWith('TODO');
+    expect(navigateMock).toHaveBeenCalledWith('/ns/test-ns/groups/test-group/integrationtests/add');
   });
 
-  it('should trigger the add handler from the empty state button', () => {
+  it('should navigate to the group add page from the empty state button', () => {
     useIntegrationTestScenariosV2Mock.mockReturnValue([[], true, undefined]);
 
-    renderWithQueryClient(<TestedComponent />);
+    renderWithQueryClientAndRouter(<TestedComponent />);
 
     fireEvent.click(screen.getByTestId('add-integration-test-empty'));
 
-    expect(alertMock).toHaveBeenCalledWith('TODO');
+    expect(navigateMock).toHaveBeenCalledWith('/ns/test-ns/groups/test-group/integrationtests/add');
+  });
+
+  it('should navigate to the group edit page from the row Edit action', async () => {
+    // ActionMenu opens via requestAnimationFrame, which needs real timers
+    jest.useRealTimers();
+    const user = userEvent.setup();
+    renderWithQueryClientAndRouter(<TestedComponent />);
+
+    const row = screen.getByText('group-test-1').closest('tr') as HTMLElement;
+    await user.click(within(row).getByTestId('kebab-button'));
+
+    // The open menu is portaled to document.body; closed row menus are hidden
+    // from the accessibility tree, so the open Edit item is unique here.
+    const editItem = await screen.findByRole('menuitem', { name: 'Edit' });
+    await user.click(editItem);
+
+    expect(navigateMock).toHaveBeenCalledWith(
+      '/ns/test-ns/groups/test-group/integrationtests/group-test-1/edit',
+    );
   });
 
   it('should disable the add buttons when the user cannot create tests', () => {
     accessReviewMock.mockReturnValue([false, true]);
     useIntegrationTestScenariosV2Mock.mockReturnValue([mockTestsV2, true, undefined]);
 
-    const { rerender } = renderWithQueryClient(<TestedComponent />);
+    const { rerender } = renderWithQueryClientAndRouter(<TestedComponent />);
     expect(screen.getByTestId('add-integration-test-toolbar')).toHaveAttribute(
       'aria-disabled',
       'true',

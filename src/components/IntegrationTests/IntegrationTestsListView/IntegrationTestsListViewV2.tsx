@@ -1,11 +1,16 @@
 import * as React from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ButtonVariant, EmptyStateBody, Truncate, EmptyStateActions } from '@patternfly/react-core';
 import emptyStateImgUrl from '~/assets/Integration-test.svg';
 import { useIntegrationTestScenariosV2 } from '~/hooks/useIntegrationTestScenariosV2';
 import { IntegrationTestScenarioModel } from '~/models';
-import { GROUP_INTEGRATION_TEST_DETAILS_PATH } from '~/routes/paths';
+import {
+  GROUP_INTEGRATION_TEST_ADD_PATH,
+  GROUP_INTEGRATION_TEST_DETAILS_PATH,
+  GROUP_INTEGRATION_TEST_EDIT_PATH,
+} from '~/routes/paths';
 import { RouterParams } from '~/routes/utils';
+import ActionMenu from '~/shared/components/action-menu/ActionMenu';
 import AppEmptyState from '~/shared/components/empty-state/AppEmptyState';
 import FilteredEmptyState from '~/shared/components/empty-state/FilteredEmptyState';
 import {
@@ -25,6 +30,7 @@ import { textMatch } from '~/utils/text-filter-utils';
 import { ButtonWithAccessTooltip } from '../../ButtonWithAccessTooltip';
 import { IntegrationTestLabels } from '../IntegrationTestForm/types';
 import { ResolverRefParams, getURLForParam } from '../IntegrationTestForm/utils/create-utils';
+import { useIntegrationTestActions } from './useIntegrationTestActions';
 
 const filterConfigs = defineFilters<IntegrationTestScenarioKind>()([
   {
@@ -69,6 +75,21 @@ const IntegrationTestsEmptyState: React.FC<
   );
 };
 
+const IntegrationTestActionCell: React.FC<{
+  obj: IntegrationTestScenarioKind;
+  namespace: string;
+}> = ({ obj, namespace }) => {
+  const actions = useIntegrationTestActions(
+    obj,
+    GROUP_INTEGRATION_TEST_EDIT_PATH.createPath({
+      workspaceName: namespace,
+      groupName: obj.spec.componentGroup,
+      integrationTestName: obj.metadata?.name,
+    }),
+  );
+  return <ActionMenu actions={actions} />;
+};
+
 const IntegrationTestsListViewV2: React.FC<React.PropsWithChildren> = () => {
   const { groupName } = useParams<RouterParams>();
   const namespace = useNamespace();
@@ -77,6 +98,7 @@ const IntegrationTestsListViewV2: React.FC<React.PropsWithChildren> = () => {
     'create',
   );
 
+  const navigate = useNavigate();
   const [integrationTests, integrationTestsLoaded, integrationTestsError] =
     useIntegrationTestScenariosV2(namespace, groupName);
 
@@ -84,11 +106,8 @@ const IntegrationTestsListViewV2: React.FC<React.PropsWithChildren> = () => {
   const { filteredData } = useFilteredData(filterConfigs, integrationTests, clientFilterValues);
 
   const handleAddTest = React.useCallback(() => {
-    // TODO: update to open page to add a ComponentGroup's IntegrationTestScenario page once implemented
-    // will be done on https://redhat.atlassian.net/browse/KFLUXUI-1716
-    // eslint-disable-next-line no-alert
-    alert('TODO');
-  }, []);
+    navigate(GROUP_INTEGRATION_TEST_ADD_PATH.createPath({ groupName, workspaceName: namespace }));
+  }, [navigate, groupName, namespace]);
 
   const columns: ColumnDefinition<IntegrationTestScenarioKind>[] = React.useMemo(
     () => [
@@ -171,6 +190,12 @@ const IntegrationTestsListViewV2: React.FC<React.PropsWithChildren> = () => {
             />
           );
         },
+      },
+      {
+        id: 'actions',
+        header: ' ',
+        accessorFn: () => null,
+        cell: (info) => <IntegrationTestActionCell obj={info.row.original} namespace={namespace} />,
       },
     ],
     [groupName, namespace],

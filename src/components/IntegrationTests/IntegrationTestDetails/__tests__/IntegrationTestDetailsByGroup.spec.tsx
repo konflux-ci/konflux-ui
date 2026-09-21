@@ -1,4 +1,5 @@
 import { screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MockIntegrationTestsWithGit } from '~/components/IntegrationTests/IntegrationTestsListView/__data__/mock-integration-tests';
 import { useIntegrationTestScenarioV2 } from '~/hooks/useIntegrationTestScenariosV2';
 import {
@@ -64,5 +65,15 @@ describe('IntegrationTestDetailsByGroup', () => {
     useIntegrationTestScenarioV2Mock.mockReturnValue([null, true, { code: 404 }]);
     renderWithQueryClientAndRouter(<IntegrationTestDetailsByGroup />);
     screen.getByText('404: Page not found');
+  });
+
+  it('should link the edit action to the group integration test edit page', async () => {
+    const user = userEvent.setup();
+    renderWithQueryClientAndRouter(<IntegrationTestDetailsByGroup />);
+    await user.click(screen.getByTestId('details__actions'));
+    expect(screen.getByRole('menuitem', { name: 'Edit' })).toHaveAttribute(
+      'href',
+      '/ns/test-ns/groups/test-group/integrationtests/group-test-1/edit',
+    );
   });
 });

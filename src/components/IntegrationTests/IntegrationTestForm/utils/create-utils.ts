@@ -175,6 +175,64 @@ export const createIntegrationTest = (
   });
 };
 
+/**
+ * Create integrationTestScenario CR for ComponentGroup
+ *
+ * @param integrationTestValues integration test data
+ * @param groupName component group name
+ * @param namespace namespace of the application
+ * @param dryRun dry run without creating any resources
+ * @returns Returns IntegrationTestScenario CR data
+ *
+ */
+export const createIntegrationTestForComponentGroup = (
+  integrationTestValues: IntegrationTestFormValues,
+  groupName: string,
+  namespace: string,
+  dryRun?: boolean,
+): Promise<IntegrationTestScenarioKind> => {
+  const { name, url, revision, path, optional, params, contexts, resourceKind } =
+    integrationTestValues;
+  const isEC =
+    url === EC_INTEGRATION_TEST_URL &&
+    revision === EC_INTEGRATION_TEST_REVISION &&
+    path === EC_INTEGRATION_TEST_PATH;
+  const integrationTestResource: IntegrationTestScenarioKind = {
+    apiVersion: `${IntegrationTestScenarioGroupVersionKind.group}/${IntegrationTestScenarioGroupVersionKind.version}`,
+    kind: IntegrationTestScenarioGroupVersionKind.kind,
+    metadata: {
+      name,
+      namespace,
+      ...(optional && { labels: { [IntegrationTestLabels.OPTIONAL]: optional.toString() } }),
+      ...(isEC && { annotations: { [IntegrationTestAnnotations.KIND]: EC_INTEGRATION_TEST_KIND } }),
+    },
+    spec: {
+      componentGroup: groupName,
+      resolverRef: {
+        resourceKind,
+        resolver: ResolverType.GIT,
+        params: [
+          { name: ResolverRefParams.URL, value: url },
+          { name: ResolverRefParams.REVISION, value: revision },
+          { name: ResolverRefParams.PATH, value: path },
+        ],
+      },
+      params: formatParams(params),
+      contexts: formatContexts(contexts),
+    },
+  };
+
+  return K8sQueryCreateResource({
+    model: IntegrationTestScenarioModel,
+    queryOptions: {
+      name,
+      ns: namespace,
+      ...(dryRun && { queryParams: { dryRun: 'All' } }),
+    },
+    resource: integrationTestResource,
+  });
+};
+
 export const createAppIntegrationTest = async (
   { application, inAppContext, integrationTest, applicationData, namespace }: FormValues,
   formHelpers: FormikHelpers<FormValues>,
