@@ -16,7 +16,7 @@ const AIChatDock = lazyLoad<LazyLoadArguments>(() =>
 export const AIChatGate: React.FC = () => (
   <IfFeature flag="ai-chat">
     <LightspeedStateProvider>
-      <AIChatDock fallback={<></>} />
+      <AIChatDock />
     </LightspeedStateProvider>
   </IfFeature>
 );

@@ -97,8 +97,8 @@ export const useLightspeedChat = (): UseLightspeedChatResult => {
   return {
     messages,
     announcement,
-    isSendButtonDisabled: isInProgress || (hasInitFailed ? true : isInitializing),
-    isInitializing: hasInitFailed ? false : isInitializing,
+    isSendButtonDisabled: isInProgress || hasInitFailed || isInitializing,
+    isInitializing: !hasInitFailed && isInitializing,
     chatError: sendError ?? initError,
     clearChatError,
     sendMessage,
