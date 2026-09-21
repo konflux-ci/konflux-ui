@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { AIClientError } from '@redhat-cloud-services/ai-client-common';
 import { AIStateContext, AIStateProvider } from '@redhat-cloud-services/ai-react-state';
 import { getLightspeedClient } from '~/lightspeed/lightspeedClient';
 import { getUserFacingErrorMessage } from '~/lightspeed/utils';
@@ -32,7 +33,8 @@ const InitializeLightspeedState: React.FC<React.PropsWithChildren> = ({ children
           'Failed to initialize Lightspeed client state',
           error instanceof Error ? error : new Error(String(error)),
         );
-        setInitError(getUserFacingErrorMessage(0));
+        const status = error instanceof AIClientError ? error.status : 0;
+        setInitError(getUserFacingErrorMessage(status));
       });
   }, [getState]);
 
