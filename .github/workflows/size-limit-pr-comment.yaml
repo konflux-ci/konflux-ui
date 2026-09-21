@@ -1,6 +1,6 @@
 name: Size Limit PR Comment
 
-# Fork PRs only: comments after CI ends (inline comment in main.yaml is immediate for same-repo).
+# Posts failure comments after CI ends (works for same-repo and fork PRs; uses workflow_run token).
 # Requires this file on main (workflow_run only uses workflows on the default branch).
 on:
   workflow_run:
@@ -11,11 +11,7 @@ jobs:
   comment:
     if: >-
       github.event.workflow_run.conclusion == 'failure' &&
-      github.event.workflow_run.event == 'pull_request' &&
-      (
-        github.event.workflow_run.head_repository == null ||
-        github.event.workflow_run.head_repository.full_name != github.repository
-      )
+      github.event.workflow_run.event == 'pull_request'
     runs-on: ubuntu-latest
     permissions:
       actions: read
@@ -76,17 +72,10 @@ jobs:
               return;
             }
 
-            const body = execFileSync(
-              'node',
-              ['.github/scripts/format-size-limit-comment.mjs', 'size-limit.log'],
-              {
-                encoding: 'utf8',
-                env: {
-                  ...process.env,
-                  GITHUB_REPOSITORY: `${context.repo.owner}/${context.repo.repo}`,
-                },
-              },
-            );
+            const body = execFileSync('node', [
+              '.github/scripts/format-size-limit-comment.mjs',
+              'size-limit.log',
+            ], { encoding: 'utf8' });
             fs.writeFileSync('comment-body.md', body);
             core.setOutput('pr_number', String(openPr.number));
 

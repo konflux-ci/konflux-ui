@@ -16,9 +16,8 @@ const raw = readFileSync(logPath, 'utf8');
 // Strip ANSI color codes from CI output
 const output = raw.replace(/\u001B\[[0-9;]*m/g, '').trim();
 
-const repo = process.env.GITHUB_REPOSITORY ?? 'konflux-ci/konflux-ui';
-const [owner, repoName] = repo.split('/');
-const docsUrl = `https://github.com/${owner}/${repoName}/blob/main/docs/bundle-size-budgets.md`;
+const docsUrl =
+  'https://github.com/konflux-ci/konflux-ui/blob/main/docs/bundle-size-budgets.md';
 
 /** @type {{ name: string; exceededBy: string; limit: string; size: string }[]} */
 const failures = [];

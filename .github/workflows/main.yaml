@@ -56,9 +56,6 @@ jobs:
   # Production bundle size budgets — fails PRs that exceed per-chunk limits
   size-limit:
     runs-on: ubuntu-latest
-    permissions:
-      issues: write
-      pull-requests: write
 
     steps:
       - name: Checkout 🛎️
@@ -91,28 +88,6 @@ jobs:
         with:
           name: size-limit-log
           path: size-limit.log
-
-      - name: Format size-limit PR comment
-        if: >-
-          failure() &&
-          steps.size-limit.outcome == 'failure' &&
-          github.event_name == 'pull_request' &&
-          github.event.pull_request.head.repo.full_name == github.repository
-        run: node .github/scripts/format-size-limit-comment.mjs size-limit.log > comment-body.md
-        env:
-          GITHUB_REPOSITORY: ${{ github.repository }}
-
-      - name: Post or update PR comment
-        if: >-
-          failure() &&
-          steps.size-limit.outcome == 'failure' &&
-          github.event_name == 'pull_request' &&
-          github.event.pull_request.head.repo.full_name == github.repository
-        uses: peter-evans/create-or-update-comment@71345be0265236311c031f5c7866368bd1eff043 # v4.0.0
-        with:
-          issue-number: ${{ github.event.pull_request.number }}
-          body-path: comment-body.md
-          comment-tag: size-limit-budget
 
   # Unit tests — sharded across 2 runners for parallel execution
   test:
