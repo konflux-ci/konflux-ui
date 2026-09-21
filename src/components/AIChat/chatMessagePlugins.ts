@@ -12,7 +12,7 @@ import type { PluggableList } from 'unified';
  * 5. `additionalRehypePlugins` (this list — always appended last)
  *
  * Registering rehype-sanitize here ensures sanitization runs after every
- * internal transform. The default schema follows GitHub/GMF rules, but strips
+ * internal transform. The default schema follows GitHub/GFM rules, but strips
  * `target` and `rel` that rehype-external-links adds in step 4.
  */
 const chatMessageSanitizeSchema = {
