@@ -142,3 +142,30 @@ export const useSortedGroupComponents = (
 
   return [sortedGroupedComponents, allCompsLoaded, allCompsError];
 };
+
+export const useComponentsByName = (
+  namespace: string,
+  componentNames: string[],
+  watch?: boolean,
+): [ComponentKind[], boolean, unknown] => {
+  const componentsSet = React.useMemo(() => new Set(componentNames), [componentNames]);
+
+  const { data, isLoading, error } = useK8sWatchResource<ComponentKind[]>(
+    {
+      groupVersionKind: ComponentGroupVersionKind,
+      namespace,
+      isList: true,
+      watch,
+    },
+    ComponentModel,
+    {
+      filterData: (res) =>
+        res.filter((c) => componentsSet.has(c.metadata?.name) && !c.metadata?.deletionTimestamp),
+    },
+  );
+
+  return React.useMemo(
+    () => [!isLoading ? (data ?? []) : [], !isLoading, error],
+    [data, isLoading, error],
+  );
+};

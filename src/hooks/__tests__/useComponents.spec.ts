@@ -1,7 +1,8 @@
 import { renderHook } from '@testing-library/react-hooks';
-import { mockComponentsData } from '../../components/ApplicationDetails/__data__/WorkflowComponentsData';
-import { createK8sWatchResourceMock } from '../../utils/test-utils';
-import { useAllComponents, useComponents } from '../useComponents';
+import { mockComponentsData } from '~/components/ApplicationDetails/__data__/WorkflowComponentsData';
+import { useAllComponents, useComponents, useComponentsByName } from '~/hooks/useComponents';
+import { ComponentGroupVersionKind, ComponentModel } from '~/models';
+import { createK8sWatchResourceMock } from '~/utils/test-utils';
 
 const useK8sWatchResourceMock = createK8sWatchResourceMock();
 
@@ -44,5 +45,55 @@ describe('useAllComponents', () => {
     const { result } = renderHook(() => useAllComponents('test-ns'));
     const [components] = result.current;
     expect(components).toHaveLength(3);
+  });
+});
+
+describe('useComponentsByName', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('should return an empty array while the request is loading', () => {
+    useK8sWatchResourceMock.mockReturnValue([[], false, undefined]);
+
+    const { result } = renderHook(() => useComponentsByName('test-ns', ['component-a'], true));
+
+    expect(result.current).toEqual([[], false, undefined]);
+  });
+
+  it('should return the fetched components after loading completes', () => {
+    useK8sWatchResourceMock.mockReturnValue([mockComponentsData, true, undefined]);
+
+    const { result } = renderHook(() => useComponentsByName('test-ns', ['test-dotnet60'], true));
+
+    expect(result.current).toEqual([mockComponentsData, true, undefined]);
+  });
+
+  it('should request all components and filter the requested names and deleted resources', () => {
+    useK8sWatchResourceMock.mockReturnValue([[], true, undefined]);
+
+    renderHook(() => useComponentsByName('test-ns', ['component-a', 'component-b'], true));
+
+    expect(useK8sWatchResourceMock).toHaveBeenCalledWith(
+      {
+        groupVersionKind: ComponentGroupVersionKind,
+        namespace: 'test-ns',
+        isList: true,
+        watch: true,
+      },
+      ComponentModel,
+      { filterData: expect.any(Function) },
+    );
+
+    const filterData = useK8sWatchResourceMock.mock.calls[0][2].filterData;
+    const matchingComponent = { metadata: { name: 'component-a' } };
+    const otherComponent = { metadata: { name: 'component-c' } };
+    const deletingComponent = {
+      metadata: { name: 'component-b', deletionTimestamp: '2026-08-01T00:00:00Z' },
+    };
+
+    expect(filterData([matchingComponent, otherComponent, deletingComponent])).toEqual([
+      matchingComponent,
+    ]);
   });
 });
