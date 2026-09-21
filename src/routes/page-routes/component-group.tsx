@@ -1,5 +1,11 @@
-import { GROUPS_PATH } from '@routes/paths';
+import { redirect } from 'react-router-dom';
+import { GROUP_DETAILS_PATH, GROUPS_PATH } from '@routes/paths';
 import { RouteErrorBoundry } from '@routes/RouteErrorBoundary';
+import {
+  ComponentGroupComponentsTab,
+  ComponentGroupDetailsViewLayout,
+  componentGroupDetailsViewLoader,
+} from '~/components/ComponentGroups/ComponentGroupsDetails';
 import { ensureFeatureFlagOnLoader } from '~/feature-flags/utils';
 
 const componentGroupRoutes = [
@@ -14,6 +20,22 @@ const componentGroupRoutes = [
 
       return { Component };
     },
+  },
+  {
+    path: GROUP_DETAILS_PATH.path,
+    loader: componentGroupDetailsViewLoader,
+    errorElement: <RouteErrorBoundry />,
+    element: <ComponentGroupDetailsViewLayout />,
+    children: [
+      {
+        index: true,
+        loader: () => redirect('components'),
+      },
+      {
+        path: 'components',
+        element: <ComponentGroupComponentsTab />,
+      },
+    ],
   },
 ];
 

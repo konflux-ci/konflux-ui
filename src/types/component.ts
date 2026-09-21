@@ -33,7 +33,6 @@ export type ComponentSource = {
   };
   versions?: ComponentSourceVersion[];
   dockerfileUri?: string;
-
 };
 
 export type RepositorySettings = {
