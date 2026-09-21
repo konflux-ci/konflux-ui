@@ -27,7 +27,7 @@ import { useNamespace } from '~/shared/providers/Namespace';
 import { PipelineRunKind, TaskRunKind } from '~/types';
 import { ReleaseKind, ReleasePlanKind } from '~/types/coreBuildService';
 import { createCommitObjectFromPLR } from '~/utils/commits-utils';
-import { PipelineRunEventTypeLabel } from '~/utils/pipeline-run-filter-utils';
+import { getEventTypeLabel } from '~/utils/pipeline-run-filter-utils';
 import { pipelineRunStatus } from '~/utils/pipeline-utils';
 import { ScanResults } from '~/utils/scan/scan-utils';
 import { usePipelinerunActionsLazy } from './pipelinerun-actions';
@@ -286,19 +286,18 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
       ) : null}
       {showTrigger ? (
         <TableData className={pipelineRunTableColumnClasses.trigger}>
-          {PipelineRunEventTypeLabel[commit?.eventType] ?? '-'}
+          {getEventTypeLabel(commit?.eventType, commit?.gitProvider)}
         </TableData>
       ) : null}
       {showReference ? (
         <TableData className={pipelineRunTableColumnClasses.reference}>
           <TriggerColumnData
-            repoOrg={commit?.repoOrg}
-            repoName={commit?.repoName}
             repoURL={commit?.repoURL}
             prNumber={commit?.pullRequestNumber}
             eventType={commit?.eventType}
             commitSha={commit?.sha}
             shaUrl={commit?.shaURL}
+            gitProvider={commit?.gitProvider}
           />
         </TableData>
       ) : null}
@@ -483,19 +482,18 @@ const DynamicPipelineRunListRow: React.FC<
       )}
       {visibleColumns.has('trigger') && (
         <TableData className={dynamicClasses.trigger}>
-          {PipelineRunEventTypeLabel[commit?.eventType] ?? '-'}
+          {getEventTypeLabel(commit?.eventType, commit?.gitProvider)}
         </TableData>
       )}
       {visibleColumns.has('reference') && (
         <TableData className={dynamicClasses.reference}>
           <TriggerColumnData
-            repoOrg={commit?.repoOrg}
-            repoName={commit?.repoName}
             repoURL={commit?.repoURL}
             prNumber={commit?.pullRequestNumber}
             eventType={commit?.eventType}
             commitSha={commit?.sha}
             shaUrl={commit?.shaURL}
+            gitProvider={commit?.gitProvider}
           />
         </TableData>
       )}
