@@ -1,4 +1,3 @@
-import { INTEGRATION_TEST_EDIT_PATH } from '@routes/paths';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { IntegrationTestScenarioModel } from '../../../models';
 import { Action } from '../../../shared/components/action-menu/types';
@@ -26,6 +25,7 @@ export const integrationTestDeleteModalAndNavigate = (
 
 export const useIntegrationTestActions = (
   integrationTest: IntegrationTestScenarioKind,
+  editPath: string,
 ): Action[] => {
   const showModal = useModalLauncher();
   const namespace = useNamespace();
@@ -42,13 +42,7 @@ export const useIntegrationTestActions = (
     {
       id: `edit-${integrationTest.metadata.name.toLowerCase()}`,
       label: 'Edit',
-      cta: {
-        href: INTEGRATION_TEST_EDIT_PATH.createPath({
-          workspaceName: namespace,
-          applicationName: integrationTest.spec.application,
-          integrationTestName: integrationTest.metadata.name,
-        }),
-      },
+      cta: { href: editPath },
       disabled:
         !canUpdateIntegrationTest ||
         integrationTest.spec?.resolverRef?.resolver !== ResolverType.GIT,

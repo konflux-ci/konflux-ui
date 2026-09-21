@@ -26,5 +26,5 @@ export const integrationTestEditFormLoader = createLoaderWithAccessCheck(
   },
 );
 
-export * from './IntegrationTestCreateForm';
-export * from './IntegrationTestEditForm';
+export { default as IntegrationTestCreateFormByApplication } from './IntegrationTestCreateFormByApplication';
+export { default as IntegrationTestEditFormByApplication } from './IntegrationTestEditFormByApplication';

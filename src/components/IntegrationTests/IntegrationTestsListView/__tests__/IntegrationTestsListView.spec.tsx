@@ -1,10 +1,13 @@
 import { MemoryRouter } from 'react-router-dom';
-import { fireEvent, waitFor, render, screen, act } from '@testing-library/react';
+import { fireEvent, waitFor, render, screen, act, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { NuqsTestingAdapter } from 'nuqs/adapters/testing';
 import { setupVirtualizerMock } from '~/unit-test-utils';
 import { createK8sWatchResourceMock } from '~/utils/test-utils';
-import { MockIntegrationTests } from '../__data__/mock-integration-tests';
+import {
+  MockIntegrationTests,
+  MockIntegrationTestsWithGit,
+} from '../__data__/mock-integration-tests';
 import IntegrationTestsListView from '../IntegrationTestsListView';
 
 const navigateMock = jest.fn();
@@ -129,6 +132,27 @@ describe('IntegrationTestsListView', () => {
     await waitFor(() =>
       expect(navigateMock).toHaveBeenCalledWith(
         '/ns/test-ns/applications/test-app/integrationtests/add',
+      ),
+    );
+  });
+
+  it('should navigate to the edit page from the row Edit action', async () => {
+    useK8sWatchResourceMock.mockReturnValue([MockIntegrationTestsWithGit, true, undefined]);
+    render(IntegrationTestsList);
+
+    const row = screen.getByText('test-app-test-1').closest('tr');
+    fireEvent.click(within(row).getByTestId('kebab-button'));
+    // ActionMenu opens via requestAnimationFrame
+    act(() => {
+      jest.advanceTimersByTime(100);
+    });
+
+    const editItem = await screen.findByRole('menuitem', { name: 'Edit' });
+    fireEvent.click(editItem);
+
+    await waitFor(() =>
+      expect(navigateMock).toHaveBeenCalledWith(
+        '/ns/test-ns/applications/test-app/integrationtests/test-app-test-1/edit',
       ),
     );
   });

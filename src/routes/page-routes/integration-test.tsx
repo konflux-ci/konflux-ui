@@ -5,9 +5,9 @@ import {
   IntegrationTestPipelineRunTabByApplication,
 } from '../../components/IntegrationTests/IntegrationTestDetails';
 import {
-  IntegrationTestCreateForm,
+  IntegrationTestCreateFormByApplication,
   integrationTestCreateFormLoader,
-  IntegrationTestEditForm,
+  IntegrationTestEditFormByApplication,
   integrationTestEditFormLoader,
 } from '../../components/IntegrationTests/IntegrationTestForm';
 import {
@@ -23,7 +23,7 @@ const integrationTestRoutes = [
     path: INTEGRATION_TEST_ADD_PATH.path,
     loader: integrationTestCreateFormLoader,
     errorElement: <RouteErrorBoundry />,
-    element: <IntegrationTestCreateForm />,
+    element: <IntegrationTestCreateFormByApplication />,
   },
   /* Integration test edit form */
   {
@@ -31,7 +31,7 @@ const integrationTestRoutes = [
     path: INTEGRATION_TEST_EDIT_PATH.path,
     loader: integrationTestEditFormLoader,
     errorElement: <RouteErrorBoundry />,
-    element: <IntegrationTestEditForm />,
+    element: <IntegrationTestEditFormByApplication />,
   },
   /* Integration tests Details routes */
   {

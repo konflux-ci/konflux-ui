@@ -1,12 +1,11 @@
 import * as React from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { ButtonVariant, EmptyStateBody, Truncate, EmptyStateActions } from '@patternfly/react-core';
 import {
-  ButtonVariant,
-  EmptyStateBody,
-  Truncate,
-  EmptyStateActions,
-} from '@patternfly/react-core';
-import { INTEGRATION_TEST_ADD_PATH, INTEGRATION_TEST_DETAILS_PATH } from '@routes/paths';
+  INTEGRATION_TEST_ADD_PATH,
+  INTEGRATION_TEST_DETAILS_PATH,
+  INTEGRATION_TEST_EDIT_PATH,
+} from '@routes/paths';
 import ActionMenu from '~/shared/components/action-menu/ActionMenu';
 import AppEmptyState from '~/shared/components/empty-state/AppEmptyState';
 import FilteredEmptyState from '~/shared/components/empty-state/FilteredEmptyState';
@@ -76,8 +75,18 @@ const IntegrationTestsEmptyState: React.FC<
   );
 };
 
-const IntegrationTestActionCell: React.FC<{ obj: IntegrationTestScenarioKind }> = ({ obj }) => {
-  const actions = useIntegrationTestActions(obj);
+const IntegrationTestActionCell: React.FC<{
+  obj: IntegrationTestScenarioKind;
+  namespace: string;
+}> = ({ obj, namespace }) => {
+  const actions = useIntegrationTestActions(
+    obj,
+    INTEGRATION_TEST_EDIT_PATH.createPath({
+      workspaceName: namespace,
+      applicationName: obj.spec.application,
+      integrationTestName: obj.metadata?.name,
+    }),
+  );
   return <ActionMenu actions={actions} />;
 };
 
@@ -182,7 +191,7 @@ const IntegrationTestsListView: React.FC<React.PropsWithChildren> = () => {
         id: 'actions',
         header: ' ',
         accessorFn: () => null,
-        cell: (info) => <IntegrationTestActionCell obj={info.row.original} />,
+        cell: (info) => <IntegrationTestActionCell obj={info.row.original} namespace={namespace} />,
       },
     ],
     [namespace],

@@ -4,16 +4,13 @@ import { MockIntegrationTestsWithGit } from '~/components/IntegrationTests/Integ
 import { IntegrationTestScenarioKind } from '~/types/coreBuildService';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { createUseParamsMock, routerRenderer } from '~/unit-test-utils/mock-react-router';
-import { IntegrationTestEditForm } from '../IntegrationTestEditForm';
+import IntegrationTestEditFormByApplication from '../IntegrationTestEditFormByApplication';
 
-// IntegrationTestView has its own tests. We mock it here to focus on
-// testing IntegrationTestEditForm's specific logic: loading integration test data,
-// handling loading and error states, and passing the loaded data to IntegrationTestView.
-jest.mock('../IntegrationTestView', () => ({
+jest.mock('../IntegrationTestViewByApplication', () => ({
   __esModule: true,
-  default: jest.fn(({ applicationName, integrationTest }) => (
-    <div data-test="integration-test-view">
-      IntegrationTestView - {applicationName} - {integrationTest?.metadata?.name || 'no-test'}
+  default: jest.fn(({ integrationTest }) => (
+    <div data-test="integration-test-view-by-application">
+      IntegrationTestViewByApplication - {integrationTest?.metadata?.name || 'no-test'}
     </div>
   )),
 }));
@@ -22,11 +19,11 @@ const mockIntegrationTest: IntegrationTestScenarioKind = MockIntegrationTestsWit
 
 const mockUseIntegrationTestScenario = jest.fn();
 
-jest.mock('../../../../hooks/useIntegrationTestScenarios', () => ({
+jest.mock('~/hooks/useIntegrationTestScenarios', () => ({
   useIntegrationTestScenario: (...args: unknown[]) => mockUseIntegrationTestScenario(...args),
 }));
 
-describe('IntegrationTestEditForm', () => {
+describe('IntegrationTestEditFormByApplication', () => {
   const mockNamespace = 'test-namespace';
   const mockApplicationName = 'test-app';
   const mockIntegrationTestName = 'test-app-test-1';
@@ -46,16 +43,16 @@ describe('IntegrationTestEditForm', () => {
   it('should render spinner when loading integration test data', () => {
     mockUseIntegrationTestScenario.mockReturnValue([null, false, undefined]);
 
-    routerRenderer(<IntegrationTestEditForm />);
+    routerRenderer(<IntegrationTestEditFormByApplication />);
 
     expect(screen.getByTestId('spinner')).toBeInTheDocument();
-    expect(screen.queryByTestId('integration-test-view')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('integration-test-view-by-application')).not.toBeInTheDocument();
   });
 
   it('should call useIntegrationTestScenario with correct parameters', () => {
     mockUseIntegrationTestScenario.mockReturnValue([mockIntegrationTest, true, undefined]);
 
-    routerRenderer(<IntegrationTestEditForm />);
+    routerRenderer(<IntegrationTestEditFormByApplication />);
 
     expect(mockUseIntegrationTestScenario).toHaveBeenCalledWith(
       mockNamespace,
@@ -64,16 +61,14 @@ describe('IntegrationTestEditForm', () => {
     );
   });
 
-  it('should render IntegrationTestView when data is loaded', () => {
+  it('should render IntegrationTestViewByApplication when data is loaded', () => {
     mockUseIntegrationTestScenario.mockReturnValue([mockIntegrationTest, true, undefined]);
 
-    routerRenderer(<IntegrationTestEditForm />);
+    routerRenderer(<IntegrationTestEditFormByApplication />);
 
-    expect(screen.getByTestId('integration-test-view')).toBeInTheDocument();
+    expect(screen.getByTestId('integration-test-view-by-application')).toBeInTheDocument();
     expect(
-      screen.getByText(
-        `IntegrationTestView - ${mockApplicationName} - ${mockIntegrationTest.metadata.name}`,
-      ),
+      screen.getByText(`IntegrationTestViewByApplication - ${mockIntegrationTest.metadata.name}`),
     ).toBeInTheDocument();
   });
 
@@ -81,26 +76,26 @@ describe('IntegrationTestEditForm', () => {
     const mockError = { message: 'Integration test not found', code: 404 };
     mockUseIntegrationTestScenario.mockReturnValue([null, true, mockError]);
 
-    routerRenderer(<IntegrationTestEditForm />);
+    routerRenderer(<IntegrationTestEditFormByApplication />);
 
     expect(screen.getByText('404: Page not found')).toBeInTheDocument();
-    expect(screen.queryByTestId('integration-test-view')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('integration-test-view-by-application')).not.toBeInTheDocument();
   });
 
   it('should render error state for server errors', () => {
     const mockError = { message: 'Server error', code: 500 };
     mockUseIntegrationTestScenario.mockReturnValue([null, true, mockError]);
 
-    routerRenderer(<IntegrationTestEditForm />);
+    routerRenderer(<IntegrationTestEditFormByApplication />);
 
     expect(screen.getByText(/Server error/i)).toBeInTheDocument();
-    expect(screen.queryByTestId('integration-test-view')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('integration-test-view-by-application')).not.toBeInTheDocument();
   });
 
   it('should not render spinner when data is loaded', () => {
     mockUseIntegrationTestScenario.mockReturnValue([mockIntegrationTest, true, undefined]);
 
-    routerRenderer(<IntegrationTestEditForm />);
+    routerRenderer(<IntegrationTestEditFormByApplication />);
 
     expect(screen.queryByTestId('spinner')).not.toBeInTheDocument();
   });
@@ -108,7 +103,7 @@ describe('IntegrationTestEditForm', () => {
   it('should update when integration test name param changes', () => {
     mockUseIntegrationTestScenario.mockReturnValue([mockIntegrationTest, true, undefined]);
 
-    const { rerender } = routerRenderer(<IntegrationTestEditForm />);
+    const { rerender } = routerRenderer(<IntegrationTestEditFormByApplication />);
 
     expect(mockUseIntegrationTestScenario).toHaveBeenCalledWith(
       mockNamespace,
@@ -122,7 +117,7 @@ describe('IntegrationTestEditForm', () => {
       integrationTestName: newTestName,
     });
 
-    rerender(<IntegrationTestEditForm />);
+    rerender(<IntegrationTestEditFormByApplication />);
 
     expect(mockUseIntegrationTestScenario).toHaveBeenCalledWith(
       mockNamespace,
