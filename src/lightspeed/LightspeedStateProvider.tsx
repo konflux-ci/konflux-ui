@@ -19,18 +19,12 @@ export const useLightspeedInitError = (): string | undefined =>
 export const useRetryLightspeedInit = (): (() => void) =>
   React.useContext(LightspeedInitContext).retryInit;
 
-type InitializeLightspeedStateProps = {
-  onInitError: (message: string) => void;
-  retryInitRef: React.MutableRefObject<() => void>;
-};
-
-const InitializeLightspeedState: React.FC<InitializeLightspeedStateProps> = ({
-  onInitError,
-  retryInitRef,
-}) => {
+const InitializeLightspeedState: React.FC<React.PropsWithChildren> = ({ children }) => {
   const { getState } = React.useContext(AIStateContext);
+  const [initError, setInitError] = React.useState<string>();
 
   const runInit = React.useCallback(() => {
+    setInitError(undefined);
     void getState()
       .init()
       .catch((error: unknown) => {
@@ -38,40 +32,23 @@ const InitializeLightspeedState: React.FC<InitializeLightspeedStateProps> = ({
           'Failed to initialize Lightspeed client state',
           error instanceof Error ? error : new Error(String(error)),
         );
-        onInitError(getUserFacingErrorMessage(0));
+        setInitError(getUserFacingErrorMessage(0));
       });
-  }, [getState, onInitError]);
-
-  React.useEffect(() => {
-    retryInitRef.current = runInit;
-  }, [retryInitRef, runInit]);
+  }, [getState]);
 
   React.useEffect(() => {
     runInit();
   }, [runInit]);
 
-  return null;
-};
-
-export const LightspeedStateProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
-  const [initError, setInitError] = React.useState<string>();
-  const retryInitRef = React.useRef<() => void>(() => undefined);
-
-  const onInitError = React.useCallback((message: string) => {
-    setInitError(message);
-  }, []);
-
-  const retryInit = React.useCallback(() => {
-    setInitError(undefined);
-    retryInitRef.current();
-  }, []);
-
   return (
-    <LightspeedInitContext.Provider value={{ initError, retryInit }}>
-      <AIStateProvider client={getLightspeedClient()}>
-        <InitializeLightspeedState onInitError={onInitError} retryInitRef={retryInitRef} />
-        {children}
-      </AIStateProvider>
+    <LightspeedInitContext.Provider value={{ initError, retryInit: runInit }}>
+      {children}
     </LightspeedInitContext.Provider>
   );
 };
+
+export const LightspeedStateProvider: React.FC<React.PropsWithChildren> = ({ children }) => (
+  <AIStateProvider client={getLightspeedClient()}>
+    <InitializeLightspeedState>{children}</InitializeLightspeedState>
+  </AIStateProvider>
+);
