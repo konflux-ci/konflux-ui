@@ -99,12 +99,10 @@ describe('VirtualizedLogContent Integration Tests', () => {
       renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
 
       const items = document.querySelectorAll('.pf-v6-c-log-viewer__list-item');
-      // Virtual items should have positioning (either absolute position or transform)
+      // Virtual items should have absolute positioning with a top offset
       const itemsWithPositioning = Array.from(items).filter((item) => {
         if (!(item instanceof HTMLElement)) return false;
-        const hasAbsolutePosition = item.style.position === 'absolute';
-        const hasTransform = item.style.transform && item.style.transform !== '';
-        return hasAbsolutePosition || hasTransform;
+        return item.style.position === 'absolute' && item.style.top !== '';
       });
       expect(itemsWithPositioning.length).toBeGreaterThan(0);
     });
@@ -397,6 +395,35 @@ describe('VirtualizedLogContent Integration Tests', () => {
       // Should have search highlights for the two "error" lines
       const marks = container.querySelectorAll('mark.pf-v6-c-log-viewer__string.pf-m-match');
       expect(marks.length).toBe(2);
+    });
+  });
+
+  describe('Wrap lines toggle', () => {
+    it('should not apply nowrap class when wrapLines is enabled', () => {
+      renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} wrapLines />);
+
+      const listElement = document.querySelector('.log-content__list');
+      expect(listElement).toBeInTheDocument();
+      expect(listElement).not.toHaveClass('log-content__list--nowrap');
+    });
+
+    it('should apply nowrap class when wrapLines is disabled', () => {
+      renderWithQueryClientAndRouter(
+        <VirtualizedLogContent {...defaultProps} wrapLines={false} />,
+      );
+
+      const listElement = document.querySelector('.log-content__list.log-content__list--nowrap');
+      expect(listElement).toBeInTheDocument();
+    });
+
+    it('should render a split layout with a fixed gutter track when wrapLines is disabled', () => {
+      renderWithQueryClientAndRouter(
+        <VirtualizedLogContent {...defaultProps} wrapLines={false} />,
+      );
+
+      expect(document.querySelector('.log-content__nowrap-layout')).toBeInTheDocument();
+      expect(document.querySelector('.log-content__gutter-track')).toBeInTheDocument();
+      expect(document.querySelector('.log-content__content-scroll')).toBeInTheDocument();
     });
   });
 
