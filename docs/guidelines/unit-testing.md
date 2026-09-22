@@ -149,7 +149,12 @@ mockAccessReviewUtil('useAccessReviewForModel', [false, true]);
 import { mockAnalyticsServiceFn } from '~/unit-test-utils';
 
 const trackMock = mockAnalyticsServiceFn('track');
+const trackAndWaitMock = mockAnalyticsServiceFn('trackAndWait');
 ```
+
+Use `trackAndWaitMock` for tests that exercise awaited analytics delivery, and
+configure its resolved value explicitly with `mockResolvedValue(true)` or
+`mockResolvedValue(false)`.
 
 ### Application Hooks
 

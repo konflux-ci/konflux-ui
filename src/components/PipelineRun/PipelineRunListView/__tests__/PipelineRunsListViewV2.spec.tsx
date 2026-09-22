@@ -246,10 +246,51 @@ describe('PipelineRunsListViewV2', () => {
     screen.getByText('Unable to load pipeline runs');
   });
 
+  it('should show a context-specific message when PipelineRun list returns 504', () => {
+    usePipelineRunsV2Mock.mockReturnValue([
+      [],
+      true,
+      { code: 504, message: 'Gateway Timeout' },
+      jest.fn(),
+      { isFetchingNextPage: false, hasNextPage: false },
+    ]);
+    renderWithQueryClient(<TestedComponentV2 />);
+    expect(screen.getByText('Unable to load pipeline runs')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /Couldn't load pipeline history \(request timed out\)/,
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Gateway Timeout')).not.toBeInTheDocument();
+  });
+
+  it('should show generic error for non-504 errors with error code', () => {
+    usePipelineRunsV2Mock.mockReturnValue([
+      [],
+      true,
+      { code: 500, message: 'Internal Server Error' },
+      jest.fn(),
+      { isFetchingNextPage: false, hasNextPage: false },
+    ]);
+    renderWithQueryClient(<TestedComponentV2 />);
+    expect(screen.getByText('Unable to load pipeline runs')).toBeInTheDocument();
+    expect(screen.getByText('Internal Server Error')).toBeInTheDocument();
+  });
+
   it('should render error state when component loading fails', () => {
     useComponentMock.mockReturnValue([undefined, true, new Error('component error')]);
     renderWithQueryClient(<TestedComponentV2 />);
     screen.getByText('Unable to load pipeline runs');
+  });
+
+  it('should not show pipeline-specific 504 message for component errors', () => {
+    useComponentMock.mockReturnValue([undefined, true, { code: 504, message: 'Gateway Timeout' }]);
+    renderWithQueryClient(<TestedComponentV2 />);
+    expect(screen.getByText('Unable to load pipeline runs')).toBeInTheDocument();
+    expect(screen.getByText('Gateway Timeout')).toBeInTheDocument();
+    expect(
+      screen.queryByText(/Couldn't load pipeline history/),
+    ).not.toBeInTheDocument();
   });
 
   it('should render empty state if no pipeline runs are present', () => {

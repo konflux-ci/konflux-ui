@@ -9,20 +9,11 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { NuqsAdapter } from 'nuqs/adapters/react-router/v6';
 import ReactDOM from 'react-dom/client';
-import { initAnalytics, TrackEvents } from '~/analytics';
-import { analyticsService, consumeLoginSignal } from '~/analytics/AnalyticsService';
-import {
-  captureArrivalSourceOnce,
-  getArrivalSource,
-  hasSessionStarted,
-  markSessionStartedOnce,
-} from '~/analytics/arrival-source';
-import { obfuscate } from '~/analytics/obfuscate';
-import { useKonfluxPublicInfo } from '~/hooks/useKonfluxPublicInfo';
+import { initAnalytics } from '~/analytics';
+import { captureArrivalSourceOnce } from '~/analytics/arrival-source';
+import { useAnalyticsInitialization } from '~/analytics/useAnalyticsInitialization';
 import { logger } from '~/monitoring/logger';
 import { AuthProvider } from './auth/AuthContext';
-import { useAuth } from './auth/useAuth';
-import { useAuthAnalytics } from './auth/useAuthAnalytics';
 import { forceEnableFlagsOnce } from './feature-flags/forceEnableFlagsOnce';
 import { FeatureFlagsStore } from './feature-flags/store';
 import { getAllConditionsKeysFromFlags } from './feature-flags/utils';
@@ -46,52 +37,7 @@ forceEnableFlagsOnce(['kubearchive-logs', 'taskruns-kubearchive', 'pipelineruns-
 });
 
 export const App = () => {
-  const [publicInfo, loaded, error] = useKonfluxPublicInfo();
-  const { onLogin } = useAuthAnalytics();
-  const { isAuthenticated, user } = useAuth();
-
-  React.useEffect(() => {
-    if (!loaded || error || !publicInfo) {
-      return;
-    }
-
-    void (async () => {
-      analyticsService.setCommonProperties({
-        ...(publicInfo.clusterVersion ? { clusterVersion: publicInfo.clusterVersion } : {}),
-        konfluxVersion: publicInfo.konfluxVersion,
-        kubernetesVersion: publicInfo.kubernetesVersion,
-        openshiftVersion: publicInfo.openshiftVersion,
-      });
-
-      if (isAuthenticated && user.preferredUsername && publicInfo.clusterId) {
-        try {
-          analyticsService.identify(await obfuscate(user.preferredUsername, publicInfo.clusterId));
-        } catch (reason) {
-          logger.error(
-            'Failed to obfuscate analytics user ID',
-            reason instanceof Error ? reason : new Error(String(reason)),
-          );
-        }
-      }
-
-      if (consumeLoginSignal()) {
-        onLogin();
-      }
-
-      if (!hasSessionStarted()) {
-        const arrivalSource = getArrivalSource();
-        if (
-          analyticsService.track(TrackEvents.ui_session_started_event, { arrivalSource }) &&
-          markSessionStartedOnce()
-        ) {
-          logger.info('UI session started', {
-            event: TrackEvents.ui_session_started_event,
-            arrivalSource,
-          });
-        }
-      }
-    })();
-  }, [loaded, error, publicInfo, isAuthenticated, onLogin, user.preferredUsername]);
+  useAnalyticsInitialization();
 
   React.useEffect(() => {
     // webpack side effects to prevent tree-shaking

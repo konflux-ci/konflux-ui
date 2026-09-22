@@ -149,7 +149,9 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
   const NoDataEmptyMsg = () => <PipelineRunEmptyState applicationName={applicationName} />;
 
   if (error) {
-    return getErrorState(error, loaded, 'pipeline runs');
+    return getErrorState(error, loaded, 'pipeline runs', false, {
+      504: "Couldn't load pipeline history (request timed out). Recent runs on the cluster may still exist. This is usually a slow history/archive query, not a cluster outage.",
+    });
   }
 
   const isFiltered = name.length > 0 || type.length > 0 || status.length > 0;

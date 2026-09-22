@@ -7,7 +7,6 @@ import capitalize from 'lodash-es/capitalize';
 import { usePipelinerunActionsLazy } from '~/components/PipelineRun/PipelineRunListView/pipelinerun-actions';
 import { PipelineRunTestOutputResult } from '~/components/PipelineRun/PipelineRunListView/PipelineRunTestOutputResult';
 import { ScanStatus } from '~/components/PipelineRun/PipelineRunListView/ScanStatus';
-import { StatusIconWithText } from '~/components/StatusIcon/StatusIcon';
 import {
   PipelineRunLabel,
   PipelineRunType,
@@ -26,6 +25,8 @@ import { PipelineRunKind } from '~/types';
 import { createCommitObjectFromPLR } from '~/utils/commits-utils';
 import { PipelineRunEventTypeLabel } from '~/utils/pipeline-run-filter-utils';
 import { pipelineRunStatus } from '~/utils/pipeline-utils';
+import { PLRStatus } from '~/utils/plr-status-config';
+import PipelineRunStatusCell from './PipelineRunStatus';
 
 const PipelineRunAttestation: React.FC<{ plr: PipelineRunKind }> = ({ plr }) => {
   const hasAttestation =
@@ -100,7 +101,7 @@ const ActionCell: React.FC<{ plr: PipelineRunKind }> = ({ plr }) => {
   return <ActionMenu actions={actions} onOpen={onOpen} />;
 };
 
-export const getPipelineRunsColumns = (namespace: string): ColumnDefinition<PipelineRunKind>[] => [
+export const pipelineRunsColumns: ColumnDefinition<PipelineRunKind>[] = [
   {
     id: 'name',
     header: 'Name',
@@ -114,7 +115,7 @@ export const getPipelineRunsColumns = (namespace: string): ColumnDefinition<Pipe
       const applicationName = plr.metadata?.labels?.[PipelineRunLabel.APPLICATION] ?? '';
       const pipelineRunName = plr.metadata?.name ?? '';
       const isFinished = !UNFINISHED_PLR_STATUSES.includes(pipelineRunStatus(plr));
-
+      const namespace = plr.metadata?.namespace ?? '';
       return (
         <>
           <Link
@@ -173,15 +174,19 @@ export const getPipelineRunsColumns = (namespace: string): ColumnDefinition<Pipe
   {
     id: 'status',
     header: 'Status',
-    accessorFn: (row) => pipelineRunStatus(row),
+    accessorFn: (row) => PLRStatus.registry.deriveStatus(row),
     sortable: true,
-    cell: (info) => <StatusIconWithText status={info.getValue() as runStatus} />,
+    cell: (info) => <PipelineRunStatusCell plr={info.row.original} />,
   },
   {
     id: 'testOutput',
     header: 'Test output',
     visibleFrom: 'xl',
-    cell: (info) => <TestOutputCell plr={info.row.original} namespace={namespace} />,
+    cell: (info) => {
+      const plr = info.row.original;
+      const namespace = plr.metadata?.namespace ?? '';
+      return <TestOutputCell plr={plr} namespace={namespace} />;
+    },
   },
   {
     id: 'type',
@@ -201,7 +206,7 @@ export const getPipelineRunsColumns = (namespace: string): ColumnDefinition<Pipe
       const plr = info.row.original;
       const componentName = plr.metadata?.labels?.[PipelineRunLabel.COMPONENT];
       const applicationName = plr.metadata?.labels?.[PipelineRunLabel.APPLICATION];
-
+      const namespace = plr.metadata?.namespace ?? '';
       if (!componentName) {
         return <>-</>;
       }

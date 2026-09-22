@@ -27,7 +27,6 @@ export const PIPELINE_RUN_TYPE_OPTIONS: FilterOption[] = [
   { label: 'Final', value: 'final' },
 ];
 
-/** Static filter options for pipeline run statuses. */
 export const PIPELINE_RUN_STATUS_OPTIONS: FilterOption[] = Object.values(runStatus).map((s) => ({
   label: s,
   value: s,
