@@ -93,6 +93,7 @@ export enum runStatus {
   TestWarning = 'Test Warnings',
   TestFailed = 'Test Failures',
   Unknown = 'Unknown',
+  Queued = 'Queued',
 }
 
 // Status priority for sorting - active states first, then errors, then completed

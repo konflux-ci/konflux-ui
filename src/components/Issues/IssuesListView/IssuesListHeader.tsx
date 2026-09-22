@@ -8,7 +8,7 @@ export const issuesTableColumnClasses = {
   createdOn: 'pf-m-width-15',
   description: 'pf-m-width-20',
   usefulLinks: 'pf-m-width-10',
-  kebab: 'pf-m-width-5 issues-list-view__actions',
+  kebab: 'pf-v6-c-table__action',
 };
 
 export const IssuesListHeader = [
