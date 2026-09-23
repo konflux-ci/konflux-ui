@@ -102,7 +102,7 @@ describe('ComponentsListView', () => {
 
     renderWithQueryClient(<TestedComponent />);
 
-    expect(screen.getByText('Unable to load group components')).toBeInTheDocument();
+    expect(screen.getByText('Unable to load components')).toBeInTheDocument();
   });
 
   it('should show the empty state when there are no components', () => {

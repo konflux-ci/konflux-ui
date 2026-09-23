@@ -94,9 +94,7 @@ describe('Component group page routes configuration', () => {
     };
 
     expect(getTabRoute('components').element).toEqual(<ComponentGroupComponentsTab />);
-    expect(getTabRoute('integrationtests').element).toEqual(
-      <ComponentGroupIntegrationTestsTab />,
-    );
+    expect(getTabRoute('integrationtests').element).toEqual(<ComponentGroupIntegrationTestsTab />);
     expect(getTabRoute('releases').element).toEqual(<ComponentGroupReleasesTab />);
   });
 

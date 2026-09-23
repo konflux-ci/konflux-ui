@@ -23,8 +23,10 @@ const ComponentGroupComponentsList: React.FC = () => {
   const { clientFilterValues, clearAll, isFiltered } = useFilterState(cgComponentsFilterConfig);
 
   const [group, groupLoaded, groupError] = useComponentGroup(namespace, groupName, true);
-  const componentNames =
-    groupLoaded && !groupError && group ? group.spec.components.map((c) => c.name) : [];
+  const componentNames = React.useMemo(
+    () => (groupLoaded && !groupError && group ? group.spec.components.map((c) => c.name) : []),
+    [group, groupError, groupLoaded],
+  );
 
   const [components, compLoaded, compError] = useComponentsByName(namespace, componentNames, true);
   const componentsMap = React.useMemo(
@@ -47,7 +49,7 @@ const ComponentGroupComponentsList: React.FC = () => {
               namespace,
               gitUrl: componentsMap.get(c.name)?.spec.source?.url,
               imageUrl: latestCandidate?.lastPromotedImage,
-              version: version ?? latestCandidate?.version ?? '',
+              version: version ?? latestCandidate?.version,
             };
           })
         : [],

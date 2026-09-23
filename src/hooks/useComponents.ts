@@ -158,14 +158,20 @@ export const useComponentsByName = (
       watch,
     },
     ComponentModel,
-    {
-      filterData: (res) =>
-        res.filter((c) => componentsSet.has(c.metadata?.name) && !c.metadata?.deletionTimestamp),
-    },
+  );
+
+  const filteredComponents = React.useMemo(
+    () =>
+      !isLoading
+        ? (data ?? []).filter(
+            (c) => componentsSet.has(c.metadata?.name) && !c.metadata?.deletionTimestamp,
+          )
+        : [],
+    [componentsSet, data, isLoading],
   );
 
   return React.useMemo(
-    () => [!isLoading ? (data ?? []) : [], !isLoading, error],
-    [data, isLoading, error],
+    () => [filteredComponents, !isLoading, error],
+    [filteredComponents, isLoading, error],
   );
 };
