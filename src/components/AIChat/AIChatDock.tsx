@@ -1,8 +1,9 @@
 import * as React from 'react';
 import Chatbot from '@patternfly/chatbot/dist/dynamic/Chatbot';
 import ChatbotToggle from '@patternfly/chatbot/dist/dynamic/ChatbotToggle';
-import { AIChatPortal } from '~/components/AIChat/AIChatPortal';
+import { AIChatPortal, getAIChatPortalContainer } from '~/components/AIChat/AIChatPortal';
 import { AIChatHistoryNav } from '~/components/AIChat/components/AIChatHistoryNav';
+import { AIChatRenameConversationModal } from '~/components/AIChat/components/AIChatRenameConversationModal';
 import {
   KONFLUX_AI_DISPLAY_MODE,
   KONFLUX_AI_TOGGLE_BUTTON_LABEL,
@@ -26,15 +27,20 @@ export const AIChatDock: React.FC = () => {
     isSendButtonDisabled,
     isDrawerOpen,
     isLoadingConversation,
+    isRenamingConversation,
     hasNoSearchResults,
     chatError,
     clearChatError,
+    renameConversationTarget,
+    historyMenuKey,
     setIsDrawerOpen,
     refreshConversations,
     startNewChat,
     selectConversation,
     filterConversations,
     sendMessage,
+    closeRenameConversation,
+    confirmRenameConversation,
   } = useLightspeedChat();
 
   React.useEffect(() => {
@@ -64,6 +70,7 @@ export const AIChatDock: React.FC = () => {
             isLoadingConversation={isLoadingConversation}
             hasNoSearchResults={hasNoSearchResults}
             chatError={chatError}
+            historyMenuKey={historyMenuKey}
             setIsDrawerOpen={setIsDrawerOpen}
             refreshConversations={refreshConversations}
             startNewChat={startNewChat}
@@ -73,6 +80,16 @@ export const AIChatDock: React.FC = () => {
             onCloseChat={() => setIsChatbotVisible(false)}
           />
         </Chatbot>
+        <AIChatRenameConversationModal
+          appendTo={getAIChatPortalContainer}
+          currentName={renameConversationTarget?.currentName ?? ''}
+          isOpen={renameConversationTarget !== null}
+          isSubmitting={isRenamingConversation}
+          onClose={closeRenameConversation}
+          onRename={(newName) => {
+            void confirmRenameConversation(newName);
+          }}
+        />
       </div>
     </AIChatPortal>
   );
