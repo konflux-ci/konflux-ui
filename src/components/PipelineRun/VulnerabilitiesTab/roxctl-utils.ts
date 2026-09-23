@@ -147,6 +147,8 @@ export const flattenCveData = (
       (entry.components ?? []).map((comp) => ({
         cve: entry.cve,
         severity: entry.severity ?? 'UNKNOWN',
+        advisory: entry.advisory,
+        links: entry.links,
         summary: entry.summary,
         link: entry.links?.[0],
         fixedBy: entry.fixedBy || undefined,
@@ -238,7 +240,7 @@ export const severityLabel = (severity: RoxctlSeverity): string =>
  * Groups flat `RoxctlCveRow[]` entries into one `RoxctlCveTableRow` per unique CVE.
  * When a CVE affects multiple packages, components are aggregated into the
  * `components` array. The first encountered row for each CVE sets the
- * severity, summary, link, fixedBy, and imageFullName.
+ * severity, advisory, links, summary, link, fixedBy, and imageFullName.
  */
 export const groupRowsByCve = (rows: RoxctlCveRow[]): RoxctlCveTableRow[] => {
   const grouped = rows.reduce<Record<string, RoxctlCveTableRow>>((groupedRows, row) => {
@@ -253,6 +255,8 @@ export const groupRowsByCve = (rows: RoxctlCveRow[]): RoxctlCveTableRow[] => {
       groupedRows[row.cve] = {
         cve: row.cve,
         severity: row.severity,
+        advisory: row.advisory,
+        links: row.links,
         fixedBy: row.fixedBy,
         summary: row.summary,
         link: row.link,

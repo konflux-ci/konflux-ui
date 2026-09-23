@@ -1,7 +1,9 @@
 import * as React from 'react';
 import { EmptyState, EmptyStateBody, EmptyStateVariant } from '@patternfly/react-core';
 import { SearchIcon } from '@patternfly/react-icons/dist/esm/icons/search-icon';
+import type { ExpandedState, OnChangeFn } from '@tanstack/react-table';
 import ColumnManagement from '~/components/ColumnManagement/ColumnManagement';
+import { VulnerabilitiesExpandedRow } from '~/components/PipelineRun/VulnerabilitiesTab/VulnerabilitiesExpandedRow';
 import FilteredEmptyState from '~/shared/components/empty-state/FilteredEmptyState';
 import { useFilterState, useFilteredData, FilterToolbar } from '~/shared/components/Filter';
 import { Table, TableContainer } from '~/shared/components/TableV2';
@@ -18,6 +20,7 @@ type VulnerabilitiesTableProps = {
 };
 
 export const VulnerabilitiesTable: React.FC<VulnerabilitiesTableProps> = ({ data }) => {
+  const [expanded, setExpanded] = React.useState<ExpandedState>({});
   const { clientFilterValues, clearAll, isFiltered } = useFilterState(vulnerabilitiesFilterConfigs);
   const { filteredData } = useFilteredData<RoxctlCveTableRow>(
     vulnerabilitiesFilterConfigs,
@@ -35,6 +38,24 @@ export const VulnerabilitiesTable: React.FC<VulnerabilitiesTableProps> = ({ data
   }, [clientFilterValues.package, filteredData]);
 
   const filterOptions = React.useMemo(() => buildVulnerabilityFilterOptions(data), [data]);
+  const rowsByCve = React.useMemo(() => new Map(data.map((row) => [row.cve, row])), [data]);
+  const handleExpandedChange = React.useCallback<OnChangeFn<ExpandedState>>((updater) => {
+    setExpanded((current) => {
+      const next = typeof updater === 'function' ? updater(current) : updater;
+      if (next === true) return {};
+
+      const newlyExpandedRow = Object.keys(next).find(
+        (rowId) => next[rowId] && (current === true || !current[rowId]),
+      );
+      return newlyExpandedRow ? { [newlyExpandedRow]: true } : {};
+    });
+  }, []);
+  const renderExpandedContent = React.useCallback(
+    (row: RoxctlCveTableRow) => (
+      <VulnerabilitiesExpandedRow vulnerability={rowsByCve.get(row.cve) ?? row} />
+    ),
+    [rowsByCve],
+  );
 
   return (
     <TableContainer
@@ -72,6 +93,10 @@ export const VulnerabilitiesTable: React.FC<VulnerabilitiesTableProps> = ({ data
         aria-label="Vulnerabilities"
         columnStateKey={VULNERABILITIES_TABLE_COLUMN_STATE_KEY}
         data-test="vulnerabilities-table"
+        enableExpansion
+        expanded={expanded}
+        onExpandedChange={handleExpandedChange}
+        expandedContent={renderExpandedContent}
       />
     </TableContainer>
   );

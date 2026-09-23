@@ -1,4 +1,5 @@
 import { screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { NuqsTestingAdapter } from 'nuqs/adapters/testing';
 import { setupVirtualizerMock, renderWithQueryClientAndRouter } from '~/unit-test-utils';
 import type { RoxctlCveTableRow } from '../types';
@@ -233,5 +234,34 @@ describe('VulnerabilitiesTable', () => {
     renderTable();
 
     expect(screen.queryByTestId('sort-dropdown')).not.toBeInTheDocument();
+  });
+
+  it('keeps only the most recently selected row expanded', async () => {
+    const user = userEvent.setup();
+    renderTable();
+
+    const firstRow = screen.getByText('CVE-2024-21626').closest('tr');
+    const secondRow = screen.getByText('CVE-2023-44487').closest('tr');
+    expect(firstRow).not.toBeNull();
+    expect(secondRow).not.toBeNull();
+
+    await user.click(within(firstRow ?? document.body).getByRole('button'));
+    screen.getByText('Critical runc vulnerability');
+
+    await user.click(within(secondRow ?? document.body).getByRole('button'));
+    expect(screen.queryByText('Critical runc vulnerability')).not.toBeInTheDocument();
+    screen.getByText('Critical nodejs vulnerability');
+  });
+
+  it('shows all affected packages in details when a package filter is active', async () => {
+    const user = userEvent.setup();
+    renderTable(mockData, '?package=%5B%22micromatch%22%5D');
+
+    const row = screen.getByText('CVE-2024-4068').closest('tr');
+    expect(row).not.toBeNull();
+    await user.click(within(row ?? document.body).getByRole('button'));
+
+    screen.getByText('braces 3.0.2 (NODEJS)');
+    screen.getByText('micromatch 4.0.5 (NODEJS)');
   });
 });
