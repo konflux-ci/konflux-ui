@@ -14,6 +14,7 @@ import {
 
 type AIChatHistoryNavProps = {
   displayMode: ChatbotDisplayMode;
+  isMaximized: boolean;
   activeConversationId: string | null;
   messages: MessageProps[];
   conversations: Conversation[];
@@ -30,11 +31,13 @@ type AIChatHistoryNavProps = {
   selectConversation: (conversationId: string) => Promise<void>;
   filterConversations: (searchValue: string) => void;
   sendMessage: (message: string | number) => Promise<void>;
+  onToggleDisplayMode: () => void;
   onCloseChat: () => void;
 };
 
 export const AIChatHistoryNav: React.FC<AIChatHistoryNavProps> = ({
   displayMode,
+  isMaximized,
   activeConversationId,
   messages,
   conversations,
@@ -51,6 +54,7 @@ export const AIChatHistoryNav: React.FC<AIChatHistoryNavProps> = ({
   selectConversation,
   filterConversations,
   sendMessage,
+  onToggleDisplayMode,
   onCloseChat,
 }) => {
   const handleToggleDrawer = React.useCallback(() => {
@@ -104,7 +108,9 @@ export const AIChatHistoryNav: React.FC<AIChatHistoryNavProps> = ({
         <>
           <AIChatDrawerHeader
             isDrawerOpen={isDrawerOpen}
+            isMaximized={isMaximized}
             onToggleDrawer={handleToggleDrawer}
+            onToggleDisplayMode={onToggleDisplayMode}
             onClose={onCloseChat}
           />
           <AIChatDrawerContent
