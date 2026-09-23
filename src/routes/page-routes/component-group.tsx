@@ -26,10 +26,7 @@ const componentGroupRoutes = [
     errorElement: <RouteErrorBoundry />,
     element: <ComponentGroupDetailsViewLayout />,
     children: [
-      {
-        index: true,
-        element: null,
-      },
+      { index: true, element: <ComponentGroupReleasesTab /> },
       {
         path: 'releases',
         element: <ComponentGroupReleasesTab />,
