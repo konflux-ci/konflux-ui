@@ -11,6 +11,8 @@ interface TableRowProps<TData> {
   virtualIndex: number;
   /** Whether to render an expand/collapse toggle cell. */
   enableExpansion?: boolean;
+  /** Whether this row controls an expanded content row. */
+  isContentExpanded?: boolean;
   /** Whether to render a row selection checkbox cell. */
   enableRowSelection?: boolean;
 }
@@ -29,6 +31,7 @@ export const TableRow = <TData,>({
   rowId,
   virtualIndex,
   enableExpansion,
+  isContentExpanded,
   enableRowSelection,
 }: TableRowProps<TData>) => {
   return (
@@ -36,6 +39,7 @@ export const TableRow = <TData,>({
       role="row"
       data-test="table-row"
       data-id={rowId}
+      isContentExpanded={isContentExpanded}
     >
       {enableRowSelection && (
         <Td
