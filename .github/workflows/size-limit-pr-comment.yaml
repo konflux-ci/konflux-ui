@@ -74,7 +74,7 @@ jobs:
 
             const body = execFileSync('node', [
               '.github/scripts/format-size-limit-comment.mjs',
-              'size-limit.log',
+              'size-limit.json',
             ], { encoding: 'utf8' });
             fs.writeFileSync('comment-body.md', body);
             core.setOutput('pr_number', String(openPr.number));

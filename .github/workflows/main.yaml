@@ -80,14 +80,16 @@ jobs:
         id: size-limit
         run: |
           set -o pipefail
-          yarn size-limit 2>&1 | tee size-limit.log
+          yarn size-limit --json > size-limit.json 2> size-limit.log
 
-      - name: Upload size-limit log
+      - name: Upload size-limit results
         if: failure() && steps.size-limit.outcome == 'failure'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: size-limit-log
-          path: size-limit.log
+          path: |
+            size-limit.json
+            size-limit.log
 
   # Unit tests — sharded across 2 runners for parallel execution
   test:

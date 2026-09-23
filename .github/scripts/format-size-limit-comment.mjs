@@ -1,53 +1,60 @@
 #!/usr/bin/env node
 /**
- * Reads size-limit CLI output and prints a PR comment body (markdown).
- * Usage: node .github/scripts/format-size-limit-comment.mjs size-limit.log
+ * Reads size-limit --json output and prints a PR comment body (markdown).
+ * Usage: node .github/scripts/format-size-limit-comment.mjs size-limit.json
  */
 
 import { readFileSync } from 'node:fs';
 
-const logPath = process.argv[2];
-if (!logPath) {
-  console.error('Usage: node format-size-limit-comment.mjs <size-limit.log>');
+const resultsPath = process.argv[2];
+if (!resultsPath) {
+  console.error('Usage: node format-size-limit-comment.mjs <size-limit.json>');
   process.exit(1);
 }
-
-const raw = readFileSync(logPath, 'utf8');
-// Strip ANSI color codes from CI output
-const output = raw.replace(/\u001B\[[0-9;]*m/g, '').trim();
 
 const docsUrl =
   'https://github.com/konflux-ci/konflux-ui/blob/main/docs/bundle-size-budgets.md';
 
-/** @type {{ name: string; exceededBy: string; limit: string; size: string }[]} */
-const failures = [];
-
-const lines = output.split('\n');
-for (let i = 0; i < lines.length; i++) {
-  const exceededMatch = lines[i].match(/Package size limit has exceeded by (.+)/);
-  if (!exceededMatch) {
-    continue;
+/** @param {number} size */
+function formatBytes(size) {
+  const units = ['B', 'kB', 'MB', 'GB'];
+  let value = size;
+  let unitIndex = 0;
+  while (value >= 1000 && unitIndex < units.length - 1) {
+    value /= 1000;
+    unitIndex += 1;
   }
-
-  let name = 'unknown';
-  for (let j = i - 1; j >= 0; j--) {
-    const candidate = lines[j].trim();
-    if (candidate && !candidate.startsWith('Try to reduce')) {
-      name = candidate;
-      break;
-    }
-  }
-
-  const limit = lines[i + 1]?.match(/Size limit:\s*(.+)/)?.[1]?.trim() ?? '—';
-  const size = lines[i + 2]?.match(/Size:\s+(.+)/)?.[1]?.trim() ?? '—';
-
-  failures.push({
-    name,
-    exceededBy: exceededMatch[1].trim(),
-    limit,
-    size,
-  });
+  const rounded = unitIndex === 0 ? String(Math.round(value)) : `${Math.round(value * 100) / 100}`;
+  return `${rounded} ${units[unitIndex]}`;
 }
+
+const raw = readFileSync(resultsPath, 'utf8').trim();
+/** @type {{ name?: string; passed?: boolean; size?: number; sizeLimit?: number }[]} */
+let checks;
+try {
+  checks = JSON.parse(raw);
+} catch {
+  console.error('Expected size-limit --json output (JSON array)');
+  process.exit(1);
+}
+
+if (!Array.isArray(checks)) {
+  console.error('Expected size-limit --json output (JSON array)');
+  process.exit(1);
+}
+
+const failures = checks
+  .filter((check) => check.passed === false && typeof check.size === 'number')
+  .map((check) => {
+    const limit = check.sizeLimit ?? 0;
+    const exceededBy = Math.max(0, check.size - limit);
+    return {
+      name: check.name ?? 'unknown',
+      limit: formatBytes(limit),
+      size: formatBytes(check.size),
+      exceededBy: formatBytes(exceededBy),
+    };
+  });
 
 const failedSection =
   failures.length > 0
@@ -57,7 +64,7 @@ const failedSection =
             `- **\`${f.name}\`**: ${f.size} — limit **${f.limit}** (exceeded by **${f.exceededBy}**)`,
         )
         .join('\n')
-    : '_Could not parse failed chunks — see full output below._';
+    : '_No failed checks in size-limit JSON — see raw output below._';
 
 const body = [
   '### Bundle size limit exceeded',
@@ -68,10 +75,10 @@ const body = [
   '',
   '**Why these limits exist:** Budgets are set with ~10–15% headroom above current gzip sizes so routine changes do not fail CI. This buffer accounts for normal code churn without letting bundle growth go unnoticed. Increase a limit only when the size growth is intentional (e.g. a new dependency or feature), and explain the increase in the PR description.',
   '',
-  '<details><summary>Full size-limit output</summary>',
+  '<details><summary>size-limit --json output</summary>',
   '',
-  '```',
-  output,
+  '```json',
+  JSON.stringify(checks, null, 2),
   '```',
   '',
   '</details>',
