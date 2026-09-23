@@ -1,54 +1,127 @@
 import * as React from 'react';
+import type { Conversation } from '@patternfly/chatbot/dist/dynamic/ChatbotConversationHistoryNav';
 import type { MessageProps } from '@patternfly/chatbot/dist/dynamic/Message';
+import type { IConversation } from '@redhat-cloud-services/ai-client-common';
 import { AIClientError } from '@redhat-cloud-services/ai-client-common';
 import {
+  useActiveConversation,
+  useClient,
+  useCreateNewConversation,
   useInProgress,
   useIsInitializing,
   useMessages,
   useSendStreamMessage,
+  useSetActiveConversation,
 } from '@redhat-cloud-services/ai-react-state';
+import type { ConversationDetails } from '@redhat-cloud-services/lightspeed-client';
+import {
+  LightspeedClient,
+  TEMP_CONVERSATION_ID as LIGHTSPEED_TEMP_CONVERSATION_ID,
+} from '@redhat-cloud-services/lightspeed-client';
 import { LIGHTSPEED_ASSISTANT_NAME } from '~/lightspeed/const';
 import {
   useLightspeedInitError,
   useRetryLightspeedInit,
 } from '~/lightspeed/LightspeedStateProvider';
-import { getUserFacingErrorMessage, stateMessagesToMessageProps } from '~/lightspeed/utils';
+import type { LightspeedConversationDetails } from '~/lightspeed/types';
+import {
+  getUserFacingErrorMessage,
+  stateMessagesToMessageProps,
+  toHistoryConversations,
+} from '~/lightspeed/utils';
 import { logger } from '~/monitoring/logger';
+import { filterByText } from '~/utils/text-filter-utils';
+
+/** State-manager temp id (ai-client-state) — distinct from Lightspeed client temp id. */
+const STATE_TEMP_CONVERSATION_ID = '__temp_conversation__';
+
+const isTemporaryConversationId = (conversationId?: string): boolean =>
+  !conversationId ||
+  conversationId === STATE_TEMP_CONVERSATION_ID ||
+  conversationId === LIGHTSPEED_TEMP_CONVERSATION_ID;
 
 type UseLightspeedChatResult = {
+  activeConversationId: string | null;
   messages: MessageProps[];
+  conversations: Conversation[];
   announcement?: string;
   isSendButtonDisabled: boolean;
-  isInitializing: boolean;
+  isDrawerOpen: boolean;
+  isLoadingConversation: boolean;
+  hasNoSearchResults: boolean;
   chatError?: string;
   clearChatError: () => void;
-  sendMessage: (message: string) => Promise<void>;
+  setIsDrawerOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  refreshConversations: () => Promise<void>;
+  startNewChat: () => Promise<void>;
+  selectConversation: (conversationId: string) => Promise<void>;
+  filterConversations: (searchValue: string) => void;
+  sendMessage: (message: string | number) => Promise<void>;
 };
+
+type LightspeedConversationWire = ConversationDetails & {
+  topic_summary?: string;
+};
+
+const mapConversationDetails = (
+  conversations: ConversationDetails[],
+): LightspeedConversationDetails[] =>
+  (conversations as LightspeedConversationWire[])
+    .filter((conversation) => Boolean(conversation.conversation_id && conversation.last_message_at))
+    .map(
+      ({
+        conversation_id: conversationId,
+        created_at: createdAt,
+        last_message_at: lastMessageAt,
+        message_count: messageCount,
+        last_used_model: lastUsedModel,
+        last_used_provider: lastUsedProvider,
+        topic_summary: topicSummary,
+      }) => ({
+        conversationId,
+        createdAt: createdAt ?? lastMessageAt,
+        lastMessageAt,
+        messageCount: messageCount ?? 0,
+        ...(lastUsedModel ? { lastUsedModel } : {}),
+        ...(lastUsedProvider ? { lastUsedProvider } : {}),
+        ...(topicSummary ? { topicSummary } : {}),
+      }),
+    );
 
 const getErrorMessage = (error: unknown): string => {
   if (error instanceof AIClientError) {
     return getUserFacingErrorMessage(error.status);
   }
-  // Never expose raw Error.message — network/fetch details may include internal URLs.
   return getUserFacingErrorMessage(0);
 };
 
 /**
- * Send messages via Lightspeed SSE (`useSendStreamMessage` → `/v1/streaming_query`)
- * and map client-state messages into PatternFly Chatbot message props.
+ * Lightspeed chat: streaming send/receive plus conversation history.
  */
 export const useLightspeedChat = (): UseLightspeedChatResult => {
+  const [isDrawerOpen, setIsDrawerOpen] = React.useState(false);
   const [sendError, setSendError] = React.useState<string>();
   const [announcement, setAnnouncement] = React.useState<string>();
+  const [allConversations, setAllConversations] = React.useState<Conversation[]>([]);
+  const [conversations, setConversations] = React.useState<Conversation[]>([]);
+  const [conversationSearch, setConversationSearch] = React.useState('');
 
+  const client = useClient<LightspeedClient>();
+  const activeConversation = useActiveConversation();
   const stateMessages = useMessages();
   const sendStreamMessage = useSendStreamMessage();
+  const createNewConversation = useCreateNewConversation();
+  const setActiveConversation = useSetActiveConversation();
   const isInProgress = useInProgress();
   const isInitializing = useIsInitializing();
   const initError = useLightspeedInitError();
   const retryInit = useRetryLightspeedInit();
   const hasInitFailed = initError !== undefined;
   const isSendingRef = React.useRef(false);
+
+  const activeConversationId = isTemporaryConversationId(activeConversation?.id)
+    ? null
+    : (activeConversation?.id ?? null);
 
   const messages = React.useMemo(
     () => stateMessagesToMessageProps(stateMessages, isInProgress),
@@ -60,9 +133,61 @@ export const useLightspeedChat = (): UseLightspeedChatResult => {
     retryInit();
   }, [retryInit]);
 
+  const refreshConversations = React.useCallback(async () => {
+    try {
+      const response = await client.getConversations();
+      const historyConversations = toHistoryConversations(
+        mapConversationDetails(response.conversations),
+      );
+      setAllConversations(historyConversations);
+      setConversations(
+        filterByText(historyConversations, conversationSearch, (item) => item.text),
+      );
+    } catch (error) {
+      logger.warn('Failed to load Lightspeed conversations', {
+        error: getErrorMessage(error),
+      });
+    }
+  }, [client, conversationSearch]);
+
+  const filterConversations = React.useCallback(
+    (searchValue: string) => {
+      setConversationSearch(searchValue);
+      setConversations(filterByText(allConversations, searchValue, (item) => item.text));
+    },
+    [allConversations],
+  );
+
+  const startNewChat = React.useCallback(async () => {
+    try {
+      const conversation: IConversation = await createNewConversation();
+      await setActiveConversation(conversation.id);
+      setSendError(undefined);
+    } catch (error) {
+      const message = getErrorMessage(error);
+      setSendError(message);
+      logger.warn('Failed to start new Lightspeed chat', { error: message });
+    }
+  }, [createNewConversation, setActiveConversation]);
+
+  const selectConversation = React.useCallback(
+    async (conversationId: string) => {
+      setSendError(undefined);
+
+      try {
+        await setActiveConversation(conversationId);
+      } catch (error) {
+        const message = getErrorMessage(error);
+        setSendError(message);
+        logger.warn('Failed to load Lightspeed conversation', { conversationId, error: message });
+      }
+    },
+    [setActiveConversation],
+  );
+
   const sendMessage = React.useCallback(
-    async (message: string) => {
-      const trimmedMessage = message.trim();
+    async (message: string | number) => {
+      const trimmedMessage = String(message).trim();
       if (!trimmedMessage || isInProgress || isSendingRef.current) {
         return;
       }
@@ -78,29 +203,39 @@ export const useLightspeedChat = (): UseLightspeedChatResult => {
         if (response?.answer) {
           setAnnouncement(`Message from ${LIGHTSPEED_ASSISTANT_NAME}: ${response.answer}`);
         }
+        await refreshConversations();
       } catch (error) {
-        logger.error(
-          'Konflux AI streaming query failed',
-          error instanceof Error ? error : new Error(String(error)),
-        );
-
         const messageText = getErrorMessage(error);
         setSendError(messageText);
         setAnnouncement(`Message from ${LIGHTSPEED_ASSISTANT_NAME}: ${messageText}`);
+        logger.error(
+          'Konflux AI streaming query failed',
+          error instanceof Error ? error : new Error(messageText),
+          { conversationId: activeConversationId },
+        );
       } finally {
         isSendingRef.current = false;
       }
     },
-    [isInProgress, sendStreamMessage],
+    [activeConversationId, isInProgress, refreshConversations, sendStreamMessage],
   );
 
   return {
+    activeConversationId,
     messages,
+    conversations,
     announcement,
     isSendButtonDisabled: isInProgress || hasInitFailed || isInitializing,
-    isInitializing: !hasInitFailed && isInitializing,
+    isDrawerOpen,
+    isLoadingConversation: !hasInitFailed && isInitializing,
+    hasNoSearchResults: Boolean(conversationSearch.trim()) && conversations.length === 0,
     chatError: sendError ?? initError,
     clearChatError,
+    setIsDrawerOpen,
+    refreshConversations,
+    startNewChat,
+    selectConversation,
+    filterConversations,
     sendMessage,
   };
 };
