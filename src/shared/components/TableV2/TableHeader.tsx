@@ -39,7 +39,7 @@ export const TableHeader = <TData,>({
       {table.getHeaderGroups().map((headerGroup) => (
         <Tr role="row" key={headerGroup.id}>
           {enableRowSelection && <Th screenReaderText="Row selection" />}
-          {enableExpansion && <Th />}
+          {enableExpansion && <Th screenReaderText="Expand row" />}
           {headerGroup.headers.map((header) => {
             const colWidth = widthMap.get(header.column.id);
             const widthProps: Partial<ThProps> = {};
