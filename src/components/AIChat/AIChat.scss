@@ -16,7 +16,7 @@
     }
   }
 
-  .pf-chatbot {
+  .pf-chatbot--default {
     z-index: var(--pf-t--global--z-index--xl);
     // PF default is 30rem; widen the floating overlay panel
     width: 45rem;
@@ -25,6 +25,27 @@
       width: 100vw;
       inset-inline-end: 0;
     }
+  }
+
+  .pf-chatbot--fullscreen {
+    z-index: var(--pf-t--global--z-index--xl);
+
+    // PF defaults to 60rem; use more horizontal space in fullscreen.
+    @media screen and (min-width: 64rem) {
+      .pf-chatbot__messagebox,
+      .pf-chatbot__footer-container {
+        width: 90%;
+        max-width: min(90rem, 90vw);
+      }
+    }
+  }
+
+  .pf-chatbot__header .pf-chatbot__title {
+    overflow: visible;
+  }
+
+  .pf-chatbot__alert {
+    margin-inline: var(--pf-t--global--spacer--lg);
   }
 
   // Welcome "Hello" — PF uses brand blue; portal is outside .konflux-ui__theme
@@ -41,14 +62,6 @@
   .ai-chat__brand {
     flex-shrink: 0;
     color: var(--pf-t--global--text--color--regular);
-  }
-
-  .pf-chatbot__header .pf-chatbot__title {
-    overflow: visible;
-  }
-
-  .pf-chatbot__alert {
-    margin-inline: var(--pf-t--global--spacer--lg);
   }
 }
 

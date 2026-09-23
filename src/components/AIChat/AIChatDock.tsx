@@ -1,11 +1,11 @@
 import * as React from 'react';
-import Chatbot from '@patternfly/chatbot/dist/dynamic/Chatbot';
+import Chatbot, { ChatbotDisplayMode } from '@patternfly/chatbot/dist/dynamic/Chatbot';
 import ChatbotToggle from '@patternfly/chatbot/dist/dynamic/ChatbotToggle';
 import { AIChatPortal, getAIChatPortalContainer } from '~/components/AIChat/AIChatPortal';
 import { AIChatHistoryNav } from '~/components/AIChat/components/AIChatHistoryNav';
 import { AIChatRenameConversationModal } from '~/components/AIChat/components/AIChatRenameConversationModal';
 import {
-  KONFLUX_AI_DISPLAY_MODE,
+  KONFLUX_AI_DEFAULT_DISPLAY_MODE,
   KONFLUX_AI_TOGGLE_BUTTON_LABEL,
   KONFLUX_AI_TOGGLE_TOOLTIP,
 } from '~/components/AIChat/const';
@@ -19,6 +19,8 @@ import './AIChat.scss';
  */
 export const AIChatDock: React.FC = () => {
   const [isChatbotVisible, setIsChatbotVisible] = React.useState(false);
+  const [displayMode, setDisplayMode] = React.useState(KONFLUX_AI_DEFAULT_DISPLAY_MODE);
+  const isMaximized = displayMode === ChatbotDisplayMode.fullscreen;
   const {
     activeConversationId,
     messages,
@@ -49,6 +51,19 @@ export const AIChatDock: React.FC = () => {
     }
   }, [clearChatError, isChatbotVisible]);
 
+  const handleToggleDisplayMode = React.useCallback(() => {
+    setDisplayMode((mode) =>
+      mode === ChatbotDisplayMode.fullscreen
+        ? ChatbotDisplayMode.default
+        : ChatbotDisplayMode.fullscreen,
+    );
+  }, []);
+
+  const handleCloseChat = React.useCallback(() => {
+    setIsChatbotVisible(false);
+    setDisplayMode(KONFLUX_AI_DEFAULT_DISPLAY_MODE);
+  }, []);
+
   return (
     <AIChatPortal>
       <div className="ai-chat" data-test="ai-chat-dock">
@@ -58,9 +73,10 @@ export const AIChatDock: React.FC = () => {
           isChatbotVisible={isChatbotVisible}
           onToggleChatbot={() => setIsChatbotVisible((visible) => !visible)}
         />
-        <Chatbot displayMode={KONFLUX_AI_DISPLAY_MODE} isVisible={isChatbotVisible}>
+        <Chatbot displayMode={displayMode} isVisible={isChatbotVisible}>
           <AIChatHistoryNav
-            displayMode={KONFLUX_AI_DISPLAY_MODE}
+            displayMode={displayMode}
+            isMaximized={isMaximized}
             activeConversationId={activeConversationId}
             messages={messages}
             conversations={conversations}
@@ -77,7 +93,8 @@ export const AIChatDock: React.FC = () => {
             selectConversation={selectConversation}
             filterConversations={filterConversations}
             sendMessage={sendMessage}
-            onCloseChat={() => setIsChatbotVisible(false)}
+            onToggleDisplayMode={handleToggleDisplayMode}
+            onCloseChat={handleCloseChat}
           />
         </Chatbot>
         <AIChatRenameConversationModal
