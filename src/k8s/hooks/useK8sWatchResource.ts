@@ -1,3 +1,4 @@
+import React from 'react';
 import {
   hashKey,
   QueryOptions as ReactQueryOptions,
@@ -14,18 +15,6 @@ import { useK8sQueryWatch } from './useK8sQueryWatch';
 
 const POLLING_INTERVAL = 10000;
 
-export type UseK8sWatchResourceResult<R> = Pick<
-  UseQueryResult<R>,
-  | 'data'
-  | 'error'
-  | 'isLoading'
-  | 'isError'
-  | 'isFetched'
-  | 'isFetching'
-  | 'dataUpdatedAt'
-  | 'refetch'
-> & { wsError: unknown };
-
 export const useK8sWatchResource = <R extends K8sResourceCommon | K8sResourceCommon[]>(
   resourceInit?: WatchK8sResource,
   model?: K8sModelCommon,
@@ -33,7 +22,7 @@ export const useK8sWatchResource = <R extends K8sResourceCommon | K8sResourceCom
   options: Partial<
     WebSocketOptions & RequestInit & { wsPrefix?: string; pathPrefix?: string }
   > = {},
-): UseK8sWatchResourceResult<R> => {
+): UseQueryResult<R> & { wsError: unknown } => {
   const k8sQueryOptions = convertToK8sQueryParams(resourceInit);
   const wsError = useK8sQueryWatch(
     resourceInit?.watch ? { model, queryOptions: k8sQueryOptions } : null,
@@ -64,18 +53,22 @@ export const useK8sWatchResource = <R extends K8sResourceCommon | K8sResourceCom
     ) as UseQueryOptions<R>;
   };
 
-  const { data, error, isLoading, isError, isFetched, isFetching, dataUpdatedAt, refetch } =
-    useQuery<R>(getQueryOptions());
+  const query = useQuery<R>(getQueryOptions());
 
-  return {
-    data,
-    error,
-    isLoading,
-    isError,
-    isFetched,
-    isFetching,
-    dataUpdatedAt,
-    refetch,
-    wsError,
-  };
+  const extra = React.useMemo(
+    () => ({
+      wsError,
+    }),
+    [wsError],
+  );
+
+  return new Proxy(query, {
+    get(target, prop) {
+      if (prop in extra) return extra[prop];
+      return Reflect.get(target, prop);
+    },
+    has(target, prop) {
+      return prop in extra || prop in target;
+    },
+  }) as UseQueryResult<R> & { wsError: unknown };
 };
