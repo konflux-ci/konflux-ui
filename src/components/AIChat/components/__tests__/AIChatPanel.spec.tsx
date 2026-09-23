@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { render, screen } from '@testing-library/react';
 import { AIChatPanel } from '~/components/AIChat/components/AIChatPanel';
-import { KONFLUX_AI_DISPLAY_MODE } from '~/components/AIChat/const';
+import { KONFLUX_AI_DEFAULT_DISPLAY_MODE } from '~/components/AIChat/const';
 
 jest.mock('@patternfly/chatbot/dist/dynamic/Chatbot', () => ({
   __esModule: true,
@@ -30,7 +30,7 @@ describe('AIChatPanel', () => {
     );
 
     const panel = screen.getByTestId('chatbot');
-    expect(panel).toHaveAttribute('data-display-mode', KONFLUX_AI_DISPLAY_MODE);
+    expect(panel).toHaveAttribute('data-display-mode', KONFLUX_AI_DEFAULT_DISPLAY_MODE);
     expect(panel).toHaveAttribute('data-visible', 'true');
     expect(screen.getByText('panel body')).toBeInTheDocument();
   });

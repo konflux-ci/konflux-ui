@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { ChatbotDisplayMode } from '@patternfly/chatbot/dist/dynamic/Chatbot';
 import { AIStateProvider, useInProgress } from '@redhat-cloud-services/ai-react-state';
 import { AIChatDeleteConversationModal } from '~/components/AIChat/components/AIChatDeleteConversationModal';
 import { AIChatFooter } from '~/components/AIChat/components/AIChatFooter';
@@ -7,7 +8,7 @@ import { AIChatMessageList } from '~/components/AIChat/components/AIChatMessageL
 import { AIChatPanel } from '~/components/AIChat/components/AIChatPanel';
 import { AIChatRenameConversationModal } from '~/components/AIChat/components/AIChatRenameConversationModal';
 import { AIChatToggle } from '~/components/AIChat/components/AIChatToggle';
-import { KONFLUX_AI_DISPLAY_MODE } from '~/components/AIChat/const';
+import { KONFLUX_AI_DEFAULT_DISPLAY_MODE } from '~/components/AIChat/const';
 import { useAIChatConversations } from '~/components/AIChat/hooks/useAIChatConversations';
 import { useAIChatInit } from '~/components/AIChat/hooks/useAIChatInit';
 import { useAIChatSend } from '~/components/AIChat/hooks/useAIChatSend';
@@ -20,6 +21,8 @@ import './AIChat.scss';
 
 const AIChatDockContent: React.FC = () => {
   const [isVisible, toggle] = useToggle();
+  const [displayMode, setDisplayMode] = React.useState(KONFLUX_AI_DEFAULT_DISPLAY_MODE);
+  const isMaximized = displayMode === ChatbotDisplayMode.fullscreen;
   const { initError, isInitializing, retryInit } = useAIChatInit();
   const { sendError, clearSendError, sendMessage } = useAIChatSend();
   const {
@@ -55,6 +58,19 @@ const AIChatDockContent: React.FC = () => {
     toggle();
   }, [clearConversationError, clearSendError, initError, isVisible, retryInit, toggle]);
 
+  const handleToggleDisplayMode = React.useCallback(() => {
+    setDisplayMode((mode) =>
+      mode === ChatbotDisplayMode.fullscreen
+        ? ChatbotDisplayMode.default
+        : ChatbotDisplayMode.fullscreen,
+    );
+  }, []);
+
+  const handleCloseChat = React.useCallback(() => {
+    setDisplayMode(KONFLUX_AI_DEFAULT_DISPLAY_MODE);
+    toggle();
+  }, [toggle]);
+
   const chatError = sendError ?? initError ?? conversationError;
   const isSendDisabled = isInProgress || !!initError || isInitializing;
 
@@ -62,9 +78,10 @@ const AIChatDockContent: React.FC = () => {
     <AIChatPortal>
       <div className="ai-chat" data-test="ai-chat-dock">
         <AIChatToggle isVisible={isVisible} onToggle={handleToggle} />
-        <AIChatPanel isVisible={isVisible}>
+        <AIChatPanel isVisible={isVisible} displayMode={displayMode}>
           <AIChatHistoryNav
-            displayMode={KONFLUX_AI_DISPLAY_MODE}
+            displayMode={displayMode}
+            isMaximized={isMaximized}
             activeConversationId={activeConversationId}
             conversations={conversations}
             conversationError={conversationError}
@@ -74,7 +91,8 @@ const AIChatDockContent: React.FC = () => {
             startNewChat={startNewChat}
             selectConversation={selectConversation}
             filterConversations={filterConversations}
-            onCloseChat={toggle}
+            onToggleDisplayMode={handleToggleDisplayMode}
+            onCloseChat={handleCloseChat}
           >
             <AIChatMessageList isInitializing={isInitializing} chatError={chatError} />
             <AIChatFooter

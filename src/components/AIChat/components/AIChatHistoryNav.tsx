@@ -12,6 +12,7 @@ import {
 
 type AIChatHistoryNavProps = {
   displayMode: ChatbotDisplayMode;
+  isMaximized: boolean;
   activeConversationId: string | null;
   conversations: Conversation[];
   conversationError?: string;
@@ -21,6 +22,7 @@ type AIChatHistoryNavProps = {
   startNewChat: () => Promise<void>;
   selectConversation: (conversationId: string) => Promise<void>;
   filterConversations: (searchValue: string) => void;
+  onToggleDisplayMode: () => void;
   onCloseChat: () => void;
   children: React.ReactNode;
 };
@@ -28,6 +30,7 @@ type AIChatHistoryNavProps = {
 /** History drawer for searching, selecting, and starting conversations. */
 export const AIChatHistoryNav: React.FC<AIChatHistoryNavProps> = ({
   displayMode,
+  isMaximized,
   activeConversationId,
   conversations,
   conversationError,
@@ -37,6 +40,7 @@ export const AIChatHistoryNav: React.FC<AIChatHistoryNavProps> = ({
   startNewChat,
   selectConversation,
   filterConversations,
+  onToggleDisplayMode,
   onCloseChat,
   children,
 }) => {
@@ -95,7 +99,9 @@ export const AIChatHistoryNav: React.FC<AIChatHistoryNavProps> = ({
         <>
           <AIChatHeader
             isDrawerOpen={isDrawerOpen}
+            isMaximized={isMaximized}
             onToggleDrawer={handleToggleDrawer}
+            onToggleDisplayMode={onToggleDisplayMode}
             onClose={onCloseChat}
           />
           {children}

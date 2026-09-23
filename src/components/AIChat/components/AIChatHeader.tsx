@@ -7,20 +7,25 @@ import ChatbotHeader, {
   ChatbotHeaderTitle,
 } from '@patternfly/chatbot/dist/dynamic/ChatbotHeader';
 import KonfluxLogo from '~/assets/konflux-logo.svg';
+import { AIChatDisplayModeButton } from '~/components/AIChat/components/AIChatDisplayModeButton';
 
 type AIChatHeaderProps = {
   onClose: () => void;
   isDrawerOpen?: boolean;
   onToggleDrawer?: () => void;
+  isMaximized?: boolean;
+  onToggleDisplayMode?: () => void;
 };
 
 /**
- * Chat panel header with Konflux branding, an optional history menu, and a close action.
+ * Chat panel header with Konflux branding, history, display mode, and close.
  */
 export const AIChatHeader: React.FC<AIChatHeaderProps> = ({
   onClose,
   isDrawerOpen = false,
   onToggleDrawer,
+  isMaximized = false,
+  onToggleDisplayMode,
 }) => (
   <ChatbotHeader>
     <ChatbotHeaderMain>
@@ -32,6 +37,9 @@ export const AIChatHeader: React.FC<AIChatHeaderProps> = ({
       </ChatbotHeaderTitle>
     </ChatbotHeaderMain>
     <ChatbotHeaderActions>
+      {onToggleDisplayMode ? (
+        <AIChatDisplayModeButton isMaximized={isMaximized} onToggle={onToggleDisplayMode} />
+      ) : null}
       <ChatbotHeaderCloseButton onClick={onClose} />
     </ChatbotHeaderActions>
   </ChatbotHeader>
