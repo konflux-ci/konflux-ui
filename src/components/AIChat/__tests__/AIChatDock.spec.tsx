@@ -21,6 +21,24 @@ jest.mock('~/components/AIChat/hooks/useAIChatSend', () => ({
   useAIChatSend: () => mockUseAIChatSend(),
 }));
 
+jest.mock('~/components/AIChat/hooks/useAIChatConversations', () => ({
+  useAIChatConversations: () => ({
+    activeConversationId: null,
+    conversations: [],
+    isDrawerOpen: false,
+    hasNoSearchResults: false,
+    setIsDrawerOpen: jest.fn(),
+    refreshConversations: jest.fn(),
+    startNewChat: jest.fn(),
+    selectConversation: jest.fn(),
+    filterConversations: jest.fn(),
+  }),
+}));
+
+jest.mock('~/components/AIChat/components/AIChatHistoryNav', () => ({
+  AIChatHistoryNav: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
 jest.mock('~/components/AIChat/components/AIChatToggle', () => ({
   AIChatToggle: ({ onToggle }: { onToggle: () => void }) => (
     <button type="button" onClick={onToggle}>
