@@ -42,6 +42,11 @@ const ComponentGroupDetailsView: React.FC = () => {
         baseURL={GROUP_DETAILS_PATH.createPath({ workspaceName: namespace, groupName })}
         tabs={[
           {
+            key: 'index',
+            label: 'Overview',
+            isFilled: true,
+          },
+          {
             key: 'releases',
             label: 'Releases',
           },
