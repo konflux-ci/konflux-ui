@@ -66,6 +66,10 @@ jobs:
     # skips routing/dispatch and goes directly to harness-run (PR #6455).
     #
     # Resolves fullsend-ai/fullsend#6347
+    #
+    # Security note: reusable-dispatch.yml is pinned to @main (not SHA) to receive
+    # updates automatically. This follows the pattern established in fullsend.yaml.
+    # The fullsend-ai/fullsend repo has branch protection on main.
     name: Harness
     needs: poll
     permissions:
