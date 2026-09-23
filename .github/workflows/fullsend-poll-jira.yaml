@@ -5,18 +5,20 @@ on:
     - cron: '*/30 * * * *' # every 30 minutes
   workflow_dispatch: {} # allow manual runs
 
-permissions: read-all
+permissions: {}
 
 jobs:
   poll:
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
     concurrency:
       group: fullsend-jira-poll
       cancel-in-progress: false
     outputs:
       matrix: ${{ steps.build-matrix.outputs.matrix }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Install fullsend
         uses: fullsend-ai/fullsend/.github/actions/install-fullsend-cli@5e6f41157a2163af1df290d2e01db827b38a7d8f # main as of 2026-09-23
