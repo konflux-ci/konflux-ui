@@ -51,3 +51,20 @@
     margin-inline: var(--pf-t--global--spacer--lg);
   }
 }
+
+// Chatbot panel uses z-index xl; PF modal backdrop defaults to lg and modal box to xl.
+// Raise both so rename/delete modals render above the open chat panel.
+#konflux-ai-chat-container {
+  .pf-v6-c-backdrop {
+    --pf-v6-c-backdrop--ZIndex: var(--pf-t--global--z-index--2xl);
+  }
+
+  .pf-v6-c-modal-box {
+    --pf-v6-c-modal-box--ZIndex: var(--pf-t--global--z-index--2xl);
+  }
+
+  // Hide any open conversation action menus while the rename modal is open.
+  &:has([data-test='ai-chat-rename-conversation-modal']) .pf-chatbot__selections {
+    display: none !important;
+  }
+}
