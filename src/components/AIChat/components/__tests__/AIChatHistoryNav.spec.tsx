@@ -105,6 +105,7 @@ const renderHistoryNav = (
     activeConversationId: null,
     conversations,
     hasNoSearchResults: false,
+    historyMenuKey: 0,
     isLoadingConversations: false,
     refreshConversations: jest.fn().mockResolvedValue(undefined),
     startNewChat: jest.fn().mockResolvedValue(undefined),

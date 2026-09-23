@@ -28,6 +28,10 @@ jest.mock('~/components/AIChat/hooks/useAIChatConversations', () => ({
   useAIChatConversations: () => mockUseAIChatConversations(),
 }));
 
+jest.mock('~/components/AIChat/components/AIChatRenameConversationModal', () => ({
+  AIChatRenameConversationModal: () => null,
+}));
+
 jest.mock('~/components/AIChat/components/AIChatHistoryNav', () => ({
   AIChatHistoryNav: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
@@ -72,7 +76,13 @@ describe('AIChatDock', () => {
       conversations: [],
       conversationError: undefined,
       hasNoSearchResults: false,
+      historyMenuKey: 0,
       isLoadingConversations: false,
+      isRenamingConversation: false,
+      renameConversationTarget: null,
+      clearConversationError: jest.fn(),
+      closeRenameConversation: jest.fn(),
+      confirmRenameConversation: jest.fn(),
       refreshConversations: mockRefreshConversations,
       startNewChat: jest.fn(),
       selectConversation: jest.fn(),
@@ -186,7 +196,13 @@ describe('AIChatDock', () => {
       conversations: [],
       conversationError: KONFLUX_AI_ERROR_UNAVAILABLE,
       hasNoSearchResults: false,
+      historyMenuKey: 0,
       isLoadingConversations: false,
+      isRenamingConversation: false,
+      renameConversationTarget: null,
+      clearConversationError: jest.fn(),
+      closeRenameConversation: jest.fn(),
+      confirmRenameConversation: jest.fn(),
       refreshConversations: mockRefreshConversations,
       startNewChat: jest.fn(),
       selectConversation: jest.fn(),

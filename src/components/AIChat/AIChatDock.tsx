@@ -4,6 +4,7 @@ import { AIChatFooter } from '~/components/AIChat/components/AIChatFooter';
 import { AIChatHistoryNav } from '~/components/AIChat/components/AIChatHistoryNav';
 import { AIChatMessageList } from '~/components/AIChat/components/AIChatMessageList';
 import { AIChatPanel } from '~/components/AIChat/components/AIChatPanel';
+import { AIChatRenameConversationModal } from '~/components/AIChat/components/AIChatRenameConversationModal';
 import { AIChatToggle } from '~/components/AIChat/components/AIChatToggle';
 import { KONFLUX_AI_DISPLAY_MODE } from '~/components/AIChat/const';
 import { useAIChatConversations } from '~/components/AIChat/hooks/useAIChatConversations';
@@ -11,7 +12,7 @@ import { useAIChatInit } from '~/components/AIChat/hooks/useAIChatInit';
 import { useAIChatSend } from '~/components/AIChat/hooks/useAIChatSend';
 import { getLightspeedClient } from '~/lightspeed/lightspeedClient';
 import { useToggle } from '~/shared/hooks/useToggle';
-import { AIChatPortal } from './AIChatPortal';
+import { AIChatPortal, getAIChatPortalContainer } from './AIChatPortal';
 
 import '@patternfly/chatbot/dist/css/main.css';
 import './AIChat.scss';
@@ -25,23 +26,30 @@ const AIChatDockContent: React.FC = () => {
     conversations,
     conversationError,
     hasNoSearchResults,
+    historyMenuKey,
     isLoadingConversations,
+    isRenamingConversation,
+    renameConversationTarget,
     refreshConversations,
     startNewChat,
     selectConversation,
     filterConversations,
+    clearConversationError,
+    closeRenameConversation,
+    confirmRenameConversation,
   } = useAIChatConversations();
   const isInProgress = useInProgress();
 
   const handleToggle = React.useCallback(() => {
     if (!isVisible) {
       clearSendError();
+      clearConversationError();
       if (initError) {
         retryInit();
       }
     }
     toggle();
-  }, [clearSendError, initError, isVisible, retryInit, toggle]);
+  }, [clearConversationError, clearSendError, initError, isVisible, retryInit, toggle]);
 
   const chatError = sendError ?? initError ?? conversationError;
   const isSendDisabled = isInProgress || !!initError || isInitializing;
@@ -57,6 +65,7 @@ const AIChatDockContent: React.FC = () => {
             conversations={conversations}
             conversationError={conversationError}
             hasNoSearchResults={hasNoSearchResults}
+            historyMenuKey={historyMenuKey}
             isLoadingConversations={isLoadingConversations}
             refreshConversations={refreshConversations}
             startNewChat={startNewChat}
@@ -73,6 +82,16 @@ const AIChatDockContent: React.FC = () => {
             />
           </AIChatHistoryNav>
         </AIChatPanel>
+        <AIChatRenameConversationModal
+          appendTo={getAIChatPortalContainer}
+          currentName={renameConversationTarget?.currentName ?? ''}
+          isOpen={renameConversationTarget !== null}
+          isSubmitting={isRenamingConversation}
+          onClose={closeRenameConversation}
+          onRename={(newName) => {
+            void confirmRenameConversation(newName);
+          }}
+        />
       </div>
     </AIChatPortal>
   );

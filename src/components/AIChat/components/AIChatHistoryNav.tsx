@@ -16,6 +16,7 @@ type AIChatHistoryNavProps = {
   conversations: Conversation[];
   conversationError?: string;
   hasNoSearchResults: boolean;
+  historyMenuKey: number;
   isLoadingConversations: boolean;
   refreshConversations: () => Promise<void>;
   startNewChat: () => Promise<void>;
@@ -32,6 +33,7 @@ export const AIChatHistoryNav: React.FC<AIChatHistoryNavProps> = ({
   conversations,
   conversationError,
   hasNoSearchResults,
+  historyMenuKey,
   isLoadingConversations,
   refreshConversations,
   startNewChat,
@@ -67,6 +69,7 @@ export const AIChatHistoryNav: React.FC<AIChatHistoryNavProps> = ({
 
   return (
     <ChatbotConversationHistoryNav
+      key={`chat-history-${historyMenuKey}`}
       displayMode={displayMode}
       onDrawerToggle={handleToggleDrawer}
       isDrawerOpen={isDrawerOpen}
