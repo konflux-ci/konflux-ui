@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { AIStateProvider, useInProgress } from '@redhat-cloud-services/ai-react-state';
+import { AIChatPortal } from '~/components/AIChat/AIChatPortal';
 import { AIChatFooter } from '~/components/AIChat/components/AIChatFooter';
 import { AIChatHeader } from '~/components/AIChat/components/AIChatHeader';
 import { AIChatMessageList } from '~/components/AIChat/components/AIChatMessageList';
@@ -13,6 +14,10 @@ import { useToggle } from '~/shared/hooks/useToggle';
 import '@patternfly/chatbot/dist/css/main.css';
 import './AIChat.scss';
 
+/**
+ * PatternFly chatbot dock backed by Lightspeed.
+ * Rendered via portal onto document.body for stacking context.
+ */
 const AIChatDockContent: React.FC = () => {
   const [isVisible, toggle] = useToggle();
   const { initError, isInitializing, retryInit } = useAIChatInit();
@@ -33,19 +38,21 @@ const AIChatDockContent: React.FC = () => {
   const isSendDisabled = isInProgress || !!initError || isInitializing;
 
   return (
-    <div className="ai-chat" data-test="ai-chat-dock">
-      <AIChatToggle isVisible={isVisible} onToggle={handleToggle} />
-      <AIChatPanel isVisible={isVisible}>
-        <AIChatHeader onClose={toggle} />
-        <AIChatMessageList isInitializing={isInitializing} chatError={chatError} />
-        <AIChatFooter
-          isSendDisabled={isSendDisabled}
-          onSend={(message) => {
-            void sendMessage(message);
-          }}
-        />
-      </AIChatPanel>
-    </div>
+    <AIChatPortal>
+      <div className="ai-chat" data-test="ai-chat-dock">
+        <AIChatToggle isVisible={isVisible} onToggle={handleToggle} />
+        <AIChatPanel isVisible={isVisible}>
+          <AIChatHeader onClose={toggle} />
+          <AIChatMessageList isInitializing={isInitializing} chatError={chatError} />
+          <AIChatFooter
+            isSendDisabled={isSendDisabled}
+            onSend={(message) => {
+              void sendMessage(message);
+            }}
+          />
+        </AIChatPanel>
+      </div>
+    </AIChatPortal>
   );
 };
 
