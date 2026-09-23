@@ -4,6 +4,7 @@ import { useReleasePlans } from '../../../../../../hooks/useReleasePlans';
 import { useReleases } from '../../../../../../hooks/useReleases';
 import { Condition } from '../../../../../../types';
 import { conditionsRunStatus } from '../../../../../../utils/pipeline-utils';
+import { getApplicationMatchLabels } from '../../../../../../utils/release-utils';
 import { WorkflowNodeModel, WorkflowNodeModelData, WorkflowNodeType } from '../types';
 import {
   emptyPipelineNode,
@@ -25,9 +26,14 @@ export const useAppReleasePlanNodes = (
   errors: unknown[],
 ] => {
   const [releasePlans, releasePlansLoaded, releasePlansError] = useReleasePlans(namespace);
-  const [releases, releasesLoaded, releasesError] = useReleases(namespace, applicationName);
-  const allLoaded = releasePlansLoaded && releasesLoaded;
-  const allErrors = [releasesError, releasePlansError].filter((e) => !!e);
+  const {
+    data: releases,
+    isLoading: releasesLoading,
+    archiveError,
+    clusterError,
+  } = useReleases(namespace, getApplicationMatchLabels(applicationName));
+  const allLoaded = releasePlansLoaded && !releasesLoading;
+  const allErrors = [archiveError ?? clusterError, releasePlansError].filter((e) => !!e);
 
   const releasePlanNodes = React.useMemo(() => {
     const nodes =

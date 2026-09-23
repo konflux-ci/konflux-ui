@@ -24,18 +24,8 @@ export const RELEASES_LIST_COLUMNS: ColumnDefinition<ReleaseKind>[] = [
     accessorFn: (obj) => obj.metadata?.name,
     cell: (info) => {
       const obj = info.row.original;
-      return (
-        <Link
-          to="#"
-          // TODO: handle navigate to Release Details page
-          // will be done on https://redhat.atlassian.net/browse/KFLUXUI-1719
-          // eslint-disable-next-line no-alert
-          onClick={() => alert('TODO')}
-          data-test="releases__row-name"
-        >
-          {obj.metadata?.name}
-        </Link>
-      );
+      // TODO[KFLUXUI-1719]
+      return obj.metadata?.name;
     },
   },
   {
@@ -95,110 +85,61 @@ export const RELEASES_LIST_COLUMNS: ColumnDefinition<ReleaseKind>[] = [
     id: 'releaseSnapshot',
     header: 'Release Snapshot',
     accessorFn: (obj) => obj.spec.snapshot,
-    cell: (info) => (
-      <Link
-        to="#"
-        // TODO: handle navigate to Snapshot Details page
-        // will be done on https://redhat.atlassian.net/browse/KFLUXUI-1720
-        // eslint-disable-next-line no-alert
-        onClick={() => alert('TODO')}
-      >
-        {info.getValue() as string}
-      </Link>
-    ),
+    // TODO[KFLUXUI-1720]
+    cell: (info) => info.getValue() as string,
   },
   {
     id: 'tenantCollectorPipelineRun',
     header: 'Tenant Collector',
-    accessorFn: () => null,
-    cell: (info) => {
-      const obj = info.row.original;
+    accessorFn: (obj) => {
       const [tenantCollectorPrNamespace, tenantCollectorPipelineRun] = getNamespaceAndPRName(
         getTenantCollectorPipelineRunFromRelease(obj),
       );
-      if (!tenantCollectorPipelineRun || !tenantCollectorPrNamespace) return '-';
-      return (
-        <Link
-          to="#"
-          // TODO: handle navigate to Pipeline Run Details page
-          // will be done on https://redhat.atlassian.net/browse/KFLUXUI-1721
-          // eslint-disable-next-line no-alert
-          onClick={() => alert('TODO')}
-        >
-          {tenantCollectorPipelineRun}
-        </Link>
-      );
+      if (!tenantCollectorPrNamespace || !tenantCollectorPipelineRun) return '-';
+      return tenantCollectorPipelineRun;
     },
+    // TODO[KFLUXUI-1721]
+    cell: (info) => info.getValue() as string,
   },
   {
     id: 'tenantPipelineRun',
     header: 'Tenant Pipeline',
-    accessorFn: () => null,
-    cell: (info) => {
-      const obj = info.row.original;
+    accessorFn: (obj) => {
       const [tenantPrNamespace, tenantPipelineRun] = getNamespaceAndPRName(
         getTenantPipelineRunFromRelease(obj),
       );
       if (!tenantPrNamespace || !tenantPipelineRun) return '-';
-      return (
-        <Link
-          to="#"
-          // TODO: handle navigate to Pipeline Run Details page
-          // will be done on https://redhat.atlassian.net/browse/KFLUXUI-1721
-          // eslint-disable-next-line no-alert
-          onClick={() => alert('TODO')}
-        >
-          {tenantPipelineRun}
-        </Link>
-      );
+      return tenantPipelineRun;
     },
+    // TODO[KFLUXUI-1721]
+    cell: (info) => info.getValue() as string,
   },
 
   {
     id: 'managedPipelineRun',
     header: 'Managed Pipeline',
-    accessorFn: () => null,
-    cell: (info) => {
-      const obj = info.row.original;
+    accessorFn: (obj) => {
       const [managedPrNamespace, managedPipelineRun] = getNamespaceAndPRName(
         getManagedPipelineRunFromRelease(obj),
       );
       if (!managedPrNamespace || !managedPipelineRun) return '-';
-      return (
-        <Link
-          to="#"
-          // TODO: handle navigate to Pipeline Run Details page
-          // will be done on https://redhat.atlassian.net/browse/KFLUXUI-1721
-          // eslint-disable-next-line no-alert
-          onClick={() => alert('TODO')}
-        >
-          {managedPipelineRun}
-        </Link>
-      );
+      return managedPipelineRun;
     },
+    // TODO[KFLUXUI-1721]
+    cell: (info) => info.getValue() as string,
   },
 
   {
     id: 'finalPipelineRun',
     header: 'Final Pipeline',
-    accessorFn: () => null,
-    cell: (info) => {
-      const obj = info.row.original;
+    accessorFn: (obj) => {
       const [finalPrNamespace, finalPipelineRun] = getNamespaceAndPRName(
         getFinalPipelineRunFromRelease(obj),
       );
       if (!finalPrNamespace || !finalPipelineRun) return '-';
-      return (
-        <Link
-          to="#"
-          // TODO: handle navigate to Pipeline Run Details page
-          // will be done on https://redhat.atlassian.net/browse/KFLUXUI-1721
-          // eslint-disable-next-line no-alert
-          onClick={() => alert('TODO')}
-        >
-          {finalPipelineRun}
-        </Link>
-      );
+      return finalPipelineRun;
     },
+    // TODO[KFLUXUI-1721]
+    cell: (info) => info.getValue() as string,
   },
 ];

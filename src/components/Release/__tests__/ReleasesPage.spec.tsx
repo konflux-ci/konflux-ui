@@ -1,8 +1,7 @@
 import * as React from 'react';
 import { screen, waitFor } from '@testing-library/react';
 import { NuqsTestingAdapter } from 'nuqs/adapters/testing';
-import { ComponentGroupReleasesTab } from '~/components/ComponentGroups/ComponentGroupDetails/tabs/ComponentGroupReleasesTab/ComponentGroupReleasesTab';
-import { ReleaseLabel } from '~/consts/release';
+import { ReleasesPage } from '~/components/Release/ReleasesPage';
 import { useReleases } from '~/hooks/useReleases';
 import { ReleaseKind } from '~/types';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
@@ -15,7 +14,6 @@ jest.mock('@tanstack/react-virtual', () => ({
 
 jest.mock('react-router-dom', () => ({
   ...jest.requireActual('react-router-dom'),
-  useParams: () => ({ groupName: 'my-group' }),
   Link: ({
     children,
     to,
@@ -105,13 +103,21 @@ const mockBaseResult = {
   archiveData: undefined,
 };
 
-const TestedComponent = ({ searchParams }: { searchParams?: string }) => (
+const selectorMatchLabels = { 'appstudio.openshift.io/component-group': 'my-group' };
+
+const TestedComponent = ({
+  searchParams,
+  labels = selectorMatchLabels,
+}: {
+  searchParams?: string;
+  labels?: { [key: string]: string } | undefined;
+}) => (
   <NuqsTestingAdapter searchParams={searchParams}>
-    <ComponentGroupReleasesTab />
+    <ReleasesPage selectorMatchLabels={labels} />
   </NuqsTestingAdapter>
 );
 
-describe('ComponentGroupReleasesTab', () => {
+describe('ReleasesPage', () => {
   beforeEach(() => {
     setupVirtualizerMock();
     useReleasesMock.mockReturnValue(mockBaseResult);
@@ -122,12 +128,20 @@ describe('ComponentGroupReleasesTab', () => {
     jest.clearAllMocks();
   });
 
-  it('should call useReleases with the current namespace and group match labels', () => {
+  it('should call useReleases with the current namespace and selector match labels', () => {
     renderWithQueryClient(<TestedComponent />);
 
-    expect(useReleasesMock).toHaveBeenCalledWith('test-ns', {
-      [ReleaseLabel.COMPONENT_GROUP]: 'my-group',
-    });
+    expect(useReleasesMock).toHaveBeenCalledWith('test-ns', selectorMatchLabels);
+  });
+
+  it('should forward undefined match labels to useReleases', () => {
+    renderWithQueryClient(
+      <NuqsTestingAdapter>
+        <ReleasesPage selectorMatchLabels={undefined} />
+      </NuqsTestingAdapter>,
+    );
+
+    expect(useReleasesMock).toHaveBeenCalledWith('test-ns', undefined);
   });
 
   it('should show a loading skeleton while releases are loading', () => {

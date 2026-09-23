@@ -6,6 +6,7 @@ import { Condition } from '../../../../../../types';
 import { ReleaseKind, ReleasePlanKind } from '../../../../../../types/coreBuildService';
 import { K8sResourceCommon } from '../../../../../../types/k8s';
 import { conditionsRunStatus } from '../../../../../../utils/pipeline-utils';
+import { getApplicationMatchLabels } from '../../../../../../utils/release-utils';
 import { WorkflowNodeModel, WorkflowNodeModelData, WorkflowNodeType } from '../types';
 import {
   emptyPipelineNode,
@@ -51,10 +52,15 @@ export const useAppReleaseNodes = (
   loaded: boolean,
   errors: unknown[],
 ] => {
-  const [releases, releasesLoaded, releasesError] = useReleases(namespace, applicationName);
+  const {
+    data: releases,
+    isLoading: releasesLoading,
+    archiveError,
+    clusterError,
+  } = useReleases(namespace, getApplicationMatchLabels(applicationName));
   const [releasePlans, releasePlansLoaded, releasePlansError] = useReleasePlans(namespace);
-  const allLoaded = releasesLoaded && releasePlansLoaded;
-  const allErrors = [releasesError, releasePlansError].filter((e) => !!e);
+  const allLoaded = !releasesLoading && releasePlansLoaded;
+  const allErrors = [archiveError ?? clusterError, releasePlansError].filter((e) => !!e);
 
   const groupedReleases = React.useMemo(() => {
     if (!allLoaded || allErrors.length > 0) {

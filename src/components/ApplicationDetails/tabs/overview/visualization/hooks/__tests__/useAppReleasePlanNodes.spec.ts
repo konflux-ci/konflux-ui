@@ -19,7 +19,12 @@ const useReleasesMock = useReleases as jest.Mock;
 describe('useAppReleasePlanNodes', () => {
   beforeEach(() => {
     useReleasePlansMock.mockReturnValue([mockReleasePlansData, true, undefined]);
-    useReleasesMock.mockReturnValue([mockReleasesData, true, undefined]);
+    useReleasesMock.mockReturnValue({
+      data: mockReleasesData,
+      isLoading: false,
+      archiveError: undefined,
+      clusterError: undefined,
+    });
   });
 
   afterEach(() => {
@@ -50,7 +55,12 @@ describe('useAppReleasePlanNodes', () => {
   });
 
   it('should return pending status when no releases exist', () => {
-    useReleasesMock.mockReturnValue([[], true, undefined]);
+    useReleasesMock.mockReturnValue({
+      data: [],
+      isLoading: false,
+      archiveError: undefined,
+      clusterError: undefined,
+    });
     const { result } = renderHook(() =>
       useAppReleasePlanNodes('test-ns', 'test-application', [], false),
     );
@@ -75,7 +85,12 @@ describe('useAppReleasePlanNodes', () => {
 
   it('should handle loading state', () => {
     useReleasePlansMock.mockReturnValue([[], false, undefined]);
-    useReleasesMock.mockReturnValue([[], false, undefined]);
+    useReleasesMock.mockReturnValue({
+      data: [],
+      isLoading: true,
+      archiveError: undefined,
+      clusterError: undefined,
+    });
     const { result } = renderHook(() =>
       useAppReleasePlanNodes('test-ns', 'test-application', [], false),
     );
@@ -97,7 +112,12 @@ describe('useAppReleasePlanNodes', () => {
 
   it('should handle errors from useReleases', () => {
     const error = new Error('Releases error');
-    useReleasesMock.mockReturnValue([[], true, error]);
+    useReleasesMock.mockReturnValue({
+      data: [],
+      isLoading: false,
+      archiveError: undefined,
+      clusterError: error,
+    });
     const { result } = renderHook(() =>
       useAppReleasePlanNodes('test-ns', 'test-application', [], false),
     );
@@ -110,7 +130,12 @@ describe('useAppReleasePlanNodes', () => {
     const error1 = new Error('Release plans error');
     const error2 = new Error('Releases error');
     useReleasePlansMock.mockReturnValue([[], true, error1]);
-    useReleasesMock.mockReturnValue([[], true, error2]);
+    useReleasesMock.mockReturnValue({
+      data: [],
+      isLoading: false,
+      archiveError: undefined,
+      clusterError: error2,
+    });
     const { result } = renderHook(() =>
       useAppReleasePlanNodes('test-ns', 'test-application', [], false),
     );
@@ -145,7 +170,12 @@ describe('useAppReleasePlanNodes', () => {
         startTime: '2022-11-09T17:40:00Z',
       },
     };
-    useReleasesMock.mockReturnValue([[olderRelease, newerRelease], true, undefined]);
+    useReleasesMock.mockReturnValue({
+      data: [olderRelease, newerRelease],
+      isLoading: false,
+      archiveError: undefined,
+      clusterError: undefined,
+    });
 
     const { result } = renderHook(() =>
       useAppReleasePlanNodes('test-ns', 'test-application', [], false),
@@ -191,7 +221,12 @@ describe('useAppReleasePlanNodes', () => {
         releasePlan: 'different-plan',
       },
     };
-    useReleasesMock.mockReturnValue([[...mockReleasesData, unrelatedRelease], true, undefined]);
+    useReleasesMock.mockReturnValue({
+      data: [...mockReleasesData, unrelatedRelease],
+      isLoading: false,
+      archiveError: undefined,
+      clusterError: undefined,
+    });
 
     const { result } = renderHook(() =>
       useAppReleasePlanNodes('test-ns', 'test-application', [], false),
@@ -203,7 +238,12 @@ describe('useAppReleasePlanNodes', () => {
   });
 
   it('should use notFoundPrevTask when no releases for specific plan', () => {
-    useReleasesMock.mockReturnValue([[], true, undefined]);
+    useReleasesMock.mockReturnValue({
+      data: [],
+      isLoading: false,
+      archiveError: undefined,
+      clusterError: undefined,
+    });
     const { result } = renderHook(() =>
       useAppReleasePlanNodes('test-ns', 'test-application', ['no-release-sre-production'], false),
     );
@@ -259,7 +299,12 @@ describe('useAppReleasePlanNodes', () => {
         ],
       },
     };
-    useReleasesMock.mockReturnValue([[failedRelease], true, undefined]);
+    useReleasesMock.mockReturnValue({
+      data: [failedRelease],
+      isLoading: false,
+      archiveError: undefined,
+      clusterError: undefined,
+    });
 
     const { result } = renderHook(() =>
       useAppReleasePlanNodes('test-ns', 'test-application', [], false),
@@ -284,7 +329,12 @@ describe('useAppReleasePlanNodes', () => {
         startTime: '2022-11-09T17:36:38Z',
       },
     };
-    useReleasesMock.mockReturnValue([[release1, release2], true, undefined]);
+    useReleasesMock.mockReturnValue({
+      data: [release1, release2],
+      isLoading: false,
+      archiveError: undefined,
+      clusterError: undefined,
+    });
 
     const { result } = renderHook(() =>
       useAppReleasePlanNodes('test-ns', 'test-application', [], false),
@@ -296,7 +346,12 @@ describe('useAppReleasePlanNodes', () => {
   });
 
   it('should use notFoundPrevTask with default value', () => {
-    useReleasesMock.mockReturnValue([[], true, undefined]);
+    useReleasesMock.mockReturnValue({
+      data: [],
+      isLoading: false,
+      archiveError: undefined,
+      clusterError: undefined,
+    });
     const { result } = renderHook(() =>
       useAppReleasePlanNodes('test-ns', 'test-application', [], false),
     );
