@@ -2,9 +2,7 @@ import * as React from 'react';
 import Chatbot from '@patternfly/chatbot/dist/dynamic/Chatbot';
 import ChatbotToggle from '@patternfly/chatbot/dist/dynamic/ChatbotToggle';
 import { AIChatPortal } from '~/components/AIChat/AIChatPortal';
-import { AIChatDrawerContent } from '~/components/AIChat/components/AIChatDrawerContent';
-import { AIChatDrawerFooter } from '~/components/AIChat/components/AIChatDrawerFooter';
-import { AIChatDrawerHeader } from '~/components/AIChat/components/AIChatDrawerHeader';
+import { AIChatHistoryNav } from '~/components/AIChat/components/AIChatHistoryNav';
 import {
   KONFLUX_AI_DISPLAY_MODE,
   KONFLUX_AI_TOGGLE_BUTTON_LABEL,
@@ -16,18 +14,26 @@ import '@patternfly/chatbot/dist/css/main.css';
 import './AIChat.scss';
 
 /**
- * PatternFly chatbot dock with Lightspeed SSE send/receive.
- * Header, content, and footer are split into dedicated drawer components.
+ * PatternFly chatbot dock with Lightspeed SSE send/receive and conversation history.
  */
 export const AIChatDock: React.FC = () => {
   const [isChatbotVisible, setIsChatbotVisible] = React.useState(false);
   const {
+    activeConversationId,
     messages,
+    conversations,
     announcement,
     isSendButtonDisabled,
-    isInitializing,
+    isDrawerOpen,
+    isLoadingConversation,
+    hasNoSearchResults,
     chatError,
     clearChatError,
+    setIsDrawerOpen,
+    refreshConversations,
+    startNewChat,
+    selectConversation,
+    filterConversations,
     sendMessage,
   } = useLightspeedChat();
 
@@ -47,18 +53,24 @@ export const AIChatDock: React.FC = () => {
           onToggleChatbot={() => setIsChatbotVisible((visible) => !visible)}
         />
         <Chatbot displayMode={KONFLUX_AI_DISPLAY_MODE} isVisible={isChatbotVisible}>
-          <AIChatDrawerHeader onClose={() => setIsChatbotVisible(false)} />
-          <AIChatDrawerContent
-            announcement={announcement}
-            chatError={chatError}
-            isLoadingConversation={isInitializing}
+          <AIChatHistoryNav
+            displayMode={KONFLUX_AI_DISPLAY_MODE}
+            activeConversationId={activeConversationId}
             messages={messages}
-          />
-          <AIChatDrawerFooter
-            isSendButtonDisabled={isSendButtonDisabled || isInitializing}
-            onSendMessage={(message) => {
-              void sendMessage(String(message));
-            }}
+            conversations={conversations}
+            announcement={announcement}
+            isSendButtonDisabled={isSendButtonDisabled}
+            isDrawerOpen={isDrawerOpen}
+            isLoadingConversation={isLoadingConversation}
+            hasNoSearchResults={hasNoSearchResults}
+            chatError={chatError}
+            setIsDrawerOpen={setIsDrawerOpen}
+            refreshConversations={refreshConversations}
+            startNewChat={startNewChat}
+            selectConversation={selectConversation}
+            filterConversations={filterConversations}
+            sendMessage={sendMessage}
+            onCloseChat={() => setIsChatbotVisible(false)}
           />
         </Chatbot>
       </div>
