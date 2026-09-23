@@ -66,13 +66,24 @@ describe('useComponentsByName', () => {
 
     const { result } = renderHook(() => useComponentsByName('test-ns', ['test-dotnet60'], true));
 
-    expect(result.current).toEqual([mockComponentsData, true, undefined]);
+    expect(result.current).toEqual([[mockComponentsData[0]], true, undefined]);
   });
 
   it('should request all components and filter the requested names and deleted resources', () => {
-    useK8sWatchResourceMock.mockReturnValue([[], true, undefined]);
+    const matchingComponent = { metadata: { name: 'component-a' } };
+    const otherComponent = { metadata: { name: 'component-c' } };
+    const deletingComponent = {
+      metadata: { name: 'component-b', deletionTimestamp: '2026-08-01T00:00:00Z' },
+    };
+    useK8sWatchResourceMock.mockReturnValue([
+      [matchingComponent, otherComponent, deletingComponent],
+      true,
+      undefined,
+    ]);
 
-    renderHook(() => useComponentsByName('test-ns', ['component-a', 'component-b'], true));
+    const { result } = renderHook(() =>
+      useComponentsByName('test-ns', ['component-a', 'component-b'], true),
+    );
 
     expect(useK8sWatchResourceMock).toHaveBeenCalledWith(
       {
@@ -82,18 +93,8 @@ describe('useComponentsByName', () => {
         watch: true,
       },
       ComponentModel,
-      { filterData: expect.any(Function) },
     );
 
-    const filterData = useK8sWatchResourceMock.mock.calls[0][2].filterData;
-    const matchingComponent = { metadata: { name: 'component-a' } };
-    const otherComponent = { metadata: { name: 'component-c' } };
-    const deletingComponent = {
-      metadata: { name: 'component-b', deletionTimestamp: '2026-08-01T00:00:00Z' },
-    };
-
-    expect(filterData([matchingComponent, otherComponent, deletingComponent])).toEqual([
-      matchingComponent,
-    ]);
+    expect(result.current).toEqual([[matchingComponent], true, undefined]);
   });
 });

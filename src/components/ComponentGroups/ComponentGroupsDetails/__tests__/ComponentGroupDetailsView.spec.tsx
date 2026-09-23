@@ -76,7 +76,7 @@ describe('ComponentGroupDetailsView', () => {
 
     renderWithQueryClientAndRouter(<ComponentGroupDetailsView />);
 
-    expect(screen.getByText('Unable to load component')).toBeInTheDocument();
+    expect(screen.getByText('Unable to load component group')).toBeInTheDocument();
   });
 
   it('should render the Components tab for the loaded group', () => {

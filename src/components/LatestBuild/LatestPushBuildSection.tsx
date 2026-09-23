@@ -10,6 +10,8 @@ import { getErrorState } from '~/shared/utils/error-utils';
 import { getCommitsFromPLRs } from '~/utils/commits-utils';
 import PipelineRunStatus from '../PipelineRun/PipelineRunStatus';
 
+import './LatestPushBuildSection.scss';
+
 type LatestBuildSectionProps = {
   componentName: string;
   version?: string;
@@ -51,7 +53,7 @@ const LatestPushBuildSection: React.FC<LatestBuildSectionProps> = ({ componentNa
           flexWrap={{ default: 'nowrap' }}
           gap={{ default: 'gapXs' }}
         >
-          <FlexItem style={{ minWidth: 0, overflowWrap: 'anywhere' }}>
+          <FlexItem className="latest-build__label">
             {/* TODO: replace with a link to the commit details page, once the new version is implemented */}
             {`${commit.isPullRequest ? `#${commit.pullRequestNumber} ` : ''}${commit.shaTitle}`}
           </FlexItem>
@@ -71,7 +73,7 @@ const LatestPushBuildSection: React.FC<LatestBuildSectionProps> = ({ componentNa
           <FlexItem flex={{ default: 'flexNone' }}>
             <strong>Built from</strong>
           </FlexItem>
-          <FlexItem style={{ minWidth: 0, overflowWrap: 'anywhere' }}>
+          <FlexItem className="latest-build__label">
             <Link
               data-test="latest-build-version"
               to={COMPONENT_VERSION_DETAILS_PATH.createPath({

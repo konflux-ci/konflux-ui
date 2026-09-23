@@ -22,13 +22,13 @@ const ComponentsListView: React.FC = () => {
   const { filteredData } = useFilteredData(componentsFilterConfig, components, clientFilterValues);
 
   if (compError) {
-    return getErrorState(compError, compLoaded, 'group components');
+    return getErrorState(compError, compLoaded, 'components');
   }
 
   return (
     <PageLayout
       title="Components"
-      description="A component is an image built from source code in a repository. One or more components that run together form an component group."
+      description="A component is an image built from source code in a repository."
     >
       <PageSection>
         <TableContainer
@@ -47,7 +47,7 @@ const ComponentsListView: React.FC = () => {
             data={filteredData}
             columns={componentsTableColumns}
             getRowId={(row) => row.metadata.name}
-            aria-label="Group component list"
+            aria-label="Component list"
             enableSorting
           />
         </TableContainer>

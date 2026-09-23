@@ -9,13 +9,11 @@ import { RouterParams } from '~/routes/utils';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
 
-export const COMPONENTS_GS_LOCAL_STORAGE_KEY = 'components-getting-started-modal';
-
 const ComponentGroupDetailsView: React.FC = () => {
   const { groupName } = useParams<RouterParams>();
   const namespace = useNamespace();
 
-  const [componentGroup, loaded, componentError] = useComponentGroup(namespace, groupName);
+  const [componentGroup, loaded, error] = useComponentGroup(namespace, groupName);
 
   if (!loaded) {
     return (
@@ -25,8 +23,8 @@ const ComponentGroupDetailsView: React.FC = () => {
     );
   }
 
-  if (componentError) {
-    return getErrorState(componentError, loaded, 'component');
+  if (error) {
+    return getErrorState(error, loaded, 'component group');
   }
 
   return (
@@ -35,9 +33,7 @@ const ComponentGroupDetailsView: React.FC = () => {
         headTitle={componentGroup?.metadata?.name || 'Unknown'}
         title={
           <Content component={ContentVariants.h2}>
-            <span className="pf-u-mr-sm">
-              <b>{componentGroup?.metadata?.name}</b>
-            </span>
+            <b>{componentGroup?.metadata?.name}</b>
             <FeatureFlagIndicator flags={['component-model']} />
           </Content>
         }

@@ -37,6 +37,6 @@ describe('Component group page routes configuration', () => {
     const componentsRoute = detailsRoute.children?.find((route) => route.path === 'components');
 
     expect(React.isValidElement(componentsRoute?.element)).toBe(true);
-    expect(componentsRoute?.element?.type).toEqual(expect.any(Function));
+    expect(componentsRoute?.element?.type).toHaveProperty('$$typeof', Symbol.for('react.lazy'));
   });
 });
