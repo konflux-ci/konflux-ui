@@ -5,13 +5,7 @@ on:
     - cron: '*/30 * * * *' # every 30 minutes
   workflow_dispatch: {} # allow manual runs
 
-permissions:
-  actions: write
-  contents: write
-  id-token: write
-  issues: write
-  packages: read
-  pull-requests: write
+permissions: read-all
 
 jobs:
   poll:
@@ -25,7 +19,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install fullsend
-        uses: fullsend-ai/fullsend/.github/actions/install-fullsend-cli@main
+        uses: fullsend-ai/fullsend/.github/actions/install-fullsend-cli@5e6f41157a2163af1df290d2e01db827b38a7d8f # main as of 2026-09-23
 
       - name: Poll Jira
         env:
@@ -47,7 +41,10 @@ jobs:
         id: build-matrix
         run: |
           set -euo pipefail
-          if ! jq -e 'length > 0' dispatches.json > /dev/null 2>&1; then
+          # Validate JSON first
+          jq empty dispatches.json
+          # Check if empty
+          if ! jq -e 'length > 0' dispatches.json > /dev/null; then
             echo "No dispatches."
             echo 'matrix={"include":[]}' >> "${GITHUB_OUTPUT}"
             exit 0
@@ -71,6 +68,13 @@ jobs:
     # Resolves fullsend-ai/fullsend#6347
     name: Harness
     needs: poll
+    permissions:
+      actions: write
+      contents: write
+      id-token: write
+      issues: write
+      packages: read
+      pull-requests: write
     uses: fullsend-ai/fullsend/.github/workflows/reusable-dispatch.yml@main
     with:
       matrix: ${{ needs.poll.outputs.matrix }}
