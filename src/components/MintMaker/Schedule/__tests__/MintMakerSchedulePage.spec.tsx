@@ -3,7 +3,12 @@ import userEvent from '@testing-library/user-event';
 import { NuqsTestingAdapter } from 'nuqs/adapters/testing';
 import { useMintMakerSchedule } from '~/hooks/useMintMakerSchedule';
 import { renderWithQueryClient } from '~/unit-test-utils/mock-react-query';
+import { setupVirtualizerMock } from '~/unit-test-utils/mock-virtualizer';
 import { MintMakerSchedulePage } from '../MintMakerSchedulePage';
+
+jest.mock('@tanstack/react-virtual', () => ({
+  useVirtualizer: jest.fn(),
+}));
 
 jest.mock('~/hooks/useMintMakerSchedule', () => ({
   useMintMakerSchedule: jest.fn(),
@@ -30,6 +35,7 @@ const TestedComponent = ({ searchParams }: { searchParams?: string }) => (
 
 describe('MintMakerSchedulePage', () => {
   beforeEach(() => {
+    setupVirtualizerMock();
     useMintMakerScheduleMock.mockReturnValue([mockSchedule, true, undefined]);
   });
 
@@ -38,48 +44,60 @@ describe('MintMakerSchedulePage', () => {
     jest.useRealTimers();
   });
 
-  it('renders the page title and description', () => {
+  it('renders the page title', () => {
     renderWithQueryClient(<TestedComponent />);
-    expect(screen.getByText('MintMaker Schedule')).toBeInTheDocument();
-    expect(screen.getByText('Upcoming scheduled dependency updates')).toBeInTheDocument();
+    expect(screen.getByText('Dependency updates schedule')).toBeInTheDocument();
   });
 
   it('renders skeleton while schedule is loading', () => {
     useMintMakerScheduleMock.mockReturnValue([[], false, undefined]);
     renderWithQueryClient(<TestedComponent />);
     expect(screen.getByTestId('table-container')).toBeInTheDocument();
-    expect(screen.queryByTestId('mintmaker-schedule-manager-card')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('mintmaker-schedule-table')).not.toBeInTheDocument();
   });
 
-  it('renders a card per manager when data is available', async () => {
+  it('renders a table row per manager when data is available', async () => {
     renderWithQueryClient(<TestedComponent />);
     await waitFor(() => {
       expect(screen.getByText('Renovate')).toBeInTheDocument();
       expect(screen.getByText('Dependabot')).toBeInTheDocument();
     });
-    expect(screen.getAllByTestId('mintmaker-schedule-manager-card')).toHaveLength(2);
+    expect(screen.getAllByTestId('table-row')).toHaveLength(2);
   });
 
-  it('highlights the next run as the primary focus of each card', () => {
+  it('renders the next scheduled run in each table row', () => {
     renderWithQueryClient(<TestedComponent />);
-    const cards = screen.getAllByTestId('mintmaker-schedule-manager-card');
-    expect(within(cards[0]).getByTestId('mintmaker-schedule-next-run')).toBeInTheDocument();
-    expect(within(cards[0]).getByTestId('mintmaker-next-label')).toHaveTextContent('Next run');
-    expect(within(cards[0]).getByTestId('mintmaker-schedule-next-countdown')).toBeInTheDocument();
-    expect(within(cards[0]).getByTestId('mintmaker-schedule-next-timestamp')).toBeInTheDocument();
+    const rows = screen.getAllByTestId('table-row');
+    expect(within(rows[0]).getByTestId('mintmaker-schedule-next-run')).toBeInTheDocument();
+    expect(within(rows[0]).getByTestId('mintmaker-schedule-next-countdown')).toBeInTheDocument();
   });
 
-  it('lists later runs separately and excludes the next run from that list', () => {
+  it('renders a fallback when a manager has no scheduled runs', () => {
+    useMintMakerScheduleMock.mockReturnValue([
+      [{ manager: 'renovate', scheduledRuns: [] }],
+      true,
+      undefined,
+    ]);
+
     renderWithQueryClient(<TestedComponent />);
 
-    const renovateCard = screen.getAllByTestId('mintmaker-schedule-manager-card')[0];
-    expect(within(renovateCard).getByText('Later runs')).toBeInTheDocument();
-    expect(within(renovateCard).getAllByTestId('mintmaker-schedule-later-run')).toHaveLength(2);
+    const row = screen.getByTestId('table-row');
+    expect(within(row).getByTestId('mintmaker-schedule-next-run')).toHaveTextContent('-');
+    expect(within(row).queryByTestId('mintmaker-schedule-next-countdown')).not.toBeInTheDocument();
+  });
 
-    const dependabotCard = screen.getAllByTestId('mintmaker-schedule-manager-card')[1];
-    expect(
-      within(dependabotCard).queryByTestId('mintmaker-schedule-later-runs'),
-    ).not.toBeInTheDocument();
+  it('renders future runs in expanded content', async () => {
+    renderWithQueryClient(<TestedComponent />);
+
+    const renovateRow = screen.getAllByTestId('table-row')[0];
+    expect(screen.queryByTestId('mintmaker-schedule-expanded-content')).not.toBeInTheDocument();
+
+    const user = userEvent.setup();
+    await user.click(within(renovateRow).getByRole('button'));
+
+    const expandedContent = screen.getByTestId('mintmaker-schedule-expanded-content');
+    expect(within(expandedContent).getByText('Future runs')).toBeInTheDocument();
+    expect(within(expandedContent).getAllByTestId('mintmaker-schedule-future-run')).toHaveLength(2);
   });
 
   it('renders the filter toolbar when schedule is non-empty', () => {
@@ -91,6 +109,12 @@ describe('MintMakerSchedulePage', () => {
     useMintMakerScheduleMock.mockReturnValue([[], true, undefined]);
     renderWithQueryClient(<TestedComponent />);
     expect(screen.queryByTestId('filter-toolbar')).not.toBeInTheDocument();
+  });
+
+  it('treats an undefined schedule as an empty schedule', () => {
+    useMintMakerScheduleMock.mockReturnValue([undefined, true, undefined]);
+    renderWithQueryClient(<TestedComponent />);
+    expect(screen.getByText('No upcoming runs scheduled')).toBeInTheDocument();
   });
 
   it('renders the search filter input for manager', () => {
@@ -121,7 +145,13 @@ describe('MintMakerSchedulePage', () => {
     expect(screen.getByText('Forbidden')).toBeInTheDocument();
   });
 
-  it('filters schedule cards by manager name using the search filter', async () => {
+  it('renders a generic error state when the error has no numeric code', () => {
+    useMintMakerScheduleMock.mockReturnValue([[], true, { message: 'Unknown error' }]);
+    renderWithQueryClient(<TestedComponent />);
+    expect(screen.getByText('Something went wrong')).toBeInTheDocument();
+  });
+
+  it('filters schedule rows by manager name using the search filter', async () => {
     jest.useFakeTimers();
 
     renderWithQueryClient(<TestedComponent />);

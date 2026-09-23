@@ -9,7 +9,7 @@ const dependencyUpdatesScheduleRoutes = [
     async lazy() {
       ensureFeatureFlagOnLoader('mintmaker');
       const { MintMakerSchedulePage: Component } = await import(
-        '~/components/MintMakerSchedule/MintMakerSchedulePage' /* webpackChunkName: "mintmaker-schedule" */
+        '~/components/MintMaker/Schedule/MintMakerSchedulePage' /* webpackChunkName: "mintmaker-schedule" */
       );
 
       return { Component };

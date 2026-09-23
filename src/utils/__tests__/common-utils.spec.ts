@@ -34,6 +34,28 @@ describe('sortByTime', () => {
     expect(sorted.map((item) => item.name)).toEqual(['earlier', 'later']);
     expect(items.map((item) => item.name)).toEqual(['later', 'earlier']);
   });
+
+  it('sorts Date values in ascending order', () => {
+    const items = [
+      { name: 'later', timestamp: new Date('2026-09-15T10:00:00Z') },
+      { name: 'earlier', timestamp: new Date('2026-09-01T10:00:00Z') },
+    ];
+
+    const sorted = sortByTime(items, (item) => item.timestamp);
+
+    expect(sorted.map((item) => item.name)).toEqual(['earlier', 'later']);
+  });
+
+  it('sorts numeric millisecond values in ascending order', () => {
+    const items = [
+      { name: 'later', timestamp: 2_000 },
+      { name: 'earlier', timestamp: 1_000 },
+    ];
+
+    const sorted = sortByTime(items, (item) => item.timestamp);
+
+    expect(sorted.map((item) => item.name)).toEqual(['earlier', 'later']);
+  });
 });
 
 describe('downloadYaml', () => {
