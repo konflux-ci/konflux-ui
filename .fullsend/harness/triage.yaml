@@ -1,0 +1,26 @@
+# .fullsend/harness/triage.yaml
+base: https://raw.githubusercontent.com/fullsend-ai/agents/7879955ea557deb6d24e3265fdb89288f0844170/harness/triage.yaml#sha256=73ef167017bcf1061d8f9107c95a6f3fcdc4ee41ba57eeff82270d7a57333f37
+
+trigger: >
+  event.entity.kind == "work_item"
+    && (
+      (event.transition.kind == "label_changed"
+        && event.transition.label.name == "fullsend"
+        && event.transition.label.action == "added")
+      ||
+      (event.transition.kind == "comment_added"
+        && has(event.transition.comment.command)
+        && event.transition.comment.command == "/fs-triage")
+    )
+
+allowed_remote_resources:
+  - https://raw.githubusercontent.com/fullsend-ai/agents/
+
+overlays:
+  - when: 'runtime.forge == "jira"'
+    env:
+      runner:
+        # KFLUXUI doesn't have special transitions - just "closed"
+        JIRA_DUPLICATE_TRANSITION: Closed
+        JIRA_NOT_PLANNED_TRANSITION: Closed
+        JIRA_SPLIT_TRANSITION: Closed
