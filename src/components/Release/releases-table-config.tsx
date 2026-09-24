@@ -2,8 +2,10 @@ import { Link } from 'react-router-dom';
 import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { COMPONENT_DETAILS_V2_PATH } from '~/routes/paths';
 import { Timestamp } from '~/shared';
+import { defineFilters } from '~/shared/components/Filter';
 import { ColumnDefinition } from '~/shared/components/TableV2';
 import { ReleaseKind } from '~/types';
+import { nameSearchFilter } from '~/utils/common-filter-configs';
 import { calculateDuration } from '~/utils/pipeline-utils';
 import {
   getFinalPipelineRunFromRelease,
@@ -15,6 +17,10 @@ import {
 import ReleaseStatusCell from './ReleaseStatusCell';
 
 export const RELEASES_LIST_COLUMN_STATE_KEY = 'releases-list';
+
+export const COMPONENT_GROUP_RELEASES_LIST_COLUMN_STATE_KEY = 'component-group-releases-list';
+
+export const RELEASES_LIST_FILTERS = defineFilters<ReleaseKind>()([nameSearchFilter]);
 
 export const RELEASES_LIST_COLUMNS: ColumnDefinition<ReleaseKind>[] = [
   {
