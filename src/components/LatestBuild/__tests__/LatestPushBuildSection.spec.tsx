@@ -1,13 +1,14 @@
 import { screen } from '@testing-library/react';
-import { useLatestBuildPipelineRunForComponentV2 } from '~/hooks/useLatestPushBuildPipeline';
-import { ComponentKind, PipelineRunKind } from '~/types';
+import { PipelineRunLabel } from '~/consts/pipelinerun';
+import { useLatestPushBuildPipelineRunForComponentV2 } from '~/hooks/useLatestPushBuildPipeline';
+import { PipelineRunKind } from '~/types';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
-import { renderWithQueryClient } from '~/unit-test-utils/mock-react-query';
+import { renderWithQueryClientAndRouter } from '~/unit-test-utils/rendering-utils';
 import { getCommitsFromPLRs } from '~/utils/commits-utils';
-import LatestBuildSection from '../LatestBuildSection';
+import LatestPushBuildSection from '../LatestPushBuildSection';
 
 jest.mock('~/hooks/useLatestPushBuildPipeline', () => ({
-  useLatestBuildPipelineRunForComponentV2: jest.fn(),
+  useLatestPushBuildPipelineRunForComponentV2: jest.fn(),
 }));
 
 jest.mock('~/utils/commits-utils', () => ({
@@ -22,30 +23,27 @@ jest.mock('../../Commits/commit-label/CommitLabel', () => {
   );
 });
 
-const useLatestBuildMock = useLatestBuildPipelineRunForComponentV2 as jest.Mock;
-const getCommitsFromPLRsMock = getCommitsFromPLRs as jest.Mock;
+jest.mock('../../PipelineRun/PipelineRunStatus', () => {
+  return ({ pipelineRun }: { pipelineRun: PipelineRunKind }) => (
+    <span data-test="pipeline-run-status">Build completed: {pipelineRun.metadata.name}</span>
+  );
+});
 
-const mockComponent = {
-  metadata: {
-    name: 'my-component',
-    namespace: 'test-ns',
-    uid: 'comp-uid',
-    creationTimestamp: '2024-01-01T00:00:00Z',
-  },
-  spec: {
-    source: { url: 'https://github.com/org/repo' },
-    containerImage: 'quay.io/org/repo',
-  },
-} as unknown as ComponentKind;
+const useLatestBuildMock = useLatestPushBuildPipelineRunForComponentV2 as jest.Mock;
+const getCommitsFromPLRsMock = getCommitsFromPLRs as jest.Mock;
 
 const mockPipelineRun = {
   metadata: {
     name: 'my-component-on-push-abc123',
     namespace: 'test-ns',
     uid: 'plr-uid',
+    labels: {
+      [PipelineRunLabel.COMPONENT_VERSION]: 'nice',
+    },
   },
   status: {
     conditions: [{ type: 'Succeeded', status: 'True' }],
+    completionTime: '2026-03-03T21:37:00Z',
   },
 } as unknown as PipelineRunKind;
 
@@ -58,28 +56,28 @@ const mockCommit = {
   pullRequestNumber: '40',
 };
 
-describe('LatestBuildSection', () => {
+describe('LatestPushBuildSection', () => {
   mockUseNamespaceHook('test-ns');
 
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  it('should render a spinner while loading', () => {
+  it('should render a skeleton while loading', () => {
     useLatestBuildMock.mockReturnValue([undefined, false, undefined]);
-    renderWithQueryClient(<LatestBuildSection component={mockComponent} />);
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    renderWithQueryClientAndRouter(<LatestPushBuildSection componentName={'my-component'} />);
+    expect(screen.getByTestId('latest-build-loading')).toBeInTheDocument();
   });
 
   it('should render an error state when pipeline run fetch fails', () => {
     useLatestBuildMock.mockReturnValue([undefined, true, { code: 500 }]);
-    renderWithQueryClient(<LatestBuildSection component={mockComponent} />);
+    renderWithQueryClientAndRouter(<LatestPushBuildSection componentName={'my-component'} />);
     expect(screen.getByText('Unable to load pipeline run')).toBeInTheDocument();
   });
 
   it('should render an info alert when no build pipeline exists', () => {
     useLatestBuildMock.mockReturnValue([undefined, true, undefined]);
-    renderWithQueryClient(<LatestBuildSection component={mockComponent} />);
+    renderWithQueryClientAndRouter(<LatestPushBuildSection componentName={'my-component'} />);
     expect(screen.getByText('No build pipeline available')).toBeInTheDocument();
   });
 
@@ -87,26 +85,28 @@ describe('LatestBuildSection', () => {
     useLatestBuildMock.mockReturnValue([mockPipelineRun, true, undefined]);
     getCommitsFromPLRsMock.mockReturnValue([mockCommit]);
 
-    renderWithQueryClient(<LatestBuildSection component={mockComponent} />);
+    renderWithQueryClientAndRouter(<LatestPushBuildSection componentName={'my-component'} />);
 
     // commit section
     expect(screen.getByText(/Red Hat Konflux update/)).toBeInTheDocument();
     expect(screen.getByText(/#40/)).toBeInTheDocument();
     expect(screen.getByTestId('commit-label-mock')).toBeInTheDocument();
 
-    // pipeline run section
-    expect(screen.getByText('my-component-on-push-abc123')).toBeInTheDocument();
-    expect(screen.getByText('Succeeded')).toBeInTheDocument();
+    // build status and component version
+    expect(screen.getByTestId('pipeline-run-status')).toHaveTextContent('Build completed');
+    expect(screen.getByTestId('latest-build-version')).toHaveTextContent('nice');
   });
 
-  it('should render "-" for commit when getCommitsFromPLRs returns empty', () => {
+  it('should omit the commit details when no commit is returned', () => {
     useLatestBuildMock.mockReturnValue([mockPipelineRun, true, undefined]);
     getCommitsFromPLRsMock.mockReturnValue([]);
 
-    renderWithQueryClient(<LatestBuildSection component={mockComponent} />);
+    renderWithQueryClientAndRouter(<LatestPushBuildSection componentName={'my-component'} />);
 
-    expect(screen.getByText('-')).toBeInTheDocument();
-    expect(screen.getByText('my-component-on-push-abc123')).toBeInTheDocument();
+    expect(screen.queryByText(/Red Hat Konflux update/)).not.toBeInTheDocument();
+    expect(screen.getByTestId('pipeline-run-status')).toHaveTextContent(
+      'Build completed: my-component-on-push-abc123',
+    );
   });
 
   it('should not render PR number for non-PR commits', () => {
@@ -114,7 +114,7 @@ describe('LatestBuildSection', () => {
     useLatestBuildMock.mockReturnValue([mockPipelineRun, true, undefined]);
     getCommitsFromPLRsMock.mockReturnValue([pushCommit]);
 
-    renderWithQueryClient(<LatestBuildSection component={mockComponent} />);
+    renderWithQueryClientAndRouter(<LatestPushBuildSection componentName={'my-component'} />);
 
     expect(screen.queryByText(/#40/)).not.toBeInTheDocument();
     expect(screen.getByText(/Red Hat Konflux update/)).toBeInTheDocument();
@@ -125,7 +125,7 @@ describe('LatestBuildSection', () => {
     useLatestBuildMock.mockReturnValue([mockPipelineRun, true, undefined]);
     getCommitsFromPLRsMock.mockReturnValue([commitWithoutURL]);
 
-    renderWithQueryClient(<LatestBuildSection component={mockComponent} />);
+    renderWithQueryClientAndRouter(<LatestPushBuildSection componentName={'my-component'} />);
 
     expect(screen.queryByTestId('commit-label-mock')).not.toBeInTheDocument();
     expect(screen.getByText(/Red Hat Konflux update/)).toBeInTheDocument();
@@ -133,13 +133,15 @@ describe('LatestBuildSection', () => {
 
   it('should pass component name to the hook', () => {
     useLatestBuildMock.mockReturnValue([undefined, true, undefined]);
-    renderWithQueryClient(<LatestBuildSection component={mockComponent} />);
+    renderWithQueryClientAndRouter(<LatestPushBuildSection componentName={'my-component'} />);
     expect(useLatestBuildMock).toHaveBeenCalledWith('test-ns', 'my-component', undefined);
   });
 
   it('should pass version to the hook when provided', () => {
     useLatestBuildMock.mockReturnValue([undefined, true, undefined]);
-    renderWithQueryClient(<LatestBuildSection component={mockComponent} version="ver-1.0" />);
+    renderWithQueryClientAndRouter(
+      <LatestPushBuildSection componentName={'my-component'} version="ver-1.0" />,
+    );
     expect(useLatestBuildMock).toHaveBeenCalledWith('test-ns', 'my-component', 'ver-1.0');
   });
 });

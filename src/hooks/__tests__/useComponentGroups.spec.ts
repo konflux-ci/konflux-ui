@@ -1,6 +1,6 @@
 import { renderHook } from '@testing-library/react';
 import { MOCK_COMPONENT_GROUPS } from '~/components/ComponentGroups/ComponentGroupsListView/__data__/mockComponentGroups';
-import { ComponentGroupGroupVersionKind, ComponentGroupModel } from '~/models';
+import { ComponentGroupGVK, ComponentGroupModel } from '~/models';
 import { createK8sWatchResourceMock } from '~/unit-test-utils';
 import { useComponentGroup, useComponentGroups } from '../useComponentGroups';
 
@@ -68,7 +68,7 @@ describe('useComponentGroups', () => {
 
     expect(useK8sWatchResourceMock).toHaveBeenCalledWith(
       {
-        groupVersionKind: ComponentGroupGroupVersionKind,
+        groupVersionKind: ComponentGroupGVK,
         namespace: 'test-ns',
         isList: true,
         watch: true,
@@ -130,7 +130,7 @@ describe('useComponentGroup', () => {
 
     expect(useK8sWatchResourceMock).toHaveBeenCalledWith(
       {
-        groupVersionKind: ComponentGroupGroupVersionKind,
+        groupVersionKind: ComponentGroupGVK,
         namespace: 'test-ns',
         name: 'frontend-stack',
         watch: true,

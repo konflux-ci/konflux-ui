@@ -1,5 +1,5 @@
-import { getLatestPromotedBuild } from '~/components/ComponentGroups/ComponentGroupsListView/component-groups-table-config';
 import { ComponentState } from '~/types';
+import { getLatestPromotedBuild } from '~/utils/component-group-utils';
 
 const build = (overrides: Partial<ComponentState>): ComponentState => ({
   name: 'component',
@@ -45,5 +45,49 @@ describe('getLatestPromotedBuild', () => {
     });
 
     expect(getLatestPromotedBuild([untimed, timed])).toEqual(timed);
+  });
+
+  it('should return the latest build for the requested component', () => {
+    const older = build({
+      name: 'component',
+      version: 'v1',
+      lastPromotedBuildTime: '2026-08-10T00:00:00Z',
+    });
+    const newer = build({
+      name: 'component',
+      version: 'v2',
+      lastPromotedBuildTime: '2026-08-20T00:00:00Z',
+    });
+    const other = build({
+      name: 'other',
+      lastPromotedBuildTime: '2026-08-30T00:00:00Z',
+    });
+
+    expect(getLatestPromotedBuild([older, newer, other], 'component')).toEqual(newer);
+  });
+
+  it('should return the build for the requested version', () => {
+    const v1 = build({
+      name: 'component',
+      version: 'v1',
+      lastPromotedBuildTime: '2026-08-10T00:00:00Z',
+    });
+    const v2 = build({
+      name: 'component',
+      version: 'v2',
+      lastPromotedBuildTime: '2026-08-20T00:00:00Z',
+    });
+
+    expect(getLatestPromotedBuild([v1, v2], 'component', 'v1')).toEqual(v1);
+    expect(getLatestPromotedBuild([v1, v2], 'component', 'v3')).toBeUndefined();
+  });
+
+  it('should return an unversioned build when a version is requested', () => {
+    const onlyVersion = build({
+      name: 'component',
+      lastPromotedBuildTime: '2026-08-10T00:00:00Z',
+    });
+
+    expect(getLatestPromotedBuild([onlyVersion], 'component', 'v1')).toEqual(onlyVersion);
   });
 });

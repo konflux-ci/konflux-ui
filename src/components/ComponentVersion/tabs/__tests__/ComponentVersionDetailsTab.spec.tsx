@@ -1,10 +1,10 @@
 import { useParams } from 'react-router-dom';
 import { screen } from '@testing-library/react';
+import ComponentVersionDetailsTab from '~/components/ComponentVersion/tabs/ComponentVersionDetailsTab';
 import { useComponent } from '~/hooks/useComponents';
 import { ComponentKind, ComponentSpecs } from '~/types';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { renderWithQueryClientAndRouter } from '~/unit-test-utils/rendering-utils';
-import ComponentVersionDetailsTab from '../ComponentVersionDetailsTab';
 
 jest.mock('react-router-dom', () => ({
   ...jest.requireActual('react-router-dom'),
@@ -24,16 +24,10 @@ jest.mock('~/components/GitLink/GitRepoLink', () => {
   );
 });
 
-jest.mock('~/components/LatestBuild/LatestBuildSection', () => {
-  return ({
-    component,
-    version,
-  }: {
-    component: { metadata: { name: string } };
-    version?: string;
-  }) => (
+jest.mock('~/components/LatestBuild/LatestPushBuildSection', () => {
+  return ({ componentName, version }: { componentName: string; version?: string }) => (
     <div data-test="latest-build-section">
-      LatestBuild: {component.metadata.name} / {version}
+      LatestBuild: {componentName} / {version}
     </div>
   );
 });

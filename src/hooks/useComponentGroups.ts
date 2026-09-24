@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useK8sWatchResource } from '~/k8s';
-import { ComponentGroupGroupVersionKind, ComponentGroupModel } from '~/models';
+import { ComponentGroupGVK, ComponentGroupModel } from '~/models';
 import { ComponentGroupKind } from '~/types';
 import { filterDeletedResources } from '~/utils/resource-utils';
 
@@ -12,7 +12,7 @@ export const useComponentGroup = (
   const { data, isLoading, error } = useK8sWatchResource<ComponentGroupKind>(
     componentGroupName
       ? {
-          groupVersionKind: ComponentGroupGroupVersionKind,
+          groupVersionKind: ComponentGroupGVK,
           namespace,
           name: componentGroupName,
           watch,
@@ -36,7 +36,7 @@ export const useComponentGroups = (
 ): [ComponentGroupKind[], boolean, unknown] => {
   const { data, isLoading, error } = useK8sWatchResource<ComponentGroupKind[]>(
     {
-      groupVersionKind: ComponentGroupGroupVersionKind,
+      groupVersionKind: ComponentGroupGVK,
       namespace,
       isList: true,
       watch,
@@ -50,11 +50,7 @@ export const useComponentGroups = (
   );
 
   return useMemo(
-    () => [
-      !isLoading && !error ? (data ?? []) : [],
-      !isLoading,
-      error,
-    ],
+    () => [!isLoading && !error ? (data ?? []) : [], !isLoading, error],
     [data, isLoading, error],
   );
 };
