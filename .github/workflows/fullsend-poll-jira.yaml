@@ -69,9 +69,6 @@ jobs:
     #
     # Resolves fullsend-ai/fullsend#6347
     #
-    # Security note: reusable-dispatch.yml is pinned to @main (not SHA) to receive
-    # updates automatically. This follows the pattern established in fullsend.yaml.
-    # The fullsend-ai/fullsend repo has branch protection on main.
     name: Harness
     needs: poll
     permissions:
@@ -81,7 +78,7 @@ jobs:
       issues: write
       packages: read
       pull-requests: write
-    uses: fullsend-ai/fullsend/.github/workflows/reusable-dispatch.yml@main
+    uses: fullsend-ai/fullsend/.github/workflows/reusable-dispatch.yml@v0.43.0
     with:
       matrix: ${{ needs.poll.outputs.matrix }}
       mint_url: ${{ vars.FULLSEND_MINT_URL }}
