@@ -4,6 +4,7 @@ import {
   ComponentGroupDetailsViewLayout,
   componentGroupDetailsViewLoader,
   ComponentGroupReleasesTab,
+  ComponentGroupIntegrationTestsTab,
 } from '~/components/ComponentGroups/ComponentGroupDetails';
 import { ensureFeatureFlagOnLoader } from '~/feature-flags/utils';
 
@@ -26,7 +27,11 @@ const componentGroupRoutes = [
     errorElement: <RouteErrorBoundry />,
     element: <ComponentGroupDetailsViewLayout />,
     children: [
-      { index: true, element: <ComponentGroupReleasesTab /> },
+      { index: true, element: <ComponentGroupIntegrationTestsTab /> },
+      {
+        path: 'integrationtests',
+        element: <ComponentGroupIntegrationTestsTab />,
+      },
       {
         path: 'releases',
         element: <ComponentGroupReleasesTab />,
