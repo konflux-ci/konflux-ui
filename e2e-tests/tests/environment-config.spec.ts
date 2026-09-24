@@ -7,6 +7,57 @@ import { UserAccessPage } from '../support/pages/UserAccessPage';
 import { Common } from '../utils/Common';
 import { Features } from '../utils/Features';
 
+// Matches header/query-param names that may carry credentials so captured
+// network logs never leak them into failure artifacts (files written via
+// cy.writeFile, which may be uploaded as CI artifacts).
+const SENSITIVE_KEY_PATTERN =
+  /(authoriz|cookie|token|secret|password|pwd|session|credential|api[-_]?key)/i;
+
+// Headers whose *value* is itself a URL that may embed credentials (e.g.
+// basic-auth userinfo or a sensitive query param), even though the header
+// name itself doesn't look sensitive.
+const URL_VALUED_HEADER_PATTERN = /^(referer|referrer|location)$/i;
+
+const sanitizeUrl = (url: string): string => {
+  try {
+    const parsed = new URL(url);
+    // Strip any basic-auth credentials embedded in the URL (e.g.
+    // https://user:pass@host/...).
+    if (parsed.username || parsed.password) {
+      parsed.username = '';
+      parsed.password = '';
+    }
+    parsed.searchParams.forEach((_value, key) => {
+      if (SENSITIVE_KEY_PATTERN.test(key)) {
+        parsed.searchParams.set(key, '[REDACTED]');
+      }
+    });
+    return parsed.toString();
+  } catch {
+    // Fallback for URLs the WHATWG parser rejects: drop the query string
+    // entirely rather than risk leaking sensitive params.
+    const [path] = url.split('?');
+    return url.includes('?') ? `${path}?[REDACTED]` : path;
+  }
+};
+
+const sanitizeHeaderValue = (key: string, value: string | string[]): string | string[] => {
+  if (SENSITIVE_KEY_PATTERN.test(key)) {
+    return '[REDACTED]';
+  }
+  if (URL_VALUED_HEADER_PATTERN.test(key)) {
+    return Array.isArray(value) ? value.map(sanitizeUrl) : sanitizeUrl(value);
+  }
+  return value;
+};
+
+const sanitizeHeaders = (
+  headers: Record<string, string | string[]>,
+): Record<string, string | string[]> =>
+  Object.fromEntries(
+    Object.entries(headers).map(([key, value]) => [key, sanitizeHeaderValue(key, value)]),
+  );
+
 describe('Basic Happy Path', () => {
   // Track if any test has failed - used to skip deletion on failure
   let hasTestFailed = false;
@@ -60,12 +111,12 @@ describe('Basic Happy Path', () => {
       req.continue((res) => {
         networkLogs.push({
           method: req.method,
-          url: req.url,
-          headers: req.headers,
+          url: sanitizeUrl(req.url),
+          headers: sanitizeHeaders(req.headers),
           timestamp,
           status: res.statusCode,
           statusText: res.statusMessage,
-          responseHeaders: res.headers,
+          responseHeaders: sanitizeHeaders(res.headers),
         });
       });
     });
