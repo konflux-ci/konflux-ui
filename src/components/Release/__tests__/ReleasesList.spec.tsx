@@ -1,10 +1,8 @@
 import * as React from 'react';
 import { screen, waitFor } from '@testing-library/react';
 import { NuqsTestingAdapter } from 'nuqs/adapters/testing';
-import { ReleasesPage } from '~/components/Release/ReleasesPage';
-import { useReleases } from '~/hooks/useReleases';
+import { ReleasesList, ReleasesListProps } from '~/components/Release/ReleasesList';
 import { ReleaseKind } from '~/types';
-import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { renderWithQueryClient } from '~/unit-test-utils/mock-react-query';
 import { setupVirtualizerMock } from '~/unit-test-utils/mock-virtualizer';
 
@@ -28,19 +26,6 @@ jest.mock('react-router-dom', () => ({
     </a>
   ),
 }));
-
-jest.mock('~/hooks/useReleases', () => ({
-  useReleases: jest.fn(),
-}));
-
-jest.mock('~/feature-flags/hooks', () => ({
-  ...jest.requireActual('~/feature-flags/hooks'),
-  IfFeature: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-}));
-
-const useReleasesMock = useReleases as jest.Mock;
-
-mockUseNamespaceHook('test-ns');
 
 const mockReleases: ReleaseKind[] = [
   {
@@ -87,40 +72,28 @@ const mockReleases: ReleaseKind[] = [
   },
 ];
 
-const mockBaseResult = {
-  data: mockReleases,
-  getSource: jest.fn(),
-  clusterLoading: false,
-  archiveLoading: false,
+const defaultProps: ReleasesListProps = {
+  releases: mockReleases,
   isLoading: false,
   clusterError: undefined,
   archiveError: undefined,
-  hasError: false,
   hasNextPage: false,
   isFetchingNextPage: false,
   fetchNextPage: jest.fn(),
-  clusterData: mockReleases,
-  archiveData: undefined,
 };
-
-const selectorMatchLabels = { 'appstudio.openshift.io/component-group': 'my-group' };
 
 const TestedComponent = ({
   searchParams,
-  labels = selectorMatchLabels,
-}: {
-  searchParams?: string;
-  labels?: { [key: string]: string } | undefined;
-}) => (
+  ...props
+}: Partial<ReleasesListProps> & { searchParams?: string }) => (
   <NuqsTestingAdapter searchParams={searchParams}>
-    <ReleasesPage selectorMatchLabels={labels} />
+    <ReleasesList {...defaultProps} {...props} />
   </NuqsTestingAdapter>
 );
 
-describe('ReleasesPage', () => {
+describe('ReleasesList', () => {
   beforeEach(() => {
     setupVirtualizerMock();
-    useReleasesMock.mockReturnValue(mockBaseResult);
     window.history.replaceState({}, '', '/');
   });
 
@@ -128,26 +101,8 @@ describe('ReleasesPage', () => {
     jest.clearAllMocks();
   });
 
-  it('should call useReleases with the current namespace and selector match labels', () => {
-    renderWithQueryClient(<TestedComponent />);
-
-    expect(useReleasesMock).toHaveBeenCalledWith('test-ns', selectorMatchLabels);
-  });
-
-  it('should forward undefined match labels to useReleases', () => {
-    renderWithQueryClient(
-      <NuqsTestingAdapter>
-        <ReleasesPage selectorMatchLabels={undefined} />
-      </NuqsTestingAdapter>,
-    );
-
-    expect(useReleasesMock).toHaveBeenCalledWith('test-ns', undefined);
-  });
-
   it('should show a loading skeleton while releases are loading', () => {
-    useReleasesMock.mockReturnValue({ ...mockBaseResult, data: [], isLoading: true });
-
-    renderWithQueryClient(<TestedComponent />);
+    renderWithQueryClient(<TestedComponent releases={[]} isLoading />);
 
     expect(screen.getByTestId('table-container')).toBeInTheDocument();
     expect(screen.getByTestId('table-skeleton')).toBeInTheDocument();
@@ -155,33 +110,21 @@ describe('ReleasesPage', () => {
   });
 
   it('should show an error state when the cluster request fails', () => {
-    useReleasesMock.mockReturnValue({
-      ...mockBaseResult,
-      data: [],
-      clusterError: { code: 500, message: 'Server error' },
-    });
-
-    renderWithQueryClient(<TestedComponent />);
+    renderWithQueryClient(
+      <TestedComponent releases={[]} clusterError={{ code: 500, message: 'Server error' }} />,
+    );
 
     expect(screen.getByText('Unable to load releases')).toBeInTheDocument();
   });
 
   it('should show an error state when the archive request fails', () => {
-    useReleasesMock.mockReturnValue({
-      ...mockBaseResult,
-      data: [],
-      archiveError: { code: 403 },
-    });
-
-    renderWithQueryClient(<TestedComponent />);
+    renderWithQueryClient(<TestedComponent releases={[]} archiveError={{ code: 403 }} />);
 
     expect(screen.getByText('Unable to load releases')).toBeInTheDocument();
   });
 
   it('should show the empty state when there are no releases', () => {
-    useReleasesMock.mockReturnValue({ ...mockBaseResult, data: [] });
-
-    renderWithQueryClient(<TestedComponent />);
+    renderWithQueryClient(<TestedComponent releases={[]} />);
 
     expect(screen.getByText('Learn more about setting up release plans')).toBeInTheDocument();
     expect(screen.queryByTestId('table-v2')).not.toBeInTheDocument();
@@ -194,7 +137,6 @@ describe('ReleasesPage', () => {
       expect(screen.getByTestId('table-v2')).toBeInTheDocument();
     });
 
-    expect(screen.getByRole('heading', { level: 3, name: /Releases/i })).toBeInTheDocument();
     expect(screen.getByTestId('filter-toolbar')).toBeInTheDocument();
 
     expect(screen.getByText('release-one')).toBeInTheDocument();

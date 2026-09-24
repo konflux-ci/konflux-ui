@@ -47,7 +47,6 @@ export const RELEASES_LIST_COLUMNS: ColumnDefinition<ReleaseKind>[] = [
           )
         : '-',
   },
-
   {
     id: 'status',
     header: 'Status',
