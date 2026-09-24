@@ -2,7 +2,7 @@ import * as React from 'react';
 import { act, fireEvent, screen } from '@testing-library/react';
 import { NuqsTestingAdapter } from 'nuqs/adapters/testing';
 import { ComponentGroupIntegrationTestsTab } from '~/components/ComponentGroups/ComponentGroupDetails/tabs/ComponentGroupIntegrationTestsTab/ComponentGroupIntegrationTestsTab';
-import { useIntegrationTestScenariosByComponentGroup } from '~/hooks/useIntegrationTestScenariosByComponentGroup';
+import { useIntegrationTestScenariosByComponentGroup } from '~/hooks/useIntegrationTestScenarios';
 import { IntegrationTestScenarioKind, ResolverType } from '~/types/coreBuildService';
 import {
   mockUseNamespaceHook,
@@ -24,7 +24,7 @@ jest.mock('react-router-dom', () => ({
   useParams: () => ({ groupName: 'test-group' }),
 }));
 
-jest.mock('~/hooks/useIntegrationTestScenariosByComponentGroup', () => ({
+jest.mock('~/hooks/useIntegrationTestScenarios', () => ({
   useIntegrationTestScenariosByComponentGroup: jest.fn(),
 }));
 
@@ -54,7 +54,6 @@ const createMockScenario = (
         : undefined),
     },
     spec: {
-      application: 'test-app',
       componentGroup: 'test-group',
       ...(options.url !== undefined || options.revision !== undefined
         ? {
@@ -198,6 +197,16 @@ describe('ComponentGroupIntegrationTestsTab', () => {
 
     expect(screen.getByText('group-test-1')).toBeInTheDocument();
     expect(screen.queryByText('group-test-2')).not.toBeInTheDocument();
+  });
+
+  it('should link each row to the group integration test details page', () => {
+    renderWithQueryClient(<TestedComponent />);
+
+    const rowLink = screen.getByText('group-test-1').closest('a');
+    expect(rowLink).toHaveAttribute(
+      'href',
+      '/ns/test-ns/groups/test-group/integrationtests/group-test-1',
+    );
   });
 
   it('should not render row actions when actions are hidden', () => {

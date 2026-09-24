@@ -1,59 +1,84 @@
 import { fireEvent, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { IntegrationTestScenarioModel } from '../../../../../models';
-import {
-  createK8sWatchResourceMock,
-  createUseParamsMock,
-  routerRenderer,
-} from '../../../../../utils/test-utils';
-import { useModalLauncher } from '../../../../modal/ModalProvider';
 import {
   MockIntegrationTestsWithBundles,
   MockIntegrationTestsWithGit,
   MockIntegrationTestsWithParams,
-} from '../../../IntegrationTestsListView/__data__/mock-integration-tests';
+} from '~/components/IntegrationTests/IntegrationTestsListView/__data__/mock-integration-tests';
+import { useModalLauncher } from '~/components/modal/ModalProvider';
+import { useIntegrationTestScenarioForContext } from '~/hooks/useIntegrationTestScenarios';
+import { createUseParamsMock, mockUseNamespaceHook, routerRenderer } from '~/unit-test-utils';
 import IntegrationTestOverviewTab from '../IntegrationTestOverviewTab';
 
-jest.mock('../../../../modal/ModalProvider', () => ({
+jest.mock('~/hooks/useIntegrationTestScenarios', () => ({
+  useIntegrationTestScenarioForContext: jest.fn(),
+}));
+
+jest.mock('~/components/modal/ModalProvider', () => ({
   useModalLauncher: jest.fn(),
 }));
 
-const watchResourceMock = createK8sWatchResourceMock();
-
+const useIntegrationTestScenarioForContextMock = useIntegrationTestScenarioForContext as jest.Mock;
+const useModalLauncherMock = useModalLauncher as jest.Mock;
 const useParamsMock = createUseParamsMock();
+mockUseNamespaceHook('test-ns');
 
-const getMockedResources = (mocks) => (params, model) => {
-  if (model.kind === IntegrationTestScenarioModel.kind) {
-    return {
-      data: mocks.find((t) => !params.name || t.metadata.name === params.name),
-      isLoading: false,
-    };
-  }
-  return { data: [], isLoading: false };
-};
+const renderTab = () => routerRenderer(<IntegrationTestOverviewTab />);
 
 describe('IntegrationTestOverviewTab', () => {
-  it('should show error state when integration test is not available', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    useModalLauncherMock.mockReturnValue(jest.fn());
     useParamsMock.mockReturnValue({
-      integrationTestName: 'nonexistent-test',
       applicationName: 'test-app',
+      integrationTestName: 'test-app-test-1',
     });
-    watchResourceMock.mockReturnValue({
-      data: undefined,
-      isLoading: false,
-      error: undefined,
+    useIntegrationTestScenarioForContextMock.mockReturnValue([
+      MockIntegrationTestsWithGit[0],
+      true,
+      undefined,
+    ]);
+  });
+
+  it('should fetch the integration test for the application from the route', () => {
+    renderTab();
+    expect(useIntegrationTestScenarioForContextMock).toHaveBeenCalledWith(
+      'test-ns',
+      'test-app-test-1',
+      { applicationName: 'test-app', groupName: undefined },
+    );
+  });
+
+  it('should fetch the integration test for the group from the route', () => {
+    useParamsMock.mockReturnValue({
+      groupName: 'test-group',
+      integrationTestName: 'group-test-1',
     });
-    routerRenderer(<IntegrationTestOverviewTab />);
+    useIntegrationTestScenarioForContextMock.mockReturnValue([
+      MockIntegrationTestsWithGit[0],
+      true,
+      undefined,
+    ]);
+
+    renderTab();
+    expect(useIntegrationTestScenarioForContextMock).toHaveBeenCalledWith(
+      'test-ns',
+      'group-test-1',
+      {
+        applicationName: undefined,
+        groupName: 'test-group',
+      },
+    );
+  });
+
+  it('should show error state when integration test fails to load', () => {
+    useIntegrationTestScenarioForContextMock.mockReturnValue([undefined, true, { code: 404 }]);
+    renderTab();
     screen.getByText('404: Page not found');
   });
 
   it('should render correct details', () => {
-    useParamsMock.mockReturnValue({
-      integrationTestName: 'test-app-test-1',
-      applicationName: 'test-app',
-    });
-    watchResourceMock.mockImplementation(getMockedResources(MockIntegrationTestsWithGit));
-    routerRenderer(<IntegrationTestOverviewTab />);
+    renderTab();
     screen.getByText('test-app-test-1'); // name
     screen.getByText('test-namespace'); // namespace
     screen.getByText('main'); // revision
@@ -62,12 +87,7 @@ describe('IntegrationTestOverviewTab', () => {
   });
 
   it('should render correct param fields', () => {
-    useParamsMock.mockReturnValue({
-      integrationTestName: 'test-app-test-1',
-      applicationName: 'test-app',
-    });
-    watchResourceMock.mockImplementation(getMockedResources(MockIntegrationTestsWithGit));
-    routerRenderer(<IntegrationTestOverviewTab />);
+    renderTab();
     screen.getByText('test-app-test-1'); // name
     screen.getByText('test-namespace'); // namespace
     screen.getByText('Git Repository URL'); // url
@@ -78,12 +98,12 @@ describe('IntegrationTestOverviewTab', () => {
   });
 
   it('should render correct param values', () => {
-    useParamsMock.mockReturnValue({
-      integrationTestName: 'test-app-test-2',
-      applicationName: 'test-app',
-    });
-    watchResourceMock.mockImplementation(getMockedResources(MockIntegrationTestsWithGit));
-    routerRenderer(<IntegrationTestOverviewTab />);
+    useIntegrationTestScenarioForContextMock.mockReturnValue([
+      MockIntegrationTestsWithGit[1],
+      true,
+      undefined,
+    ]);
+    renderTab();
     screen.getByText('test-app-test-2'); // name
     screen.getByText('test-namespace'); // namespace
     screen.getByText('test-url2'); // url
@@ -100,41 +120,39 @@ describe('IntegrationTestOverviewTab', () => {
   });
 
   it('should not render param if value is not given', () => {
-    useParamsMock.mockReturnValue({
-      integrationTestName: 'test-app-test-4',
-      applicationName: 'test-app',
-    });
-    watchResourceMock.mockImplementation(getMockedResources(MockIntegrationTestsWithGit));
-    expect(screen.queryByText('revision')).not.toBeInTheDocument();
+    useIntegrationTestScenarioForContextMock.mockReturnValue([
+      MockIntegrationTestsWithGit[3],
+      true,
+      undefined,
+    ]);
+    renderTab();
+    // revision param has an empty value so its row is skipped
+    expect(screen.queryByText('test-path2')).not.toBeInTheDocument();
+    screen.getByText('test-app-test-4');
   });
 
   it('should use the git url from the spec param', () => {
-    useParamsMock.mockReturnValue({
-      integrationTestName: 'test-app-test-1',
-      applicationName: 'test-app',
-    });
-    watchResourceMock.mockImplementation(getMockedResources(MockIntegrationTestsWithGit));
-    routerRenderer(<IntegrationTestOverviewTab />);
+    renderTab();
     expect(screen.getAllByRole('link')[0].getAttribute('href')).toBe('https://test-url');
   });
 
   it('should append https to the git url if it is not present in the spec', () => {
-    useParamsMock.mockReturnValue({
-      integrationTestName: 'test-app-test-2',
-      applicationName: 'test-app',
-    });
-    watchResourceMock.mockImplementation(getMockedResources(MockIntegrationTestsWithGit));
-    routerRenderer(<IntegrationTestOverviewTab />);
+    useIntegrationTestScenarioForContextMock.mockReturnValue([
+      MockIntegrationTestsWithGit[1],
+      true,
+      undefined,
+    ]);
+    renderTab();
     expect(screen.getAllByRole('link')[0].getAttribute('href')).toBe('https://test-url2');
   });
 
   it('should render correct param values for bundle resolvers', () => {
-    useParamsMock.mockReturnValue({
-      integrationTestName: 'test-app-test-1',
-      applicationName: 'test-app',
-    });
-    watchResourceMock.mockImplementation(getMockedResources(MockIntegrationTestsWithBundles));
-    routerRenderer(<IntegrationTestOverviewTab />);
+    useIntegrationTestScenarioForContextMock.mockReturnValue([
+      MockIntegrationTestsWithBundles[0],
+      true,
+      undefined,
+    ]);
+    renderTab();
     screen.getByText('test-app-test-1'); // name
     screen.getByText('test-namespace'); // namespace
     screen.getByText('Optional'); // optional for release
@@ -142,40 +160,74 @@ describe('IntegrationTestOverviewTab', () => {
   });
 
   it('should display multiple parameters', () => {
-    useParamsMock.mockReturnValue({
-      integrationTestName: 'example-git',
-      applicationName: 'example-app',
-    });
-    watchResourceMock.mockImplementation(getMockedResources(MockIntegrationTestsWithParams));
-    routerRenderer(<IntegrationTestOverviewTab />);
+    useIntegrationTestScenarioForContextMock.mockReturnValue([
+      MockIntegrationTestsWithParams[0],
+      true,
+      undefined,
+    ]);
+    renderTab();
     screen.getByText('example-git'); // name
     screen.getByText('3 parameters'); // Params
   });
 
   it('should not pluralize when only one param', () => {
-    useParamsMock.mockReturnValue({
-      integrationTestName: 'test-app-test-3',
-      applicationName: 'test-app',
-    });
-    watchResourceMock.mockImplementation(getMockedResources(MockIntegrationTestsWithParams));
-    routerRenderer(<IntegrationTestOverviewTab />);
+    useIntegrationTestScenarioForContextMock.mockReturnValue([
+      MockIntegrationTestsWithParams[2],
+      true,
+      undefined,
+    ]);
+    renderTab();
     screen.getByText('test-app-test-3'); // name
     screen.getByText('1 parameter'); // Params
   });
 
   it('should show Modal when edit param is clicked', () => {
     const showModal = jest.fn();
-    (useModalLauncher as jest.Mock).mockImplementation(() => {
-      return showModal;
-    });
-    useParamsMock.mockReturnValue({
-      integrationTestName: 'example-git',
-      applicationName: 'example-app',
-    });
-    watchResourceMock.mockImplementation(getMockedResources(MockIntegrationTestsWithParams));
-    routerRenderer(<IntegrationTestOverviewTab />);
+    useModalLauncherMock.mockReturnValue(showModal);
+    useIntegrationTestScenarioForContextMock.mockReturnValue([
+      MockIntegrationTestsWithParams[0],
+      true,
+      undefined,
+    ]);
+    renderTab();
     const editParambtn = screen.getByTestId('edit-param-button'); // Params
     fireEvent.click(editParambtn);
     expect(showModal).toHaveBeenCalled();
+  });
+
+  it('should render the application context link', () => {
+    renderTab();
+    screen.getByText('test-app-test-1');
+    screen.getByText('Application');
+    expect(screen.getByRole('link', { name: 'test-app' })).toHaveAttribute(
+      'href',
+      '/ns/test-ns/applications/test-app',
+    );
+  });
+
+  it('should render the component group context link', () => {
+    useParamsMock.mockReturnValue({
+      groupName: 'test-group',
+      integrationTestName: 'group-test-1',
+    });
+    useIntegrationTestScenarioForContextMock.mockReturnValue([
+      MockIntegrationTestsWithGit[0],
+      true,
+      undefined,
+    ]);
+
+    renderTab();
+    screen.getByText('Component Group');
+    expect(screen.getByRole('link', { name: 'test-group' })).toHaveAttribute(
+      'href',
+      '/ns/test-ns/groups/test-group',
+    );
+  });
+
+  it('should render placeholders when metadata is missing', () => {
+    useIntegrationTestScenarioForContextMock.mockReturnValue([undefined, true, undefined]);
+    renderTab();
+    // Name, namespace and created-at fall back to '-'
+    expect(screen.getAllByText('-').length).toBeGreaterThan(0);
   });
 });

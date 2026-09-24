@@ -168,3 +168,9 @@ export const PIPELINE_RUNS_PAGE_PATH = WORKSPACE_PATH.extend('prns');
 export const GROUPS_PATH = WORKSPACE_PATH.extend('groups');
 
 export const GROUP_DETAILS_PATH = GROUPS_PATH.extend(`:${RouterParams.groupName}`);
+
+export const GROUP_INTEGRATION_TEST_LIST_PATH = GROUP_DETAILS_PATH.extend(`integrationtests`);
+
+export const GROUP_INTEGRATION_TEST_DETAILS_PATH = GROUP_INTEGRATION_TEST_LIST_PATH.extend(
+  `:${RouterParams.integrationTestName}`,
+);

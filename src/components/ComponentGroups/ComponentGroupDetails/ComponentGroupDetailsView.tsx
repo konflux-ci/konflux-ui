@@ -8,12 +8,15 @@ import { GROUP_DETAILS_PATH } from '~/routes/paths';
 import { RouterParams } from '~/routes/utils';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
+import { useComponentGroupBreadcrumbs } from '../breadcrumb-utils';
 
 const ComponentGroupDetailsView: React.FC = () => {
   const { groupName } = useParams<RouterParams>();
   const namespace = useNamespace();
 
   const [componentGroup, loaded, componentError] = useComponentGroup(namespace, groupName);
+
+  const componentGroupBreadcrumbs = useComponentGroupBreadcrumbs(groupName);
 
   if (!loaded) {
     return (
@@ -39,6 +42,7 @@ const ComponentGroupDetailsView: React.FC = () => {
             <FeatureFlagIndicator flags={['component-model']} />
           </Content>
         }
+        breadcrumbs={componentGroupBreadcrumbs}
         baseURL={GROUP_DETAILS_PATH.createPath({ workspaceName: namespace, groupName })}
         tabs={[
           {
