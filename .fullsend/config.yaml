@@ -3,19 +3,24 @@
 #
 # This file configures fullsend for per-repo installation mode.
 # See https://fullsend.sh/docs/guides/infrastructure/layered-config-reference
-version: "1"
+version: '1'
 roles:
-    - fullsend
-    - triage
-    - coder
-    - fix
-    - review
-    - prioritize
+  - fullsend
+  - triage
+  - coder
+  - fix
+  - review
+  - prioritize
+agents:
+  - name: triage
+    source: harness/triage.yaml
+  - name: code
+    source: harness/code.yaml
 allowed_remote_resources:
-    - https://raw.githubusercontent.com/fullsend-ai/fullsend/
-    - https://raw.githubusercontent.com/fullsend-ai/agents/
+  - https://raw.githubusercontent.com/fullsend-ai/fullsend/
+  - https://raw.githubusercontent.com/fullsend-ai/agents/
 create_issues:
-    allow_targets:
-        repos:
-            - konflux-ci/konflux-ui
-            - fullsend-ai/fullsend
+  allow_targets:
+    repos:
+      - konflux-ci/konflux-ui
+      - fullsend-ai/fullsend
