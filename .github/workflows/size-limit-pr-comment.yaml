@@ -17,6 +17,8 @@ jobs:
       actions: read
       pull-requests: write
       issues: write
+    env:
+      SIZE_LIMIT_ARTIFACT_DIR: ${{ runner.temp }}/size-limit-results
     steps:
       - name: Check if size-limit job failed
         id: check
@@ -35,21 +37,22 @@ jobs:
               sizeLimitJob?.conclusion === 'failure' ? 'true' : 'false',
             );
 
-      - name: Checkout comment formatter
-        if: steps.check.outputs.should_comment == 'true'
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          sparse-checkout: .github/scripts/format-size-limit-comment.mjs
-
-      - name: Download size-limit log
+      - name: Download size-limit results
         id: download
         if: steps.check.outputs.should_comment == 'true'
         continue-on-error: true
         uses: actions/download-artifact@cc203a76641edee3691beb1ea2ce8f566e2072ec # v4.1.9
         with:
           name: size-limit-log
+          path: ${{ runner.temp }}/size-limit-results
           run-id: ${{ github.event.workflow_run.id }}
           github-token: ${{ github.token }}
+
+      - name: Checkout comment formatter
+        if: steps.check.outputs.should_comment == 'true' && steps.download.outcome == 'success'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: .github/scripts/format-size-limit-comment.mjs
 
       - name: Resolve PR number and format comment
         id: comment
@@ -58,6 +61,7 @@ jobs:
         with:
           script: |
             const fs = require('fs');
+            const path = require('path');
             const { execFileSync } = require('node:child_process');
             const run = context.payload.workflow_run;
 
@@ -72,17 +76,27 @@ jobs:
               return;
             }
 
-            const body = execFileSync('node', [
+            const artifactDir = process.env.SIZE_LIMIT_ARTIFACT_DIR;
+            const resultsPath = path.join(artifactDir, 'size-limit.json');
+            if (!fs.existsSync(resultsPath)) {
+              core.setFailed(`Missing size-limit.json in artifact (expected at ${resultsPath})`);
+              return;
+            }
+
+            const formatterPath = path.join(
+              process.env.GITHUB_WORKSPACE,
               '.github/scripts/format-size-limit-comment.mjs',
-              'size-limit.json',
-            ], { encoding: 'utf8' });
-            fs.writeFileSync('comment-body.md', body);
+            );
+            const body = execFileSync('node', [formatterPath, resultsPath], { encoding: 'utf8' });
+            const commentPath = path.join(process.env.RUNNER_TEMP, 'comment-body.md');
+            fs.writeFileSync(commentPath, body);
             core.setOutput('pr_number', String(openPr.number));
+            core.setOutput('comment_path', commentPath);
 
       - name: Post or update PR comment
         if: steps.check.outputs.should_comment == 'true' && steps.download.outcome == 'success'
         uses: peter-evans/create-or-update-comment@71345be0265236311c031f5c7866368bd1eff043 # v4.0.0
         with:
           issue-number: ${{ steps.comment.outputs.pr_number }}
-          body-path: comment-body.md
+          body-path: ${{ steps.comment.outputs.comment_path }}
           comment-tag: size-limit-budget
