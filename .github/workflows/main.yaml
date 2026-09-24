@@ -80,7 +80,10 @@ jobs:
         id: size-limit
         run: |
           set -o pipefail
-          yarn size-limit --json > size-limit.json 2> size-limit.log
+          status=0
+          yarn size-limit 2>&1 | tee size-limit.log || status=$?
+          yarn size-limit --json > size-limit.json || status=$?
+          exit $status
 
       - name: Upload size-limit results
         if: failure() && steps.size-limit.outcome == 'failure'
