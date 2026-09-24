@@ -67,6 +67,7 @@ const failedSection =
     : '_No failed checks in size-limit JSON — see raw output below._';
 
 const body = [
+  '<!-- size-limit-budget -->',
   '### Bundle size limit exceeded',
   '',
   'The following gzip budget(s) in `.size-limit.json` were exceeded:',
