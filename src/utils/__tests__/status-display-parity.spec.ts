@@ -50,8 +50,12 @@ describe('PIPELINE_RUN_STATUS_REGISTRY — parity with pipelineRunStatus', () =>
   });
 
   it('matches pipelineRunStatus for ALL test fixtures', () => {
-    for (const plr of Object.values(testPipelineRuns)) {
-      if (!plr) continue;
+    const queuedDataStates = new Set([
+      DataState.PIPELINE_RUN_QUEUED_PAC,
+      DataState.PIPELINE_RUN_QUEUED_KUEUE,
+    ]);
+    for (const [key, plr] of Object.entries(testPipelineRuns)) {
+      if (!plr || queuedDataStates.has(key as DataState)) continue;
       const legacy = pipelineRunStatus(plr);
       const derived = registry.deriveStatus(plr);
       expect(derived).toBe(legacy);
@@ -252,6 +256,60 @@ describe('PIPELINE_RUN_STATUS_REGISTRY accessors', () => {
         expect(prevWeight).toBeLessThanOrEqual(currWeight);
       }
     });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Queued status derivation
+// ---------------------------------------------------------------------------
+
+describe('PIPELINE_RUN_STATUS_REGISTRY — Queued status', () => {
+  it('derives Queued for PLR with PAC queued label and PipelineRunPending spec.status', () => {
+    const plr = testPipelineRuns[DataState.PIPELINE_RUN_QUEUED_PAC];
+    expect(registry.deriveStatus(plr)).toBe(runStatus.Queued);
+  });
+
+  it('derives Queued for PLR with Kueue queue-name label and PipelineRunPending spec.status', () => {
+    const plr = testPipelineRuns[DataState.PIPELINE_RUN_QUEUED_KUEUE];
+    expect(registry.deriveStatus(plr)).toBe(runStatus.Queued);
+  });
+
+  it('derives Pending (not Queued) for PLR with PipelineRunPending but no queue label', () => {
+    const plr = testPipelineRuns[DataState.PIPELINE_RUN_PENDING_NO_QUEUE_LABEL];
+    expect(registry.deriveStatus(plr)).toBe(runStatus.Pending);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// getReason
+// ---------------------------------------------------------------------------
+
+describe('PIPELINE_RUN_STATUS_REGISTRY.getReason', () => {
+  it('returns the Succeeded condition message for Failed PLR', () => {
+    const plr = testPipelineRuns[DataState.FAILED];
+    const message = registry.getReason(plr);
+    expect(message).toBe('Error retrieving pipeline for pipelinerun');
+  });
+
+  it('returns the Succeeded condition message for Cancelled PLR', () => {
+    const plr = testPipelineRuns[DataState.PIPELINE_RUN_CANCELLED];
+    const message = registry.getReason(plr);
+    expect(message).toBe('PipelineRun "test-casevcgrn" was cancelled');
+  });
+
+  it('returns undefined for Running PLR (no reason fn)', () => {
+    const plr = testPipelineRuns[DataState.RUNNING];
+    expect(registry.getReason(plr)).toBeUndefined();
+  });
+
+  it('returns undefined for Succeeded PLR (no reason fn)', () => {
+    const plr = testPipelineRuns[DataState.SUCCEEDED];
+    expect(registry.getReason(plr)).toBeUndefined();
+  });
+
+  it('returns undefined for Queued PLR (no reason fn)', () => {
+    const plr = testPipelineRuns[DataState.PIPELINE_RUN_QUEUED_PAC];
+    expect(registry.getReason(plr)).toBeUndefined();
   });
 });
 

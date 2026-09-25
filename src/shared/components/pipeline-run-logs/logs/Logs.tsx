@@ -322,6 +322,7 @@ const Logs: React.FC<LogsProps> = ({
       onDownloadAll={onDownloadAll}
       onDownloadFullLogs={isArchiveSource ? handleDownloadFullLogs : undefined}
       onViewFullLogs={isArchiveSource ? handleViewFullLogs : undefined}
+      allowExpandAllSections={!!isArchiveSource}
       taskRun={taskRun}
       isLoading={isLoading || isFetchingLogs}
       errorMessage={error ? t('An error occurred while retrieving the requested logs.') : null}

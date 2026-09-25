@@ -46,6 +46,7 @@ export type StatusEntryConfig<TStatus extends string, TResource, TContext = void
   pfRunStatus?: RunStatus;
   color?: ColorEntry;
   tags?: string[];
+  reason?: (obj: TResource, context: TContext) => string | undefined;
 };
 
 export type StatusRegistryInput<TStatus extends string, TResource, TContext = void> = {
@@ -86,6 +87,16 @@ export function createStatusRegistry<TStatus extends string, TResource, TContext
 
     const byWeight = [...statuses].sort((a, b) => a.weight - b.weight);
 
+    const findEntry = (
+      obj: TResource,
+    ): { entry: StatusEntryConfig<TStatus, TResource, TContext>; ctx: TContext } => {
+      const ctx = createContext ? createContext(obj) : (undefined as TContext);
+      for (const entry of statuses) {
+        if (entry.match(obj, ctx)) return { entry, ctx };
+      }
+      return { entry: statuses[statuses.length - 1], ctx };
+    };
+
     const getEntryColor = (status: TStatus): ColorEntry => {
       const entry = entryRecord[status];
       return entry.color ?? CATEGORY_COLORS[entry.category];
@@ -93,11 +104,12 @@ export function createStatusRegistry<TStatus extends string, TResource, TContext
 
     const registry = {
       deriveStatus(obj: TResource): TStatus {
-        const ctx = createContext ? createContext(obj) : (undefined as TContext);
-        for (const entry of statuses) {
-          if (entry.match(obj, ctx)) return entry.status;
-        }
-        return statuses[statuses.length - 1].status;
+        return findEntry(obj).entry.status;
+      },
+
+      getReason(obj: TResource): string | undefined {
+        const { entry, ctx } = findEntry(obj);
+        return entry.reason?.(obj, ctx);
       },
 
       getEntry: (status: TStatus) => entryRecord[status],

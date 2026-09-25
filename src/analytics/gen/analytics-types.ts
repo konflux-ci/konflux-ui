@@ -197,6 +197,7 @@ export interface JourneyStep {
   hiddenMs?: number;
 }
 
+
 /**
  * Event names for Segment track() calls.
  * Values match the x-event-name field in the schema.

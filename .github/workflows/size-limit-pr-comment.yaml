@@ -1,0 +1,112 @@
+name: Size Limit PR Comment
+
+# Posts failure comments after CI ends (works for same-repo and fork PRs; uses workflow_run token).
+# Requires this file on main (workflow_run only uses workflows on the default branch).
+on:
+  workflow_run:
+    workflows: ['UI Lint, Unit Tests & Bundle Size']
+    types: [completed]
+
+jobs:
+  comment:
+    if: >-
+      github.event.workflow_run.conclusion == 'failure' &&
+      github.event.workflow_run.event == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      pull-requests: write
+      issues: write
+    env:
+      SIZE_LIMIT_ARTIFACT_DIR: ${{ runner.temp }}/size-limit-results
+    steps:
+      - name: Check if size-limit job failed
+        id: check
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const runId = context.payload.workflow_run.id;
+            const { data: { jobs } } = await github.rest.actions.listJobsForWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: runId,
+            });
+            const sizeLimitJob = jobs.find((job) => job.name === 'size-limit');
+            core.setOutput(
+              'should_comment',
+              sizeLimitJob?.conclusion === 'failure' ? 'true' : 'false',
+            );
+
+      - name: Download size-limit results
+        id: download
+        if: steps.check.outputs.should_comment == 'true'
+        continue-on-error: true
+        uses: actions/download-artifact@cc203a76641edee3691beb1ea2ce8f566e2072ec # v4.1.9
+        with:
+          name: size-limit-log
+          path: ${{ runner.temp }}/size-limit-results
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+
+      - name: Checkout comment formatter
+        if: steps.check.outputs.should_comment == 'true' && steps.download.outcome == 'success'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: .github/scripts/format-size-limit-comment.mjs
+
+      - name: Resolve PR number and format comment
+        id: comment
+        if: steps.check.outputs.should_comment == 'true' && steps.download.outcome == 'success'
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            const { execFileSync } = require('node:child_process');
+            const run = context.payload.workflow_run;
+
+            const { data: prs } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: run.head_sha,
+            });
+            const openPr = prs.find((pr) => pr.state === 'open');
+            if (!openPr?.number) {
+              core.setFailed('No open PR found for workflow run');
+              return;
+            }
+
+            const artifactDir = process.env.SIZE_LIMIT_ARTIFACT_DIR;
+            const resultsPath = path.join(artifactDir, 'size-limit.json');
+            if (!fs.existsSync(resultsPath)) {
+              core.setFailed(`Missing size-limit.json in artifact (expected at ${resultsPath})`);
+              return;
+            }
+
+            const formatterPath = path.join(
+              process.env.GITHUB_WORKSPACE,
+              '.github/scripts/format-size-limit-comment.mjs',
+            );
+            const body = execFileSync('node', [formatterPath, resultsPath], { encoding: 'utf8' });
+            const commentPath = path.join(process.env.RUNNER_TEMP, 'comment-body.md');
+            fs.writeFileSync(commentPath, body);
+            core.setOutput('pr_number', String(openPr.number));
+            core.setOutput('comment_path', commentPath);
+
+      - name: Find existing size-limit comment
+        if: steps.check.outputs.should_comment == 'true' && steps.download.outcome == 'success'
+        uses: peter-evans/find-comment@3eae4d37986fb5a8592848f6a574fdf654e61f9e # v3
+        id: find-comment
+        with:
+          issue-number: ${{ steps.comment.outputs.pr_number }}
+          comment-author: github-actions[bot]
+          body-includes: '<!-- size-limit-budget -->'
+
+      - name: Post or update PR comment
+        if: steps.check.outputs.should_comment == 'true' && steps.download.outcome == 'success'
+        uses: peter-evans/create-or-update-comment@71345be0265236311c031f5c7866368bd1eff043 # v4.0.0
+        with:
+          comment-id: ${{ steps.find-comment.outputs.comment-id }}
+          issue-number: ${{ steps.comment.outputs.pr_number }}
+          body-path: ${{ steps.comment.outputs.comment_path }}
+          edit-mode: replace
