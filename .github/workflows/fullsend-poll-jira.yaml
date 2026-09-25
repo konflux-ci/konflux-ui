@@ -22,6 +22,10 @@ jobs:
 
       - name: Install fullsend
         uses: fullsend-ai/fullsend/.github/actions/install-fullsend-cli@5e6f41157a2163af1df290d2e01db827b38a7d8f # main as of 2026-09-23
+        with:
+          mode: upstream
+          workflow_repository: fullsend-ai/fullsend
+          workflow_sha: 5e6f41157a2163af1df290d2e01db827b38a7d8f
 
       - name: Poll Jira
         env:
