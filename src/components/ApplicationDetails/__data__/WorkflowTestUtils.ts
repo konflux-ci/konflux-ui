@@ -56,7 +56,12 @@ export const getMockWorkflows = () => {
     ]);
     mockFns.useLatestPushBuildPipelinesMock.mockReturnValue([mockBuildPipelinesData, true]);
     mockFns.useReleasePlansMock.mockReturnValue([mockReleasePlansData, true]);
-    mockFns.useReleasesMock.mockReturnValue([mockReleasesData, true]);
+    mockFns.useReleasesMock.mockReturnValue({
+      data: mockReleasesData,
+      isLoading: false,
+      archiveError: undefined,
+      clusterError: undefined,
+    });
     mockFns.useLatestIntegrationTestPipelinesMock.mockReturnValue([mockTestPipelinesData, true]);
   };
   return { workflowMocks, applyWorkflowMocks };

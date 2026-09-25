@@ -3,6 +3,8 @@ import { ColumnDefinition } from '../shared/components/table/ColumnManagement';
 export enum ReleaseLabel {
   AUTOMATED = 'release.appstudio.openshift.io/automated',
   AUTHOR = 'release.appstudio.openshift.io/author',
+
+  COMPONENT_GROUP = 'appstudio.openshift.io/component-group',
 }
 
 export type ReleaseColumnKeys =
@@ -69,13 +71,7 @@ export const enum SortableHeaders {
 
 // Release Plan Column Configurations
 export type ReleasePlanColumnKeys =
-  | 'name'
-  | 'application'
-  | 'target'
-  | 'autoRelease'
-  | 'standingAttribution'
-  | 'status'
-  | 'rpa';
+  'name' | 'application' | 'target' | 'autoRelease' | 'standingAttribution' | 'status' | 'rpa';
 
 export const RELEASE_PLAN_COLUMNS_DEFINITIONS: readonly ColumnDefinition<ReleasePlanColumnKeys>[] =
   [
