@@ -1,0 +1,33 @@
+#!/bin/sh
+# Resolve the bundled Yarn Berry release at invocation time so container
+# files do not hardcode yarn-<version>.cjs (Renovate cannot update those paths).
+# KONFLUX_YARN_RELEASES_DIR must not be named YARN_*: Yarn Berry maps YARN_* onto yarnrc keys.
+set -eu
+
+yarn_dir="${KONFLUX_YARN_RELEASES_DIR:-}"
+if [ -z "${yarn_dir}" ]; then
+  echo "container-yarn: KONFLUX_YARN_RELEASES_DIR is not set" >&2
+  exit 1
+fi
+
+count=0
+yarn_bin=
+for f in "${yarn_dir}"/yarn-*.cjs; do
+  if [ ! -f "${f}" ]; then
+    continue
+  fi
+  count=$((count + 1))
+  if [ "${count}" -gt 1 ]; then
+    echo "container-yarn: expected exactly one Yarn release in ${yarn_dir}, found more than one:" >&2
+    ls -1 "${yarn_dir}"/yarn-*.cjs >&2
+    exit 1
+  fi
+  yarn_bin=${f}
+done
+
+if [ "${count}" -eq 0 ]; then
+  echo "container-yarn: no Yarn release found in ${yarn_dir} (expected yarn-*.cjs)" >&2
+  exit 1
+fi
+
+exec node "${yarn_bin}" "$@"
