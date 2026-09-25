@@ -86,12 +86,18 @@ export default defineConfig({
         },
       });
 
-      if (!isStudioMode) {
-        on('before:run', async (details) => {
+      on('before:run', async (details) => {
+        // Wipe stale network logs left over from a previous run so
+        // cypress/network-logs/ only ever contains data from the current run.
+        fs.emptyDirSync(`${config.projectRoot}/cypress/network-logs`);
+
+        if (!isStudioMode) {
           // cypress-mochawesome-reporter
           await beforeRunHook(details);
-        });
+        }
+      });
 
+      if (!isStudioMode) {
         on('after:run', async () => {
           // cypress-mochawesome-reporter
           await afterRunHook();
