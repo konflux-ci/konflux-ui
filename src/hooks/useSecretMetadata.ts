@@ -1,5 +1,4 @@
 import React from 'react';
-import type { UseQueryOptions } from '@tanstack/react-query';
 import { useK8sWatchResource } from '~/k8s';
 import { K8S_QUERY_KEY_SECRET_TABLE } from '~/k8s/consts/k8s-accept';
 import { convertToK8sQueryParams } from '~/k8s/k8s-utils';
@@ -7,6 +6,7 @@ import { createQueryKeys } from '~/k8s/query/utils';
 import { SecretGroupVersionKind, SecretModel } from '~/models';
 import { SecretKind } from '~/types';
 import {
+  type K8sTable,
   SECRET_TABLE_K8S_FETCH_OPTIONS,
   selectSecretMetadata,
 } from '~/utils/secrets/secret-table-utils';
@@ -48,14 +48,14 @@ export const useSecretMetadata = (
     data: secret,
     isLoading,
     error,
-  } = useK8sWatchResource<SecretKind>(
+  } = useK8sWatchResource<SecretKind, K8sTable>(
     resourceInit,
     SecretModel,
     {
       queryKey,
       enabled: !!namespace && !!name,
       select: selectSecret,
-    } as unknown as UseQueryOptions<SecretKind>,
+    },
     SECRET_TABLE_K8S_FETCH_OPTIONS as Parameters<typeof useK8sWatchResource>[3],
   );
 
