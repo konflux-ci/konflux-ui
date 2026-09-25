@@ -1,3 +1,4 @@
+import React from 'react';
 import {
   hashKey,
   QueryOptions as ReactQueryOptions,
@@ -21,7 +22,7 @@ export const useK8sWatchResource = <R extends K8sResourceCommon | K8sResourceCom
   options: Partial<
     WebSocketOptions & RequestInit & { wsPrefix?: string; pathPrefix?: string }
   > = {},
-): UseQueryResult<R> => {
+): UseQueryResult<R> & { wsError: unknown } => {
   const k8sQueryOptions = convertToK8sQueryParams(resourceInit);
   const wsError = useK8sQueryWatch(
     resourceInit?.watch ? { model, queryOptions: k8sQueryOptions } : null,
@@ -52,5 +53,22 @@ export const useK8sWatchResource = <R extends K8sResourceCommon | K8sResourceCom
     ) as UseQueryOptions<R>;
   };
 
-  return useQuery<R>(getQueryOptions());
+  const query = useQuery<R>(getQueryOptions());
+
+  const extra = React.useMemo(
+    () => ({
+      wsError,
+    }),
+    [wsError],
+  );
+
+  return new Proxy(query, {
+    get(target, prop) {
+      if (prop in extra) return extra[prop];
+      return Reflect.get(target, prop);
+    },
+    has(target, prop) {
+      return prop in extra || prop in target;
+    },
+  }) as UseQueryResult<R> & { wsError: unknown };
 };
