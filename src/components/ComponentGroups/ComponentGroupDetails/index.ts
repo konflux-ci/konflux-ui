@@ -26,4 +26,4 @@ export const componentGroupDetailsViewLoader = createLoaderWithAccessCheck(
 
 export { default as ComponentGroupDetailsViewLayout } from './ComponentGroupDetailsView';
 export { ComponentGroupReleasesTab } from './tabs/ComponentGroupReleasesTab';
-export { default as ComponentGroupIntegrationTestsTab } from './tabs/ComponentGroupIntegrationTestsTab';
+export { ComponentGroupIntegrationTestsTab } from './tabs/ComponentGroupIntegrationTestsTab';

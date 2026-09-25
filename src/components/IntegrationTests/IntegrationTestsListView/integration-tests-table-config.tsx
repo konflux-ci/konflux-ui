@@ -15,8 +15,6 @@ export const INTEGRATION_TESTS_LIST_FILTERS = defineFilters<IntegrationTestScena
 ]);
 
 export const INTEGRATION_TESTS_LIST_COLUMN_STATE_KEY = 'integration-tests-list';
-export const COMPONENT_GROUP_INTEGRATION_TESTS_LIST_COLUMN_STATE_KEY =
-  'component-group-integration-tests-list';
 
 export const BASE_INTEGRATION_TESTS_COLUMNS: ColumnDefinition<IntegrationTestScenarioKind>[] = [
   {

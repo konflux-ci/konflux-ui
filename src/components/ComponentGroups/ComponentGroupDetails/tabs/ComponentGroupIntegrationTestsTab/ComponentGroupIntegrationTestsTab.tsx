@@ -1,6 +1,6 @@
 import * as React from 'react';
-import IntegrationTestsListViewByComponentGroup from '~/components/IntegrationTests/IntegrationTestsListView/IntegrationTestsListViewByComponentGroup';
 import { IfFeature } from '~/feature-flags/hooks';
+import IntegrationTestsListViewByComponentGroup from './IntegrationTestsListViewByComponentGroup';
 
 export const ComponentGroupIntegrationTestsTab: React.FC = () => {
   return (

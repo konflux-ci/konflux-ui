@@ -1,6 +1,11 @@
 import * as React from 'react';
 import { useParams } from 'react-router-dom';
 import ColumnManagement from '~/components/ColumnManagement/ColumnManagement';
+import {
+  BASE_INTEGRATION_TESTS_COLUMNS,
+  INTEGRATION_TESTS_LIST_FILTERS,
+} from '~/components/IntegrationTests/IntegrationTestsListView/integration-tests-table-config';
+import IntegrationTestsEmptyState from '~/components/IntegrationTests/IntegrationTestsListView/IntegrationTestsEmptyState';
 import { useIntegrationTestScenariosByComponentGroup } from '~/hooks/useIntegrationTestScenariosByComponentGroup';
 import { RouterParams } from '~/routes/utils';
 import FilteredEmptyState from '~/shared/components/empty-state/FilteredEmptyState';
@@ -10,12 +15,9 @@ import { Table, TableContainer } from '~/shared/components/TableV2';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { IntegrationTestScenarioKind } from '~/types/coreBuildService';
-import {
-  BASE_INTEGRATION_TESTS_COLUMNS,
-  COMPONENT_GROUP_INTEGRATION_TESTS_LIST_COLUMN_STATE_KEY,
-  INTEGRATION_TESTS_LIST_FILTERS,
-} from './integration-tests-table-config';
-import IntegrationTestsEmptyState from './IntegrationTestsEmptyState';
+
+const COMPONENT_GROUP_INTEGRATION_TESTS_LIST_COLUMN_STATE_KEY =
+  'component-group-integration-tests-list';
 
 const IntegrationTestsListViewByComponentGroup: React.FC<React.PropsWithChildren> = () => {
   const { groupName } = useParams<RouterParams>();
