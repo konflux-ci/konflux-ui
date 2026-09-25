@@ -41,7 +41,7 @@ jobs:
         id: download
         if: steps.check.outputs.should_comment == 'true'
         continue-on-error: true
-        uses: actions/download-artifact@cc203a76641edee3691beb1ea2ce8f566e2072ec # v4.1.9
+        uses: actions/download-artifact@cc203385981b70ca67e1cc392babf9cc229d5806 # v4.1.9
         with:
           name: size-limit-log
           path: ${{ runner.temp }}/size-limit-results
