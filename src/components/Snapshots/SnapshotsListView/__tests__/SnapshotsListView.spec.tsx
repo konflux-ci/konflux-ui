@@ -27,10 +27,6 @@ jest.mock('../../../../hooks/useK8sAndKarchResources', () => ({
   useK8sAndKarchResources: jest.fn(),
 }));
 
-jest.mock('../../../../hooks/useApplicationReleases', () => ({
-  useApplicationReleases: jest.fn(() => []),
-}));
-
 jest.mock('react-router-dom', () => {
   const actual = jest.requireActual('react-router-dom');
   return {
