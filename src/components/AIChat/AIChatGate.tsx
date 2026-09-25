@@ -1,7 +1,8 @@
 import * as React from 'react';
+import { AIStateProvider } from '@redhat-cloud-services/ai-react-state';
 import { IfFeature } from '~/feature-flags/hooks';
 import { useIsLightspeedAvailable } from '~/lightspeed/conditional-checks';
-import { LightspeedStateProvider } from '~/lightspeed/LightspeedStateProvider';
+import { getLightspeedClient } from '~/lightspeed/lightspeedClient';
 import { lazyLoad, LazyLoadArguments } from '~/shared/components/lazy-load/lazy';
 
 const AIChatDock = lazyLoad<LazyLoadArguments>(() =>
@@ -18,9 +19,9 @@ const AIChatDockLoader: React.FC = () => {
   }
 
   return (
-    <LightspeedStateProvider>
+    <AIStateProvider client={getLightspeedClient()}>
       <AIChatDock />
-    </LightspeedStateProvider>
+    </AIStateProvider>
   );
 };
 
