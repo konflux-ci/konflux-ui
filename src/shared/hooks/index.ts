@@ -3,6 +3,7 @@ export * from './useForceRender';
 export * from './useResizeObserver';
 export * from './useLayoutResizeObserver';
 export * from './useScrollContainer';
+export * from './useScrollToBottom';
 export * from './useScrollShadows';
 export * from './useDeepCompareMemoize';
 export * from './useMutationObserver';
