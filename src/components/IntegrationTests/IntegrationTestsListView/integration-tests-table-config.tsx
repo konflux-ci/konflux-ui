@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Truncate } from '@patternfly/react-core';
-import { INTEGRATION_TEST_DETAILS_PATH } from '~/routes/paths';
+import { GROUP_INTEGRATION_TEST_DETAILS_PATH, INTEGRATION_TEST_DETAILS_PATH } from '~/routes/paths';
 import { defineFilters } from '~/shared/components/Filter';
 import ExternalLink from '~/shared/components/links/ExternalLink';
 import { type ColumnDefinition } from '~/shared/components/TableV2';
@@ -29,15 +29,16 @@ export const BASE_INTEGRATION_TESTS_COLUMNS: ColumnDefinition<IntegrationTestSce
             integrationTestName: obj.metadata?.name,
             workspaceName: obj.metadata?.namespace,
           })
-        : // TODO[KFLUXUI-1717]
-          null;
+        : GROUP_INTEGRATION_TEST_DETAILS_PATH.createPath({
+            groupName: obj.spec?.componentGroup ?? '',
+            integrationTestName: obj.metadata?.name,
+            workspaceName: obj.metadata?.namespace,
+          });
 
-      return detailsPath ? (
+      return (
         <Link to={detailsPath} data-test="integration-tests__row-name">
           {obj.metadata?.name}
         </Link>
-      ) : (
-        obj.metadata?.name
       );
     },
   },

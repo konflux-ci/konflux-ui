@@ -14,33 +14,40 @@ import {
   pluralize,
 } from '@patternfly/react-core';
 import { OutlinedQuestionCircleIcon } from '@patternfly/react-icons/dist/esm/icons/outlined-question-circle-icon';
-import { getErrorState } from '~/shared/utils/error-utils';
-import { useIntegrationTestScenario } from '../../../../hooks/useIntegrationTestScenarios';
-import { APPLICATION_DETAILS_PATH } from '../../../../routes/paths';
-import { RouterParams } from '../../../../routes/utils';
-import { Timestamp } from '../../../../shared';
-import ExternalLink from '../../../../shared/components/links/ExternalLink';
-import { useNamespace } from '../../../../shared/providers/Namespace';
-import MetadataList from '../../../MetadataList';
-import { useModalLauncher } from '../../../modal/ModalProvider';
-import { createEditContextsModal } from '../../EditContextsModal';
-import { createEditParamsModal } from '../../EditParamsModal';
-import { IntegrationTestLabels } from '../../IntegrationTestForm/types';
+import { createEditContextsModal } from '~/components/IntegrationTests/EditContextsModal';
+import { createEditParamsModal } from '~/components/IntegrationTests/EditParamsModal';
+import { IntegrationTestLabels } from '~/components/IntegrationTests/IntegrationTestForm/types';
 import {
   getLabelForParam,
   getURLForParam,
   ResolverRefParams,
-} from '../../IntegrationTestForm/utils/create-utils';
+} from '~/components/IntegrationTests/IntegrationTestForm/utils/create-utils';
+import MetadataList from '~/components/MetadataList';
+import { useModalLauncher } from '~/components/modal/ModalProvider';
+import { useIntegrationTestScenarioForContext } from '~/hooks/useIntegrationTestScenarios';
+import { APPLICATION_DETAILS_PATH, GROUP_DETAILS_PATH } from '~/routes/paths';
+import { RouterParams } from '~/routes/utils';
+import { Timestamp } from '~/shared';
+import ExternalLink from '~/shared/components/links/ExternalLink';
+import { useNamespace } from '~/shared/providers/Namespace';
+import { getErrorState } from '~/shared/utils/error-utils';
 
 const IntegrationTestOverviewTab: React.FC<React.PropsWithChildren> = () => {
   const namespace = useNamespace();
-  const { integrationTestName, applicationName } = useParams<RouterParams>();
+  const { integrationTestName, applicationName, groupName } = useParams<RouterParams>();
+  const isGroupContext = Boolean(groupName);
 
-  const [integrationTest, loaded, error] = useIntegrationTestScenario(
+  const [integrationTest, loaded, error] = useIntegrationTestScenarioForContext(
     namespace,
-    applicationName,
-    integrationTestName,
+    integrationTestName ?? '',
+    { applicationName, groupName },
   );
+
+  const contextTitle = isGroupContext ? 'Component Group' : 'Application';
+  const contextDetailsPath = isGroupContext
+    ? GROUP_DETAILS_PATH.createPath({ workspaceName: namespace, groupName })
+    : APPLICATION_DETAILS_PATH.createPath({ workspaceName: namespace, applicationName });
+  const contextName = (isGroupContext ? groupName : applicationName) ?? '';
 
   const showModal = useModalLauncher();
 
@@ -49,7 +56,7 @@ const IntegrationTestOverviewTab: React.FC<React.PropsWithChildren> = () => {
   }
 
   const optionalReleaseLabel =
-    integrationTest.metadata.labels?.[IntegrationTestLabels.OPTIONAL] === 'true';
+    integrationTest?.metadata?.labels?.[IntegrationTestLabels.OPTIONAL] === 'true';
 
   const params = integrationTest?.spec?.params;
   const contexts = integrationTest?.spec?.contexts;
@@ -216,16 +223,9 @@ const IntegrationTestOverviewTab: React.FC<React.PropsWithChildren> = () => {
                 </DescriptionListDescription>
               </DescriptionListGroup>
               <DescriptionListGroup>
-                <DescriptionListTerm>Application</DescriptionListTerm>
+                <DescriptionListTerm>{contextTitle}</DescriptionListTerm>
                 <DescriptionListDescription>
-                  <Link
-                    to={APPLICATION_DETAILS_PATH.createPath({
-                      workspaceName: namespace,
-                      applicationName: integrationTest.spec.application,
-                    })}
-                  >
-                    {integrationTest.spec.application}
-                  </Link>
+                  <Link to={contextDetailsPath}>{contextName}</Link>
                 </DescriptionListDescription>
               </DescriptionListGroup>
             </DescriptionList>
