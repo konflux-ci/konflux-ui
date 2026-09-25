@@ -4,6 +4,9 @@ base: https://raw.githubusercontent.com/fullsend-ai/agents/7879955ea557deb6d24e3
 trigger: >
   event.entity.kind == "work_item"
     && (
+      (event.transition.kind == "opened"
+        && "fullsend" in event.state.labels)
+      ||
       (event.transition.kind == "label_changed"
         && event.transition.label.name == "fullsend"
         && event.transition.label.action == "added")
