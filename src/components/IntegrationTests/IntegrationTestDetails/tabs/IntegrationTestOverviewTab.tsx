@@ -78,31 +78,31 @@ const IntegrationTestOverviewTab: React.FC<React.PropsWithChildren> = () => {
               <DescriptionListGroup>
                 <DescriptionListTerm>Name</DescriptionListTerm>
                 <DescriptionListDescription>
-                  {integrationTest?.metadata?.name ?? '-'}
+                  {integrationTest.metadata.name ?? '-'}
                 </DescriptionListDescription>
               </DescriptionListGroup>
               <DescriptionListGroup>
                 <DescriptionListTerm>Namespace</DescriptionListTerm>
                 <DescriptionListDescription>
-                  {integrationTest?.metadata?.namespace ?? '-'}
+                  {integrationTest.metadata.namespace ?? '-'}
                 </DescriptionListDescription>
               </DescriptionListGroup>
               <DescriptionListGroup>
                 <DescriptionListTerm>Labels</DescriptionListTerm>
                 <DescriptionListDescription>
-                  <MetadataList metadata={integrationTest?.metadata?.labels} />
+                  <MetadataList metadata={integrationTest.metadata.labels} />
                 </DescriptionListDescription>
               </DescriptionListGroup>
               <DescriptionListGroup>
                 <DescriptionListTerm>Annotations</DescriptionListTerm>
                 <DescriptionListDescription>
-                  <MetadataList metadata={integrationTest?.metadata?.annotations} />
+                  <MetadataList metadata={integrationTest.metadata.annotations} />
                 </DescriptionListDescription>
               </DescriptionListGroup>
               <DescriptionListGroup>
                 <DescriptionListTerm>Created at</DescriptionListTerm>
                 <DescriptionListDescription>
-                  <Timestamp timestamp={integrationTest?.metadata?.creationTimestamp ?? '-'} />
+                  <Timestamp timestamp={integrationTest.metadata.creationTimestamp ?? '-'} />
                 </DescriptionListDescription>
               </DescriptionListGroup>
             </DescriptionList>
@@ -117,7 +117,7 @@ const IntegrationTestOverviewTab: React.FC<React.PropsWithChildren> = () => {
                 default: '1Col',
               }}
             >
-              {integrationTest?.spec.resolverRef && (
+              {integrationTest.spec.resolverRef && (
                 <>
                   <DescriptionListGroup>
                     <DescriptionListTerm>Type</DescriptionListTerm>
@@ -127,7 +127,7 @@ const IntegrationTestOverviewTab: React.FC<React.PropsWithChildren> = () => {
                   </DescriptionListGroup>
                   {integrationTest.spec.resolverRef.params.map((param) => {
                     const paramLink = getURLForParam(
-                      integrationTest?.spec.resolverRef?.params ?? [],
+                      integrationTest.spec.resolverRef.params,
                       param.name,
                     );
                     if (!param.value) {

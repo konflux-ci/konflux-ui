@@ -7,7 +7,7 @@ import {
 } from '~/components/IntegrationTests/IntegrationTestsListView/integration-tests-table-config';
 import IntegrationTestsEmptyState from '~/components/IntegrationTests/IntegrationTestsListView/IntegrationTestsEmptyState';
 import { IfFeature } from '~/feature-flags/hooks';
-import { useIntegrationTestScenariosByComponentGroup } from '~/hooks/useIntegrationTestScenariosByComponentGroup';
+import { useIntegrationTestScenariosByComponentGroup } from '~/hooks/useIntegrationTestScenarios';
 import { RouterParams } from '~/routes/utils';
 import FilteredEmptyState from '~/shared/components/empty-state/FilteredEmptyState';
 import { useFilterState, useFilteredData, FilterToolbar } from '~/shared/components/Filter';

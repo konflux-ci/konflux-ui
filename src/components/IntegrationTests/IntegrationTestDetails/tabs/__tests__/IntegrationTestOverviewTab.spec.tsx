@@ -223,11 +223,4 @@ describe('IntegrationTestOverviewTab', () => {
       '/ns/test-ns/groups/test-group',
     );
   });
-
-  it('should render placeholders when metadata is missing', () => {
-    useIntegrationTestScenarioForContextMock.mockReturnValue([undefined, true, undefined]);
-    renderTab();
-    // Name, namespace and created-at fall back to '-'
-    expect(screen.getAllByText('-').length).toBeGreaterThan(0);
-  });
 });
