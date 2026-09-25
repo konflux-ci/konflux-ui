@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { act, fireEvent, screen } from '@testing-library/react';
 import { NuqsTestingAdapter } from 'nuqs/adapters/testing';
+import { ComponentGroupIntegrationTestsTab } from '~/components/ComponentGroups/ComponentGroupDetails/tabs/ComponentGroupIntegrationTestsTab/ComponentGroupIntegrationTestsTab';
 import { useIntegrationTestScenariosByComponentGroup } from '~/hooks/useIntegrationTestScenariosByComponentGroup';
 import { IntegrationTestScenarioKind, ResolverType } from '~/types/coreBuildService';
 import {
@@ -8,7 +9,6 @@ import {
   renderWithQueryClient,
   setupVirtualizerMock,
 } from '~/unit-test-utils';
-import IntegrationTestsListViewByComponentGroup from '../IntegrationTestsListViewByComponentGroup';
 
 jest.mock('@tanstack/react-virtual', () => ({
   useVirtualizer: jest.fn(),
@@ -26,6 +26,11 @@ jest.mock('react-router-dom', () => ({
 
 jest.mock('~/hooks/useIntegrationTestScenariosByComponentGroup', () => ({
   useIntegrationTestScenariosByComponentGroup: jest.fn(),
+}));
+
+jest.mock('~/feature-flags/hooks', () => ({
+  ...jest.requireActual('~/feature-flags/hooks'),
+  IfFeature: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
 const useIntegrationTestScenariosByComponentGroupMock =
@@ -82,11 +87,11 @@ const mockTestsV2: IntegrationTestScenarioKind[] = [
 
 const TestedComponent = ({ searchParams }: { searchParams?: string }) => (
   <NuqsTestingAdapter searchParams={searchParams}>
-    <IntegrationTestsListViewByComponentGroup />
+    <ComponentGroupIntegrationTestsTab />
   </NuqsTestingAdapter>
 );
 
-describe('IntegrationTestsListViewByComponentGroup', () => {
+describe('ComponentGroupIntegrationTestsTab', () => {
   beforeEach(() => {
     jest.useFakeTimers();
     setupVirtualizerMock();
