@@ -12,7 +12,7 @@
 | Type check        | `yarn type-checks`                   |
 | Start dev server  | `yarn start`                         |
 
-CI runs two parallel jobs on Node 24: **lint** (`yarn lint` -> `yarn lint:restricted-imports` -> `yarn type-checks`) and **test** (`yarn test`).
+CI runs three parallel jobs on Node 24: **lint** (`yarn lint` -> `yarn lint:restricted-imports` -> `yarn type-checks`), **size-limit** (`yarn build` -> `yarn size-limit`), and **test** (`yarn test`).
 
 ## Setup
 
