@@ -67,3 +67,21 @@ export function parseNumber(value: string | undefined, defaultValue: number): nu
   const parsed = parseFloat(value);
   return isNaN(parsed) ? defaultValue : parsed;
 }
+
+type TimeValue = Date | number | string;
+
+const timeValueInMilliseconds = (value: TimeValue): number => {
+  if (value instanceof Date) {
+    return value.getTime();
+  }
+
+  return typeof value === 'number' ? value : Date.parse(value);
+};
+
+/** Returns a new array sorted by the selected time value in ascending order. */
+export const sortByTime = <T,>(items: readonly T[], getTime: (item: T) => TimeValue): T[] => {
+  const sortFunction = (a: T, b: T) =>
+    timeValueInMilliseconds(getTime(a)) - timeValueInMilliseconds(getTime(b));
+
+  return [...items].sort(sortFunction);
+};

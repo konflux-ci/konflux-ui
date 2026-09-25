@@ -168,3 +168,5 @@ export const PIPELINE_RUNS_PAGE_PATH = WORKSPACE_PATH.extend('prns');
 export const GROUPS_PATH = WORKSPACE_PATH.extend('groups');
 
 export const GROUP_DETAILS_PATH = GROUPS_PATH.extend(`:${RouterParams.groupName}`);
+
+export const DEPENDENCY_SCHEDULE_PATH = buildRoute('dep-updates-schedule');
