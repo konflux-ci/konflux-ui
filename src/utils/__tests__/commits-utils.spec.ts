@@ -109,6 +109,22 @@ describe('commit-utils', () => {
       expect(result.isPullRequest).toBe(true);
       expect(result.pullRequestNumber).toBe('');
     });
+
+    it('should fallback to pac.test pull-request label when pipelinesascode label is missing', () => {
+      const plrWithTestLabel = {
+        ...pipelineWithCommits[1],
+        metadata: {
+          ...pipelineWithCommits[1].metadata,
+          labels: {
+            ...pipelineWithCommits[1].metadata.labels,
+            'pipelinesascode.tekton.dev/pull-request': undefined,
+            'pac.test.appstudio.openshift.io/pull-request': '99',
+          },
+        },
+      };
+      const result = createCommitObjectFromPLR(plrWithTestLabel);
+      expect(result.pullRequestNumber).toBe('99');
+    });
   });
 
   describe('createCommitObjectFromSnapshot', () => {
@@ -259,7 +275,7 @@ describe('commit-utils', () => {
           repoURL: 'https://github.com/a/b',
           pullRequestNumber: '23',
         } as Commit),
-      ).toEqual(null);
+      ).toEqual('https://github.com/a/b/pull/23');
       expect(
         createRepoPullRequestURL({
           gitProvider: 'github',
@@ -276,6 +292,26 @@ describe('commit-utils', () => {
           repoOrg: 'a',
         } as Commit),
       ).toEqual(null);
+    });
+
+    it('should return GitLab merge request URL for gitlab provider', () => {
+      expect(
+        createRepoPullRequestURL({
+          repoURL: 'https://gitlab.com/a/b',
+          pullRequestNumber: '23',
+          gitProvider: 'gitlab',
+        } as Commit),
+      ).toEqual('https://gitlab.com/a/b/-/merge_requests/23');
+    });
+
+    it('should return Bitbucket pull request URL for bitbucket provider', () => {
+      expect(
+        createRepoPullRequestURL({
+          repoURL: 'https://bitbucket.org/a/b',
+          pullRequestNumber: '10',
+          gitProvider: 'bitbucket',
+        } as Commit),
+      ).toEqual('https://bitbucket.org/a/b/pull-requests/10');
     });
 
     it('should return valid git url or null based on commit object', () => {

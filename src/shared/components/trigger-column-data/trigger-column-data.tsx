@@ -1,66 +1,57 @@
 import * as React from 'react';
-import { Label, Truncate, Flex, FlexItem } from '@patternfly/react-core';
+import { Flex, FlexItem } from '@patternfly/react-core';
+import CommitLabel from '~/components/Commits/commit-label/CommitLabel';
 import { CommitIcon } from '~/components/Commits/CommitIcon';
+import { PipelineRunEventType } from '~/consts/pipelinerun';
+import { createPullRequestUrl } from '~/utils/git-utils';
 import { ExternalLink } from '../..';
-import { PipelineRunEventType } from '../../../consts/pipelinerun';
 
-import './trigger-column-data.scss';
+const GITLAB_PROVIDER = 'gitlab';
+
+const isGitLabProvider = (gitProvider?: string): boolean => gitProvider === GITLAB_PROVIDER;
+
+const getPullRequestDisplayText = (prNumber: string, gitProvider?: string): string =>
+  isGitLabProvider(gitProvider) ? `!${prNumber}` : `#${prNumber}`;
 
 export interface TriggerColumnData {
-  repoOrg?: string;
-  repoName?: string;
   repoURL?: string;
   prNumber?: string;
   eventType?: string;
   commitSha?: string;
   shaUrl?: string;
+  gitProvider?: string;
 }
 
-/**
- * Component that renders trigger column data with appropriate icons and links
- * @param props - Object containing trigger-related data
- * @returns JSX element for the trigger column
- */
 export const TriggerColumnData: React.FC<TriggerColumnData> = ({
-  repoOrg,
   repoURL,
   prNumber,
   eventType,
   commitSha,
   shaUrl,
-  repoName,
+  gitProvider,
 }) => {
   if (!eventType || !commitSha) {
     return <>-</>;
   }
 
-  const commitShaText = commitSha.substring(0, 7);
   const isPullRequest = eventType === PipelineRunEventType.PULL;
   const icon = <CommitIcon isPR={isPullRequest} className="sha-title-icon" />;
-  const pullRequestText = `${repoOrg}/${repoName}/${prNumber}`;
-  const pullRequestURL = `${repoURL}/pull/${prNumber}`;
+  const pullRequestURL = createPullRequestUrl(repoURL, prNumber);
 
   return (
     <Flex spaceItems={{ default: 'spaceItemsXs' }} alignItems={{ default: 'alignItemsCenter' }}>
       <FlexItem>{icon}</FlexItem>
-      {isPullRequest && (
+      {isPullRequest && prNumber && pullRequestURL && (
         <FlexItem>
           <ExternalLink
             href={pullRequestURL}
-            text={<Truncate content={pullRequestText} />}
+            text={getPullRequestDisplayText(prNumber, gitProvider)}
             hideIcon={true}
           />
         </FlexItem>
       )}
       <FlexItem>
-        <Label
-          color="blue"
-          isCompact
-          variant="outline"
-          className="trigger-column-data__commit-label pf-v6-u-py-xs"
-        >
-          <ExternalLink href={shaUrl} text={commitShaText} />
-        </Label>
+        <CommitLabel gitProvider={gitProvider ?? ''} sha={commitSha} shaURL={shaUrl ?? ''} />
       </FlexItem>
     </Flex>
   );
