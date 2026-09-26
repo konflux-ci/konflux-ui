@@ -4724,12 +4724,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@size-limit/file@npm:^13.0.3":
-  version: 13.0.3
-  resolution: "@size-limit/file@npm:13.0.3"
+"@size-limit/file@npm:^14.0.0":
+  version: 14.0.0
+  resolution: "@size-limit/file@npm:14.0.0"
   peerDependencies:
-    size-limit: 13.0.3
-  checksum: 10/c94ba067996e71baa0965603e640730a69d5d63d924411b22f752b07ac1deba94054a20a0fcc0e2163d7051d41c40b8c4f8c995f76c3371308cc5b52667811c6
+    size-limit: 14.0.0
+  checksum: 10/e17557f18ab214f0b3b101cefac6cca5533fd6e4789d00bd5ba3528e31a4a741a78237b008cb5ed11f00b9cd51e51343a9009612a3602725f452196f472dc34e
   languageName: node
   linkType: hard
 
@@ -7894,13 +7894,6 @@ __metadata:
   dependencies:
     run-applescript: "npm:^7.0.0"
   checksum: 10/1d966c8d2dbf4d9d394e53b724ac756c2414c45c01340b37743621f59cc565a435024b394ddcb62b9b335d1c9a31f4640eb648c3fec7f97ee74dc0694c9beb6c
-  languageName: node
-  linkType: hard
-
-"bytes-iec@npm:^3.1.1":
-  version: 3.1.1
-  resolution: "bytes-iec@npm:3.1.1"
-  checksum: 10/2f89d1dbb058b1bc8a9284658b6c779ffe16127f93f3647b749723660c989a38ac87bad065cc874d380f05b566c95153348f416e6a08985625812512d01e689f
   languageName: node
   linkType: hard
 
@@ -14472,7 +14465,7 @@ __metadata:
     "@redhat-cloud-services/lightspeed-client": "npm:^0.15.0"
     "@segment/analytics-next": "npm:^1.81.1"
     "@sentry/react": "npm:^10.38.0"
-    "@size-limit/file": "npm:^13.0.3"
+    "@size-limit/file": "npm:^14.0.0"
     "@storybook/addon-a11y": "npm:10.6.0"
     "@storybook/addon-webpack5-compiler-swc": "npm:4.0.3"
     "@storybook/react": "npm:10.6.0"
@@ -14550,7 +14543,7 @@ __metadata:
     sass: "npm:^1.77.8"
     sass-loader: "npm:^14.2.1"
     showdown: "npm:^2.1.0"
-    size-limit: "npm:^13.0.3"
+    size-limit: "npm:^14.0.0"
     source-map-explorer: "npm:^2.5.3"
     storybook: "npm:10.6.0"
     strip-json-comments: "npm:^5.0.1"
@@ -19162,16 +19155,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"size-limit@npm:^13.0.3":
-  version: 13.0.3
-  resolution: "size-limit@npm:13.0.3"
+"size-limit@npm:^14.0.0":
+  version: 14.0.0
+  resolution: "size-limit@npm:14.0.0"
   dependencies:
-    bytes-iec: "npm:^3.1.1"
     lilconfig: "npm:^3.1.3"
     nanospinner: "npm:^1.2.2"
   bin:
     size-limit: bin.js
-  checksum: 10/440de38f1b8bc7724d007defb632ab8518f71c220dd082732dc5a2321deb43a14333697fa2c6b7c066cf81e302c3017f1ebf878b673be722fa8466d9c72c48ee
+  checksum: 10/54dcee22afe46248fd8cd4a4bfccc55113a9f905dc84af78a0982be09807fe39ca2f29de7f873f208efeff2e14be5e815e7bbe6aacbd03bdaf3e1bc2776b7ddf
   languageName: node
   linkType: hard
 
