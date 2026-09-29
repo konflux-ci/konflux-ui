@@ -12,12 +12,15 @@ import PipelineRunStatus from '../PipelineRun/PipelineRunStatus';
 
 import './LatestPushBuildSection.scss';
 
-type LatestBuildSectionProps = {
+type LatestPushBuildSectionProps = {
   componentName: string;
   version?: string;
 };
 
-const LatestPushBuildSection: React.FC<LatestBuildSectionProps> = ({ componentName, version }) => {
+const LatestPushBuildSection: React.FC<LatestPushBuildSectionProps> = ({
+  componentName,
+  version,
+}) => {
   const namespace = useNamespace();
 
   const [pipelineRun, pipelineRunLoaded, pipelineRunError] =

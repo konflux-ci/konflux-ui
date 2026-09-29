@@ -71,7 +71,7 @@ const ComponentGroupComponentsList: React.FC = () => {
   return (
     <PageLayout
       title="Components"
-      description="A component is an image built from source code in a repository. One or more components that run together form an component group."
+      description="A component is an image built from source code in a repository. One or more components that run together form a component group."
     >
       <PageSection>
         <TableContainer
