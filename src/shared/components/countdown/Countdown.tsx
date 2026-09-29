@@ -45,7 +45,7 @@ export const Countdown: React.FC<CountdownProps> = ({ timestamp, isUnix, simple,
   const countdown = formatCountdown(remainingMs);
 
   if (simple) {
-    return countdown;
+    return <>{countdown}</>;
   }
 
   return (

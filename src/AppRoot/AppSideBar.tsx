@@ -18,11 +18,7 @@ import {
 import IssuesNavItemContent from '~/components/Issues/IssuesNavItemContent';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { IfFeature } from '~/feature-flags/hooks';
-import {
-  SavedViewNavItems,
-  SavedViewNavSection,
-  type SavedViewsConfig,
-} from '~/shared/components/SavedViews';
+import { SavedViewNavSection, type SavedViewsConfig } from '~/shared/components/SavedViews';
 import { useActiveRouteChecker } from '../../src/hooks/useActiveRouteChecker';
 import { useNamespace } from '../shared/providers/Namespace';
 import './AppSideBar.scss';
@@ -194,10 +190,6 @@ export const AppSideBar: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
                 User Access
               </NavLink>
             </NavItem>
-
-            <IfFeature flag="pipeline-runs-page">
-              {namespace && <SavedViewNavItems config={pipelineRunsSavedViewsConfig} />}
-            </IfFeature>
 
             <IfFeature flag="mintmaker">
               <NavItem isActive={isActive(DEPENDENCY_SCHEDULE_PATH.path)}>
