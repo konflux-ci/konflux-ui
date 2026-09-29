@@ -1,16 +1,17 @@
 import { githubAPIEndpoints } from './APIEndpoints';
 
 export class APIHelper {
-  static readonly githubHeaders = {
-    Accept: 'application/vnd.github+json',
-    Authorization: `Bearer ${Cypress.env('GH_TOKEN')}`,
-    'X-GitHub-Api-Version': '2022-11-28',
-  };
+  private static buildGithubHeaders(ghToken: string) {
+    return {
+      Accept: 'application/vnd.github+json',
+      Authorization: `Bearer ${ghToken}`,
+      'X-GitHub-Api-Version': '2022-11-28',
+    };
+  }
 
   static requestHACAPI(options: Partial<Cypress.RequestOptions>) {
-    const oidcUser = JSON.parse(
-      localStorage.getItem(`oidc.user:${Cypress.env('SSO_URL')}:cloud-services`),
-    );
+    const ssoUrl = Cypress.expose('SSO_URL');
+    const oidcUser = JSON.parse(localStorage.getItem(`oidc.user:${ssoUrl}:cloud-services`));
     const token = oidcUser.access_token as string;
 
     options.headers = {
@@ -22,15 +23,17 @@ export class APIHelper {
   }
 
   static githubRequest(method: Cypress.HttpMethod, url: string, body?: Cypress.RequestBody) {
-    const options: Partial<Cypress.RequestOptions> = {
-      method,
-      url,
-      headers: this.githubHeaders,
-    };
-    if (body) {
-      options.body = body;
-    }
-    return cy.request(options);
+    return cy.env(['GH_TOKEN']).then(({ GH_TOKEN }: { GH_TOKEN: string }) => {
+      const options: Partial<Cypress.RequestOptions> = {
+        method,
+        url,
+        headers: APIHelper.buildGithubHeaders(GH_TOKEN),
+      };
+      if (body) {
+        options.body = body;
+      }
+      return cy.request(options);
+    });
   }
 
   static checkResponseBodyAndStatusCode(
@@ -77,20 +80,22 @@ export class APIHelper {
 
   static deleteGitHubRepositoryIfExists(owner: string, repoName: string) {
     const url = githubAPIEndpoints.testRepo(owner, repoName);
-    return cy
-      .request({
-        method: 'DELETE',
-        url,
-        headers: this.githubHeaders,
-        failOnStatusCode: false,
-      })
-      .then((response) => {
-        if (response.status === 404) {
-          cy.log(`Repo not found during cleanup (already deleted): ${owner}/${repoName}`);
-        } else if (response.status >= 400) {
-          cy.log(`Repo cleanup failed with status ${response.status}: ${owner}/${repoName}`);
-        }
-      });
+    return cy.env(['GH_TOKEN']).then(({ GH_TOKEN }: { GH_TOKEN: string }) =>
+      cy
+        .request({
+          method: 'DELETE',
+          url,
+          headers: APIHelper.buildGithubHeaders(GH_TOKEN),
+          failOnStatusCode: false,
+        })
+        .then((response) => {
+          if (response.status === 404) {
+            cy.log(`Repo not found during cleanup (already deleted): ${owner}/${repoName}`);
+          } else if (response.status >= 400) {
+            cy.log(`Repo cleanup failed with status ${response.status}: ${owner}/${repoName}`);
+          }
+        }),
+    );
   }
 
   static createRepositoryFromTemplate(

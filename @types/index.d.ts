@@ -19,11 +19,6 @@ interface Window {
   /** Konflux UI runtime configuration injected via runtime-config.js */
   KONFLUX_RUNTIME?: {
     [key: string]: string | undefined;
-    // Chatbot configuration
-    CHAT_BOT_ENABLED?: string;
-    CHAT_BOT_ASSISTANT_ID?: string;
-    CHAT_BOT_ENVIRONMENT_ID?: string;
-    CHAT_BOT_VERSION?: string;
     // Monitoring configuration
     MONITORING_ENABLED?: string;
     MONITORING_DSN?: string;

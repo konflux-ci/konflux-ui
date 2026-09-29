@@ -5,6 +5,7 @@ const codeCoverageTask = require('@cypress/code-coverage/task');
 
 export default defineConfig({
   projectId: process.env.CYPRESS_PROJECT_ID,
+  allowCypressEnv: false,
   defaultCommandTimeout: 40000,
   execTimeout: 150000,
   pageLoadTimeout: 90000,
@@ -159,6 +160,34 @@ export default defineConfig({
           config.env.HAC_NAMESPACE = `default-tenant`;
         } else {
           config.env.HAC_NAMESPACE = `${config.env.HAC_WORKSPACE}-tenant`;
+        }
+      }
+
+      // Public/non-sensitive subset of config.env to mirror into config.expose, so
+      // Cypress.expose() can read them (Cypress.env() removal means only this or
+      // cy.env() work). Sensitive keys (USERNAME, PASSWORD, GH_TOKEN, etc.) are
+      // deliberately left out and stay accessible only via cy.env().
+      const publicEnvKeys = [
+        'KONFLUX_BASE_URL',
+        'GH_USERNAME',
+        'GH_REPO_OWNER',
+        'CLEAN_NAMESPACE',
+        'LOCAL_CLUSTER',
+        'LOGIN_PROVIDER',
+        'PERIODIC_RUN_STAGE',
+        'PIPELINE',
+        'SOURCE_REPO_OWNER',
+        'SOURCE_REPO_NAME',
+        'REMOVE_APP_ON_FAIL',
+        'STUDIO_MODE',
+        'SSO_URL',
+        'HAC_NAMESPACE',
+      ];
+
+      for (const key of publicEnvKeys) {
+        // Let an explicit `expose` config value (e.g. --expose/-x CLI flag) win.
+        if (config.expose[key] === undefined) {
+          config.expose[key] = config.env[key];
         }
       }
 
