@@ -14,6 +14,7 @@ import ChatbotWelcomePrompt from '@patternfly/chatbot/dist/dynamic/ChatbotWelcom
 import Message from '@patternfly/chatbot/dist/dynamic/Message';
 import MessageBar from '@patternfly/chatbot/dist/dynamic/MessageBar';
 import MessageBox from '@patternfly/chatbot/dist/dynamic/MessageBox';
+import { Checkbox } from '@patternfly/react-core';
 import KonfluxLogo from '~/assets/konflux-logo.svg';
 import { CHAT_MESSAGE_REHYPE_PLUGINS } from '~/components/AIChat/chatMessagePlugins';
 import {
@@ -21,6 +22,7 @@ import {
   KONFLUX_AI_ERROR_TITLE,
   KONFLUX_AI_FOOTNOTE,
   KONFLUX_AI_MESSAGE_PLACEHOLDER,
+  KONFLUX_AI_SEND_CONTEXT_LABEL,
   KONFLUX_AI_TOGGLE_BUTTON_LABEL,
   KONFLUX_AI_TOGGLE_TOOLTIP,
   KONFLUX_AI_WELCOME_DESCRIPTION,
@@ -36,6 +38,7 @@ import './AIChat.scss';
  */
 export const AIChatDock: React.FC = () => {
   const [isChatbotVisible, setIsChatbotVisible] = React.useState(false);
+  const [sendContextAsAttachment, setSendContextAsAttachment] = React.useState(false);
   const scrollToBottomRef = React.useRef<HTMLDivElement>(null);
   const {
     messages,
@@ -105,9 +108,18 @@ export const AIChatDock: React.FC = () => {
             hasAttachButton={false}
             isSendButtonDisabled={isSendButtonDisabled}
             onSendMessage={(message) => {
-              void sendMessage(String(message));
+              void sendMessage(String(message), {
+                includePageContext: sendContextAsAttachment,
+              });
             }}
             placeholder={KONFLUX_AI_MESSAGE_PLACEHOLDER}
+          />
+          <Checkbox
+            className="ai-chat__context-toggle"
+            id="konflux-ai-send-context"
+            isChecked={sendContextAsAttachment}
+            label={KONFLUX_AI_SEND_CONTEXT_LABEL}
+            onChange={(_event, checked) => setSendContextAsAttachment(checked)}
           />
           <ChatbotFootnote label={KONFLUX_AI_FOOTNOTE} />
         </ChatbotFooter>

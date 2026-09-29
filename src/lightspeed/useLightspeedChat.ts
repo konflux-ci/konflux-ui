@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useLocation, useMatches, useParams } from 'react-router-dom';
 import type { MessageProps } from '@patternfly/chatbot/dist/dynamic/Message';
 import { AIClientError } from '@redhat-cloud-services/ai-client-common';
 import {
@@ -7,13 +8,25 @@ import {
   useMessages,
   useSendStreamMessage,
 } from '@redhat-cloud-services/ai-react-state';
+import { useAIChatPageContext } from '~/components/AIChat/pageContext/AIChatPageContext';
+import {
+  AIChatRoutePageContext,
+  buildPageContextPayload,
+} from '~/components/AIChat/pageContext/types';
+import { buildPageContextAttachment } from '~/lightspeed/buildPageContextAttachment';
 import { LIGHTSPEED_ASSISTANT_NAME } from '~/lightspeed/const';
+import { setPendingQueryRequestFields } from '~/lightspeed/lightspeedQueryRequestBridge';
 import {
   useLightspeedInitError,
   useRetryLightspeedInit,
 } from '~/lightspeed/LightspeedStateProvider';
 import { getUserFacingErrorMessage, stateMessagesToMessageProps } from '~/lightspeed/utils';
 import { logger } from '~/monitoring/logger';
+import { getRoutePatternFromMatches } from '~/routes/with-route-patterns';
+
+export type SendLightspeedMessageOptions = {
+  includePageContext?: boolean;
+};
 
 type UseLightspeedChatResult = {
   messages: MessageProps[];
@@ -22,7 +35,7 @@ type UseLightspeedChatResult = {
   isInitializing: boolean;
   chatError?: string;
   clearChatError: () => void;
-  sendMessage: (message: string) => Promise<void>;
+  sendMessage: (message: string, options?: SendLightspeedMessageOptions) => Promise<void>;
 };
 
 const getErrorMessage = (error: unknown): string => {
@@ -49,6 +62,18 @@ export const useLightspeedChat = (): UseLightspeedChatResult => {
   const retryInit = useRetryLightspeedInit();
   const hasInitFailed = initError !== undefined;
   const isSendingRef = React.useRef(false);
+  const location = useLocation();
+  const matches = useMatches();
+  const params = useParams();
+  const pageContext = useAIChatPageContext();
+  const route = React.useMemo<AIChatRoutePageContext>(
+    () => ({
+      pathname: location.pathname,
+      routePattern: getRoutePatternFromMatches(matches),
+      params,
+    }),
+    [location.pathname, matches, params],
+  );
 
   const messages = React.useMemo(
     () => stateMessagesToMessageProps(stateMessages, isInProgress),
@@ -61,7 +86,7 @@ export const useLightspeedChat = (): UseLightspeedChatResult => {
   }, [retryInit]);
 
   const sendMessage = React.useCallback(
-    async (message: string) => {
+    async (message: string, options?: SendLightspeedMessageOptions) => {
       const trimmedMessage = message.trim();
       if (!trimmedMessage || isInProgress || isSendingRef.current) {
         return;
@@ -72,6 +97,12 @@ export const useLightspeedChat = (): UseLightspeedChatResult => {
       setAnnouncement(
         `Message from you: ${trimmedMessage}. ${LIGHTSPEED_ASSISTANT_NAME} is responding.`,
       );
+
+      if (options?.includePageContext) {
+        setPendingQueryRequestFields({
+          attachments: [buildPageContextAttachment(buildPageContextPayload(route, pageContext))],
+        });
+      }
 
       try {
         const response = await sendStreamMessage(trimmedMessage);
@@ -88,10 +119,11 @@ export const useLightspeedChat = (): UseLightspeedChatResult => {
         setSendError(messageText);
         setAnnouncement(`Message from ${LIGHTSPEED_ASSISTANT_NAME}: ${messageText}`);
       } finally {
+        setPendingQueryRequestFields(undefined);
         isSendingRef.current = false;
       }
     },
-    [isInProgress, sendStreamMessage],
+    [isInProgress, pageContext, route, sendStreamMessage],
   );
 
   return {
