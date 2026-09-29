@@ -15,6 +15,7 @@ import {
 import { IfFeature } from '~/feature-flags/hooks';
 import { useDebounceCallback } from '../../../shared/hooks/useDebounceCallback';
 import ColumnManagementButton from '../components/ColumnManagementButton';
+import { SEARCH_SHORTCUT_KEY, useSearchShortcut } from './useSearchShortcut';
 
 type BaseTextFilterToolbarProps = {
   text: string;
@@ -46,17 +47,22 @@ export const BaseTextFilterToolbar: React.FC<BaseTextFilterToolbarProps> = ({
 }) => {
   const [isOpen, setIsOpen] = React.useState<boolean>(false);
   const [searchOption, setSearchOption] = React.useState<string>(searchOptions?.[0] ?? '');
+  const searchInputRef = React.useRef<HTMLInputElement>(null);
   const onTextInput = useDebounceCallback((value: string) => {
     setText(value, searchOption);
   }, 600);
 
+  useSearchShortcut({ inputRef: searchInputRef, enabled: showSearchInput });
+
   const searchInput = React.useMemo(
     () => (
       <SearchInput
+        ref={searchInputRef}
         name={`${label}Input`}
         data-test={`${label}-input-filter`}
         type="search"
         aria-label={`${label} filter`}
+        inputProps={{ 'aria-keyshortcuts': SEARCH_SHORTCUT_KEY }}
         placeholder={`Filter by ${searchOptions.length > 0 ? searchOption.toLocaleLowerCase() : label}...`}
         onChange={(_, value) => onTextInput(value)}
         value={text}
