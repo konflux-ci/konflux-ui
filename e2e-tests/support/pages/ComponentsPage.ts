@@ -16,13 +16,14 @@ export class ComponentPage extends AbstractWizardPage {
         // remove "quay.io/" prefix from the quay link
         let quayRepoIdentifier = quayLink.replace('quay.io/', '');
         let curlLink = `https://quay.io/api/v1/repository/${quayRepoIdentifier}`;
-        cy.exec(
-          `curl -X GET -H "Authorization: Bearer ${Cypress.env(
-            'QUAY_TOKEN',
-          )}" -H "Content-Type: application/json" ${curlLink}`,
-        ).then((obj) => {
-          let response = JSON.parse(obj.stdout);
-          expect(response.is_public).to.be.false;
+        cy.env(['QUAY_TOKEN']).then(({ QUAY_TOKEN }) => {
+          cy.exec(
+            `curl -X GET -H "Authorization: Bearer ${QUAY_TOKEN}" -H "Content-Type: application/json" ${curlLink}`,
+            { log: false },
+          ).then((obj) => {
+            let response = JSON.parse(obj.stdout);
+            expect(response.is_public).to.be.false;
+          });
         });
       });
   }

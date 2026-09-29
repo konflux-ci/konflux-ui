@@ -2,7 +2,7 @@ import { featureFlagsPO } from '../support/pageObjects/featureFlags-po';
 
 describe('Test Features Flags', function () {
   it('System Notifications', function () {
-    cy.visit(Cypress.env('KONFLUX_BASE_URL'));
+    cy.visit(Cypress.expose('KONFLUX_BASE_URL'));
     cy.prompt(['Open Experimental Features', 'Click Reset to Defaults button']);
     cy.get(featureFlagsPO.systemNotifications).click({ force: true });
     cy.prompt([
