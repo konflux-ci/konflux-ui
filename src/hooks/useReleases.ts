@@ -1,33 +1,32 @@
 import React from 'react';
-import { PipelineRunLabel } from '~/consts/pipelinerun';
-import { useK8sWatchResource } from '../k8s';
+import { MatchLabels } from '~/types/k8s';
 import { ReleaseGroupVersionKind, ReleaseModel } from '../models';
 import { ReleaseKind } from '../types';
-import { useK8sAndKarchResource } from './useK8sAndKarchResources';
+import {
+  K8sAndKarchResourcesResult,
+  useK8sAndKarchResource,
+  useK8sAndKarchResources,
+} from './useK8sAndKarchResources';
 
 export const useReleases = (
   namespace: string,
-  applicationName?: string,
-): [ReleaseKind[], boolean, unknown] => {
-  const { data, isLoading, error } = useK8sWatchResource<ReleaseKind[]>(
+  labels?: MatchLabels,
+): K8sAndKarchResourcesResult<ReleaseKind> => {
+  const res = useK8sAndKarchResources<ReleaseKind>(
     {
       groupVersionKind: ReleaseGroupVersionKind,
       namespace,
       isList: true,
-      watch: true,
-      ...(applicationName
+      selector: labels
         ? {
-            selector: {
-              matchLabels: {
-                [PipelineRunLabel.APPLICATION]: applicationName,
-              },
-            },
+            matchLabels: labels,
           }
-        : {}),
+        : undefined,
     },
     ReleaseModel,
   );
-  return [data, !isLoading, error];
+
+  return res;
 };
 
 export const useRelease = (

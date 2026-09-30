@@ -64,11 +64,11 @@ spec:
       description: 'Skip sending the Slack notification'
       default: 'false'
       type: string
-    - name: test-image-tag
+    - name: test-image-repository
       description: >-
-        Tag for the E2E test image (quay.io/konflux_ui_qe/konflux-ui-tests:<tag>).
-        Repository is fixed so PipelineRuns cannot point the secret-bearing step at an arbitrary image.
-      default: 'latest'
+        E2E test image repository without tag. Must match e2e-output-image from
+        the konflux-ui build pipeline (e2e-on-pr-<sha> for pull_request, e2e-<sha> for push).
+      default: 'quay.io/redhat-user-workloads/konflux-ui-tenant/konflux-ui/konflux-ui'
       type: string
   tasks:
     - name: test-metadata

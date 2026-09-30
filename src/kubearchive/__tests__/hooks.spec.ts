@@ -2,11 +2,12 @@ import * as React from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import { STALE_ARCHIVE_SUCCEEDED_REASONS } from '~/consts/pipelinerun';
-import { PipelineRunModel, ReleaseModel } from '~/models';
-import { PipelineRunKind, ReleaseCondition } from '~/types';
-import type { ReleaseKind } from '~/types/release';
+import { PipelineRunModel } from '~/models/pipelineruns';
+import { ReleaseModel } from '~/models/release';
+import { K8sModelCommon, K8sResourceCommon, WatchK8sResource } from '~/types/k8s';
+import { PipelineRunKind } from '~/types/pipeline-run';
+import { ReleaseCondition, type ReleaseKind } from '~/types/release';
 import { createTestQueryClient, createK8sUtilMock } from '~/unit-test-utils';
-import { K8sModelCommon, K8sResourceCommon, WatchK8sResource } from '../../types/k8s';
 import { useKubearchiveListResourceQuery } from '../hooks';
 
 // Mock the kubearchive utilities
