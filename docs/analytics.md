@@ -167,24 +167,38 @@ To avoid this, `signOut()` `await`s `onLogout()` before doing the sign-out fetch
 - `toPagePattern`: the next route pattern, absent on the open step
 - `durationMs`: elapsed time on the step
 
-`useJourneyTracker()` records route changes through the shared `JourneyCollector`. Checkpoints are non-destructive: later flushes may repeat steps with longer durations or a newly known `toPagePattern`.
+`useJourneyTracker()` records route changes through the shared `JourneyCollector`. Each successful delivery starts a new, non-overlapping segment. The active route becomes the next segment's boundary step, with its dwell time restarted at delivery; this preserves the transition to the next route without repeating earlier dwell time or transitions.
 
 Journeys flush on:
 
-- logout through `JourneyCollector.flushAndWait()`, awaited before navigation, forced past checkpoint deduplication (see [Logout](#logout))
-- payload splitting, before a journey exceeds the downstream destination's property limit
+- **Timed checkpoint** every 15 minutes, when the journey is eligible (has at least one distinct route transition and new route data since the last checkpoint). Maximum routine volume is 4 timed calls per active hour.
+- **Logout** through `JourneyCollector.flushAndWait()`, awaited before navigation, forced past checkpoint deduplication (see [Logout](#logout)).
+- **Payload splitting**, before a journey exceeds the downstream destination's 80 KB property limit.
+- **Inactivity rotation**, when a dirty journey is superseded after 20 minutes of no route activity.
 
-Flushes return `false`/resolve `false` when there are no steps or required common fields are missing.
+Flushes return `false`/resolve `false` when there are no steps, no distinct route transition has occurred, or required common fields are missing.
+
+### Single-page suppression
+
+A journey containing only its initial route (no navigation to a different page) produces no timed or logout journey event. This prevents idle tabs from generating noise.
+
+### Inactivity rotation
+
+When 20 minutes elapse without a route transition, the next navigation starts a new journey (new `journeyId`, new `sessionStartedAt`). If the old journey had unsent transitions, it is flushed before rotation.
+
+### Always-present identifiers
+
+`journeyId` and `journeyPartIndex` are present on every checkpoint, enabling correlation of multiple checkpoints within the same journey. `journeyPartIndex` starts at `0` and increments after every successful delivery, including payload splits.
 
 Background-tab and browser-close delivery are deliberately out of scope until a supported, end-to-end tested lifecycle transport is available.
 
 ### Payload splitting
 
-When closed steps exceed the 80 KB estimate, the collector flushes a part and starts another without duplicating the boundary step. Split parts keep `sessionStartedAt` and `journeyId` stable, increment `journeyPartIndex`, and use an independent duration clock. `journeyId` and `journeyPartIndex` are omitted until a split occurs to avoid adding bytes to normal sessions.
+When closed steps exceed the 80 KB estimate, the collector flushes a segment and starts another without repeating prior steps. Split segments keep `sessionStartedAt` and `journeyId` stable, increment `journeyPartIndex`, and use an independent duration clock.
 
 ### Downstream queries
 
-Checkpoint events overlap. Do not sum all `durationMs` values for a session. Group by `sessionStartedAt` and select the latest event. For split journeys, select the latest event per `journeyPartIndex`, group parts by `journeyId`, then concatenate parts in index order.
+Checkpoint events are non-overlapping. Group by `sessionId` and `journeyId`, then concatenate segments in `journeyPartIndex` order. The boundary route can appear in adjacent segments, but each occurrence reports only the dwell time accumulated in its own segment.
 
 Queries must use `steps.pagePattern` and `steps.toPagePattern`; the old `steps.path` and `steps.toPath` names are no longer emitted.
 

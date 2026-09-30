@@ -5,6 +5,12 @@ import { CommonFields, JourneyStep, TrackEvents, UserJourneyEvent } from './gen/
 /** Maximum estimated payload size before a journey is split into another part. */
 export const MAX_PAYLOAD_BYTES = 80 * 1024;
 
+/** Timed checkpoint interval: at most one checkpoint per this period. */
+export const CHECKPOINT_INTERVAL_MS = 15 * 60 * 1000;
+
+/** Route inactivity threshold: start a new journey when exceeded. */
+export const INACTIVITY_THRESHOLD_MS = 20 * 60 * 1000;
+
 interface OpenStep {
   pagePattern: string;
   enteredAt: number;
@@ -33,12 +39,19 @@ export class JourneyCollector {
 
   private journeyId: string;
 
-  // The first split is still part 0, so the index alone cannot identify it.
-  private hasSplit = false;
+  /** Timestamp of the most recent route transition (recordStep with a new pattern). */
+  private lastRouteActivityMs: number;
+
+  /** True once at least two distinct route patterns have been recorded in this journey. */
+  private hasDistinctTransition = false;
+
+  /** True when route transitions exist that have not yet been successfully checkpointed. */
+  private isDirty = false;
 
   constructor() {
     this.sessionStartedAtMs = Date.now();
     this.partStartedAtMs = this.sessionStartedAtMs;
+    this.lastRouteActivityMs = this.sessionStartedAtMs;
     this.journeyId = uuidv4();
   }
 
@@ -49,6 +62,17 @@ export class JourneyCollector {
 
     const now = Date.now();
 
+    // Rotate the journey when the tab resumes after prolonged inactivity.
+    if (
+      this.openStep &&
+      now - this.lastRouteActivityMs >= INACTIVITY_THRESHOLD_MS
+    ) {
+      if (this.hasDistinctTransition && this.isDirty) {
+        this.flushAt(now, { force: true });
+      }
+      this.reset();
+    }
+
     if (this.openStep) {
       this.closedSteps.push({
         pagePattern: this.openStep.pagePattern,
@@ -58,19 +82,28 @@ export class JourneyCollector {
       // Prevent the boundary step from also appearing as the live step.
       this.openStep = undefined;
 
+      this.hasDistinctTransition = true;
+      this.isDirty = true;
+
       if (this.estimatedPayloadBytes() > MAX_PAYLOAD_BYTES) {
-        this.hasSplit = true;
         // Payload protection must not be blocked by lifecycle-flush deduplication.
-        if (this.flushAt(now, { force: true })) {
-          this.softReset(now);
-        }
+        this.flushAt(now, { force: true });
       }
     }
 
+    this.lastRouteActivityMs = now;
     this.openStep = {
       pagePattern,
       enteredAt: now,
     };
+  }
+
+  /**
+   * Whether the journey has meaningful data worth checkpointing: at least one
+   * distinct route transition has occurred and unsent data exists.
+   */
+  isEligibleForCheckpoint(): boolean {
+    return this.hasDistinctTransition && this.isDirty;
   }
 
   flush(options?: { force?: boolean }): boolean {
@@ -140,13 +173,24 @@ export class JourneyCollector {
     this.flushInFlight = false;
     this.journeyId = uuidv4();
     this.journeyPartIndex = 0;
-    this.hasSplit = false;
+    this.lastRouteActivityMs = now;
+    this.hasDistinctTransition = false;
+    this.isDirty = false;
   }
 
-  private softReset(now: number): void {
+  private startNextSegment(now: number): void {
     this.closedSteps = [];
     this.journeyPartIndex += 1;
     this.partStartedAtMs = now;
+    this.hasDistinctTransition = false;
+    this.isDirty = false;
+
+    if (this.openStep) {
+      this.openStep = {
+        pagePattern: this.openStep.pagePattern,
+        enteredAt: now,
+      };
+    }
   }
 
   private canFlush(now: number): boolean {
@@ -158,6 +202,7 @@ export class JourneyCollector {
 
   private markFlushed(now: number): void {
     this.lastFlushAtMs = now;
+    this.startNextSegment(now);
   }
 
   private estimatedPayloadBytes(): number {
@@ -175,7 +220,7 @@ export class JourneyCollector {
     }
 
     const [firstStep, ...remainingSteps] = steps;
-    if (!firstStep) {
+    if (!firstStep || !this.hasDistinctTransition) {
       return undefined;
     }
 
@@ -183,9 +228,8 @@ export class JourneyCollector {
       sessionStartedAt: new Date(this.sessionStartedAtMs).toISOString(),
       totalDurationMs: now - this.partStartedAtMs,
       steps: [firstStep, ...remainingSteps],
-      ...(this.hasSplit
-        ? { journeyId: this.journeyId, journeyPartIndex: this.journeyPartIndex }
-        : {}),
+      journeyId: this.journeyId,
+      journeyPartIndex: this.journeyPartIndex,
     };
   }
 }
