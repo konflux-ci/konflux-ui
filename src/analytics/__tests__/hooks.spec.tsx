@@ -2,7 +2,7 @@ import { renderHook, act } from '@testing-library/react';
 import { createReactRouterMock, mockAnalyticsServiceFn } from '~/unit-test-utils';
 import { TrackEvents } from '../gen/analytics-types';
 import { useJourneyTracker, useTrackAnalyticsEvent } from '../hooks';
-import { journeyCollector } from '../JourneyCollector';
+import { CHECKPOINT_INTERVAL_MS, journeyCollector } from '../JourneyCollector';
 
 jest.mock('~/analytics/conditional-checks', () => ({
   useIsAnalyticsEnabled: jest.fn(),
@@ -99,5 +99,70 @@ describe('useJourneyTracker', () => {
     renderHook(() => useJourneyTracker());
 
     expect(recordStepSpy).toHaveBeenCalledWith('/unknown');
+  });
+
+  describe('checkpoint timer', () => {
+    const flushSpy = jest.spyOn(journeyCollector, 'flush').mockImplementation(jest.fn());
+    const isEligibleForCheckpointSpy = jest.spyOn(journeyCollector, 'isEligibleForCheckpoint');
+
+    beforeEach(() => {
+      jest.useFakeTimers();
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it('starts a checkpoint timer when analytics is enabled', () => {
+      isEligibleForCheckpointSpy.mockReturnValue(true);
+
+      renderHook(() => useJourneyTracker());
+
+      act(() => {
+        jest.advanceTimersByTime(CHECKPOINT_INTERVAL_MS);
+      });
+
+      expect(flushSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not flush when journey is not eligible', () => {
+      isEligibleForCheckpointSpy.mockReturnValue(false);
+
+      renderHook(() => useJourneyTracker());
+
+      act(() => {
+        jest.advanceTimersByTime(CHECKPOINT_INTERVAL_MS);
+      });
+
+      expect(flushSpy).not.toHaveBeenCalled();
+    });
+
+    it('clears the timer when analytics is disabled', () => {
+      isEligibleForCheckpointSpy.mockReturnValue(true);
+
+      const { rerender } = renderHook(() => useJourneyTracker());
+
+      useIsAnalyticsEnabled.mockReturnValue({ isAnalyticsEnabled: false });
+      rerender();
+
+      act(() => {
+        jest.advanceTimersByTime(CHECKPOINT_INTERVAL_MS);
+      });
+
+      expect(flushSpy).not.toHaveBeenCalled();
+    });
+
+    it('clears the timer on unmount', () => {
+      isEligibleForCheckpointSpy.mockReturnValue(true);
+
+      const { unmount } = renderHook(() => useJourneyTracker());
+      unmount();
+
+      act(() => {
+        jest.advanceTimersByTime(CHECKPOINT_INTERVAL_MS);
+      });
+
+      expect(flushSpy).not.toHaveBeenCalled();
+    });
   });
 });
