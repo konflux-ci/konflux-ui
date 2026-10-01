@@ -11,7 +11,7 @@ import AppEmptyState from '~/shared/components/empty-state/AppEmptyState';
 import FilteredEmptyState from '~/shared/components/empty-state/FilteredEmptyState';
 import { useFilterState, useFilteredData, FilterToolbar } from '~/shared/components/Filter';
 import ListLayout from '~/shared/components/list-layout/ListLayout';
-import { Table, TableContainer } from '~/shared/components/TableV2';
+import { Table, TableContainer, SortDropdown } from '~/shared/components/TableV2';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { Snapshot } from '~/types/coreBuildService';
@@ -19,6 +19,7 @@ import {
   FILTER_BY_VALUES,
   filterConfigs,
   filterOptions,
+  SNAPSHOTS_DEFAULT_SORT,
   SNAPSHOTS_LIST_COLUMN_STATE_KEY,
   SNAPSHOTS_LIST_COLUMNS,
 } from './snapshots-table-config';
@@ -130,6 +131,11 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
         toolbar={
           isFiltered || (snapshots ?? []).length > 0 ? (
             <FilterToolbar configs={filterConfigs} options={filterOptions}>
+              <SortDropdown
+                columns={SNAPSHOTS_LIST_COLUMNS}
+                columnStateKey={SNAPSHOTS_LIST_COLUMN_STATE_KEY}
+                defaultSort={SNAPSHOTS_DEFAULT_SORT}
+              />
               <ColumnManagement<Snapshot>
                 columns={SNAPSHOTS_LIST_COLUMNS}
                 columnStateKey={SNAPSHOTS_LIST_COLUMN_STATE_KEY}
@@ -145,6 +151,7 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
           getRowId={(obj) => obj.metadata.uid ?? obj.metadata.name}
           aria-label="Snapshots List"
           enableSorting
+          defaultSort={SNAPSHOTS_DEFAULT_SORT}
           hasNextPage={hasNextPage}
           isFetchingNextPage={isFetchingNextPage}
           fetchNextPage={fetchNextPage}

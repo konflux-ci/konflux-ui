@@ -3,7 +3,7 @@ import { COMPONENT_DETAILS_PATH, SNAPSHOT_DETAILS_PATH } from '@routes/paths';
 import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { Timestamp } from '~/shared';
 import { defineFilters } from '~/shared/components/Filter';
-import { ColumnDefinition } from '~/shared/components/TableV2';
+import { ColumnDefinition, type DefaultSort } from '~/shared/components/TableV2';
 import { TriggerColumnData } from '~/shared/components/trigger-column-data/trigger-column-data';
 import TruncatedLinkListWithPopover from '~/shared/components/truncated-link-list-with-popover/TruncatedLinkListWithPopover';
 import { Snapshot } from '~/types/coreBuildService';
@@ -13,6 +13,8 @@ import { textMatch } from '~/utils/text-filter-utils';
 import { SnapshotActionCell } from './snapshot-actions';
 
 export const SNAPSHOTS_LIST_COLUMN_STATE_KEY = 'snapshots-list';
+
+export const SNAPSHOTS_DEFAULT_SORT: DefaultSort = { column: 'createdAt', direction: 'desc' };
 
 const SHOW_MERGED_ONLY = 'showMergedOnly';
 const RELEASABLE = 'releasable';

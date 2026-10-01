@@ -16,8 +16,8 @@ interface TestRow {
 }
 
 const columns: ColumnDefinition<TestRow>[] = [
-  { id: 'name', header: 'Name', accessorFn: (row) => row.name },
-  { id: 'status', header: 'Status', accessorFn: (row) => row.status },
+  { id: 'name', header: 'Name', accessorFn: (row) => row.name, sortable: true },
+  { id: 'status', header: 'Status', accessorFn: (row) => row.status, sortable: true },
   { id: 'id', header: 'ID', accessorFn: (row) => row.id },
 ];
 
@@ -46,6 +46,25 @@ describe('useColumnState', () => {
 
     it('derives default state with no sort', () => {
       const { result } = renderHook(() => useColumnState('test-key', columns));
+
+      expect(result.current.columnState.sortColumn).toBeUndefined();
+      expect(result.current.columnState.sortDirection).toBeUndefined();
+    });
+
+    it('applies defaultSort when no persisted state exists', () => {
+      const { result } = renderHook(() =>
+        useColumnState('test-key', columns, { column: 'name', direction: 'desc' }),
+      );
+
+      expect(result.current.columnState.sortColumn).toBe('name');
+      expect(result.current.columnState.sortDirection).toBe('desc');
+    });
+
+    it('ignores defaultSort when the target column is not sortable', () => {
+      // 'id' column does not have sortable: true
+      const { result } = renderHook(() =>
+        useColumnState('test-key', columns, { column: 'id', direction: 'asc' }),
+      );
 
       expect(result.current.columnState.sortColumn).toBeUndefined();
       expect(result.current.columnState.sortDirection).toBeUndefined();
@@ -241,6 +260,74 @@ describe('useColumnState', () => {
       expect(result.current.columnState.visibleColumns).toEqual(['name']);
       expect(result.current.columnState.sortColumn).toBe('name');
       expect(result.current.columnState.sortDirection).toBe('desc');
+    });
+  });
+
+  describe('defaultSort with persisted state', () => {
+    it('uses persisted sort over defaultSort when user has explicitly sorted', () => {
+      const persisted = {
+        visibleColumns: ['name', 'status', 'id'],
+        columnOrder: ['name', 'status', 'id'],
+        sortColumn: 'status',
+        sortDirection: 'asc' as const,
+      };
+      mockUseLocalStorage.mockReturnValue([persisted, mockSetValue, jest.fn()]);
+
+      const { result } = renderHook(() =>
+        useColumnState('test-key', columns, { column: 'name', direction: 'desc' }),
+      );
+
+      expect(result.current.columnState.sortColumn).toBe('status');
+      expect(result.current.columnState.sortDirection).toBe('asc');
+    });
+
+    it('applies defaultSort when persisted state has no sort', () => {
+      const persisted = {
+        visibleColumns: ['name', 'status', 'id'],
+        columnOrder: ['name', 'status', 'id'],
+      };
+      mockUseLocalStorage.mockReturnValue([persisted, mockSetValue, jest.fn()]);
+
+      const { result } = renderHook(() =>
+        useColumnState('test-key', columns, { column: 'name', direction: 'desc' }),
+      );
+
+      expect(result.current.columnState.sortColumn).toBe('name');
+      expect(result.current.columnState.sortDirection).toBe('desc');
+    });
+
+    it('ignores defaultSort when the column is not sortable', () => {
+      const persisted = {
+        visibleColumns: ['name', 'status', 'id'],
+        columnOrder: ['name', 'status', 'id'],
+      };
+      mockUseLocalStorage.mockReturnValue([persisted, mockSetValue, jest.fn()]);
+
+      // 'id' exists but has sortable: undefined (not sortable)
+      const { result } = renderHook(() =>
+        useColumnState('test-key', columns, { column: 'id', direction: 'desc' }),
+      );
+
+      expect(result.current.columnState.sortColumn).toBeUndefined();
+      expect(result.current.columnState.sortDirection).toBeUndefined();
+    });
+
+    it('does not apply defaultSort when sorted column was explicitly removed', () => {
+      const persisted = {
+        visibleColumns: ['name', 'status', 'id'],
+        columnOrder: ['name', 'status', 'id'],
+        sortColumn: 'deleted-col',
+        sortDirection: 'asc' as const,
+      };
+      mockUseLocalStorage.mockReturnValue([persisted, mockSetValue, jest.fn()]);
+
+      const { result } = renderHook(() =>
+        useColumnState('test-key', columns, { column: 'name', direction: 'desc' }),
+      );
+
+      // The user had sorted by a column that was removed — don't override with default
+      expect(result.current.columnState.sortColumn).toBeUndefined();
+      expect(result.current.columnState.sortDirection).toBeUndefined();
     });
   });
 

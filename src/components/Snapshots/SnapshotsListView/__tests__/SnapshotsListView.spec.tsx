@@ -53,6 +53,39 @@ describe('SnapshotsListView - Column Headers', () => {
     jest.useFakeTimers();
   });
 
+  it('should render the sort indicator on the "Created at" column by default', () => {
+    useMockSnapshots.mockReturnValue({
+      data: mockSnapshots,
+      getSource: () => ResourceSource.Cluster,
+      isLoading: false,
+      hasError: false,
+    });
+
+    act(() => {
+      renderWithQueryClientAndRouter(createWrappedComponent());
+    });
+
+    // The "Created at" column header should have a descending sort indicator
+    const createdAtHeader = screen.getByText('Created at').closest('th');
+    expect(createdAtHeader).toBeInTheDocument();
+    expect(createdAtHeader).toHaveAttribute('aria-sort', 'descending');
+  });
+
+  it('should render the SortDropdown in the toolbar', () => {
+    useMockSnapshots.mockReturnValue({
+      data: mockSnapshots,
+      getSource: () => ResourceSource.Cluster,
+      isLoading: false,
+      hasError: false,
+    });
+
+    act(() => {
+      renderWithQueryClientAndRouter(createWrappedComponent());
+    });
+
+    expect(screen.getByTestId('sort-dropdown')).toBeInTheDocument();
+  });
+
   it('should display all expected column headers correctly', () => {
     useMockSnapshots.mockReturnValue({
       data: mockSnapshots,
