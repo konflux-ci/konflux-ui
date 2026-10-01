@@ -385,6 +385,52 @@ describe('flattenFlatCveEntries', () => {
 });
 
 describe('flattenFlatCveEntries fields', () => {
+  it('preserves advisory metadata emitted by newer scans', () => {
+    const entries: RoxctlFlatCveEntry[] = [
+      {
+        cve: 'CVE-2024-4487',
+        severity: 'CRITICAL',
+        advisory: [
+          {
+            name: 'RHSA-2024:4487',
+            link: 'https://access.redhat.com/errata/RHSA-2024:4487',
+          },
+        ],
+        components: [{ component: 'nodejs', version: '18.16.0' }],
+      },
+    ];
+
+    const row = flattenFlatCveEntries(entries)[0];
+
+    expect(row.advisory).toEqual([
+      {
+        name: 'RHSA-2024:4487',
+        link: 'https://access.redhat.com/errata/RHSA-2024:4487',
+      },
+    ]);
+  });
+
+  it('preserves every reference link emitted by the scan', () => {
+    const entries: RoxctlFlatCveEntry[] = [
+      {
+        cve: 'CVE-2024-4487',
+        severity: 'CRITICAL',
+        links: [
+          'https://nvd.nist.gov/vuln/detail/CVE-2024-4487',
+          'https://security.example.com/CVE-2024-4487',
+        ],
+        components: [{ component: 'nodejs', version: '18.16.0' }],
+      },
+    ];
+
+    const row = flattenFlatCveEntries(entries)[0];
+
+    expect(row.links).toEqual([
+      'https://nvd.nist.gov/vuln/detail/CVE-2024-4487',
+      'https://security.example.com/CVE-2024-4487',
+    ]);
+  });
+
   it('maps fields correctly for a moderate severity CVE', () => {
     const rows = flattenFlatCveEntries(sampleFlatEntries);
     const moderate = rows.find(
@@ -696,6 +742,52 @@ describe('groupRowsByCve', () => {
         fixedBy: undefined,
       }),
     );
+  });
+
+  it('preserves advisory metadata from newer scans', () => {
+    const rows = flattenFlatCveEntries([
+      {
+        cve: 'CVE-2024-4487',
+        severity: 'CRITICAL',
+        advisory: [
+          {
+            name: 'RHSA-2024:4487',
+            link: 'https://access.redhat.com/errata/RHSA-2024:4487',
+          },
+        ],
+        components: [{ component: 'nodejs', version: '18.16.0' }],
+      },
+    ]);
+
+    const groupedRow = groupRowsByCve(rows)[0];
+
+    expect(groupedRow.advisory).toEqual([
+      {
+        name: 'RHSA-2024:4487',
+        link: 'https://access.redhat.com/errata/RHSA-2024:4487',
+      },
+    ]);
+  });
+
+  it('preserves all reference links in the grouped row', () => {
+    const rows = flattenFlatCveEntries([
+      {
+        cve: 'CVE-2024-4487',
+        severity: 'CRITICAL',
+        links: [
+          'https://nvd.nist.gov/vuln/detail/CVE-2024-4487',
+          'https://security.example.com/CVE-2024-4487',
+        ],
+        components: [{ component: 'nodejs', version: '18.16.0' }],
+      },
+    ]);
+
+    const groupedRow = groupRowsByCve(rows)[0];
+
+    expect(groupedRow.links).toEqual([
+      'https://nvd.nist.gov/vuln/detail/CVE-2024-4487',
+      'https://security.example.com/CVE-2024-4487',
+    ]);
   });
 
   it('preserves imagePlatform from the first row', () => {
