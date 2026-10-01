@@ -1,6 +1,6 @@
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
 import Chatbot from '@patternfly/chatbot/dist/dynamic/Chatbot';
+import ChatbotAlert from '@patternfly/chatbot/dist/dynamic/ChatbotAlert';
 import ChatbotContent from '@patternfly/chatbot/dist/dynamic/ChatbotContent';
 import ChatbotFooter, { ChatbotFootnote } from '@patternfly/chatbot/dist/dynamic/ChatbotFooter';
 import ChatbotHeader, {
@@ -11,29 +11,59 @@ import ChatbotHeader, {
 } from '@patternfly/chatbot/dist/dynamic/ChatbotHeader';
 import ChatbotToggle from '@patternfly/chatbot/dist/dynamic/ChatbotToggle';
 import ChatbotWelcomePrompt from '@patternfly/chatbot/dist/dynamic/ChatbotWelcomePrompt';
+import Message from '@patternfly/chatbot/dist/dynamic/Message';
 import MessageBar from '@patternfly/chatbot/dist/dynamic/MessageBar';
 import MessageBox from '@patternfly/chatbot/dist/dynamic/MessageBox';
+import { Checkbox } from '@patternfly/react-core';
 import KonfluxLogo from '~/assets/konflux-logo.svg';
+import { CHAT_MESSAGE_REHYPE_PLUGINS } from '~/components/AIChat/chatMessagePlugins';
 import {
   KONFLUX_AI_DISPLAY_MODE,
+  KONFLUX_AI_ERROR_TITLE,
   KONFLUX_AI_FOOTNOTE,
   KONFLUX_AI_MESSAGE_PLACEHOLDER,
+  KONFLUX_AI_SEND_CONTEXT_LABEL,
   KONFLUX_AI_TOGGLE_BUTTON_LABEL,
   KONFLUX_AI_TOGGLE_TOOLTIP,
   KONFLUX_AI_WELCOME_DESCRIPTION,
   KONFLUX_AI_WELCOME_TITLE,
 } from '~/components/AIChat/const';
+import { useLightspeedChat } from '~/lightspeed/useLightspeedChat';
 
 import '@patternfly/chatbot/dist/css/main.css';
 import './AIChat.scss';
 
 /**
- * Basic PatternFly chatbot shell with no backend/send behavior.
+ * PatternFly chatbot dock with Lightspeed SSE send/receive.
  */
 export const AIChatDock: React.FC = () => {
   const [isChatbotVisible, setIsChatbotVisible] = React.useState(false);
+  const [sendContextAsAttachment, setSendContextAsAttachment] = React.useState(false);
+  const scrollToBottomRef = React.useRef<HTMLDivElement>(null);
+  const {
+    messages,
+    announcement,
+    isSendButtonDisabled,
+    isInitializing,
+    chatError,
+    clearChatError,
+    sendMessage,
+  } = useLightspeedChat();
 
-  return ReactDOM.createPortal(
+  React.useEffect(() => {
+    if (!isChatbotVisible) {
+      clearChatError();
+    }
+  }, [clearChatError, isChatbotVisible]);
+
+  React.useEffect(() => {
+    if (messages.length === 0) {
+      return;
+    }
+    scrollToBottomRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'end' });
+  }, [messages]);
+
+  return (
     <div className="ai-chat" data-test="ai-chat-dock">
       <ChatbotToggle
         tooltipLabel={KONFLUX_AI_TOGGLE_TOOLTIP}
@@ -45,11 +75,7 @@ export const AIChatDock: React.FC = () => {
         <ChatbotHeader>
           <ChatbotHeaderMain>
             <ChatbotHeaderTitle>
-              <KonfluxLogo
-                aria-label="Konflux"
-                className="ai-chat__brand"
-                height={36}
-              />
+              <KonfluxLogo aria-label="Konflux" className="ai-chat__brand" height={36} />
             </ChatbotHeaderTitle>
           </ChatbotHeaderMain>
           <ChatbotHeaderActions>
@@ -57,23 +83,47 @@ export const AIChatDock: React.FC = () => {
           </ChatbotHeaderActions>
         </ChatbotHeader>
         <ChatbotContent>
-          <MessageBox>
-            <ChatbotWelcomePrompt
-              title={KONFLUX_AI_WELCOME_TITLE}
-              description={KONFLUX_AI_WELCOME_DESCRIPTION}
-            />
+          {chatError ? (
+            <ChatbotAlert variant="danger" title={KONFLUX_AI_ERROR_TITLE} isInline>
+              {chatError}
+            </ChatbotAlert>
+          ) : null}
+          <MessageBox announcement={announcement}>
+            {messages.length === 0 && !isInitializing ? (
+              <ChatbotWelcomePrompt
+                title={KONFLUX_AI_WELCOME_TITLE}
+                description={KONFLUX_AI_WELCOME_DESCRIPTION}
+              />
+            ) : null}
+            {messages.map((message, index) => (
+              <React.Fragment key={message.id}>
+                <Message {...message} additionalRehypePlugins={CHAT_MESSAGE_REHYPE_PLUGINS} />
+                {index === messages.length - 1 ? <div ref={scrollToBottomRef} /> : null}
+              </React.Fragment>
+            ))}
           </MessageBox>
         </ChatbotContent>
         <ChatbotFooter>
           <MessageBar
             hasAttachButton={false}
-            onSendMessage={() => undefined}
+            isSendButtonDisabled={isSendButtonDisabled}
+            onSendMessage={(message) => {
+              void sendMessage(String(message), {
+                includePageContext: sendContextAsAttachment,
+              });
+            }}
             placeholder={KONFLUX_AI_MESSAGE_PLACEHOLDER}
+          />
+          <Checkbox
+            className="ai-chat__context-toggle"
+            id="konflux-ai-send-context"
+            isChecked={sendContextAsAttachment}
+            label={KONFLUX_AI_SEND_CONTEXT_LABEL}
+            onChange={(_event, checked) => setSendContextAsAttachment(checked)}
           />
           <ChatbotFootnote label={KONFLUX_AI_FOOTNOTE} />
         </ChatbotFooter>
       </Chatbot>
-    </div>,
-    document.body,
+    </div>
   );
 };

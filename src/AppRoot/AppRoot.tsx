@@ -4,6 +4,8 @@ import { Page, PageSection } from '@patternfly/react-core';
 import { NAMESPACE_LIST_PATH, RELEASE_MONITOR_PATH } from '@routes/paths';
 import { useJourneyTracker } from '~/analytics/hooks';
 import { AIChatGate } from '~/components/AIChat/AIChatGate';
+import { AIChatPageContextProvider } from '~/components/AIChat/pageContext/AIChatPageContext';
+import { AIChatPageContextResolver } from '~/components/AIChat/pageContext/AIChatPageContextResolver';
 import NotificationCenter from '~/components/KonfluxSystemNotifications/NotificationList';
 import SidePanelHost from '~/components/SidePanel/SidePanelHost';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
@@ -39,7 +41,7 @@ export const AppRoot: React.FC = () => {
   const closeDrawer = React.useCallback(() => setIsDrawerExpanded(false), []);
 
   return (
-    <>
+    <AIChatPageContextProvider>
       <KonfluxBanner />
       <Page
         sidebar={<AppSideBar isOpen={isSideBarOpen} />}
@@ -66,7 +68,8 @@ export const AppRoot: React.FC = () => {
       {isSystemNotificationsEnabled && (
         <NotificationCenter isDrawerExpanded={isDrawerExpanded} closeDrawer={closeDrawer} />
       )}
+      <AIChatPageContextResolver />
       <AIChatGate />
-    </>
+    </AIChatPageContextProvider>
   );
 };
