@@ -3,8 +3,8 @@ import { Flex, FlexItem } from '@patternfly/react-core';
 import CommitLabel from '~/components/Commits/commit-label/CommitLabel';
 import { CommitIcon } from '~/components/Commits/CommitIcon';
 import { PipelineRunEventType } from '~/consts/pipelinerun';
+import { ExternalLink } from '~/shared/components';
 import { createPullRequestUrl } from '~/utils/git-utils';
-import { ExternalLink } from '../..';
 
 const GITLAB_PROVIDER = 'gitlab';
 
