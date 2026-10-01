@@ -134,6 +134,29 @@ Standalone collapsible group header row for grouped tables. Renders the group na
 />
 ```
 
+### `SortDropdown`
+
+Dropdown for selecting sort column and direction. Renders two option groups: "Sort by" (one option per sortable column) and "Direction" (Ascending / Descending). Uses `useColumnState` to read and write sort state, sharing persistence with the `Table` component via the same `columnStateKey`.
+
+**Import:** `import { SortDropdown } from '~/shared/components/TableV2';`
+
+```tsx
+<SortDropdown
+  columns={columns}
+  columnStateKey="my-table"
+  defaultSort={{ column: 'createdAt', direction: 'desc' }}
+/>
+```
+
+#### Props (`SortDropdownProps<TData>`)
+
+| Prop             | Type                        | Required | Description                                                                     |
+| ---------------- | --------------------------- | -------- | ------------------------------------------------------------------------------- |
+| `columns`        | `ColumnDefinition<TData>[]` | Yes      | Column definitions — only columns with `sortable: true` appear in the dropdown  |
+| `columnStateKey` | `string`                    | Yes      | localStorage key for persisting column/sort state                               |
+| `defaultSort`    | `DefaultSort`               | No       | Default sort forwarded to `useColumnState` so the dropdown matches the table's initial sort |
+| `data-tour`      | `string`                    | No       | Tour anchor attribute passed through to the root element                        |
+
 ## Hook Reference
 
 ### `useColumnState(key, columns, defaultSort?)`

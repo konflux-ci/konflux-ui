@@ -143,7 +143,6 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
                 columns={SNAPSHOTS_LIST_COLUMNS}
                 columnStateKey={columnStateKey}
                 defaultSort={SNAPSHOTS_DEFAULT_SORT}
-                data-tour="snapshots-sort-dropdown"
               />
               <ColumnManagement<Snapshot>
                 columns={SNAPSHOTS_LIST_COLUMNS}
