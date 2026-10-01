@@ -69,11 +69,10 @@ describe('SnapshotsListView - Column Headers', () => {
       renderWithQueryClientAndRouter(createWrappedComponent());
     });
 
-    // The "Created at" column header should have a sort indicator (descending arrow)
+    // The "Created at" column header should have a descending sort indicator
     const createdAtHeader = screen.getByText('Created at').closest('th');
     expect(createdAtHeader).toBeInTheDocument();
-    // The sort indicator renders an SVG icon inside the header
-    expect(createdAtHeader?.querySelector('svg')).toBeInTheDocument();
+    expect(createdAtHeader).toHaveAttribute('aria-sort', 'descending');
   });
 
   it('should render the SortDropdown in the toolbar', () => {
