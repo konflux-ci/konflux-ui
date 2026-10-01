@@ -76,6 +76,21 @@ describe('SnapshotsListView - Column Headers', () => {
     expect(createdAtHeader?.querySelector('svg')).toBeInTheDocument();
   });
 
+  it('should render the SortDropdown in the toolbar', () => {
+    useMockSnapshots.mockReturnValue({
+      data: mockSnapshots,
+      getSource: () => ResourceSource.Cluster,
+      isLoading: false,
+      hasError: false,
+    });
+
+    act(() => {
+      renderWithQueryClientAndRouter(createWrappedComponent());
+    });
+
+    expect(screen.getByTestId('sort-dropdown')).toBeInTheDocument();
+  });
+
   it('should display all expected column headers correctly', () => {
     useMockSnapshots.mockReturnValue({
       data: mockSnapshots,
