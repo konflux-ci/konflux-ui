@@ -11,7 +11,7 @@ import AppEmptyState from '~/shared/components/empty-state/AppEmptyState';
 import FilteredEmptyState from '~/shared/components/empty-state/FilteredEmptyState';
 import { useFilterState, useFilteredData, FilterToolbar } from '~/shared/components/Filter';
 import ListLayout from '~/shared/components/list-layout/ListLayout';
-import { Table, TableContainer, SortDropdown, type DefaultSort } from '~/shared/components/TableV2';
+import { Table, TableContainer, SortDropdown } from '~/shared/components/TableV2';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { Snapshot } from '~/types/coreBuildService';
@@ -19,11 +19,10 @@ import {
   FILTER_BY_VALUES,
   filterConfigs,
   filterOptions,
+  SNAPSHOTS_DEFAULT_SORT,
   SNAPSHOTS_LIST_COLUMN_STATE_KEY,
   SNAPSHOTS_LIST_COLUMNS,
 } from './snapshots-table-config';
-
-const SNAPSHOTS_DEFAULT_SORT: DefaultSort = { column: 'createdAt', direction: 'desc' };
 
 export type SnapshotsListViewProps = {
   applicationName: string;
