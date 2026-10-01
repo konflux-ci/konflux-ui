@@ -11,7 +11,7 @@ import AppEmptyState from '~/shared/components/empty-state/AppEmptyState';
 import FilteredEmptyState from '~/shared/components/empty-state/FilteredEmptyState';
 import { useFilterState, useFilteredData, FilterToolbar } from '~/shared/components/Filter';
 import ListLayout from '~/shared/components/list-layout/ListLayout';
-import { Table, TableContainer, SortDropdown } from '~/shared/components/TableV2';
+import { Table, TableContainer, SortDropdown, type DefaultSort } from '~/shared/components/TableV2';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { Snapshot } from '~/types/coreBuildService';
@@ -22,6 +22,8 @@ import {
   SNAPSHOTS_LIST_COLUMN_STATE_KEY,
   SNAPSHOTS_LIST_COLUMNS,
 } from './snapshots-table-config';
+
+const SNAPSHOTS_DEFAULT_SORT: DefaultSort = { column: 'createdAt', direction: 'desc' };
 
 export type SnapshotsListViewProps =
   { applicationName: string; groupName?: never } | { applicationName?: never; groupName: string };
@@ -139,7 +141,8 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
             <FilterToolbar configs={filterConfigs} options={filterOptions}>
               <SortDropdown
                 columns={SNAPSHOTS_LIST_COLUMNS}
-                columnStateKey={SNAPSHOTS_LIST_COLUMN_STATE_KEY}
+                columnStateKey={columnStateKey}
+                defaultSort={SNAPSHOTS_DEFAULT_SORT}
                 data-tour="snapshots-sort-dropdown"
               />
               <ColumnManagement<Snapshot>
@@ -157,7 +160,7 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
           getRowId={(obj) => obj.metadata.uid ?? obj.metadata.name}
           aria-label="Snapshots List"
           enableSorting
-          defaultSort={{ column: 'createdAt', direction: 'desc' }}
+          defaultSort={SNAPSHOTS_DEFAULT_SORT}
           hasNextPage={hasNextPage}
           isFetchingNextPage={isFetchingNextPage}
           fetchNextPage={fetchNextPage}

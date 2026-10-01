@@ -8,10 +8,12 @@ type ColumnId = Pick<ColumnDefinition<never>, 'id'>;
 /** Derives the default column state from column definitions, optionally with a default sort. */
 function deriveDefaultState(columns: ColumnId[], defaultSort?: DefaultSort): ColumnState {
   const ids = columns.map((c) => c.id);
+  const validIds = new Set(ids);
+  const hasValidDefault = defaultSort && validIds.has(defaultSort.column);
   return {
     visibleColumns: ids,
     columnOrder: ids,
-    ...(defaultSort
+    ...(hasValidDefault
       ? { sortColumn: defaultSort.column, sortDirection: defaultSort.direction }
       : {}),
   };
@@ -63,10 +65,11 @@ function migrateState(
   const mergedVisible = [...existingVisible, ...newColumns];
 
   // Preserve persisted sort if still valid; fall back to defaultSort if no sort was persisted
+  const hasValidDefault = defaultSort && validIds.has(defaultSort.column);
   const sortColumn =
     persisted.sortColumn && validIds.has(persisted.sortColumn)
       ? persisted.sortColumn
-      : !persisted.sortColumn && defaultSort
+      : !persisted.sortColumn && hasValidDefault
         ? defaultSort.column
         : undefined;
   const sortDirection = sortColumn

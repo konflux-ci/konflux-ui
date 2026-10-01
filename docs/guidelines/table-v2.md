@@ -63,6 +63,7 @@ The main orchestrator. Composes hooks and sub-components into a full-featured ta
 | `isFetchingNextPage`  | `boolean`                                             | No       | Whether next page is currently loading                              |
 | `fetchNextPage`       | `() => void`                                          | No       | Callback to fetch the next page                                     |
 | `columnStateKey`      | `string`                                              | No       | localStorage key for persisting column state                        |
+| `defaultSort`         | `DefaultSort`                                         | No       | Default sort applied when no sort is persisted in column state      |
 | `scrollElement`       | `HTMLElement \| null`                                 | No       | External scroll container for virtualization                        |
 | `data-test`           | `string`                                              | No       | Custom data-test attribute for the table root element (default: `table-v2`) |
 
@@ -135,7 +136,7 @@ Standalone collapsible group header row for grouped tables. Renders the group na
 
 ## Hook Reference
 
-### `useColumnState(key, columns)`
+### `useColumnState(key, columns, defaultSort?)`
 
 Manages column visibility, order, and sort state with optional localStorage persistence.
 
@@ -144,6 +145,12 @@ import { useColumnState } from '~/shared/components/TableV2';
 
 // Persisted (survives unmount/refresh)
 const { columnState, setColumnState } = useColumnState('my-table', columns);
+
+// With default sort (applied when no sort is persisted)
+const { columnState, setColumnState } = useColumnState('my-table', columns, {
+  column: 'createdAt',
+  direction: 'desc',
+});
 
 // Ephemeral (resets on unmount)
 const { columnState, setColumnState } = useColumnState(undefined, columns);
@@ -154,6 +161,18 @@ const { columnState, setColumnState } = useColumnState(undefined, columns);
 - Stale column IDs are removed, preserving persisted order
 - New column IDs are appended at the end
 - Sort is cleared if the sorted column was removed
+- If no sort was persisted and `defaultSort` is provided, `defaultSort` is applied as the initial sort
+
+#### `DefaultSort` Shape
+
+```ts
+interface DefaultSort {
+  /** Column ID to sort by. Must match a column with `sortable: true`. */
+  column: string;
+  /** Sort direction. */
+  direction: 'asc' | 'desc';
+}
+```
 
 #### `ColumnState` Shape
 
