@@ -2,14 +2,14 @@ import { useState, useMemo, useCallback } from 'react';
 import { useLocalStorage } from '~/shared/hooks/useLocalStorage';
 import { type ColumnDefinition, type ColumnState, type DefaultSort } from '../types';
 
-// Only the `id` field is needed — use Pick to avoid variance issues with TData
-type ColumnId = Pick<ColumnDefinition<never>, 'id'>;
+// Only the `id` and `sortable` fields are needed — use Pick to avoid variance issues with TData
+type ColumnId = Pick<ColumnDefinition<never>, 'id' | 'sortable'>;
 
 /** Derives the default column state from column definitions, optionally with a default sort. */
 function deriveDefaultState(columns: ColumnId[], defaultSort?: DefaultSort): ColumnState {
   const ids = columns.map((c) => c.id);
-  const validIds = new Set(ids);
-  const hasValidDefault = defaultSort && validIds.has(defaultSort.column);
+  const sortableIds = new Set(columns.filter((c) => c.sortable).map((c) => c.id));
+  const hasValidDefault = defaultSort && sortableIds.has(defaultSort.column);
   return {
     visibleColumns: ids,
     columnOrder: ids,
@@ -65,7 +65,8 @@ function migrateState(
   const mergedVisible = [...existingVisible, ...newColumns];
 
   // Preserve persisted sort if still valid; fall back to defaultSort if no sort was persisted
-  const hasValidDefault = defaultSort && validIds.has(defaultSort.column);
+  const sortableIds = new Set(columns.filter((c) => c.sortable).map((c) => c.id));
+  const hasValidDefault = defaultSort && sortableIds.has(defaultSort.column);
   const sortColumn =
     persisted.sortColumn && validIds.has(persisted.sortColumn)
       ? persisted.sortColumn
