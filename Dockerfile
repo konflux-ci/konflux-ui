@@ -10,10 +10,10 @@ COPY .yarnrc.yml .yarnrc.yml
 COPY package.json package.json
 COPY yarn.lock yarn.lock
 
-# Create yarn wrapper script to enable 'yarn' command
-# This delegates to the bundled, version-controlled yarn binary
-RUN printf '#!/bin/sh\nexec node /opt/app-root/src/.yarn/releases/yarn-4.12.0.cjs "$@"\n' > /usr/local/bin/yarn && \
-    chmod +x /usr/local/bin/yarn
+# Resolve the bundled Yarn Berry release at invocation time (not a hardcoded yarn-<version>.cjs).
+# KONFLUX_YARN_RELEASES_DIR is not YARN_* so Yarn Berry does not treat it as a yarnrc setting.
+COPY --chmod=755 scripts/container-yarn /usr/local/bin/yarn
+ENV KONFLUX_YARN_RELEASES_DIR=/opt/app-root/src/.yarn/releases
 
 # Copy source files
 COPY @types @types
