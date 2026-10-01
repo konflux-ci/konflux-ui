@@ -14,7 +14,7 @@ const ComponentGroupDetailsView: React.FC = () => {
   const { groupName } = useParams<RouterParams>();
   const namespace = useNamespace();
 
-  const [componentGroup, loaded, componentError] = useComponentGroup(namespace, groupName);
+  const [componentGroup, loaded, error] = useComponentGroup(namespace, groupName);
 
   const componentGroupBreadcrumbs = useComponentGroupBreadcrumbs(groupName);
 
@@ -26,8 +26,8 @@ const ComponentGroupDetailsView: React.FC = () => {
     );
   }
 
-  if (componentError) {
-    return getErrorState(componentError, loaded, 'component');
+  if (error) {
+    return getErrorState(error, loaded, 'component group');
   }
 
   return (
@@ -36,15 +36,17 @@ const ComponentGroupDetailsView: React.FC = () => {
         headTitle={componentGroup?.metadata?.name || 'Unknown'}
         title={
           <Content component={ContentVariants.h2}>
-            <span className="pf-u-mr-sm">
-              <b>{componentGroup?.metadata?.name}</b>
-            </span>
+            <b>{componentGroup?.metadata?.name}</b>
             <FeatureFlagIndicator flags={['component-model']} />
           </Content>
         }
         breadcrumbs={componentGroupBreadcrumbs}
         baseURL={GROUP_DETAILS_PATH.createPath({ workspaceName: namespace, groupName })}
         tabs={[
+          {
+            key: 'components',
+            label: 'Components',
+          },
           {
             key: 'integrationtests',
             label: 'Integration tests',
