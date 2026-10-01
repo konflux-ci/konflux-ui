@@ -1,4 +1,4 @@
-import { NavItem, pageTitles } from '../support/constants/PageTitle';
+import { NavItem } from '../support/constants/PageTitle';
 import { userAccessPO } from '../support/pageObjects/userAccess-po';
 import { issuesPagePO, secretsPagePO } from '../support/pageObjects/pages-po';
 import { ContrastSwitcher, Contrasts, ThemeSwitcher, Themes } from '../support/pages/PageHeader';
@@ -58,13 +58,81 @@ const sanitizeHeaders = (
     Object.entries(headers).map(([key, value]) => [key, sanitizeHeaderValue(key, value)]),
   );
 
-describe('Basic Happy Path', () => {
-  // Track if any test has failed - used to skip deletion on failure
-  let hasTestFailed = false;
+type NetworkLogEntry = {
+  method: string;
+  url: string;
+  headers: Record<string, string | string[]>;
+  timestamp: number;
+  status?: number;
+  statusText?: string;
+  responseHeaders?: Record<string, string | string[]>;
+};
+
+// Capture every request/response that goes through Cypress's network proxy
+// (Images, CSS, JS, XHR, Fetch, Docs) using cy.intercept instead of raw CDP
+// events, since Cypress.automation('remote:debugger:protocol', ...) only
+// forwards CDP *commands* and has no support for subscribing to CDP *events*
+// such as 'Network.onRequestWillBeSent'.
+const captureNetworkTraffic = (
+  logs: NetworkLogEntry[],
+  // Lets callers stop recording into `logs` once they're done with it
+  // (e.g. once a setup phase has completed), without having to tear down
+  // the underlying intercept, which stays registered for the rest of the spec.
+  shouldCapture: () => boolean = () => true,
+) => {
+  cy.intercept('**/*', (req) => {
+    const timestamp = Date.now();
+    req.continue((res) => {
+      if (!shouldCapture()) {
+        return;
+      }
+      logs.push({
+        method: req.method,
+        url: sanitizeUrl(req.url),
+        headers: sanitizeHeaders(req.headers),
+        timestamp,
+        status: res.statusCode,
+        statusText: res.statusMessage,
+        responseHeaders: sanitizeHeaders(res.headers),
+      });
+    });
+  });
+};
+
+describe('Environment Configuration Tests', () => {
+  // Setup-phase capture buffer, separate from the per-test `networkLogs`
+  // captured in beforeEach below: a `before` hook failure has no
+  // `this.currentTest`, so the afterEach failure handler can't pick it up.
+  // `setupFailed` is flipped by the `cy.on('fail', ...)` listener in
+  // `before()`, which is deregistered once setup finishes so it can't catch
+  // later test failures; the actual file write happens in `after()` below,
+  // since that hook still runs even when `before()` fails, whereas writing
+  // from inside the failure listener itself would race the hook teardown.
+  let setupNetworkLogs: NetworkLogEntry[] = [];
+  let setupFailed = false;
 
   before(function () {
-    if (Cypress.env('STUDIO_MODE')) {
-      const baseUrl = Cypress.env('KONFLUX_BASE_URL') as string;
+    // Start capturing before any setup action (Studio session login,
+    // cy.visit, Features.resetToDefault) runs.
+    setupNetworkLogs = [];
+    setupFailed = false;
+    // Guards both the `fail` listener below and the network capture against
+    // firing for anything beyond this `before()` hook: `cy.on('fail', ...)`
+    // and the `cy.intercept(...)` registered via `captureNetworkTraffic`
+    // both stay active for the entire spec (not just this hook), so without
+    // this flag a later test's failure/traffic would be wrongly attributed
+    // to setup.
+    let setupInProgress = true;
+    captureNetworkTraffic(setupNetworkLogs, () => setupInProgress);
+
+    const handleSetupFailure = (error: Error) => {
+      setupFailed = true;
+      throw error;
+    };
+    cy.on('fail', handleSetupFailure);
+
+    if (Cypress.expose('STUDIO_MODE')) {
+      const baseUrl = Cypress.expose('KONFLUX_BASE_URL') as string;
 
       // Studio replays in isolation — cache SSO cookies so replay skips the login redirect.
       cy.session(
@@ -83,55 +151,42 @@ describe('Basic Happy Path', () => {
       );
 
       cy.visit(baseUrl);
-      return;
+    } else {
+      Features.resetToDefault();
     }
-    Features.resetToDefault();
+
+    // Runs after all the setup commands above have executed. If `before()`
+    // fails partway through, this never runs — which is fine, since a failed
+    // `before()` hook skips the rest of the suite anyway, so there's no
+    // later test traffic/failure for the stale listener or intercept to
+    // misattribute.
+    cy.then(() => {
+      setupInProgress = false;
+      cy.off('fail', handleSetupFailure);
+    });
   });
 
-  let networkLogs: {
-    method: string;
-    url: string;
-    headers: Record<string, string | string[]>;
-    timestamp: number;
-    status?: number;
-    statusText?: string;
-    responseHeaders?: Record<string, string | string[]>;
-  }[] = [];
+  after(() => {
+    if (setupFailed) {
+      cy.writeFile('cypress/network-logs/nl-before_all_setup.json', setupNetworkLogs);
+    }
+  });
+
+  let networkLogs: NetworkLogEntry[] = [];
 
   beforeEach(() => {
     networkLogs = [];
-
-    // Capture every request/response that goes through Cypress's network proxy
-    // (Images, CSS, JS, XHR, Fetch, Docs) using cy.intercept instead of raw CDP
-    // events, since Cypress.automation('remote:debugger:protocol', ...) only
-    // forwards CDP *commands* and has no support for subscribing to CDP *events*
-    // such as 'Network.onRequestWillBeSent'.
-    cy.intercept('**/*', (req) => {
-      const timestamp = Date.now();
-      req.continue((res) => {
-        networkLogs.push({
-          method: req.method,
-          url: sanitizeUrl(req.url),
-          headers: sanitizeHeaders(req.headers),
-          timestamp,
-          status: res.statusCode,
-          statusText: res.statusMessage,
-          responseHeaders: sanitizeHeaders(res.headers),
-        });
-      });
-    });
+    captureNetworkTraffic(networkLogs);
   });
 
   afterEach(function () {
     // Extract and inspect the full network log in afterEach()
     cy.then(() => {
       if (this.currentTest?.state === 'failed') {
-        hasTestFailed = true;
-
         cy.log(`Captured total network events: ${networkLogs.length}`);
 
         // Save complete traffic to a file
-        const safeTestName = Cypress.currentTest.title.replace(/[^a-zA-Z0-9]/g, '_');
+        const safeTestName = this.currentTest.title.replace(/[^a-zA-Z0-9]/g, '_');
         cy.writeFile(`cypress/network-logs/nl-${safeTestName}.json`, networkLogs);
       }
     });
@@ -172,7 +227,7 @@ describe('Basic Happy Path', () => {
       Common.navigateTo(NavItem.issues);
       Common.waitForLoad();
 
-      if (!Cypress.env('LOCAL_CLUSTER')) {
+      if (!Cypress.expose('LOCAL_CLUSTER')) {
         cy.get(issuesPagePO.page).contains(issuesPagePO.pageDescription).should('exist');
         cy.get(issuesPagePO.overviewTab).should('exist');
         cy.get(issuesPagePO.issuesTab).should('exist');
