@@ -4,6 +4,7 @@ import { Skeleton, Tooltip } from '@patternfly/react-core';
 import { ClipboardCheckIcon } from '@patternfly/react-icons/dist/esm/icons/clipboard-check-icon';
 import { ExclamationTriangleIcon } from '@patternfly/react-icons/dist/esm/icons/exclamation-triangle-icon';
 import { StatusIconWithText } from '~/components/StatusIcon/StatusIcon';
+import { TriggerColumnData } from '~/components/trigger-column-data/trigger-column-data';
 import { PipelineRunColumnKeys } from '~/consts/pipeline';
 import {
   PipelineRunLabel,
@@ -22,12 +23,11 @@ import ActionMenu from '~/shared/components/action-menu/ActionMenu';
 import { Duration } from '~/shared/components/duration';
 import { RowFunctionArgs, TableData } from '~/shared/components/table';
 import { Timestamp } from '~/shared/components/timestamp/Timestamp';
-import { TriggerColumnData } from '~/shared/components/trigger-column-data/trigger-column-data';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { PipelineRunKind, TaskRunKind } from '~/types';
 import { ReleaseKind, ReleasePlanKind } from '~/types/coreBuildService';
 import { createCommitObjectFromPLR } from '~/utils/commits-utils';
-import { PipelineRunEventTypeLabel } from '~/utils/pipeline-run-filter-utils';
+import { getEventTypeLabel } from '~/utils/pipeline-run-filter-utils';
 import { pipelineRunStatus } from '~/utils/pipeline-utils';
 import { ScanResults } from '~/utils/scan/scan-utils';
 import { usePipelinerunActionsLazy } from './pipelinerun-actions';
@@ -286,19 +286,18 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
       ) : null}
       {showTrigger ? (
         <TableData className={pipelineRunTableColumnClasses.trigger}>
-          {PipelineRunEventTypeLabel[commit?.eventType] ?? '-'}
+          {getEventTypeLabel(commit?.eventType, commit?.gitProvider)}
         </TableData>
       ) : null}
       {showReference ? (
         <TableData className={pipelineRunTableColumnClasses.reference}>
           <TriggerColumnData
-            repoOrg={commit?.repoOrg}
-            repoName={commit?.repoName}
             repoURL={commit?.repoURL}
             prNumber={commit?.pullRequestNumber}
             eventType={commit?.eventType}
             commitSha={commit?.sha}
             shaUrl={commit?.shaURL}
+            gitProvider={commit?.gitProvider}
           />
         </TableData>
       ) : null}
@@ -483,19 +482,18 @@ const DynamicPipelineRunListRow: React.FC<
       )}
       {visibleColumns.has('trigger') && (
         <TableData className={dynamicClasses.trigger}>
-          {PipelineRunEventTypeLabel[commit?.eventType] ?? '-'}
+          {getEventTypeLabel(commit?.eventType, commit?.gitProvider)}
         </TableData>
       )}
       {visibleColumns.has('reference') && (
         <TableData className={dynamicClasses.reference}>
           <TriggerColumnData
-            repoOrg={commit?.repoOrg}
-            repoName={commit?.repoName}
             repoURL={commit?.repoURL}
             prNumber={commit?.pullRequestNumber}
             eventType={commit?.eventType}
             commitSha={commit?.sha}
             shaUrl={commit?.shaURL}
+            gitProvider={commit?.gitProvider}
           />
         </TableData>
       )}

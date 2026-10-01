@@ -34,6 +34,7 @@ export enum PipelineRunLabel {
   TEST_REPO_ORG_LABEL = 'pac.test.appstudio.openshift.io/url-org',
   TEST_COMMIT_EVENT_TYPE_LABEL = 'pac.test.appstudio.openshift.io/event-type',
   TEST_COMMIT_PROVIDER_LABEL = 'pac.test.appstudio.openshift.io/git-provider',
+  TEST_PULL_REQUEST_NUMBER_LABEL = 'pac.test.appstudio.openshift.io/pull-request',
   TEST_SERVICE_COMMIT = 'pac.test.appstudio.openshift.io/sha',
   TEST_SERVICE_COMMIT_TITLE = 'pac.test.appstudio.openshift.io/sha-title',
   TEST_SERVICE_EVENT_TYPE_LABEL = 'pac.test.appstudio.openshift.io/event-type',
@@ -64,6 +65,7 @@ export enum PipelineRunEventType {
   PULL = 'pull_request',
   INCOMING = 'incoming',
   RETEST = 'retest-all-comment',
+  TEST_ALL_COMMENT = 'test-all-comment',
 }
 
 /** Event types that represent post-merge / manually re-triggered build pipelines. */

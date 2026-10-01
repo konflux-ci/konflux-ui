@@ -7,6 +7,7 @@ import {
 import { SnapshotLabels } from '../consts/snapshots';
 import { PipelineRunKind, Commit } from '../types';
 import { Snapshot } from '../types/coreBuildService';
+import { createPullRequestUrl } from './git-utils';
 import { getSourceUrl, stripQueryStringParams } from './pipelinerun-utils';
 
 export const statuses = [
@@ -58,7 +59,10 @@ export const createCommitObjectFromPLR = (plr: PipelineRunKind): Commit => {
     plr.metadata.annotations?.[PipelineRunLabel.COMMIT_PROVIDER_LABEL] ||
     plr.metadata.labels?.[PipelineRunLabel.TEST_COMMIT_PROVIDER_LABEL] ||
     plr.metadata.annotations?.[PipelineRunLabel.TEST_COMMIT_PROVIDER_LABEL];
-  const pullRequestNumber = plr.metadata.labels?.[PipelineRunLabel.PULL_REQUEST_NUMBER_LABEL] ?? '';
+  const pullRequestNumber =
+    plr.metadata.labels?.[PipelineRunLabel.PULL_REQUEST_NUMBER_LABEL] ||
+    plr.metadata.labels?.[PipelineRunLabel.TEST_PULL_REQUEST_NUMBER_LABEL] ||
+    '';
   const eventType =
     plr.metadata.labels?.[PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL] ||
     plr.metadata.labels?.[PipelineRunLabel.TEST_COMMIT_EVENT_TYPE_LABEL] ||
@@ -199,11 +203,11 @@ export const createRepoBranchURL = (commit: Commit): string | null => {
 };
 
 export const createRepoPullRequestURL = (commit: Commit): string | null => {
-  const repoURL = createRepoUrl(commit);
-  if (commit.pullRequestNumber && repoURL) {
-    return `${repoURL}/pull/${commit.pullRequestNumber}`;
+  const repoURL = commit.repoURL ?? createRepoUrl(commit);
+  if (!commit.pullRequestNumber || !repoURL) {
+    return null;
   }
-  return null;
+  return createPullRequestUrl(repoURL, commit.pullRequestNumber) ?? null;
 };
 
 export const getSnapshotSourceUrl = (snapshot: Snapshot): string => {

@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom';
 import { COMPONENT_DETAILS_PATH, SNAPSHOT_DETAILS_PATH } from '@routes/paths';
+import { TriggerColumnData } from '~/components/trigger-column-data/trigger-column-data';
 import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { Timestamp } from '~/shared';
 import { defineFilters } from '~/shared/components/Filter';
 import { ColumnDefinition } from '~/shared/components/TableV2';
-import { TriggerColumnData } from '~/shared/components/trigger-column-data/trigger-column-data';
 import TruncatedLinkListWithPopover from '~/shared/components/truncated-link-list-with-popover/TruncatedLinkListWithPopover';
 import { Snapshot } from '~/types/coreBuildService';
 import { ResourceSource } from '~/types/k8s';
@@ -146,13 +146,12 @@ export const SNAPSHOTS_LIST_COLUMNS: ColumnDefinition<Snapshot>[] = [
       const commit = createCommitObjectFromSnapshot(info.row.original);
       return (
         <TriggerColumnData
-          repoOrg={commit?.repoOrg}
-          repoName={commit?.repoName}
           repoURL={commit?.repoURL}
           prNumber={commit?.pullRequestNumber}
           eventType={commit?.eventType}
           commitSha={commit?.sha}
           shaUrl={commit?.shaURL}
+          gitProvider={commit?.gitProvider}
         />
       );
     },
@@ -166,8 +165,7 @@ export const SNAPSHOTS_LIST_COLUMNS: ColumnDefinition<Snapshot>[] = [
     nonHidable: true,
     cell: (info) => {
       const getSourceFn = info.table.options.meta?.getSource as
-        | ((item: Snapshot) => ResourceSource | undefined)
-        | undefined;
+        ((item: Snapshot) => ResourceSource | undefined) | undefined;
       const source = getSourceFn?.(info.row.original);
       return <SnapshotActionCell snapshot={info.row.original} source={source} />;
     },
