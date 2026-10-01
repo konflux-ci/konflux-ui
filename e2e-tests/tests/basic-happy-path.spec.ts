@@ -27,10 +27,10 @@ describe('Basic Happy Path', () => {
   const integrationTestsTab = new IntegrationTestsTabPage();
   const componentPage = new ComponentPage();
 
-  const sourceOwner = Cypress.env('SOURCE_REPO_OWNER');
-  const sourceRepo = Cypress.env('SOURCE_REPO_NAME');
+  const sourceOwner = Cypress.expose('SOURCE_REPO_OWNER');
+  const sourceRepo = Cypress.expose('SOURCE_REPO_NAME');
   const repoName = Common.generateAppName(sourceRepo);
-  const repoOwner = Cypress.env('GH_REPO_OWNER');
+  const repoOwner = Cypress.expose('GH_REPO_OWNER');
   const publicRepo = `https://github.com/${repoOwner}/${repoName}`;
   const componentName: string = Common.generateAppName('java-quarkus');
 
@@ -53,7 +53,7 @@ describe('Basic Happy Path', () => {
     },
   };
 
-  const pipeline: string = Cypress.env('PIPELINE');
+  const pipeline: string = Cypress.expose('PIPELINE');
   const pipelineConfig = pipelineConfigs[pipeline];
   if (!pipelineConfig) {
     throw new Error(
@@ -66,8 +66,8 @@ describe('Basic Happy Path', () => {
   let hasTestFailed = false;
 
   before(function () {
-    if (Cypress.env('STUDIO_MODE')) {
-      const baseUrl = Cypress.env('KONFLUX_BASE_URL') as string;
+    if (Cypress.expose('STUDIO_MODE')) {
+      const baseUrl = Cypress.expose('KONFLUX_BASE_URL') as string;
 
       // Studio replays in isolation — cache SSO cookies so replay skips the login redirect.
       cy.session(
@@ -177,7 +177,7 @@ describe('Basic Happy Path', () => {
         .then((pipelinerunName) => {
           UIhelper.checkTableHasRows('Pipeline run List', componentName, 2);
           UIhelper.clickRowCellInTable('Pipeline run List', pipelinerunName, pipelinerunName);
-          UIhelper.verifyLabelAndValue('Namespace', Cypress.env('HAC_NAMESPACE'));
+          UIhelper.verifyLabelAndValue('Namespace', Cypress.expose('HAC_NAMESPACE'));
           // Use the pipelinerunName excluding the last hyphenated part "-<generated_number>"
           const lastDashIndex = pipelinerunName.lastIndexOf('-');
           const shortPipelinerunName =
@@ -213,7 +213,7 @@ describe('Basic Happy Path', () => {
       UIhelper.clickRowCellInTable('Pipeline run List', 'Test', `${applicationName}-`);
       // We encountered problems with EC checks on a local deployment,
       // so we only check for Succeeded status on the stage job
-      if (Cypress.env('PERIODIC_RUN_STAGE') === 'true') {
+      if (Cypress.expose('PERIODIC_RUN_STAGE') === 'true') {
         DetailsTab.waitForPLRAndDownloadAllLogs(300000, false, 'Succeeded');
       } else {
         DetailsTab.waitForPLRAndDownloadAllLogs(300000, false, '(Succeeded|Failed)');
@@ -296,7 +296,7 @@ describe('Basic Happy Path', () => {
       Common.navigateTo(NavItem.issues);
       Common.waitForLoad();
 
-      if (!Cypress.env('LOCAL_CLUSTER')) {
+      if (!Cypress.expose('LOCAL_CLUSTER')) {
         cy.get(issuesPagePO.page).contains(issuesPagePO.pageDescription).should('exist');
         cy.get(issuesPagePO.overviewTab).should('exist');
         cy.get(issuesPagePO.issuesTab).should('exist');
@@ -353,7 +353,7 @@ describe('Basic Happy Path', () => {
   describe('Delete the application via UI', () => {
     before(function () {
       // Skip deletion if any previous test has failed on stage - preserve app for debugging
-      if (hasTestFailed && Cypress.env('PERIODIC_RUN_STAGE')) {
+      if (hasTestFailed && Cypress.expose('PERIODIC_RUN_STAGE')) {
         cy.log('⚠️ Skipping application deletion - previous tests failed');
         cy.log(`Application "${applicationName}" will be preserved for debugging`);
         this.skip();

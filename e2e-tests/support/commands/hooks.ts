@@ -23,7 +23,7 @@ before(() => {
   //Clear namespace before running the tests
   Common.cleanNamespace();
 
-  const url = new URL(Cypress.env('KONFLUX_BASE_URL'));
+  const url = new URL(Cypress.expose('KONFLUX_BASE_URL'));
   cy.setCookie('notice_gdpr_prefs', '0,1,2:', { domain: url.hostname });
   cy.setCookie('cmapi_cookie_privacy', 'permit 1,2,3', { domain: url.hostname });
   cy.setCookie('notice_preferences', '2:', { domain: url.hostname });
@@ -34,17 +34,15 @@ before(() => {
     JSON.stringify({ 'application-list-getting-started-modal': true }),
   );
 
-  // Cypress Studio replays a single test in isolation; the global login/setup flow
-  // leaves the AUT on a blank page and breaks recording. Skip it when using Studio.
-  if (Cypress.env('STUDIO_MODE')) {
+  if (Cypress.expose('STUDIO_MODE')) {
     return;
   }
 
-  if (Cypress.env('LOGIN_PROVIDER') === 'openshift') {
+  if (Cypress.expose('LOGIN_PROVIDER') === 'openshift') {
     Login.openshiftLogin();
-  } else if (Cypress.env('LOCAL_CLUSTER')) {
+  } else if (Cypress.expose('LOCAL_CLUSTER')) {
     Login.localKonfluxLogin();
-  } else if (Cypress.env('PERIODIC_RUN_STAGE')) {
+  } else if (Cypress.expose('PERIODIC_RUN_STAGE')) {
     Login.stageKonfluxLogin();
   } else {
     Login.login();
@@ -52,7 +50,7 @@ before(() => {
 });
 
 afterEach(function () {
-  if (Cypress.env('STUDIO_MODE')) {
+  if (Cypress.expose('STUDIO_MODE')) {
     return;
   }
 
@@ -74,7 +72,7 @@ afterEach(function () {
 });
 
 after(() => {
-  if (Cypress.env('STUDIO_MODE')) {
+  if (Cypress.expose('STUDIO_MODE')) {
     return;
   }
 

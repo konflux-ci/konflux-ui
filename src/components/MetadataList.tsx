@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Flex, FlexItem, Label, LabelGroup, Truncate } from '@patternfly/react-core';
 
 interface MetadataListProps {
-  metadata: Record<string, string>;
+  metadata: Record<string, string> | undefined;
 }
 
 const MetadataList: React.FC<React.PropsWithChildren<MetadataListProps>> = ({ metadata }) => {
