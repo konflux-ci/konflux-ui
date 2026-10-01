@@ -1,4 +1,4 @@
-import { NavItem, pageTitles } from '../support/constants/PageTitle';
+import { NavItem } from '../support/constants/PageTitle';
 import { userAccessPO } from '../support/pageObjects/userAccess-po';
 import { issuesPagePO, secretsPagePO } from '../support/pageObjects/pages-po';
 import { ContrastSwitcher, Contrasts, ThemeSwitcher, Themes } from '../support/pages/PageHeader';
@@ -58,11 +58,54 @@ const sanitizeHeaders = (
     Object.entries(headers).map(([key, value]) => [key, sanitizeHeaderValue(key, value)]),
   );
 
-describe('Basic Happy Path', () => {
-  // Track if any test has failed - used to skip deletion on failure
-  let hasTestFailed = false;
+type NetworkLogEntry = {
+  method: string;
+  url: string;
+  headers: Record<string, string | string[]>;
+  timestamp: number;
+  status?: number;
+  statusText?: string;
+  responseHeaders?: Record<string, string | string[]>;
+};
 
+// Capture every request/response that goes through Cypress's network proxy
+// (Images, CSS, JS, XHR, Fetch, Docs) using cy.intercept instead of raw CDP
+// events, since Cypress.automation('remote:debugger:protocol', ...) only
+// forwards CDP *commands* and has no support for subscribing to CDP *events*
+// such as 'Network.onRequestWillBeSent'.
+const captureNetworkTraffic = (logs: NetworkLogEntry[]) => {
+  cy.intercept('**/*', (req) => {
+    const timestamp = Date.now();
+    req.continue((res) => {
+      logs.push({
+        method: req.method,
+        url: sanitizeUrl(req.url),
+        headers: sanitizeHeaders(req.headers),
+        timestamp,
+        status: res.statusCode,
+        statusText: res.statusMessage,
+        responseHeaders: sanitizeHeaders(res.headers),
+      });
+    });
+  });
+};
+
+describe('Environment Configuration Tests', () => {
   before(function () {
+    // Capture setup-phase traffic in its own buffer, separate from the
+    // per-test `networkLogs` captured in beforeEach below: a `before` hook
+    // failure has no `this.currentTest`, so the afterEach failure handler
+    // can't pick it up. Start capturing before any setup action (Studio
+    // session login, cy.visit, Features.resetToDefault) runs, and persist it
+    // via a scoped `cy.on('fail', ...)` handler if setup itself fails.
+    const setupNetworkLogs: NetworkLogEntry[] = [];
+    captureNetworkTraffic(setupNetworkLogs);
+
+    cy.on('fail', (error) => {
+      cy.writeFile('cypress/network-logs/nl-before_all_setup.json', setupNetworkLogs);
+      throw error;
+    });
+
     if (Cypress.env('STUDIO_MODE')) {
       const baseUrl = Cypress.env('KONFLUX_BASE_URL') as string;
 
@@ -88,50 +131,21 @@ describe('Basic Happy Path', () => {
     Features.resetToDefault();
   });
 
-  let networkLogs: {
-    method: string;
-    url: string;
-    headers: Record<string, string | string[]>;
-    timestamp: number;
-    status?: number;
-    statusText?: string;
-    responseHeaders?: Record<string, string | string[]>;
-  }[] = [];
+  let networkLogs: NetworkLogEntry[] = [];
 
   beforeEach(() => {
     networkLogs = [];
-
-    // Capture every request/response that goes through Cypress's network proxy
-    // (Images, CSS, JS, XHR, Fetch, Docs) using cy.intercept instead of raw CDP
-    // events, since Cypress.automation('remote:debugger:protocol', ...) only
-    // forwards CDP *commands* and has no support for subscribing to CDP *events*
-    // such as 'Network.onRequestWillBeSent'.
-    cy.intercept('**/*', (req) => {
-      const timestamp = Date.now();
-      req.continue((res) => {
-        networkLogs.push({
-          method: req.method,
-          url: sanitizeUrl(req.url),
-          headers: sanitizeHeaders(req.headers),
-          timestamp,
-          status: res.statusCode,
-          statusText: res.statusMessage,
-          responseHeaders: sanitizeHeaders(res.headers),
-        });
-      });
-    });
+    captureNetworkTraffic(networkLogs);
   });
 
   afterEach(function () {
     // Extract and inspect the full network log in afterEach()
     cy.then(() => {
       if (this.currentTest?.state === 'failed') {
-        hasTestFailed = true;
-
         cy.log(`Captured total network events: ${networkLogs.length}`);
 
         // Save complete traffic to a file
-        const safeTestName = Cypress.currentTest.title.replace(/[^a-zA-Z0-9]/g, '_');
+        const safeTestName = this.currentTest.title.replace(/[^a-zA-Z0-9]/g, '_');
         cy.writeFile(`cypress/network-logs/nl-${safeTestName}.json`, networkLogs);
       }
     });

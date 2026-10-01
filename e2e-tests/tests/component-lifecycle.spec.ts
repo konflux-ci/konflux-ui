@@ -12,7 +12,7 @@ import { Common } from '../utils/Common';
 import { Features } from '../utils/Features';
 import { UIhelper } from '../utils/UIhelper';
 
-describe('Basic Happy Path', () => {
+describe('Component Lifecycle Tests', () => {
   const applicationName = Common.generateAppName();
   const applicationDetailPage = new ApplicationDetailPage();
   const integrationTestsTab = new IntegrationTestsTabPage();
