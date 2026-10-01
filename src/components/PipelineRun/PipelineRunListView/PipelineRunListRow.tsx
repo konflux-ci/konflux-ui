@@ -4,6 +4,7 @@ import { Skeleton, Tooltip } from '@patternfly/react-core';
 import { ClipboardCheckIcon } from '@patternfly/react-icons/dist/esm/icons/clipboard-check-icon';
 import { ExclamationTriangleIcon } from '@patternfly/react-icons/dist/esm/icons/exclamation-triangle-icon';
 import { StatusIconWithText } from '~/components/StatusIcon/StatusIcon';
+import { TriggerColumnData } from '~/components/trigger-column-data/trigger-column-data';
 import { PipelineRunColumnKeys } from '~/consts/pipeline';
 import {
   PipelineRunLabel,
@@ -22,7 +23,6 @@ import ActionMenu from '~/shared/components/action-menu/ActionMenu';
 import { Duration } from '~/shared/components/duration';
 import { RowFunctionArgs, TableData } from '~/shared/components/table';
 import { Timestamp } from '~/shared/components/timestamp/Timestamp';
-import { TriggerColumnData } from '~/shared/components/trigger-column-data/trigger-column-data';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { PipelineRunKind, TaskRunKind } from '~/types';
 import { ReleaseKind, ReleasePlanKind } from '~/types/coreBuildService';

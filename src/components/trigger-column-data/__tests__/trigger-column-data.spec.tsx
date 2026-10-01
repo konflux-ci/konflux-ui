@@ -3,8 +3,8 @@ import { PipelineRunEventType } from '~/consts/pipelinerun';
 import { routerRenderer } from '~/unit-test-utils';
 import { TriggerColumnData } from '../trigger-column-data';
 
-jest.mock('../../../../assets/code-commit.svg', () => () => <svg data-test="commit-icon" />);
-jest.mock('../../../../assets/code-pull-request.svg', () => () => <svg data-test="pr-icon" />);
+jest.mock('../../../assets/code-commit.svg', () => () => <svg data-test="commit-icon" />);
+jest.mock('../../../assets/code-pull-request.svg', () => () => <svg data-test="pr-icon" />);
 
 describe('TriggerColumnData', () => {
   it('should render dash when eventType is missing', () => {

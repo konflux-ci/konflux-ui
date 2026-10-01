@@ -7,6 +7,7 @@ import capitalize from 'lodash-es/capitalize';
 import { usePipelinerunActionsLazy } from '~/components/PipelineRun/PipelineRunListView/pipelinerun-actions';
 import { PipelineRunTestOutputResult } from '~/components/PipelineRun/PipelineRunListView/PipelineRunTestOutputResult';
 import { ScanStatus } from '~/components/PipelineRun/PipelineRunListView/ScanStatus';
+import { TriggerColumnData } from '~/components/trigger-column-data/trigger-column-data';
 import {
   PipelineRunLabel,
   PipelineRunType,
@@ -20,7 +21,6 @@ import ActionMenu from '~/shared/components/action-menu/ActionMenu';
 import { Duration } from '~/shared/components/duration';
 import { ColumnDefinition } from '~/shared/components/TableV2';
 import { Timestamp } from '~/shared/components/timestamp/Timestamp';
-import { TriggerColumnData } from '~/shared/components/trigger-column-data/trigger-column-data';
 import { PipelineRunKind } from '~/types';
 import { createCommitObjectFromPLR } from '~/utils/commits-utils';
 import { getEventTypeLabel } from '~/utils/pipeline-run-filter-utils';
