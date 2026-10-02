@@ -82,8 +82,7 @@ spec:
       results:
         - name: base-url
           description: 'Konflux base URL for Cypress tests (https://<kind-ip>:9443)'
-      # Same image as deploy-konflux-ci — avoid docker.io/bitnami
-      image: quay.io/konflux-ci/tekton-integration-catalog/utils:latest
+      image: quay.io/konflux-ci/tekton-integration-catalog/utils@sha256:79707a56aa34a59f8ebb97db855114b840cbbf60bece4a0edf8ef8c7d7d5acd1
       env:
         - name: TEKTON_NAMESPACE
           valueFrom:
@@ -108,7 +107,7 @@ spec:
         echo "Namespace: ${NAMESPACE}"
 
         if [[ -z "${PIPELINE_RUN_NAME}" ]]; then
-          echo "[ERROR] pipeline-run-name param is empty"
+          echo "ERROR: pipeline-run-name param is empty"
           exit 1
         fi
 

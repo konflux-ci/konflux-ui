@@ -39,8 +39,7 @@ spec:
         secretName: $(params.pull-secret)
   steps:
     - name: patch-proxy-ui-image
-      # Same image as deploy-konflux-ci steps — known pullable in Konflux.
-      image: quay.io/konflux-ci/tekton-integration-catalog/utils:latest
+      image: quay.io/konflux-ci/tekton-integration-catalog/utils@sha256:79707a56aa34a59f8ebb97db855114b840cbbf60bece4a0edf8ef8c7d7d5acd1
       env:
         - name: KUBECONFIG
           value: /cluster-credentials/kubeconfig
@@ -55,50 +54,51 @@ spec:
         #!/usr/bin/env bash
         set -euo pipefail
 
-        echo "[INFO] patch-konflux-ui-image starting"
+        echo "=== Patching Konflux UI image ==="
         KIND_PULL_SECRET_NAME=snapshot-ui-pull
 
         if [[ -z "${CONTAINER_IMAGE}" ]]; then
-          echo "[ERROR] container-image param is empty; expected SNAPSHOT image"
+          echo "ERROR: container-image param is empty; expected SNAPSHOT image"
           exit 1
         fi
 
         DOCKERCONFIG=/pull-secret/.dockerconfigjson
         if [[ ! -f "${DOCKERCONFIG}" ]]; then
-          echo "[ERROR] pull-secret missing .dockerconfigjson (expected a Konflux IPS)"
+          echo "ERROR: pull-secret missing .dockerconfigjson (expected a Konflux IPS)"
           ls -la /pull-secret || true
           exit 1
         fi
 
-        echo "[INFO] Using SNAPSHOT image: ${CONTAINER_IMAGE}"
+        echo "=== Using SNAPSHOT image ==="
+        echo "Container image: ${CONTAINER_IMAGE}"
 
-        echo "[INFO] Scaling down konflux-operator so it cannot revert the proxy patch"
+        echo "=== Scaling down konflux-operator ==="
         if kubectl get deployment/konflux-operator-controller-manager -n konflux-operator &>/dev/null; then
           kubectl scale deployment/konflux-operator-controller-manager \
             -n konflux-operator --replicas=0
           kubectl wait --for=delete pod -l control-plane=controller-manager \
             -n konflux-operator --timeout=2m || true
         else
-          echo "[INFO] konflux-operator-controller-manager not found; continuing"
+          echo "konflux-operator-controller-manager not found; continuing"
         fi
 
-        echo "[INFO] Creating pull secret ${KIND_PULL_SECRET_NAME} in konflux-ui"
+        echo "=== Creating pull secret ${KIND_PULL_SECRET_NAME} in konflux-ui ==="
         kubectl create secret generic "${KIND_PULL_SECRET_NAME}" \
           --namespace=konflux-ui \
           --type=kubernetes.io/dockerconfigjson \
           --from-file=.dockerconfigjson="${DOCKERCONFIG}" \
           --dry-run=client -o yaml | kubectl apply -f -
 
-        echo "[INFO] Attaching pull secret to serviceaccount/proxy"
+        echo "=== Attaching pull secret to serviceaccount/proxy ==="
         kubectl patch serviceaccount proxy -n konflux-ui --type=merge \
           -p "{\"imagePullSecrets\":[{\"name\":\"${KIND_PULL_SECRET_NAME}\"}]}"
 
-        echo "[INFO] Current proxy initContainers:"
+        echo "=== Current proxy initContainers ==="
         kubectl get deployment proxy -n konflux-ui \
           -o jsonpath='{range .spec.template.spec.initContainers[*]}{.name}={.image}{"\n"}{end}' \
           || true
 
-        echo "[INFO] Patching deployment/proxy copy-static-content -> ${CONTAINER_IMAGE}"
+        echo "=== Patching deployment/proxy copy-static-content ==="
         # Escape JSON-sensitive characters in the image reference.
         IMAGE_JSON=$(printf '%s' "${CONTAINER_IMAGE}" | sed 's/\\/\\\\/g; s/"/\\"/g')
         kubectl patch deployment proxy -n konflux-ui --type='strategic' -p="{
@@ -120,9 +120,9 @@ spec:
           }
         }"
 
-        echo "[INFO] Waiting for proxy rollout"
+        echo "=== Waiting for proxy rollout ==="
         if ! kubectl rollout status deployment/proxy -n konflux-ui --timeout=5m; then
-          echo "[ERROR] Proxy deployment rollout failed"
+          echo "ERROR: Proxy deployment rollout failed"
           kubectl describe deployment proxy -n konflux-ui
           kubectl get pods -n konflux-ui -l app=proxy -o wide
           for pod in $(kubectl get pods -n konflux-ui -l app=proxy -o name); do
@@ -133,7 +133,7 @@ spec:
           exit 1
         fi
 
-        echo "[INFO] Proxy initContainers after patch:"
+        echo "=== Proxy initContainers after patch ==="
         kubectl get deployment proxy -n konflux-ui \
           -o jsonpath='{range .spec.template.spec.initContainers[*]}{.name}={.image}{"\n"}{end}'
-        echo "[INFO] UI image patch complete"
+        echo "=== UI image patch complete ==="
