@@ -46,6 +46,12 @@ spec:
     - name: build-credentials-secret
       type: string
       default: build-credentials
+    - name: ui-image-pull-secret
+      description: >-
+        Konflux image pull secret (IPS) that can pull the private SNAPSHOT UI
+        image. Copied onto kind for deployment/proxy.
+      type: string
+      default: components-namespace-pull
     - name: spec-file
       description: 'Cypress test spec file to run (for debugging, run single test)'
       default: 'tests/basic-happy-path.spec.ts'
@@ -151,6 +157,32 @@ spec:
         - name: build-credentials
           value: $(params.build-credentials-secret)
 
+    # deploy-konflux-ci cannot reliably override the UI image (ui folder vs
+    # konflux-ui image name, digest pins). Patch proxy to the SNAPSHOT image.
+    - name: patch-konflux-ui-image
+      runAfter:
+        - deploy-konflux
+      when:
+        - input: '$(params.job-type)'
+          operator: notin
+          values: ['periodic-stage']
+      taskRef:
+        resolver: git
+        params:
+          - name: url
+            value: https://github.com/konflux-ci/konflux-ui
+          - name: revision
+            value: main
+          - name: pathInRepo
+            value: .integration-tests/tasks/patch-konflux-ui-image.yaml
+      params:
+        - name: cluster-access-secret
+          value: kfg-$(context.pipelineRun.name)
+        - name: container-image
+          value: $(tasks.test-metadata.results.container-image)
+        - name: pull-secret
+          value: $(params.ui-image-pull-secret)
+
     - name: monitor-webhook-logs
       runAfter:
         - deploy-konflux
@@ -173,7 +205,7 @@ spec:
 
     - name: format-e2e-test-image
       runAfter:
-        - deploy-konflux
+        - patch-konflux-ui-image
       taskSpec:
         params:
           - name: test-image-repository
