@@ -311,6 +311,94 @@ const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } = useI
 });
 ```
 
+## React Query caching and performance
+
+Guidelines for configuring TanStack React Query efficiently to prevent redundant computations and unnecessary network requests.
+
+### `select` function stability
+
+The `select` option transforms or filters query data before returning it to the component. The `select` callback must be a **stable reference** (a top-level function defined outside the hook or memoized with `useCallback`).
+
+If an inline arrow function is passed to `select`, React Query creates a new function instance on every render. Because the selector reference changes, React Query re-executes `select` on every render even when the underlying cached query data has not changed.
+
+**Before (anti-pattern):** An inline arrow function causes the selector to re-run on every render:
+
+```tsx
+// Bad: Inline arrow function re-runs on every render even when data is unchanged
+export const useRoxctlCveReport = (taskRun: TaskRunKind) => {
+  const namespace = useNamespace();
+  const isKubearchiveLogsEnabled = useIsOnFeatureFlag('kubearchive-logs');
+
+  return useQuery({
+    queryKey: ['roxctl-cve-report', namespace, taskRun?.metadata?.uid, isKubearchiveLogsEnabled],
+    queryFn: () => resolveRoxctlCveReport(namespace, taskRun, isKubearchiveLogsEnabled),
+    select: (report: RoxctlCveReportResolution) =>
+      toRows(report.reports, report.imagePlatforms).filter((row) => row.fixedBy),
+    enabled: !!taskRun?.metadata?.uid && !!taskRun?.status?.completionTime,
+    staleTime: Infinity,
+  });
+};
+```
+
+**After (preferred pattern):** Define the selector as a top-level function outside the hook:
+
+```tsx
+// Good: Stable function reference ensures select only re-runs when cached data changes
+const selectFixableRows = (report: RoxctlCveReportResolution) =>
+  toRows(report.reports, report.imagePlatforms).filter((row) => row.fixedBy);
+
+export const useRoxctlCveReport = (taskRun: TaskRunKind) => {
+  const namespace = useNamespace();
+  const isKubearchiveLogsEnabled = useIsOnFeatureFlag('kubearchive-logs');
+
+  return useQuery({
+    queryKey: ['roxctl-cve-report', namespace, taskRun?.metadata?.uid, isKubearchiveLogsEnabled],
+    queryFn: () => resolveRoxctlCveReport(namespace, taskRun, isKubearchiveLogsEnabled),
+    select: selectFixableRows,
+    enabled: !!taskRun?.metadata?.uid && !!taskRun?.status?.completionTime,
+    staleTime: Infinity,
+  });
+};
+```
+
+If the selector requires access to props or component state, wrap it in `useCallback` with accurate dependencies:
+
+```tsx
+const selectFilteredRows = React.useCallback(
+  (report: RoxctlCveReportResolution) =>
+    toRows(report.reports, report.imagePlatforms).filter((row) => row.severity === filterSeverity),
+  [filterSeverity],
+);
+```
+
+### `refetchInterval` guidance
+
+Do not use `refetchInterval` to poll large or immutable responses (such as build logs, CVE scan reports, SBOMs, or large artifact payloads). Polling large endpoints strains API servers, consumes network bandwidth, and incurs unnecessary client-side JSON parsing.
+
+Instead of polling during execution:
+
+- **Gate queries by completion:** Keep queries disabled while a TaskRun or PipelineRun is still executing. Enable the query only when the resource has finished:
+  ```tsx
+  enabled: !!taskRun?.metadata?.uid && !!taskRun?.status?.completionTime,
+  ```
+- **Combine with immutable caching:** Once the run completes, pair the completion guard with `staleTime: Infinity` because historical logs and reports will not change once finalized.
+- **When polling is acceptable:** Reserve `refetchInterval` for lightweight status checks where WebSocket push notifications are unavailable or disconnected (such as polling fallback on WebSocket error). Never use polling intervals on queries returning multi-kilobyte or multi-megabyte payloads.
+
+### `staleTime` guidance
+
+`staleTime` defines the duration in milliseconds that fetched data is considered fresh. While fresh, React Query satisfies requests from cache and skips background refetches on component remounts, window focus (`refetchOnWindowFocus`), and network reconnection. Once `staleTime` expires, data becomes stale and background refetches occur upon the next trigger.
+
+- **Use `staleTime: Infinity` for immutable historical data:**
+  Any resource that cannot change once produced should be cached indefinitely. This prevents redundant network round-trips when users navigate between tabs or return to the browser window.
+  - Finalized build logs and TaskRun/PipelineRun logs
+  - Vulnerability scan reports (`useRoxctlCveReport`, `useScanResults`)
+  - Historical records fetched from Tekton Results or KubeArchive (`useK8sAndKarchResources`)
+  - Static configuration or schemas (`useSwaggerDefinitions`, `useKonfluxPublicInfo`)
+- **Use a finite `staleTime` (e.g., `30_000` to `60_000`) for live or semi-static resources:**
+  Use a finite duration for resources that update periodically but do not require immediate re-fetching on every window focus or rapid route change.
+- **Use default (`staleTime: 0`) when immediate freshness is required:**
+  When data changes frequently and must reflect real-time cluster state upon every mount or user interaction, rely on React Query's default `staleTime: 0` alongside WebSocket live invalidation.
+
 ## Common Hooks Reference
 
 ### useNamespace / useNamespaceInfo
