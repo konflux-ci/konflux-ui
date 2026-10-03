@@ -52,6 +52,8 @@ import { sortBy } from 'lodash';
 
 Each component should do one thing. If a component handles data fetching, filtering, sorting, AND rendering, break it down.
 
+For detail-view tabs, separate the tab container (data fetching, loading/error states) from the tab content (presentation with guaranteed non-null props); see [Tab data-fetching responsibilities](./layout-and-pages.md#tab-data-fetching-responsibilities).
+
 ### 2. No `as` Type Assertions
 
 Never use TypeScript `as` casts except for:
