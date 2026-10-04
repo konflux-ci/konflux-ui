@@ -11,6 +11,7 @@ import {
   Title,
 } from '@patternfly/react-core';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
+import GroupSnapshotComponentsList from '~/components/SnapshotDetails/tabs/GroupSnapshotComponentsList';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { SnapshotLabels } from '../../../consts/snapshots';
 import { usePipelineRunV2 } from '../../../hooks/usePipelineRunsV2';
@@ -28,7 +29,7 @@ import SnapshotComponentsList from './SnapshotComponentsList';
 import { SnapshotComponentTableData } from './SnapshotComponentsListRow';
 
 const SnapshotOverviewTab: React.FC = () => {
-  const { snapshotName } = useParams<RouterParams>();
+  const { snapshotName, groupName } = useParams<RouterParams>();
   const namespace = useNamespace();
   const [snapshot, loaded, loadErr] = useSnapshot(namespace, snapshotName);
 
@@ -89,16 +90,20 @@ const SnapshotOverviewTab: React.FC = () => {
                 <DescriptionListGroup>
                   <DescriptionListTerm>Triggered by</DescriptionListTerm>
                   <DescriptionListDescription data-test="snapshot-commit-link">
-                    <Link
-                      to={COMMIT_DETAILS_PATH.createPath({
-                        workspaceName: namespace,
-                        applicationName: snapshot?.spec?.application,
-                        commitName: commit.sha,
-                      })}
-                      title={commit.displayName || commit.shaTitle}
-                    >
-                      {commit.displayName || commit.shaTitle}{' '}
-                    </Link>
+                    {groupName ? (
+                      commit.displayName || commit.shaTitle
+                    ) : (
+                      <Link
+                        to={COMMIT_DETAILS_PATH.createPath({
+                          workspaceName: namespace,
+                          applicationName: snapshot?.spec?.application,
+                          commitName: commit.sha,
+                        })}
+                        title={commit.displayName || commit.shaTitle}
+                      >
+                        {commit.displayName || commit.shaTitle}{' '}
+                      </Link>
+                    )}{' '}
                     <CommitLabel
                       gitProvider={commit.gitProvider}
                       sha={commit.sha}
@@ -122,7 +127,9 @@ const SnapshotOverviewTab: React.FC = () => {
               <DescriptionListGroup>
                 <DescriptionListTerm>Vulnerabilities</DescriptionListTerm>
                 <DescriptionListDescription>
-                  {scanError ? (
+                  {groupName && !buildPipelineName ? (
+                    '-'
+                  ) : scanError ? (
                     getErrorState(scanError, loaded, 'vulnerability scan', true)
                   ) : scanLoaded ? (
                     <ScanStatus scanResults={scanResults} />
@@ -136,12 +143,16 @@ const SnapshotOverviewTab: React.FC = () => {
         </Flex>
       </Flex>
       <div id="snapshot-components" className="pf-v6-u-mt-lg">
-        <FilterContextProvider filterParams={['name']}>
-          <SnapshotComponentsList
-            components={componentsTableData}
-            applicationName={snapshot?.spec?.application}
-          />
-        </FilterContextProvider>
+        {groupName ? (
+          <GroupSnapshotComponentsList components={snapshot?.spec?.components ?? []} />
+        ) : (
+          <FilterContextProvider filterParams={['name']}>
+            <SnapshotComponentsList
+              components={componentsTableData}
+              applicationName={snapshot?.spec?.application}
+            />
+          </FilterContextProvider>
+        )}
       </div>
     </>
   );
