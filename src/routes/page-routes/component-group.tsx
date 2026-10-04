@@ -16,6 +16,7 @@ import {
   integrationDetailsPageLoader,
   IntegrationTestDetailsView,
   IntegrationTestOverviewTab,
+  IntegrationTestPipelineRunTabV2,
 } from '~/components/IntegrationTests/IntegrationTestDetails';
 import { ensureFeatureFlagOnLoader } from '~/feature-flags/utils';
 
@@ -65,6 +66,10 @@ const componentGroupRoutes = [
       {
         index: true,
         element: <IntegrationTestOverviewTab />,
+      },
+      {
+        path: 'pipelineruns',
+        element: <IntegrationTestPipelineRunTabV2 />,
       },
     ],
   },
