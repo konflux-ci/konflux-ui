@@ -23,3 +23,4 @@ export const integrationDetailsPageLoader = createLoaderWithAccessCheck(
 export { default as IntegrationTestDetailsView } from './IntegrationTestDetailsView';
 export { default as IntegrationTestOverviewTab } from './tabs/IntegrationTestOverviewTab';
 export { default as IntegrationTestPipelineRunTab } from './tabs/IntegrationTestPipelineRunTab';
+export { default as IntegrationTestPipelineRunTabV2 } from '~/components/IntegrationTests/IntegrationTestDetails/tabs/IntegrationTestPipelineRunTabV2';

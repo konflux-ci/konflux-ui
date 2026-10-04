@@ -94,7 +94,7 @@ describe('IntegrationTestDetailsView', () => {
     );
   });
 
-  it('should render the test name with group breadcrumbs and no pipeline runs tab', () => {
+  it('should render the test name with group breadcrumbs and the pipeline runs tab', () => {
     useParamsMock.mockReturnValue({
       groupName: 'test-group',
       integrationTestName: 'group-test-1',
@@ -106,7 +106,7 @@ describe('IntegrationTestDetailsView', () => {
     screen.getByText('Groups');
     screen.getByText('Integration tests');
     screen.getByText('Overview');
-    expect(screen.queryByText('Pipeline runs')).not.toBeInTheDocument();
+    expect(screen.getByText('Pipeline runs')).toBeInTheDocument();
   });
 
   it('should render spinner while loading', () => {
