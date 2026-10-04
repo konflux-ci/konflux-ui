@@ -21,11 +21,11 @@ import {
   IntegrationTestOverviewTab,
   IntegrationTestPipelineRunTabV2,
 } from '~/components/IntegrationTests/IntegrationTestDetails';
-import GroupReleaseArtifactsTab from '~/components/Releases/GroupReleaseArtifactsTab';
 import { groupReleaseDetailsLoader } from '~/components/Releases/groupReleaseDetailsLoader';
 import GroupReleaseDetailsView from '~/components/Releases/GroupReleaseDetailsView';
 import GroupReleaseOverviewTab from '~/components/Releases/GroupReleaseOverviewTab';
 import GroupReleasePipelineRunsTab from '~/components/Releases/GroupReleasePipelineRunsTab';
+import ReleaseArtifactsTab from '~/components/Releases/ReleaseArtifactsTab';
 import {
   GroupSnapshotDetailsView,
   snapshotDetailsViewLoader,
@@ -44,7 +44,7 @@ const componentGroupRoutes = [
     children: [
       { index: true, element: <GroupReleaseOverviewTab /> },
       { path: 'pipelineruns', element: <GroupReleasePipelineRunsTab /> },
-      { path: 'artifacts', element: <GroupReleaseArtifactsTab /> },
+      { path: 'artifacts', element: <ReleaseArtifactsTab /> },
       {
         path: 'yaml',
         async lazy() {

@@ -1,8 +1,8 @@
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import GroupReleaseArtifactsTab from '~/components/Releases/GroupReleaseArtifactsTab';
 import GroupReleaseDetailsView from '~/components/Releases/GroupReleaseDetailsView';
 import GroupReleasePipelineRunsTab from '~/components/Releases/GroupReleasePipelineRunsTab';
+import ReleaseArtifactsTab from '~/components/Releases/ReleaseArtifactsTab';
 import { ReleaseLabel } from '~/consts/release';
 import { useRelease } from '~/hooks/useReleases';
 import { ReleaseKind } from '~/types';
@@ -105,7 +105,7 @@ it('disables rerun when permission is denied', async () => {
     'true',
   );
 });
-it.each([GroupReleaseDetailsView, GroupReleasePipelineRunsTab, GroupReleaseArtifactsTab])(
+it.each([GroupReleaseDetailsView, GroupReleasePipelineRunsTab])(
   'renders loading and missing resource states',
   (Component) => {
     jest.mocked(useRelease).mockReturnValue([undefined, false, undefined, undefined, false]);
@@ -153,26 +153,19 @@ it('shows an empty state for a release without processing runs', () => {
   renderWithQueryClientAndRouter(<GroupReleasePipelineRunsTab />);
   expect(screen.getByText('No pipeline runs')).toBeInTheDocument();
 });
-it('renders release URLs, artifact images, architectures and additional URLs', async () => {
-  const user = userEvent.setup();
-  renderWithQueryClientAndRouter(<GroupReleaseArtifactsTab />);
-  expect(screen.getByText('component-one')).toBeInTheDocument();
-  expect(screen.getByText('amd64, arm64')).toBeInTheDocument();
+it('reuses the artifacts tab with group route parameters', () => {
+  renderWithQueryClientAndRouter(<ReleaseArtifactsTab />);
   expect(
     screen.getByRole('link', { name: 'https://github.com/org/repo/releases/tag/v1' }),
   ).toHaveAttribute('href', 'https://github.com/org/repo/releases/tag/v1');
-  await user.click(screen.getByRole('button', { name: 'Details' }));
-  expect(screen.getByRole('link', { name: 'quay.io/org/image:other' })).toHaveAttribute(
-    'href',
-    'https://quay.io/org/image:other',
-  );
+  expect(screen.getByRole('heading', { name: 'Components' })).toBeInTheDocument();
 });
 it('shows an empty state for a release without artifact images', () => {
   jest
     .mocked(useRelease)
     .mockReturnValue([{ ...release, status: {} }, true, undefined, undefined, false]);
-  renderWithQueryClientAndRouter(<GroupReleaseArtifactsTab />);
-  expect(screen.getByText('No release artifacts images')).toBeInTheDocument();
+  renderWithQueryClientAndRouter(<ReleaseArtifactsTab />);
+  expect(screen.getByText('No release artifacts images found')).toBeInTheDocument();
 });
 
 it('downloads the group release YAML', async () => {
@@ -181,4 +174,11 @@ it('downloads the group release YAML', async () => {
   await user.click(screen.getByRole('button', { name: 'Actions' }));
   await user.click(screen.getByRole('menuitem', { name: 'Download YAML' }));
   expect(downloadYaml).toHaveBeenCalledWith(release);
+});
+
+it('shows release pipeline summaries without filter or column toolbars', () => {
+  renderWithQueryClientAndRouter(<GroupReleasePipelineRunsTab />);
+  expect(screen.getByRole('grid', { name: 'Release pipeline runs' })).toBeInTheDocument();
+  expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Manage columns' })).not.toBeInTheDocument();
 });
