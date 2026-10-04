@@ -55,6 +55,14 @@ describe('TableHeader', () => {
     { id: 'status', type: 'flex', widthPercent: 40 },
   ];
 
+  it('gives the expansion column an accessible name', () => {
+    const table = createMockTable(defaultHeaders);
+    renderTableHeader(
+      <TableHeader table={table as never} columnWidths={defaultWidths} enableExpansion />,
+    );
+    expect(screen.getByRole('columnheader', { name: 'Expand row' })).toBeInTheDocument();
+  });
+
   it('renders a Th for each header', () => {
     const table = createMockTable(defaultHeaders);
     renderTableHeader(<TableHeader table={table as never} columnWidths={defaultWidths} />);
