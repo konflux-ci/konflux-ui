@@ -27,3 +27,6 @@ export const snapshotDetailsViewLoader = createLoaderWithAccessCheck(
 export { default as SnapshotDetailsView } from './SnapshotDetailsView';
 export { default as SnapshotOverviewTab } from './tabs/SnapshotOverview';
 export { default as SnapshotPipelineRunsTab } from './tabs/SnapshotPipelineRunsTab';
+
+export { default as GroupSnapshotDetailsView } from './GroupSnapshotDetailsView';
+export { default as GroupSnapshotOverview } from './tabs/GroupSnapshotOverview';
