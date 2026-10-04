@@ -68,13 +68,14 @@ it('shows distinct component versions with standalone links in the overview', ()
   renderWithQueryClientAndRouter(<SnapshotOverview />);
   expect(screen.getByRole('grid', { name: 'Snapshot components' })).toBeInTheDocument();
   expect(screen.getAllByRole('row')).toHaveLength(3);
-  expect(screen.getByRole('link', { name: 'v1' })).toHaveAttribute(
+  expect(screen.queryByRole('columnheader', { name: 'Version' })).not.toBeInTheDocument();
+  expect(screen.getByRole('link', { name: 'component-a( v1)' })).toHaveAttribute(
     'href',
-    '/ns/test-ns/components/component-a/versions/v1',
+    '/ns/test-ns/components/component-a',
   );
-  expect(screen.getByRole('link', { name: 'v2' })).toHaveAttribute(
+  expect(screen.getByRole('link', { name: 'component-a( v2)' })).toHaveAttribute(
     'href',
-    '/ns/test-ns/components/component-a/versions/v2',
+    '/ns/test-ns/components/component-a',
   );
   expect(screen.getByDisplayValue('quay.io/test/image:v1')).toBeInTheDocument();
   expect(

@@ -1,9 +1,8 @@
 import { useMemo } from 'react';
-import { Link } from 'react-router-dom';
 import { EmptyState, Title } from '@patternfly/react-core';
-import { COMPONENT_DETAILS_V2_PATH, COMPONENT_VERSION_DETAILS_PATH } from '@routes/paths';
 import GitRepoLink from '~/components/GitLink/GitRepoLink';
 import SnapshotComponentImage from '~/components/SnapshotDetails/tabs/SnapshotComponentImage';
+import { ComponentLink } from '~/shared/components/component-link/ComponentLink';
 import FilteredEmptyState from '~/shared/components/empty-state/FilteredEmptyState';
 import {
   defineFilters,
@@ -37,34 +36,12 @@ const GroupSnapshotComponentsList = ({ components }: { components: SnapshotCompo
         accessorFn: (c) => c.name,
         sortable: true,
         cell: ({ row }) => (
-          <Link
-            to={COMPONENT_DETAILS_V2_PATH.createPath({
-              workspaceName: namespace,
-              componentName: row.original.name,
-            })}
-          >
-            {row.original.name}
-          </Link>
+          <ComponentLink
+            namespace={namespace}
+            name={row.original.name}
+            version={row.original.version}
+          />
         ),
-      },
-      {
-        id: 'version',
-        header: 'Version',
-        accessorFn: (c) => c.version ?? '-',
-        cell: ({ row }) =>
-          row.original.version ? (
-            <Link
-              to={COMPONENT_VERSION_DETAILS_PATH.createPath({
-                workspaceName: namespace,
-                componentName: row.original.name,
-                versionRevision: row.original.version,
-              })}
-            >
-              {row.original.version}
-            </Link>
-          ) : (
-            '-'
-          ),
       },
       {
         id: 'image',

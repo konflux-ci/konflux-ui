@@ -1,5 +1,9 @@
 import { Link } from 'react-router-dom';
-import { GROUP_SNAPSHOT_DETAILS_PATH, COMPONENT_DETAILS_PATH, SNAPSHOT_DETAILS_PATH } from '@routes/paths';
+import {
+  GROUP_SNAPSHOT_DETAILS_PATH,
+  COMPONENT_DETAILS_PATH,
+  SNAPSHOT_DETAILS_PATH,
+} from '@routes/paths';
 import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { Timestamp } from '~/shared';
 import { ComponentLink } from '~/shared/components/component-link/ComponentLink';
