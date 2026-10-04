@@ -121,7 +121,8 @@ it('clears unmatched name filters', async () => {
   expect(await screen.findByText('group-snapshot')).toBeInTheDocument();
 });
 
-it('lists each component once when the snapshot contains multiple versions', () => {
+it('links every component version, including those in the more popover', async () => {
+  const user = userEvent.setup();
   mockSnapshots.mockReturnValue({
     ...result,
     data: [
@@ -129,11 +130,24 @@ it('lists each component once when the snapshot contains multiple versions', () 
         ...snapshot,
         spec: {
           ...snapshot.spec,
-          components: ['v1', 'v2'].map((version) => ({ ...snapshot.spec.components[0], version })),
+          components: ['v1', 'v2', 'v3', 'v4'].map((version) => ({
+            ...snapshot.spec.components[0],
+            version,
+          })),
         },
       },
     ],
   });
   renderTab();
-  expect(screen.getAllByRole('link', { name: 'my-component' })).toHaveLength(1);
+  for (const version of ['v1', 'v2', 'v3']) {
+    expect(screen.getByRole('link', { name: `my-component( ${version})` })).toHaveAttribute(
+      'href',
+      '/ns/test-ns/components/my-component',
+    );
+  }
+  await user.click(screen.getByRole('button', { name: '1 more' }));
+  expect(await screen.findByRole('link', { name: 'my-component( v4)' })).toHaveAttribute(
+    'href',
+    '/ns/test-ns/components/my-component',
+  );
 });
