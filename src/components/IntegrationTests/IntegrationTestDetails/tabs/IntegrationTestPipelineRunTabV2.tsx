@@ -1,6 +1,6 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
-import { Button, EmptyState, EmptyStateBody } from '@patternfly/react-core';
+import { EmptyState, EmptyStateBody } from '@patternfly/react-core';
 import ColumnManagement from '~/components/ColumnManagement/ColumnManagement';
 import { IntegrationTestLabels } from '~/components/IntegrationTests/IntegrationTestForm/types';
 import {
@@ -133,16 +133,6 @@ const IntegrationTestPipelineRunTabV2: React.FC = () => {
             enableSorting
           />
         </TableContainer>
-        {loaded && hasNextPage && (
-          <Button
-            variant="link"
-            onClick={() => void getNextPage?.()}
-            isDisabled={isFetchingNextPage}
-            isLoading={isFetchingNextPage}
-          >
-            Load more pipeline runs
-          </Button>
-        )}
       </ListLayout>
     </IfFeature>
   );
