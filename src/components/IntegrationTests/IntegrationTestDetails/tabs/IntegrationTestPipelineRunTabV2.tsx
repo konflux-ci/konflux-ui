@@ -6,7 +6,6 @@ import { IntegrationTestLabels } from '~/components/IntegrationTests/Integration
 import {
   plrNameSearchConfig,
   plrStatusFilterConfig,
-  plrTypeFilterConfig,
   plrEventTypeFilterConfig,
 } from '~/components/PipelineRunsPage/pipelineRunFilterConfigs';
 import {
@@ -36,10 +35,7 @@ import { Table, TableContainer, SortDropdown } from '~/shared/components/TableV2
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { PipelineRunKind } from '~/types';
-import {
-  PIPELINE_RUN_TYPE_OPTIONS,
-  PIPELINE_RUN_EVENT_TYPE_OPTIONS,
-} from '~/utils/pipeline-run-filter-utils';
+import { PIPELINE_RUN_EVENT_TYPE_OPTIONS } from '~/utils/pipeline-run-filter-utils';
 import { PLRStatus } from '~/utils/plr-status-config';
 
 const COLUMN_STATE_KEY = 'group-integration-test-pipeline-runs';
@@ -57,7 +53,6 @@ const integrationTestColumns = [
 const filterConfigs = defineFilters<PipelineRunKind>()([
   plrNameSearchConfig,
   plrStatusFilterConfig,
-  plrTypeFilterConfig,
   plrEventTypeFilterConfig,
 ] as const);
 
@@ -66,7 +61,6 @@ const IntegrationTestPipelineRunTabV2: React.FC = () => {
   const namespace = useNamespace();
   const { filterValues, clientFilterValues, clearAll, isFiltered } = useFilterState(filterConfigs);
   const matchExpressions = [
-    { key: PipelineRunLabel.PIPELINE_TYPE, values: filterValues.type },
     { key: PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL, values: filterValues.eventType },
   ]
     .filter(({ values }) => values?.length > 0)
@@ -115,7 +109,6 @@ const IntegrationTestPipelineRunTabV2: React.FC = () => {
               configs={filterConfigs}
               options={{
                 status: PLRStatus.filterOptions,
-                type: PIPELINE_RUN_TYPE_OPTIONS,
                 eventType: PIPELINE_RUN_EVENT_TYPE_OPTIONS,
               }}
             >
