@@ -246,33 +246,21 @@ describe('IntegrationTestPipelineRunTabV2', () => {
     );
   });
 
-  it.each(['', '?name=not-on-this-page'])(
-    'keeps older runs reachable with filters %s',
-    async (searchParams) => {
-      const user = userEvent.setup();
-      const fetchNextPage = jest.fn();
+  it.each([false, true])(
+    'does not show a separate load-more button when fetching is %s',
+    (isFetchingNextPage) => {
       mockUsePipelineRuns.mockReturnValue([
         runs,
         true,
         undefined,
-        fetchNextPage,
-        { hasNextPage: true, isFetchingNextPage: false },
+        jest.fn(),
+        { hasNextPage: true, isFetchingNextPage },
       ]);
-      renderTab(searchParams);
-      await user.click(screen.getByRole('button', { name: 'Load more pipeline runs' }));
-      expect(fetchNextPage).toHaveBeenCalledTimes(1);
+      renderTab();
+      expect(screen.getByRole('grid', { name: 'Pipeline runs' })).toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: /Load more pipeline runs/ }),
+      ).not.toBeInTheDocument();
     },
   );
-
-  it('disables loading more while a page is being fetched', () => {
-    mockUsePipelineRuns.mockReturnValue([
-      runs,
-      true,
-      undefined,
-      jest.fn(),
-      { hasNextPage: true, isFetchingNextPage: true },
-    ]);
-    renderTab();
-    expect(screen.getByRole('button', { name: /Load more pipeline runs/ })).toBeDisabled();
-  });
 });
