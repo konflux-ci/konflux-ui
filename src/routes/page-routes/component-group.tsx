@@ -9,6 +9,7 @@ import {
   ComponentGroupDetailsViewLayout,
   componentGroupDetailsViewLoader,
   ComponentGroupReleasesTab,
+  ComponentGroupPipelineRunsTab,
   ComponentGroupIntegrationTestsTab,
 } from '~/components/ComponentGroups/ComponentGroupDetails';
 import {
@@ -41,6 +42,10 @@ const componentGroupRoutes = [
       {
         path: 'integrationtests',
         element: <ComponentGroupIntegrationTestsTab />,
+      },
+      {
+        path: 'pipelineruns',
+        element: <ComponentGroupPipelineRunsTab />,
       },
       {
         path: 'releases',

@@ -50,6 +50,10 @@ const ComponentGroupDetailsView: React.FC = () => {
             label: 'Integration tests',
           },
           {
+            key: 'pipelineruns',
+            label: 'Pipeline runs',
+          },
+          {
             key: 'releases',
             label: 'Releases',
           },
