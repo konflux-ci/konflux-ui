@@ -21,9 +21,9 @@ import {
   IntegrationTestPipelineRunTabV2,
 } from '~/components/IntegrationTests/IntegrationTestDetails';
 import {
-  SnapshotDetailsView,
+  GroupSnapshotDetailsView,
   snapshotDetailsViewLoader,
-  SnapshotOverviewTab,
+  GroupSnapshotOverview,
 } from '~/components/SnapshotDetails';
 import { snapshotsTabLoader } from '~/components/Snapshots/SnapshotsListView/SnapshotsTab';
 import { ensureFeatureFlagOnLoader } from '~/feature-flags/utils';
@@ -36,8 +36,8 @@ const componentGroupRoutes = [
       return snapshotDetailsViewLoader(args);
     },
     errorElement: <RouteErrorBoundry />,
-    element: <SnapshotDetailsView />,
-    children: [{ index: true, element: <SnapshotOverviewTab /> }],
+    element: <GroupSnapshotDetailsView />,
+    children: [{ index: true, element: <GroupSnapshotOverview /> }],
   },
   {
     path: GROUPS_PATH.path,
