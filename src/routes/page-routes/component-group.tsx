@@ -38,7 +38,7 @@ const componentGroupRoutes = [
     errorElement: <RouteErrorBoundry />,
     element: <ComponentGroupDetailsViewLayout />,
     children: [
-      { index: true, element: <ComponentGroupIntegrationTestsTab /> },
+      { index: true, element: <ComponentGroupPipelineRunsTab /> },
       {
         path: 'integrationtests',
         element: <ComponentGroupIntegrationTestsTab />,

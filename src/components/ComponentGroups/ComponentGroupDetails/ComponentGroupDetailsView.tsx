@@ -46,12 +46,12 @@ const ComponentGroupDetailsView: React.FC = () => {
         baseURL={GROUP_DETAILS_PATH.createPath({ workspaceName: namespace, groupName })}
         tabs={[
           {
-            key: 'integrationtests',
-            label: 'Integration tests',
-          },
-          {
             key: 'pipelineruns',
             label: 'Pipeline runs',
+          },
+          {
+            key: 'integrationtests',
+            label: 'Integration tests',
           },
           {
             key: 'releases',

@@ -12,7 +12,7 @@ jest.mock('~/hooks/useComponentGroups', () => ({ useComponentGroup: jest.fn() })
 createUseParamsMock({ groupName: 'test-group' });
 mockUseNamespaceHook('test-ns');
 
-it('offers the pipeline runs tab alongside existing component group tabs', async () => {
+it('shows Pipeline runs first and navigates there from Integration tests', async () => {
   const user = userEvent.setup();
   jest.mocked(useComponentGroup).mockReturnValue([
     {
@@ -24,7 +24,13 @@ it('offers the pipeline runs tab alongside existing component group tabs', async
     true,
     undefined,
   ]);
+  window.history.replaceState({}, '', '/ns/test-ns/groups/test-group/integrationtests');
   renderWithQueryClientAndRouter(<ComponentGroupDetailsView />);
+  expect(screen.getAllByRole('tab').map((tab) => tab.textContent.trim())).toEqual([
+    'Pipeline runs',
+    'Integration tests',
+    'Releases',
+  ]);
   await user.click(screen.getByRole('tab', { name: 'Pipeline runs' }));
   expect(window.location.pathname).toBe('/ns/test-ns/groups/test-group/pipelineruns');
   expect(screen.getByRole('tab', { name: 'Integration tests' })).toBeInTheDocument();
