@@ -1,12 +1,18 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { Bullseye, Spinner, Content, ContentVariants } from '@patternfly/react-core';
+import { useComponentGroupBreadcrumbs } from '~/components/ComponentGroups/breadcrumb-utils';
 import { usePipelineRunV2 } from '~/hooks/usePipelineRunsV2';
+import {
+  GROUP_SNAPSHOT_DETAILS_PATH,
+  GROUP_SNAPSHOT_LIST_PATH,
+  SNAPSHOT_DETAILS_PATH,
+  SNAPSHOT_LIST_PATH,
+} from '~/routes/paths';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { downloadYamlAction } from '~/utils/common-utils';
 import { SnapshotLabels } from '../../consts/snapshots';
 import { useSnapshot } from '../../hooks/useSnapshots';
-import { SNAPSHOT_DETAILS_PATH, SNAPSHOT_LIST_PATH } from '../../routes/paths';
 import { RouterParams } from '../../routes/utils';
 import { Timestamp } from '../../shared/components/timestamp/Timestamp';
 import useTriggerReleaseAction from '../../shared/hooks/useTriggerReleaseAction';
@@ -19,9 +25,16 @@ import { createDetailsPageAction } from '../DetailsPage/utils';
 
 const SnapshotDetailsView: React.FC = () => {
   const namespace = useNamespace();
-  const { snapshotName, applicationName } = useParams<RouterParams>();
+  const { snapshotName, applicationName, groupName } = useParams<RouterParams>();
 
   const applicationBreadcrumbs = useApplicationBreadcrumbs();
+  const groupBreadcrumbs = useComponentGroupBreadcrumbs(groupName);
+  const snapshotPath = groupName
+    ? GROUP_SNAPSHOT_DETAILS_PATH.createPath({ workspaceName: namespace, groupName, snapshotName })
+    : SNAPSHOT_DETAILS_PATH.createPath({ workspaceName: namespace, applicationName, snapshotName });
+  const snapshotsPath = groupName
+    ? GROUP_SNAPSHOT_LIST_PATH.createPath({ workspaceName: namespace, groupName })
+    : SNAPSHOT_LIST_PATH.createPath({ workspaceName: namespace, applicationName });
 
   const [snapshot, loaded, snapshotError, , , snapshotSource] = useSnapshot(
     namespace,
@@ -67,20 +80,13 @@ const SnapshotDetailsView: React.FC = () => {
         headTitle={snapshot.metadata.name}
         featureFlags={['pipelineruns-kubearchive', 'taskruns-kubearchive']}
         breadcrumbs={[
-          ...applicationBreadcrumbs,
+          ...(groupName ? groupBreadcrumbs : applicationBreadcrumbs),
           {
-            path: SNAPSHOT_LIST_PATH.createPath({
-              workspaceName: namespace,
-              applicationName,
-            }),
+            path: snapshotsPath,
             name: 'Snapshots',
           },
           {
-            path: SNAPSHOT_DETAILS_PATH.createPath({
-              workspaceName: namespace,
-              applicationName,
-              snapshotName,
-            }),
+            path: snapshotPath,
             name: snapshot.metadata.name,
           },
         ]}
@@ -108,30 +114,17 @@ const SnapshotDetailsView: React.FC = () => {
             )}
           </>
         }
-        baseURL={SNAPSHOT_DETAILS_PATH.createPath({
-          workspaceName: namespace,
-          applicationName,
-          snapshotName,
-        })}
+        baseURL={snapshotPath}
         tabs={[
           {
             key: 'index',
             label: 'Overview',
             isFilled: true,
           },
-          {
-            key: 'pipelineruns',
-            label: 'Pipeline runs',
-          },
+          ...(!groupName ? [{ key: 'pipelineruns', label: 'Pipeline runs' }] : []),
         ]}
         actions={[
-          {
-            key,
-            label,
-            isDisabled,
-            disabledTooltip,
-            onClick: cta,
-          },
+          ...(!groupName ? [{ key, label, isDisabled, disabledTooltip, onClick: cta }] : []),
           createDetailsPageAction(downloadYamlAction(snapshot)),
         ]}
       />

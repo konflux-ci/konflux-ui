@@ -169,6 +169,12 @@ export const GROUPS_PATH = WORKSPACE_PATH.extend('groups');
 
 export const GROUP_DETAILS_PATH = GROUPS_PATH.extend(`:${RouterParams.groupName}`);
 
+export const GROUP_SNAPSHOT_LIST_PATH = GROUP_DETAILS_PATH.extend('snapshots');
+
+export const GROUP_SNAPSHOT_DETAILS_PATH = GROUP_SNAPSHOT_LIST_PATH.extend(
+  `:${RouterParams.snapshotName}`,
+);
+
 export const GROUP_INTEGRATION_TEST_LIST_PATH = GROUP_DETAILS_PATH.extend(`integrationtests`);
 
 export const GROUP_INTEGRATION_TEST_DETAILS_PATH = GROUP_INTEGRATION_TEST_LIST_PATH.extend(

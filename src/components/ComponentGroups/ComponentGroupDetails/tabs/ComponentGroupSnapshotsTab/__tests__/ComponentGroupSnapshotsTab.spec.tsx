@@ -76,7 +76,10 @@ it('scopes snapshots to the group and links components without an application', 
     '/ns/test-ns/components/my-component',
   );
   expect(screen.getByText('group-snapshot')).toBeInTheDocument();
-  expect(screen.queryByRole('link', { name: 'group-snapshot' })).not.toBeInTheDocument();
+  expect(screen.getByRole('link', { name: 'group-snapshot' })).toHaveAttribute(
+    'href',
+    '/ns/test-ns/groups/my-group/snapshots/group-snapshot',
+  );
   await user.click(screen.getByRole('button', { name: /actions/i }));
   expect(await screen.findByText('Download YAML')).toBeInTheDocument();
   expect(screen.queryByText('Trigger release')).not.toBeInTheDocument();
