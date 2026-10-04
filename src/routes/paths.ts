@@ -180,3 +180,9 @@ export const GROUP_INTEGRATION_TEST_LIST_PATH = GROUP_DETAILS_PATH.extend(`integ
 export const GROUP_INTEGRATION_TEST_DETAILS_PATH = GROUP_INTEGRATION_TEST_LIST_PATH.extend(
   `:${RouterParams.integrationTestName}`,
 );
+
+export const GROUP_RELEASE_LIST_PATH = GROUP_DETAILS_PATH.extend('releases');
+
+export const GROUP_RELEASE_DETAILS_PATH = GROUP_RELEASE_LIST_PATH.extend(
+  `:${RouterParams.releaseName}`,
+);
