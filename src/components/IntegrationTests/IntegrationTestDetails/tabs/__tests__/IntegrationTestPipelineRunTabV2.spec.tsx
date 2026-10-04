@@ -202,8 +202,9 @@ describe('IntegrationTestPipelineRunTabV2', () => {
     expect(screen.queryByRole('link', { name: 'integration-failed' })).not.toBeInTheDocument();
   });
 
-  it('adds type and event filters to the group selector', () => {
+  it('ignores stale type filters and applies the event filter', () => {
     renderTab('?type=%5B%22build%22%5D&eventType=%5B%22push%22%5D');
+    expect(screen.queryByRole('button', { name: /^Type/ })).not.toBeInTheDocument();
     expect(mockUsePipelineRuns).toHaveBeenCalledWith(
       'test-ns',
       expect.objectContaining({
@@ -213,7 +214,6 @@ describe('IntegrationTestPipelineRunTabV2', () => {
             [IntegrationTestLabels.SCENARIO]: 'my-test',
           },
           matchExpressions: [
-            { key: PipelineRunLabel.PIPELINE_TYPE, operator: 'In', values: ['build'] },
             { key: PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL, operator: 'In', values: ['push'] },
           ],
         },
@@ -229,7 +229,7 @@ describe('IntegrationTestPipelineRunTabV2', () => {
       undefined,
       { hasNextPage: false, isFetchingNextPage: false },
     ]);
-    renderTab('?type=%5B%22final%22%5D');
+    renderTab('?eventType=%5B%22push%22%5D');
     expect(screen.getByText('No results found')).toBeInTheDocument();
     await user.click(screen.getAllByRole('button', { name: 'Clear all filters' })[0]);
     expect(mockUsePipelineRuns).toHaveBeenLastCalledWith(
