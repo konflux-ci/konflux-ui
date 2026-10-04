@@ -12,12 +12,14 @@ import {
   ComponentGroupPipelineRunsTab,
   ComponentGroupIntegrationTestsTab,
 } from '~/components/ComponentGroups/ComponentGroupDetails';
+import { ComponentGroupSnapshotsTab } from '~/components/ComponentGroups/ComponentGroupDetails/tabs/ComponentGroupSnapshotsTab';
 import {
   integrationDetailsPageLoader,
   IntegrationTestDetailsView,
   IntegrationTestOverviewTab,
   IntegrationTestPipelineRunTabV2,
 } from '~/components/IntegrationTests/IntegrationTestDetails';
+import { snapshotsTabLoader } from '~/components/Snapshots/SnapshotsListView/SnapshotsTab';
 import { ensureFeatureFlagOnLoader } from '~/feature-flags/utils';
 
 const componentGroupRoutes = [
@@ -47,6 +49,11 @@ const componentGroupRoutes = [
       {
         path: 'pipelineruns',
         element: <ComponentGroupPipelineRunsTab />,
+      },
+      {
+        path: 'snapshots',
+        loader: snapshotsTabLoader,
+        element: <ComponentGroupSnapshotsTab />,
       },
       {
         path: 'releases',
