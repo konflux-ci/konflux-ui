@@ -54,6 +54,10 @@ const ComponentGroupDetailsView: React.FC = () => {
             label: 'Integration tests',
           },
           {
+            key: 'snapshots',
+            label: 'Snapshots',
+          },
+          {
             key: 'releases',
             label: 'Releases',
           },

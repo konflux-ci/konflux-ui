@@ -1,5 +1,9 @@
 import { Link } from 'react-router-dom';
-import { COMPONENT_DETAILS_PATH, SNAPSHOT_DETAILS_PATH } from '@routes/paths';
+import {
+  COMPONENT_DETAILS_PATH,
+  COMPONENT_DETAILS_V2_PATH,
+  SNAPSHOT_DETAILS_PATH,
+} from '@routes/paths';
 import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { Timestamp } from '~/shared';
 import { defineFilters } from '~/shared/components/Filter';
@@ -76,6 +80,8 @@ export const SNAPSHOTS_LIST_COLUMNS: ColumnDefinition<Snapshot>[] = [
     cell: (info) => {
       const namespace = info.table.options.meta?.namespace as string;
       const applicationName = info.table.options.meta?.applicationName as string;
+      const groupName = info.table.options.meta?.groupName;
+      if (groupName) return info.row.original.metadata.name;
       return (
         <Link
           to={SNAPSHOT_DETAILS_PATH.createPath({
@@ -101,7 +107,7 @@ export const SNAPSHOTS_LIST_COLUMNS: ColumnDefinition<Snapshot>[] = [
   {
     id: 'components',
     header: 'Components',
-    accessorFn: (row) => row.spec.components?.map((c) => c.name) ?? [],
+    accessorFn: (row) => [...new Set(row.spec.components?.map((c) => c.name) ?? [])],
     size: 2,
     cell: (info) => {
       const namespace = info.table.options.meta?.namespace as string;
@@ -112,11 +118,18 @@ export const SNAPSHOTS_LIST_COLUMNS: ColumnDefinition<Snapshot>[] = [
           renderItem={(component: string) => (
             <Link
               key={component}
-              to={COMPONENT_DETAILS_PATH.createPath({
-                workspaceName: namespace,
-                applicationName,
-                componentName: component.trim(),
-              })}
+              to={
+                info.table.options.meta?.groupName
+                  ? COMPONENT_DETAILS_V2_PATH.createPath({
+                      workspaceName: namespace,
+                      componentName: component.trim(),
+                    })
+                  : COMPONENT_DETAILS_PATH.createPath({
+                      workspaceName: namespace,
+                      applicationName,
+                      componentName: component.trim(),
+                    })
+              }
             >
               {component.trim()}
             </Link>
@@ -166,10 +179,15 @@ export const SNAPSHOTS_LIST_COLUMNS: ColumnDefinition<Snapshot>[] = [
     nonHidable: true,
     cell: (info) => {
       const getSourceFn = info.table.options.meta?.getSource as
-        | ((item: Snapshot) => ResourceSource | undefined)
-        | undefined;
+        ((item: Snapshot) => ResourceSource | undefined) | undefined;
       const source = getSourceFn?.(info.row.original);
-      return <SnapshotActionCell snapshot={info.row.original} source={source} />;
+      return (
+        <SnapshotActionCell
+          snapshot={info.row.original}
+          source={source}
+          readOnly={Boolean(info.table.options.meta?.groupName)}
+        />
+      );
     },
   },
 ];

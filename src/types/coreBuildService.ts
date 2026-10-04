@@ -171,12 +171,14 @@ export type component = {
 
 export type Snapshot = K8sResourceCommon & {
   spec: {
-    application: string;
+    application?: string;
+    componentGroup?: string;
     displayName?: string;
     displayDescription?: string;
     components: {
       containerImage: string;
       name: string;
+      version?: string;
       source?: {
         git?: {
           url: string;
