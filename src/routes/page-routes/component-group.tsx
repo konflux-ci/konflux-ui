@@ -25,6 +25,7 @@ import {
   snapshotDetailsViewLoader,
   GroupSnapshotOverview,
 } from '~/components/SnapshotDetails';
+import SnapshotPipelineRunsTabV2 from '~/components/SnapshotDetails/tabs/SnapshotPipelineRunsTabV2';
 import { snapshotsTabLoader } from '~/components/Snapshots/SnapshotsListView/SnapshotsTab';
 import { ensureFeatureFlagOnLoader } from '~/feature-flags/utils';
 
@@ -37,7 +38,10 @@ const componentGroupRoutes = [
     },
     errorElement: <RouteErrorBoundry />,
     element: <GroupSnapshotDetailsView />,
-    children: [{ index: true, element: <GroupSnapshotOverview /> }],
+    children: [
+      { index: true, element: <GroupSnapshotOverview /> },
+      { path: 'pipelineruns', element: <SnapshotPipelineRunsTabV2 /> },
+    ],
   },
   {
     path: GROUPS_PATH.path,

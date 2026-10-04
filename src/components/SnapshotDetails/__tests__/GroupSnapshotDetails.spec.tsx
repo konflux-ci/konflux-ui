@@ -147,10 +147,17 @@ it('renders group breadcrumbs and read-only actions', async () => {
     'href',
     '/ns/test-ns/groups/my-group/snapshots',
   );
-  expect(screen.getAllByRole('tab').map((tab) => tab.textContent.trim())).toEqual(['Overview']);
+  expect(screen.getAllByRole('tab').map((tab) => tab.textContent.trim())).toEqual([
+    'Overview',
+    'Pipeline runs',
+  ]);
   await user.click(screen.getByRole('button', { name: 'Actions' }));
   expect(await screen.findByText('Download YAML')).toBeInTheDocument();
   expect(screen.queryByText('Trigger release')).not.toBeInTheDocument();
+  await user.click(screen.getByRole('tab', { name: 'Pipeline runs' }));
+  expect(window.location.pathname).toBe(
+    '/ns/test-ns/groups/my-group/snapshots/group-snapshot/pipelineruns',
+  );
 });
 it('shows distinct component versions with standalone links in the overview', () => {
   renderWithQueryClientAndRouter(<GroupSnapshotOverview />);

@@ -90,6 +90,7 @@ const GroupSnapshotDetailsView: React.FC = () => {
             label: 'Overview',
             isFilled: true,
           },
+          { key: 'pipelineruns', label: 'Pipeline runs' },
         ]}
         actions={[createDetailsPageAction(downloadYamlAction(snapshot))]}
       />
