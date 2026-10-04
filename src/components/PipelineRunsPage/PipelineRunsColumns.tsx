@@ -101,164 +101,182 @@ const ActionCell: React.FC<{ plr: PipelineRunKind }> = ({ plr }) => {
   return <ActionMenu actions={actions} onOpen={onOpen} />;
 };
 
-export const pipelineRunsColumns: ColumnDefinition<PipelineRunKind>[] = [
-  {
-    id: 'name',
-    header: 'Name',
-    accessorFn: (row) => row.metadata?.name ?? '',
-    pinned: 'start',
-    nonHidable: true,
-    sortable: true,
-    size: 3,
-    cell: (info) => {
-      const plr = info.row.original;
-      const applicationName = plr.metadata?.labels?.[PipelineRunLabel.APPLICATION] ?? '';
-      const pipelineRunName = plr.metadata?.name ?? '';
-      const isFinished = !UNFINISHED_PLR_STATUSES.includes(pipelineRunStatus(plr));
-      const namespace = plr.metadata?.namespace ?? '';
-      return (
-        <>
-          <Link
-            to={PIPELINE_RUNS_DETAILS_PATH.createPath({
-              workspaceName: namespace,
-              applicationName,
-              pipelineRunName,
-            })}
-          >
-            {pipelineRunName}
-          </Link>
-          {isFinished && <PipelineRunAttestation plr={plr} />}
-        </>
-      );
-    },
-  },
-  {
-    id: 'started',
-    header: 'Started',
-    accessorFn: (row) => row.status?.startTime ?? '',
-    sortable: true,
-    cell: (info) => (
-      <Timestamp
-        timestamp={typeof info.getValue() === 'string' ? (info.getValue() as string) : ''}
-      />
-    ),
-  },
-  {
-    id: 'vulnerabilities',
-    header: 'Vulnerabilities',
-    visibleFrom: 'xl',
-    cell: (info) => <VulnerabilitiesCell plr={info.row.original} />,
-  },
-  {
-    id: 'duration',
-    header: 'Duration',
-    accessorFn: (row) => row.status?.startTime ?? '',
-    sortable: true,
-    visibleFrom: 'xl',
-    cell: (info) => {
-      const plr = info.row.original;
-      const status = pipelineRunStatus(plr);
-      if (status === runStatus.Pending) {
-        return <>-</>;
-      }
-      return (
-        <Duration
-          startTime={typeof plr.status?.startTime === 'string' ? plr.status.startTime : undefined}
-          endTime={
-            typeof plr.status?.completionTime === 'string' ? plr.status.completionTime : undefined
-          }
-        />
-      );
-    },
-  },
-  {
-    id: 'status',
-    header: 'Status',
-    accessorFn: (row) => PLRStatus.registry.deriveStatus(row),
-    sortable: true,
-    cell: (info) => <PipelineRunStatusCell plr={info.row.original} />,
-  },
-  {
-    id: 'testOutput',
-    header: 'Test output',
-    visibleFrom: 'xl',
-    cell: (info) => {
-      const plr = info.row.original;
-      const namespace = plr.metadata?.namespace ?? '';
-      return <TestOutputCell plr={plr} namespace={namespace} />;
-    },
-  },
-  {
-    id: 'type',
-    header: 'Type',
-    accessorFn: (row) => row.metadata?.labels?.[PipelineRunLabel.PIPELINE_TYPE] ?? '',
-    sortable: true,
-    visibleFrom: 'xl',
-    cell: (info) => <>{capitalize(info.getValue() as string) || '-'}</>,
-  },
-  {
-    id: 'component',
-    header: 'Component',
-    accessorFn: (row) => row.metadata?.labels?.[PipelineRunLabel.COMPONENT] ?? '',
-    sortable: true,
-    visibleFrom: 'xl',
-    cell: (info) => {
-      const plr = info.row.original;
-      const componentName = plr.metadata?.labels?.[PipelineRunLabel.COMPONENT];
-      const applicationName = plr.metadata?.labels?.[PipelineRunLabel.APPLICATION];
-      const namespace = plr.metadata?.namespace ?? '';
-      if (!componentName) {
-        return <>-</>;
-      }
-      if (!applicationName) {
-        return <>{componentName}</>;
-      }
-      return (
+export const plrNameColumn: ColumnDefinition<PipelineRunKind> = {
+  id: 'name',
+  header: 'Name',
+  accessorFn: (row) => row.metadata?.name ?? '',
+  pinned: 'start',
+  nonHidable: true,
+  sortable: true,
+  size: 3,
+  cell: (info) => {
+    const plr = info.row.original;
+    const applicationName = plr.metadata?.labels?.[PipelineRunLabel.APPLICATION] ?? '';
+    const pipelineRunName = plr.metadata?.name ?? '';
+    const isFinished = !UNFINISHED_PLR_STATUSES.includes(pipelineRunStatus(plr));
+    const namespace = plr.metadata?.namespace ?? '';
+    return (
+      <>
         <Link
-          to={COMPONENT_DETAILS_PATH.createPath({
+          to={PIPELINE_RUNS_DETAILS_PATH.createPath({
             workspaceName: namespace,
             applicationName,
-            componentName,
+            pipelineRunName,
           })}
         >
-          {componentName}
+          {pipelineRunName}
         </Link>
-      );
-    },
+        {isFinished && <PipelineRunAttestation plr={plr} />}
+      </>
+    );
   },
-  {
-    id: 'triggerReference',
-    header: 'Trigger / Reference',
-    visibleFrom: 'xl',
-    cell: (info) => {
-      const plr = info.row.original;
-      const commit = createCommitObjectFromPLR(plr);
-      if (!commit) {
-        return <>-</>;
-      }
-      const eventTypeLabel = PipelineRunEventTypeLabel[commit.eventType] ?? '-';
-      return (
-        <>
-          {eventTypeLabel}{' '}
-          <TriggerColumnData
-            repoOrg={commit.repoOrg}
-            repoName={commit.repoName}
-            repoURL={commit.repoURL}
-            prNumber={commit.pullRequestNumber}
-            eventType={commit.eventType}
-            commitSha={commit.sha}
-            shaUrl={commit.shaURL}
-          />
-        </>
-      );
-    },
+};
+
+export const plrStartedColumn: ColumnDefinition<PipelineRunKind> = {
+  id: 'started',
+  header: 'Started',
+  accessorFn: (row) => row.status?.startTime ?? '',
+  sortable: true,
+  cell: (info) => (
+    <Timestamp timestamp={typeof info.getValue() === 'string' ? (info.getValue() as string) : ''} />
+  ),
+};
+
+export const plrVulnerabilitiesColumn: ColumnDefinition<PipelineRunKind> = {
+  id: 'vulnerabilities',
+  header: 'Vulnerabilities',
+  visibleFrom: 'xl',
+  cell: (info) => <VulnerabilitiesCell plr={info.row.original} />,
+};
+
+export const plrDurationColumn: ColumnDefinition<PipelineRunKind> = {
+  id: 'duration',
+  header: 'Duration',
+  accessorFn: (row) => row.status?.startTime ?? '',
+  sortable: true,
+  visibleFrom: 'xl',
+  cell: (info) => {
+    const plr = info.row.original;
+    const status = pipelineRunStatus(plr);
+    if (status === runStatus.Pending) {
+      return <>-</>;
+    }
+    return (
+      <Duration
+        startTime={typeof plr.status?.startTime === 'string' ? plr.status.startTime : undefined}
+        endTime={
+          typeof plr.status?.completionTime === 'string' ? plr.status.completionTime : undefined
+        }
+      />
+    );
   },
-  {
-    id: 'actions',
-    header: '',
-    pinned: 'end',
-    nonHidable: true,
-    width: '48px',
-    cell: (info) => <ActionCell plr={info.row.original} />,
+};
+
+export const plrStatusColumn: ColumnDefinition<PipelineRunKind> = {
+  id: 'status',
+  header: 'Status',
+  accessorFn: (row) => PLRStatus.registry.deriveStatus(row),
+  sortable: true,
+  cell: (info) => <PipelineRunStatusCell plr={info.row.original} />,
+};
+
+export const plrTestOutputColumn: ColumnDefinition<PipelineRunKind> = {
+  id: 'testOutput',
+  header: 'Test output',
+  visibleFrom: 'xl',
+  cell: (info) => {
+    const plr = info.row.original;
+    const namespace = plr.metadata?.namespace ?? '';
+    return <TestOutputCell plr={plr} namespace={namespace} />;
   },
+};
+
+export const plrTypeColumn: ColumnDefinition<PipelineRunKind> = {
+  id: 'type',
+  header: 'Type',
+  accessorFn: (row) => row.metadata?.labels?.[PipelineRunLabel.PIPELINE_TYPE] ?? '',
+  sortable: true,
+  visibleFrom: 'xl',
+  cell: (info) => <>{capitalize(info.getValue() as string) || '-'}</>,
+};
+
+export const plrComponentColumn: ColumnDefinition<PipelineRunKind> = {
+  id: 'component',
+  header: 'Component',
+  accessorFn: (row) => row.metadata?.labels?.[PipelineRunLabel.COMPONENT] ?? '',
+  sortable: true,
+  visibleFrom: 'xl',
+  cell: (info) => {
+    const plr = info.row.original;
+    const componentName = plr.metadata?.labels?.[PipelineRunLabel.COMPONENT];
+    const applicationName = plr.metadata?.labels?.[PipelineRunLabel.APPLICATION];
+    const namespace = plr.metadata?.namespace ?? '';
+    if (!componentName) {
+      return <>-</>;
+    }
+    if (!applicationName) {
+      return <>{componentName}</>;
+    }
+    return (
+      <Link
+        to={COMPONENT_DETAILS_PATH.createPath({
+          workspaceName: namespace,
+          applicationName,
+          componentName,
+        })}
+      >
+        {componentName}
+      </Link>
+    );
+  },
+};
+
+export const plrTriggerReferenceColumn: ColumnDefinition<PipelineRunKind> = {
+  id: 'triggerReference',
+  header: 'Trigger / Reference',
+  visibleFrom: 'xl',
+  cell: (info) => {
+    const plr = info.row.original;
+    const commit = createCommitObjectFromPLR(plr);
+    if (!commit) {
+      return <>-</>;
+    }
+    const eventTypeLabel = PipelineRunEventTypeLabel[commit.eventType] ?? '-';
+    return (
+      <>
+        {eventTypeLabel}{' '}
+        <TriggerColumnData
+          repoOrg={commit.repoOrg}
+          repoName={commit.repoName}
+          repoURL={commit.repoURL}
+          prNumber={commit.pullRequestNumber}
+          eventType={commit.eventType}
+          commitSha={commit.sha}
+          shaUrl={commit.shaURL}
+        />
+      </>
+    );
+  },
+};
+
+export const plrActionsColumn: ColumnDefinition<PipelineRunKind> = {
+  id: 'actions',
+  header: '',
+  pinned: 'end',
+  nonHidable: true,
+  width: '48px',
+  cell: (info) => <ActionCell plr={info.row.original} />,
+};
+
+export const pipelineRunsColumns: ColumnDefinition<PipelineRunKind>[] = [
+  plrNameColumn,
+  plrStartedColumn,
+  plrVulnerabilitiesColumn,
+  plrDurationColumn,
+  plrStatusColumn,
+  plrTestOutputColumn,
+  plrTypeColumn,
+  plrComponentColumn,
+  plrTriggerReferenceColumn,
+  plrActionsColumn,
 ];
