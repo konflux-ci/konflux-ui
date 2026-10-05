@@ -398,7 +398,13 @@ const PipelineRunDetailsTab: React.FC = () => {
                     )}
                   </DescriptionListDescription>
                 </DescriptionListGroup>
-                {!taskRunError && <ScanDescriptionListGroup taskRuns={taskRuns} showLogsLink />}
+                {!taskRunError && (
+                  <ScanDescriptionListGroup
+                    taskRuns={taskRuns}
+                    showLogsLink
+                    showVulnerabilitiesLink={pipelineRun.status?.completionTime !== undefined}
+                  />
+                )}
                 <DescriptionListGroup>
                   <DescriptionListTerm>Component</DescriptionListTerm>
                   <DescriptionListDescription>

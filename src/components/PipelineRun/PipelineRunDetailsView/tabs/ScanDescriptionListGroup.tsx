@@ -8,11 +8,12 @@ import {
   DescriptionListTerm,
   Popover,
 } from '@patternfly/react-core';
-import { TASKRUN_LOGS_PATH } from '@routes/paths';
+import { PIPELINE_RUNS_VULNERABILITIES_PATH, TASKRUN_LOGS_PATH } from '@routes/paths';
+import { PipelineRunLabel } from '~/consts/pipelinerun';
+import { ROXCTL_SCAN_TASK } from '~/consts/security';
+import { getScanResults } from '~/hooks/useScanResults';
 import { useNamespace } from '~/shared/providers/Namespace';
-import { PipelineRunLabel } from '../../../../consts/pipelinerun';
-import { getScanResults } from '../../../../hooks/useScanResults';
-import { TaskRunKind, TektonResourceLabel } from '../../../../types';
+import { TaskRunKind, TektonResourceLabel } from '~/types';
 import { ScanDetailStatus } from '../../ScanDetailStatus';
 
 import './ScanDescriptionListGroup.scss';
@@ -20,6 +21,7 @@ import './ScanDescriptionListGroup.scss';
 type Props = {
   taskRuns: TaskRunKind[];
   showLogsLink?: boolean;
+  showVulnerabilitiesLink?: boolean;
   hideIfNotFound?: boolean;
   popoverAppendTo?: boolean;
   errorState?: React.ReactNode | null;
@@ -29,11 +31,15 @@ const ScanDescriptionListGroup: React.FC<React.PropsWithChildren<Props>> = ({
   taskRuns,
   hideIfNotFound,
   showLogsLink,
+  showVulnerabilitiesLink,
   popoverAppendTo = true,
   errorState,
 }) => {
   const namespace = useNamespace();
   const [scanResults, scanTaskRuns] = taskRuns ? getScanResults(taskRuns) : [null, []];
+  const roxctlScanTaskRun = taskRuns?.find(
+    (taskRun) => taskRun?.metadata?.labels?.[TektonResourceLabel.pipelineTask] === ROXCTL_SCAN_TASK,
+  );
 
   if (!scanTaskRuns?.length && hideIfNotFound) {
     return null;
@@ -110,6 +116,34 @@ const ScanDescriptionListGroup: React.FC<React.PropsWithChildren<Props>> = ({
     );
   };
 
+  const renderScanLink = () => {
+    if (!showLogsLink) {
+      return null;
+    }
+
+    if (roxctlScanTaskRun && showVulnerabilitiesLink !== false) {
+      const applicationName = roxctlScanTaskRun.metadata?.labels?.[PipelineRunLabel.APPLICATION];
+      const pipelineRunName = roxctlScanTaskRun.metadata?.labels?.[TektonResourceLabel.pipelinerun];
+
+      if (applicationName && pipelineRunName) {
+        return (
+          <Link
+            to={PIPELINE_RUNS_VULNERABILITIES_PATH.createPath({
+              workspaceName: namespace,
+              applicationName,
+              pipelineRunName,
+            })}
+            className="pf-v6-u-font-weight-normal"
+          >
+            View vulnerabilities
+          </Link>
+        );
+      }
+    }
+
+    return renderLogsLink();
+  };
+
   return (
     <DescriptionListGroup>
       <DescriptionListTerm>Fixable vulnerabilities scan</DescriptionListTerm>
@@ -119,7 +153,7 @@ const ScanDescriptionListGroup: React.FC<React.PropsWithChildren<Props>> = ({
         ) : (
           <>
             {scanResults?.vulnerabilities ? <ScanDetailStatus scanResults={scanResults} /> : '-'}
-            {scanResults?.vulnerabilities ? renderLogsLink() : null}
+            {scanResults?.vulnerabilities ? renderScanLink() : null}
           </>
         )}
       </DescriptionListDescription>
