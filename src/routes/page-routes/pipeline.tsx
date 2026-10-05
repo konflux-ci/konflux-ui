@@ -23,6 +23,8 @@ const pipelineRoutes = [
       { index: true, element: <NamespacePipelineRunDetailsTab /> },
       { path: 'taskruns', element: <NamespacePipelineRunTaskRunsTab /> },
       { path: 'logs', element: <PipelineRunDetailsLogsTab /> },
+      { path: 'security', element: <PipelineRunSecurityTab /> },
+      { path: 'vulnerabilities', element: <PipelineRunVulnerabilitiesTab /> },
     ],
   },
   /* Pipeline Run details routes */

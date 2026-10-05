@@ -20,6 +20,8 @@ const taskRunRoutes = [
     children: [
       { index: true, element: <NamespaceTaskRunDetailsTab /> },
       { path: 'logs', element: <TaskRunLogsTab /> },
+      { path: 'security', element: <TaskRunSecurityTab /> },
+      { path: 'vulnerabilities', element: <TaskRunVulnerabilitiesTab /> },
     ],
   },
   {
