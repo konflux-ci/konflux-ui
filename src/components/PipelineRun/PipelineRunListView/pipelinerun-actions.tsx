@@ -2,6 +2,7 @@ import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { TrackEvents } from '~/analytics';
 import { useTrackAnalyticsEvent } from '~/analytics/hooks';
+import { useViewVulnerabilitiesAction } from '~/components/PipelineRun/PipelineRunListView/useViewVulnerabilitiesAction';
 import { useSnapshot } from '~/hooks/useSnapshots';
 import { PIPELINE_RUNS_LIST_PATH } from '~/routes/paths';
 import { useNamespace } from '~/shared/providers/Namespace';
@@ -469,7 +470,10 @@ export const usePipelinerunActionsLazy = (
 ): LazyActionHookResult<Action> => {
   const rerunHook = useRerunActionLazy(pipelineRun);
   const stopCancelHook = useStopCancelActionsLazy(pipelineRun);
+  const viewVulnerabilitiesActions: LazyActionHookResult<Action> = [
+    useViewVulnerabilitiesAction(pipelineRun),
+  ];
   const downloadYamlHook = useDownloadYamlActionLazy(pipelineRun);
 
-  return composeLazyActions(rerunHook, stopCancelHook, downloadYamlHook);
+  return composeLazyActions(rerunHook, stopCancelHook, viewVulnerabilitiesActions, downloadYamlHook);
 };
