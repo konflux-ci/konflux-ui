@@ -1,10 +1,61 @@
 import { DataState, testPipelineRuns } from '~/__data__/pipelinerun-data';
 import { PipelineRunLabel } from '~/consts/pipelinerun';
-import { getPipelineRunDetailsPath, getPipelineRunBreadcrumbs } from '../pipeline-run-routes';
+import { TaskRunKind, TektonResourceLabel } from '~/types';
+import {
+  getPipelineRunDetailsPath,
+  getPipelineRunBreadcrumbs,
+  getTaskRunDetailsPath,
+} from '../pipeline-run-routes';
 
 const run = (labels?: Record<string, string>) => ({
   ...testPipelineRuns[DataState.SUCCEEDED],
   metadata: { name: 'build-1', namespace: 'team', labels },
+});
+
+describe('task run navigation', () => {
+  const task: TaskRunKind = {
+    apiVersion: 'tekton.dev/v1',
+    kind: 'TaskRun',
+    metadata: { name: 'compile', labels: { [TektonResourceLabel.pipelinerun]: 'build-1' } },
+    spec: {},
+  };
+
+  it('uses the nested namespace route for a task in a run without an application', () => {
+    expect(getTaskRunDetailsPath(task, 'team', run())).toBe(
+      '/ns/team/pipelineruns/build-1/taskruns/compile',
+    );
+  });
+
+  it('uses the parent application even when the task has no application label', () => {
+    expect(
+      getTaskRunDetailsPath(task, 'team', run({ [PipelineRunLabel.APPLICATION]: 'app' })),
+    ).toBe('/ns/team/applications/app/taskruns/compile');
+  });
+
+  it('uses the known parent rather than conflicting task ownership labels', () => {
+    expect(
+      getTaskRunDetailsPath(
+        {
+          ...task,
+          metadata: { ...task.metadata, labels: { [PipelineRunLabel.APPLICATION]: 'old-app' } },
+        },
+        'team',
+        run(),
+      ),
+    ).toBe('/ns/team/pipelineruns/build-1/taskruns/compile');
+  });
+
+  it('uses task labels when no parent resource is available', () => {
+    expect(getTaskRunDetailsPath(task, 'team')).toBe(
+      '/ns/team/pipelineruns/build-1/taskruns/compile',
+    );
+  });
+
+  it('does not invent a destination for an orphaned task', () => {
+    expect(
+      getTaskRunDetailsPath({ ...task, metadata: { name: 'orphan' } }, 'team'),
+    ).toBeUndefined();
+  });
 });
 
 describe('pipeline run navigation', () => {

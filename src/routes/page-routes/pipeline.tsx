@@ -1,5 +1,6 @@
 import NamespacePipelineRunDetailsTab from '~/components/PipelineRun/NamespacePipelineRunDetails/NamespacePipelineRunDetailsTab';
 import NamespacePipelineRunDetailsView from '~/components/PipelineRun/NamespacePipelineRunDetails/NamespacePipelineRunDetailsView';
+import NamespacePipelineRunTaskRunsTab from '~/components/PipelineRun/NamespacePipelineRunDetails/NamespacePipelineRunTaskRunsTab';
 import {
   PipelineRunDetailsLayout,
   PipelineRunDetailsLogsTab,
@@ -20,6 +21,7 @@ const pipelineRoutes = [
     element: <NamespacePipelineRunDetailsView />,
     children: [
       { index: true, element: <NamespacePipelineRunDetailsTab /> },
+      { path: 'taskruns', element: <NamespacePipelineRunTaskRunsTab /> },
       { path: 'logs', element: <PipelineRunDetailsLogsTab /> },
     ],
   },
