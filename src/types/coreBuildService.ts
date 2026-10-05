@@ -23,7 +23,8 @@ export type ResolverParam = {
 };
 
 export type IntegrationTestScenarioSpec = {
-  application: string;
+  application?: string;
+  componentGroup?: string;
   contexts?: Context[];
   environment?: Environment;
   params?: Param[];
