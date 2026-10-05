@@ -6,7 +6,15 @@ export const useVisibleColumns = <T extends string>(
 ): [Set<T>, React.Dispatch<React.SetStateAction<Set<T>>>] => {
   const [visibleColumns, setVisibleColumns] = React.useState<Set<T>>(() => {
     try {
-      const saved = sessionStorage.getItem(storageKey);
+      let saved = window.localStorage.getItem(storageKey);
+      if (!saved) {
+        // Preserve column choices made before preferences moved to localStorage.
+        saved = window.sessionStorage.getItem(storageKey);
+        if (saved) {
+          window.localStorage.setItem(storageKey, saved);
+          window.sessionStorage.removeItem(storageKey);
+        }
+      }
       if (saved) {
         const parsedColumns = JSON.parse(saved) as T[];
         if (Array.isArray(parsedColumns)) {
@@ -21,7 +29,7 @@ export const useVisibleColumns = <T extends string>(
 
   React.useEffect(() => {
     try {
-      sessionStorage.setItem(storageKey, JSON.stringify([...visibleColumns]));
+      window.localStorage.setItem(storageKey, JSON.stringify([...visibleColumns]));
     } catch {
       // Silent error handling
     }
