@@ -40,6 +40,7 @@ it('renders group breadcrumbs and navigates to namespace logs', async () => {
   const user = userEvent.setup();
   renderWithQueryClientAndRouter(<NamespacePipelineRunDetailsView />);
   expect(screen.getByRole('link', { name: 'Groups' })).toHaveAttribute('href', '/ns/team/groups');
+  expect(screen.getByRole('tab', { name: 'Task runs' })).toBeInTheDocument();
   expect(screen.getByRole('link', { name: 'Pipeline runs' })).toHaveAttribute(
     'href',
     '/ns/team/groups/group/pipelineruns',

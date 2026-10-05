@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Bullseye, EmptyState, EmptyStateBody, Spinner } from '@patternfly/react-core';
 import { useTaskRunsForPipelineRuns } from '~/hooks/useTaskRunsV2';
+import { PipelineRunKind } from '~/types';
 import { textMatch } from '~/utils/text-filter-utils';
 import { Table, useDeepCompareMemoize } from '../../shared';
 import FilteredEmptyState from '../../shared/components/empty-state/FilteredEmptyState';
@@ -14,12 +15,14 @@ type Props = {
   namespace: string;
   pipelineRunName: string;
   taskName?: string;
+  pipelineRun?: PipelineRunKind;
 };
 
 const TaskRunListView: React.FC<React.PropsWithChildren<Props>> = ({
   namespace,
   pipelineRunName,
   taskName,
+  pipelineRun,
 }) => {
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
   const filters = useDeepCompareMemoize({
@@ -81,6 +84,7 @@ const TaskRunListView: React.FC<React.PropsWithChildren<Props>> = ({
           aria-label="TaskRun List"
           Header={TaskRunListHeader}
           Row={TaskRunListRow}
+          customData={{ pipelineRun }}
           loaded={loaded}
         />
       ) : (

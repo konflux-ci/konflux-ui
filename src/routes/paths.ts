@@ -125,6 +125,10 @@ export const NAMESPACE_PIPELINE_RUN_DETAILS_PATH = WORKSPACE_PATH.extend(
   `pipelineruns/:${RouterParams.pipelineRunName}`,
 );
 
+export const NAMESPACE_TASK_RUN_DETAILS_PATH = NAMESPACE_PIPELINE_RUN_DETAILS_PATH.extend(
+  `taskruns/:${RouterParams.taskRunName}`,
+);
+
 export const PIPELINE_RUNS_LOG_PATH = PIPELINE_RUNS_DETAILS_PATH.extend('logs');
 
 export const PIPELINE_RUNS_SECURITY_PATH = PIPELINE_RUNS_DETAILS_PATH.extend('security');

@@ -43,7 +43,7 @@ import ScanDescriptionListGroup from '../../PipelineRun/PipelineRunDetailsView/t
 import { StatusIconWithText } from '../../topology/StatusIcon';
 
 const TaskRunDetailsTab: React.FC = () => {
-  const { taskRunName } = useParams<RouterParams>();
+  const { taskRunName, applicationName: routeApplicationName } = useParams<RouterParams>();
   const namespace = useNamespace();
   const [taskRun, loaded, error] = useTaskRunV2(namespace, taskRunName);
 
@@ -67,7 +67,8 @@ const TaskRunDetailsTab: React.FC = () => {
       )
     : undefined;
 
-  const applicationName = taskRun?.metadata?.labels?.[PipelineRunLabel.APPLICATION];
+  const applicationName =
+    routeApplicationName || taskRun?.metadata?.labels?.[PipelineRunLabel.APPLICATION];
   const status = !error ? taskRunStatus(taskRun) : null;
   const plrName = taskRun?.metadata?.labels?.[TektonResourceLabel.pipelinerun];
   const specParams = taskRun?.spec?.params;
@@ -222,7 +223,7 @@ const TaskRunDetailsTab: React.FC = () => {
                           workspaceName: namespace,
                         })}
                       >
-                        {taskRun.metadata?.labels?.[PipelineRunLabel.APPLICATION]}
+                        {applicationName}
                       </Link>
                     ) : (
                       '-'

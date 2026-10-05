@@ -62,6 +62,7 @@ const NamespacePipelineRunDetailsView = () => {
       baseURL={baseURL}
       tabs={[
         { key: 'index', label: 'Details', isFilled: true },
+        { key: 'taskruns', label: 'Task runs' },
         { key: 'logs', label: 'Logs', isFilled: true },
       ]}
       actions={[
