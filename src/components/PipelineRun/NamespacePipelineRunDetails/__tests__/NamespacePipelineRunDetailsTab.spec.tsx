@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import { mockPrivateImageRepository } from '~/__data__/image-repository-data';
 import { DataState, testPipelineRuns } from '~/__data__/pipelinerun-data';
 import { PipelineRunLabel } from '~/consts/pipelinerun';
@@ -14,7 +14,9 @@ import {
 } from '~/unit-test-utils';
 import NamespacePipelineRunDetailsTab from '../NamespacePipelineRunDetailsTab';
 
-jest.mock('~/hooks/usePipelineRunsV2', () => ({ usePipelineRunV2: jest.fn() }));
+jest.mock('~/hooks/usePipelineRunsV2', () => ({
+  usePipelineRunV2: jest.fn(),
+}));
 jest.mock('~/hooks/useTaskRunsV2', () => ({ useTaskRunsForPipelineRuns: jest.fn() }));
 jest.mock('~/hooks/useUIInstance', () => ({ useSbomUrl: () => () => undefined }));
 jest.mock('~/hooks/useImageProxy', () => ({ useImageProxy: jest.fn() }));
@@ -63,34 +65,30 @@ beforeEach(() => {
 it('uses the access proxy for private image SBOM downloads', () => {
   (useIsImageControllerEnabled as jest.Mock).mockReturnValue({ isImageControllerEnabled: true });
   jest.mocked(useImageRepository).mockReturnValue([mockPrivateImageRepository, true, undefined]);
-  jest
-    .mocked(useImageProxy)
-    .mockReturnValue([
-      {
-        hostname: 'image-proxy.example',
-        fullUrl: 'https://image-proxy.example',
-        oauthPath: '/oauth',
-        buildUrl: (path) => `https://image-proxy.example${path}`,
-      },
-      true,
-      undefined,
-    ]);
-  jest
-    .mocked(usePipelineRunV2)
-    .mockReturnValue([
-      {
-        ...run,
-        metadata: {
-          ...run.metadata,
-          annotations: {
-            [PipelineRunLabel.BUILD_IMAGE_ANNOTATION]:
-              'quay.io/redhat-user-workloads/team/api:latest',
-          },
+  jest.mocked(useImageProxy).mockReturnValue([
+    {
+      hostname: 'image-proxy.example',
+      fullUrl: 'https://image-proxy.example',
+      oauthPath: '/oauth',
+      buildUrl: (path) => `https://image-proxy.example${path}`,
+    },
+    true,
+    undefined,
+  ]);
+  jest.mocked(usePipelineRunV2).mockReturnValue([
+    {
+      ...run,
+      metadata: {
+        ...run.metadata,
+        annotations: {
+          [PipelineRunLabel.BUILD_IMAGE_ANNOTATION]:
+            'quay.io/redhat-user-workloads/team/api:latest',
         },
       },
-      true,
-      undefined,
-    ]);
+    },
+    true,
+    undefined,
+  ]);
   renderWithQueryClientAndRouter(<NamespacePipelineRunDetailsTab />);
   expect(
     screen.getByDisplayValue(
@@ -100,21 +98,19 @@ it('uses the access proxy for private image SBOM downloads', () => {
 });
 
 it('preserves the pipeline failure message alongside a different task failure', () => {
-  jest
-    .mocked(usePipelineRunV2)
-    .mockReturnValue([
-      {
-        ...run,
-        status: {
-          ...run.status,
-          conditions: [
-            { type: 'Succeeded', status: 'False', reason: 'Failed', message: 'Two tasks failed' },
-          ],
-        },
+  jest.mocked(usePipelineRunV2).mockReturnValue([
+    {
+      ...run,
+      status: {
+        ...run.status,
+        conditions: [
+          { type: 'Succeeded', status: 'False', reason: 'Failed', message: 'Two tasks failed' },
+        ],
       },
-      true,
-      undefined,
-    ]);
+    },
+    true,
+    undefined,
+  ]);
   jest.mocked(useTaskRunsForPipelineRuns).mockReturnValue([
     [
       {
@@ -137,16 +133,19 @@ it('preserves the pipeline failure message alongside a different task failure', 
   renderWithQueryClientAndRouter(<NamespacePipelineRunDetailsTab />);
   expect(screen.getByText('Two tasks failed')).toBeInTheDocument();
   expect(screen.getByText('Compilation failed')).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: 'See logs' })).toHaveAttribute(
+    'href',
+    '/ns/team/pipelineruns/build-1/logs',
+  );
 });
 
-it('links group, component, snapshot, test and logs without an application', () => {
+it('links group, component, snapshot and test without an application', () => {
   renderWithQueryClientAndRouter(<NamespacePipelineRunDetailsTab />);
   for (const [name, href] of [
     ['group', '/ns/team/groups/group'],
     ['api', '/ns/team/components/api'],
     ['snapshot', '/ns/team/groups/group/snapshots/snapshot'],
     ['smoke', '/ns/team/groups/group/integrationtests/smoke'],
-    ['See logs', '/ns/team/pipelineruns/build-1/logs'],
   ])
     expect(screen.getByRole('link', { name })).toHaveAttribute('href', href);
   expect(screen.queryByText('Application')).not.toBeInTheDocument();
@@ -190,4 +189,37 @@ it('keeps run metadata visible when task runs cannot be loaded', () => {
   renderWithQueryClientAndRouter(<NamespacePipelineRunDetailsTab />);
   expect(screen.getByText('build-1')).toBeInTheDocument();
   expect(screen.getByText('Unable to load task runs')).toBeInTheDocument();
+});
+
+it('matches the existing details field order within each column', () => {
+  renderWithQueryClientAndRouter(<NamespacePipelineRunDetailsTab />);
+  expect(
+    within(
+      screen
+        .getAllByRole('term')
+        .find((term) => term.textContent === 'Name')
+        .closest('dl'),
+    )
+      .getAllByRole('term')
+      .map((term) => term.textContent),
+  ).toEqual(['Name', 'Namespace', 'Labels', 'Annotations', 'Created at', 'Duration']);
+  expect(
+    within(
+      screen
+        .getAllByRole('term')
+        .find((term) => term.textContent === 'Status')
+        .closest('dl'),
+    )
+      .getAllByRole('term')
+      .map((term) => term.textContent),
+  ).toEqual([
+    'Status',
+    'Pipeline',
+    'Snapshot',
+    'Component group',
+    'Component',
+    'Commit',
+    'Integration test',
+  ]);
+  expect(screen.queryByText('Started')).not.toBeInTheDocument();
 });
