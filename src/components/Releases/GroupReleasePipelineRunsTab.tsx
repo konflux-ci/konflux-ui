@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Bullseye, EmptyState, EmptyStateBody, Spinner } from '@patternfly/react-core';
-import { GROUP_SNAPSHOT_DETAILS_PATH } from '@routes/paths';
+import { GROUP_SNAPSHOT_DETAILS_PATH, NAMESPACE_PIPELINE_RUN_DETAILS_PATH } from '@routes/paths';
 import { RouterParams } from '@routes/utils';
 import {
   getReleasePipelineRuns,
@@ -37,6 +37,16 @@ const columns: ColumnDefinition<PipelineRunProcessing>[] = [
     id: 'name',
     header: 'Name',
     accessorFn: (run) => run.pipelineRun,
+    cell: ({ row }) => (
+      <Link
+        to={NAMESPACE_PIPELINE_RUN_DETAILS_PATH.createPath({
+          workspaceName: row.original.prNamespace,
+          pipelineRunName: row.original.pipelineRun,
+        })}
+      >
+        {row.original.pipelineRun}
+      </Link>
+    ),
     nonHidable: true,
     sortable: true,
   },

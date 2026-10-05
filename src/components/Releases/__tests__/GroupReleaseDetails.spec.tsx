@@ -149,7 +149,14 @@ describe('GroupReleaseDetails', () => {
     renderWithQueryClientAndRouter(<GroupReleasePipelineRunsTab />);
     for (const name of ['collector-run', 'tenant-run', 'managed-run', 'final-run'])
       expect(screen.getByText(name)).toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: 'tenant-run' })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'tenant-run' })).toHaveAttribute(
+      'href',
+      '/ns/test-ns/pipelineruns/tenant-run',
+    );
+    expect(screen.getByRole('link', { name: 'managed-run' })).toHaveAttribute(
+      'href',
+      '/ns/managed-ns/pipelineruns/managed-run',
+    );
     expect(screen.getByText('managed-ns')).toBeInTheDocument();
     expect(screen.getByText('10 seconds')).toBeInTheDocument();
     expect(screen.getAllByRole('link', { name: 'snapshot-one' })[0]).toHaveAttribute(

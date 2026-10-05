@@ -62,7 +62,10 @@ const defaultEmptyAction: RerunActionReturnType = {
   label: 'Rerun',
 };
 
-export const usePipelinererunAction = (pipelineRun: PipelineRunKind): RerunActionReturnType => {
+export const usePipelinererunAction = (
+  pipelineRun: PipelineRunKind,
+  redirectPath?: string,
+): RerunActionReturnType => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const isIntegrationTestsPage = pathname?.includes('integrationtests') ?? false;
@@ -87,7 +90,7 @@ export const usePipelinererunAction = (pipelineRun: PipelineRunKind): RerunActio
       PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL
     ]?.toLowerCase() as PipelineRunEventType,
   );
-  const runType = pipelineRun?.metadata?.labels[PipelineRunLabel.PIPELINE_TYPE];
+  const runType = pipelineRun?.metadata?.labels?.[PipelineRunLabel.PIPELINE_TYPE];
 
   const scenario = pipelineRun?.metadata?.labels?.[PipelineRunLabel.TEST_SERVICE_SCENARIO];
   const isCancelling = status === runStatus.Cancelling;
@@ -126,10 +129,11 @@ export const usePipelinererunAction = (pipelineRun: PipelineRunKind): RerunActio
             startNewBuild(component).then(() => {
               if (isSnapshotsPage) return;
               navigate(
-                PIPELINE_RUNS_LIST_PATH.createPath({
-                  workspaceName: namespace,
-                  applicationName: component.spec.application,
-                }),
+                redirectPath ??
+                  PIPELINE_RUNS_LIST_PATH.createPath({
+                    workspaceName: namespace,
+                    applicationName: component.spec.application,
+                  }),
               );
             }),
           isDisabled: isCancelling,
@@ -152,10 +156,11 @@ export const usePipelinererunAction = (pipelineRun: PipelineRunKind): RerunActio
             return rerunTestPipeline(snapshot, scenario).then(() => {
               if (isIntegrationTestsPage || isSnapshotsPage) return;
               navigate(
-                PIPELINE_RUNS_LIST_PATH.createPath({
-                  workspaceName: namespace,
-                  applicationName: snapshot.spec.application,
-                }),
+                redirectPath ??
+                  PIPELINE_RUNS_LIST_PATH.createPath({
+                    workspaceName: namespace,
+                    applicationName: snapshot.spec.application,
+                  }),
               );
             });
           },
@@ -179,6 +184,7 @@ export const usePipelinererunAction = (pipelineRun: PipelineRunKind): RerunActio
       }
     }
   }, [
+    redirectPath,
     canPatchComponent,
     canPatchSnapshot,
     runType,
@@ -256,8 +262,7 @@ export const useRerunActionLazy = (pipelineRun: PipelineRunKind): LazyActionHook
   const snapshotName = labels?.[PipelineRunLabel.SNAPSHOT];
   const applicationName = labels?.[PipelineRunLabel.APPLICATION];
   const eventType = labels?.[PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL]?.toLowerCase() as
-    | PipelineRunEventType
-    | undefined;
+    PipelineRunEventType | undefined;
   const isPR = eventType === PipelineRunEventType.PULL;
   const isPushBuildType =
     eventType === PipelineRunEventType.PUSH || eventType === PipelineRunEventType.INCOMING;

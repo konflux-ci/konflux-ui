@@ -15,7 +15,7 @@ import {
 } from '~/consts/pipelinerun';
 import { usePipelineRunTestOutputResult } from '~/hooks/usePipelineRunTestOutputResult';
 import { useKarchScanResults } from '~/hooks/useScanResults';
-import { PIPELINE_RUNS_DETAILS_PATH, COMPONENT_DETAILS_PATH } from '~/routes/paths';
+import { COMPONENT_DETAILS_PATH } from '~/routes/paths';
 import ActionMenu from '~/shared/components/action-menu/ActionMenu';
 import { Duration } from '~/shared/components/duration';
 import { ColumnDefinition } from '~/shared/components/TableV2';
@@ -24,6 +24,7 @@ import { TriggerColumnData } from '~/shared/components/trigger-column-data/trigg
 import { PipelineRunKind } from '~/types';
 import { createCommitObjectFromPLR } from '~/utils/commits-utils';
 import { PipelineRunEventTypeLabel } from '~/utils/pipeline-run-filter-utils';
+import { getPipelineRunDetailsPath } from '~/utils/pipeline-run-routes';
 import { pipelineRunStatus } from '~/utils/pipeline-utils';
 import { PLRStatus } from '~/utils/plr-status-config';
 import PipelineRunStatusCell from './PipelineRunStatus';
@@ -111,21 +112,11 @@ export const plrNameColumn: ColumnDefinition<PipelineRunKind> = {
   size: 3,
   cell: (info) => {
     const plr = info.row.original;
-    const applicationName = plr.metadata?.labels?.[PipelineRunLabel.APPLICATION] ?? '';
     const pipelineRunName = plr.metadata?.name ?? '';
     const isFinished = !UNFINISHED_PLR_STATUSES.includes(pipelineRunStatus(plr));
-    const namespace = plr.metadata?.namespace ?? '';
     return (
       <>
-        <Link
-          to={PIPELINE_RUNS_DETAILS_PATH.createPath({
-            workspaceName: namespace,
-            applicationName,
-            pipelineRunName,
-          })}
-        >
-          {pipelineRunName}
-        </Link>
+        <Link to={getPipelineRunDetailsPath(plr)}>{pipelineRunName}</Link>
         {isFinished && <PipelineRunAttestation plr={plr} />}
       </>
     );
