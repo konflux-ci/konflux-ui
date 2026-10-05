@@ -13,6 +13,7 @@ jest.mock('../../hooks/useActiveRouteChecker', () => ({
 
 jest.mock('~/analytics/hooks', () => ({
   useJourneyTracker: jest.fn(),
+  useTrackAnalyticsEvent: jest.fn(() => jest.fn()),
 }));
 
 jest.mock('../../hooks/useKonfluxPublicInfo', () => ({
