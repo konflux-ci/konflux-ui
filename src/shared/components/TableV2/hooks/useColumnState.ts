@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useLocalStorage } from '~/shared/hooks/useLocalStorage';
+import { getColumnPreferencesStorage } from '~/shared/utils/column-preferences-storage';
 import { type ColumnDefinition, type ColumnState } from '../types';
 
 // Only the `id` field is needed — use Pick to avoid variance issues with TData
@@ -104,6 +105,8 @@ export function useColumnState<TData>(
   const [persistedValue, setPersistedValue] = useLocalStorage<ColumnState>(
     key ?? '__ephemeral__',
     defaultState,
+    getColumnPreferencesStorage(),
+    true,
   );
 
   // Ephemeral state — active only when no key is provided

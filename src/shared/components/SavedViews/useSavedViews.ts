@@ -4,6 +4,11 @@ import { parseAsString, useQueryState } from 'nuqs';
 import { useLocalStorage } from '~/shared/hooks/useLocalStorage';
 import { SavedView, SavedViewsConfig } from './types';
 import { generateSlug, isSlugUnique, STORAGE_KEY_PREFIX } from './utils';
+import {
+  readColumnPreference,
+  removeColumnPreference,
+  writeColumnPreference,
+} from '~/shared/utils/column-preferences-storage';
 
 export const useSavedViews = (config: SavedViewsConfig, currentNamespace?: string) => {
   const { resourceKey, columnKeyPrefix } = config;
@@ -53,10 +58,8 @@ export const useSavedViews = (config: SavedViewsConfig, currentNamespace?: strin
       const columnStateKey = `${columnKeyPrefix}:${slug}`;
 
       // Copy column state from current key to the new view's key
-      const columnState = localStorage.getItem(currentColumnStateKey);
-      if (columnState !== null) {
-        localStorage.setItem(columnStateKey, columnState);
-      }
+      const columnState = readColumnPreference(currentColumnStateKey);
+      if (columnState !== null) writeColumnPreference(columnStateKey, columnState);
 
       const newView: SavedView = {
         slug,
@@ -77,7 +80,7 @@ export const useSavedViews = (config: SavedViewsConfig, currentNamespace?: strin
       const view = views.find((v) => v.slug === slug);
 
       if (view) {
-        localStorage.removeItem(view.columnStateKey);
+        removeColumnPreference(view.columnStateKey);
       }
       setViews((prev) => (prev ?? []).filter((v) => v.slug !== slug));
       if (activeViewSlug === slug && currentNamespace) {
@@ -106,10 +109,8 @@ export const useSavedViews = (config: SavedViewsConfig, currentNamespace?: strin
     ) => {
       // Copy column state outside the updater to keep it pure
       const columnStateKey = `${columnKeyPrefix}:${slug}`;
-      const columnState = localStorage.getItem(currentColumnStateKey);
-      if (columnState !== null) {
-        localStorage.setItem(columnStateKey, columnState);
-      }
+      const columnState = readColumnPreference(currentColumnStateKey);
+      if (columnState !== null) writeColumnPreference(columnStateKey, columnState);
 
       setViews((prev) => (prev ?? []).map((v) => (v.slug === slug ? { ...v, searchParams } : v)));
     },

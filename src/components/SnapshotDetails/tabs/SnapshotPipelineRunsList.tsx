@@ -15,6 +15,7 @@ import { Table, useDeepCompareMemoize } from '../../../shared';
 import FilteredEmptyState from '../../../shared/components/empty-state/FilteredEmptyState';
 import ColumnManagement from '../../../shared/components/table/ColumnManagement';
 import { useLocalStorage } from '../../../shared/hooks/useLocalStorage';
+import { getColumnPreferencesStorage } from '~/shared/utils/column-preferences-storage';
 import { PipelineRunKind } from '../../../types';
 import { statuses } from '../../../utils/commits-utils';
 import { pipelineRunStatus } from '../../../utils/pipeline-utils';
@@ -55,6 +56,9 @@ const SnapshotPipelineRunsList: React.FC<React.PropsWithChildren<SnapshotPipelin
   const [isColumnManagementOpen, setIsColumnManagementOpen] = React.useState(false);
   const [visibleColumnKeys, setVisibleColumnKeys] = useLocalStorage<string[]>(
     `snapshot-pipeline-runs-columns-${applicationName}`,
+    undefined,
+    getColumnPreferencesStorage(),
+    true,
   );
 
   const safeVisibleColumns = React.useMemo((): Set<PipelineRunColumnKeys> => {

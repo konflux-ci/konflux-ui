@@ -101,7 +101,7 @@ describe('useSavedViews', () => {
     });
 
     it('should copy column state from current key to new view key', () => {
-      localStorage.setItem('col-state-pr:default', JSON.stringify({ order: ['a', 'b'] }));
+      sessionStorage.setItem('col-state-pr:default', JSON.stringify({ order: ['a', 'b'] }));
       const { result } = renderHookWithNuqs(() => useSavedViews(config, 'test-ns'));
 
       act(() => {
@@ -114,7 +114,7 @@ describe('useSavedViews', () => {
         });
       });
 
-      expect(localStorage.getItem('col-state-pr:test-view')).toBe(
+      expect(sessionStorage.getItem('col-state-pr:test-view')).toBe(
         JSON.stringify({ order: ['a', 'b'] }),
       );
     });
@@ -174,7 +174,7 @@ describe('useSavedViews', () => {
         namespace: 'test-ns',
       };
       mockViews = [viewToDelete];
-      localStorage.setItem('col-state-pr:delete-me', '{"cols":["a"]}');
+      sessionStorage.setItem('col-state-pr:delete-me', '{"cols":["a"]}');
 
       mockUseLocalStorage.mockReturnValue([mockViews, mockSetViews, mockRemoveViews]);
       const { result } = renderHookWithNuqs(() => useSavedViews(config, 'test-ns'));
@@ -184,7 +184,7 @@ describe('useSavedViews', () => {
       });
 
       // Column state should be removed
-      expect(localStorage.getItem('col-state-pr:delete-me')).toBeNull();
+      expect(sessionStorage.getItem('col-state-pr:delete-me')).toBeNull();
 
       // Views should be filtered
       const updater = mockSetViews.mock.calls[0][0] as (prev: SavedView[]) => SavedView[];
@@ -267,7 +267,7 @@ describe('useSavedViews', () => {
 
   describe('updateView', () => {
     it('should update searchParams and copy column state', () => {
-      localStorage.setItem('col-state-pr:current', '{"visibility":{"name":true}}');
+      sessionStorage.setItem('col-state-pr:current', '{"visibility":{"name":true}}');
       const { result } = renderHookWithNuqs(() => useSavedViews(config, 'test-ns'));
 
       act(() => {
@@ -289,11 +289,11 @@ describe('useSavedViews', () => {
 
       expect(updated[0].searchParams).toBe('?status=updated');
       expect(updated[0].label).toBe('My View');
-      expect(localStorage.getItem('col-state-pr:my-view')).toBe('{"visibility":{"name":true}}');
+      expect(sessionStorage.getItem('col-state-pr:my-view')).toBe('{"visibility":{"name":true}}');
     });
 
     it('should not copy column state if source key does not exist', () => {
-      localStorage.setItem('col-state-pr:my-view', '{"old":"state"}');
+      sessionStorage.setItem('col-state-pr:my-view', '{"old":"state"}');
       const { result } = renderHookWithNuqs(() => useSavedViews(config, 'test-ns'));
 
       act(() => {
@@ -314,7 +314,7 @@ describe('useSavedViews', () => {
       updater([original]);
 
       // Should keep old column state since source doesn't exist
-      expect(localStorage.getItem('col-state-pr:my-view')).toBe('{"old":"state"}');
+      expect(sessionStorage.getItem('col-state-pr:my-view')).toBe('{"old":"state"}');
     });
   });
 

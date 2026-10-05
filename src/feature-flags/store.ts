@@ -1,4 +1,4 @@
-import { createKeyedJSONStorage } from '~/shared/utils';
+import { createKeyedJSONStorage } from '~/shared/utils/storage';
 import {
   type ConditionKey,
   type ConditionState,

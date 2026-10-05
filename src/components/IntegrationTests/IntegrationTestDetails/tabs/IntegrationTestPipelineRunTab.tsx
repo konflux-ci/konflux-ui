@@ -15,6 +15,7 @@ import { RouterParams } from '../../../../routes/utils';
 import { Table } from '../../../../shared';
 import ColumnManagement from '../../../../shared/components/table/ColumnManagement';
 import { useLocalStorage } from '../../../../shared/hooks/useLocalStorage';
+import { getColumnPreferencesStorage } from '~/shared/utils/column-preferences-storage';
 import { useNamespace } from '../../../../shared/providers/Namespace';
 import { PipelineRunKind } from '../../../../types';
 import { BaseTextFilterToolbar } from '../../../Filter/toolbars/BaseTextFIlterToolbar';
@@ -47,6 +48,9 @@ const IntegrationTestPipelineRunTab: React.FC<React.PropsWithChildren> = () => {
   const [isColumnManagementOpen, setIsColumnManagementOpen] = React.useState(false);
   const [persistedColumns, setPersistedColumns] = useLocalStorage<string[]>(
     `integration-test-pipeline-runs-columns-${applicationName}-${integrationTestName}`,
+    undefined,
+    getColumnPreferencesStorage(),
+    true,
   );
 
   const safeVisibleColumns = React.useMemo((): Set<PipelineRunColumnKeys> => {

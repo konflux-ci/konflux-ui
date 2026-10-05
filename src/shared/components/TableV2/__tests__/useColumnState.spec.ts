@@ -56,7 +56,12 @@ describe('useColumnState', () => {
     it('calls useLocalStorage with the provided key', () => {
       renderHook(() => useColumnState('my-table-key', columns));
 
-      expect(mockUseLocalStorage).toHaveBeenCalledWith('my-table-key', expect.any(Object));
+      expect(mockUseLocalStorage).toHaveBeenCalledWith(
+        'my-table-key',
+        expect.any(Object),
+        expect.any(String),
+        true,
+      );
     });
 
     it('persists state via setColumnState', () => {

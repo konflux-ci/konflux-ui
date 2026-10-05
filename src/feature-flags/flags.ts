@@ -48,6 +48,12 @@ const InternalFLAGS = {
     defaultEnabled: true,
     status: 'ready',
   },
+  'column-preferences-local-storage': {
+    key: 'column-preferences-local-storage',
+    description: 'Persist column preferences in local storage instead of session storage',
+    defaultEnabled: false,
+    status: 'wip',
+  },
   'system-notifications': {
     key: 'system-notifications',
     description: 'Enable system notifications badge and notification center',

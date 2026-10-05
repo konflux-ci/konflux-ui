@@ -126,7 +126,7 @@ export interface ColumnDefinition<TData, TValue = unknown> {
 /**
  * Serializable column state used for persistence and state management.
  *
- * Stored in `localStorage` when a {@link TableProps.columnStateKey} is
+ * Stored in the selected browser storage when a {@link TableProps.columnStateKey} is
  * provided, or held in React state otherwise. Managed by `useColumnState`.
  */
 export interface ColumnState {

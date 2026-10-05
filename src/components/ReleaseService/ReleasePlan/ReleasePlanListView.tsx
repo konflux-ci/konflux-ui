@@ -4,6 +4,7 @@ import { FilterContext, FilterContextProvider } from '~/components/Filter/generi
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 import { useApplications } from '~/hooks/useApplications';
 import { useLocalStorage } from '~/shared/hooks/useLocalStorage';
+import { getColumnPreferencesStorage } from '~/shared/utils/column-preferences-storage';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { filterByText } from '~/utils/text-filter-utils';
 import { FULL_APPLICATION_TITLE } from '../../../consts/labels';
@@ -34,7 +35,12 @@ const ReleasePlanListView: React.FC<React.PropsWithChildren<unknown>> = () => {
 
   // Column management state
   const [isColumnManagementOpen, setIsColumnManagementOpen] = React.useState(false);
-  const [persistedColumns, setPersistedColumns] = useLocalStorage<string[]>('release-plan-columns');
+  const [persistedColumns, setPersistedColumns] = useLocalStorage<string[]>(
+    'release-plan-columns',
+    undefined,
+    getColumnPreferencesStorage(),
+    true,
+  );
 
   const safeVisibleColumns = React.useMemo((): Set<ReleasePlanColumnKeys> => {
     if (Array.isArray(persistedColumns) && persistedColumns.length > 0) {

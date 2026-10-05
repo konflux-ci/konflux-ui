@@ -19,6 +19,7 @@ import { Table } from '../../../../shared';
 import FilteredEmptyState from '../../../../shared/components/empty-state/FilteredEmptyState';
 import ColumnManagement from '../../../../shared/components/table/ColumnManagement';
 import { useLocalStorage } from '../../../../shared/hooks/useLocalStorage';
+import { getColumnPreferencesStorage } from '~/shared/utils/column-preferences-storage';
 import { useNamespace } from '../../../../shared/providers/Namespace';
 import { PipelineRunKind } from '../../../../types';
 import { statuses } from '../../../../utils/commits-utils';
@@ -81,6 +82,9 @@ const CommitsPipelineRunTab: React.FC = () => {
   const [isColumnManagementOpen, setIsColumnManagementOpen] = React.useState(false);
   const [visibleColumnKeys, setVisibleColumnKeys] = useLocalStorage<string[]>(
     `commit-pipeline-runs-columns-${applicationName}-${commitName}`,
+    undefined,
+    getColumnPreferencesStorage(),
+    true,
   );
 
   const safeVisibleColumns = React.useMemo((): Set<PipelineRunColumnKeys> => {

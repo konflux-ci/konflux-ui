@@ -523,7 +523,12 @@ describe('Pipeline run List', () => {
 
     renderWithQueryClient(<TestedComponent name={appName} />);
 
-    expect(useLocalStorageMock).toHaveBeenCalledWith(`pipeline-runs-columns-${appName}`);
+    expect(useLocalStorageMock).toHaveBeenCalledWith(
+      `pipeline-runs-columns-${appName}`,
+      undefined,
+      'sessionStorage',
+      true,
+    );
     expect(screen.getByText('basic-node-js-first')).toBeInTheDocument();
   });
 
@@ -532,6 +537,9 @@ describe('Pipeline run List', () => {
 
     expect(useLocalStorageMock).toHaveBeenCalledWith(
       `pipeline-runs-columns-${appName}-sample-component`,
+      undefined,
+      'sessionStorage',
+      true,
     );
   });
 
