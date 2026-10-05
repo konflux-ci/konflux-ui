@@ -13,9 +13,9 @@ import {
   ToolbarItem,
 } from '@patternfly/react-core';
 import { IfFeature } from '~/feature-flags/hooks';
+import { SEARCH_SHORTCUT_KEY, useSearchShortcut } from '~/shared/hooks/useSearchShortcut';
 import { useDebounceCallback } from '../../../shared/hooks/useDebounceCallback';
 import ColumnManagementButton from '../components/ColumnManagementButton';
-import { SEARCH_SHORTCUT_KEY, useSearchShortcut } from './useSearchShortcut';
 
 type BaseTextFilterToolbarProps = {
   text: string;
