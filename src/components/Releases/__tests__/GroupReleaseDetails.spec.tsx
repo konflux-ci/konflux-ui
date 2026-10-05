@@ -72,6 +72,7 @@ beforeEach(() => {
   jest.mocked(useRelease).mockReturnValue([release, true, undefined, undefined, false]);
   window.history.replaceState({}, '', '/ns/test-ns/groups/my-group/releases/release-one');
 });
+
 it('shows group breadcrumbs and all four release tabs', () => {
   renderWithQueryClientAndRouter(<GroupReleaseDetailsView />);
   expect(screen.getByRole('link', { name: 'Groups' })).toHaveAttribute(
@@ -85,6 +86,7 @@ it('shows group breadcrumbs and all four release tabs', () => {
   for (const name of ['Overview', 'Pipeline runs', 'Release artifacts', 'YAML'])
     expect(screen.getByRole('tab', { name })).toBeInTheDocument();
 });
+
 it('reruns the release and returns to group releases', async () => {
   const user = userEvent.setup();
   renderWithQueryClientAndRouter(<GroupReleaseDetailsView />);
@@ -95,6 +97,7 @@ it('reruns the release and returns to group releases', async () => {
   );
   expect(releaseRerun).toHaveBeenCalledWith(release, 'test@example.com');
 });
+
 it('disables rerun when permission is denied', async () => {
   jest.mocked(useAccessReviewForModel).mockReturnValue([false, true]);
   const user = userEvent.setup();
@@ -134,11 +137,19 @@ it('rejects a release belonging to another group', () => {
   expect(screen.getByText('404: Page not found')).toBeInTheDocument();
   expect(screen.queryByRole('tab')).not.toBeInTheDocument();
 });
+
 it('shows every processing stage and group snapshot links without requiring a release plan', () => {
   renderWithQueryClientAndRouter(<GroupReleasePipelineRunsTab />);
   for (const name of ['collector-run', 'tenant-run', 'managed-run', 'final-run'])
     expect(screen.getByText(name)).toBeInTheDocument();
-  expect(screen.queryByRole('link', { name: 'tenant-run' })).not.toBeInTheDocument();
+  expect(screen.getByRole('link', { name: 'tenant-run' })).toHaveAttribute(
+    'href',
+    '/ns/test-ns/pipelineruns/tenant-run',
+  );
+  expect(screen.getByRole('link', { name: 'managed-run' })).toHaveAttribute(
+    'href',
+    '/ns/managed-ns/pipelineruns/managed-run',
+  );
   expect(screen.getByText('managed-ns')).toBeInTheDocument();
   expect(screen.getByText('10 seconds')).toBeInTheDocument();
   expect(screen.getAllByRole('link', { name: 'snapshot-one' })[0]).toHaveAttribute(
@@ -146,6 +157,7 @@ it('shows every processing stage and group snapshot links without requiring a re
     '/ns/test-ns/groups/my-group/snapshots/snapshot-one',
   );
 });
+
 it('shows an empty state for a release without processing runs', () => {
   jest
     .mocked(useRelease)
@@ -153,6 +165,7 @@ it('shows an empty state for a release without processing runs', () => {
   renderWithQueryClientAndRouter(<GroupReleasePipelineRunsTab />);
   expect(screen.getByText('No pipeline runs')).toBeInTheDocument();
 });
+
 it('reuses the artifacts tab with group route parameters', () => {
   renderWithQueryClientAndRouter(<ReleaseArtifactsTab />);
   expect(
@@ -160,6 +173,7 @@ it('reuses the artifacts tab with group route parameters', () => {
   ).toHaveAttribute('href', 'https://github.com/org/repo/releases/tag/v1');
   expect(screen.getByRole('heading', { name: 'Components' })).toBeInTheDocument();
 });
+
 it('shows an empty state for a release without artifact images', () => {
   jest
     .mocked(useRelease)

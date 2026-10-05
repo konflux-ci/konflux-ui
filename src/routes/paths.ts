@@ -121,6 +121,10 @@ export const RELEASE_PIPELINE_LIST_PATH = APPLICATION_RELEASE_LIST_PATH.extend(
 
 export const PIPELINE_RUNS_DETAILS_PATH = PLR_LIST_PATH.extend(`:${RouterParams.pipelineRunName}`);
 
+export const NAMESPACE_PIPELINE_RUN_DETAILS_PATH = WORKSPACE_PATH.extend(
+  `pipelineruns/:${RouterParams.pipelineRunName}`,
+);
+
 export const PIPELINE_RUNS_LOG_PATH = PIPELINE_RUNS_DETAILS_PATH.extend('logs');
 
 export const PIPELINE_RUNS_SECURITY_PATH = PIPELINE_RUNS_DETAILS_PATH.extend('security');
@@ -168,6 +172,8 @@ export const PIPELINE_RUNS_PAGE_PATH = WORKSPACE_PATH.extend('prns');
 export const GROUPS_PATH = WORKSPACE_PATH.extend('groups');
 
 export const GROUP_DETAILS_PATH = GROUPS_PATH.extend(`:${RouterParams.groupName}`);
+
+export const GROUP_PIPELINE_RUNS_PATH = GROUP_DETAILS_PATH.extend('pipelineruns');
 
 export const GROUP_SNAPSHOT_LIST_PATH = GROUP_DETAILS_PATH.extend('snapshots');
 
