@@ -212,6 +212,8 @@ describe('TableProps', () => {
       getRowId: (row) => row.metadata.uid,
       'aria-label': 'Test table',
       enableSorting: true,
+      defaultVisibleColumns: ['name', 'status'],
+      defaultSort: { column: 'name', direction: 'desc' },
       enableExpansion: true,
       expandedContent: (row) => {
         void row;

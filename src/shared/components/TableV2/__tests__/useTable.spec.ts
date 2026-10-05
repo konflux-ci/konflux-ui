@@ -117,6 +117,7 @@ describe('useTable', () => {
 
       const callArgs = mockUseReactTable.mock.calls[0][0];
       expect(callArgs.getSortedRowModel).toBe('sortedRowModel');
+      expect(callArgs.state.sorting).toEqual([{ id: 'name', desc: false }]);
       expect(getSortedRowModel).toHaveBeenCalled();
     });
 

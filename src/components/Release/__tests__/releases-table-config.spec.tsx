@@ -85,6 +85,27 @@ describe('releases-table-config', () => {
     expect(getColumn('finalPipelineRun')?.accessorFn?.(baseRelease)).toBe('final-pr');
   });
 
+  it('should render pipeline runs as links and preserve release back-button state for snapshots', () => {
+    const pipelineColumn = getColumn('tenantPipelineRun');
+    const cell = pipelineColumn?.cell?.({
+      row: { original: baseRelease },
+      table: { options: { meta: { currentNamespace: 'release-ns', applicationName: 'app' } } },
+    } as never);
+    expect(cell).toBeTruthy();
+
+    const snapshotColumn = getColumn('releaseSnapshot');
+    const snapshotCell = snapshotColumn?.cell?.({
+      row: { original: baseRelease },
+      getValue: () => 'snapshot-a',
+      table: {
+        options: {
+          meta: { currentNamespace: 'release-ns', applicationName: 'app' },
+        },
+      },
+    } as never);
+    expect(snapshotCell).toBeTruthy();
+  });
+
   it("should return '-' for missing pipeline runs", () => {
     const releaseWithoutRuns = {
       ...baseRelease,

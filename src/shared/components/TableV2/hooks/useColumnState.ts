@@ -6,9 +6,21 @@ import { type ColumnDefinition, type ColumnState } from '../types';
 type ColumnId = Pick<ColumnDefinition<never>, 'id'>;
 
 /** Derives the default column state from column definitions (all columns visible, no sort). */
-function deriveDefaultState(columns: ColumnId[]): ColumnState {
+function deriveDefaultState(
+  columns: ColumnId[],
+  defaultVisibleColumns?: string[],
+  defaultSort?: { column: string; direction: 'asc' | 'desc' },
+): ColumnState {
   const ids = columns.map((c) => c.id);
-  return { visibleColumns: ids, columnOrder: ids };
+  const visible = defaultVisibleColumns?.filter((id) => ids.includes(id)) ?? ids;
+  const sortColumn =
+    defaultSort && ids.includes(defaultSort.column) ? defaultSort.column : undefined;
+  return {
+    visibleColumns: visible,
+    columnOrder: ids,
+    sortColumn,
+    sortDirection: sortColumn ? defaultSort?.direction : undefined,
+  };
 }
 
 /**
@@ -94,8 +106,13 @@ function migrateState(persisted: ColumnState, columns: ColumnId[]): ColumnState 
 export function useColumnState<TData>(
   key: string | undefined,
   columns: ColumnDefinition<TData>[],
+  defaultVisibleColumns?: string[],
+  defaultSort?: { column: string; direction: 'asc' | 'desc' },
 ): { columnState: ColumnState; setColumnState: (state: ColumnState) => void } {
-  const defaultState = useMemo(() => deriveDefaultState(columns), [columns]);
+  const defaultState = useMemo(
+    () => deriveDefaultState(columns, defaultVisibleColumns, defaultSort),
+    [columns, defaultVisibleColumns, defaultSort],
+  );
 
   const isPersisted = !!key;
 

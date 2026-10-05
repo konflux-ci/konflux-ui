@@ -50,6 +50,33 @@ describe('useColumnState', () => {
       expect(result.current.columnState.sortColumn).toBeUndefined();
       expect(result.current.columnState.sortDirection).toBeUndefined();
     });
+
+    it('uses custom visible columns and sort defaults', () => {
+      const { result } = renderHook(() =>
+        useColumnState('test-key', columns, ['name', 'id'], {
+          column: 'status',
+          direction: 'desc',
+        }),
+      );
+
+      expect(result.current.columnState.visibleColumns).toEqual(['name', 'id']);
+      expect(result.current.columnState.columnOrder).toEqual(['name', 'status', 'id']);
+      expect(result.current.columnState.sortColumn).toBe('status');
+      expect(result.current.columnState.sortDirection).toBe('desc');
+    });
+
+    it('ignores custom defaults for unknown columns', () => {
+      const { result } = renderHook(() =>
+        useColumnState('test-key', columns, ['name', 'missing'], {
+          column: 'missing',
+          direction: 'asc',
+        }),
+      );
+
+      expect(result.current.columnState.visibleColumns).toEqual(['name']);
+      expect(result.current.columnState.sortColumn).toBeUndefined();
+      expect(result.current.columnState.sortDirection).toBeUndefined();
+    });
   });
 
   describe('persistence round-trip', () => {

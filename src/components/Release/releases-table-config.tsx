@@ -1,6 +1,12 @@
 import { Link } from 'react-router-dom';
 import { PipelineRunLabel } from '~/consts/pipelinerun';
-import { COMPONENT_DETAILS_V2_PATH } from '~/routes/paths';
+import {
+  APPLICATION_RELEASE_DETAILS_PATH,
+  APPLICATION_RELEASE_LIST_PATH,
+  COMPONENT_DETAILS_V2_PATH,
+  PIPELINERUN_DETAILS_PATH,
+  SNAPSHOT_DETAILS_PATH,
+} from '~/routes/paths';
 import { Timestamp } from '~/shared';
 import { defineFilters } from '~/shared/components/Filter';
 import { ColumnDefinition } from '~/shared/components/TableV2';
@@ -22,21 +28,83 @@ export const COMPONENT_GROUP_RELEASES_LIST_COLUMN_STATE_KEY = 'component-group-r
 
 export const RELEASES_LIST_FILTERS = defineFilters<ReleaseKind>()([nameSearchFilter]);
 
+const pipelineRunCell =
+  (getPipelineRun: (release: ReleaseKind) => string, withBackButton = false) =>
+  (info: import('~/shared/components/TableV2').CellContext<ReleaseKind, string>) => {
+    const [workspaceName, pipelineRunName] = getNamespaceAndPRName(
+      getPipelineRun(info.row.original),
+    );
+    const { currentNamespace, applicationName } = info.table.options.meta ?? {};
+    const releaseApplication =
+      info.row.original.metadata?.labels?.[PipelineRunLabel.APPLICATION] ?? applicationName;
+    if (
+      !workspaceName ||
+      !pipelineRunName ||
+      typeof releaseApplication !== 'string' ||
+      !releaseApplication
+    ) {
+      return '-';
+    }
+    const backButtonState =
+      withBackButton &&
+      typeof currentNamespace === 'string' &&
+      currentNamespace.length > 0 &&
+      typeof releaseApplication === 'string' &&
+      releaseApplication.length > 0 &&
+      workspaceName !== currentNamespace
+        ? {
+            backButtonLink: APPLICATION_RELEASE_LIST_PATH.createPath({
+              workspaceName: currentNamespace,
+              applicationName: releaseApplication,
+            }),
+            backButtonText: 'Back to release list',
+          }
+        : {};
+    return (
+      <Link
+        to={PIPELINERUN_DETAILS_PATH.createPath({
+          workspaceName,
+          applicationName: releaseApplication,
+          pipelineRunName,
+        })}
+        state={backButtonState}
+      >
+        {pipelineRunName}
+      </Link>
+    );
+  };
+
 export const RELEASES_LIST_COLUMNS: ColumnDefinition<ReleaseKind>[] = [
   {
     id: 'name',
     header: 'Name',
     nonHidable: true,
+    pinned: 'start',
+    sortable: true,
     accessorFn: (obj) => obj.metadata?.name,
     cell: (info) => {
       const obj = info.row.original;
-      // TODO[KFLUXUI-1719]
-      return obj.metadata?.name;
+      const releaseApplication = obj.metadata?.labels?.[PipelineRunLabel.APPLICATION];
+      if (!obj.metadata?.namespace || !releaseApplication || !obj.metadata?.name) {
+        return obj.metadata?.name ?? '-';
+      }
+      return (
+        <Link
+          to={APPLICATION_RELEASE_DETAILS_PATH.createPath({
+            workspaceName: obj.metadata.namespace,
+            applicationName: releaseApplication,
+            releaseName: obj.metadata.name,
+          })}
+        >
+          {obj.metadata.name}
+        </Link>
+      );
     },
   },
   {
     id: 'created',
     header: 'Created',
+    sortable: true,
     accessorFn: (obj) => obj.metadata?.creationTimestamp,
     cell: (info) => {
       return <Timestamp timestamp={info.getValue() as string} />;
@@ -68,11 +136,12 @@ export const RELEASES_LIST_COLUMNS: ColumnDefinition<ReleaseKind>[] = [
     accessorFn: (obj) => obj?.metadata?.labels?.[PipelineRunLabel.COMPONENT],
     cell: (info) => {
       const componentName = info.getValue() as string | undefined;
-      if (!componentName) return '-';
+      const workspaceName = info.row.original.metadata?.namespace;
+      if (!componentName || !workspaceName) return '-';
       return (
         <Link
           to={COMPONENT_DETAILS_V2_PATH.createPath({
-            workspaceName: info.row.original.metadata?.namespace,
+            workspaceName,
             componentName,
           })}
         >
@@ -90,8 +159,41 @@ export const RELEASES_LIST_COLUMNS: ColumnDefinition<ReleaseKind>[] = [
     id: 'releaseSnapshot',
     header: 'Release Snapshot',
     accessorFn: (obj) => obj.spec.snapshot,
-    // TODO[KFLUXUI-1720]
-    cell: (info) => info.getValue() as string,
+    cell: (info) => {
+      const snapshot = info.getValue() as string;
+      const releaseNamespace = info.row.original.metadata?.namespace;
+      const { currentNamespace, applicationName } = info.table.options.meta ?? {};
+      if (!snapshot || !releaseNamespace) return '-';
+      const releaseApplication =
+        info.row.original.metadata?.labels?.[PipelineRunLabel.APPLICATION] ?? applicationName;
+      const backButtonState =
+        typeof currentNamespace === 'string' &&
+        currentNamespace.length > 0 &&
+        typeof releaseApplication === 'string' &&
+        releaseApplication.length > 0 &&
+        releaseNamespace !== currentNamespace
+          ? {
+              backButtonLink: APPLICATION_RELEASE_LIST_PATH.createPath({
+                workspaceName: currentNamespace,
+                applicationName: releaseApplication,
+              }),
+              backButtonText: 'Back to release list',
+            }
+          : {};
+      if (typeof releaseApplication !== 'string' || !releaseApplication) return snapshot;
+      return (
+        <Link
+          to={SNAPSHOT_DETAILS_PATH.createPath({
+            workspaceName: releaseNamespace,
+            applicationName: releaseApplication,
+            snapshotName: snapshot,
+          })}
+          state={backButtonState}
+        >
+          {snapshot}
+        </Link>
+      );
+    },
   },
   {
     id: 'tenantCollectorPipelineRun',
@@ -103,8 +205,7 @@ export const RELEASES_LIST_COLUMNS: ColumnDefinition<ReleaseKind>[] = [
       if (!tenantCollectorPrNamespace || !tenantCollectorPipelineRun) return '-';
       return tenantCollectorPipelineRun;
     },
-    // TODO[KFLUXUI-1721]
-    cell: (info) => info.getValue() as string,
+    cell: pipelineRunCell(getTenantCollectorPipelineRunFromRelease),
   },
   {
     id: 'tenantPipelineRun',
@@ -116,8 +217,7 @@ export const RELEASES_LIST_COLUMNS: ColumnDefinition<ReleaseKind>[] = [
       if (!tenantPrNamespace || !tenantPipelineRun) return '-';
       return tenantPipelineRun;
     },
-    // TODO[KFLUXUI-1721]
-    cell: (info) => info.getValue() as string,
+    cell: pipelineRunCell(getTenantPipelineRunFromRelease),
   },
 
   {
@@ -130,8 +230,7 @@ export const RELEASES_LIST_COLUMNS: ColumnDefinition<ReleaseKind>[] = [
       if (!managedPrNamespace || !managedPipelineRun) return '-';
       return managedPipelineRun;
     },
-    // TODO[KFLUXUI-1721]
-    cell: (info) => info.getValue() as string,
+    cell: pipelineRunCell(getManagedPipelineRunFromRelease, true),
   },
 
   {
@@ -144,7 +243,6 @@ export const RELEASES_LIST_COLUMNS: ColumnDefinition<ReleaseKind>[] = [
       if (!finalPrNamespace || !finalPipelineRun) return '-';
       return finalPipelineRun;
     },
-    // TODO[KFLUXUI-1721]
-    cell: (info) => info.getValue() as string,
+    cell: pipelineRunCell(getFinalPipelineRunFromRelease, true),
   },
 ];

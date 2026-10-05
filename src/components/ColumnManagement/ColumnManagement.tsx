@@ -5,26 +5,40 @@ import { ColumnDefinition, ColumnState, useColumnState } from '~/shared/componen
 import { useModalLauncher } from '../modal/ModalProvider';
 import { columnManagementModalLauncher } from './ColumnManagementModal';
 
+type DefaultSort = { column: string; direction: 'asc' | 'desc' };
+
 interface ColumnManagementProps<T> {
   columns: ColumnDefinition<T>[];
   columnStateKey: string;
+  /** Column IDs shown when no saved column state exists. */
+  defaultVisibleColumns?: string[];
+  defaultSort?: DefaultSort;
   'data-tour'?: string;
 }
 
 const ColumnManagement_ = <T,>({
   columns,
   columnStateKey,
+  defaultVisibleColumns,
+  defaultSort,
   'data-tour': dataTour,
 }: ColumnManagementProps<T>) => {
-  const { columnState, setColumnState } = useColumnState(columnStateKey, columns);
+  const { columnState, setColumnState } = useColumnState(
+    columnStateKey,
+    columns,
+    defaultVisibleColumns,
+    defaultSort,
+  );
   const showModal = useModalLauncher();
 
   const defaultColumnState: ColumnState = React.useMemo(
     () => ({
-      visibleColumns: columns.map((c) => c.id),
+      visibleColumns: defaultVisibleColumns ?? columns.map((c) => c.id),
       columnOrder: columns.map((c) => c.id),
+      sortColumn: defaultSort?.column,
+      sortDirection: defaultSort?.direction,
     }),
-    [columns],
+    [columns, defaultVisibleColumns, defaultSort],
   );
 
   const columnInfoForModal = React.useMemo(
@@ -64,6 +78,8 @@ const ColumnManagement_ = <T,>({
 function ColumnManagement<T>({
   columns,
   columnStateKey,
+  defaultVisibleColumns,
+  defaultSort,
   showColumnManagement = false,
   'data-tour': dataTour,
 }: ColumnManagementProps<T> & { showColumnManagement?: boolean }) {
@@ -71,7 +87,13 @@ function ColumnManagement<T>({
     return null;
   }
   return (
-    <ColumnManagement_<T> columns={columns} columnStateKey={columnStateKey} data-tour={dataTour} />
+    <ColumnManagement_<T>
+      columns={columns}
+      columnStateKey={columnStateKey}
+      defaultVisibleColumns={defaultVisibleColumns}
+      defaultSort={defaultSort}
+      data-tour={dataTour}
+    />
   );
 }
 

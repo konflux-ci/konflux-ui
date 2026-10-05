@@ -12,6 +12,10 @@ export interface SortDropdownProps<TData> {
   columns: ColumnDefinition<TData>[];
   /** LocalStorage key for persisting column/sort state. */
   columnStateKey: string;
+  /** Column visibility defaults when no persisted state exists. */
+  defaultVisibleColumns?: string[];
+  /** Sort applied when no persisted state exists. */
+  defaultSort?: { column: string; direction: 'asc' | 'desc' };
   /** Tour anchor attribute passed through to the root element. */
   'data-tour'?: string;
 }
@@ -28,9 +32,16 @@ export interface SortDropdownProps<TData> {
 export const SortDropdown = <TData,>({
   columns,
   columnStateKey,
+  defaultVisibleColumns,
+  defaultSort,
   'data-tour': dataTour,
 }: SortDropdownProps<TData>) => {
-  const { columnState, setColumnState } = useColumnState(columnStateKey, columns);
+  const { columnState, setColumnState } = useColumnState(
+    columnStateKey,
+    columns,
+    defaultVisibleColumns,
+    defaultSort,
+  );
 
   const sortableColumns = React.useMemo(() => columns.filter((col) => col.sortable), [columns]);
 

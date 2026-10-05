@@ -1,186 +1,167 @@
 import '@testing-library/jest-dom';
+import type { ReactNode } from 'react';
 import { MemoryRouter } from 'react-router-dom';
-import { Table, Tbody, Th, Thead, Tr } from '@patternfly/react-table';
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
+import { FeatureFlagsStore } from '~/feature-flags/store';
 import { useK8sAndKarchResources } from '~/hooks/useK8sAndKarchResources';
+import { ModalProvider } from '~/shared/components/modal';
+import { useVirtualization } from '~/shared/components/TableV2/hooks/useVirtualization';
+import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { createUseParamsMock } from '../../../utils/test-utils';
+import { RELEASES_LIST_COLUMN_STATE_KEY } from '../../Release/releases-table-config';
 import { mockReleases } from '../__data__/mock-release-data';
-import ReleasesListRow from '../ReleasesListRow';
 import ReleasesListView from '../ReleasesListView';
 
-jest.useFakeTimers();
-
-jest.mock('react-i18next', () => ({
-  useTranslation: jest.fn(() => ({ t: (x) => x })),
-}));
-
+jest.mock('react-i18next', () => ({ useTranslation: jest.fn(() => ({ t: (x: string) => x })) }));
 jest.mock('../../../hooks/useK8sAndKarchResources', () => ({
   useK8sAndKarchResources: jest.fn(),
 }));
-
+jest.mock('~/shared/components/TableV2/hooks/useVirtualization');
 jest.mock('react-router-dom', () => {
   const actual = jest.requireActual('react-router-dom');
   return {
     ...actual,
-    Link: (props) => <a href={props.to}>{props.children}</a>,
-  };
-});
-
-jest.mock('../../../shared/components/table', () => {
-  const actual = jest.requireActual('../../../shared/components/table');
-  return {
-    ...actual,
-    Table: (props) => {
-      const { data, filters, selected, match, kindObj } = props;
-      const cProps = { data, filters, selected, match, kindObj };
-      const columns = props.Header(cProps);
-      return (
-        <Table role="table" aria-label="table" variant="compact" borders={true}>
-          <Thead>
-            <Tr>
-              {columns.map((col, idx) => (
-                <Th key={idx} {...(col.props ?? {})}>
-                  {col.title}
-                </Th>
-              ))}
-            </Tr>
-          </Thead>
-          <Tbody>
-            {props.data.map((obj, i) => (
-              <Tr key={i}>
-                <ReleasesListRow
-                  obj={obj}
-                  columns={null}
-                  customData={{ applicationName: 'test-app' }}
-                />
-              </Tr>
-            ))}
-          </Tbody>
-        </Table>
-      );
-    },
+    Link: (props: { to: string; children: ReactNode }) => <a href={props.to}>{props.children}</a>,
   };
 });
 
 const useMockReleases = useK8sAndKarchResources as jest.Mock;
+const releasesWithRoutingMetadata = mockReleases.map((release) => ({
+  ...release,
+  metadata: {
+    ...release.metadata,
+    namespace: 'test-ns',
+    labels: { ...release.metadata.labels, 'appstudio.openshift.io/application': 'test-app' },
+  },
+}));
+const renderReleases = () =>
+  render(
+    <MemoryRouter>
+      <ModalProvider>
+        <FilterContextProvider filterParams={['name', 'release plan', 'release snapshot']}>
+          <ReleasesListView />
+        </FilterContextProvider>
+      </ModalProvider>
+    </MemoryRouter>,
+  );
 
-const ReleasesList = (
-  <MemoryRouter>
-    <FilterContextProvider filterParams={['name', 'release plan', 'release snapshot']}>
-      <ReleasesListView />
-    </FilterContextProvider>
-  </MemoryRouter>
-);
+jest.useFakeTimers();
+
+mockUseNamespaceHook('test-ns');
+createUseParamsMock({ applicationName: 'test-app' });
 
 describe('ReleasesListView', () => {
-  createUseParamsMock({ applicationName: 'test-app' });
+  beforeEach(() => {
+    localStorage.clear();
+    FeatureFlagsStore.set('column-management', true);
+    useMockReleases.mockReset();
+    jest.mocked(useVirtualization).mockReturnValue({
+      virtualizer: { getTotalSize: () => 0, measureElement: jest.fn() } as never,
+      virtualRows: releasesWithRoutingMetadata.map(
+        (_, index) => ({ index, start: index * 44, size: 44 }) as never,
+      ),
+    });
+  });
 
-  it('should render progress indicator while loading', async () => {
+  it('renders the TableV2 loading state', () => {
     useMockReleases.mockReturnValue({ data: [], isLoading: true });
-    const wrapper = render(ReleasesList);
-    expect(await wrapper.findByRole('progressbar')).toBeTruthy();
+    renderReleases();
+    expect(screen.getByTestId('table-skeleton')).toBeInTheDocument();
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
   });
 
-  it('should render all columns', () => {
-    useMockReleases.mockReturnValue({ data: mockReleases, isLoading: true });
-    render(ReleasesList);
-    expect(screen.getByRole('columnheader', { name: 'Name' })).toBeVisible();
-    expect(screen.getByRole('columnheader', { name: 'Created' })).toBeVisible();
-    expect(screen.getByRole('columnheader', { name: 'Status' })).toBeVisible();
-    expect(screen.getByRole('columnheader', { name: 'Component' })).toBeVisible();
-    expect(screen.getByRole('columnheader', { name: 'Release Plan' })).toBeVisible();
-    expect(screen.getByRole('columnheader', { name: 'Release Snapshot' })).toBeVisible();
-  });
-
-  it('should render empty state when no releases present', () => {
-    useMockReleases.mockReturnValue({ data: [], isLoading: false, hasError: false });
-    render(ReleasesList);
-    expect(screen.queryByText('Learn more about setting up release plans')).toBeInTheDocument();
-  });
-
-  it('should render table', () => {
-    useMockReleases.mockReturnValue({ data: mockReleases, isLoading: false });
-    const wrapper = render(ReleasesList);
-    const table = wrapper.container.getElementsByTagName('table');
-    expect(table).toHaveLength(1);
-  });
-
-  it('should render filter toolbar', () => {
-    useMockReleases.mockReturnValue({ data: mockReleases, isLoading: false });
-    const wrapper = render(ReleasesList);
-    screen.getByTestId('releases-filter-toolbar');
-    expect(wrapper.container.getElementsByTagName('table')).toHaveLength(1);
-    expect(wrapper.container.getElementsByTagName('tr')).toHaveLength(4);
-  });
-
-  it('should sort by creation date by default', () => {
-    useMockReleases.mockReturnValue({ data: mockReleases, isLoading: false });
-    render(ReleasesList);
-    expect(screen.getByRole('columnheader', { name: 'Created' })).toHaveAttribute(
+  it('renders default sorted rows and hides pipeline columns', () => {
+    useMockReleases.mockReturnValue({ data: releasesWithRoutingMetadata, isLoading: false });
+    renderReleases();
+    const table = screen.getByRole('grid', { name: 'Release List' });
+    expect(within(table).getByRole('columnheader', { name: 'Created' })).toHaveAttribute(
       'aria-sort',
       'descending',
     );
-    expect(screen.getByRole('columnheader', { name: 'Name' })).not.toHaveAttribute('aria-sort');
-    const rows = screen.getAllByRole('row');
-    expect(rows[1].children[0]).toHaveTextContent('test-release-2');
-    expect(rows[2].children[0]).toHaveTextContent('test-release');
-    expect(rows[3].children[0]).toHaveTextContent('test-release-3');
+    expect(within(table).getAllByRole('row')[1]).toHaveTextContent('test-release-2');
+    expect(within(table).getAllByRole('row')[2]).toHaveTextContent('test-release');
+    expect(
+      within(table).queryByRole('columnheader', { name: 'Tenant Collector' }),
+    ).not.toBeInTheDocument();
+    expect(
+      within(table).queryByRole('columnheader', { name: 'Tenant Pipeline' }),
+    ).not.toBeInTheDocument();
+    expect(
+      within(table).queryByRole('columnheader', { name: 'Managed Pipeline' }),
+    ).not.toBeInTheDocument();
+    expect(
+      within(table).queryByRole('columnheader', { name: 'Final Pipeline' }),
+    ).not.toBeInTheDocument();
   });
 
-  it('should sort by name on click', () => {
-    useMockReleases.mockReturnValue({ data: mockReleases, isLoading: false });
-    render(ReleasesList);
-    const table = screen.getByRole('table');
-    fireEvent.click(within(table).getByRole('button', { name: 'Name' }));
-    expect(screen.getByRole('columnheader', { name: 'Name' })).toHaveAttribute(
-      'aria-sort',
-      'ascending',
-    );
-    expect(screen.getByRole('columnheader', { name: 'Created' })).not.toHaveAttribute('aria-sort');
-    const rows = screen.getAllByRole('row');
-    expect(rows[1].children[0]).toHaveTextContent('test-release');
-    expect(rows[2].children[0]).toHaveTextContent('test-release-2');
-    expect(rows[3].children[0]).toHaveTextContent('test-release-3');
-
-    fireEvent.click(within(table).getByRole('button', { name: 'Name' }));
-    expect(screen.getByRole('columnheader', { name: 'Name' })).toHaveAttribute(
-      'aria-sort',
-      'descending',
-    );
-    expect(rows[1].children[0]).toHaveTextContent('test-release-3');
-    expect(rows[2].children[0]).toHaveTextContent('test-release-2');
-    expect(rows[3].children[0]).toHaveTextContent('test-release');
+  it('renders the no-data state', () => {
+    useMockReleases.mockReturnValue({ data: [], isLoading: false });
+    renderReleases();
+    expect(screen.getByText('Learn more about setting up release plans')).toBeInTheDocument();
   });
 
-  it('should allow filtering by name', () => {
-    useMockReleases.mockReturnValue({ data: mockReleases, isLoading: false });
-    render(ReleasesList);
-    fireEvent.input(screen.getByRole('textbox'), { target: { value: 'test-release-2' } });
-    const rows = screen.getAllByRole('row');
-    expect(rows.length).toBe(2);
-    expect(rows[1].children[0]).toHaveTextContent('test-release-2');
+  it('renders the filtered empty state', async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    useMockReleases.mockReturnValue({ data: releasesWithRoutingMetadata, isLoading: false });
+    renderReleases();
+    await user.type(screen.getByRole('textbox'), 'does-not-exist');
+    expect(screen.getByText('No results found')).toBeInTheDocument();
   });
 
-  it('should allow filtering by release plan', () => {
-    useMockReleases.mockReturnValue({ data: mockReleases, isLoading: false });
-    render(ReleasesList);
-    fireEvent.click(screen.getAllByRole('button')[0], { name: 'Name' });
-    fireEvent.click(screen.getByRole('option', { name: 'Release plan' }));
-    fireEvent.input(screen.getByRole('textbox'), { target: { value: 'test-plan-2' } });
-    const rows = screen.getAllByRole('row');
-    expect(rows.length).toBe(2);
-    expect(rows[1].children[5]).toHaveTextContent('test-plan-2');
+  it.each([
+    ['name', 'test-release-2'],
+    ['Release plan', 'test-plan-2'],
+    ['Release snapshot', 'test-snapshot-2'],
+  ])('filters by %s', async (filter, value) => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    useMockReleases.mockReturnValue({ data: releasesWithRoutingMetadata, isLoading: false });
+    renderReleases();
+    if (filter !== 'name') {
+      await user.click(screen.getByRole('button', { name: /name/i }));
+      await user.click(screen.getByRole('option', { name: filter }));
+    }
+    await user.type(screen.getByRole('textbox'), value);
+    const rows = within(screen.getByRole('grid', { name: 'Release List' })).getAllByRole('row');
+    expect(rows).toHaveLength(2);
+    const expectedColumn = filter === 'Release snapshot' ? 6 : filter === 'Release plan' ? 5 : 0;
+    expect(rows[1].children[expectedColumn]).toHaveTextContent(value);
   });
 
-  it('should allow filtering by release snapshot', () => {
-    useMockReleases.mockReturnValue({ data: mockReleases, isLoading: false });
-    render(ReleasesList);
-    fireEvent.click(screen.getAllByRole('button')[0], { name: 'Name' });
-    fireEvent.click(screen.getByRole('option', { name: 'Release snapshot' }));
-    fireEvent.input(screen.getByRole('textbox'), { target: { value: 'test-snapshot-2' } });
-    const rows = screen.getAllByRole('row');
-    expect(rows.length).toBe(2);
-    expect(rows[1].children[6]).toHaveTextContent('test-snapshot-2');
+  it('keeps sort control separate from column management without persisting defaults', () => {
+    useMockReleases.mockReturnValue({ data: releasesWithRoutingMetadata, isLoading: false });
+    renderReleases();
+    expect(screen.getByTestId('sort-dropdown')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Manage columns' })).toBeInTheDocument();
+    // Defaults are used in memory and are persisted only after the user changes state.
+    expect(localStorage.getItem(RELEASES_LIST_COLUMN_STATE_KEY)).toBeNull();
+  });
+
+  it('allows a hidden pipeline column to be enabled from column management', async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    useMockReleases.mockReturnValue({ data: releasesWithRoutingMetadata, isLoading: false });
+    renderReleases();
+
+    await user.click(screen.getByRole('button', { name: 'Manage columns' }));
+    const modal = screen.getByRole('dialog');
+    const pipelineCheckbox = within(modal).getByRole('checkbox', { name: 'Tenant Pipeline' });
+    expect(pipelineCheckbox).not.toBeChecked();
+
+    await user.click(pipelineCheckbox);
+    await user.click(within(modal).getByRole('button', { name: 'Save' }));
+
+    expect(
+      within(screen.getByRole('grid', { name: 'Release List' })).getByRole('columnheader', {
+        name: 'Tenant Pipeline',
+      }),
+    ).toBeInTheDocument();
+  });
+
+  it('renders release links and action menus', () => {
+    useMockReleases.mockReturnValue({ data: releasesWithRoutingMetadata, isLoading: false });
+    renderReleases();
+    expect(screen.getByText('test-release-2')).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: /actions/i }).length).toBeGreaterThan(0);
   });
 });
