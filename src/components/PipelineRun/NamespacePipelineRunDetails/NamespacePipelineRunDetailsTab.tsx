@@ -43,6 +43,7 @@ import { getCommitSha, getCommitShortName } from '~/utils/commits-utils';
 import { getPipelineRunDetailsPath } from '~/utils/pipeline-run-routes';
 import { calculateDuration, pipelineRunStatus } from '~/utils/pipeline-utils';
 import { getSourceUrl } from '~/utils/pipelinerun-utils';
+import RelatedNamespacePipelineRuns from './RelatedNamespacePipelineRuns';
 
 const NamespacePipelineRunDetailsTab = () => {
   const { pipelineRunName } = useParams();
@@ -143,6 +144,7 @@ const NamespacePipelineRunDetailsTab = () => {
           getCommitShortName(sha)
         )),
     },
+    { name: 'Related pipeline runs', value: <RelatedNamespacePipelineRuns pipelineRun={run} /> },
     { name: 'Source', value: source && <GitRepoLink url={source} /> },
     { name: 'Logs', value: <Link to={`${getPipelineRunDetailsPath(run)}/logs`}>See logs</Link> },
     {
