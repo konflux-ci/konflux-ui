@@ -7,8 +7,10 @@ import {
   GROUP_PIPELINE_RUNS_PATH,
   GROUPS_PATH,
   NAMESPACE_PIPELINE_RUN_DETAILS_PATH,
+  NAMESPACE_PIPELINE_RUN_VULNERABILITIES_PATH,
   NAMESPACE_TASK_RUN_DETAILS_PATH,
   PIPELINE_RUNS_DETAILS_PATH,
+  PIPELINE_RUNS_VULNERABILITIES_PATH,
   TASKRUN_DETAILS_PATH,
 } from '~/routes/paths';
 import { PipelineRunKind, TaskRunKind, TektonResourceLabel } from '~/types';
@@ -22,6 +24,24 @@ export const getPipelineRunDetailsPath = (run: PipelineRunKind): string => {
   return applicationName
     ? PIPELINE_RUNS_DETAILS_PATH.createPath({ ...params, applicationName })
     : NAMESPACE_PIPELINE_RUN_DETAILS_PATH.createPath(params);
+};
+
+export const getPipelineRunVulnerabilitiesPath = (
+  run: PipelineRunKind,
+  namespace: string,
+): string => {
+  const applicationName = run.metadata.labels?.[PipelineRunLabel.APPLICATION];
+  const pipelineRunName = run.metadata.name;
+  return applicationName
+    ? PIPELINE_RUNS_VULNERABILITIES_PATH.createPath({
+        workspaceName: namespace,
+        applicationName,
+        pipelineRunName,
+      })
+    : NAMESPACE_PIPELINE_RUN_VULNERABILITIES_PATH.createPath({
+        workspaceName: namespace,
+        pipelineRunName,
+      });
 };
 
 export const getTaskRunDetailsPath = (
