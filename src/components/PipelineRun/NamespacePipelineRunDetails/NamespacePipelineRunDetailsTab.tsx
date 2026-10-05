@@ -17,6 +17,7 @@ import {
 import GitRepoLink from '~/components/GitLink/GitRepoLink';
 import MetadataList from '~/components/MetadataList';
 import { useModalLauncher } from '~/components/modal/ModalProvider';
+import RelatedNamespacePipelineRuns from '~/components/PipelineRun/NamespacePipelineRunDetails/RelatedNamespacePipelineRuns';
 import { createPipelineRunSBOMsModal } from '~/components/PipelineRun/PipelineRunDetailsView/tabs/PipelineRunSBOMsModal';
 import RunParamsList from '~/components/PipelineRun/PipelineRunDetailsView/tabs/RunParamsList';
 import RunResultsList from '~/components/PipelineRun/PipelineRunDetailsView/tabs/RunResultsList';
@@ -283,6 +284,12 @@ const NamespacePipelineRunDetailsTab = () => {
                 </DescriptionListDescription>
               </DescriptionListGroup>
             )}
+            <DescriptionListGroup>
+              <DescriptionListTerm>Related pipeline runs</DescriptionListTerm>
+              <DescriptionListDescription>
+                <RelatedNamespacePipelineRuns pipelineRun={run} />
+              </DescriptionListDescription>
+            </DescriptionListGroup>
           </DescriptionList>
         </FlexItem>
       </Flex>
