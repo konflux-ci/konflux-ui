@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { usePipelineRunV2 } from '~/hooks/usePipelineRunsV2';
 import { useTaskRunV2 } from '~/hooks/useTaskRunsV2';
@@ -90,4 +90,37 @@ it('renders an inline task without labels when linked through its owner referenc
     'href',
     '/ns/team/pipelineruns/build',
   );
+});
+
+it('matches the existing details field order within each column', () => {
+  renderWithQueryClientAndRouter(<NamespaceTaskRunDetailsTab />);
+  expect(
+    within(
+      screen
+        .getAllByRole('term')
+        .find((term) => term.textContent === 'Name')
+        .closest('dl'),
+    )
+      .getAllByRole('term')
+      .map((term) => term.textContent),
+  ).toEqual(['Name', 'Namespace', 'Labels', 'Annotations', 'Created at', 'Duration']);
+  expect(
+    within(
+      screen
+        .getAllByRole('term')
+        .find((term) => term.textContent === 'Task')
+        .closest('dl'),
+    )
+      .getAllByRole('term')
+      .map((term) => term.textContent),
+  ).toEqual([
+    'Task',
+    'Description',
+    'Status',
+    'Message',
+    'Log snippet',
+    'Pipeline run',
+    'Component',
+  ]);
+  expect(screen.queryByText('Started')).not.toBeInTheDocument();
 });

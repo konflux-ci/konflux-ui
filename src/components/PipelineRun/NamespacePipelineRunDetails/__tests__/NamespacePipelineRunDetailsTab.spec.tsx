@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import { mockPrivateImageRepository } from '~/__data__/image-repository-data';
 import { DataState, testPipelineRuns } from '~/__data__/pipelinerun-data';
 import { PipelineRunLabel } from '~/consts/pipelinerun';
@@ -143,16 +143,19 @@ it('preserves the pipeline failure message alongside a different task failure', 
   renderWithQueryClientAndRouter(<NamespacePipelineRunDetailsTab />);
   expect(screen.getByText('Two tasks failed')).toBeInTheDocument();
   expect(screen.getByText('Compilation failed')).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: 'See logs' })).toHaveAttribute(
+    'href',
+    '/ns/team/pipelineruns/build-1/logs',
+  );
 });
 
-it('links group, component, snapshot, test and logs without an application', () => {
+it('links group, component, snapshot and test without an application', () => {
   renderWithQueryClientAndRouter(<NamespacePipelineRunDetailsTab />);
   for (const [name, href] of [
     ['group', '/ns/team/groups/group'],
     ['api', '/ns/team/components/api'],
     ['snapshot', '/ns/team/groups/group/snapshots/snapshot'],
     ['smoke', '/ns/team/groups/group/integrationtests/smoke'],
-    ['See logs', '/ns/team/pipelineruns/build-1/logs'],
   ])
     expect(screen.getByRole('link', { name })).toHaveAttribute('href', href);
   expect(screen.queryByText('Application')).not.toBeInTheDocument();
@@ -202,4 +205,38 @@ it('includes related pipeline runs in the details metadata', () => {
   renderWithQueryClientAndRouter(<NamespacePipelineRunDetailsTab />);
   expect(screen.getByText('Related pipeline runs')).toBeInTheDocument();
   expect(screen.getByRole('button', { name: '0 pipeline runs' })).toBeInTheDocument();
+});
+
+it('matches the existing details field order within each column', () => {
+  renderWithQueryClientAndRouter(<NamespacePipelineRunDetailsTab />);
+  expect(
+    within(
+      screen
+        .getAllByRole('term')
+        .find((term) => term.textContent === 'Name')
+        .closest('dl'),
+    )
+      .getAllByRole('term')
+      .map((term) => term.textContent),
+  ).toEqual(['Name', 'Namespace', 'Labels', 'Annotations', 'Created at', 'Duration']);
+  expect(
+    within(
+      screen
+        .getAllByRole('term')
+        .find((term) => term.textContent === 'Status')
+        .closest('dl'),
+    )
+      .getAllByRole('term')
+      .map((term) => term.textContent),
+  ).toEqual([
+    'Status',
+    'Pipeline',
+    'Snapshot',
+    'Component group',
+    'Component',
+    'Commit',
+    'Integration test',
+    'Related pipeline runs',
+  ]);
+  expect(screen.queryByText('Started')).not.toBeInTheDocument();
 });

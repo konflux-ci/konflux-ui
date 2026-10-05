@@ -11,10 +11,13 @@ import {
   CodeBlockCode,
   ClipboardCopy,
   Button,
+  Flex,
+  FlexItem,
 } from '@patternfly/react-core';
 import GitRepoLink from '~/components/GitLink/GitRepoLink';
 import MetadataList from '~/components/MetadataList';
 import { useModalLauncher } from '~/components/modal/ModalProvider';
+import RelatedNamespacePipelineRuns from '~/components/PipelineRun/NamespacePipelineRunDetails/RelatedNamespacePipelineRuns';
 import { createPipelineRunSBOMsModal } from '~/components/PipelineRun/PipelineRunDetailsView/tabs/PipelineRunSBOMsModal';
 import RunParamsList from '~/components/PipelineRun/PipelineRunDetailsView/tabs/RunParamsList';
 import RunResultsList from '~/components/PipelineRun/PipelineRunDetailsView/tabs/RunResultsList';
@@ -43,7 +46,6 @@ import { getCommitSha, getCommitShortName } from '~/utils/commits-utils';
 import { getPipelineRunDetailsPath } from '~/utils/pipeline-run-routes';
 import { calculateDuration, pipelineRunStatus } from '~/utils/pipeline-utils';
 import { getSourceUrl } from '~/utils/pipelinerun-utils';
-import RelatedNamespacePipelineRuns from './RelatedNamespacePipelineRuns';
 
 const NamespacePipelineRunDetailsTab = () => {
   const { pipelineRunName } = useParams();
@@ -75,7 +77,11 @@ const NamespacePipelineRunDetailsTab = () => {
   const sha = getCommitSha(run);
   const commitUrl = run.metadata.annotations?.[PipelineRunLabel.COMMIT_URL_ANNOTATION];
   const sboms = getSBOMsFromTaskRuns(tasks, generateSbomUrl);
-  const fields = [
+  const failureMessage = run.status?.conditions?.find(
+    (condition) => condition.type === 'Succeeded',
+  )?.message;
+  const staticMessage = snippet && 'staticMessage' in snippet ? snippet.staticMessage : undefined;
+  const metadataFields = [
     { name: 'Name', value: run.metadata.name },
     { name: 'Namespace', value: namespace },
     { name: 'Labels', value: <MetadataList metadata={labels} /> },
@@ -88,16 +94,56 @@ const NamespacePipelineRunDetailsTab = () => {
         typeof run.status?.completionTime === 'string' ? run.status.completionTime : '',
       ),
     },
-    { name: 'Status', value: <StatusIconWithText status={status} /> },
-    {
-      name: 'Message',
-      value: run.status?.conditions?.find((condition) => condition.type === 'Succeeded')?.message,
-    },
+  ];
+  const pipelineFields = [
     { name: 'Pipeline', value: labels?.[PipelineRunLabel.PIPELINE_NAME] },
+    ...(snapshotName
+      ? [
+          {
+            name: 'Snapshot',
+            value: groupName ? (
+              <Link to={GROUP_SNAPSHOT_DETAILS_PATH.createPath({ ...params, snapshotName })}>
+                {snapshotName}
+              </Link>
+            ) : (
+              snapshotName
+            ),
+          },
+        ]
+      : []),
+    ...(image
+      ? [
+          {
+            name: 'Download SBOM',
+            value: <ClipboardCopy isReadOnly>{`cosign download sbom ${image}`}</ClipboardCopy>,
+          },
+        ]
+      : []),
+    ...(sboms.length > 0
+      ? [
+          {
+            name: 'SBOM',
+            value:
+              sboms.length === 1 ? (
+                <ExternalLink href={sboms[0].url}>View SBOM</ExternalLink>
+              ) : (
+                <Button
+                  variant="link"
+                  isInline
+                  onClick={() => showModal(createPipelineRunSBOMsModal({ sboms }))}
+                >
+                  View SBOMs
+                </Button>
+              ),
+          },
+        ]
+      : []),
     {
       name: 'Component group',
       value: groupName && <Link to={GROUP_DETAILS_PATH.createPath(params)}>{groupName}</Link>,
     },
+  ];
+  const relatedFields = [
     {
       name: 'Component',
       value: componentName && (
@@ -108,64 +154,39 @@ const NamespacePipelineRunDetailsTab = () => {
         </Link>
       ),
     },
-    {
-      name: 'Snapshot',
-      value:
-        snapshotName &&
-        (groupName ? (
-          <Link to={GROUP_SNAPSHOT_DETAILS_PATH.createPath({ ...params, snapshotName })}>
-            {snapshotName}
-          </Link>
-        ) : (
-          snapshotName
-        )),
-    },
-    {
-      name: 'Integration test',
-      value:
-        integrationTestName &&
-        (groupName ? (
-          <Link
-            to={GROUP_INTEGRATION_TEST_DETAILS_PATH.createPath({ ...params, integrationTestName })}
-          >
-            {integrationTestName}
-          </Link>
-        ) : (
-          integrationTestName
-        )),
-    },
-    {
-      name: 'Commit',
-      value:
-        sha &&
-        (commitUrl ? (
-          <ExternalLink href={commitUrl}>{getCommitShortName(sha)}</ExternalLink>
-        ) : (
-          getCommitShortName(sha)
-        )),
-    },
+    ...(sha
+      ? [
+          {
+            name: 'Commit',
+            value: commitUrl ? (
+              <ExternalLink href={commitUrl}>{getCommitShortName(sha)}</ExternalLink>
+            ) : (
+              getCommitShortName(sha)
+            ),
+          },
+        ]
+      : []),
+    ...(source ? [{ name: 'Source', value: <GitRepoLink url={source} /> }] : []),
+    ...(integrationTestName
+      ? [
+          {
+            name: 'Integration test',
+            value: groupName ? (
+              <Link
+                to={GROUP_INTEGRATION_TEST_DETAILS_PATH.createPath({
+                  ...params,
+                  integrationTestName,
+                })}
+              >
+                {integrationTestName}
+              </Link>
+            ) : (
+              integrationTestName
+            ),
+          },
+        ]
+      : []),
     { name: 'Related pipeline runs', value: <RelatedNamespacePipelineRuns pipelineRun={run} /> },
-    { name: 'Source', value: source && <GitRepoLink url={source} /> },
-    { name: 'Logs', value: <Link to={`${getPipelineRunDetailsPath(run)}/logs`}>See logs</Link> },
-    {
-      name: 'Download SBOM',
-      value: image && <ClipboardCopy isReadOnly>{`cosign download sbom ${image}`}</ClipboardCopy>,
-    },
-    {
-      name: 'SBOM',
-      value:
-        sboms.length === 1 ? (
-          <ExternalLink href={sboms[0].url}>View SBOM</ExternalLink>
-        ) : sboms.length > 1 ? (
-          <Button
-            variant="link"
-            isInline
-            onClick={() => showModal(createPipelineRunSBOMsModal({ sboms }))}
-          >
-            View SBOMs
-          </Button>
-        ) : null,
-    },
   ];
   return (
     <>
@@ -177,35 +198,72 @@ const NamespacePipelineRunDetailsTab = () => {
       ) : (
         <PipelineRunVisualization pipelineRun={run} taskRuns={tasks} error={undefined} />
       )}
-      <DescriptionList columnModifier={{ lg: '2Col' }}>
-        {fields.map(({ name, value }) => (
-          <DescriptionListGroup key={name}>
-            <DescriptionListTerm>{name}</DescriptionListTerm>
-            <DescriptionListDescription>{value || '-'}</DescriptionListDescription>
-          </DescriptionListGroup>
-        ))}
-        {snippet && (
-          <DescriptionListGroup>
-            <DescriptionListTerm>Failure</DescriptionListTerm>
-            <DescriptionListDescription>
-              {snippet.title}
-              {'staticMessage' in snippet && (
-                <CodeBlock>
-                  <CodeBlockCode>{snippet.staticMessage}</CodeBlockCode>
-                </CodeBlock>
-              )}
-            </DescriptionListDescription>
-          </DescriptionListGroup>
-        )}
-        <SnapshotCreationStatus pipelineRun={run} />
-        <ScanDescriptionListGroup
-          taskRuns={tasks}
-          pipelineRun={run}
-          showLogsLink
-          hideIfNotFound
-          errorState={getErrorState(taskError, tasksLoaded, 'task runs')}
-        />
-      </DescriptionList>
+      <Flex direction={{ default: 'row' }}>
+        <FlexItem style={{ flex: 1 }}>
+          <DescriptionList columnModifier={{ default: '1Col' }}>
+            {metadataFields.map(({ name, value }) => (
+              <DescriptionListGroup key={name}>
+                <DescriptionListTerm>{name}</DescriptionListTerm>
+                <DescriptionListDescription>{value || '-'}</DescriptionListDescription>
+              </DescriptionListGroup>
+            ))}
+            <SnapshotCreationStatus pipelineRun={run} />
+          </DescriptionList>
+        </FlexItem>
+        <FlexItem style={{ flex: 1 }}>
+          <DescriptionList columnModifier={{ default: '1Col' }}>
+            <DescriptionListGroup>
+              <DescriptionListTerm>Status</DescriptionListTerm>
+              <DescriptionListDescription>
+                <StatusIconWithText status={status} />
+              </DescriptionListDescription>
+            </DescriptionListGroup>
+            {snippet && (
+              <>
+                <DescriptionListGroup>
+                  <DescriptionListTerm>Message</DescriptionListTerm>
+                  <DescriptionListDescription>
+                    {snippet.title}
+                    {failureMessage && failureMessage !== staticMessage && (
+                      <CodeBlock>
+                        <CodeBlockCode>{failureMessage}</CodeBlockCode>
+                      </CodeBlock>
+                    )}
+                  </DescriptionListDescription>
+                </DescriptionListGroup>
+                <DescriptionListGroup>
+                  <DescriptionListTerm>Log snippet</DescriptionListTerm>
+                  <DescriptionListDescription>
+                    <CodeBlock>
+                      <CodeBlockCode>{staticMessage ?? '-'}</CodeBlockCode>
+                    </CodeBlock>
+                    <Link to={`${getPipelineRunDetailsPath(run)}/logs`}>See logs</Link>
+                  </DescriptionListDescription>
+                </DescriptionListGroup>
+              </>
+            )}
+            {pipelineFields.map(({ name, value }) => (
+              <DescriptionListGroup key={name}>
+                <DescriptionListTerm>{name}</DescriptionListTerm>
+                <DescriptionListDescription>{value || '-'}</DescriptionListDescription>
+              </DescriptionListGroup>
+            ))}
+            <ScanDescriptionListGroup
+              taskRuns={tasks}
+              pipelineRun={run}
+              showLogsLink
+              hideIfNotFound
+              errorState={getErrorState(taskError, tasksLoaded, 'task runs')}
+            />
+            {relatedFields.map(({ name, value }) => (
+              <DescriptionListGroup key={name}>
+                <DescriptionListTerm>{name}</DescriptionListTerm>
+                <DescriptionListDescription>{value || '-'}</DescriptionListDescription>
+              </DescriptionListGroup>
+            ))}
+          </DescriptionList>
+        </FlexItem>
+      </Flex>
       {!!results?.length && (
         <div className="pf-v6-u-mt-lg">
           <RunResultsList results={results} status={status} />
