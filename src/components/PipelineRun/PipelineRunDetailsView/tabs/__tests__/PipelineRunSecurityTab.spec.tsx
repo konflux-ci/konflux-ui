@@ -23,7 +23,7 @@ describe('PipelineRunSecurityTab', () => {
 
     routerRenderer(<PipelineRunSecurityTab />);
 
-    expect(mockUseConformaResult).toHaveBeenCalledWith(mockPipelineRunName);
+    expect(mockUseConformaResult).toHaveBeenCalledWith(mockPipelineRunName, undefined);
   });
 
   it('should pass undefined pipelineRunName when not in params', () => {
@@ -31,7 +31,7 @@ describe('PipelineRunSecurityTab', () => {
 
     routerRenderer(<PipelineRunSecurityTab />);
 
-    expect(mockUseConformaResult).toHaveBeenCalledWith(undefined);
+    expect(mockUseConformaResult).toHaveBeenCalledWith(undefined, undefined);
   });
 
   it('should render loading state when data is loading', () => {

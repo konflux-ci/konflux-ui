@@ -18,6 +18,7 @@ import { useModalLauncher } from '~/components/modal/ModalProvider';
 import { createPipelineRunSBOMsModal } from '~/components/PipelineRun/PipelineRunDetailsView/tabs/PipelineRunSBOMsModal';
 import RunParamsList from '~/components/PipelineRun/PipelineRunDetailsView/tabs/RunParamsList';
 import RunResultsList from '~/components/PipelineRun/PipelineRunDetailsView/tabs/RunResultsList';
+import ScanDescriptionListGroup from '~/components/PipelineRun/PipelineRunDetailsView/tabs/ScanDescriptionListGroup';
 import { SnapshotCreationStatus } from '~/components/PipelineRun/PipelineRunDetailsView/tabs/SnapshotCreationStatus';
 import { usePipelineRunImageData } from '~/components/PipelineRun/PipelineRunDetailsView/usePipelineRunImageData';
 import { getSBOMsFromTaskRuns } from '~/components/PipelineRun/PipelineRunDetailsView/utils/pipelinerun-utils';
@@ -195,6 +196,13 @@ const NamespacePipelineRunDetailsTab = () => {
           </DescriptionListGroup>
         )}
         <SnapshotCreationStatus pipelineRun={run} />
+        <ScanDescriptionListGroup
+          taskRuns={tasks}
+          pipelineRun={run}
+          showLogsLink
+          hideIfNotFound
+          errorState={getErrorState(taskError, tasksLoaded, 'task runs')}
+        />
       </DescriptionList>
       {!!results?.length && (
         <div className="pf-v6-u-mt-lg">
