@@ -1,5 +1,7 @@
 # Konflux UI
 
+[![Build](https://img.shields.io/github/check-runs/konflux-ci/konflux-ui/main?nameFilter=Red%20Hat%20Konflux%20%2F%20konflux-ui-on-push&label=Build)](https://github.com/konflux-ci/konflux-ui/commits/main) [![EC](https://img.shields.io/github/check-runs/konflux-ci/konflux-ui/main?nameFilter=Red%20Hat%20Konflux%20%2F%20ec%20%2F%20konflux-ui&label=EC)](https://github.com/konflux-ci/konflux-ui/commits/main)
+
 UI for [Konflux](https://github.com/konflux-ci/konflux-ci)
 
 ## Contributing
