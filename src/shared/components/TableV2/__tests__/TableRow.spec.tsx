@@ -107,6 +107,21 @@ describe('TableRow', () => {
     expect(cells).toHaveLength(2);
   });
 
+  it('marks the control row as expanded when content is expanded', () => {
+    const row = createMockRow('row-1', { cells: mockCells });
+    renderTableRow(
+      <TableRow
+        row={row as never}
+        rowId="test-1"
+        virtualIndex={0}
+        enableExpansion
+        isContentExpanded
+      />,
+    );
+
+    expect(screen.getByTestId('table-row')).toHaveClass('pf-m-expanded');
+  });
+
   it('renders a checkbox cell when enableRowSelection is true', () => {
     const row = createMockRow('row-1', { cells: mockCells });
     renderTableRow(

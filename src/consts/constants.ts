@@ -22,3 +22,4 @@ export const TEXT_SEARCH_TYPES = {
 
 export const MINTMAKER_NAMESPACE = 'mintmaker';
 export const MINTMAKER_TASK_NAME = 'build';
+export const MINTMAKER_SCHEDULE_CONFIGMAP = 'mintmaker-schedule-calculator-results';
