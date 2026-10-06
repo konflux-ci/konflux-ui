@@ -2,6 +2,7 @@ import * as React from 'react';
 import { Toolbar, ToolbarContent, ToolbarGroup, ToolbarItem } from '@patternfly/react-core';
 import { useFilterState } from '~/shared/components/Filter/hooks/useFilterState';
 import type { FilterConfig, OptionItems } from '~/shared/components/Filter/types';
+import { SEARCH_SHORTCUT_KEY, useSearchShortcut } from '~/shared/hooks/useSearchShortcut';
 import { BooleanFilter } from './controls/BooleanFilter';
 import { MultiSelectFilter } from './controls/MultiSelectFilter';
 import { SearchFilter } from './controls/SearchFilter';
@@ -34,14 +35,32 @@ type FilterToolbarProps<C extends readonly FilterConfig<unknown>[]> = {
   'data-tour'?: string;
 };
 
+/** Filter types that render a text input the `/` shortcut can focus. @internal */
+const isSearchConfig = (config: FilterConfig<unknown>) =>
+  config.type === 'search' || config.type === 'switchableSearch';
+
 /**
  * Renders the appropriate filter control component for a given config.
+ *
+ * `shortcutRef` is passed to the single control that owns the `/` shortcut, so the
+ * toolbar focuses one input even when several search controls are configured.
  * @internal
  */
-const renderControl = (config: FilterConfig<unknown>, options: Record<string, OptionItems>) => {
+const renderControl = (
+  config: FilterConfig<unknown>,
+  options: Record<string, OptionItems>,
+  shortcutRef?: React.RefObject<HTMLInputElement>,
+) => {
   switch (config.type) {
     case 'search':
-      return <SearchFilter key={config.param} config={config} />;
+      return (
+        <SearchFilter
+          key={config.param}
+          config={config}
+          inputRef={shortcutRef}
+          keyShortcut={shortcutRef ? SEARCH_SHORTCUT_KEY : undefined}
+        />
+      );
     case 'multiSelect': {
       const configOptions = options[config.param] ?? [];
       return (
@@ -64,7 +83,14 @@ const renderControl = (config: FilterConfig<unknown>, options: Record<string, Op
     case 'boolean':
       return <BooleanFilter key={config.param} config={config} />;
     case 'switchableSearch':
-      return <SwitchableSearchFilter key={config.param} config={config} />;
+      return (
+        <SwitchableSearchFilter
+          key={config.param}
+          config={config}
+          inputRef={shortcutRef}
+          keyShortcut={shortcutRef ? SEARCH_SHORTCUT_KEY : undefined}
+        />
+      );
     default:
       return null;
   }
@@ -76,6 +102,9 @@ const renderControl = (config: FilterConfig<unknown>, options: Record<string, Op
  * Each config entry produces the matching control component (`SearchFilter`,
  * `MultiSelectFilter`, etc.). The toolbar's "Clear all filters" action resets
  * every URL parameter declared in the configs.
+ *
+ * Pressing `/` focuses the first search control (`search` or `switchableSearch`),
+ * matching the shortcut offered by `BaseTextFilterToolbar`.
  *
  * @typeParam C - Readonly tuple of filter configs.
  *
@@ -94,6 +123,11 @@ export const FilterToolbar = <C extends readonly FilterConfig<unknown>[]>({
   'data-tour': dataTour,
 }: FilterToolbarProps<C>) => {
   const { clearAll } = useFilterState(configs);
+
+  // The `/` shortcut targets the first search control; `param` is unique per config.
+  const shortcutParam = configs.find(isSearchConfig)?.param;
+  const searchInputRef = React.useRef<HTMLInputElement>(null);
+  useSearchShortcut({ inputRef: searchInputRef, enabled: shortcutParam !== undefined });
 
   // Group configs by group name, preserving order
   const groupedConfigs = React.useMemo(() => {
@@ -125,7 +159,13 @@ export const FilterToolbar = <C extends readonly FilterConfig<unknown>[]>({
               data-test={groupName ? `filter-group-${groupName}` : 'filter-group-default'}
               data-tour={groupTour}
             >
-              {groupConfigs_.map((config) => renderControl(config, options))}
+              {groupConfigs_.map((config) =>
+                renderControl(
+                  config,
+                  options,
+                  config.param === shortcutParam ? searchInputRef : undefined,
+                ),
+              )}
             </ToolbarGroup>
           );
         })}
