@@ -1,0 +1,21 @@
+# .fullsend/harness/code.yaml
+base: https://raw.githubusercontent.com/fullsend-ai/agents/7879955ea557deb6d24e3265fdb89288f0844170/harness/code.yaml#sha256=1295192718eaa559500ec948cb1ba3e69590c86c5ed44f6294b0c114ef54017f
+
+trigger: >
+  event.entity.kind == "work_item"
+    && (
+      (event.transition.kind == "label_changed"
+        && event.transition.label.name == "ready-to-code"
+        && event.transition.label.action == "added")
+      ||
+      (event.transition.kind == "comment_added"
+        && has(event.transition.comment.command)
+        && event.transition.comment.command == "/fs-code")
+    )
+
+allowed_remote_resources:
+  - https://raw.githubusercontent.com/fullsend-ai/agents/
+
+env:
+  runner:
+    CODE_ALLOWED_TARGET_BRANCHES: 'main'

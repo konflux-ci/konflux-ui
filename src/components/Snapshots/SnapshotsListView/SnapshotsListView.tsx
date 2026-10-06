@@ -23,14 +23,17 @@ import {
   SNAPSHOTS_LIST_COLUMNS,
 } from './snapshots-table-config';
 
-export type SnapshotsListViewProps = {
-  applicationName: string;
-};
+export type SnapshotsListViewProps =
+  { applicationName: string; groupName?: never } | { applicationName?: never; groupName: string };
 
 const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps>> = ({
   applicationName,
+  groupName,
 }) => {
   const namespace = useNamespace();
+  const columnStateKey = groupName
+    ? 'component-group-snapshots-list'
+    : SNAPSHOTS_LIST_COLUMN_STATE_KEY;
   const { filterValues, clientFilterValues, clearAll, isFiltered } = useFilterState(filterConfigs);
 
   const {
@@ -43,16 +46,19 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
     isFetchingNextPage,
     fetchNextPage,
   } = useK8sAndKarchResources<Snapshot>(
-    {
-      groupVersionKind: SnapshotGroupVersionKind,
-      namespace,
-      isList: true,
-      selector: {
-        matchLabels: {
-          [PipelineRunLabel.APPLICATION]: applicationName,
-        },
-      },
-    },
+    applicationName || groupName
+      ? {
+          groupVersionKind: SnapshotGroupVersionKind,
+          namespace,
+          isList: true,
+          selector: {
+            matchLabels: {
+              [groupName ? PipelineRunLabel.COMPONENT_GROUP : PipelineRunLabel.APPLICATION]:
+                groupName || applicationName,
+            },
+          },
+        }
+      : undefined,
     SnapshotModel,
     undefined,
     undefined,
@@ -81,8 +87,8 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
   }, [textFiltered, filterValues.filterBy]);
 
   const meta = React.useMemo(
-    () => ({ namespace, applicationName, getSource }),
-    [namespace, applicationName, getSource],
+    () => ({ namespace, applicationName, groupName, getSource }),
+    [namespace, applicationName, groupName, getSource],
   );
 
   if (clusterError && archiveError) {
@@ -104,7 +110,8 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
       title="Snapshots"
       description={
         <>
-          A snapshot is a point-in-time, immutable record of an application&apos;s container images.{' '}
+          A snapshot is a point-in-time, immutable record of{' '}
+          {groupName ? 'a component group' : 'an application'}&apos;s container images.{' '}
           <ExternalLink href={LEARN_MORE_SNAPSHOTS}>Learn more</ExternalLink>
         </>
       }
@@ -132,7 +139,7 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
             <FilterToolbar configs={filterConfigs} options={filterOptions}>
               <ColumnManagement<Snapshot>
                 columns={SNAPSHOTS_LIST_COLUMNS}
-                columnStateKey={SNAPSHOTS_LIST_COLUMN_STATE_KEY}
+                columnStateKey={columnStateKey}
                 showColumnManagement
               />
             </FilterToolbar>
@@ -148,7 +155,7 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
           hasNextPage={hasNextPage}
           isFetchingNextPage={isFetchingNextPage}
           fetchNextPage={fetchNextPage}
-          columnStateKey={SNAPSHOTS_LIST_COLUMN_STATE_KEY}
+          columnStateKey={columnStateKey}
           meta={meta}
         />
       </TableContainer>

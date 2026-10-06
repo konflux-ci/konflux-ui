@@ -23,7 +23,8 @@ export type ResolverParam = {
 };
 
 export type IntegrationTestScenarioSpec = {
-  application: string;
+  application?: string;
+  componentGroup?: string;
   contexts?: Context[];
   environment?: Environment;
   params?: Param[];
@@ -170,12 +171,14 @@ export type component = {
 
 export type Snapshot = K8sResourceCommon & {
   spec: {
-    application: string;
+    application?: string;
+    componentGroup?: string;
     displayName?: string;
     displayDescription?: string;
     components: {
       containerImage: string;
       name: string;
+      version?: string;
       source?: {
         git?: {
           url: string;

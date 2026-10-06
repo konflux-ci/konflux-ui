@@ -1,6 +1,10 @@
 import React from 'react';
 import { Bullseye, PageSection, Spinner } from '@patternfly/react-core';
 import ColumnManagement from '~/components/ColumnManagement/ColumnManagement';
+import {
+  plrNameSearchConfig,
+  plrStatusFilterConfig,
+} from '~/components/PipelineRunsPage/pipelineRunFilterConfigs';
 import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { useApplications } from '~/hooks/useApplications';
@@ -30,29 +34,7 @@ import { pipelineRunsColumns } from './PipelineRunsColumns';
 import { PipelineRunsEmptyState } from './PipelineRunsEmptyState';
 
 const filterConfigs = defineFilters<PipelineRunKind>()([
-  {
-    type: 'switchableSearch',
-    param: 'searchField',
-    label: 'Search',
-    group: 'search',
-    fields: [
-      {
-        label: 'Name',
-        value: 'name',
-        param: 'name',
-        filterFn: (item, value) =>
-          (item.metadata?.name ?? '').toLowerCase().includes(value.toLowerCase()),
-      },
-      {
-        label: 'PR number',
-        value: 'prNumber',
-        param: 'prNumber',
-        multiValue: true,
-        filterFn: (item, value) =>
-          (item.metadata?.labels?.[PipelineRunLabel.PULL_REQUEST_NUMBER_LABEL] ?? '') === value,
-      },
-    ],
-  },
+  plrNameSearchConfig,
   {
     type: 'multiSelect',
     param: 'app',
@@ -68,13 +50,7 @@ const filterConfigs = defineFilters<PipelineRunKind>()([
     group: 'resource',
   },
   { ...eventTypeFilterConfig, group: 'resource' },
-  {
-    type: 'multiSelect',
-    param: 'status',
-    label: 'Status',
-    filterFn: PLRStatus.statusFilterFn,
-    group: 'attributes',
-  },
+  plrStatusFilterConfig,
   { ...pipelineTypeFilterConfig, group: 'attributes' },
 ] as const);
 

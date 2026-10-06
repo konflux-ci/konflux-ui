@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { COMPONENT_DETAILS_PATH, SNAPSHOT_DETAILS_PATH } from '@routes/paths';
 import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { Timestamp } from '~/shared';
+import { ComponentLink } from '~/shared/components/component-link/ComponentLink';
 import { defineFilters } from '~/shared/components/Filter';
 import { ColumnDefinition } from '~/shared/components/TableV2';
 import { TriggerColumnData } from '~/shared/components/trigger-column-data/trigger-column-data';
@@ -76,6 +77,8 @@ export const SNAPSHOTS_LIST_COLUMNS: ColumnDefinition<Snapshot>[] = [
     cell: (info) => {
       const namespace = info.table.options.meta?.namespace as string;
       const applicationName = info.table.options.meta?.applicationName as string;
+      const groupName = info.table.options.meta?.groupName;
+      if (groupName) return info.row.original.metadata.name;
       return (
         <Link
           to={SNAPSHOT_DETAILS_PATH.createPath({
@@ -101,26 +104,34 @@ export const SNAPSHOTS_LIST_COLUMNS: ColumnDefinition<Snapshot>[] = [
   {
     id: 'components',
     header: 'Components',
-    accessorFn: (row) => row.spec.components?.map((c) => c.name) ?? [],
+    accessorFn: (row) => row.spec.components ?? [],
     size: 2,
     cell: (info) => {
       const namespace = info.table.options.meta?.namespace as string;
       const applicationName = info.table.options.meta?.applicationName as string;
       return (
         <TruncatedLinkListWithPopover
-          items={info.getValue() as string[]}
-          renderItem={(component: string) => (
-            <Link
-              key={component}
-              to={COMPONENT_DETAILS_PATH.createPath({
-                workspaceName: namespace,
-                applicationName,
-                componentName: component.trim(),
-              })}
-            >
-              {component.trim()}
-            </Link>
-          )}
+          items={info.getValue() as Snapshot['spec']['components']}
+          getKey={(component) => JSON.stringify([component.name, component.version])}
+          renderItem={(component) =>
+            info.table.options.meta?.groupName ? (
+              <ComponentLink
+                namespace={namespace}
+                name={component.name}
+                version={component.version}
+              />
+            ) : (
+              <Link
+                to={COMPONENT_DETAILS_PATH.createPath({
+                  workspaceName: namespace,
+                  applicationName,
+                  componentName: component.name.trim(),
+                })}
+              >
+                {component.name.trim()}
+              </Link>
+            )
+          }
           popover={{
             header: 'More snapshot components',
             ariaLabel: 'More snapshot components',
@@ -166,10 +177,15 @@ export const SNAPSHOTS_LIST_COLUMNS: ColumnDefinition<Snapshot>[] = [
     nonHidable: true,
     cell: (info) => {
       const getSourceFn = info.table.options.meta?.getSource as
-        | ((item: Snapshot) => ResourceSource | undefined)
-        | undefined;
+        ((item: Snapshot) => ResourceSource | undefined) | undefined;
       const source = getSourceFn?.(info.row.original);
-      return <SnapshotActionCell snapshot={info.row.original} source={source} />;
+      return (
+        <SnapshotActionCell
+          snapshot={info.row.original}
+          source={source}
+          readOnly={Boolean(info.table.options.meta?.groupName)}
+        />
+      );
     },
   },
 ];

@@ -1,6 +1,8 @@
 import { act, fireEvent, screen } from '@testing-library/react';
 import * as yup from 'yup';
-import { createK8sWatchResourceMock, namespaceRenderer } from '../../../../../utils/test-utils';
+import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
+import { renderWithQueryClientAndRouter } from '~/unit-test-utils/rendering-utils';
+import { createK8sWatchResourceMock } from '~/utils/test-utils';
 import { createRelease } from '../form-utils';
 import { TriggerReleaseFormPage } from '../TriggerReleaseFormPage';
 
@@ -43,6 +45,7 @@ const watchResourceMock = createK8sWatchResourceMock();
 
 describe('TriggerReleaseFormPage', () => {
   beforeEach(() => {
+    mockUseNamespaceHook('test-ns');
     watchResourceMock.mockReturnValue([[], true]);
   });
 
@@ -52,7 +55,7 @@ describe('TriggerReleaseFormPage', () => {
       true,
     ]);
     triggerReleasePlanMock.mockResolvedValue({ metadata: { name: 'newRelease' }, spec: {} });
-    namespaceRenderer(<TriggerReleaseFormPage />, 'test-ns');
+    renderWithQueryClientAndRouter(<TriggerReleaseFormPage />);
 
     await act(() => fireEvent.click(screen.getByRole('button', { name: 'Submit' })));
 
@@ -73,7 +76,7 @@ describe('TriggerReleaseFormPage', () => {
   });
 
   it('should navigate to release list on reset', async () => {
-    namespaceRenderer(<TriggerReleaseFormPage />, 'test-ns');
+    renderWithQueryClientAndRouter(<TriggerReleaseFormPage />);
 
     await act(() => fireEvent.click(screen.getByRole('button', { name: 'Reset' })));
 
