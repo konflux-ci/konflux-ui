@@ -1,17 +1,17 @@
 import React from 'react';
 import { Button } from '@patternfly/react-core';
 import { TableIcon } from '@patternfly/react-icons/dist/esm/icons/table-icon';
-import { ColumnDefinition, ColumnState, useColumnState } from '~/shared/components/TableV2';
-import { useModalLauncher } from '../modal/ModalProvider';
+import { useModalLauncher } from '~/components/modal/ModalProvider';
+import { ColumnDefinition, DefaultSort, useColumnState } from '~/shared/components/TableV2';
+import { deriveDefaultState } from '~/shared/components/TableV2/hooks/useColumnState';
 import { columnManagementModalLauncher } from './ColumnManagementModal';
-
-type DefaultSort = { column: string; direction: 'asc' | 'desc' };
 
 interface ColumnManagementProps<T> {
   columns: ColumnDefinition<T>[];
   columnStateKey: string;
   /** Column IDs shown when no saved column state exists. */
   defaultVisibleColumns?: string[];
+  /** Sort restored by Restore defaults and applied when no saved state exists. */
   defaultSort?: DefaultSort;
   'data-tour'?: string;
 }
@@ -31,13 +31,8 @@ const ColumnManagement_ = <T,>({
   );
   const showModal = useModalLauncher();
 
-  const defaultColumnState: ColumnState = React.useMemo(
-    () => ({
-      visibleColumns: defaultVisibleColumns ?? columns.map((c) => c.id),
-      columnOrder: columns.map((c) => c.id),
-      sortColumn: defaultSort?.column,
-      sortDirection: defaultSort?.direction,
-    }),
+  const defaultColumnState = React.useMemo(
+    () => deriveDefaultState(columns, defaultVisibleColumns, defaultSort),
     [columns, defaultVisibleColumns, defaultSort],
   );
 

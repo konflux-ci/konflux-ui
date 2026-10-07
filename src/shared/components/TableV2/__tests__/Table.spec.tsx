@@ -82,7 +82,28 @@ describe('Table', () => {
   it('calls useColumnState with columnStateKey and columns', () => {
     render(<Table {...defaultProps} columnStateKey="my-table" />);
 
-    expect(useColumnState).toHaveBeenCalledWith('my-table', columns);
+    expect(useColumnState).toHaveBeenCalledWith('my-table', columns, undefined, undefined);
+  });
+
+  it('passes explicit column visibility and sort defaults to useColumnState', () => {
+    const defaultVisibleColumns = ['name'];
+    const defaultSort = { column: 'name', direction: 'desc' as const };
+
+    render(
+      <Table
+        {...defaultProps}
+        columnStateKey="my-table"
+        defaultVisibleColumns={defaultVisibleColumns}
+        defaultSort={defaultSort}
+      />,
+    );
+
+    expect(useColumnState).toHaveBeenCalledWith(
+      'my-table',
+      columns,
+      defaultVisibleColumns,
+      defaultSort,
+    );
   });
 
   it('calls useResponsiveColumns with columns', () => {

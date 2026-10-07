@@ -4,7 +4,7 @@ import { SortAlphaUpIcon } from '@patternfly/react-icons/dist/esm/icons/sort-alp
 import { SelectDropdown } from '~/shared/components/Filter/controls/SelectDropdown';
 import type { GroupedOptions } from '~/shared/components/Filter/types';
 import { useColumnState } from './hooks/useColumnState';
-import type { ColumnDefinition } from './types';
+import type { ColumnDefinition, DefaultSort } from './types';
 
 /** Props for {@link SortDropdown}. */
 export interface SortDropdownProps<TData> {
@@ -15,7 +15,7 @@ export interface SortDropdownProps<TData> {
   /** Column visibility defaults when no persisted state exists. */
   defaultVisibleColumns?: string[];
   /** Sort applied when no persisted state exists. */
-  defaultSort?: { column: string; direction: 'asc' | 'desc' };
+  defaultSort?: DefaultSort;
   /** Tour anchor attribute passed through to the root element. */
   'data-tour'?: string;
 }
