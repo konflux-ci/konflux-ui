@@ -186,7 +186,10 @@ describe('ComponentGroupReleasesTab', () => {
     expect(screen.getByText('release-one')).toBeInTheDocument();
     expect(screen.getByText('release-two')).toBeInTheDocument();
     expect(screen.getByText('plan-a')).toBeInTheDocument();
-    expect(screen.getByText('snapshot-b')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'snapshot-b' })).toHaveAttribute(
+      'href',
+      '/ns/test-ns/groups/my-group/snapshots/snapshot-b',
+    );
   });
 
   it('should show the filtered empty state when the name filter matches nothing', () => {

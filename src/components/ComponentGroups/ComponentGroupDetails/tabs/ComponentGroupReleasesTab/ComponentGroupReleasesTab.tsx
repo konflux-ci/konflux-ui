@@ -69,6 +69,7 @@ export const ComponentGroupReleasesTab: React.FC = () => {
             getRowId={(obj) => obj.metadata?.uid ?? obj.metadata?.name ?? ''}
             aria-label="Releases"
             columnStateKey={COMPONENT_GROUP_RELEASES_LIST_COLUMN_STATE_KEY}
+            meta={{ currentNamespace: namespace, groupName }}
             hasNextPage={hasNextPage}
             isFetchingNextPage={isFetchingNextPage}
             fetchNextPage={fetchNextPage}

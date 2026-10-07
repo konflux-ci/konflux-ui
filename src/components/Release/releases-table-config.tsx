@@ -4,6 +4,8 @@ import {
   APPLICATION_RELEASE_DETAILS_PATH,
   APPLICATION_RELEASE_LIST_PATH,
   COMPONENT_DETAILS_V2_PATH,
+  GROUP_DETAILS_PATH,
+  GROUP_SNAPSHOT_DETAILS_PATH,
   PIPELINERUN_DETAILS_PATH,
   SNAPSHOT_DETAILS_PATH,
 } from '~/routes/paths';
@@ -83,7 +85,10 @@ export const RELEASES_LIST_COLUMNS: ColumnDefinition<ReleaseKind>[] = [
     cell: (info) => {
       const obj = info.row.original;
       // TODO[KFLUXUI-1719]: Route Component Group releases to the group-specific Release details page.
-      const releaseApplication = obj.metadata?.labels?.[PipelineRunLabel.APPLICATION];
+      const applicationName = info.table.options.meta?.applicationName;
+      const releaseApplication =
+        obj.metadata?.labels?.[PipelineRunLabel.APPLICATION] ??
+        (typeof applicationName === 'string' ? applicationName : undefined);
       if (!obj.metadata?.namespace || !releaseApplication || !obj.metadata?.name) {
         return obj.metadata?.name ?? '-';
       }
@@ -158,12 +163,35 @@ export const RELEASES_LIST_COLUMNS: ColumnDefinition<ReleaseKind>[] = [
     id: 'releaseSnapshot',
     header: 'Release Snapshot',
     accessorFn: (obj) => obj.spec.snapshot,
-    // TODO[KFLUXUI-1720]: Route Component Group releases to the group-specific Snapshot details page.
     cell: (info) => {
       const snapshot = info.getValue() as string;
       const releaseNamespace = info.row.original.metadata?.namespace;
-      const { currentNamespace, applicationName } = info.table.options.meta ?? {};
+      const { currentNamespace, applicationName, groupName } = info.table.options.meta ?? {};
       if (!snapshot || !releaseNamespace) return '-';
+      if (typeof groupName === 'string' && groupName) {
+        return (
+          <Link
+            to={GROUP_SNAPSHOT_DETAILS_PATH.createPath({
+              workspaceName: releaseNamespace,
+              groupName,
+              snapshotName: snapshot,
+            })}
+            state={
+              typeof currentNamespace === 'string' && currentNamespace
+                ? {
+                    backButtonLink: GROUP_DETAILS_PATH.extend('releases').createPath({
+                      workspaceName: currentNamespace,
+                      groupName,
+                    }),
+                    backButtonText: 'Back to releases',
+                  }
+                : undefined
+            }
+          >
+            {snapshot}
+          </Link>
+        );
+      }
       const releaseApplication =
         info.row.original.metadata?.labels?.[PipelineRunLabel.APPLICATION] ?? applicationName;
       const backButtonState =

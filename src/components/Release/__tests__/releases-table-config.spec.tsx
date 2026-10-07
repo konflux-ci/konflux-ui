@@ -143,9 +143,46 @@ describe('releases-table-config', () => {
     },
   );
 
+  it('renders release name as a link when the application comes from table metadata', () => {
+    const releaseWithoutApplicationLabel = {
+      ...baseRelease,
+      metadata: { ...baseRelease.metadata, labels: {} },
+    } as ReleaseKind;
+    const nameCell = getColumn('name')?.cell?.({
+      row: { original: releaseWithoutApplicationLabel },
+      table: { options: { meta: { applicationName: 'app' } } },
+    } as never);
+    routerRenderer(<>{nameCell}</>);
+    expect(screen.getByRole('link', { name: 'release-one' })).toHaveAttribute(
+      'href',
+      '/ns/test-ns/applications/app/releases/release-one',
+    );
+  });
+
+  it('routes group snapshot links to group details with group back navigation', async () => {
+    const user = userEvent.setup();
+    const cell = getColumn('releaseSnapshot')?.cell?.({
+      row: { original: baseRelease },
+      getValue: () => 'snapshot-a',
+      table: {
+        options: {
+          meta: { currentNamespace: 'test-ns', groupName: 'my-group' },
+        },
+      },
+    } as never);
+    routerRenderer(<>{cell}</>);
+    const link = screen.getByRole('link', { name: 'snapshot-a' });
+    expect(link).toHaveAttribute('href', '/ns/test-ns/groups/my-group/snapshots/snapshot-a');
+    await user.click(link);
+    expect(window.history.state.usr).toEqual({
+      backButtonLink: '/ns/test-ns/groups/my-group/releases',
+      backButtonText: 'Back to releases',
+    });
+  });
+
   it('omits snapshot back-button state within the current namespace', async () => {
     const user = userEvent.setup();
-    const cell = getColumn('releaseSnapshot').cell({
+    const cell = getColumn('releaseSnapshot')?.cell?.({
       row: { original: baseRelease },
       getValue: () => 'snapshot-a',
       table: { options: { meta: { currentNamespace: 'test-ns', applicationName: 'app' } } },
