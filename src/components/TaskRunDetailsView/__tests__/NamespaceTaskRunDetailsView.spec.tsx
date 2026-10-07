@@ -138,25 +138,25 @@ describe('NamespaceTaskRunDetailsView', () => {
     view.rerender(<NamespaceTaskRunDetailsView />);
     expect(screen.getByText('Unable to load task run')).toBeInTheDocument();
   });
-});
 
-it.each([
-  ['verify-conforma', 'Security', 'security'],
-  ['roxctl-scan', 'Vulnerabilities', 'vulnerabilities'],
-])('shows the matching tab for %s tasks', async (name, label, suffix) => {
-  const user = userEvent.setup();
-  jest.mocked(useTaskRunV2).mockReturnValue([
-    {
-      ...task,
-      metadata: {
-        ...task.metadata,
-        labels: { ...task.metadata.labels, [TektonResourceLabel.pipelineTask]: name },
+  it.each([
+    ['verify-conforma', 'Security', 'security'],
+    ['roxctl-scan', 'Vulnerabilities', 'vulnerabilities'],
+  ])('shows the matching tab for %s tasks', async (name, label, suffix) => {
+    const user = userEvent.setup();
+    jest.mocked(useTaskRunV2).mockReturnValue([
+      {
+        ...task,
+        metadata: {
+          ...task.metadata,
+          labels: { ...task.metadata.labels, [TektonResourceLabel.pipelineTask]: name },
+        },
       },
-    },
-    true,
-    undefined,
-  ]);
-  renderWithQueryClientAndRouter(<NamespaceTaskRunDetailsView />);
-  await user.click(screen.getByRole('tab', { name: label }));
-  expect(window.location.pathname).toBe(`/ns/team/pipelineruns/build/taskruns/compile/${suffix}`);
+      true,
+      undefined,
+    ]);
+    renderWithQueryClientAndRouter(<NamespaceTaskRunDetailsView />);
+    await user.click(screen.getByRole('tab', { name: label }));
+    expect(window.location.pathname).toBe(`/ns/team/pipelineruns/build/taskruns/compile/${suffix}`);
+  });
 });
