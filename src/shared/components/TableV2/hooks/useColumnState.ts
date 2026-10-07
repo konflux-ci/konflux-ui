@@ -1,14 +1,26 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useLocalStorage } from '~/shared/hooks/useLocalStorage';
-import { type ColumnDefinition, type ColumnState } from '../types';
+import { type ColumnDefinition, type ColumnState, type DefaultSort } from '../types';
 
 // Only the `id` field is needed — use Pick to avoid variance issues with TData
 type ColumnId = Pick<ColumnDefinition<never>, 'id'>;
 
-/** Derives the default column state from column definitions (all columns visible, no sort). */
-function deriveDefaultState(columns: ColumnId[]): ColumnState {
+/** Derives the default column state from definitions, ignoring unknown visibility and sort IDs. */
+export function deriveDefaultState(
+  columns: ColumnId[],
+  defaultVisibleColumns?: string[],
+  defaultSort?: DefaultSort,
+): ColumnState {
   const ids = columns.map((c) => c.id);
-  return { visibleColumns: ids, columnOrder: ids };
+  const visible = defaultVisibleColumns?.filter((id) => ids.includes(id)) ?? ids;
+  const sortColumn =
+    defaultSort && ids.includes(defaultSort.column) ? defaultSort.column : undefined;
+  return {
+    visibleColumns: visible,
+    columnOrder: ids,
+    sortColumn,
+    sortDirection: sortColumn ? defaultSort?.direction : undefined,
+  };
 }
 
 /**
@@ -71,7 +83,7 @@ function migrateState(persisted: ColumnState, columns: ColumnId[]): ColumnState 
  *
  * When `key` is provided, state is persisted to localStorage and automatically
  * migrated when column definitions change (stale columns removed, new columns
- * appended). When `key` is `undefined`, state is held in ephemeral React state
+ * inserted at their definition-relative position). When `key` is `undefined`, state is held in ephemeral React state
  * and resets on unmount.
  *
  * Both hooks (`useLocalStorage` and `useState`) are always called to satisfy
@@ -80,6 +92,8 @@ function migrateState(persisted: ColumnState, columns: ColumnId[]): ColumnState 
  * @typeParam TData - The row data type
  * @param key - LocalStorage key for persistence. Pass `undefined` for ephemeral mode.
  * @param columns - Current column definitions, used to derive defaults and migrate state.
+ * @param defaultVisibleColumns - Initial visible IDs; unknown IDs are ignored. Defaults to all columns.
+ * @param defaultSort - Initial sort; ignored if its column ID is unknown. Saved state takes precedence.
  * @returns An object with the current `columnState` and a `setColumnState` updater.
  *
  * @example
@@ -94,8 +108,13 @@ function migrateState(persisted: ColumnState, columns: ColumnId[]): ColumnState 
 export function useColumnState<TData>(
   key: string | undefined,
   columns: ColumnDefinition<TData>[],
+  defaultVisibleColumns?: string[],
+  defaultSort?: DefaultSort,
 ): { columnState: ColumnState; setColumnState: (state: ColumnState) => void } {
-  const defaultState = useMemo(() => deriveDefaultState(columns), [columns]);
+  const defaultState = useMemo(
+    () => deriveDefaultState(columns, defaultVisibleColumns, defaultSort),
+    [columns, defaultVisibleColumns, defaultSort],
+  );
 
   const isPersisted = !!key;
 

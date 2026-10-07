@@ -147,6 +147,9 @@ export interface ColumnState {
   sortDirection?: 'asc' | 'desc';
 }
 
+/** Initial sort applied when no saved column state exists. */
+export type DefaultSort = { column: string; direction: 'asc' | 'desc' };
+
 /**
  * Props for the {@link Table} component — the main TableV2 orchestrator.
  *
@@ -191,6 +194,12 @@ export interface TableProps<TData> {
 
   /** Enables client-side column sorting. Defaults to `false`. */
   enableSorting?: boolean;
+
+  /** Column IDs visible when no persisted state exists. Defaults to all columns. */
+  defaultVisibleColumns?: string[];
+
+  /** Sort applied when no persisted state exists. */
+  defaultSort?: DefaultSort;
 
   /** Enables expandable rows. When `true`, each row gets an expand/collapse toggle. */
   enableExpansion?: boolean;

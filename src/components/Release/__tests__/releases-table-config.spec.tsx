@@ -1,4 +1,7 @@
+import { screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { ReleaseKind } from '~/types';
+import { routerRenderer } from '~/unit-test-utils';
 import { RELEASES_LIST_COLUMNS, RELEASES_LIST_COLUMN_STATE_KEY } from '../releases-table-config';
 
 const getColumn = (id: string) => RELEASES_LIST_COLUMNS.find((c) => c.id === id);
@@ -83,6 +86,125 @@ describe('releases-table-config', () => {
     expect(getColumn('tenantPipelineRun')?.accessorFn?.(baseRelease)).toBe('tenant-pr');
     expect(getColumn('managedPipelineRun')?.accessorFn?.(baseRelease)).toBe('managed-pr');
     expect(getColumn('finalPipelineRun')?.accessorFn?.(baseRelease)).toBe('final-pr');
+  });
+
+  it.each([
+    ['name', 'release-one', '/ns/test-ns/applications/app/releases/release-one', undefined],
+    ['component', 'component-a', '/ns/test-ns/components/component-a', undefined],
+    ['releaseSnapshot', 'snapshot-a', '/ns/test-ns/applications/app/snapshots/snapshot-a', true],
+    [
+      'tenantCollectorPipelineRun',
+      'collector-pr',
+      '/ns/tenant-ns/applications/app/pipelineruns/collector-pr',
+      undefined,
+    ],
+    [
+      'tenantPipelineRun',
+      'tenant-pr',
+      '/ns/tenant-ns/applications/app/pipelineruns/tenant-pr',
+      undefined,
+    ],
+    [
+      'managedPipelineRun',
+      'managed-pr',
+      '/ns/managed-ns/applications/app/pipelineruns/managed-pr',
+      true,
+    ],
+    ['finalPipelineRun', 'final-pr', '/ns/final-ns/applications/app/pipelineruns/final-pr', true],
+  ])(
+    'renders %s link destination, text and navigation state',
+    async (id, text, href, withBackButton) => {
+      const user = userEvent.setup();
+      const release = {
+        ...baseRelease,
+        metadata: {
+          ...baseRelease.metadata,
+          labels: { ...baseRelease.metadata.labels, 'appstudio.openshift.io/application': 'app' },
+        },
+      };
+      const column = getColumn(id);
+      const cell = column.cell({
+        row: { original: release },
+        getValue: () => column.accessorFn?.(release),
+        table: { options: { meta: { currentNamespace: 'release-ns', applicationName: 'app' } } },
+      } as never);
+      routerRenderer(<>{cell}</>);
+      const link = screen.getByRole('link', { name: text });
+      expect(link).toHaveAttribute('href', href);
+      await user.click(link);
+      expect(window.history.state.usr).toEqual(
+        withBackButton
+          ? {
+              backButtonLink: '/ns/release-ns/applications/app/releases',
+              backButtonText: 'Back to release list',
+            }
+          : null,
+      );
+    },
+  );
+
+  it('renders release name as a link when the application comes from table metadata', () => {
+    const releaseWithoutApplicationLabel = {
+      ...baseRelease,
+      metadata: { ...baseRelease.metadata, labels: {} },
+    } as ReleaseKind;
+    const nameCell = getColumn('name')?.cell?.({
+      row: { original: releaseWithoutApplicationLabel },
+      table: { options: { meta: { applicationName: 'app' } } },
+    } as never);
+    routerRenderer(<>{nameCell}</>);
+    expect(screen.getByRole('link', { name: 'release-one' })).toHaveAttribute(
+      'href',
+      '/ns/test-ns/applications/app/releases/release-one',
+    );
+  });
+
+  it('routes group snapshot links to group details with group back navigation', async () => {
+    const user = userEvent.setup();
+    const cell = getColumn('releaseSnapshot')?.cell?.({
+      row: { original: baseRelease },
+      getValue: () => 'snapshot-a',
+      table: {
+        options: {
+          meta: { currentNamespace: 'test-ns', groupName: 'my-group' },
+        },
+      },
+    } as never);
+    routerRenderer(<>{cell}</>);
+    const link = screen.getByRole('link', { name: 'snapshot-a' });
+    expect(link).toHaveAttribute('href', '/ns/test-ns/groups/my-group/snapshots/snapshot-a');
+    await user.click(link);
+    expect(window.history.state.usr).toEqual({
+      backButtonLink: '/ns/test-ns/groups/my-group/releases',
+      backButtonText: 'Back to releases',
+    });
+  });
+
+  it('omits snapshot back-button state within the current namespace', async () => {
+    const user = userEvent.setup();
+    const cell = getColumn('releaseSnapshot')?.cell?.({
+      row: { original: baseRelease },
+      getValue: () => 'snapshot-a',
+      table: { options: { meta: { currentNamespace: 'test-ns', applicationName: 'app' } } },
+    } as never);
+    routerRenderer(<>{cell}</>);
+    await user.click(screen.getByRole('link', { name: 'snapshot-a' }));
+    expect(window.history.state.usr).toBeNull();
+  });
+
+  it('should render a pipeline run name as text when application metadata is missing', () => {
+    const releaseWithoutApplication = {
+      ...baseRelease,
+      metadata: {
+        ...baseRelease.metadata,
+        labels: {},
+      },
+    } as ReleaseKind;
+    const pipelineCell = getColumn('tenantPipelineRun')?.cell?.({
+      row: { original: releaseWithoutApplication },
+      table: { options: { meta: {} } },
+    } as never);
+    expect(pipelineCell).toBe('tenant-pr');
   });
 
   it("should return '-' for missing pipeline runs", () => {

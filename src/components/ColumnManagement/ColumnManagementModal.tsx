@@ -40,6 +40,10 @@ export const ColumnManagementModal: React.FC<ColumnManagementModalProps> = ({
     () => new Set(columnState.visibleColumns),
   );
 
+  const [sortState, setSortState] = useState<Pick<ColumnState, 'sortColumn' | 'sortDirection'>>(
+    () => ({ sortColumn: columnState.sortColumn, sortDirection: columnState.sortDirection }),
+  );
+
   const columnsById = React.useMemo(() => {
     const map = new Map<string, ColumnInfo>();
     columns.forEach((col) => map.set(col.id, col));
@@ -73,17 +77,22 @@ export const ColumnManagementModal: React.FC<ColumnManagementModalProps> = ({
   const handleReset = useCallback(() => {
     setAllColumnsOrder(defaultColumnState.columnOrder);
     setVisibleSet(new Set(defaultColumnState.visibleColumns));
+    setSortState({
+      sortColumn: defaultColumnState.sortColumn,
+      sortDirection: defaultColumnState.sortDirection,
+    });
   }, [defaultColumnState]);
 
   const handleSave = useCallback(() => {
     const newState: ColumnState = {
       ...columnState,
+      ...sortState,
       columnOrder: allColumnsOrder,
       visibleColumns: allColumnsOrder.filter((id) => visibleSet.has(id)),
     };
     onSave(newState);
     onClose?.();
-  }, [allColumnsOrder, visibleSet, columnState, onSave, onClose]);
+  }, [allColumnsOrder, visibleSet, columnState, sortState, onSave, onClose]);
 
   const handleCancel = useCallback(() => {
     onClose?.();

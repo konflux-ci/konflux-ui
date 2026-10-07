@@ -65,6 +65,8 @@ export const Table = <TData,>({
   'data-test': dataTest = 'table-v2',
   meta,
   enableSorting,
+  defaultVisibleColumns,
+  defaultSort,
   enableExpansion,
   enableRowSelection,
   onRowSelectionChange,
@@ -98,7 +100,12 @@ export const Table = <TData,>({
 
   const scrollMargin = useScrollMargin(tableNode, scrollElement);
 
-  const { columnState, setColumnState } = useColumnState(columnStateKey, columns);
+  const { columnState, setColumnState } = useColumnState(
+    columnStateKey,
+    columns,
+    defaultVisibleColumns,
+    defaultSort,
+  );
   const { columnVisibility } = useResponsiveColumns(columns);
 
   const { table, rows } = useTable({

@@ -24,6 +24,8 @@ type Props = {
   onFilterTypeChange: (value: string) => void;
   openColumnManagement?: () => void;
   totalColumns?: number;
+  columnManagement?: React.ReactNode;
+  sortControl?: React.ReactNode;
 };
 
 export const ReleasesFilterToolbar: React.FC<Props> = ({
@@ -33,6 +35,8 @@ export const ReleasesFilterToolbar: React.FC<Props> = ({
   dropdownItems,
   openColumnManagement,
   totalColumns = 0,
+  columnManagement,
+  sortControl,
 }) => {
   const [isOpen, setIsOpen] = React.useState(false);
   const [filterType, setFilterType] = React.useState(dropdownItems[0]);
@@ -87,9 +91,15 @@ export const ReleasesFilterToolbar: React.FC<Props> = ({
               </InputGroupItem>
             </InputGroup>
           </ToolbarItem>
+          {sortControl && <ToolbarItem>{sortControl}</ToolbarItem>}
           <IfFeature flag="column-management">
             <ToolbarItem>
-              <ColumnManagementButton onClick={openColumnManagement} totalColumns={totalColumns} />
+              {columnManagement ?? (
+                <ColumnManagementButton
+                  onClick={openColumnManagement}
+                  totalColumns={totalColumns}
+                />
+              )}
             </ToolbarItem>
           </IfFeature>
         </ToolbarGroup>

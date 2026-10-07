@@ -3,11 +3,12 @@ export type {
   CellContext,
   ColumnDefinition,
   ColumnState,
+  DefaultSort,
   TableProps,
   TableContainerProps,
 } from './types';
 
-export { useColumnState } from './hooks/useColumnState';
+export { useColumnState, deriveDefaultState } from './hooks/useColumnState';
 export { useResponsiveColumns } from './hooks/useResponsiveColumns';
 export { useTable, type UseTableOptions, type UseTableResult } from './hooks/useTable';
 export { useVirtualization } from './hooks/useVirtualization';
