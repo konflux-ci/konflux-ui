@@ -54,6 +54,8 @@ The main orchestrator. Composes hooks and sub-components into a full-featured ta
 | `getRowId`            | `(row: TData) => string`                              | Yes      | Stable unique row ID                                                |
 | `aria-label`          | `string`                                              | Yes      | Accessible label for the table element                              |
 | `meta`                | `Record<string, unknown>`                             | No       | Arbitrary metadata passed to TanStack's `table.options.meta`        |
+| `defaultVisibleColumns` | `string[]` | No | Initial visible IDs when no saved state exists; defaults to all columns |
+| `defaultSort` | `DefaultSort` | No | Initial `{ column, direction: 'asc' \| 'desc' }` sort when no saved state exists |
 | `enableSorting`       | `boolean`                                             | No       | Enable client-side column sorting                                   |
 | `enableExpansion`     | `boolean`                                             | No       | Enable expandable rows                                              |
 | `expandedContent`     | `(row: TData) => ReactNode`                           | No       | Render function for expanded row content                            |
@@ -135,12 +137,12 @@ Standalone collapsible group header row for grouped tables. Renders the group na
 
 ## Hook Reference
 
-### `useColumnState(key, columns)`
+### `useColumnState(key, columns, defaultVisibleColumns?, defaultSort?)`
 
 Manages column visibility, order, and sort state with optional localStorage persistence.
 
 ```tsx
-import { useColumnState } from '~/shared/components/TableV2';
+import { useColumnState, type DefaultSort } from '~/shared/components/TableV2';
 
 // Persisted (survives unmount/refresh)
 const { columnState, setColumnState } = useColumnState('my-table', columns);
@@ -149,18 +151,29 @@ const { columnState, setColumnState } = useColumnState('my-table', columns);
 const { columnState, setColumnState } = useColumnState(undefined, columns);
 ```
 
+Pass the same defaults to `Table`, `SortDropdown`, and `ColumnManagement` when they share a `columnStateKey`. Keep default arrays and sort objects stable (for example, module-level constants). Unknown visibility and sort IDs are ignored. Defaults are not written to localStorage until the user changes state, and never override saved state.
+
+```tsx
+const DEFAULT_SORT: DefaultSort = { column: 'created', direction: 'desc' };
+const { columnState, setColumnState } = useColumnState(
+  'my-table', columns, DEFAULT_VISIBLE_COLUMNS, DEFAULT_SORT,
+);
+```
+
 **Schema migration:** When column definitions change (columns added or removed), persisted state is automatically migrated:
 
 - Stale column IDs are removed, preserving persisted order
-- New column IDs are appended at the end
+- New column IDs are inserted at their definition-relative position
 - Sort is cleared if the sorted column was removed
 
 #### `ColumnState` Shape
 
 ```ts
 interface ColumnState {
-  /** Ordered list of visible column IDs. Order = display order. */
+  /** Visible column IDs (display order is controlled by columnOrder). */
   visibleColumns: string[];
+  /** Ordered list of all column IDs, including hidden columns. */
+  columnOrder: string[];
   /** ID of the currently sorted column, if any. */
   sortColumn?: string;
   /** Sort direction. */
@@ -369,72 +382,39 @@ showModal(columnManagementModalLauncher({
 
 ## Column Management
 
-The `ColumnManagementModal` lets users reorder and show/hide columns via drag-and-drop. The `ColumnManagementButton` trigger is automatically hidden when there are 6 or fewer columns.
+The `ColumnManagement` wrapper launches `ColumnManagementModal` to reorder and show/hide columns. It shares state with `Table` and `SortDropdown` through the same `columnStateKey`. The trigger is hidden for five or fewer columns unless `showColumnManagement` is set. Render inside a `ModalProvider`.
 
 ### Wiring It Up
 
 ```tsx
-import { useColumnState, type ColumnState } from '~/shared/components/TableV2';
-import ColumnManagementButton from '~/components/Filter/components/ColumnManagementButton';
-import { columnManagementModalLauncher } from '~/components/modal/ColumnManagementModal';
-import { useModalLauncher } from '~/components/modal/ModalProvider';
+import ColumnManagement from '~/components/ColumnManagement/ColumnManagement';
+import { Table, SortDropdown, type DefaultSort } from '~/shared/components/TableV2';
 
-const MyListView = () => {
-  const showModal = useModalLauncher();
-  const { columnState, setColumnState } = useColumnState('my-table', columns);
+// Module-level defaults shared by all three controls.
+const DEFAULT_SORT: DefaultSort = { column: 'created', direction: 'desc' };
+const DEFAULT_VISIBLE_COLUMNS = ['name', 'created', 'status'];
 
-  // Default state for the "Restore defaults" button
-  const defaultColumnState: ColumnState = React.useMemo(
-    () => ({ visibleColumns: columns.map((c) => c.id) }),
-    [columns],
-  );
-
-  // Column metadata for the modal (strips out accessorFn, cell, etc.)
-  const columnInfoForModal = React.useMemo(
-    () => columns.map((c) => ({
-      id: c.id,
-      header: typeof c.header === 'string' ? c.header : c.id,
-      nonHidable: c.nonHidable,
-      pinned: c.pinned,
-    })),
-    [columns],
-  );
-
-  const openColumnManagement = React.useCallback(() => {
-    showModal(
-      columnManagementModalLauncher({
-        columns: columnInfoForModal,
-        columnState,
-        defaultColumnState,
-        onSave: setColumnState,
-      }),
-    );
-  }, [showModal, columnInfoForModal, columnState, defaultColumnState, setColumnState]);
-
-  return (
-    <TableContainer
-      toolbar={
-        <FilterToolbar configs={filterConfigs}>
-          <ColumnManagementButton onClick={openColumnManagement} totalColumns={columns.length} />
-        </FilterToolbar>
-      }
-      ...
-    >
-      <Table
-        columnState={columnState}
-        onColumnStateChange={setColumnState}
-        ...
-      />
-    </TableContainer>
-  );
+const stateProps = {
+  columns,
+  columnStateKey: 'my-table',
+  defaultVisibleColumns: DEFAULT_VISIBLE_COLUMNS,
+  defaultSort: DEFAULT_SORT,
 };
+
+// Place controls in the toolbar and the table inside TableContainer.
+<SortDropdown {...stateProps} />
+<ColumnManagement {...stateProps} showColumnManagement />
+<Table {...stateProps} data={data} getRowId={(row) => row.metadata.uid}
+  aria-label="My items" enableSorting />
 ```
+
+For fully controlled state, use `useColumnState` with `columnState` / `onColumnStateChange` on `Table` and launch the modal directly with `columnManagementModalLauncher` from `~/components/ColumnManagement/ColumnManagementModal`.
 
 **Key behaviors:**
 
 - Pinned columns (`pinned: 'start'` or `'end'`) cannot be dragged or hidden
 - `nonHidable` columns have a disabled checkbox
-- "Restore defaults" resets to the original column order and visibility
+- "Restore defaults" resets to the default column order, visibility, and sort
 
 ## Usage Patterns
 
@@ -724,7 +704,7 @@ const MyGroupedTable = ({ groupedData }: { groupedData: MyGroupedData[] }) => {
 | `useSortedResources` + sort index state        | `enableSorting` + `sortable` on columns                                           |
 | `StatusBox` empty state logic                  | `TableContainer` with explicit `emptyState`/`noDataState`                         |
 | `isInfiniteLoading` + `infiniteLoaderProps`    | `hasNextPage` + `isFetchingNextPage` + `fetchNextPage`                            |
-| `useVisibleColumns` + `ColumnManagement`       | `useColumnState` + `ColumnManagementModal`                                        |
+| `useVisibleColumns` + `ColumnManagement`       | `useColumnState` + `ColumnManagement`                                        |
 
 ### Migration Steps
 
@@ -742,7 +722,7 @@ const MyGroupedTable = ({ groupedData }: { groupedData: MyGroupedData[] }) => {
 | Use stable `getRowId` (e.g. `metadata.uid`)                                        | Use array index as row ID                                                                 |
 | Place `<Table>` inside a bounded-height scroll container                           | Let the table overflow the page without constraint                                        |
 | Use `size` for proportional widths                                                 | Hardcode pixel widths on flex columns                                                     |
-| Use `columnState` + `onColumnStateChange` when sharing state                       | Use `columnStateKey` when you need the modal to work                                      |
+| Share `columnStateKey` and defaults across table controls                       | Mix different keys or defaults for controls on the same table                                      |
 | Use `useCallback` for `scrollContainerRef`                                         | Use `useRef` for the virtualizer scroll container (stale ref)                             |
 | Spread column def properties conditionally with `...(value ? { key: value } : {})` | Spread `undefined` into column defs (TanStack treats `undefined` differently from absent) |
 
