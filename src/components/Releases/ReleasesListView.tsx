@@ -8,7 +8,13 @@ import { RouterParams } from '~/routes/utils';
 import ActionMenu from '~/shared/components/action-menu/ActionMenu';
 import FilteredEmptyState from '~/shared/components/empty-state/FilteredEmptyState';
 import ListLayout from '~/shared/components/list-layout/ListLayout';
-import { Table, TableContainer, SortDropdown, ColumnDefinition } from '~/shared/components/TableV2';
+import {
+  Table,
+  TableContainer,
+  SortDropdown,
+  ColumnDefinition,
+  DefaultSort,
+} from '~/shared/components/TableV2';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { ReleaseKind } from '~/types';
 import { textMatch } from '~/utils/text-filter-utils';
@@ -42,6 +48,8 @@ const columns: ColumnDefinition<ReleaseKind>[] = [
     nonHidable: true,
   },
 ];
+
+const DEFAULT_SORT: DefaultSort = { column: 'created', direction: 'desc' };
 
 const DEFAULT_VISIBLE_COLUMNS = [
   'name',
@@ -110,7 +118,7 @@ const ReleasesListView: React.FC = () => {
                 columns={columns}
                 columnStateKey={RELEASES_LIST_COLUMN_STATE_KEY}
                 defaultVisibleColumns={DEFAULT_VISIBLE_COLUMNS}
-                defaultSort={{ column: 'created', direction: 'desc' }}
+                defaultSort={DEFAULT_SORT}
               />
             }
             columnManagement={
@@ -118,7 +126,7 @@ const ReleasesListView: React.FC = () => {
                 columns={columns}
                 columnStateKey={RELEASES_LIST_COLUMN_STATE_KEY}
                 defaultVisibleColumns={DEFAULT_VISIBLE_COLUMNS}
-                defaultSort={{ column: 'created', direction: 'desc' }}
+                defaultSort={DEFAULT_SORT}
                 showColumnManagement
               />
             }
@@ -134,7 +142,7 @@ const ReleasesListView: React.FC = () => {
           columnStateKey={RELEASES_LIST_COLUMN_STATE_KEY}
           enableSorting
           defaultVisibleColumns={DEFAULT_VISIBLE_COLUMNS}
-          defaultSort={{ column: 'created', direction: 'desc' }}
+          defaultSort={DEFAULT_SORT}
           meta={{ currentNamespace: namespace, applicationName }}
           hasNextPage={hasNextPage}
           isFetchingNextPage={isFetchingNextPage}

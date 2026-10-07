@@ -9,7 +9,7 @@ import {
 } from '~/routes/paths';
 import { Timestamp } from '~/shared';
 import { defineFilters } from '~/shared/components/Filter';
-import { ColumnDefinition } from '~/shared/components/TableV2';
+import { CellContext, ColumnDefinition } from '~/shared/components/TableV2';
 import { ReleaseKind } from '~/types';
 import { nameSearchFilter } from '~/utils/common-filter-configs';
 import { calculateDuration } from '~/utils/pipeline-utils';
@@ -30,7 +30,7 @@ export const RELEASES_LIST_FILTERS = defineFilters<ReleaseKind>()([nameSearchFil
 
 const pipelineRunCell =
   (getPipelineRun: (release: ReleaseKind) => string, withBackButton = false) =>
-  (info: import('~/shared/components/TableV2').CellContext<ReleaseKind, string>) => {
+  (info: CellContext<ReleaseKind, string>) => {
     const [workspaceName, pipelineRunName] = getNamespaceAndPRName(
       getPipelineRun(info.row.original),
     );
@@ -59,7 +59,7 @@ const pipelineRunCell =
             }),
             backButtonText: 'Back to release list',
           }
-        : {};
+        : undefined;
     return (
       <Link
         to={PIPELINERUN_DETAILS_PATH.createPath({
@@ -84,6 +84,7 @@ export const RELEASES_LIST_COLUMNS: ColumnDefinition<ReleaseKind>[] = [
     accessorFn: (obj) => obj.metadata?.name,
     cell: (info) => {
       const obj = info.row.original;
+      // TODO[KFLUXUI-1719]: Route Component Group releases to the group-specific Release details page.
       const releaseApplication = obj.metadata?.labels?.[PipelineRunLabel.APPLICATION];
       if (!obj.metadata?.namespace || !releaseApplication || !obj.metadata?.name) {
         return obj.metadata?.name ?? '-';
@@ -159,6 +160,7 @@ export const RELEASES_LIST_COLUMNS: ColumnDefinition<ReleaseKind>[] = [
     id: 'releaseSnapshot',
     header: 'Release Snapshot',
     accessorFn: (obj) => obj.spec.snapshot,
+    // TODO[KFLUXUI-1720]: Route Component Group releases to the group-specific Snapshot details page.
     cell: (info) => {
       const snapshot = info.getValue() as string;
       const releaseNamespace = info.row.original.metadata?.namespace;
@@ -179,7 +181,7 @@ export const RELEASES_LIST_COLUMNS: ColumnDefinition<ReleaseKind>[] = [
               }),
               backButtonText: 'Back to release list',
             }
-          : {};
+          : undefined;
       if (typeof releaseApplication !== 'string' || !releaseApplication) return snapshot;
       return (
         <Link
@@ -198,6 +200,7 @@ export const RELEASES_LIST_COLUMNS: ColumnDefinition<ReleaseKind>[] = [
   {
     id: 'tenantCollectorPipelineRun',
     header: 'Tenant Collector',
+    // TODO[KFLUXUI-1721]: Route Component Group releases to the group-specific PipelineRun details page.
     accessorFn: (obj) => {
       const [tenantCollectorPrNamespace, tenantCollectorPipelineRun] = getNamespaceAndPRName(
         getTenantCollectorPipelineRunFromRelease(obj),
@@ -210,6 +213,7 @@ export const RELEASES_LIST_COLUMNS: ColumnDefinition<ReleaseKind>[] = [
   {
     id: 'tenantPipelineRun',
     header: 'Tenant Pipeline',
+    // TODO[KFLUXUI-1721]: Route Component Group releases to the group-specific PipelineRun details page.
     accessorFn: (obj) => {
       const [tenantPrNamespace, tenantPipelineRun] = getNamespaceAndPRName(
         getTenantPipelineRunFromRelease(obj),
@@ -223,6 +227,7 @@ export const RELEASES_LIST_COLUMNS: ColumnDefinition<ReleaseKind>[] = [
   {
     id: 'managedPipelineRun',
     header: 'Managed Pipeline',
+    // TODO[KFLUXUI-1721]: Route Component Group releases to the group-specific PipelineRun details page.
     accessorFn: (obj) => {
       const [managedPrNamespace, managedPipelineRun] = getNamespaceAndPRName(
         getManagedPipelineRunFromRelease(obj),
@@ -236,6 +241,7 @@ export const RELEASES_LIST_COLUMNS: ColumnDefinition<ReleaseKind>[] = [
   {
     id: 'finalPipelineRun',
     header: 'Final Pipeline',
+    // TODO[KFLUXUI-1721]: Route Component Group releases to the group-specific PipelineRun details page.
     accessorFn: (obj) => {
       const [finalPrNamespace, finalPipelineRun] = getNamespaceAndPRName(
         getFinalPipelineRunFromRelease(obj),

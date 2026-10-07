@@ -1,15 +1,13 @@
 import '@testing-library/jest-dom';
-import type { ReactNode } from 'react';
-import { MemoryRouter } from 'react-router-dom';
-import { render, screen, within } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { FeatureFlagsStore } from '~/feature-flags/store';
 import { useK8sAndKarchResources } from '~/hooks/useK8sAndKarchResources';
 import { ModalProvider } from '~/shared/components/modal';
 import { useVirtualization } from '~/shared/components/TableV2/hooks/useVirtualization';
+import { createUseParamsMock, renderWithQueryClientAndRouter } from '~/unit-test-utils';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
-import { createUseParamsMock } from '../../../utils/test-utils';
 import { RELEASES_LIST_COLUMN_STATE_KEY } from '../../Release/releases-table-config';
 import { mockReleases } from '../__data__/mock-release-data';
 import ReleasesListView from '../ReleasesListView';
@@ -19,14 +17,6 @@ jest.mock('../../../hooks/useK8sAndKarchResources', () => ({
   useK8sAndKarchResources: jest.fn(),
 }));
 jest.mock('~/shared/components/TableV2/hooks/useVirtualization');
-jest.mock('react-router-dom', () => {
-  const actual = jest.requireActual('react-router-dom');
-  return {
-    ...actual,
-    Link: (props: { to: string; children: ReactNode }) => <a href={props.to}>{props.children}</a>,
-  };
-});
-
 const useMockReleases = useK8sAndKarchResources as jest.Mock;
 const releasesWithRoutingMetadata = mockReleases.map((release) => ({
   ...release,
@@ -37,14 +27,12 @@ const releasesWithRoutingMetadata = mockReleases.map((release) => ({
   },
 }));
 const renderReleases = () =>
-  render(
-    <MemoryRouter>
-      <ModalProvider>
-        <FilterContextProvider filterParams={['name', 'release plan', 'release snapshot']}>
-          <ReleasesListView />
-        </FilterContextProvider>
-      </ModalProvider>
-    </MemoryRouter>,
+  renderWithQueryClientAndRouter(
+    <ModalProvider>
+      <FilterContextProvider filterParams={['name', 'release plan', 'release snapshot']}>
+        <ReleasesListView />
+      </FilterContextProvider>
+    </ModalProvider>,
   );
 
 jest.useFakeTimers();
@@ -55,6 +43,7 @@ createUseParamsMock({ applicationName: 'test-app' });
 describe('ReleasesListView', () => {
   beforeEach(() => {
     localStorage.clear();
+    window.history.replaceState(null, '', '/');
     FeatureFlagsStore.set('column-management', true);
     useMockReleases.mockReset();
     jest.mocked(useVirtualization).mockReturnValue({
@@ -158,10 +147,34 @@ describe('ReleasesListView', () => {
     ).toBeInTheDocument();
   });
 
+  it('sorts rows through the toolbar dropdown and persists the selection', async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    useMockReleases.mockReturnValue({ data: releasesWithRoutingMetadata, isLoading: false });
+    renderReleases();
+    const toggle = screen.getByTestId('sort-dropdown');
+    await user.click(toggle);
+    await user.click(screen.getByRole('option', { name: 'Name' }));
+    await user.click(screen.getByRole('option', { name: 'Ascending' }));
+    const table = screen.getByRole('grid', { name: 'Release List' });
+    expect(within(table).getByRole('columnheader', { name: 'Name' })).toHaveAttribute(
+      'aria-sort',
+      'ascending',
+    );
+    const rows = within(table).getAllByRole('row');
+    expect(within(rows[1]).getByRole('link', { name: 'test-release' })).toBeInTheDocument();
+    expect(within(rows[2]).getByRole('link', { name: 'test-release-2' })).toBeInTheDocument();
+    expect(JSON.parse(localStorage.getItem(RELEASES_LIST_COLUMN_STATE_KEY))).toEqual(
+      expect.objectContaining({ sortColumn: 'name', sortDirection: 'asc' }),
+    );
+  });
+
   it('renders release links and action menus', () => {
     useMockReleases.mockReturnValue({ data: releasesWithRoutingMetadata, isLoading: false });
     renderReleases();
-    expect(screen.getByText('test-release-2')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'test-release-2' })).toHaveAttribute(
+      'href',
+      '/ns/test-ns/applications/test-app/releases/test-release-2',
+    );
     expect(screen.getAllByRole('button', { name: /actions/i }).length).toBeGreaterThan(0);
   });
 });
