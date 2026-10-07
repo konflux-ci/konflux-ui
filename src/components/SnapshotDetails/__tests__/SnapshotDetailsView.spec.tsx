@@ -2,6 +2,7 @@ import { useParams } from 'react-router-dom';
 import { act, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { downloadYaml } from '~/utils/common-utils';
+import { useAccessReviewForModel } from '~/utils/rbac';
 import { useK8sAndKarchResource } from '../../../hooks/useK8sAndKarchResources';
 import { usePipelineRunV2 } from '../../../hooks/usePipelineRunsV2';
 import { PipelineRunGroupVersionKind, SnapshotGroupVersionKind } from '../../../models';
@@ -115,7 +116,18 @@ describe('SnapshotDetailsView', () => {
       isLoading: false,
     });
     renderWithQueryClientAndRouter(<SnapshotDetails />);
-    expect(screen.getByText(/Snapshots/)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Applications' })).toHaveAttribute(
+      'href',
+      '/ns//applications',
+    );
+    expect(screen.getByRole('link', { name: 'Snapshots' })).toHaveAttribute(
+      'href',
+      '/ns//applications/my-test-output/snapshots',
+    );
+    expect(screen.getAllByRole('tab').map((tab) => tab.textContent.trim())).toEqual([
+      'Overview',
+      'Pipeline runs',
+    ]);
   });
 
   it('should show EnvProvisionError', () => {
@@ -189,6 +201,22 @@ describe('SnapshotDetailsView', () => {
     const triggerAction = screen.getByText('Trigger release');
     expect(triggerAction).toBeInTheDocument();
     expect(triggerAction.closest('button, a')).toHaveAttribute('aria-disabled', 'true');
+  });
+
+  it('disables release for a cluster snapshot when permission is denied', async () => {
+    const user = userEvent.setup();
+    jest.mocked(useAccessReviewForModel).mockReturnValueOnce([false, true]);
+    useSnapshotMock.mockReturnValue({
+      data: mockSnapshots[0],
+      isLoading: false,
+      source: ResourceSource.Cluster,
+    });
+    renderWithQueryClientAndRouter(<SnapshotDetails />);
+    await user.click(screen.getByRole('button', { name: 'Actions' }));
+    expect(screen.getByText('Trigger release').closest('button, a')).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    );
   });
 
   describe('Download YAML action', () => {

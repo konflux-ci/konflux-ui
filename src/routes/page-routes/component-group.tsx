@@ -1,6 +1,7 @@
 import { LoaderFunctionArgs } from 'react-router-dom';
 import {
   GROUP_DETAILS_PATH,
+  GROUP_SNAPSHOT_DETAILS_PATH,
   GROUPS_PATH,
   GROUP_INTEGRATION_TEST_DETAILS_PATH,
 } from '@routes/paths';
@@ -19,10 +20,25 @@ import {
   IntegrationTestOverviewTab,
   IntegrationTestPipelineRunTabV2,
 } from '~/components/IntegrationTests/IntegrationTestDetails';
+import {
+  GroupSnapshotDetailsView,
+  snapshotDetailsViewLoader,
+  GroupSnapshotOverview,
+} from '~/components/SnapshotDetails';
 import { snapshotsTabLoader } from '~/components/Snapshots/SnapshotsListView/SnapshotsTab';
 import { ensureFeatureFlagOnLoader } from '~/feature-flags/utils';
 
 const componentGroupRoutes = [
+  {
+    path: GROUP_SNAPSHOT_DETAILS_PATH.path,
+    loader: (args: LoaderFunctionArgs) => {
+      ensureFeatureFlagOnLoader('component-model');
+      return snapshotDetailsViewLoader(args);
+    },
+    errorElement: <RouteErrorBoundry />,
+    element: <GroupSnapshotDetailsView />,
+    children: [{ index: true, element: <GroupSnapshotOverview /> }],
+  },
   {
     path: GROUPS_PATH.path,
     errorElement: <RouteErrorBoundry />,

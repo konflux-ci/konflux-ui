@@ -1,5 +1,9 @@
 import { Link } from 'react-router-dom';
-import { COMPONENT_DETAILS_PATH, SNAPSHOT_DETAILS_PATH } from '@routes/paths';
+import {
+  GROUP_SNAPSHOT_DETAILS_PATH,
+  COMPONENT_DETAILS_PATH,
+  SNAPSHOT_DETAILS_PATH,
+} from '@routes/paths';
 import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { Timestamp } from '~/shared';
 import { ComponentLink } from '~/shared/components/component-link/ComponentLink';
@@ -78,7 +82,19 @@ export const SNAPSHOTS_LIST_COLUMNS: ColumnDefinition<Snapshot>[] = [
       const namespace = info.table.options.meta?.namespace as string;
       const applicationName = info.table.options.meta?.applicationName as string;
       const groupName = info.table.options.meta?.groupName;
-      if (groupName) return info.row.original.metadata.name;
+      if (typeof groupName === 'string')
+        return (
+          <Link
+            to={GROUP_SNAPSHOT_DETAILS_PATH.createPath({
+              workspaceName: namespace,
+              groupName,
+              snapshotName: info.row.original.metadata.name,
+            })}
+            data-test="snapshot-list-row-name"
+          >
+            {info.row.original.metadata.name}
+          </Link>
+        );
       return (
         <Link
           to={SNAPSHOT_DETAILS_PATH.createPath({
