@@ -34,20 +34,23 @@ jest.mock('~/hooks/useTaskRunsV2', () => ({
     undefined,
   ],
 }));
-mockUseNamespaceHook('team');
 
-it('records the initially selected task in the logs URL after mounting', () => {
-  window.history.replaceState({}, '', '/ns/team/pipelineruns/build/logs');
-  renderWithQueryClientAndRouter(
-    <Routes>
-      <Route
-        path="/ns/:workspaceName/pipelineruns/:pipelineRunName/logs"
-        element={<PipelineRunLogsTab />}
-      />
-    </Routes>,
-  );
-  expect(screen.getByText('Compilation failed')).toBeInTheDocument();
-  expect(window.location.pathname + window.location.search).toBe(
-    '/ns/team/pipelineruns/build/logs?task=compile',
-  );
+describe('PipelineRunLogsNavigation', () => {
+  mockUseNamespaceHook('team');
+
+  it('records the initially selected task in the logs URL after mounting', () => {
+    window.history.replaceState({}, '', '/ns/team/pipelineruns/build/logs');
+    renderWithQueryClientAndRouter(
+      <Routes>
+        <Route
+          path="/ns/:workspaceName/pipelineruns/:pipelineRunName/logs"
+          element={<PipelineRunLogsTab />}
+        />
+      </Routes>,
+    );
+    expect(screen.getByText('Compilation failed')).toBeInTheDocument();
+    expect(window.location.pathname + window.location.search).toBe(
+      '/ns/team/pipelineruns/build/logs?task=compile',
+    );
+  });
 });

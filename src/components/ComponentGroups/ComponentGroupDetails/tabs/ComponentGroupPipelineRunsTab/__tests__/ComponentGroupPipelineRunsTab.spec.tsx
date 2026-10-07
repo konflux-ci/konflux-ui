@@ -234,6 +234,7 @@ describe('ComponentGroupPipelineRunsTab', () => {
       }),
     );
   });
+
   it('shows a clearable empty state when API filters return no runs', async () => {
     const user = userEvent.setup();
     mockUsePipelineRuns.mockReturnValue([
