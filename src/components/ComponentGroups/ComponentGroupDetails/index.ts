@@ -28,3 +28,4 @@ export { default as ComponentGroupDetailsViewLayout } from './ComponentGroupDeta
 export { ComponentGroupReleasesTab } from './tabs/ComponentGroupReleasesTab';
 export { ComponentGroupIntegrationTestsTab } from './tabs/ComponentGroupIntegrationTestsTab';
 export { ComponentGroupComponentsTab } from './tabs/ComponentGroupComponents/ComponentGroupComponentsTab';
+export { ComponentGroupPipelineRunsTab } from '~/components/ComponentGroups/ComponentGroupDetails/tabs/ComponentGroupPipelineRunsTab';

@@ -86,10 +86,12 @@ describe('ComponentGroupDetailsView', () => {
     expect(screen.getByTestId('base-url')).toHaveTextContent('/ns/test-ns/groups/frontend-stack');
 
     const tabs = screen.getAllByTestId('details-tab');
-    expect(tabs).toHaveLength(3);
+    expect(tabs).toHaveLength(5);
     expect(tabs.map((tab) => tab.textContent)).toEqual([
       'Components',
+      'Pipeline runs',
       'Integration tests',
+      'Snapshots',
       'Releases',
     ]);
   });

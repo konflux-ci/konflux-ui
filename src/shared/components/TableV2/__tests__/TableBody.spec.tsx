@@ -77,6 +77,35 @@ describe('TableBody', () => {
     expect(screen.getByText('Details for r-0')).toBeInTheDocument();
   });
 
+  it('marks the row group and expanded row with PatternFly expansion state', () => {
+    const rows = [createMockRow('r-0', { expanded: true })];
+    const virtualRows = createMockVirtualRows(1);
+
+    renderTableBody({
+      rows: rows as never[],
+      virtualRows,
+      enableExpansion: true,
+      expandedContent: () => <div>details</div>,
+    });
+
+    const expandedRow = screen.getByText('details').closest('tr');
+    expect(expandedRow).toHaveClass('pf-v6-c-table__expandable-row', 'pf-m-expanded');
+
+    const expandedBody = screen
+      .getAllByRole('rowgroup')
+      .find((rowGroup) => rowGroup.classList.contains('pf-m-expanded'));
+    expect(expandedBody).toBeDefined();
+  });
+
+  it('renders an explicit divider after expandable row groups', () => {
+    const rows = [createMockRow('r-0')];
+    const virtualRows = createMockVirtualRows(1);
+
+    renderTableBody({ rows: rows as never[], virtualRows, enableExpansion: true });
+
+    expect(document.querySelector('tr.pf-m-border-row')).toBeInTheDocument();
+  });
+
   it('does not render expanded content when row is not expanded', () => {
     const rows = [createMockRow('r-0')];
     const virtualRows = createMockVirtualRows(1);
@@ -105,10 +134,12 @@ describe('TableBody', () => {
       expandedContent: () => <div>details</div>,
     });
 
-    // The expanded row's Td should have colspan=5
+    // The expansion cell is rendered separately so content aligns with the data columns.
     const expandedRow = screen.getByText('details').closest('tr') as HTMLElement;
-    const td = within(expandedRow).getByRole('cell');
-    expect(td).toHaveAttribute('colspan', '5');
+    const cells = within(expandedRow).getAllByRole('cell');
+    expect(cells).toHaveLength(2);
+    expect(cells[0]).not.toHaveAttribute('colspan');
+    expect(cells[1]).toHaveAttribute('colspan', '4');
   });
 
   it('renders 3 skeleton rows when isFetchingNextPage is true', () => {

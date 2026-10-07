@@ -48,8 +48,16 @@ const ComponentGroupDetailsView: React.FC = () => {
             label: 'Components',
           },
           {
+            key: 'pipelineruns',
+            label: 'Pipeline runs',
+          },
+          {
             key: 'integrationtests',
             label: 'Integration tests',
+          },
+          {
+            key: 'snapshots',
+            label: 'Snapshots',
           },
           {
             key: 'releases',
