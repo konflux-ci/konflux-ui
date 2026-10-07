@@ -85,6 +85,87 @@ describe('ReleasesListView', () => {
     ).not.toBeInTheDocument();
   });
 
+  it.each(['clusterError', 'archiveError'])(
+    'preserves available releases when %s occurs',
+    (errorSource) => {
+      useMockReleases.mockReturnValue({
+        data: releasesWithRoutingMetadata,
+        isLoading: false,
+        hasError: true,
+        [errorSource]: new Error('Source unavailable'),
+      });
+      renderReleases();
+      const table = screen.getByRole('grid', { name: 'Release List' });
+      expect(within(table).getByRole('link', { name: 'test-release' })).toBeInTheDocument();
+      expect(within(table).getByRole('link', { name: 'test-release-2' })).toBeInTheDocument();
+      expect(screen.getByText('Some releases could not be loaded')).toBeInTheDocument();
+      expect(screen.getByText(/The list may be incomplete or out of date/)).toBeInTheDocument();
+      expect(screen.queryByTestId('table-error')).not.toBeInTheDocument();
+    },
+  );
+
+  it('renders an error when both sources fail with no available releases', () => {
+    useMockReleases.mockReturnValue({
+      data: [],
+      isLoading: false,
+      hasError: true,
+      clusterError: new Error('Cluster unavailable'),
+      archiveError: new Error('Archive unavailable'),
+    });
+    renderReleases();
+    expect(screen.getByTestId('table-error')).toHaveTextContent('Unable to load releases');
+    expect(screen.queryByRole('grid', { name: 'Release List' })).not.toBeInTheDocument();
+    expect(screen.queryByText('Some releases could not be loaded')).not.toBeInTheDocument();
+    expect(screen.queryByText('Learn more about setting up release plans')).not.toBeInTheDocument();
+  });
+
+  it('renders the filtered empty state rather than a blocking error after a source failure', async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    useMockReleases.mockReturnValue({
+      data: releasesWithRoutingMetadata,
+      isLoading: false,
+      hasError: true,
+      archiveError: new Error('Archive unavailable'),
+    });
+    renderReleases();
+    await user.type(screen.getByRole('textbox'), 'does-not-exist');
+    expect(screen.getByText('No results found')).toBeInTheDocument();
+    expect(screen.getByText('Some releases could not be loaded')).toBeInTheDocument();
+    expect(screen.queryByTestId('table-error')).not.toBeInTheDocument();
+  });
+
+  it('keeps pagination available when filtering to a short list', async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const fetchNextPage = jest.fn();
+    useMockReleases.mockReturnValue({
+      data: releasesWithRoutingMetadata,
+      isLoading: false,
+      hasNextPage: true,
+      isFetchingNextPage: false,
+      fetchNextPage,
+    });
+    renderReleases();
+    await user.type(screen.getByRole('textbox'), 'test-release-2');
+    const table = screen.getByRole('grid', { name: 'Release List' });
+    expect(within(table).getAllByRole('row')).toHaveLength(2);
+    const loadMore = screen.getByRole('button', { name: 'Load more releases' });
+    expect(loadMore).toBeEnabled();
+    await user.click(loadMore);
+    expect(fetchNextPage).toHaveBeenCalledTimes(1);
+  });
+
+  it('disables pagination while fetching the next page', () => {
+    useMockReleases.mockReturnValue({
+      data: releasesWithRoutingMetadata,
+      isLoading: false,
+      hasNextPage: true,
+      isFetchingNextPage: true,
+      fetchNextPage: jest.fn(),
+    });
+    renderReleases();
+    expect(screen.getByRole('button', { name: /Load more releases/ })).toBeDisabled();
+  });
+
   it('renders the no-data state', () => {
     useMockReleases.mockReturnValue({ data: [], isLoading: false });
     renderReleases();

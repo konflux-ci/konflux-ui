@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { useParams } from 'react-router-dom';
+import { Alert, Button } from '@patternfly/react-core';
 import ColumnManagement from '~/components/ColumnManagement/ColumnManagement';
 import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { useK8sAndKarchResources } from '~/hooks/useK8sAndKarchResources';
@@ -96,11 +97,19 @@ const ReleasesListView: React.FC = () => {
 
   return (
     <ListLayout title="Releases">
+      {hasError && releases.length > 0 && (
+        <Alert isInline variant="warning" title="Some releases could not be loaded">
+          Showing available releases. The list may be incomplete or out of date. Try refreshing the
+          page.
+        </Alert>
+      )}
       <TableContainer
         data={filteredReleases}
         unfilteredData={releases}
-        loaded={!isLoading}
-        loadError={hasError ? new Error('Unable to load releases') : undefined}
+        loaded={!isLoading || releases.length > 0}
+        loadError={
+          hasError && releases.length === 0 ? new Error('Unable to load releases') : undefined
+        }
         emptyState={<FilteredEmptyState onClearFilters={onClearFilters} />}
         noDataState={<ReleasesEmptyState />}
         toolbar={
@@ -149,6 +158,16 @@ const ReleasesListView: React.FC = () => {
           fetchNextPage={fetchNextPage}
         />
       </TableContainer>
+      {!isLoading && hasNextPage && (
+        <Button
+          variant="link"
+          onClick={() => void fetchNextPage()}
+          isDisabled={isFetchingNextPage}
+          isLoading={isFetchingNextPage}
+        >
+          Load more releases
+        </Button>
+      )}
     </ListLayout>
   );
 };
