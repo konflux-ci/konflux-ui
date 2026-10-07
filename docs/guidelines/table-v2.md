@@ -359,15 +359,15 @@ Pass a `columnStateKey` to persist column visibility, order, and sort:
 
 ### External State Management
 
-For views that need to share column state with other components (e.g. column management modal):
+Share column state through the same `columnStateKey`. `Table` manages its state internally and does not accept `columnState` or `onColumnStateChange` props. Use `ColumnManagement` for the standard modal integration, or `useColumnState` with the same key when launching the modal directly:
 
 ```tsx
 const { columnState, setColumnState } = useColumnState('my-table', columns);
 
-// Pass to Table
+// Table subscribes to the same persisted state.
 <Table
-  columnState={columnState}
-  onColumnStateChange={setColumnState}
+  columnStateKey="my-table"
+  columns={columns}
   ...
 />
 
@@ -408,7 +408,7 @@ const stateProps = {
   aria-label="My items" enableSorting />
 ```
 
-For fully controlled state, use `useColumnState` with `columnState` / `onColumnStateChange` on `Table` and launch the modal directly with `columnManagementModalLauncher` from `~/components/ColumnManagement/ColumnManagementModal`.
+For custom modal integration, use `useColumnState` with the same `columnStateKey` and defaults as `Table`, then pass its `columnState` and `setColumnState` (as `onSave`) to `columnManagementModalLauncher` from `~/components/ColumnManagement/ColumnManagementModal`. `Table` does not expose controlled column-state props.
 
 **Key behaviors:**
 
@@ -454,10 +454,10 @@ Sorting, infinite scroll, column persistence, column management, filtering:
 import {
   Table,
   TableContainer,
-  useColumnState,
+  SortDropdown,
   type ColumnDefinition,
-  type ColumnState,
 } from '~/shared/components/TableV2';
+import ColumnManagement from '~/components/ColumnManagement/ColumnManagement';
 import {
   defineFilters,
   useFilterState,
@@ -495,8 +495,6 @@ const MyListView = () => {
     },
   ];
 
-  const { columnState, setColumnState } = useColumnState('my-table', columns);
-
   return (
     <TableContainer
       data={filteredData}
@@ -505,9 +503,13 @@ const MyListView = () => {
       emptyState={<FilteredEmptyState onClear={clearAll} />}
       noDataState={<EmptyState>No items yet</EmptyState>}
       toolbar={
-        isFiltered || (data ?? []).length > 0 ? (
-          <FilterToolbar configs={filterConfigs} />
-        ) : undefined
+        <>
+          {isFiltered || (data ?? []).length > 0 ? (
+            <FilterToolbar configs={filterConfigs} />
+          ) : null}
+          <SortDropdown columns={columns} columnStateKey="my-table" />
+          <ColumnManagement columns={columns} columnStateKey="my-table" showColumnManagement />
+        </>
       }
     >
       <Table
@@ -516,8 +518,7 @@ const MyListView = () => {
         getRowId={(row) => row.id}
         aria-label="My items"
         enableSorting
-        columnState={columnState}
-        onColumnStateChange={setColumnState}
+        columnStateKey="my-table"
         hasNextPage={hasNextPage}
         isFetchingNextPage={isFetchingNextPage}
         fetchNextPage={fetchNextPage}
