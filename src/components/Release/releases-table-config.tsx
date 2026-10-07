@@ -37,13 +37,11 @@ const pipelineRunCell =
     const { currentNamespace, applicationName } = info.table.options.meta ?? {};
     const releaseApplication =
       info.row.original.metadata?.labels?.[PipelineRunLabel.APPLICATION] ?? applicationName;
-    if (
-      !workspaceName ||
-      !pipelineRunName ||
-      typeof releaseApplication !== 'string' ||
-      !releaseApplication
-    ) {
+    if (!workspaceName || !pipelineRunName) {
       return '-';
+    }
+    if (typeof releaseApplication !== 'string' || !releaseApplication) {
+      return pipelineRunName;
     }
     const backButtonState =
       withBackButton &&

@@ -155,6 +155,21 @@ describe('releases-table-config', () => {
     expect(window.history.state.usr).toBeNull();
   });
 
+  it('should render a pipeline run name as text when application metadata is missing', () => {
+    const releaseWithoutApplication = {
+      ...baseRelease,
+      metadata: {
+        ...baseRelease.metadata,
+        labels: {},
+      },
+    } as ReleaseKind;
+    const pipelineCell = getColumn('tenantPipelineRun')?.cell?.({
+      row: { original: releaseWithoutApplication },
+      table: { options: { meta: {} } },
+    } as never);
+    expect(pipelineCell).toBe('tenant-pr');
+  });
+
   it("should return '-' for missing pipeline runs", () => {
     const releaseWithoutRuns = {
       ...baseRelease,
