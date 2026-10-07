@@ -177,6 +177,7 @@ describe('tekton-results', () => {
       );
     });
   });
+
   describe('expressionsToFilter', () => {
     it('should convert empty expressions', () => {
       expect(expressionsToFilter([])).toEqual('');
@@ -694,17 +695,17 @@ describe('tekton-results', () => {
       });
     });
   });
-});
 
-it('includes integration commit annotations in a group-scoped Tekton Results query', () => {
-  const filter = selectorToFilter({
-    matchLabels: { [PipelineRunLabel.COMPONENT_GROUP]: 'checkout' },
-    filterByCommit: 'sha',
+  it('includes integration commit annotations in a group-scoped Tekton Results query', () => {
+    const filter = selectorToFilter({
+      matchLabels: { [PipelineRunLabel.COMPONENT_GROUP]: 'checkout' },
+      filterByCommit: 'sha',
+    });
+    expect(filter).toContain(
+      'data.metadata.annotations["pac.test.appstudio.openshift.io/sha"] == "sha"',
+    );
+    expect(filter).toContain(
+      'data.metadata.labels["appstudio.openshift.io/component-group"] == "checkout"',
+    );
   });
-  expect(filter).toContain(
-    'data.metadata.annotations["pac.test.appstudio.openshift.io/sha"] == "sha"',
-  );
-  expect(filter).toContain(
-    'data.metadata.labels["appstudio.openshift.io/component-group"] == "checkout"',
-  );
 });
