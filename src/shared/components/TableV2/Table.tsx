@@ -75,6 +75,7 @@ export const Table = <TData,>({
   isFetchingNextPage,
   fetchNextPage,
   columnStateKey,
+  defaultSort,
   scrollElement: scrollElementProp,
 }: TableProps<TData>) => {
   const [tableNode, setTableNode] = useState<HTMLDivElement | null>(null);
@@ -98,7 +99,7 @@ export const Table = <TData,>({
 
   const scrollMargin = useScrollMargin(tableNode, scrollElement);
 
-  const { columnState, setColumnState } = useColumnState(columnStateKey, columns);
+  const { columnState, setColumnState } = useColumnState(columnStateKey, columns, defaultSort);
   const { columnVisibility } = useResponsiveColumns(columns);
 
   const { table, rows } = useTable({
