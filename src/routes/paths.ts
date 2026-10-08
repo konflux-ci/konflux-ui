@@ -181,3 +181,9 @@ export const GROUP_INTEGRATION_TEST_DETAILS_PATH = GROUP_INTEGRATION_TEST_LIST_P
   `:${RouterParams.integrationTestName}`,
 );
 export const DEPENDENCY_SCHEDULE_PATH = buildRoute('dep-updates-schedule');
+
+export const GROUP_RELEASE_LIST_PATH = GROUP_DETAILS_PATH.extend('releases');
+
+export const GROUP_RELEASE_DETAILS_PATH = GROUP_RELEASE_LIST_PATH.extend(
+  `:${RouterParams.releaseName}`,
+);

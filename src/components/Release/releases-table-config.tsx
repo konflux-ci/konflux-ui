@@ -1,6 +1,7 @@
-import { Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
+import { GROUP_RELEASE_DETAILS_PATH, COMPONENT_DETAILS_V2_PATH } from '@routes/paths';
+import { RouterParams } from '@routes/utils';
 import { PipelineRunLabel } from '~/consts/pipelinerun';
-import { COMPONENT_DETAILS_V2_PATH } from '~/routes/paths';
 import { Timestamp } from '~/shared';
 import { defineFilters } from '~/shared/components/Filter';
 import { ColumnDefinition } from '~/shared/components/TableV2';
@@ -22,6 +23,21 @@ export const COMPONENT_GROUP_RELEASES_LIST_COLUMN_STATE_KEY = 'component-group-r
 
 export const RELEASES_LIST_FILTERS = defineFilters<ReleaseKind>()([nameSearchFilter]);
 
+const ReleaseNameLink = ({ release }: { release: ReleaseKind }) => {
+  const { groupName } = useParams<RouterParams>();
+  return (
+    <Link
+      to={GROUP_RELEASE_DETAILS_PATH.createPath({
+        workspaceName: release.metadata.namespace,
+        groupName,
+        releaseName: release.metadata.name,
+      })}
+    >
+      {release.metadata.name}
+    </Link>
+  );
+};
+
 export const RELEASES_LIST_COLUMNS: ColumnDefinition<ReleaseKind>[] = [
   {
     id: 'name',
@@ -30,8 +46,7 @@ export const RELEASES_LIST_COLUMNS: ColumnDefinition<ReleaseKind>[] = [
     accessorFn: (obj) => obj.metadata?.name,
     cell: (info) => {
       const obj = info.row.original;
-      // TODO[KFLUXUI-1719]
-      return obj.metadata?.name;
+      return <ReleaseNameLink release={obj} />;
     },
   },
   {
