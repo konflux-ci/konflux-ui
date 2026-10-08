@@ -111,7 +111,10 @@ describe('ComponentGroupPipelineRunsTab', () => {
       }),
     );
     expect(screen.getByRole('grid', { name: 'Pipeline runs' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'component-build' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'component-build' })).toHaveAttribute(
+      'href',
+      '/ns/test-ns/pipelineruns/component-build',
+    );
     expect(screen.getByRole('link', { name: 'integration-test' })).toBeInTheDocument();
     for (const header of [
       'Name',
@@ -132,6 +135,29 @@ describe('ComponentGroupPipelineRunsTab', () => {
     mockParams.mockReturnValue({});
     renderTab();
     expect(mockUsePipelineRuns).toHaveBeenCalledWith(null, expect.anything());
+  });
+
+  it('keeps application run links on the existing application route', () => {
+    mockUsePipelineRuns.mockReturnValue([
+      [
+        {
+          ...runs[0],
+          metadata: {
+            ...runs[0].metadata,
+            labels: { ...runs[0].metadata.labels, [PipelineRunLabel.APPLICATION]: 'app' },
+          },
+        },
+      ],
+      true,
+      undefined,
+      undefined,
+      { hasNextPage: false, isFetchingNextPage: false },
+    ]);
+    renderTab();
+    expect(screen.getByRole('link', { name: 'component-build' })).toHaveAttribute(
+      'href',
+      '/ns/test-ns/applications/app/pipelineruns/component-build',
+    );
   });
 
   it('shows the loading state', () => {
@@ -208,6 +234,7 @@ describe('ComponentGroupPipelineRunsTab', () => {
       }),
     );
   });
+
   it('shows a clearable empty state when API filters return no runs', async () => {
     const user = userEvent.setup();
     mockUsePipelineRuns.mockReturnValue([

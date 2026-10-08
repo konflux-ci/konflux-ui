@@ -42,7 +42,7 @@ const PipelineRunVisualization: React.FC<{
         layoutFactory={layoutFactory}
         model={model}
       >
-        <PipelineRunSidePanel scrollIntoView={scrollIntoView} />
+        <PipelineRunSidePanel scrollIntoView={scrollIntoView} pipelineRun={pipelineRun} />
       </VisualizationFactory>
     </div>
   );

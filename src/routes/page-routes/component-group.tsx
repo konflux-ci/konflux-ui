@@ -1,6 +1,7 @@
 import { LoaderFunctionArgs } from 'react-router-dom';
 import {
   GROUP_DETAILS_PATH,
+  GROUP_RELEASE_DETAILS_PATH,
   GROUP_SNAPSHOT_DETAILS_PATH,
   GROUPS_PATH,
   GROUP_INTEGRATION_TEST_DETAILS_PATH,
@@ -20,15 +21,39 @@ import {
   IntegrationTestOverviewTab,
   IntegrationTestPipelineRunTabV2,
 } from '~/components/IntegrationTests/IntegrationTestDetails';
+import { groupReleaseDetailsLoader } from '~/components/Releases/groupReleaseDetailsLoader';
+import GroupReleaseDetailsView from '~/components/Releases/GroupReleaseDetailsView';
+import GroupReleaseOverviewTab from '~/components/Releases/GroupReleaseOverviewTab';
+import GroupReleasePipelineRunsTab from '~/components/Releases/GroupReleasePipelineRunsTab';
+import ReleaseArtifactsTab from '~/components/Releases/ReleaseArtifactsTab';
 import {
   GroupSnapshotDetailsView,
   snapshotDetailsViewLoader,
   GroupSnapshotOverview,
 } from '~/components/SnapshotDetails';
+import SnapshotPipelineRunsTabV2 from '~/components/SnapshotDetails/tabs/SnapshotPipelineRunsTabV2';
 import { snapshotsTabLoader } from '~/components/Snapshots/SnapshotsListView/SnapshotsTab';
 import { ensureFeatureFlagOnLoader } from '~/feature-flags/utils';
 
 const componentGroupRoutes = [
+  {
+    path: GROUP_RELEASE_DETAILS_PATH.path,
+    loader: groupReleaseDetailsLoader,
+    errorElement: <RouteErrorBoundry />,
+    element: <GroupReleaseDetailsView />,
+    children: [
+      { index: true, element: <GroupReleaseOverviewTab /> },
+      { path: 'pipelineruns', element: <GroupReleasePipelineRunsTab /> },
+      { path: 'artifacts', element: <ReleaseArtifactsTab /> },
+      {
+        path: 'yaml',
+        async lazy() {
+          const { ReleaseYamlTab } = await import('~/components/Releases/ReleaseYamlTab');
+          return { element: <ReleaseYamlTab /> };
+        },
+      },
+    ],
+  },
   {
     path: GROUP_SNAPSHOT_DETAILS_PATH.path,
     loader: (args: LoaderFunctionArgs) => {
@@ -37,7 +62,10 @@ const componentGroupRoutes = [
     },
     errorElement: <RouteErrorBoundry />,
     element: <GroupSnapshotDetailsView />,
-    children: [{ index: true, element: <GroupSnapshotOverview /> }],
+    children: [
+      { index: true, element: <GroupSnapshotOverview /> },
+      { path: 'pipelineruns', element: <SnapshotPipelineRunsTabV2 /> },
+    ],
   },
   {
     path: GROUPS_PATH.path,

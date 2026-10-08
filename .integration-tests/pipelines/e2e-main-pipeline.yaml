@@ -47,8 +47,8 @@ spec:
       type: string
       default: build-credentials
     - name: spec-file
-      description: 'Cypress test spec file to run (for debugging, run single test)'
-      default: 'tests/basic-happy-path.spec.ts'
+      description: 'Cypress test spec file(s) to run (comma-separated; override for a single test)'
+      default: 'tests/component-lifecycle.spec.ts,tests/environment-config.spec.ts'
       type: string
     - name: job-type
       description: 'Type of job (pr-check, periodic-local, periodic-stage)'
