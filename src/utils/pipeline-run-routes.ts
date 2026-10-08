@@ -7,9 +7,11 @@ import {
   GROUP_PIPELINE_RUNS_PATH,
   GROUPS_PATH,
   NAMESPACE_PIPELINE_RUN_DETAILS_PATH,
+  NAMESPACE_TASK_RUN_DETAILS_PATH,
   PIPELINE_RUNS_DETAILS_PATH,
+  TASKRUN_DETAILS_PATH,
 } from '~/routes/paths';
-import { PipelineRunKind } from '~/types';
+import { PipelineRunKind, TaskRunKind, TektonResourceLabel } from '~/types';
 
 export const getPipelineRunDetailsPath = (run: PipelineRunKind): string => {
   const applicationName = run.metadata.labels?.[PipelineRunLabel.APPLICATION];
@@ -20,6 +22,23 @@ export const getPipelineRunDetailsPath = (run: PipelineRunKind): string => {
   return applicationName
     ? PIPELINE_RUNS_DETAILS_PATH.createPath({ ...params, applicationName })
     : NAMESPACE_PIPELINE_RUN_DETAILS_PATH.createPath(params);
+};
+
+export const getTaskRunDetailsPath = (
+  task: TaskRunKind,
+  namespace: string,
+  parent?: PipelineRunKind,
+): string | undefined => {
+  const applicationName = (parent ?? task).metadata.labels?.[PipelineRunLabel.APPLICATION];
+  const params = { workspaceName: namespace, taskRunName: task.metadata.name };
+  if (applicationName) return TASKRUN_DETAILS_PATH.createPath({ ...params, applicationName });
+  const pipelineRunName =
+    parent?.metadata.name ||
+    task.metadata.labels?.[TektonResourceLabel.pipelinerun] ||
+    task.metadata.ownerReferences?.find((owner) => owner.kind === 'PipelineRun')?.name;
+  return pipelineRunName
+    ? NAMESPACE_TASK_RUN_DETAILS_PATH.createPath({ ...params, pipelineRunName })
+    : undefined;
 };
 
 export const getPipelineRunBreadcrumbs = (run: PipelineRunKind) => {
