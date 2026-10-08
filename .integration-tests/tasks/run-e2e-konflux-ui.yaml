@@ -29,7 +29,7 @@ spec:
       default: 'github-credentials'
     - name: spec-file
       type: string
-      default: 'tests/basic-happy-path.spec.ts'
+      default: 'tests/component-lifecycle.spec.ts,tests/environment-config.spec.ts'
     - name: oci-ref
       type: string
       description: 'OCI repository to store test artifacts'
@@ -82,7 +82,8 @@ spec:
       results:
         - name: base-url
           description: 'Konflux base URL for Cypress tests (https://<kind-ip>:9443)'
-      image: docker.io/bitnami/kubectl@sha256:95de17e6eb92da83a58c90a9df0c4cede634f898d2e6b92ea04f4a6ee6ace08d # kubectl 1.36.3
+      # Same image as deploy-konflux-ci — avoid docker.io/bitnami (hangs / pull issues).
+      image: quay.io/konflux-ci/tekton-integration-catalog/utils@sha256:79707a56aa34a59f8ebb97db855114b840cbbf60bece4a0edf8ef8c7d7d5acd1
       env:
         - name: TEKTON_NAMESPACE
           valueFrom:
