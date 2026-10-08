@@ -16,6 +16,7 @@ import {
   useDownloadYamlActionLazy,
   usePipelinererunAction,
   usePipelinerunActions,
+  usePipelinerunActionsLazy,
   useRerunActionLazy,
 } from '../pipelinerun-actions';
 
@@ -466,6 +467,43 @@ describe('usePipelinerunActions', () => {
         disabledTooltip: "You don't have access to rerun",
       }),
     );
+  });
+});
+
+describe('usePipelinerunActionsLazy', () => {
+  beforeEach(() => {
+    useAccessReviewForModelMock.mockReturnValue([true, true]);
+    useNavigateMock.mockReturnValue(jest.fn());
+    useComponentMock.mockReturnValue([mockComponent, true]);
+    mockUseSnapshots.mockReturnValue([{ metadata: { name: 'snp1' } }, true]);
+  });
+
+  it('composes View vulnerabilities between Cancel and Download YAML', () => {
+    const { result } = renderHook(() =>
+      usePipelinerunActionsLazy({
+        metadata: {
+          name: 'pipeline-run-1',
+          namespace: 'test-ns',
+          labels: {
+            [PipelineRunLabel.APPLICATION]: 'test-app',
+            [PipelineRunLabel.PIPELINE_TYPE]: 'build',
+          },
+        },
+        status: {
+          completionTime: '2026-10-04T10:00:00Z',
+          conditions: [{ type: 'Succeeded', status: 'True' }],
+          pipelineSpec: { tasks: [{ name: 'roxctl-scan' }] },
+        },
+      } as unknown as PipelineRunKind),
+    );
+
+    expect(result.current[0].map((action) => action.label)).toEqual([
+      'Rerun',
+      'Stop',
+      'Cancel',
+      'View vulnerabilities',
+      'Download YAML',
+    ]);
   });
 });
 

@@ -125,6 +125,9 @@ export const PIPELINE_RUNS_LOG_PATH = PIPELINE_RUNS_DETAILS_PATH.extend('logs');
 
 export const PIPELINE_RUNS_SECURITY_PATH = PIPELINE_RUNS_DETAILS_PATH.extend('security');
 
+export const PIPELINE_RUNS_VULNERABILITIES_PATH =
+  PIPELINE_RUNS_DETAILS_PATH.extend('vulnerabilities');
+
 // TaskRun routes
 
 export const TASKRUN_LIST_PATH = APPLICATION_DETAILS_PATH.extend('taskruns');

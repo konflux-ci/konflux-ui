@@ -2,6 +2,7 @@ import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { TrackEvents } from '~/analytics';
 import { useTrackAnalyticsEvent } from '~/analytics/hooks';
+import { useViewVulnerabilitiesActionLazy } from '~/components/PipelineRun/PipelineRunListView/useViewVulnerabilitiesAction';
 import { useSnapshot } from '~/hooks/useSnapshots';
 import { PIPELINE_RUNS_LIST_PATH } from '~/routes/paths';
 import { useNamespace } from '~/shared/providers/Namespace';
@@ -256,8 +257,7 @@ export const useRerunActionLazy = (pipelineRun: PipelineRunKind): LazyActionHook
   const snapshotName = labels?.[PipelineRunLabel.SNAPSHOT];
   const applicationName = labels?.[PipelineRunLabel.APPLICATION];
   const eventType = labels?.[PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL]?.toLowerCase() as
-    | PipelineRunEventType
-    | undefined;
+    PipelineRunEventType | undefined;
   const isPR = eventType === PipelineRunEventType.PULL;
   const isPushBuildType =
     eventType === PipelineRunEventType.PUSH || eventType === PipelineRunEventType.INCOMING;
@@ -464,7 +464,8 @@ export const usePipelinerunActionsLazy = (
 ): LazyActionHookResult<Action> => {
   const rerunHook = useRerunActionLazy(pipelineRun);
   const stopCancelHook = useStopCancelActionsLazy(pipelineRun);
+  const viewVulnerabilitiesHook = useViewVulnerabilitiesActionLazy(pipelineRun);
   const downloadYamlHook = useDownloadYamlActionLazy(pipelineRun);
 
-  return composeLazyActions(rerunHook, stopCancelHook, downloadYamlHook);
+  return composeLazyActions(rerunHook, stopCancelHook, viewVulnerabilitiesHook, downloadYamlHook);
 };
