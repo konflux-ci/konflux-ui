@@ -65,10 +65,10 @@ For headless execution:
 $ yarn run cy:run
 ```
 
-Runs all available specs, by default in the Electron browser. Flags that might come in handy are `-b` to specify the browser, or `-s` to filter spec files based on a glob pattern. For example, running the basic happy path spec in Chrome:
+Runs all available specs, by default in the Electron browser. Flags that might come in handy are `-b` to specify the browser, or `-s` to filter spec files based on a glob pattern. For example, running the default suite specs in Chrome:
 
 ```
-$ yarn run cy:run -b chrome -s 'tests/basic-happy-path*'
+$ yarn run cy:run -b chrome -s 'tests/component-lifecycle.spec.ts,tests/environment-config.spec.ts'
 ```
 
 ### Running test from source against local Konflux UI and local Konflux backend
@@ -117,7 +117,7 @@ The cypress run command can be customized using flags, as per the [documentation
 For example, we can limit what spec files will be run:
 
 ```
-$ podman run -e CYPRESS_KONFLUX_BASE_URL=https://<HOSTNAME>/hac/application-pipeline quay.io/konflux_ui_qe/konflux-ui-tests:latest --spec tests/basic-happy-path.spec.ts
+$ podman run -e CYPRESS_KONFLUX_BASE_URL=https://<HOSTNAME>/hac/application-pipeline quay.io/konflux_ui_qe/konflux-ui-tests:latest --spec tests/component-lifecycle.spec.ts,tests/environment-config.spec.ts
 ```
 
 Or if instead of using container environment variables, you prefer to pass them directly to cypress:
