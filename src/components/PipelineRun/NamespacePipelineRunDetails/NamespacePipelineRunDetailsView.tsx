@@ -4,6 +4,7 @@ import { DetailsPage } from '~/components/DetailsPage';
 import { usePipelinererunAction } from '~/components/PipelineRun/PipelineRunListView/pipelinerun-actions';
 import { StatusIconWithTextLabel } from '~/components/topology/StatusIcon';
 import { PipelineRunLabel, runStatus } from '~/consts/pipelinerun';
+import { CONFORMA_TASK, ROXCTL_SCAN_TASK } from '~/consts/security';
 import { usePipelineRunV2 } from '~/hooks/usePipelineRunsV2';
 import { useStatusOnFavicon } from '~/hooks/useStatusOnFavicon';
 import { PipelineRunModel } from '~/models';
@@ -11,9 +12,10 @@ import { NAMESPACE_PIPELINE_RUN_DETAILS_PATH } from '~/routes/paths';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { downloadYamlAction } from '~/utils/common-utils';
+import { isResourceEnterpriseContract } from '~/utils/conforma-utils';
 import { pipelineRunCancel, pipelineRunStop } from '~/utils/pipeline-actions';
 import { getPipelineRunBreadcrumbs, getPipelineRunDetailsPath } from '~/utils/pipeline-run-routes';
-import { pipelineRunStatus } from '~/utils/pipeline-utils';
+import { isTaskRunInPipelineRun, pipelineRunStatus } from '~/utils/pipeline-utils';
 import { useAccessReviewForModel } from '~/utils/rbac';
 
 const NamespacePipelineRunDetailsView = () => {
@@ -64,6 +66,12 @@ const NamespacePipelineRunDetailsView = () => {
         { key: 'index', label: 'Details', isFilled: true },
         { key: 'taskruns', label: 'Task runs' },
         { key: 'logs', label: 'Logs', isFilled: true },
+        ...(isResourceEnterpriseContract(run) || isTaskRunInPipelineRun(run, CONFORMA_TASK)
+          ? [{ key: 'security', label: 'Security' }]
+          : []),
+        ...(isTaskRunInPipelineRun(run, ROXCTL_SCAN_TASK)
+          ? [{ key: 'vulnerabilities', label: 'Vulnerabilities' }]
+          : []),
       ]}
       actions={[
         {

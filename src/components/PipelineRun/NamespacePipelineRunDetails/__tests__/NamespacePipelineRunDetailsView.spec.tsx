@@ -111,4 +111,31 @@ describe('NamespacePipelineRunDetailsView', () => {
       'true',
     );
   });
+
+  it('shows security and vulnerabilities tabs for matching tasks and uses namespace URLs', async () => {
+    const user = userEvent.setup();
+    jest.mocked(usePipelineRunV2).mockReturnValue([
+      {
+        ...run,
+        status: {
+          ...run.status,
+          pipelineSpec: { tasks: [{ name: 'verify-conforma' }, { name: 'roxctl-scan' }] },
+        },
+      },
+      true,
+      undefined,
+    ]);
+    renderWithQueryClientAndRouter(<NamespacePipelineRunDetailsView />);
+    await user.click(screen.getByRole('tab', { name: 'Security' }));
+    expect(window.location.pathname).toBe('/ns/team/pipelineruns/build-1/security');
+    await user.click(screen.getByRole('tab', { name: 'Vulnerabilities' }));
+    expect(window.location.pathname).toBe('/ns/team/pipelineruns/build-1/vulnerabilities');
+  });
+
+  it('hides security tabs when the pipeline has no matching tasks', () => {
+    jest.mocked(usePipelineRunV2).mockReturnValue([{ ...run, status: undefined }, true, undefined]);
+    renderWithQueryClientAndRouter(<NamespacePipelineRunDetailsView />);
+    expect(screen.queryByRole('tab', { name: 'Security' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('tab', { name: 'Vulnerabilities' })).not.toBeInTheDocument();
+  });
 });

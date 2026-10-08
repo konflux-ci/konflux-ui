@@ -3,6 +3,7 @@ import { Bullseye, Spinner } from '@patternfly/react-core';
 import { DetailsPage } from '~/components/DetailsPage';
 import { StatusIconWithTextLabel } from '~/components/StatusIcon/StatusIcon';
 import { PipelineRunLabel } from '~/consts/pipelinerun';
+import { CONFORMA_TASK, ROXCTL_SCAN_TASK } from '~/consts/security';
 import { usePipelineRunV2 } from '~/hooks/usePipelineRunsV2';
 import { useStatusOnFavicon } from '~/hooks/useStatusOnFavicon';
 import { useTaskRunV2 } from '~/hooks/useTaskRunsV2';
@@ -11,6 +12,7 @@ import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { TektonResourceLabel } from '~/types';
 import { downloadYamlAction } from '~/utils/common-utils';
+import { isResourceEnterpriseContract } from '~/utils/conforma-utils';
 import {
   getPipelineRunBreadcrumbs,
   getPipelineRunDetailsPath,
@@ -78,6 +80,13 @@ const NamespaceTaskRunDetailsView = () => {
       tabs={[
         { key: 'index', label: 'Details' },
         { key: 'logs', label: 'Logs', isFilled: true },
+        ...(isResourceEnterpriseContract(task) ||
+        task.metadata.labels?.[TektonResourceLabel.pipelineTask] === CONFORMA_TASK
+          ? [{ key: 'security', label: 'Security' }]
+          : []),
+        ...(task.metadata.labels?.[TektonResourceLabel.pipelineTask] === ROXCTL_SCAN_TASK
+          ? [{ key: 'vulnerabilities', label: 'Vulnerabilities' }]
+          : []),
       ]}
     />
   );
