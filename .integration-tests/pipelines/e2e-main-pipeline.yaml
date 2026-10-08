@@ -61,8 +61,8 @@ spec:
     - name: test-image-repository
       description: >-
         E2E test image repository without tag. Must match e2e-output-image from
-        the new-spec-names-e2e build pipeline (e2e-on-pr-<sha> for pull_request, e2e-<sha> for push).
-      default: 'quay.io/redhat-user-workloads-stage/mtakac-tenant/new-spec-names-e2e'
+        the konflux-ui build pipeline (e2e-on-pr-<sha> for pull_request, e2e-<sha> for push).
+      default: 'quay.io/redhat-user-workloads/konflux-ui-tenant/konflux-ui/konflux-ui'
       type: string
   tasks:
     - name: test-metadata
