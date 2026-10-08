@@ -82,7 +82,6 @@ spec:
       results:
         - name: base-url
           description: 'Konflux base URL for Cypress tests (https://<kind-ip>:9443)'
-      # Same image as deploy-konflux-ci — avoid docker.io/bitnami (hangs / pull issues).
       image: quay.io/konflux-ci/tekton-integration-catalog/utils@sha256:79707a56aa34a59f8ebb97db855114b840cbbf60bece4a0edf8ef8c7d7d5acd1
       env:
         - name: TEKTON_NAMESPACE
