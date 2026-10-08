@@ -4,8 +4,9 @@ import userEvent from '@testing-library/user-event';
 import { NuqsTestingAdapter } from 'nuqs/adapters/testing';
 import { ComponentGroupPipelineRunsTab } from '~/components/ComponentGroups/ComponentGroupDetails/tabs/ComponentGroupPipelineRunsTab';
 import { PipelineRunLabel, PipelineRunType, runStatus } from '~/consts/pipelinerun';
+import { useComponentGroup } from '~/hooks/useComponentGroups';
 import { usePipelineRunsV2 } from '~/hooks/usePipelineRunsV2';
-import { PipelineRunKind } from '~/types';
+import { ComponentGroupKind, PipelineRunKind } from '~/types';
 import {
   createUseParamsMock,
   mockUseNamespaceHook,
@@ -15,6 +16,7 @@ import {
 
 jest.mock('@tanstack/react-virtual', () => ({ useVirtualizer: jest.fn() }));
 jest.mock('~/hooks/useTaskRunsV2', () => ({ useTaskRunsForPipelineRuns: () => [[], true] }));
+jest.mock('~/hooks/useComponentGroups', () => ({ useComponentGroup: jest.fn() }));
 jest.mock('~/hooks/usePipelineRunsV2', () => ({ usePipelineRunsV2: jest.fn() }));
 jest.mock('~/hooks/useScanResults', () => ({ useKarchScanResults: () => [null, true] }));
 jest.mock('~/hooks/usePipelineRunTestOutputResult', () => ({
@@ -28,6 +30,22 @@ jest.mock('~/feature-flags/hooks', () => ({
   IfFeature: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
+const mockUseComponentGroup = jest.mocked(useComponentGroup);
+const group: ComponentGroupKind = {
+  apiVersion: 'appstudio.redhat.com/v1beta2',
+  kind: 'ComponentGroup',
+  metadata: { name: 'test-group' },
+  spec: {
+    components: [
+      { name: 'my-component', componentVersion: { name: 'main', version: 'git-revision' } },
+      { name: 'other-component', componentVersion: { name: 'release' } },
+    ],
+  },
+};
+const componentExpressions = [
+  { key: PipelineRunLabel.COMPONENT, operator: 'In', values: ['my-component', 'other-component'] },
+  { key: PipelineRunLabel.COMPONENT_VERSION, operator: 'In', values: ['main', 'release'] },
+];
 const mockUsePipelineRuns = jest.mocked(usePipelineRunsV2);
 const mockParams = createUseParamsMock({ groupName: 'test-group' });
 mockUseNamespaceHook('test-ns');
@@ -41,8 +59,8 @@ const runs: PipelineRunKind[] = [
       namespace: 'test-ns',
       uid: 'build-uid',
       labels: {
-        [PipelineRunLabel.COMPONENT_GROUP]: 'test-group',
         [PipelineRunLabel.COMPONENT]: 'my-component',
+        [PipelineRunLabel.COMPONENT_VERSION]: 'main',
         [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.BUILD,
       },
     },
@@ -61,6 +79,8 @@ const runs: PipelineRunKind[] = [
       uid: 'test-uid',
       labels: {
         [PipelineRunLabel.COMPONENT_GROUP]: 'test-group',
+        [PipelineRunLabel.COMPONENT]: 'other-component',
+        [PipelineRunLabel.COMPONENT_VERSION]: 'release',
         [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.TEST,
       },
     },
@@ -90,6 +110,7 @@ describe('ComponentGroupPipelineRunsTab', () => {
       removeEventListener: jest.fn(),
     }));
     mockParams.mockReturnValue({ groupName: 'test-group' });
+    mockUseComponentGroup.mockReturnValue([group, true, undefined]);
     mockUsePipelineRuns.mockReturnValue([
       runs,
       true,
@@ -99,14 +120,13 @@ describe('ComponentGroupPipelineRunsTab', () => {
     ]);
   });
 
-  it('fetches only the current component group and renders pipeline run columns', () => {
+  it('fetches component and version labels without requiring a group label and renders columns', () => {
     renderTab();
     expect(mockUsePipelineRuns).toHaveBeenCalledWith(
       'test-ns',
       expect.objectContaining({
         selector: {
-          matchLabels: { [PipelineRunLabel.COMPONENT_GROUP]: 'test-group' },
-          matchExpressions: [],
+          matchExpressions: componentExpressions,
         },
       }),
     );
@@ -135,6 +155,84 @@ describe('ComponentGroupPipelineRunsTab', () => {
     mockParams.mockReturnValue({});
     renderTab();
     expect(mockUsePipelineRuns).toHaveBeenCalledWith(null, expect.anything());
+  });
+
+  it('removes runs whose individual labels match but whose pair is outside the group', () => {
+    const mismatched = {
+      ...runs[0],
+      metadata: {
+        ...runs[0].metadata,
+        name: 'cross-pair',
+        uid: 'cross-pair',
+        labels: { ...runs[0].metadata.labels, [PipelineRunLabel.COMPONENT_VERSION]: 'release' },
+      },
+    };
+    mockUsePipelineRuns.mockReturnValue([
+      [...runs, mismatched],
+      true,
+      undefined,
+      undefined,
+      { hasNextPage: false, isFetchingNextPage: false },
+    ]);
+    renderTab();
+    expect(screen.getByRole('link', { name: 'component-build' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'cross-pair' })).not.toBeInTheDocument();
+  });
+
+  it('waits for the group before querying runs', () => {
+    mockUseComponentGroup.mockReturnValue([null, false, undefined]);
+    renderTab();
+    expect(mockUsePipelineRuns).toHaveBeenCalledWith(null, expect.anything());
+    expect(screen.getByTestId('table-skeleton')).toBeInTheDocument();
+  });
+
+  it('shows group errors without querying pipeline runs', () => {
+    mockUseComponentGroup.mockReturnValue([null, true, { code: 500 }]);
+    renderTab();
+    expect(mockUsePipelineRuns).toHaveBeenCalledWith(null, expect.anything());
+    expect(screen.getByText('Unable to load component group')).toBeInTheDocument();
+  });
+
+  it.each<{ components: ComponentGroupKind['spec']['components'] }>([
+    { components: [] },
+    { components: [{ name: 'nested', kind: 'componentGroup' }] },
+    { components: [{ name: 'unversioned' }] },
+  ])('shows an empty state without a broad query for group references %j', ({ components }) => {
+    mockUseComponentGroup.mockReturnValue([{ ...group, spec: { components } }, true, undefined]);
+    mockUsePipelineRuns.mockReturnValue([
+      [],
+      false,
+      null,
+      undefined,
+      { hasNextPage: false, isFetchingNextPage: false },
+    ]);
+    renderTab();
+    expect(mockUsePipelineRuns).toHaveBeenCalledWith(null, expect.anything());
+    expect(screen.getByText('No pipeline runs')).toBeInTheDocument();
+  });
+
+  it('keeps older pages reachable when all fetched runs fail exact-pair matching', async () => {
+    const user = userEvent.setup();
+    const fetchNextPage = jest.fn();
+    mockUseComponentGroup.mockReturnValue([
+      {
+        ...group,
+        spec: { components: [{ name: 'my-component', componentVersion: { name: 'release' } }] },
+      },
+      true,
+      undefined,
+    ]);
+    mockUsePipelineRuns.mockReturnValue([
+      runs,
+      true,
+      undefined,
+      fetchNextPage,
+      { hasNextPage: true, isFetchingNextPage: false },
+    ]);
+    renderTab();
+    expect(screen.queryByRole('link', { name: 'component-build' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Load more pipeline runs' }));
+    expect(fetchNextPage).toHaveBeenCalledTimes(1);
   });
 
   it('keeps application run links on the existing application route', () => {
@@ -225,8 +323,8 @@ describe('ComponentGroupPipelineRunsTab', () => {
       'test-ns',
       expect.objectContaining({
         selector: {
-          matchLabels: { [PipelineRunLabel.COMPONENT_GROUP]: 'test-group' },
           matchExpressions: [
+            ...componentExpressions,
             { key: PipelineRunLabel.PIPELINE_TYPE, operator: 'In', values: ['build'] },
             { key: PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL, operator: 'In', values: ['push'] },
           ],
@@ -251,8 +349,7 @@ describe('ComponentGroupPipelineRunsTab', () => {
       'test-ns',
       expect.objectContaining({
         selector: {
-          matchLabels: { [PipelineRunLabel.COMPONENT_GROUP]: 'test-group' },
-          matchExpressions: [],
+          matchExpressions: componentExpressions,
         },
       }),
     );
