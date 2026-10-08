@@ -4,4 +4,4 @@ export const getComponentVersion = (
   component: ComponentKind,
   versionRevision: string,
 ): ComponentVersion | undefined =>
-  component.spec.source?.versions?.find((v) => v.revision === versionRevision);
+  component.spec.source?.versions?.find((v) => v.name === versionRevision);
