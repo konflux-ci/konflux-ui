@@ -1,9 +1,9 @@
 import * as React from 'react';
 import { useParams } from 'react-router-dom';
 import { screen } from '@testing-library/react';
+import { useComponentV2 } from '~/hooks/useComponentsV2';
 import { FLAGS } from '../../../../feature-flags/flags';
 import { useIsOnFeatureFlag, useFeatureFlags } from '../../../../feature-flags/hooks';
-import { useComponent } from '../../../../hooks/useComponents';
 import { renderWithQueryClientAndRouter } from '../../../../unit-test-utils';
 import { mockUseNamespaceHook } from '../../../../unit-test-utils/mock-namespace';
 import ComponentDetailsView from '../ComponentDetailsView';
@@ -13,8 +13,8 @@ jest.mock('react-router-dom', () => ({
   useParams: jest.fn(),
 }));
 
-jest.mock('../../../../hooks/useComponents', () => ({
-  useComponent: jest.fn(),
+jest.mock('~/hooks/useComponentsV2', () => ({
+  useComponentV2: jest.fn(),
 }));
 
 jest.mock('../../../../feature-flags/hooks', () => {
@@ -39,7 +39,7 @@ jest.mock('../../../../feature-flags/hooks', () => {
   };
 });
 
-const useComponentMock = useComponent as jest.Mock;
+const useComponentMock = useComponentV2 as jest.Mock;
 const useParamsMock = useParams as jest.Mock;
 const mockUseIsOnFeatureFlag = useIsOnFeatureFlag as jest.Mock;
 const mockUseFeatureFlags = useFeatureFlags as jest.Mock;

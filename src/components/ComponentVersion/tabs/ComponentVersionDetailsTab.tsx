@@ -11,7 +11,7 @@ import {
 import { DetailsSection } from '~/components/DetailsPage';
 import GitRepoLink from '~/components/GitLink/GitRepoLink';
 import LatestPushBuildSection from '~/components/LatestBuild/LatestPushBuildSection';
-import { useComponent } from '~/hooks/useComponents';
+import { useComponentV2 } from '~/hooks/useComponentsV2';
 import { RouterParams } from '~/routes/utils';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
@@ -20,7 +20,7 @@ import { getComponentVersion } from '~/utils/version-utils';
 const ComponentVersionDetailsTab: React.FC = () => {
   const namespace = useNamespace();
   const { componentName, versionRevision } = useParams<RouterParams>();
-  const [component, loaded, componentError] = useComponent(namespace, componentName);
+  const [component, loaded, componentError] = useComponentV2(namespace, componentName);
 
   if (!loaded) {
     return (

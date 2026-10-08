@@ -1,7 +1,7 @@
 import { useParams } from 'react-router-dom';
 import { screen } from '@testing-library/react';
 import ComponentVersionDetailsTab from '~/components/ComponentVersion/tabs/ComponentVersionDetailsTab';
-import { useComponent } from '~/hooks/useComponents';
+import { useComponentV2 } from '~/hooks/useComponentsV2';
 import { ComponentKind, ComponentSpecs } from '~/types';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { renderWithQueryClientAndRouter } from '~/unit-test-utils/rendering-utils';
@@ -12,8 +12,8 @@ jest.mock('react-router-dom', () => ({
   useNavigate: jest.fn(() => jest.fn()),
 }));
 
-jest.mock('~/hooks/useComponents', () => ({
-  useComponent: jest.fn(),
+jest.mock('~/hooks/useComponentsV2', () => ({
+  useComponentV2: jest.fn(),
 }));
 
 jest.mock('~/components/GitLink/GitRepoLink', () => {
@@ -42,7 +42,7 @@ jest.mock('~/components/DetailsPage', () => ({
 }));
 
 const useParamsMock = useParams as jest.Mock;
-const useComponentMock = useComponent as jest.Mock;
+const useComponentMock = useComponentV2 as jest.Mock;
 
 const mockComponent: Partial<ComponentKind> = {
   metadata: {

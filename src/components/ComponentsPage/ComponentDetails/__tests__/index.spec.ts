@@ -1,5 +1,5 @@
+import { ComponentModelV2 } from '~/models';
 import { k8sQueryGetResource } from '../../../../k8s';
-import { ComponentModel } from '../../../../models';
 import { RouterParams } from '../../../../routes/utils';
 import {
   componentDetailsViewLoader,
@@ -20,7 +20,7 @@ jest.mock('../ComponentDetailsView', () => ({
   default: () => null,
 }));
 
-jest.mock('../../../Components/ComponentDetails/tabs/ComponentDetailsTab', () => ({
+jest.mock('~/components/ComponentsPage/ComponentDetails/ComponentDetailsTab', () => ({
   __esModule: true,
   default: () => null,
 }));
@@ -49,7 +49,7 @@ describe('ComponentDetails index', () => {
     });
 
     expect(k8sQueryGetResourceMock).toHaveBeenCalledWith({
-      model: ComponentModel,
+      model: ComponentModelV2,
       queryOptions: {
         ns: 'test-ns',
         name: 'my-component',

@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { screen } from '@testing-library/react';
 import { FLAGS } from '~/feature-flags/flags';
 import { useIsOnFeatureFlag, useFeatureFlags } from '~/feature-flags/hooks';
-import { useComponent } from '~/hooks/useComponents';
+import { useComponentV2 } from '~/hooks/useComponentsV2';
 import { ComponentKind, ComponentSpecs } from '~/types';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { renderWithQueryClientAndRouter } from '~/unit-test-utils/rendering-utils';
@@ -15,8 +15,8 @@ jest.mock('react-router-dom', () => ({
   Outlet: () => <div data-test="outlet" />,
 }));
 
-jest.mock('~/hooks/useComponents', () => ({
-  useComponent: jest.fn(),
+jest.mock('~/hooks/useComponentsV2', () => ({
+  useComponentV2: jest.fn(),
 }));
 
 jest.mock('~/feature-flags/hooks', () => {
@@ -45,7 +45,7 @@ jest.mock('~/hooks/useDocumentTitle', () => ({
 }));
 
 const useParamsMock = useParams as jest.Mock;
-const useComponentMock = useComponent as jest.Mock;
+const useComponentMock = useComponentV2 as jest.Mock;
 const mockUseIsOnFeatureFlag = useIsOnFeatureFlag as jest.Mock;
 const mockUseFeatureFlags = useFeatureFlags as jest.Mock;
 

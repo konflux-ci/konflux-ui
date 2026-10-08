@@ -2,7 +2,7 @@ import React from 'react';
 import { SortByDirection } from '@patternfly/react-table';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
-import { useComponent } from '~/hooks/useComponents';
+import { useComponentV2 } from '~/hooks/useComponentsV2';
 import { useSortedResources } from '~/hooks/useSortedResources';
 import { Table } from '~/shared';
 import FilteredEmptyState from '~/shared/components/empty-state/FilteredEmptyState';
@@ -31,7 +31,7 @@ const ComponentVersionListView: React.FC<
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
   const nameFilter = unparsedFilters.name ? (unparsedFilters.name as string) : '';
 
-  const [component, compLoaded, compError] = useComponent(namespace, componentName);
+  const [component, compLoaded, compError] = useComponentV2(namespace, componentName);
 
   const [activeSortIndex, setActiveSortIndex] = React.useState<number>(SortableHeaders.name);
   const [activeSortDirection, setActiveSortDirection] = React.useState<SortByDirection>(
