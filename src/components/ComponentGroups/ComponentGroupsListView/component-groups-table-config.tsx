@@ -8,25 +8,9 @@ import {
 import { Timestamp } from '~/shared';
 import { defineFilters } from '~/shared/components/Filter';
 import { ColumnDefinition } from '~/shared/components/TableV2';
-import { ComponentGroupKind, ComponentState } from '~/types';
+import { ComponentGroupKind } from '~/types';
+import { getLatestPromotedBuild } from '~/utils/component-group-utils';
 import { textMatch } from '~/utils/text-filter-utils';
-
-const parsePromotedBuildTime = (time?: string): number => {
-  const parsed = Date.parse(time ?? '');
-  return Number.isNaN(parsed) ? Number.NEGATIVE_INFINITY : parsed;
-};
-
-export const getLatestPromotedBuild = (builds: ComponentState[]): ComponentState | undefined =>
-  builds.reduce<ComponentState | undefined>((latest, build) => {
-    if (!latest) {
-      return build;
-    }
-
-    const latestTime = parsePromotedBuildTime(latest.lastPromotedBuildTime);
-    const buildTime = parsePromotedBuildTime(build.lastPromotedBuildTime);
-
-    return buildTime > latestTime ? build : latest;
-  }, undefined);
 
 export const componentGroupsFilterConfig = defineFilters<ComponentGroupKind>()([
   {
