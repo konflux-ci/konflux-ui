@@ -8,14 +8,14 @@ import {
   DescriptionListTerm,
   Spinner,
 } from '@patternfly/react-core';
+import { DetailsSection } from '~/components/DetailsPage';
 import GitRepoLink from '~/components/GitLink/GitRepoLink';
-import LatestBuildSection from '~/components/LatestBuild/LatestBuildSection';
+import LatestPushBuildSection from '~/components/LatestBuild/LatestPushBuildSection';
 import { useComponent } from '~/hooks/useComponents';
 import { RouterParams } from '~/routes/utils';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { getComponentVersion } from '~/utils/version-utils';
-import { DetailsSection } from '../../DetailsPage';
 
 const ComponentVersionDetailsTab: React.FC = () => {
   const namespace = useNamespace();
@@ -73,7 +73,10 @@ const ComponentVersionDetailsTab: React.FC = () => {
             </DescriptionListDescription>
           </DescriptionListGroup>
           <DescriptionListGroup>
-            <LatestBuildSection component={component} version={versionRevision} />
+            <LatestPushBuildSection
+              componentName={component.metadata?.name}
+              version={versionRevision}
+            />
           </DescriptionListGroup>
         </DescriptionList>
       </DetailsSection>

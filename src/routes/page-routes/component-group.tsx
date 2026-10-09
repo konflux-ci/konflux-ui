@@ -1,4 +1,4 @@
-import { LoaderFunctionArgs } from 'react-router-dom';
+import { redirect, type LoaderFunctionArgs } from 'react-router-dom';
 import {
   GROUP_DETAILS_PATH,
   GROUP_RELEASE_DETAILS_PATH,
@@ -8,6 +8,7 @@ import {
 } from '@routes/paths';
 import { RouteErrorBoundry } from '@routes/RouteErrorBoundary';
 import {
+  ComponentGroupComponentsTab,
   ComponentGroupDetailsViewLayout,
   componentGroupDetailsViewLoader,
   ComponentGroupReleasesTab,
@@ -85,7 +86,14 @@ const componentGroupRoutes = [
     errorElement: <RouteErrorBoundry />,
     element: <ComponentGroupDetailsViewLayout />,
     children: [
-      { index: true, element: <ComponentGroupPipelineRunsTab /> },
+      {
+        index: true,
+        loader: () => redirect('components'),
+      },
+      {
+        path: 'components',
+        element: <ComponentGroupComponentsTab />,
+      },
       {
         path: 'integrationtests',
         element: <ComponentGroupIntegrationTestsTab />,
