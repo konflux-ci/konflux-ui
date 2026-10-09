@@ -39,7 +39,7 @@ export const useLatestSuccessfulBuildPipelineRunForComponentV2 = (
   componentName: string,
   version?: string,
 ): [PipelineRunKind, boolean, unknown] => {
-  const [pipelines, loaded, error, getNextPage] = usePipelineRunsV2(
+  const [pipelines, loaded, error, getNextPage, nextPageProps] = usePipelineRunsV2(
     namespace,
     React.useMemo(
       () => ({
@@ -63,13 +63,17 @@ export const useLatestSuccessfulBuildPipelineRunForComponentV2 = (
     [error, loaded, pipelines],
   );
 
+  const hasNextPage = nextPageProps?.hasNextPage ?? false;
+  const isFetchingNextPage = nextPageProps?.isFetchingNextPage ?? false;
   React.useEffect(() => {
-    if (loaded && !error && !latestSuccess && getNextPage) {
+    if (loaded && !error && !latestSuccess && hasNextPage && !isFetchingNextPage && getNextPage) {
       getNextPage();
     }
-  }, [loaded, error, getNextPage, latestSuccess]);
+  }, [loaded, error, getNextPage, latestSuccess, hasNextPage, isFetchingNextPage]);
 
-  return [latestSuccess, loaded, error];
+  const searchComplete =
+    loaded && (!!error || !!latestSuccess || (!hasNextPage && !isFetchingNextPage));
+  return [latestSuccess, searchComplete, error];
 };
 
 export const useLatestPushBuildPipelineRunForComponentV2 = (

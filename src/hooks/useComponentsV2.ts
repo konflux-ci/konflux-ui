@@ -42,7 +42,7 @@ export const useAllComponentsV2 = (
     { select: filterDeletedResources },
   );
 
-  return useMemo(() => [data, !isLoading, error], [data, isLoading, error]);
+  return useMemo(() => [data ?? [], !isLoading, error], [data, isLoading, error]);
 };
 
 export const useComponentsByNameV2 = (
