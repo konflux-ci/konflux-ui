@@ -19,7 +19,7 @@ const deletingComponent = {
 
 beforeEach(() => {
   jest.clearAllMocks();
-  watchMock.mockReturnValue([[component, otherComponent, deletingComponent], true, undefined]);
+  watchMock.mockReturnValue([[component, otherComponent], true, undefined]);
 });
 
 describe('useAllComponentsV2', () => {
@@ -40,7 +40,13 @@ describe('useAllComponentsV2', () => {
         plural: 'components',
         namespaced: true,
       }),
+      { select: expect.any(Function) },
     );
+    const { select } = watchMock.mock.calls[0][2];
+    expect(select([component, otherComponent, deletingComponent])).toEqual([
+      component,
+      otherComponent,
+    ]);
     expect(result.current).toEqual([[component, otherComponent], true, undefined]);
   });
 
@@ -60,7 +66,9 @@ describe('useAllComponentsV2', () => {
   it('handles an empty response and disables fetching without a namespace', () => {
     watchMock.mockReturnValue({ data: undefined, isLoading: false, error: undefined });
     const { result } = renderHook(() => useAllComponentsV2(''));
-    expect(watchMock).toHaveBeenCalledWith(undefined, ComponentModelV2);
+    expect(watchMock).toHaveBeenCalledWith(undefined, ComponentModelV2, {
+      select: expect.any(Function),
+    });
     expect(result.current).toEqual([[], true, undefined]);
   });
 
@@ -85,13 +93,16 @@ describe('useComponentsByNameV2', () => {
     expect(watchMock).toHaveBeenCalledWith(
       expect.objectContaining({ namespace: 'test-ns', watch: true }),
       ComponentModelV2,
+      { select: expect.any(Function) },
     );
   });
 
   it('does not fetch for an empty group', () => {
     watchMock.mockReturnValue({ data: undefined, isLoading: false, error: undefined });
     const { result } = renderHook(() => useComponentsByNameV2('test-ns', [], true));
-    expect(watchMock).toHaveBeenCalledWith(undefined, ComponentModelV2);
+    expect(watchMock).toHaveBeenCalledWith(undefined, ComponentModelV2, {
+      select: expect.any(Function),
+    });
     expect(result.current).toEqual([[], true, undefined]);
   });
 

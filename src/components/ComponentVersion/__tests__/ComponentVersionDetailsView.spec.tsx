@@ -75,7 +75,7 @@ describe('ComponentVersionDetailsView', () => {
   beforeEach(() => {
     useParamsMock.mockReturnValue({
       componentName: 'my-component',
-      versionRevision: 'ver-1.0',
+      versionRevision: 'Version 1.0',
     });
     useComponentMock.mockReturnValue([mockComponent, true, undefined]);
     mockUseIsOnFeatureFlag.mockReturnValue(true);
