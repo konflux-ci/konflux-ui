@@ -155,15 +155,10 @@ const IntegrationTestDetailsView: React.FC<React.PropsWithChildren> = () => {
             label: 'Overview',
             isFilled: true,
           },
-          // Pipeline runs tab is only available in the application context for now
-          ...(!isGroupContext
-            ? [
-                {
-                  key: 'pipelineruns',
-                  label: 'Pipeline runs',
-                },
-              ]
-            : []),
+          {
+            key: 'pipelineruns',
+            label: 'Pipeline runs',
+          },
         ]}
       />
     );

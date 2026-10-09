@@ -1,27 +1,35 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
-import { Bullseye, Spinner, Content, ContentVariants } from '@patternfly/react-core';
+import { Bullseye, Spinner } from '@patternfly/react-core';
+import { SNAPSHOT_DETAILS_PATH, SNAPSHOT_LIST_PATH } from '@routes/paths';
+import { RouterParams } from '@routes/utils';
+import { useApplicationBreadcrumbs } from '~/components/Applications/breadcrumbs/breadcrumb-utils';
+import { DetailsPage } from '~/components/DetailsPage';
+import { createDetailsPageAction } from '~/components/DetailsPage/utils';
+import SnapshotDetailsTitle from '~/components/SnapshotDetails/SnapshotDetailsTitle';
+import { SnapshotLabels } from '~/consts/snapshots';
 import { usePipelineRunV2 } from '~/hooks/usePipelineRunsV2';
+import { useSnapshot } from '~/hooks/useSnapshots';
+import useTriggerReleaseAction from '~/shared/hooks/useTriggerReleaseAction';
+import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
+import { createCommitObjectFromPLR } from '~/utils/commits-utils';
 import { downloadYamlAction } from '~/utils/common-utils';
-import { SnapshotLabels } from '../../consts/snapshots';
-import { useSnapshot } from '../../hooks/useSnapshots';
-import { SNAPSHOT_DETAILS_PATH, SNAPSHOT_LIST_PATH } from '../../routes/paths';
-import { RouterParams } from '../../routes/utils';
-import { Timestamp } from '../../shared/components/timestamp/Timestamp';
-import useTriggerReleaseAction from '../../shared/hooks/useTriggerReleaseAction';
-import { useNamespace } from '../../shared/providers/Namespace';
-import { createCommitObjectFromPLR } from '../../utils/commits-utils';
-import { useApplicationBreadcrumbs } from '../Applications/breadcrumbs/breadcrumb-utils';
-import CommitLabel from '../Commits/commit-label/CommitLabel';
-import { DetailsPage } from '../DetailsPage';
-import { createDetailsPageAction } from '../DetailsPage/utils';
 
 const SnapshotDetailsView: React.FC = () => {
   const namespace = useNamespace();
   const { snapshotName, applicationName } = useParams<RouterParams>();
 
   const applicationBreadcrumbs = useApplicationBreadcrumbs();
+  const snapshotPath = SNAPSHOT_DETAILS_PATH.createPath({
+    workspaceName: namespace,
+    applicationName,
+    snapshotName,
+  });
+  const snapshotsPath = SNAPSHOT_LIST_PATH.createPath({
+    workspaceName: namespace,
+    applicationName,
+  });
 
   const [snapshot, loaded, snapshotError, , , snapshotSource] = useSnapshot(
     namespace,
@@ -69,69 +77,32 @@ const SnapshotDetailsView: React.FC = () => {
         breadcrumbs={[
           ...applicationBreadcrumbs,
           {
-            path: SNAPSHOT_LIST_PATH.createPath({
-              workspaceName: namespace,
-              applicationName,
-            }),
+            path: snapshotsPath,
             name: 'Snapshots',
           },
           {
-            path: SNAPSHOT_DETAILS_PATH.createPath({
-              workspaceName: namespace,
-              applicationName,
-              snapshotName,
-            }),
+            path: snapshotPath,
             name: snapshot.metadata.name,
           },
         ]}
         title={
-          <>
-            <Content component={ContentVariants.h2} data-test="snapshot-name">
-              {snapshotName}
-            </Content>
-            {plrLoaded && !plrLoadError && commit?.sha && (
-              <>
-                <Content component={ContentVariants.p} data-test="snapshot-header-details">
-                  Triggered by {commit.shaTitle}{' '}
-                  <CommitLabel
-                    gitProvider={commit.gitProvider}
-                    sha={commit.sha}
-                    shaURL={commit.shaURL}
-                  />{' '}
-                  at{' '}
-                  <Timestamp
-                    timestamp={snapshot.metadata.creationTimestamp}
-                    className="pf-u-display-inline"
-                  />
-                </Content>
-              </>
-            )}
-          </>
+          <SnapshotDetailsTitle
+            name={snapshotName}
+            creationTimestamp={snapshot.metadata.creationTimestamp}
+            commit={commit || undefined}
+          />
         }
-        baseURL={SNAPSHOT_DETAILS_PATH.createPath({
-          workspaceName: namespace,
-          applicationName,
-          snapshotName,
-        })}
+        baseURL={snapshotPath}
         tabs={[
           {
             key: 'index',
             label: 'Overview',
             isFilled: true,
           },
-          {
-            key: 'pipelineruns',
-            label: 'Pipeline runs',
-          },
+          { key: 'pipelineruns', label: 'Pipeline runs' },
         ]}
         actions={[
-          {
-            key,
-            label,
-            isDisabled,
-            disabledTooltip,
-            onClick: cta,
-          },
+          { key, label, isDisabled, disabledTooltip, onClick: cta },
           createDetailsPageAction(downloadYamlAction(snapshot)),
         ]}
       />

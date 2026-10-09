@@ -11,6 +11,7 @@ import {
 import { CONFORMA_POLICY_AVAILABLE_RULE_COLLECTIONS_URL } from '~/consts/documentation';
 import { useDeepCompareMemoize } from '~/shared';
 import { getErrorState } from '~/shared/utils/error-utils';
+import { TaskRunKind } from '~/types';
 import { CONFORMA_RESULT_STATUS, ConformaResultRow } from '~/types/conforma';
 import { textMatch } from '~/utils/text-filter-utils';
 import FilteredEmptyState from '../../shared/components/empty-state/FilteredEmptyState';
@@ -44,9 +45,9 @@ const getResultsSummary = (CRs, crLoaded) => {
 };
 
 export const SecurityConformaTab: React.FC<
-  React.PropsWithChildren<{ pipelineRunName: string }>
-> = ({ pipelineRunName }) => {
-  const [conformaResult, crLoaded, crError] = useConformaResult(pipelineRunName);
+  React.PropsWithChildren<{ pipelineRunName: string; taskRun?: TaskRunKind }>
+> = ({ pipelineRunName, taskRun }) => {
+  const [conformaResult, crLoaded, crError] = useConformaResult(pipelineRunName, taskRun);
   const componentOptions = React.useMemo(
     () => Array.from(new Set(conformaResult?.map((cr) => cr.component) ?? [])),
     [conformaResult],
@@ -132,7 +133,7 @@ export const SecurityConformaTab: React.FC<
       </Bullseye>
     );
   } else if (crLoaded && !filteredCRResult) {
-    return <SecurityTabEmptyState />;
+    return <SecurityTabEmptyState pipelineRunName={pipelineRunName} />;
   }
 
   return (

@@ -1,31 +1,22 @@
 import * as React from 'react';
 import { Link, useParams } from 'react-router-dom';
-import {
-  DescriptionList,
-  DescriptionListDescription,
-  DescriptionListGroup,
-  DescriptionListTerm,
-  Flex,
-  FlexItem,
-  Skeleton,
-  Title,
-} from '@patternfly/react-core';
+import { Skeleton } from '@patternfly/react-core';
+import { COMMIT_DETAILS_PATH } from '@routes/paths';
+import { RouterParams } from '@routes/utils';
+import CommitLabel from '~/components/Commits/commit-label/CommitLabel';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
+import { ScanStatus } from '~/components/PipelineRun/PipelineRunListView/ScanStatus';
+import SnapshotMetadata from '~/components/SnapshotDetails/SnapshotMetadata';
+import SnapshotComponentsList from '~/components/SnapshotDetails/tabs/SnapshotComponentsList';
+import { SnapshotComponentTableData } from '~/components/SnapshotDetails/tabs/SnapshotComponentsListRow';
+import { SnapshotLabels } from '~/consts/snapshots';
+import { usePipelineRunV2 } from '~/hooks/usePipelineRunsV2';
+import { useScanResults } from '~/hooks/useScanResults';
+import { useScrollToHash } from '~/hooks/useScrollToHash';
+import { useSnapshot } from '~/hooks/useSnapshots';
+import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
-import { SnapshotLabels } from '../../../consts/snapshots';
-import { usePipelineRunV2 } from '../../../hooks/usePipelineRunsV2';
-import { useScanResults } from '../../../hooks/useScanResults';
-import { useScrollToHash } from '../../../hooks/useScrollToHash';
-import { useSnapshot } from '../../../hooks/useSnapshots';
-import { COMMIT_DETAILS_PATH } from '../../../routes/paths';
-import { RouterParams } from '../../../routes/utils';
-import { Timestamp } from '../../../shared/components/timestamp/Timestamp';
-import { useNamespace } from '../../../shared/providers/Namespace';
-import { createCommitObjectFromPLR } from '../../../utils/commits-utils';
-import CommitLabel from '../../Commits/commit-label/CommitLabel';
-import { ScanStatus } from '../../PipelineRun/PipelineRunListView/ScanStatus';
-import SnapshotComponentsList from './SnapshotComponentsList';
-import { SnapshotComponentTableData } from './SnapshotComponentsListRow';
+import { createCommitObjectFromPLR } from '~/utils/commits-utils';
 
 const SnapshotOverviewTab: React.FC = () => {
   const { snapshotName } = useParams<RouterParams>();
@@ -67,74 +58,39 @@ const SnapshotOverviewTab: React.FC = () => {
 
   return (
     <>
-      <Title headingLevel="h4" className="pf-v6-c-title pf-v6-u-mt-lg pf-v6-u-mb-lg" size="lg">
-        Snapshot details
-      </Title>
-      <Flex>
-        <Flex flex={{ default: 'flex_3' }}>
-          <FlexItem>
-            <DescriptionList
-              data-test="snapshot-details"
-              columnModifier={{
-                default: '1Col',
-              }}
-            >
-              <DescriptionListGroup>
-                <DescriptionListTerm>Created at</DescriptionListTerm>
-                <DescriptionListDescription>
-                  <Timestamp timestamp={snapshot?.metadata?.creationTimestamp ?? '-'} />
-                </DescriptionListDescription>
-              </DescriptionListGroup>
-              {commit && (
-                <DescriptionListGroup>
-                  <DescriptionListTerm>Triggered by</DescriptionListTerm>
-                  <DescriptionListDescription data-test="snapshot-commit-link">
-                    <Link
-                      to={COMMIT_DETAILS_PATH.createPath({
-                        workspaceName: namespace,
-                        applicationName: snapshot?.spec?.application,
-                        commitName: commit.sha,
-                      })}
-                      title={commit.displayName || commit.shaTitle}
-                    >
-                      {commit.displayName || commit.shaTitle}{' '}
-                    </Link>
-                    <CommitLabel
-                      gitProvider={commit.gitProvider}
-                      sha={commit.sha}
-                      shaURL={commit.shaURL}
-                    />
-                  </DescriptionListDescription>
-                </DescriptionListGroup>
-              )}
-            </DescriptionList>
-          </FlexItem>
-        </Flex>
-
-        <Flex flex={{ default: 'flex_3' }}>
-          <FlexItem>
-            <DescriptionList
-              data-test="snapshot-details"
-              columnModifier={{
-                default: '1Col',
-              }}
-            >
-              <DescriptionListGroup>
-                <DescriptionListTerm>Vulnerabilities</DescriptionListTerm>
-                <DescriptionListDescription>
-                  {scanError ? (
-                    getErrorState(scanError, loaded, 'vulnerability scan', true)
-                  ) : scanLoaded ? (
-                    <ScanStatus scanResults={scanResults} />
-                  ) : (
-                    <Skeleton />
-                  )}
-                </DescriptionListDescription>
-              </DescriptionListGroup>
-            </DescriptionList>
-          </FlexItem>
-        </Flex>
-      </Flex>
+      <SnapshotMetadata
+        creationTimestamp={snapshot?.metadata?.creationTimestamp}
+        triggeredBy={
+          commit && (
+            <>
+              <Link
+                to={COMMIT_DETAILS_PATH.createPath({
+                  workspaceName: namespace,
+                  applicationName: snapshot?.spec?.application,
+                  commitName: commit.sha,
+                })}
+                title={commit.displayName || commit.shaTitle}
+              >
+                {commit.displayName || commit.shaTitle}{' '}
+              </Link>{' '}
+              <CommitLabel
+                gitProvider={commit.gitProvider}
+                sha={commit.sha}
+                shaURL={commit.shaURL}
+              />
+            </>
+          )
+        }
+        vulnerabilities={
+          scanError ? (
+            getErrorState(scanError, loaded, 'vulnerability scan', true)
+          ) : scanLoaded ? (
+            <ScanStatus scanResults={scanResults} />
+          ) : (
+            <Skeleton />
+          )
+        }
+      />
       <div id="snapshot-components" className="pf-v6-u-mt-lg">
         <FilterContextProvider filterParams={['name']}>
           <SnapshotComponentsList
