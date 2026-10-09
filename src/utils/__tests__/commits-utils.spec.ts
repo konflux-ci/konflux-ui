@@ -64,6 +64,21 @@ describe('commit-utils', () => {
   });
 
   describe('createCommitObjectFromPLR: create commit from plr', () => {
+    it('should recognize a native GitLab merge request as a pull request', () => {
+      const source = pipelineWithCommits[1];
+      const commit = createCommitObjectFromPLR({
+        ...source,
+        metadata: {
+          ...source.metadata,
+          labels: {
+            ...source.metadata.labels,
+            'pipelinesascode.tekton.dev/event-type': 'Merge_Request',
+          },
+        },
+      });
+      expect(commit.isPullRequest).toBe(true);
+    });
+
     it('Should return correct commit', () => {
       const result = createCommitObjectFromPLR(pipelineWithCommits[0]);
       expect(result).not.toBe(null);
@@ -128,6 +143,21 @@ describe('commit-utils', () => {
   });
 
   describe('createCommitObjectFromSnapshot', () => {
+    it('should recognize a native GitLab merge request as a pull request', () => {
+      const source = mockSnapshot;
+      const commit = createCommitObjectFromSnapshot({
+        ...source,
+        metadata: {
+          ...source.metadata,
+          labels: {
+            ...source.metadata.labels,
+            'pac.test.appstudio.openshift.io/event-type': 'Merge_Request',
+          },
+        },
+      });
+      expect(commit.isPullRequest).toBe(true);
+    });
+
     it('Should return correct commit', () => {
       const result = createCommitObjectFromSnapshot(mockSnapshot);
       expect(result).not.toBe(null);

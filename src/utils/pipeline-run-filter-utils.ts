@@ -8,6 +8,7 @@ export const PipelineRunEventTypeLabel: Record<string, string> = {
   [PipelineRunEventType.PUSH]: 'Push',
   [PipelineRunEventType.GITLAB_PUSH]: 'Push',
   [PipelineRunEventType.PULL]: 'Pull Request',
+  [PipelineRunEventType.MERGE_REQUEST]: 'Merge Request',
   [PipelineRunEventType.INCOMING]: 'Incoming',
   [PipelineRunEventType.RETEST]: 'Retest All Comment',
   [PipelineRunEventType.TEST_ALL_COMMENT]: 'Test All Comment',
@@ -15,7 +16,7 @@ export const PipelineRunEventTypeLabel: Record<string, string> = {
 
 /** Converts a raw event-type string (e.g. `'some-new-event'`) into a human-readable label. */
 const humanizeEventType = (raw: string): string => {
-  const str = raw.replace(/-/g, ' ');
+  const str = raw.replace(/[-_]/g, ' ');
   return str.charAt(0).toUpperCase() + str.slice(1);
 };
 

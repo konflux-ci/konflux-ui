@@ -2,6 +2,10 @@ import { PipelineRunEventType } from '~/consts/pipelinerun';
 import { getEventTypeLabel, PIPELINE_RUN_EVENT_TYPE_OPTIONS } from '../pipeline-run-filter-utils';
 
 describe('getEventTypeLabel', () => {
+  it('should label the native GitLab merge request event', () => {
+    expect(getEventTypeLabel('Merge_Request', 'gitlab')).toBe('Merge Request');
+  });
+
   it('should return "Pull Request" for pull_request event with github provider', () => {
     expect(getEventTypeLabel(PipelineRunEventType.PULL, 'github')).toBe('Pull Request');
   });
@@ -30,6 +34,7 @@ describe('getEventTypeLabel', () => {
   it('should humanize unknown event types by replacing hyphens and capitalizing first letter', () => {
     expect(getEventTypeLabel('unknown-event')).toBe('Unknown event');
     expect(getEventTypeLabel('some-new-event')).toBe('Some new event');
+    expect(getEventTypeLabel('some_new_event')).toBe('Some new event');
   });
 
   it('should capitalize a single-word unknown event type', () => {

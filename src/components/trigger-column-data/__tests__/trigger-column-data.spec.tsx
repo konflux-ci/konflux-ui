@@ -1,7 +1,7 @@
 import { screen } from '@testing-library/react';
+import { TriggerColumnData } from '~/components/trigger-column-data/trigger-column-data';
 import { PipelineRunEventType } from '~/consts/pipelinerun';
 import { routerRenderer } from '~/unit-test-utils';
-import { TriggerColumnData } from '../trigger-column-data';
 
 jest.mock('../../../assets/code-commit.svg', () => () => <svg data-test="commit-icon" />);
 jest.mock('../../../assets/code-pull-request.svg', () => () => <svg data-test="pr-icon" />);
@@ -49,20 +49,23 @@ describe('TriggerColumnData', () => {
       expect(prLink).toHaveAttribute('href', 'https://github.com/org/repo/pull/42');
     });
 
-    it('should show !<number> for GitLab merge requests', () => {
-      routerRenderer(
-        <TriggerColumnData
-          commitSha="abc1234567890"
-          eventType={PipelineRunEventType.PULL}
-          shaUrl="https://gitlab.com/org/repo/-/commit/abc1234567890"
-          repoURL="https://gitlab.com/org/repo"
-          prNumber="42"
-          gitProvider="gitlab"
-        />,
-      );
-      const mrLink = screen.getByRole('link', { name: '!42' });
-      expect(mrLink).toHaveAttribute('href', 'https://gitlab.com/org/repo/-/merge_requests/42');
-    });
+    it.each(['pull_request', 'Merge_Request'])(
+      'should show !<number> for GitLab %s events',
+      (eventType) => {
+        routerRenderer(
+          <TriggerColumnData
+            commitSha="abc1234567890"
+            eventType={eventType}
+            shaUrl="https://gitlab.com/org/repo/-/commit/abc1234567890"
+            repoURL="https://gitlab.com/org/repo"
+            prNumber="42"
+            gitProvider="gitlab"
+          />,
+        );
+        const mrLink = screen.getByRole('link', { name: '!42' });
+        expect(mrLink).toHaveAttribute('href', 'https://gitlab.com/org/repo/-/merge_requests/42');
+      },
+    );
 
     it('should show #<number> for Bitbucket pull requests', () => {
       routerRenderer(

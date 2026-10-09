@@ -67,7 +67,8 @@ export const createCommitObjectFromPLR = (plr: PipelineRunKind): Commit => {
     plr.metadata.labels?.[PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL] ||
     plr.metadata.labels?.[PipelineRunLabel.TEST_COMMIT_EVENT_TYPE_LABEL] ||
     plr.metadata.annotations?.[PipelineRunLabel.TEST_COMMIT_EVENT_TYPE_LABEL];
-  const isPullRequest = eventType === PipelineRunEventType.PULL;
+  const isPullRequest =
+    eventType === PipelineRunEventType.PULL || eventType === PipelineRunEventType.MERGE_REQUEST;
 
   return {
     metadata: {
@@ -262,7 +263,7 @@ export const createCommitObjectFromSnapshot = (snapshot: Snapshot): Commit => {
   const pullRequestNumber = snapshot.metadata.labels?.[SnapshotLabels.PAC_PULL_REQUEST_LABEL] ?? '';
   const eventType = snapshot.metadata.labels?.[SnapshotLabels.PAC_EVENT_TYPE_LABEL];
   const isPullRequest =
-    snapshot.metadata.labels?.[SnapshotLabels.PAC_EVENT_TYPE_LABEL] === PipelineRunEventType.PULL;
+    eventType === PipelineRunEventType.PULL || eventType === PipelineRunEventType.MERGE_REQUEST;
 
   return {
     metadata: {

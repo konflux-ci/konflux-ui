@@ -34,7 +34,8 @@ export const TriggerColumnData: React.FC<TriggerColumnData> = ({
     return <>-</>;
   }
 
-  const isPullRequest = eventType === PipelineRunEventType.PULL;
+  const isPullRequest =
+    eventType === PipelineRunEventType.PULL || eventType === PipelineRunEventType.MERGE_REQUEST;
   const icon = <CommitIcon isPR={isPullRequest} className="sha-title-icon" />;
   const pullRequestURL = createPullRequestUrl(repoURL, prNumber);
 

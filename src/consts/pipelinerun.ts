@@ -64,6 +64,7 @@ export enum PipelineRunEventType {
   PUSH = 'push',
   GITLAB_PUSH = 'Push',
   PULL = 'pull_request',
+  MERGE_REQUEST = 'Merge_Request',
   INCOMING = 'incoming',
   RETEST = 'retest-all-comment',
   TEST_ALL_COMMENT = 'test-all-comment',
