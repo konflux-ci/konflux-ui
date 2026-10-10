@@ -48,8 +48,8 @@ export const watchListResource = (
             const newItem = { ...oldItem, ...resource };
 
             // Check if only resourceVersion has changed
-            const oldItemWithoutVersion = { ...oldItem };
-            const newItemWithoutVersion = { ...newItem };
+            const oldItemWithoutVersion = { ...oldItem, metadata: { ...oldItem.metadata } };
+            const newItemWithoutVersion = { ...newItem, metadata: { ...newItem.metadata } };
             delete oldItemWithoutVersion.metadata.resourceVersion;
             delete newItemWithoutVersion.metadata.resourceVersion;
 
