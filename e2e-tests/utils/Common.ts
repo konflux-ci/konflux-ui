@@ -13,7 +13,12 @@ export class Common {
         .contains('a', NavItem[item], { timeout: 30000 })
         .should('be.visible');
     }
-    cy.get(navigation.sideNavigation).contains('a', link).click();
+
+    // Fail fast with a clear signal if the click didn't actually navigate.
+    cy.location('pathname').then((previousPath) => {
+      cy.get(navigation.sideNavigation).contains('a', link).click();
+      cy.location('pathname', { timeout: 10000 }).should('not.eq', previousPath);
+    });
     Common.waitForLoad();
   }
 
