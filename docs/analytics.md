@@ -47,6 +47,7 @@ Components
 | `src/feature-flags/useFeatureFlagAnalytics.ts` | Hook fired from `Panel.tsx` — diffs flag state on panel open vs. close and tracks `feature_flags_changed` |
 | `src/components/Issues/ConformaViolationsCard.tsx` | Tracks `conforma_violations_link_clicked` when a user clicks an application link on the Issues Dashboard Conforma policy results card |
 | `src/components/PipelineRun/PipelineRunListView/pipelinerun-actions.tsx` | Tracks `integration_test_rerun_triggered` when a user clicks Rerun on an integration test pipeline |
+| `src/components/Header/useCopyLoginCommandAnalytics.ts` | Tracks `copy_login_command_clicked` when a user clicks Copy login command in the Help menu |
 
 ---
 
@@ -235,6 +236,12 @@ Fires on click, before navigation. No event-specific properties beyond `userId` 
 - **Detail page** — `usePipelinererunAction` (pipeline run details header action)
 
 Fires on click, before `rerunTestPipeline()` runs. No event-specific properties beyond `userId` (from auth).
+
+---
+
+## Copy Login Command Tracking
+
+`useCopyLoginCommandAnalytics` (used by `Header`) tracks `copy_login_command_clicked` on every click of **Copy login command** in the Help menu. `userMenuOpenedBefore` is `true` if the user opened the user menu earlier on the same URL pathname; it resets on pathname change and after each click.
 
 ---
 

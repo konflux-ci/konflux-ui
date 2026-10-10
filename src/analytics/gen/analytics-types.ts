@@ -2,7 +2,7 @@
  * ⚠️  AUTO-GENERATED FILE — DO NOT EDIT MANUALLY ⚠️
  *
  * This file was generated from the Konflux analytics schema.
- * Schema: https://github.com/konflux-ci/segment-bridge/blob/4d4a967d781a9ce387bd1803a0b7abf356a4c31e/schema/ui.json
+ * Schema: https://github.com/konflux-ci/segment-bridge/blob/6a9a81249ff8222b39ca30256b62facb889fd44b/schema/ui.json
  * Docs:   docs/analytics.md
  *
  * To regenerate, run: yarn generate:analytics-types
@@ -24,7 +24,8 @@ export type KonfluxUISegmentEvents =
   | FeatureFlagsChangedEvent
   | UserJourneyEvent
   | ConformaViolationsLinkClickedEvent
-  | IntegrationTestRerunTriggeredEvent;
+  | IntegrationTestRerunTriggeredEvent
+  | CopyLoginCommandClickedEvent;
 /**
  * Fired when a user successfully authenticates into Konflux
  */
@@ -149,6 +150,19 @@ export type IntegrationTestRerunTriggeredEvent = CommonFields & {
    */
   userId: SHA256Hash;
 };
+/**
+ * Fired when a user clicks 'Copy login command' in the Help (?) menu.
+ */
+export type CopyLoginCommandClickedEvent = CommonFields & {
+  /**
+   * Unique identifier of the user. Obfuscated via sha256 with `clusterId` as salt.
+   */
+  userId: SHA256Hash;
+  /**
+   * True if the user opened the user-name menu on the same page (URL pathname) before clicking. Resets on pathname change and after each click.
+   */
+  userMenuOpenedBefore: boolean;
+};
 
 /**
  * Base fields required on every Segment event sent from Konflux UI
@@ -197,7 +211,6 @@ export interface JourneyStep {
   hiddenMs?: number;
 }
 
-
 /**
  * Event names for Segment track() calls.
  * Values match the x-event-name field in the schema.
@@ -211,6 +224,7 @@ export enum TrackEvents {
   feature_flags_changed_event = 'feature_flags_changed',
   conforma_violations_link_clicked_event = 'conforma_violations_link_clicked',
   integration_test_rerun_triggered_event = 'integration_test_rerun_triggered',
+  copy_login_command_clicked_event = 'copy_login_command_clicked',
 }
 
 /**
@@ -226,4 +240,5 @@ export type EventPropertiesMap = {
   [TrackEvents.feature_flags_changed_event]: Omit<FeatureFlagsChangedEvent, keyof CommonFields>;
   [TrackEvents.conforma_violations_link_clicked_event]: Omit<ConformaViolationsLinkClickedEvent, keyof CommonFields>;
   [TrackEvents.integration_test_rerun_triggered_event]: Omit<IntegrationTestRerunTriggeredEvent, keyof CommonFields>;
+  [TrackEvents.copy_login_command_clicked_event]: Omit<CopyLoginCommandClickedEvent, keyof CommonFields>;
 };

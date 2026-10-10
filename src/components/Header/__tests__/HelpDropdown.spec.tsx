@@ -225,6 +225,35 @@ describe('HelpDropdown Component', () => {
 
       expect(await screen.findByTestId('cli-login-modal')).toBeInTheDocument();
     });
+
+    it('calls onCliLoginClick once when Copy login command is clicked', async () => {
+      const onCliLoginClick = jest.fn();
+      const user = userEvent.setup();
+      renderWithModalProvider(
+        <HelpDropdown onCliLoginClick={onCliLoginClick} />,
+        '/ns/my-tenant/applications',
+      );
+
+      await user.click(screen.getByLabelText('Help menu toggle'));
+      await user.click(await screen.findByRole('menuitem', { name: /Copy login command/i }));
+
+      expect(onCliLoginClick).toHaveBeenCalledTimes(1);
+    });
+
+    it('still opens the CLI login modal when onCliLoginClick is provided', async () => {
+      const onCliLoginClick = jest.fn();
+      const user = userEvent.setup();
+      renderWithModalProvider(
+        <HelpDropdown onCliLoginClick={onCliLoginClick} />,
+        '/ns/my-tenant/applications',
+      );
+
+      await user.click(screen.getByLabelText('Help menu toggle'));
+      await user.click(await screen.findByRole('menuitem', { name: /Copy login command/i }));
+
+      expect(onCliLoginClick).toHaveBeenCalledTimes(1);
+      expect(await screen.findByTestId('cli-login-modal')).toBeInTheDocument();
+    });
   });
 
   describe('About Modal Functionality', () => {
