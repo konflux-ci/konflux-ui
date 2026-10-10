@@ -12,6 +12,8 @@ export const KONFLUX_AI_WELCOME_DESCRIPTION =
 
 export const KONFLUX_AI_MESSAGE_PLACEHOLDER = 'Ask about your Konflux resources...';
 
+export const KONFLUX_AI_ERROR_TITLE = 'Konflux AI is unavailable';
+
 export const KONFLUX_AI_TOGGLE_TOOLTIP = 'Konflux AI assistant';
 
 export const KONFLUX_AI_TOGGLE_BUTTON_LABEL = 'Open Konflux AI assistant';
