@@ -1310,15 +1310,15 @@ __metadata:
   linkType: hard
 
 "cypress-terminal-report@npm:^7.3.0":
-  version: 7.3.3
-  resolution: "cypress-terminal-report@npm:7.3.3"
+  version: 7.4.0
+  resolution: "cypress-terminal-report@npm:7.4.0"
   dependencies:
     chalk: "npm:^4.0.0"
     compare-versions: "npm:^6.1.1"
     superstruct: "npm:0.14.2"
   peerDependencies:
     cypress: ">=10.0.0"
-  checksum: 10/5c8a9a64f39bec3befc96d84d8c424d1786bd48daeae541b67698c9a95a7d25036466859c8a754e69f7cedf21d68780a67e6b6aecf09cb49e921771e66e87fdc
+  checksum: 10/2d6c346a9f9a666cc671ea8c36a91797c40055f5b20a28efc43aa604f909c4035db74c26726825235c772cc40d4db2f4f34f0e29fdecb737e2d1214c58645082
   languageName: node
   linkType: hard
 
