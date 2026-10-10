@@ -88,7 +88,7 @@
     "@commitlint/cli": "^21.0.0",
     "@commitlint/config-conventional": "^21.0.0",
     "@dotenvx/dotenvx": "^2.0.0",
-    "@pmmmwh/react-refresh-webpack-plugin": "^0.5.15",
+    "@pmmmwh/react-refresh-webpack-plugin": "^0.6.0",
     "@size-limit/file": "^13.0.3",
     "@storybook/addon-a11y": "10.6.0",
     "@storybook/addon-webpack5-compiler-swc": "4.0.3",
