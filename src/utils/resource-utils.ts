@@ -11,7 +11,7 @@ import { K8sModelCommon, K8sResourceCommon } from '../types/k8s';
 
 type PipelineRunResource = PipelineRunKindV1Beta1 | PipelineRunKind;
 
-export const filterDeletedResources = <R extends K8sResourceCommon[]>(resources: R) => {
+export const filterDeletedResources = <R extends K8sResourceCommon>(resources: R[]): R[] => {
   return resources.filter((res) => !res.metadata.deletionTimestamp);
 };
 
@@ -58,8 +58,7 @@ export const filterOutStaleRunningPipelineRunsFromArchive = (
 ): PipelineRunResource[] | undefined =>
   pipelineRuns?.filter(
     (pipelinerun) =>
-      pipelinerun?.status?.conditions?.every((c) => !isStaleRunningPipelineRunCondition(c)) ??
-      true,
+      pipelinerun?.status?.conditions?.every((c) => !isStaleRunningPipelineRunCondition(c)) ?? true,
   );
 
 export const filterOutDeletedAndStaleRunningResources = <T extends K8sResourceCommon>(

@@ -1,4 +1,34 @@
-import { ComponentState } from '~/types';
+import { PipelineRunLabel } from '~/consts/pipelinerun';
+import { ComponentReference, ComponentState, PipelineRunKind } from '~/types';
+
+export const getComponentGroupVersionMap = (
+  components: ComponentReference[],
+): Map<string, Set<string>> => {
+  const versions = new Map<string, Set<string>>();
+  for (const component of components) {
+    const version = component.componentVersion?.name;
+    if ((component.kind && component.kind.toLowerCase() !== 'component') || !version) {
+      continue;
+    }
+    if (!versions.has(component.name)) {
+      versions.set(component.name, new Set());
+    }
+    versions.get(component.name).add(version);
+  }
+  return versions;
+};
+
+/** Match exact pairs in O(n), using the group's precomputed version map. */
+export const filterPipelineRunsByComponentVersions = (
+  pipelineRuns: PipelineRunKind[],
+  versions: ReadonlyMap<string, ReadonlySet<string>>,
+): PipelineRunKind[] =>
+  pipelineRuns.filter((run) => {
+    const labels = run.metadata?.labels;
+    const component = labels?.[PipelineRunLabel.COMPONENT];
+    const version = labels?.[PipelineRunLabel.COMPONENT_VERSION];
+    return !!component && !!version && versions.get(component)?.has(version);
+  });
 
 const parsePromotedBuildTime = (time?: string): number => {
   const parsed = Date.parse(time ?? '');

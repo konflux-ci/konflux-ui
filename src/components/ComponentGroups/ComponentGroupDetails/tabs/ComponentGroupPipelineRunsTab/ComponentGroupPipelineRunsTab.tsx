@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { Button, EmptyState, EmptyStateBody } from '@patternfly/react-core';
 import ColumnManagement from '~/components/ColumnManagement/ColumnManagement';
@@ -11,6 +11,7 @@ import {
 import { pipelineRunsColumns } from '~/components/PipelineRunsPage/PipelineRunsColumns';
 import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { IfFeature } from '~/feature-flags/hooks';
+import { useComponentGroup } from '~/hooks/useComponentGroups';
 import { usePipelineRunsV2 } from '~/hooks/usePipelineRunsV2';
 import { RouterParams } from '~/routes/utils';
 import FilteredEmptyState from '~/shared/components/empty-state/FilteredEmptyState';
@@ -25,6 +26,10 @@ import { Table, TableContainer, SortDropdown } from '~/shared/components/TableV2
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { PipelineRunKind } from '~/types';
+import {
+  filterPipelineRunsByComponentVersions,
+  getComponentGroupVersionMap,
+} from '~/utils/component-group-utils';
 import {
   PIPELINE_RUN_TYPE_OPTIONS,
   PIPELINE_RUN_EVENT_TYPE_OPTIONS,
@@ -42,22 +47,41 @@ const filterConfigs = defineFilters<PipelineRunKind>()([
 export const ComponentGroupPipelineRunsTab: React.FC = () => {
   const { groupName } = useParams<RouterParams>();
   const namespace = useNamespace();
+  const [group, groupLoaded, groupError] = useComponentGroup(namespace, groupName, true);
+  const componentVersions = useMemo(
+    () => getComponentGroupVersionMap(group?.spec.components ?? []),
+    [group?.spec.components],
+  );
   const { filterValues, clientFilterValues, clearAll, isFiltered } = useFilterState(filterConfigs);
   const matchExpressions = [
+    { key: PipelineRunLabel.COMPONENT, values: [...componentVersions.keys()] },
+    {
+      key: PipelineRunLabel.COMPONENT_VERSION,
+      values: [...new Set([...componentVersions.values()].flatMap((versions) => [...versions]))],
+    },
     { key: PipelineRunLabel.PIPELINE_TYPE, values: filterValues.type },
     { key: PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL, values: filterValues.eventType },
   ]
     .filter(({ values }) => values?.length > 0)
     .map(({ key, values }) => ({ key, operator: 'In', values }));
 
-  const [pipelineRuns, loaded, error, getNextPage, { hasNextPage, isFetchingNextPage }] =
-    usePipelineRunsV2(groupName ? namespace : null, {
+  const queryEnabled = !!groupName && groupLoaded && !groupError && componentVersions.size > 0;
+  const [fetchedRuns, runsLoaded, error, getNextPage, { hasNextPage, isFetchingNextPage }] =
+    usePipelineRunsV2(queryEnabled ? namespace : null, {
       selector: {
-        matchLabels: { [PipelineRunLabel.COMPONENT_GROUP]: groupName },
         matchExpressions,
       },
     });
+  const pipelineRuns = useMemo(
+    () => filterPipelineRunsByComponentVersions(fetchedRuns, componentVersions),
+    [fetchedRuns, componentVersions],
+  );
+  const loaded = groupLoaded && (!queryEnabled || runsLoaded);
   const { filteredData } = useFilteredData(filterConfigs, pipelineRuns, clientFilterValues);
+
+  if (groupLoaded && (groupError || !group)) {
+    return getErrorState(groupError ?? { code: 404 }, groupLoaded, 'component group');
+  }
 
   if (error && loaded) {
     return getErrorState(error, loaded, 'pipeline runs');

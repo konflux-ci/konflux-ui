@@ -96,12 +96,45 @@ describe('component build pipeline hooks', () => {
       true,
       undefined,
       getNextPage,
-      undefined,
+      { hasNextPage: true, isFetchingNextPage: false },
     ]);
 
-    renderHook(() => useLatestSuccessfulBuildPipelineRunForComponentV2('test-ns', 'component'));
+    const { result } = renderHook(() =>
+      useLatestSuccessfulBuildPipelineRunForComponentV2('test-ns', 'component'),
+    );
 
     expect(getNextPage).toHaveBeenCalledTimes(1);
+    expect(result.current[1]).toBe(false);
+  });
+
+  it.each([
+    { hasNextPage: false, isFetchingNextPage: false, expectedLoaded: true },
+    { hasNextPage: true, isFetchingNextPage: true, expectedLoaded: false },
+  ])('does not request another page for %o', ({ expectedLoaded, ...pagination }) => {
+    const getNextPage = jest.fn();
+    usePipelineRunsV2Mock.mockReturnValue([[], true, undefined, getNextPage, pagination]);
+    const { result } = renderHook(() =>
+      useLatestSuccessfulBuildPipelineRunForComponentV2('test-ns', 'component'),
+    );
+    expect(result.current[1]).toBe(expectedLoaded);
+    expect(getNextPage).not.toHaveBeenCalled();
+  });
+
+  it('ends the search on an API error even when more pages exist', () => {
+    const error = new Error('Unavailable');
+    const getNextPage = jest.fn();
+    usePipelineRunsV2Mock.mockReturnValue([
+      [],
+      true,
+      error,
+      getNextPage,
+      { hasNextPage: true, isFetchingNextPage: false },
+    ]);
+    const { result } = renderHook(() =>
+      useLatestSuccessfulBuildPipelineRunForComponentV2('test-ns', 'component'),
+    );
+    expect(result.current.slice(1)).toEqual([true, error]);
+    expect(getNextPage).not.toHaveBeenCalled();
   });
 
   it('should select only push-triggered builds and preserve the version selector', () => {
