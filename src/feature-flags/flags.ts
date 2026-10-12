@@ -41,111 +41,117 @@ export interface FeatureMeta {
   guard?: GuardSpec;
 }
 
-const KA = 'KubeArchive n/a';
-
 const InternalFLAGS = {
   'column-management': {
     key: 'column-management',
-    description: 'Manage columns',
+    description: 'Enable the "Manage columns" button for tables with more than six columns',
     defaultEnabled: true,
     status: 'ready',
   },
   'system-notifications': {
     key: 'system-notifications',
-    description: 'System notifications',
+    description: 'Enable system notifications badge and notification center',
     defaultEnabled: false,
     status: 'wip',
     guard: {
       allOf: ['isSystemNotificationsAccessible'],
-      failureReason: 'No access',
+      failureReason: 'You do not have permission to access system notifications',
+      visibleInFeatureFlagPanel: true,
     },
   },
   'kubearchive-logs': {
     key: 'kubearchive-logs',
-    description: 'KubeArchive logs',
+    description: 'Use KubeArchive to fetch logs instead of Tekton',
     defaultEnabled: true,
     status: 'ready',
     guard: {
       allOf: ['isKubearchiveEnabled'],
-      failureReason: KA,
+      failureReason: 'KubeArchive is not available on this cluster',
+      visibleInFeatureFlagPanel: true,
     },
   },
   'conforma-policy': {
     key: 'conforma-policy',
-    description: 'Conforma Results',
+    description:
+      'Show the Conforma Results tab on application details and the Conforma violations card on the Issues Dashboard',
     defaultEnabled: false,
     status: 'wip',
     guard: {
-      failureReason: 'Conforma WIP',
+      failureReason: 'Conforma policy view is work in progress',
+      visibleInFeatureFlagPanel: true,
     },
   },
   'taskruns-kubearchive': {
     key: 'taskruns-kubearchive',
-    description: 'KubeArchive TaskRuns',
+    description: 'Use KubeArchive as data source for TaskRuns instead of Tekton Results',
     defaultEnabled: true,
     status: 'ready',
     guard: {
       allOf: ['isKubearchiveEnabled'],
-      failureReason: KA,
+      failureReason: 'KubeArchive is not available on this cluster',
+      visibleInFeatureFlagPanel: true,
     },
   },
   'pipelineruns-kubearchive': {
     key: 'pipelineruns-kubearchive',
-    description: 'KubeArchive PipelineRuns',
+    description: 'Use KubeArchive as data source for PipelineRuns instead of Tekton Results',
     defaultEnabled: true,
     status: 'ready',
     guard: {
       allOf: ['isKubearchiveEnabled'],
-      failureReason: KA,
+      failureReason: 'KubeArchive is not available on this cluster',
+      visibleInFeatureFlagPanel: true,
     },
   },
   'component-model': {
     key: 'component-model',
-    description: 'New component model',
+    description: 'Use new component model',
     defaultEnabled: false,
     status: 'wip',
     guard: {
       allOf: ['isStagingCluster'],
-      failureReason: 'Not staging',
+      failureReason: 'Not a staging cluster',
       visibleInFeatureFlagPanel: false,
     },
   },
   'feedback-section': {
     key: 'feedback-section',
-    description: 'Send feedback',
+    description: 'Provide feedback to the Konflux team',
     defaultEnabled: true,
     status: 'wip',
     guard: {
       allOf: ['isAnalyticsEnabled'],
-      failureReason: 'Analytics off',
+      failureReason: 'Analytics is not enabled on this cluster',
+      visibleInFeatureFlagPanel: true,
     },
   },
   'edit-secret-page': {
     key: 'edit-secret-page',
-    description: 'Edit secrets',
+    description: 'Editing existing secrets',
     defaultEnabled: true,
     status: 'wip',
   },
   'ai-chat': {
     key: 'ai-chat',
-    description: 'AI chat',
+    description: 'Enable Konflux AI chat bot',
     defaultEnabled: false,
     status: 'wip',
     guard: {
       allOf: ['isStagingCluster', 'isLightspeedAvailable'],
-      failureReason: 'Needs staging+AI',
+      failureReason: 'Requires staging environment with Konflux AI available',
       visibleInFeatureFlagPanel: false,
     },
   },
   'pipeline-runs-page': {
     key: 'pipeline-runs-page',
-    description: 'Pipeline Runs page',
+    description:
+      'Cross-application Pipeline Runs page with saved views, advanced filters, and column management',
     defaultEnabled: true,
     status: 'wip',
   },
   mintmaker: {
     key: 'mintmaker',
-    description: 'MintMaker',
+    description: 'Enable MintMaker in the UI',
     defaultEnabled: true,
     status: 'wip',
   },
