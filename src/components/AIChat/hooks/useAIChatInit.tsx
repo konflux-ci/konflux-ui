@@ -1,19 +1,22 @@
 import * as React from 'react';
 import { AIClientError } from '@redhat-cloud-services/ai-client-common';
 import { AIStateContext, useIsInitializing } from '@redhat-cloud-services/ai-react-state';
-import { getUserFacingErrorMessage } from '~/lightspeed/utils';
+import { getUserFacingErrorMessage } from '~/components/AIChat/message-utils';
 import { logger } from '~/monitoring/logger';
 
-type UseLightspeedInitResult = {
+type AIChatInitContextValue = {
   initError?: string;
   isInitializing: boolean;
   retryInit: () => void;
 };
 
+const AIChatInitContext = React.createContext<AIChatInitContextValue | null>(null);
+
 /**
- * Initializes AI client state once under `AIStateProvider` and exposes init errors for retry.
+ * Runs Lightspeed client `init()` once under `AIStateProvider` and shares init state
+ * with chat components via context (avoids double-init and prop drilling).
  */
-export const useLightspeedInit = (): UseLightspeedInitResult => {
+export const AIChatInitProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
   const { getState } = React.useContext(AIStateContext);
   const isInitializing = useIsInitializing();
   const [initError, setInitError] = React.useState<string>();
@@ -36,5 +39,22 @@ export const useLightspeedInit = (): UseLightspeedInitResult => {
     retryInit();
   }, [retryInit]);
 
-  return { initError, isInitializing, retryInit };
+  const value = React.useMemo(
+    () => ({
+      initError,
+      isInitializing: !initError && isInitializing,
+      retryInit,
+    }),
+    [initError, isInitializing, retryInit],
+  );
+
+  return <AIChatInitContext.Provider value={value}>{children}</AIChatInitContext.Provider>;
+};
+
+export const useAIChatInit = (): AIChatInitContextValue => {
+  const value = React.useContext(AIChatInitContext);
+  if (!value) {
+    throw new Error('useAIChatInit must be used within AIChatInitProvider');
+  }
+  return value;
 };

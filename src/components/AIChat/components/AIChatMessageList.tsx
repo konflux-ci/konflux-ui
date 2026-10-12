@@ -2,34 +2,48 @@ import * as React from 'react';
 import ChatbotAlert from '@patternfly/chatbot/dist/dynamic/ChatbotAlert';
 import ChatbotContent from '@patternfly/chatbot/dist/dynamic/ChatbotContent';
 import ChatbotWelcomePrompt from '@patternfly/chatbot/dist/dynamic/ChatbotWelcomePrompt';
-import type { MessageProps } from '@patternfly/chatbot/dist/dynamic/Message';
 import Message from '@patternfly/chatbot/dist/dynamic/Message';
 import MessageBox from '@patternfly/chatbot/dist/dynamic/MessageBox';
+import { useInProgress, useMessages } from '@redhat-cloud-services/ai-react-state';
 import { CHAT_MESSAGE_REHYPE_PLUGINS } from '~/components/AIChat/chatMessagePlugins';
 import {
   KONFLUX_AI_ERROR_TITLE,
   KONFLUX_AI_WELCOME_DESCRIPTION,
   KONFLUX_AI_WELCOME_TITLE,
 } from '~/components/AIChat/const';
+import { useAIChatInit } from '~/components/AIChat/hooks/useAIChatInit';
+import { useAIChatSend } from '~/components/AIChat/hooks/useAIChatSend';
+import { stateMessagesToMessageProps } from '~/components/AIChat/message-utils';
 import { useScrollToBottom } from '~/shared/hooks/useScrollToBottom';
-
-type AIChatMessageListProps = {
-  messages: MessageProps[];
-  announcement?: string;
-  isInitializing: boolean;
-  chatError?: string;
-};
 
 /**
  * Renders chat messages, welcome prompt, error alert, and auto-scrolls on updates.
+ * Reads message/init/send state from AI providers — no props from the dock.
  */
-export const AIChatMessageList: React.FC<AIChatMessageListProps> = ({
-  messages,
-  announcement,
-  isInitializing,
-  chatError,
-}) => {
+export const AIChatMessageList: React.FC = () => {
+  const stateMessages = useMessages();
+  const isInProgress = useInProgress();
+  const { initError, isInitializing } = useAIChatInit();
+  const { sendError } = useAIChatSend();
+
+  const messages = React.useMemo(
+    () => stateMessagesToMessageProps(stateMessages, isInProgress),
+    [isInProgress, stateMessages],
+  );
+
+  const announcement = React.useMemo(() => {
+    const lastMessage = messages[messages.length - 1];
+    if (!lastMessage) {
+      return undefined;
+    }
+    if (lastMessage.isLoading) {
+      return `${lastMessage.name} is responding.`;
+    }
+    return `Message from ${lastMessage.name}: ${lastMessage.content}`;
+  }, [messages]);
+
   const scrollToBottomRef = useScrollToBottom(messages);
+  const chatError = sendError ?? initError;
 
   return (
     <ChatbotContent>
