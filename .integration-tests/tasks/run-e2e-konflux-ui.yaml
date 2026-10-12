@@ -100,10 +100,16 @@ spec:
 
         echo "=== Getting PipelineRun name and kubeconfig ==="
 
+        # Passed from the Pipeline (resolved at PipelineRun level).
         PIPELINE_RUN_NAME="$(params.pipeline-run-name)"
         NAMESPACE="${TEKTON_NAMESPACE}"
         echo "PipelineRun name: ${PIPELINE_RUN_NAME}"
         echo "Namespace: ${NAMESPACE}"
+
+        if [[ -z "${PIPELINE_RUN_NAME}" ]]; then
+          echo "ERROR: pipeline-run-name param is empty"
+          exit 1
+        fi
 
         # Construct the secret name
         SECRET_NAME="kfg-${PIPELINE_RUN_NAME}"
