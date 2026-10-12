@@ -1,16 +1,16 @@
 import * as React from 'react';
 import { AIClientError } from '@redhat-cloud-services/ai-client-common';
-import { useSendStreamMessage } from '@redhat-cloud-services/ai-react-state';
-import { LIGHTSPEED_ASSISTANT_NAME } from '~/lightspeed/const';
-import { getUserFacingErrorMessage } from '~/lightspeed/utils';
+import { useInProgress, useSendStreamMessage } from '@redhat-cloud-services/ai-react-state';
+import { getUserFacingErrorMessage } from '~/components/AIChat/message-utils';
 import { logger } from '~/monitoring/logger';
 
-type UseLightspeedSendResult = {
-  announcement?: string;
+type AIChatSendContextValue = {
   sendError?: string;
   clearSendError: () => void;
   sendMessage: (message: string) => Promise<void>;
 };
+
+const AIChatSendContext = React.createContext<AIChatSendContextValue | null>(null);
 
 const getErrorMessage = (error: unknown): string => {
   if (error instanceof AIClientError) {
@@ -21,12 +21,12 @@ const getErrorMessage = (error: unknown): string => {
 };
 
 /**
- * Sends chat messages via Lightspeed SSE and tracks send errors / a11y announcements.
+ * Owns send/SSE + send errors under `AIStateProvider`. Announcements live in the message list.
  */
-export const useLightspeedSend = (isInProgress: boolean): UseLightspeedSendResult => {
+export const AIChatSendProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
   const [sendError, setSendError] = React.useState<string>();
-  const [announcement, setAnnouncement] = React.useState<string>();
   const sendStreamMessage = useSendStreamMessage();
+  const isInProgress = useInProgress();
   const isSendingRef = React.useRef(false);
 
   const clearSendError = React.useCallback(() => {
@@ -42,24 +42,15 @@ export const useLightspeedSend = (isInProgress: boolean): UseLightspeedSendResul
 
       isSendingRef.current = true;
       setSendError(undefined);
-      setAnnouncement(
-        `Message from you: ${trimmedMessage}. ${LIGHTSPEED_ASSISTANT_NAME} is responding.`,
-      );
 
       try {
-        const response = await sendStreamMessage(trimmedMessage);
-        if (response?.answer) {
-          setAnnouncement(`Message from ${LIGHTSPEED_ASSISTANT_NAME}: ${response.answer}`);
-        }
+        await sendStreamMessage(trimmedMessage);
       } catch (error) {
         logger.error(
           'Konflux AI streaming query failed',
           error instanceof Error ? error : new Error(String(error)),
         );
-
-        const messageText = getErrorMessage(error);
-        setSendError(messageText);
-        setAnnouncement(`Message from ${LIGHTSPEED_ASSISTANT_NAME}: ${messageText}`);
+        setSendError(getErrorMessage(error));
       } finally {
         isSendingRef.current = false;
       }
@@ -67,5 +58,18 @@ export const useLightspeedSend = (isInProgress: boolean): UseLightspeedSendResul
     [isInProgress, sendStreamMessage],
   );
 
-  return { announcement, sendError, clearSendError, sendMessage };
+  const value = React.useMemo(
+    () => ({ sendError, clearSendError, sendMessage }),
+    [sendError, clearSendError, sendMessage],
+  );
+
+  return <AIChatSendContext.Provider value={value}>{children}</AIChatSendContext.Provider>;
+};
+
+export const useAIChatSend = (): AIChatSendContextValue => {
+  const value = React.useContext(AIChatSendContext);
+  if (!value) {
+    throw new Error('useAIChatSend must be used within AIChatSendProvider');
+  }
+  return value;
 };

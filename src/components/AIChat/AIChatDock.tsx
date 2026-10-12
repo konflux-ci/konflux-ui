@@ -4,47 +4,46 @@ import { AIChatHeader } from '~/components/AIChat/components/AIChatHeader';
 import { AIChatMessageList } from '~/components/AIChat/components/AIChatMessageList';
 import { AIChatPanel } from '~/components/AIChat/components/AIChatPanel';
 import { AIChatToggle } from '~/components/AIChat/components/AIChatToggle';
+import { AIChatInitProvider, useAIChatInit } from '~/components/AIChat/hooks/useAIChatInit';
+import { AIChatSendProvider, useAIChatSend } from '~/components/AIChat/hooks/useAIChatSend';
 import { useAIChatVisibility } from '~/components/AIChat/hooks/useAIChatVisibility';
-import { useLightspeedChat } from '~/lightspeed/useLightspeedChat';
 
 import '@patternfly/chatbot/dist/css/main.css';
 import './AIChat.scss';
 
-/**
- * PatternFly chatbot dock with Lightspeed SSE send/receive.
- */
-export const AIChatDock: React.FC = () => {
-  const {
-    messages,
-    announcement,
-    isInProgress,
-    isInitializing,
-    chatError,
-    clearChatError,
-    sendMessage,
-  } = useLightspeedChat();
-  const { isVisible, toggle, hide } = useAIChatVisibility(clearChatError);
+const AIChatDockContent: React.FC = () => {
+  const { initError, retryInit } = useAIChatInit();
+  const { clearSendError } = useAIChatSend();
 
-  const isSendDisabled = isInProgress || !!chatError || isInitializing;
+  const clearChatError = React.useCallback(() => {
+    clearSendError();
+    if (initError) {
+      retryInit();
+    }
+  }, [clearSendError, initError, retryInit]);
+
+  const { isVisible, toggle, hide } = useAIChatVisibility(clearChatError);
 
   return (
     <div className="ai-chat" data-test="ai-chat-dock">
       <AIChatToggle isVisible={isVisible} onToggle={toggle} />
       <AIChatPanel isVisible={isVisible}>
         <AIChatHeader onClose={hide} />
-        <AIChatMessageList
-          messages={messages}
-          announcement={announcement}
-          isInitializing={isInitializing}
-          chatError={chatError}
-        />
-        <AIChatFooter
-          isSendDisabled={isSendDisabled}
-          onSend={(message) => {
-            void sendMessage(message);
-          }}
-        />
+        <AIChatMessageList />
+        <AIChatFooter />
       </AIChatPanel>
     </div>
   );
 };
+
+/**
+ * PatternFly chatbot dock. Init/send providers wrap children; message list and
+ * footer read AI state hooks directly — no chat props from this shell.
+ */
+export const AIChatDock: React.FC = () => (
+  <AIChatInitProvider>
+    <AIChatSendProvider>
+      <AIChatDockContent />
+    </AIChatSendProvider>
+  </AIChatInitProvider>
+);
