@@ -1,22 +1,29 @@
 import type { MessageProps } from '@patternfly/chatbot/dist/dynamic/Message';
 import type { Message } from '@redhat-cloud-services/ai-client-state';
+import {
+  KONFLUX_AI_ERROR_MESSAGE_TOO_LONG,
+  KONFLUX_AI_ERROR_NOT_FOUND,
+  KONFLUX_AI_ERROR_PERMISSION,
+  KONFLUX_AI_ERROR_QUOTA,
+  KONFLUX_AI_ERROR_UNAVAILABLE,
+} from '~/components/AIChat/const';
 import { LIGHTSPEED_ASSISTANT_NAME } from '~/lightspeed/const';
 
 export const getUserFacingErrorMessage = (status: number): string => {
   switch (status) {
     case 401:
     case 403:
-      return 'You do not have permission to use Konflux AI.';
+      return KONFLUX_AI_ERROR_PERMISSION;
     case 404:
-      return 'The requested conversation was not found.';
+      return KONFLUX_AI_ERROR_NOT_FOUND;
     case 413:
-      return 'Your message is too long. Please shorten it and try again.';
+      return KONFLUX_AI_ERROR_MESSAGE_TOO_LONG;
     case 429:
-      return 'Konflux AI is temporarily unavailable due to quota limits. Please try again later.';
+      return KONFLUX_AI_ERROR_QUOTA;
     case 503:
-      return 'Konflux AI is temporarily unavailable. Please try again later.';
+      return KONFLUX_AI_ERROR_UNAVAILABLE;
     default:
-      return 'Konflux AI is temporarily unavailable. Please try again later.';
+      return KONFLUX_AI_ERROR_UNAVAILABLE;
   }
 };
 
