@@ -128,8 +128,7 @@ spec:
         name: e2e-output-image
         type: string
       - default: quay.io/konflux_ui_qe/konflux-ui-tests:konflux
-        description: >
-          Public QE Quay tag updated after each main push (skopeo copy from e2e-output-image).
+        description: Public QE Quay tag updated after each main push (skopeo copy from e2e-output-image).
         name: e2e-qe-output-image
         type: string
       - default: Containerfile
