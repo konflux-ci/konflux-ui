@@ -5,7 +5,7 @@ import ChatbotWelcomePrompt from '@patternfly/chatbot/dist/dynamic/ChatbotWelcom
 import Message from '@patternfly/chatbot/dist/dynamic/Message';
 import MessageBox from '@patternfly/chatbot/dist/dynamic/MessageBox';
 import { useInProgress, useMessages } from '@redhat-cloud-services/ai-react-state';
-import { CHAT_MESSAGE_REHYPE_PLUGINS } from '~/components/AIChat/chatMessagePlugins';
+import { useChatMessageRehypePlugins } from '~/components/AIChat/chatMessagePlugins';
 import {
   KONFLUX_AI_ERROR_TITLE,
   KONFLUX_AI_WELCOME_DESCRIPTION,
@@ -43,6 +43,8 @@ export const AIChatMessageList: React.FC = () => {
   }, [messages]);
 
   const scrollToBottomRef = useScrollToBottom(messages);
+  const hasMessages = messages.length > 0;
+  const rehypePlugins = useChatMessageRehypePlugins(hasMessages);
   const chatError = sendError ?? initError;
 
   return (
@@ -59,12 +61,14 @@ export const AIChatMessageList: React.FC = () => {
             description={KONFLUX_AI_WELCOME_DESCRIPTION}
           />
         ) : null}
-        {messages.map((message, index) => (
-          <React.Fragment key={message.id}>
-            <Message {...message} additionalRehypePlugins={CHAT_MESSAGE_REHYPE_PLUGINS} />
-            {index === messages.length - 1 ? <div ref={scrollToBottomRef} /> : null}
-          </React.Fragment>
-        ))}
+        {rehypePlugins
+          ? messages.map((message, index) => (
+              <React.Fragment key={message.id}>
+                <Message {...message} additionalRehypePlugins={rehypePlugins} />
+                {index === messages.length - 1 ? <div ref={scrollToBottomRef} /> : null}
+              </React.Fragment>
+            ))
+          : null}
       </MessageBox>
     </ChatbotContent>
   );
