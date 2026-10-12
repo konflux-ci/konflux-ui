@@ -1,4 +1,12 @@
 import type { LoaderFunctionArgs } from 'react-router-dom';
+import componentGroupRoutes from '@routes/page-routes/component-group';
+import {
+  GROUP_DETAILS_PATH,
+  GROUP_RELEASE_DETAILS_PATH,
+  GROUP_INTEGRATION_TEST_DETAILS_PATH,
+  GROUP_SNAPSHOT_DETAILS_PATH,
+  GROUPS_PATH,
+} from '@routes/paths';
 import {
   ComponentGroupComponentsTab,
   ComponentGroupDetailsViewLayout,
@@ -14,14 +22,8 @@ import {
   IntegrationTestPipelineRunTabV2,
 } from '~/components/IntegrationTests/IntegrationTestDetails';
 import { GroupSnapshotDetailsView, GroupSnapshotOverview } from '~/components/SnapshotDetails';
+import SnapshotPipelineRunsTabV2 from '~/components/SnapshotDetails/tabs/SnapshotPipelineRunsTabV2';
 import { snapshotsTabLoader } from '~/components/Snapshots/SnapshotsListView/SnapshotsTab';
-import {
-  GROUP_DETAILS_PATH,
-  GROUP_INTEGRATION_TEST_DETAILS_PATH,
-  GROUP_SNAPSHOT_DETAILS_PATH,
-  GROUPS_PATH,
-} from '../../paths';
-import componentGroupRoutes from '../component-group';
 
 jest.mock('../../RouteErrorBoundary', () => ({
   RouteErrorBoundry: () => <div data-test="error-boundary">Error Boundary</div>,
@@ -77,6 +79,7 @@ const getRoute = (path: string) => {
 describe('Component group page routes configuration', () => {
   it('should register all component group routes', () => {
     expect(componentGroupRoutes.map((route) => route.path)).toEqual([
+      GROUP_RELEASE_DETAILS_PATH.path,
       GROUP_SNAPSHOT_DETAILS_PATH.path,
       GROUPS_PATH.path,
       GROUP_DETAILS_PATH.path,
@@ -166,6 +169,10 @@ describe('Component group page routes configuration', () => {
       {
         index: true,
         element: <GroupSnapshotOverview />,
+      },
+      {
+        path: 'pipelineruns',
+        element: <SnapshotPipelineRunsTabV2 />,
       },
     ]);
   });

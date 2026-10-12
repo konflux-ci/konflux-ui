@@ -1,5 +1,10 @@
-import { ComponentState } from '~/types';
-import { getLatestPromotedBuild } from '~/utils/component-group-utils';
+import { PipelineRunLabel, PipelineRunType } from '~/consts/pipelinerun';
+import { ComponentReference, ComponentState, PipelineRunKind } from '~/types';
+import {
+  getLatestPromotedBuild,
+  getComponentGroupVersionMap,
+  filterPipelineRunsByComponentVersions,
+} from '~/utils/component-group-utils';
 
 const build = (overrides: Partial<ComponentState>): ComponentState => ({
   name: 'component',
@@ -90,4 +95,83 @@ describe('getLatestPromotedBuild', () => {
 
     expect(getLatestPromotedBuild([onlyVersion], 'component', 'v1')).toEqual(onlyVersion);
   });
+});
+
+describe('component group pipeline run filtering', () => {
+  const components: ComponentReference[] = [
+    { name: 'frontend', componentVersion: { name: 'main', version: 'different-revision' } },
+    { name: 'backend', componentVersion: { name: 'release' } },
+    { name: 'frontend', componentVersion: { name: 'stable' } },
+    { name: 'frontend', componentVersion: { name: 'main' } },
+    { name: 'nested-group', kind: 'componentGroup' },
+    { name: 'unversioned' },
+  ];
+  const run = (name: string, component?: string, version?: string): PipelineRunKind => ({
+    apiVersion: 'tekton.dev/v1',
+    kind: 'PipelineRun',
+    metadata: {
+      name,
+      labels: {
+        ...(component && { [PipelineRunLabel.COMPONENT]: component }),
+        ...(version && { [PipelineRunLabel.COMPONENT_VERSION]: version }),
+      },
+    },
+    spec: {},
+  });
+
+  it('indexes unique component/version names, excluding nested groups and missing versions', () => {
+    expect(getComponentGroupVersionMap(components)).toEqual(
+      new Map([
+        ['frontend', new Set(['main', 'stable'])],
+        ['backend', new Set(['release'])],
+      ]),
+    );
+    expect(getComponentGroupVersionMap([])).toEqual(new Map());
+  });
+
+  it('keeps exact pairs in input order and rejects the server selector cross product', () => {
+    const frontend = run('frontend-build', 'frontend', 'main');
+    const backend = run('backend-build', 'backend', 'release');
+    const stable = run('frontend-stable', 'frontend', 'stable');
+    const runs = [
+      frontend,
+      run('wrong-frontend-version', 'frontend', 'release'),
+      backend,
+      run('wrong-backend-version', 'backend', 'main'),
+      stable,
+      run('unknown-component', 'other', 'main'),
+      run('revision-is-not-version', 'frontend', 'different-revision'),
+    ];
+    const original = [...runs];
+    expect(
+      filterPipelineRunsByComponentVersions(runs, getComponentGroupVersionMap(components)),
+    ).toEqual([frontend, backend, stable]);
+    expect(runs).toEqual(original);
+  });
+
+  it('rejects missing labels and returns no runs for an empty group', () => {
+    const runs = [
+      run('missing-version', 'frontend'),
+      run('missing-component', undefined, 'main'),
+      { ...run('missing-labels'), metadata: { name: 'missing-labels' } },
+    ];
+    expect(
+      filterPipelineRunsByComponentVersions(runs, getComponentGroupVersionMap(components)),
+    ).toEqual([]);
+    expect(
+      filterPipelineRunsByComponentVersions([run('build', 'frontend', 'main')], new Map()),
+    ).toEqual([]);
+  });
+
+  it.each([PipelineRunType.BUILD, PipelineRunType.TEST, PipelineRunType.RELEASE])(
+    'retains matching %s runs regardless of their component-group label',
+    (type) => {
+      const matching = run('matching', 'frontend', 'main');
+      matching.metadata.labels[PipelineRunLabel.PIPELINE_TYPE] = type;
+      matching.metadata.labels[PipelineRunLabel.COMPONENT_GROUP] = 'group';
+      expect(
+        filterPipelineRunsByComponentVersions([matching], getComponentGroupVersionMap(components)),
+      ).toEqual([matching]);
+    },
+  );
 });

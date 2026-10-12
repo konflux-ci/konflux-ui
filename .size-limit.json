@@ -2,7 +2,7 @@
   {
     "name": "main",
     "path": "dist/main.*.js",
-    "limit": "275 kB",
+    "limit": "276 kB",
     "gzip": true
   },
   {

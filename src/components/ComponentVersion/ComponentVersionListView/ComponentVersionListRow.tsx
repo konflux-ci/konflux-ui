@@ -31,7 +31,7 @@ export const ComponentVersionListRow: React.FC<
           to={COMPONENT_VERSION_DETAILS_PATH.createPath({
             workspaceName: namespace,
             componentName,
-            versionRevision: obj.revision,
+            versionRevision: obj.name,
           })}
         >
           {obj.name}

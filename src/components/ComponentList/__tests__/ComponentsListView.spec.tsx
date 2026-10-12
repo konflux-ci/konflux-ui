@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { screen, waitFor } from '@testing-library/react';
 import { NuqsTestingAdapter } from 'nuqs/adapters/testing';
-import { useAllComponents } from '~/hooks/useComponents';
+import { useAllComponentsV2 } from '~/hooks/useComponentsV2';
 import { ComponentKind } from '~/types';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { renderWithQueryClient } from '~/unit-test-utils/mock-react-query';
@@ -21,8 +21,8 @@ jest.mock('react-router-dom', () => ({
   ),
 }));
 
-jest.mock('~/hooks/useComponents', () => ({
-  useAllComponents: jest.fn(),
+jest.mock('~/hooks/useComponentsV2', () => ({
+  useAllComponentsV2: jest.fn(),
 }));
 
 jest.mock('~/components/GitLink/GitRepoLink', () => ({
@@ -41,11 +41,11 @@ jest.mock('~/components/LatestBuild/LatestPushBuildSection', () => ({
   ),
 }));
 
-const useAllComponentsMock = useAllComponents as jest.Mock;
+const useAllComponentsMock = useAllComponentsV2 as jest.Mock;
 
 const createComponent = (name: string, source: ComponentKind['spec']['source']): ComponentKind =>
   ({
-    apiVersion: 'appstudio.redhat.com/v1alpha1',
+    apiVersion: 'konflux-ci.dev/v1alpha1',
     kind: 'Component',
     metadata: { name, namespace: 'test-ns' },
     spec: {
@@ -145,7 +145,7 @@ describe('ComponentsListView', () => {
     ).toEqual(['frontend', 'backend']);
   });
 
-  it('should call useAllComponents with the current namespace', () => {
+  it('should call useAllComponentsV2 with the current namespace', () => {
     renderWithQueryClient(<TestedComponent />);
 
     expect(useAllComponentsMock).toHaveBeenCalledWith('test-ns');
