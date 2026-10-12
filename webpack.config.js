@@ -118,6 +118,15 @@ export default {
           priority: 20,
           enforce: true,
         },
+        // Keep Konflux AI / chatbot markdown stack out of shared vendor (async with ai-chat-dock).
+        // Priority above `patternfly` so @patternfly/chatbot does not land in the PF chunk.
+        aiChat: {
+          test: /[\\/]node_modules[\\/](@patternfly[\\/]chatbot|@redhat-cloud-services[\\/](lightspeed-client|ai-react-state|ai-client-state|ai-client-common)|rehype-[^\\/]+|remark-[^\\/]+|unified|micromark(?:-[^\\/]+)?|mdast-[^\\/]+|unist-[^\\/]+|hast-util-[^\\/]+|hastscript|vfile(?:-[^\\/]+)?|bail|trough|devlop|trim-lines|ccount|markdown-table|zwitch|longest-streak|property-information|space-separated-tokens|comma-separated-tokens|web-namespaces|html-void-elements|stringify-entities|parse-entities|decode-named-character-reference|character-entities(?:-[^\\/]+)?|is-plain-obj|extend|collapse-white-space|highlight\.js|lowlight|refractor|hast-to-hyperscript|trim-trailing-lines|unist-util-[^\\/]+)[\\/]/,
+          name: 'ai-chat-vendor',
+          chunks: 'async',
+          priority: 25,
+          enforce: true,
+        },
       },
     },
   },
