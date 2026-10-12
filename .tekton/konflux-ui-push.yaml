@@ -35,7 +35,7 @@ spec:
     - name: e2e-output-image
       value: quay.io/redhat-user-workloads/konflux-ui-tenant/konflux-ui/konflux-ui:e2e-{{revision}}
     - name: e2e-qe-output-image
-      value: quay.io/konflux_ui_qe/konflux-ui-tests:latest
+      value: quay.io/konflux_ui_qe/konflux-ui-tests:konflux
     - name: e2e-dockerfile
       value: Containerfile
     - name: e2e-path-context
@@ -322,6 +322,10 @@ spec:
             - name: kind
               value: task
           resolver: bundles
+      # Cross-registry mirror to public QE Quay (different org/repo than the
+      # component image). Kept as an inline taskSpec because there is no
+      # digest-pinned konflux-ci catalog task that mounts QE credentials and
+      # copies by digest across registries; apply-tags only retags in-repo.
       - name: publish-e2e-qe-image
         params:
           - name: SOURCE_IMAGE_URL
@@ -347,6 +351,13 @@ spec:
           steps:
             - name: skopeo-copy
               image: registry.access.redhat.com/ubi9/skopeo@sha256:6ebbdfce633f9915a6a99d8ee035d9fd258121aa1acf944229e90696eb353549
+              env:
+                - name: SOURCE_IMAGE_URL
+                  value: $(params.SOURCE_IMAGE_URL)
+                - name: SOURCE_IMAGE_DIGEST
+                  value: $(params.SOURCE_IMAGE_DIGEST)
+                - name: DESTINATION_IMAGE_URL
+                  value: $(params.DESTINATION_IMAGE_URL)
               volumeMounts:
                 - name: qe-quay-auth
                   mountPath: /etc/qe-quay-auth
@@ -355,18 +366,15 @@ spec:
                 #!/usr/bin/env bash
                 set -euo pipefail
 
-                SRC_TAGGED="$(params.SOURCE_IMAGE_URL)"
-                DIGEST="$(params.SOURCE_IMAGE_DIGEST)"
-                DEST="$(params.DESTINATION_IMAGE_URL)"
                 DEST_AUTH="/etc/qe-quay-auth/.dockerconfigjson"
 
                 # IMAGE_URL is always repo:tag; strip tag and pin by digest
                 # (containers/image rejects name:tag@digest).
-                SRC="${SRC_TAGGED%:*}@${DIGEST}"
+                SRC="${SOURCE_IMAGE_URL%:*}@${SOURCE_IMAGE_DIGEST}"
 
-                echo "Copying docker://${SRC} -> docker://${DEST}"
+                echo "Copying docker://${SRC} -> docker://${DESTINATION_IMAGE_URL}"
                 skopeo copy --all --dest-authfile="${DEST_AUTH}" \
-                  "docker://${SRC}" "docker://${DEST}"
+                  "docker://${SRC}" "docker://${DESTINATION_IMAGE_URL}"
                 echo "Copy finished successfully"
       - name: build-instrumented-container
         params:
