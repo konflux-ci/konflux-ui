@@ -21,11 +21,11 @@ export interface GuardSpec {
    *  when guard fails, show the flag entry disabled with the reason
    */
   failureReason: string;
-  /** visibility flag for Dev Panel / tooltips. default: true
+  /** visibility flag for Dev Panel / tooltips. default: false
    *  visible: true => show the flag disabled with its reason
    *  visible: false => hide the flag entirely when guard conditions aren't met
    */
-  visibleInFeatureFlagPanel?: boolean;
+  visibleInFeatureFlagPanel: boolean;
 }
 
 export type ConditionResolver = <T>(ctx?: T) => Promise<boolean>;
