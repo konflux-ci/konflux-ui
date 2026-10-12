@@ -1,6 +1,5 @@
 import { checkIfAnalyticsIsEnabled } from '~/analytics/conditional-checks';
 import { getKonfluxPublicInfo } from '~/hooks/useKonfluxPublicInfo';
-import { checkIfLightspeedIsAvailable } from '~/lightspeed/conditional-checks';
 import { LIGHTSPEED_CONDITION_TTL_MS } from '~/lightspeed/lightspeedConfig';
 import { KonfluxInstanceEnvironments } from '~/types/konflux-public-info';
 import { registerCondition } from './feature-flags/conditions';
@@ -14,17 +13,20 @@ registerCondition('isKubearchiveEnabled', checkIfKubeArchiveIsEnabled);
 registerCondition('isKiteServiceEnabled', checkIfKiteServiceIsEnabled);
 registerCondition('isImageControllerEnabled', checkIfImageControllerIsEnabled);
 registerCondition('isAnalyticsEnabled', checkIfAnalyticsIsEnabled);
-registerCondition('isLightspeedAvailable', checkIfLightspeedIsAvailable, LIGHTSPEED_CONDITION_TTL_MS);
+registerCondition(
+  'isLightspeedAvailable',
+  async () =>
+    (await import('~/lightspeed/conditional-checks')).checkIfLightspeedIsAvailable(),
+  LIGHTSPEED_CONDITION_TTL_MS,
+);
 registerCondition('isKueueAvailable', checkIfKueueIsAvailable, KUEUE_CONDITION_TTL_MS);
 
 registerCondition('isStagingCluster', async () => {
   try {
-    const info = await getKonfluxPublicInfo();
-    return info.environment === KonfluxInstanceEnvironments.STAGING;
-  } catch (error) {
+    return (await getKonfluxPublicInfo()).environment === KonfluxInstanceEnvironments.STAGING;
+  } catch {
     return false;
   }
 });
 
-// Export something to prevent tree-shaking
 export const REGISTRATIONS_LOADED = true;

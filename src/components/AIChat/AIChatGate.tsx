@@ -1,28 +1,22 @@
 import * as React from 'react';
-import { AIStateProvider } from '@redhat-cloud-services/ai-react-state';
 import { IfFeature } from '~/feature-flags/hooks';
-import { useIsLightspeedAvailable } from '~/lightspeed/conditional-checks';
-import { getLightspeedClient } from '~/lightspeed/lightspeedClient';
+import { useIsLightspeedAvailable } from '~/lightspeed/useIsLightspeedAvailable';
 import { lazyLoad, LazyLoadArguments } from '~/shared/components/lazy-load/lazy';
 
-const AIChatDock = lazyLoad<LazyLoadArguments>(() =>
+const AIChatDockLoader = lazyLoad<LazyLoadArguments>(() =>
   import(
-    '~/components/AIChat/AIChatDock' /* webpackChunkName: "ai-chat-dock" */
-  ).then((module) => ({ default: module.AIChatDock })),
+    '~/components/AIChat/AIChatDockLoader' /* webpackChunkName: "ai-chat-dock" */
+  ).then((module) => ({ default: module.default })),
 );
 
-const AIChatDockLoader: React.FC = () => {
+const AIChatAvailabilityGate: React.FC = () => {
   const { isLightspeedAvailable } = useIsLightspeedAvailable();
 
   if (!isLightspeedAvailable) {
     return null;
   }
 
-  return (
-    <AIStateProvider client={getLightspeedClient()}>
-      <AIChatDock />
-    </AIStateProvider>
-  );
+  return <AIChatDockLoader />;
 };
 
 /**
@@ -31,6 +25,6 @@ const AIChatDockLoader: React.FC = () => {
  */
 export const AIChatGate: React.FC = () => (
   <IfFeature flag="ai-chat">
-    <AIChatDockLoader />
+    <AIChatAvailabilityGate />
   </IfFeature>
 );
