@@ -30,9 +30,7 @@ export const FeatureFlagPanel: React.FC<RawComponentProps> = ({ onClose, modalPr
 
   const flagList = Object.values(FLAGS).filter((flag) => {
     if (!flag.guard) return true;
-    return (
-      guardSatisfied(flag.guard, conditions) || flag.guard.visibleInFeatureFlagPanel !== false
-    );
+    return guardSatisfied(flag.guard, conditions) || flag.guard.visibleInFeatureFlagPanel;
   });
 
   const { title, isOpen, variant, ...restModalProps } = modalProps ?? {};
