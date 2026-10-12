@@ -18,16 +18,12 @@ import FilteredEmptyState from '~/shared/components/empty-state/FilteredEmptySta
 import { useNamespaceInfo } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { MonitoredReleaseKind } from '~/types';
-import { ReleasePlanKind, ReleasePlanLabel } from '~/types/coreBuildService';
-import { ReleasePlanAdmissionKind } from '~/types/release-plan-admission';
 import { statuses as statusList } from '~/utils/commits-utils';
 import MonitoredReleaseEmptyState from './ReleaseEmptyState';
 import { getReleasesListHeader, SortableHeaders } from './ReleaseListHeader';
 import ReleaseListRow from './ReleaseListRow';
-import ReleasePlanAdmissionsInNamespace from './ReleasePlanAdmissionsInNamespace';
-import ReleasePlansInNamespace from './ReleasePlansInNamespace';
-import ReleasesInNamespace from './ReleasesInNamespace';
 import SelectNamespaceEmptyState from './SelectNamespaceEmptyState';
+import { useMonitoredReleases } from './useMonitoredReleases';
 import { useNamespacesToFetch } from './useNamespacesToFetch';
 
 const sortPaths: Record<SortableHeaders, string> = {
@@ -94,23 +90,6 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
 
   const { namespaces, namespacesLoaded: loaded, lastUsedNamespace } = useNamespaceInfo();
 
-  const [releases, setReleases] = React.useState<MonitoredReleaseKind[]>([]);
-  const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState<unknown>();
-
-  const releasesRef = React.useRef<Record<string, MonitoredReleaseKind[]>>({});
-  const loadedNamespacesRef = React.useRef<Set<string>>(new Set());
-
-  const releasePlansRef = React.useRef<Record<string, ReleasePlanKind[]>>({});
-  const loadedReleasePlansNamespacesRef = React.useRef<Set<string>>(new Set());
-
-  const releasePlanAdmissionsRef = React.useRef<Record<string, ReleasePlanAdmissionKind[]>>({});
-  const loadedRPAsNamespacesRef = React.useRef<Set<string>>(new Set());
-
-  // Track target namespaces that need RPA fetching
-  const [targetNamespaces, setTargetNamespaces] = React.useState<string[]>([]);
-  const targetNamespacesCountRef = React.useRef<number>(0);
-
   // Manage which namespaces to fetch based on threshold and filters
   const { namespacesToFetch } = useNamespacesToFetch({
     loaded,
@@ -122,154 +101,11 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
     threshold: NAMESPACE_THRESHOLD,
   });
 
-  // Function to enrich releases with product data
-  const enrichAndSetReleases = React.useCallback(() => {
-    const allReleasesLoaded = namespacesToFetch.every((ns) => loadedNamespacesRef.current.has(ns));
-    const allReleasePlansLoaded = namespacesToFetch.every((ns) =>
-      loadedReleasePlansNamespacesRef.current.has(ns),
-    );
+  const { releases, isLoading, error } = useMonitoredReleases(namespacesToFetch);
 
-    // Calculate expected target namespaces from loaded ReleasePlans only
-    const expectedTargetNamespaces = new Set<string>();
-    namespacesToFetch.forEach((ns) => {
-      const plans = releasePlansRef.current[ns] || [];
-      plans.forEach((rp) => {
-        if (rp.spec?.target) {
-          expectedTargetNamespaces.add(rp.spec.target);
-        }
-      });
-    });
-
-    const allRPAsLoaded =
-      expectedTargetNamespaces.size === 0 ||
-      Array.from(expectedTargetNamespaces).every((ns) => loadedRPAsNamespacesRef.current.has(ns));
-
-    if (allReleasesLoaded && allReleasePlansLoaded && allRPAsLoaded) {
-      const allReleases = Object.values(releasesRef.current).flat();
-      const allReleasePlans = Object.values(releasePlansRef.current).flat();
-      const allRPAs = Object.values(releasePlanAdmissionsRef.current).flat();
-
-      // Build lookup maps for O(1) access instead of O(n) find operations
-      const releasePlansByKey = allReleasePlans.reduce(
-        (acc, rp) => {
-          const key = `${rp.metadata.namespace}:${rp.metadata.name}`;
-          acc[key] = rp;
-          return acc;
-        },
-        {} as Record<string, ReleasePlanKind>,
-      );
-
-      const rpasByKey = allRPAs.reduce(
-        (acc, rpa) => {
-          const key = `${rpa.metadata.namespace}:${rpa.metadata.name}`;
-          acc[key] = rpa;
-          return acc;
-        },
-        {} as Record<string, ReleasePlanAdmissionKind>,
-      );
-
-      // Enrich releases with product data using O(1) lookups
-      const enrichedReleases = allReleases.map((release) => {
-        const releasePlanKey = `${release.metadata.namespace}:${release.spec.releasePlan}`;
-        const foundReleasePlan = releasePlansByKey[releasePlanKey];
-
-        if (!foundReleasePlan) {
-          return { ...release, rpa: '' } as MonitoredReleaseKind;
-        }
-
-        const rpaName =
-          foundReleasePlan.metadata.labels?.[ReleasePlanLabel.RELEASE_PLAN_ADMISSION] || '';
-
-        if (!rpaName) {
-          return { ...release, rpa: '' } as MonitoredReleaseKind;
-        }
-
-        const rpaKey = `${foundReleasePlan.spec?.target}:${rpaName}`;
-        const rpa = rpasByKey[rpaKey];
-
-        return {
-          ...release,
-          product: rpa?.spec?.data?.releaseNotes?.product_name || undefined,
-          productVersion: rpa?.spec?.data?.releaseNotes?.product_version || undefined,
-          rpa: rpaName,
-        } as MonitoredReleaseKind;
-      });
-
-      setReleases(enrichedReleases);
-      setLoading(false);
-      setError(null);
-    }
-  }, [namespacesToFetch]);
-
-  const handleReleasesLoaded = React.useCallback(
-    (ns: string, data: MonitoredReleaseKind[]) => {
-      releasesRef.current[ns] = data;
-      loadedNamespacesRef.current.add(ns);
-      // Safe to attempt; enrichAndSetReleases() is internally gated on "all loaded"
-      enrichAndSetReleases();
-    },
-    [enrichAndSetReleases],
-  );
-
-  const handleError = React.useCallback((err: unknown) => {
-    setError(err);
-    setLoading(false);
-  }, []);
-
-  const handleReleasePlansLoaded = React.useCallback(
-    (ns: string, data: ReleasePlanKind[]) => {
-      releasePlansRef.current[ns] = data;
-      loadedReleasePlansNamespacesRef.current.add(ns);
-
-      // Determine target namespaces only from LOADED release plans
-      const loadedReleasePlans = namespacesToFetch.flatMap(
-        (nsName) => releasePlansRef.current[nsName] || [],
-      );
-
-      const rpaNamespaces = new Set<string>();
-      loadedReleasePlans.forEach((rp) => {
-        const target = rp.spec?.target;
-        if (target) {
-          rpaNamespaces.add(target);
-        }
-      });
-
-      const targetArray = Array.from(rpaNamespaces);
-      setTargetNamespaces(targetArray);
-      targetNamespacesCountRef.current = targetArray.length;
-
-      if (targetArray.length === 0) {
-        enrichAndSetReleases();
-      }
-    },
-    [namespacesToFetch, enrichAndSetReleases],
-  );
-
-  const handleReleasePlanAdmissionsLoaded = React.useCallback(
-    (ns: string, data: ReleasePlanAdmissionKind[]) => {
-      releasePlanAdmissionsRef.current[ns] = data;
-      loadedRPAsNamespacesRef.current.add(ns);
-      // Try to enrich if all data is ready
-      enrichAndSetReleases();
-    },
-    [enrichAndSetReleases],
-  );
-
-  React.useEffect(() => {
-    if (loaded && namespaces.length > 0) {
-      setLoading(true);
-      releasesRef.current = {};
-      loadedNamespacesRef.current = new Set();
-      releasePlansRef.current = {};
-      loadedReleasePlansNamespacesRef.current = new Set();
-      releasePlanAdmissionsRef.current = {};
-      loadedRPAsNamespacesRef.current = new Set();
-      setTargetNamespaces([]);
-      targetNamespacesCountRef.current = 0;
-    } else if (loaded) {
-      setLoading(false);
-    }
-  }, [loaded, namespaces]);
+  // `useNamespacesToFetch` resolves its namespaces in an effect, so the render in between
+  // has nothing to fetch yet and must still count as loading.
+  const loading = !loaded || (namespaces.length > 0 && namespacesToFetch.length === 0) || isLoading;
 
   const filterOptions = React.useMemo(() => {
     if (releases.length === 0 && namespaces.length === 0) {
@@ -490,31 +326,6 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
       description="The dashboard to monitor the releases you care about"
     >
       <PageSection isFilled={false}>
-        {/* Fetch Releases and ReleasePlans from origin namespaces */}
-        {loaded &&
-          namespacesToFetch.map((nsName) => (
-            <React.Fragment key={`origin-${nsName}`}>
-              <ReleasesInNamespace
-                namespace={nsName}
-                onReleasesLoaded={handleReleasesLoaded}
-                onError={handleError}
-              />
-              <ReleasePlansInNamespace
-                namespace={nsName}
-                onReleasePlansLoaded={handleReleasePlansLoaded}
-                onError={handleError}
-              />
-            </React.Fragment>
-          ))}
-        {/* Fetch ReleasePlanAdmissions from target namespaces only */}
-        {targetNamespaces.map((targetNs) => (
-          <ReleasePlanAdmissionsInNamespace
-            key={`rpa-${targetNs}`}
-            namespace={targetNs}
-            onReleasePlanAdmissionsLoaded={handleReleasePlanAdmissionsLoaded}
-            onError={handleError}
-          />
-        ))}
         {(isFiltered ||
           releases.length > 0 ||
           namespacesToFetch.length > 0 ||
