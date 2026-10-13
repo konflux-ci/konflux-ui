@@ -14,9 +14,6 @@ jest.mock('../useTaskRunsV2', () => ({
 
 const useTaskRunsForPipelineRunsMock = useTaskRunsForPipelineRuns as jest.Mock;
 
-const defaultNextPageProps = { hasNextPage: false, isFetchingNextPage: false };
-const defaultGetNextPage = jest.fn();
-
 describe('usePipelineRunTestOutputResult', () => {
   let queryClient: QueryClient;
 
@@ -30,13 +27,7 @@ describe('usePipelineRunTestOutputResult', () => {
   beforeEach(() => {
     queryClient = createTestQueryClient();
     jest.clearAllMocks();
-    useTaskRunsForPipelineRunsMock.mockReturnValue([
-      [],
-      true,
-      null,
-      defaultGetNextPage,
-      defaultNextPageProps,
-    ]);
+    useTaskRunsForPipelineRunsMock.mockReturnValue([[], true, null]);
   });
 
   describe('when pipeline run has TEST_OUTPUT in status.results', () => {
@@ -83,8 +74,6 @@ describe('usePipelineRunTestOutputResult', () => {
         taskRunsWithFailure,
         true,
         null,
-        defaultGetNextPage,
-        defaultNextPageProps,
       ]);
 
       const { result } = renderHookWithQueryClient(plr, 'test-ns');
@@ -148,8 +137,6 @@ describe('usePipelineRunTestOutputResult', () => {
         taskRunsWithSuccess,
         true,
         null,
-        defaultGetNextPage,
-        defaultNextPageProps,
       ]);
 
       const { result } = renderHookWithQueryClient(plr, 'test-ns');
@@ -195,8 +182,6 @@ describe('usePipelineRunTestOutputResult', () => {
         multipleTaskRuns,
         true,
         null,
-        defaultGetNextPage,
-        defaultNextPageProps,
       ]);
 
       const { result } = renderHookWithQueryClient(plr, 'test-ns');
@@ -228,8 +213,6 @@ describe('usePipelineRunTestOutputResult', () => {
         taskRunsWithNoNumericFields,
         true,
         null,
-        defaultGetNextPage,
-        defaultNextPageProps,
       ]);
 
       const { result } = renderHookWithQueryClient(plr, 'test-ns');
@@ -247,8 +230,6 @@ describe('usePipelineRunTestOutputResult', () => {
         [],
         false,
         null,
-        defaultGetNextPage,
-        defaultNextPageProps,
       ]);
 
       const { result } = renderHookWithQueryClient(plr, null);
@@ -264,8 +245,6 @@ describe('usePipelineRunTestOutputResult', () => {
         [],
         false,
         null,
-        defaultGetNextPage,
-        defaultNextPageProps,
       ]);
 
       const { result } = renderHookWithQueryClient(plr, 'test-ns');
@@ -281,8 +260,6 @@ describe('usePipelineRunTestOutputResult', () => {
         [],
         true,
         null,
-        defaultGetNextPage,
-        defaultNextPageProps,
       ]);
 
       const { result } = renderHookWithQueryClient(plr, 'test-ns');
@@ -301,8 +278,6 @@ describe('usePipelineRunTestOutputResult', () => {
         [],
         true,
         fetchError,
-        defaultGetNextPage,
-        defaultNextPageProps,
       ]);
 
       const { result } = renderHookWithQueryClient(plr, 'test-ns');
@@ -319,8 +294,6 @@ describe('usePipelineRunTestOutputResult', () => {
         [],
         false,
         new Error('Network error'),
-        defaultGetNextPage,
-        defaultNextPageProps,
       ]);
 
       const { result } = renderHookWithQueryClient(plr, 'test-ns');
@@ -338,8 +311,6 @@ describe('usePipelineRunTestOutputResult', () => {
         [],
         true,
         null,
-        defaultGetNextPage,
-        defaultNextPageProps,
       ]);
 
       const { result } = renderHookWithQueryClient(plr, 'test-ns');
@@ -356,8 +327,6 @@ describe('usePipelineRunTestOutputResult', () => {
         [],
         true,
         null,
-        defaultGetNextPage,
-        defaultNextPageProps,
       ]);
 
       const { result } = renderHookWithQueryClient(plr, null);

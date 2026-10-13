@@ -51,7 +51,7 @@ describe('MonitoringService', () => {
     expect(Sentry.init).toHaveBeenCalled();
   });
 
-  it('should delegate captureException to provider and return this for chaining', () => {
+  it('should delegate captureException to provider and return undefined for noop', () => {
     const config: MonitoringConfig = {
       enabled: false,
       provider: 'noop',
@@ -66,7 +66,7 @@ describe('MonitoringService', () => {
     expect(consoleMock.error).toHaveBeenCalledWith('captureException', expect.any(Error), {
       key: 'value',
     });
-    expect(result).toBe(service);
+    expect(result).toBeUndefined();
   });
 
   it('should delegate captureMessage to provider and return this for chaining', () => {
@@ -85,7 +85,7 @@ describe('MonitoringService', () => {
     expect(result).toBe(service);
   });
 
-  it('should delegate setUser to provider and return this for chaining', () => {
+  it('should delegate setUser to provider', () => {
     const config: MonitoringConfig = {
       enabled: false,
       provider: 'noop',
@@ -95,10 +95,9 @@ describe('MonitoringService', () => {
     const service = new MonitoringService();
     service.initialize(config);
 
-    const result = service.setUser({ id: '123', username: 'testuser' });
+    service.setUser({ id: '123' });
 
-    expect(consoleMock.info).toHaveBeenCalledWith('setUser', { id: '123', username: 'testuser' });
-    expect(result).toBe(service);
+    expect(consoleMock.info).toHaveBeenCalledWith('setUser', { id: '123' });
   });
 
   it('should create and initialize service via static create method', () => {

@@ -5,6 +5,7 @@ const codeCoverageTask = require('@cypress/code-coverage/task');
 
 export default defineConfig({
   projectId: process.env.CYPRESS_PROJECT_ID,
+  allowCypressEnv: false,
   defaultCommandTimeout: 40000,
   execTimeout: 150000,
   pageLoadTimeout: 90000,
@@ -33,39 +34,42 @@ export default defineConfig({
     supportFile: 'support/commands/index.ts',
     specPattern: 'tests/*.spec.ts',
     testIsolation: false,
-    experimentalPromptCommand: true,
     excludeSpecPattern:
       process.env.CYPRESS_PERIODIC_RUN_STAGE ||
       process.env.GH_COMMENTBODY?.toLowerCase() === '[test]'
         ? 'tests/*-private-git-*' // TODO: remove once https://issues.redhat.com/browse/RHTAPBUGS-111 is resolved
         : 'tests/{advanced-happy-path*,private-basic*,*-private-git-*}',
     setupNodeEvents(on, config) {
-      // Code coverage plugin - must be registered first
-      if (process.env.CYPRESS_PERIODIC_RUN_STAGE !== 'true') {
+      const isStudioMode = Boolean(config.env.STUDIO_MODE);
+
+      // Code coverage plugin - must be registered first (breaks Cypress Studio recording)
+      if (process.env.CYPRESS_PERIODIC_RUN_STAGE !== 'true' && !isStudioMode) {
         codeCoverageTask(on, config);
+      } else if (isStudioMode) {
+        console.log('Skipping code coverage for Cypress Studio mode');
       } else {
         console.log('Skipping code coverage for periodic run stage');
       }
 
-      require('cypress-mochawesome-reporter/plugin')(on);
+      if (!isStudioMode) {
+        require('cypress-mochawesome-reporter/plugin')(on);
+        require('cypress-high-resolution')(on, config);
 
-      const logOptions = {
-        outputRoot: `${config.projectRoot}/cypress`,
-        outputTarget: {
-          'cypress-log.txt': 'txt',
-        },
-        printLogsToFile: 'always',
-      };
-      require('cypress-terminal-report/src/installLogsPrinter')(on, logOptions);
-
+        const logOptions = {
+          outputRoot: `${config.projectRoot}/cypress`,
+          outputTarget: {
+            'cypress-log.txt': 'txt',
+          },
+          printLogsToFile: 'always',
+        };
+        require('cypress-terminal-report/src/installLogsPrinter')(on, logOptions);
+      }
       on('task', {
         log(message) {
-          // eslint-disable-next-line no-console
           console.log(message);
           return null;
         },
         logTable(data) {
-          // eslint-disable-next-line no-console
           console.table(data);
           return null;
         },
@@ -84,26 +88,42 @@ export default defineConfig({
       });
 
       on('before:run', async (details) => {
-        // cypress-mochawesome-reporter
-        await beforeRunHook(details);
-      });
+        // Wipe stale network logs left over from a previous run so
+        // cypress/network-logs/ only ever contains data from the current run.
+        fs.emptyDirSync(`${config.projectRoot}/cypress/network-logs`);
 
-      on('after:spec', async (spec, res) => {
-        // cypress-mochawesome-reporter
-        const results = res as CypressCommandLine.RunResult;
-        if (results.stats?.failures > 0) {
-          // eslint-disable-next-line no-console
-          console.log(
-            `A total of ${results.stats.failures} tests failed, DOM content saved at './cypress/saved-doms'`,
-          );
+        if (!isStudioMode) {
+          // cypress-mochawesome-reporter
+          await beforeRunHook(details);
         }
-        return null;
       });
 
-      on('after:run', async () => {
-        // cypress-mochawesome-reporter
-        await afterRunHook();
+      if (!isStudioMode) {
+        on('after:run', async () => {
+          // cypress-mochawesome-reporter
+          await afterRunHook();
+        });
+      }
+
+      on('before:browser:launch', (browser, launchOptions) => {
+        if (browser.family === 'chromium') {
+          launchOptions.args.push('--disable-extensions');
+        }
+        return launchOptions;
       });
+
+      (on as any)(
+        'after:spec',
+        async (spec: Cypress.Spec, results: CypressCommandLine.RunResult) => {
+          // cypress-mochawesome-reporter
+          if (results.stats?.failures > 0 && !isStudioMode) {
+            console.log(
+              `A total of ${results.stats.failures} tests failed, DOM content saved at './cypress/saved-doms'`,
+            );
+          }
+          return null;
+        },
+      );
 
       const defaultValues: { [key: string]: string | boolean } = {
         KONFLUX_BASE_URL: 'https://localhost:8080',
@@ -121,9 +141,10 @@ export default defineConfig({
         PERIODIC_RUN_STAGE: false,
         PIPELINE: 'docker-build-oci-ta-min',
         SOURCE_REPO_OWNER: 'hac-test',
-        SOURCE_REPO_NAME: 'devfile-sample-code-with-quarkus',
+        SOURCE_REPO_NAME: 'testrepo',
         resolution: 'high',
         REMOVE_APP_ON_FAIL: false,
+        STUDIO_MODE: false,
         SNYK_TOKEN: '',
         SSO_URL: 'https://sso.redhat.com/auth/',
       };
@@ -134,6 +155,7 @@ export default defineConfig({
         }
       }
 
+      // We need a GH_TOKEN even for Studio mode to create a testing repository.
       if (config.env.GH_TOKEN == '') {
         throw new Error('GH_TOKEN variable needs to be set to run a test.');
       }
@@ -147,7 +169,34 @@ export default defineConfig({
         }
       }
 
-      require('cypress-high-resolution')(on, config);
+      // Public/non-sensitive subset of config.env to mirror into config.expose, so
+      // Cypress.expose() can read them (Cypress.env() removal means only this or
+      // cy.env() work). Sensitive keys (USERNAME, PASSWORD, GH_TOKEN, etc.) are
+      // deliberately left out and stay accessible only via cy.env().
+      const publicEnvKeys = [
+        'KONFLUX_BASE_URL',
+        'GH_USERNAME',
+        'GH_REPO_OWNER',
+        'CLEAN_NAMESPACE',
+        'LOCAL_CLUSTER',
+        'LOGIN_PROVIDER',
+        'PERIODIC_RUN_STAGE',
+        'PIPELINE',
+        'SOURCE_REPO_OWNER',
+        'SOURCE_REPO_NAME',
+        'REMOVE_APP_ON_FAIL',
+        'STUDIO_MODE',
+        'SSO_URL',
+        'HAC_NAMESPACE',
+      ];
+
+      for (const key of publicEnvKeys) {
+        // Let an explicit `expose` config value (e.g. --expose/-x CLI flag) win.
+        if (config.expose[key] === undefined) {
+          config.expose[key] = config.env[key];
+        }
+      }
+
       return config;
     },
   },

@@ -92,6 +92,9 @@ yarn type-checks
 # Build for production
 yarn build
 
+# Check production bundle sizes against budgets in .size-limit.json
+yarn size-limit
+
 # Analyze bundle size
 yarn analyze
 ```

@@ -80,7 +80,7 @@ describe('TaskRunSecurityTab', () => {
 
     renderWithQueryClientAndRouter(<TaskRunSecurityTab />);
 
-    expect(mockUseConformaResult).toHaveBeenCalledWith('test-pipelinerun');
+    expect(mockUseConformaResult).toHaveBeenCalledWith('test-pipelinerun', mockTaskRun);
     expect(screen.getByText('Testing apps against Conforma')).toBeInTheDocument();
     expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
   });
@@ -109,7 +109,7 @@ describe('TaskRunSecurityTab', () => {
 
     renderWithQueryClientAndRouter(<TaskRunSecurityTab />);
 
-    expect(mockUseConformaResult).toHaveBeenCalledWith('different-pipelinerun');
+    expect(mockUseConformaResult).toHaveBeenCalledWith('different-pipelinerun', mockTaskRun);
     expect(screen.getByText('Testing apps against Conforma')).toBeInTheDocument();
   });
 });

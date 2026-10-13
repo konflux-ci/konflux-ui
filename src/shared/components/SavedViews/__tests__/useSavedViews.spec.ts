@@ -17,7 +17,7 @@ const mockGenerateSlug = jest.mocked(generateSlug);
 const config: SavedViewsConfig = {
   resourceKey: 'pipelineruns',
   columnKeyPrefix: 'col-state-pr',
-  routePath: '/workspaces/:workspace/pipelineruns',
+  routePathBuilder: (ns: string) => `/workspaces/${ns}/pipelineruns`,
 };
 
 let mockViews: SavedView[];
@@ -41,19 +41,19 @@ beforeEach(() => {
 
 describe('useSavedViews', () => {
   it('should initialize with empty views', () => {
-    const { result } = renderHookWithNuqs(() => useSavedViews(config));
+    const { result } = renderHookWithNuqs(() => useSavedViews(config, 'test-ns'));
     expect(result.current.views).toEqual([]);
   });
 
   it('should use the correct storage key', () => {
-    renderHookWithNuqs(() => useSavedViews(config));
+    renderHookWithNuqs(() => useSavedViews(config, 'test-ns'));
     expect(mockUseLocalStorage).toHaveBeenCalledWith('saved-views:pipelineruns', []);
   });
 
   describe('saveView', () => {
     it('should save a view with auto-generated slug', () => {
       mockGenerateSlug.mockReturnValue('sv-auto1234');
-      const { result } = renderHookWithNuqs(() => useSavedViews(config));
+      const { result } = renderHookWithNuqs(() => useSavedViews(config, 'test-ns'));
 
       let slug = '';
       act(() => {
@@ -61,6 +61,7 @@ describe('useSavedViews', () => {
           label: 'My View',
           searchParams: '?status=failed',
           currentColumnStateKey: 'col-state-pr:default',
+          namespace: 'test-ns',
         });
       });
 
@@ -76,12 +77,13 @@ describe('useSavedViews', () => {
           label: 'My View',
           searchParams: 'status=failed',
           columnStateKey: 'col-state-pr:sv-auto1234',
+          namespace: 'test-ns',
         },
       ]);
     });
 
     it('should save a view with a custom slug', () => {
-      const { result } = renderHookWithNuqs(() => useSavedViews(config));
+      const { result } = renderHookWithNuqs(() => useSavedViews(config, 'test-ns'));
 
       let slug = '';
       act(() => {
@@ -90,6 +92,7 @@ describe('useSavedViews', () => {
           label: 'Custom View',
           searchParams: '?status=success',
           currentColumnStateKey: 'col-state-pr:default',
+          namespace: 'test-ns',
         });
       });
 
@@ -99,7 +102,7 @@ describe('useSavedViews', () => {
 
     it('should copy column state from current key to new view key', () => {
       localStorage.setItem('col-state-pr:default', JSON.stringify({ order: ['a', 'b'] }));
-      const { result } = renderHookWithNuqs(() => useSavedViews(config));
+      const { result } = renderHookWithNuqs(() => useSavedViews(config, 'test-ns'));
 
       act(() => {
         result.current.saveView({
@@ -107,6 +110,7 @@ describe('useSavedViews', () => {
           label: 'Test',
           searchParams: '',
           currentColumnStateKey: 'col-state-pr:default',
+          namespace: 'test-ns',
         });
       });
 
@@ -116,7 +120,7 @@ describe('useSavedViews', () => {
     });
 
     it('should not copy column state if source key does not exist', () => {
-      const { result } = renderHookWithNuqs(() => useSavedViews(config));
+      const { result } = renderHookWithNuqs(() => useSavedViews(config, 'test-ns'));
 
       act(() => {
         result.current.saveView({
@@ -124,6 +128,7 @@ describe('useSavedViews', () => {
           label: 'Test',
           searchParams: '',
           currentColumnStateKey: 'col-state-pr:nonexistent',
+          namespace: 'test-ns',
         });
       });
 
@@ -136,9 +141,10 @@ describe('useSavedViews', () => {
         label: 'Existing',
         searchParams: '?a=1',
         columnStateKey: 'col-state-pr:existing',
+        namespace: 'test-ns',
       };
 
-      const { result } = renderHookWithNuqs(() => useSavedViews(config));
+      const { result } = renderHookWithNuqs(() => useSavedViews(config, 'test-ns'));
 
       act(() => {
         result.current.saveView({
@@ -146,6 +152,7 @@ describe('useSavedViews', () => {
           label: 'New View',
           searchParams: '?b=2',
           currentColumnStateKey: 'col-state-pr:default',
+          namespace: 'test-ns',
         });
       });
 
@@ -164,12 +171,13 @@ describe('useSavedViews', () => {
         label: 'Delete Me',
         searchParams: '?x=1',
         columnStateKey: 'col-state-pr:delete-me',
+        namespace: 'test-ns',
       };
       mockViews = [viewToDelete];
       localStorage.setItem('col-state-pr:delete-me', '{"cols":["a"]}');
 
       mockUseLocalStorage.mockReturnValue([mockViews, mockSetViews, mockRemoveViews]);
-      const { result } = renderHookWithNuqs(() => useSavedViews(config));
+      const { result } = renderHookWithNuqs(() => useSavedViews(config, 'test-ns'));
 
       act(() => {
         result.current.deleteView('delete-me');
@@ -186,7 +194,7 @@ describe('useSavedViews', () => {
     it('should handle deleting a non-existent slug gracefully', () => {
       mockViews = [];
       mockUseLocalStorage.mockReturnValue([mockViews, mockSetViews, mockRemoveViews]);
-      const { result } = renderHookWithNuqs(() => useSavedViews(config));
+      const { result } = renderHookWithNuqs(() => useSavedViews(config, 'test-ns'));
 
       act(() => {
         result.current.deleteView('nonexistent');
@@ -199,7 +207,7 @@ describe('useSavedViews', () => {
 
   describe('renameView', () => {
     it('should update the label without changing the slug', () => {
-      const { result } = renderHookWithNuqs(() => useSavedViews(config));
+      const { result } = renderHookWithNuqs(() => useSavedViews(config, 'test-ns'));
 
       act(() => {
         result.current.renameView('my-view', 'Updated Label');
@@ -211,6 +219,7 @@ describe('useSavedViews', () => {
         label: 'Old Label',
         searchParams: '?a=1',
         columnStateKey: 'col-state-pr:my-view',
+        namespace: 'test-ns',
       };
       const updated = updater([original]);
 
@@ -220,12 +229,13 @@ describe('useSavedViews', () => {
           label: 'Updated Label',
           searchParams: '?a=1',
           columnStateKey: 'col-state-pr:my-view',
+          namespace: 'test-ns',
         },
       ]);
     });
 
     it('should not affect other views', () => {
-      const { result } = renderHookWithNuqs(() => useSavedViews(config));
+      const { result } = renderHookWithNuqs(() => useSavedViews(config, 'test-ns'));
 
       act(() => {
         result.current.renameView('view-a', 'New Name');
@@ -233,12 +243,19 @@ describe('useSavedViews', () => {
 
       const updater = mockSetViews.mock.calls[0][0] as (prev: SavedView[]) => SavedView[];
       const views: SavedView[] = [
-        { slug: 'view-a', label: 'Old', searchParams: '', columnStateKey: 'col-state-pr:view-a' },
+        {
+          slug: 'view-a',
+          label: 'Old',
+          searchParams: '',
+          columnStateKey: 'col-state-pr:view-a',
+          namespace: 'test-ns',
+        },
         {
           slug: 'view-b',
           label: 'Keep This',
           searchParams: '',
           columnStateKey: 'col-state-pr:view-b',
+          namespace: 'test-ns',
         },
       ];
       const updated = updater(views);
@@ -251,7 +268,7 @@ describe('useSavedViews', () => {
   describe('updateView', () => {
     it('should update searchParams and copy column state', () => {
       localStorage.setItem('col-state-pr:current', '{"visibility":{"name":true}}');
-      const { result } = renderHookWithNuqs(() => useSavedViews(config));
+      const { result } = renderHookWithNuqs(() => useSavedViews(config, 'test-ns'));
 
       act(() => {
         result.current.updateView('my-view', {
@@ -266,6 +283,7 @@ describe('useSavedViews', () => {
         label: 'My View',
         searchParams: '?status=old',
         columnStateKey: 'col-state-pr:my-view',
+        namespace: 'test-ns',
       };
       const updated = updater([original]);
 
@@ -276,7 +294,7 @@ describe('useSavedViews', () => {
 
     it('should not copy column state if source key does not exist', () => {
       localStorage.setItem('col-state-pr:my-view', '{"old":"state"}');
-      const { result } = renderHookWithNuqs(() => useSavedViews(config));
+      const { result } = renderHookWithNuqs(() => useSavedViews(config, 'test-ns'));
 
       act(() => {
         result.current.updateView('my-view', {
@@ -291,6 +309,7 @@ describe('useSavedViews', () => {
         label: 'My View',
         searchParams: '?old=params',
         columnStateKey: 'col-state-pr:my-view',
+        namespace: 'test-ns',
       };
       updater([original]);
 
@@ -303,7 +322,7 @@ describe('useSavedViews', () => {
     it('should return true for a unique slug', () => {
       mockViews = [];
       mockUseLocalStorage.mockReturnValue([mockViews, mockSetViews, mockRemoveViews]);
-      const { result } = renderHookWithNuqs(() => useSavedViews(config));
+      const { result } = renderHookWithNuqs(() => useSavedViews(config, 'test-ns'));
 
       expect(result.current.isSlugAvailable('new-slug')).toBe(true);
     });
@@ -315,10 +334,11 @@ describe('useSavedViews', () => {
           label: 'Taken',
           searchParams: '',
           columnStateKey: 'col-state-pr:taken',
+          namespace: 'test-ns',
         },
       ];
       mockUseLocalStorage.mockReturnValue([mockViews, mockSetViews, mockRemoveViews]);
-      const { result } = renderHookWithNuqs(() => useSavedViews(config));
+      const { result } = renderHookWithNuqs(() => useSavedViews(config, 'test-ns'));
 
       expect(result.current.isSlugAvailable('taken')).toBe(false);
     });

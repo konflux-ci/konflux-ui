@@ -7,6 +7,7 @@ export const getErrorState = (
   loaded: boolean,
   resourceName: string = 'data',
   isAlert: boolean = false,
+  contextMessages?: Partial<Record<number, string>>,
 ) => {
   if (loaded && error) {
     const errorCode =
@@ -17,6 +18,10 @@ export const getErrorState = (
         ? error.code
         : undefined;
     const httpError = errorCode ? HttpError.fromCode(errorCode) : undefined;
+    const bodyMessage =
+      (errorCode && contextMessages?.[errorCode]) ||
+      httpError?.message ||
+      'Something went wrong';
 
     return isAlert ? (
       <Alert variant="danger" isInline title={`Unable to load ${resourceName}`} />
@@ -24,7 +29,7 @@ export const getErrorState = (
       <ErrorEmptyState
         httpError={httpError}
         title={`Unable to load ${resourceName}`}
-        body={httpError?.message || 'Something went wrong'}
+        body={bodyMessage}
       />
     );
   }

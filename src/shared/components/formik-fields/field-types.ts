@@ -189,6 +189,7 @@ export interface EnvironmentFieldProps extends FieldProps {
 export interface KeyValueFieldProps extends FieldProps {
   entries?: { key: string; value: string }[];
   description?: string;
+  readOnly?: boolean;
 }
 
 export interface NumberSpinnerFieldProps extends FieldProps {

@@ -1,180 +1,111 @@
 import * as React from 'react';
-import { Link, useParams } from 'react-router-dom';
-import { Content, Tooltip, Truncate as PfTruncate } from '@patternfly/react-core';
-import { ExpandableRowContent, Table, Tbody, Td, Th, Thead, Tr } from '@patternfly/react-table';
-import { PIPELINE_RUNS_SECURITY_PATH } from '@routes/paths';
-import { getRuleStatus } from '~/components/Conforma/utils';
-import { Truncate } from '~/shared/components/truncate-text/Truncate';
-import { useNamespace } from '~/shared/providers/Namespace';
-import type { ConformaResultRow } from '~/types/conforma';
+import { type ExpandedState } from '@tanstack/react-table';
+import { Table as TableV2, type ColumnDefinition } from '~/shared/components/TableV2';
+import { CONFORMA_RESULT_STATUS } from '~/types/conforma';
 import type { GroupByMode, GroupedConformaRow } from './conforma-grouping-utils';
-import { getCommonImageName } from './conforma-grouping-utils';
-import { getConformaGroupedColumns } from './ConformaGroupedTableHeader';
-import { ConformaResultsListRow } from './ConformaResultsListRow';
+import { ConformaCountBadge } from './ConformaCountBadge';
+import { DetailSubTable } from './DetailSubTable';
 import './ConformaResultsTab.scss';
 
 type ConformaGroupedTableProps = {
   groups: GroupedConformaRow[];
   groupBy: GroupByMode;
   expandedGroups: Set<string>;
-  onToggleGroup: (groupKey: string) => void;
+  onExpandedGroupsChange: (groups: Set<string>) => void;
 };
 
-const DetailSubTable: React.FC<{ rows: ConformaResultRow[] }> = ({ rows }) => {
-  const namespace = useNamespace();
-  const { applicationName } = useParams();
-  return (
-    <Table
-      aria-label="Conforma detail rows"
-      variant="compact"
-      borders={false}
-      className="conforma-results-tab__detail-table"
-    >
-      <Thead>
-        <Tr>
-          <Th width={20}>Rule</Th>
-          <Th width={10}>Component</Th>
-          <Th width={25}>Image</Th>
-          <Th width={10}>Status</Th>
-          <Th width={20}>Message</Th>
-          <Th width={20}>Pipeline run</Th>
-        </Tr>
-      </Thead>
-      <Tbody>
-        {rows.map((row, idx) => {
-          const commonName = row.images.length > 1 ? getCommonImageName(row.images) : undefined;
-          return (
-            <Tr key={`${row.component}-${row.title}-${idx}`}>
-              <Td dataLabel="Rule">
-                <Content>
-                  <Content component="p">
-                    <strong>{row.title ?? '-'}</strong>
-                  </Content>
-                  {row.code && <Content component="small">{row.code}</Content>}
-                  {row.description && <Content component="small">{row.description}</Content>}
-                </Content>
-              </Td>
-              <Td dataLabel="Component">{row.component}</Td>
-              <Td dataLabel="Image">
-                {row.images.length > 1 ? (
-                  <Tooltip
-                    content={
-                      <ul>
-                        {row.images.map((img) => (
-                          <li key={img}>{img}</li>
-                        ))}
-                      </ul>
-                    }
-                  >
-                    <Content>
-                      {commonName ? (
-                        <>
-                          <Content component="p">
-                            <PfTruncate content={commonName} />
-                          </Content>
-                          <Content component="small">{row.images.length} arch variants</Content>
-                        </>
-                      ) : (
-                        <Content component="p">Affects {row.images.length} images</Content>
-                      )}
-                    </Content>
-                  </Tooltip>
-                ) : row.images.length === 1 ? (
-                  <PfTruncate content={row.images[0]} />
-                ) : (
-                  '-'
-                )}
-              </Td>
-              <Td dataLabel="Status">{getRuleStatus(row.status)}</Td>
-              <Td dataLabel="Message">
-                <Content>
-                  <Content component="p">
-                    {row.msg != null ? (
-                      <Truncate
-                        content={row.msg}
-                        expandInline
-                        data-test="conforma-violation-msg"
-                      />
-                    ) : (
-                      '-'
-                    )}
-                  </Content>
-                  {row.solution && <Content component="small">Solution: {row.solution}</Content>}
-                </Content>
-              </Td>
-              <Td dataLabel="Pipeline run">
-                {row.pipelineRunName ? (
-                  <Link
-                    to={PIPELINE_RUNS_SECURITY_PATH.createPath({
-                      workspaceName: namespace,
-                      applicationName: applicationName || '',
-                      pipelineRunName: row.pipelineRunName,
-                    })}
-                    data-test="conforma-pipeline-run-link"
-                  >
-                    <PfTruncate content={row.pipelineRunName} />
-                  </Link>
-                ) : (
-                  '-'
-                )}
-              </Td>
-            </Tr>
-          );
-        })}
-      </Tbody>
-    </Table>
-  );
-};
+const getGroupedColumns = (
+  groupLabel: string,
+): ColumnDefinition<GroupedConformaRow, unknown>[] => [
+  {
+    id: 'group',
+    header: groupLabel,
+    accessorFn: (row) => row.groupKey,
+    cell: (info) => <strong>{info.getValue() as string}</strong>,
+    size: 3,
+  },
+  {
+    id: 'violations',
+    header: 'Violations',
+    accessorFn: (row) => row.violations,
+    cell: (info) => (
+      <ConformaCountBadge
+        count={info.getValue() as number}
+        type={CONFORMA_RESULT_STATUS.violations}
+      />
+    ),
+    size: 1,
+  },
+  {
+    id: 'warnings',
+    header: 'Warnings',
+    accessorFn: (row) => row.warnings,
+    cell: (info) => (
+      <ConformaCountBadge count={info.getValue() as number} type={CONFORMA_RESULT_STATUS.warnings} />
+    ),
+    size: 1,
+  },
+  {
+    id: 'successes',
+    header: 'Successes',
+    accessorFn: (row) => row.successes,
+    cell: (info) => (
+      <ConformaCountBadge
+        count={info.getValue() as number}
+        type={CONFORMA_RESULT_STATUS.successes}
+      />
+    ),
+    size: 1,
+  },
+];
 
 export const ConformaGroupedTable: React.FC<ConformaGroupedTableProps> = ({
   groups,
   groupBy,
   expandedGroups,
-  onToggleGroup,
+  onExpandedGroupsChange,
 }) => {
   const groupLabel = groupBy === 'rule' ? 'Rule' : 'Component';
-  const headerColumns = React.useMemo(() => getConformaGroupedColumns(groupLabel), [groupLabel]);
+
+  // Convert Set<string> to ExpandedState (Record<string, boolean>)
+  const expanded = React.useMemo<ExpandedState>(() => {
+    const state: Record<string, boolean> = {};
+    expandedGroups.forEach((key) => {
+      state[key] = true;
+    });
+    return state;
+  }, [expandedGroups]);
+
+  // Handle expansion changes from TableV2
+  const handleExpandedChange = React.useCallback(
+    (updaterOrValue: ExpandedState | ((old: ExpandedState) => ExpandedState)) => {
+      const next = typeof updaterOrValue === 'function' ? updaterOrValue(expanded) : updaterOrValue;
+      onExpandedGroupsChange(
+        next === true
+          ? new Set(groups.map((group) => group.groupKey))
+          : new Set(
+              Object.entries(next)
+                .filter(([, isExpanded]) => isExpanded)
+                .map(([key]) => key),
+            ),
+      );
+    },
+    [expanded, groups, onExpandedGroupsChange],
+  );
+
+  const columns = React.useMemo(() => getGroupedColumns(groupLabel), [groupLabel]);
 
   return (
-    <Table aria-label="Conforma results grouped table" data-test="conforma-grouped-table">
-      <Thead>
-        <Tr>
-          <Th screenReaderText="Expand" />
-          {headerColumns.map((col) => (
-            <Th key={String(col.title)} {...col.props}>
-              {col.title}
-            </Th>
-          ))}
-        </Tr>
-      </Thead>
-      {groups.map((group, groupIdx) => {
-        const isExpanded = expandedGroups.has(group.groupKey);
-        const rowId = `conforma-group-${groupIdx}`;
-
-        return (
-          <Tbody key={group.groupKey} isExpanded={isExpanded}>
-            <Tr>
-              <Td
-                expand={{
-                  rowIndex: groupIdx,
-                  isExpanded,
-                  onToggle: () => onToggleGroup(group.groupKey),
-                  expandId: `${rowId}-expand`,
-                }}
-              />
-              {/* Reuse the shared Row fragment for the main summary cells */}
-              <ConformaResultsListRow obj={group} />
-            </Tr>
-            <Tr isExpanded={isExpanded}>
-              <Td colSpan={headerColumns.length + 1} noPadding={false}>
-                <ExpandableRowContent>
-                  {isExpanded && <DetailSubTable rows={group.rows} />}
-                </ExpandableRowContent>
-              </Td>
-            </Tr>
-          </Tbody>
-        );
-      })}
-    </Table>
+    <TableV2
+      data={groups}
+      columns={columns}
+      getRowId={(row) => row.groupKey}
+      aria-label="Conforma results grouped table"
+      data-test="conforma-grouped-table"
+      enableExpansion
+      expanded={expanded}
+      onExpandedChange={handleExpandedChange}
+      expandedContent={(row) => <DetailSubTable rows={row.rows} />}
+    />
   );
 };

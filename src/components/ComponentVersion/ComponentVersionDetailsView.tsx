@@ -11,7 +11,7 @@ import emptyStateImgUrl from '~/assets/Components.svg';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { FLAGS } from '~/feature-flags/flags';
 import { IfFeature } from '~/feature-flags/hooks';
-import { useComponent } from '~/hooks/useComponents';
+import { useComponentV2 } from '~/hooks/useComponentsV2';
 import {
   COMPONENTS_PATH,
   COMPONENT_DETAILS_V2_PATH,
@@ -28,7 +28,7 @@ import { DetailsPage } from '../DetailsPage';
 const ComponentVersionDetailsView: React.FC = () => {
   const { componentName, versionRevision } = useParams<RouterParams>();
   const namespace = useNamespace();
-  const [component, loaded, componentError] = useComponent(namespace, componentName);
+  const [component, loaded, componentError] = useComponentV2(namespace, componentName);
 
   if (!loaded) {
     return (
@@ -50,11 +50,11 @@ const ComponentVersionDetailsView: React.FC = () => {
 
   return (
     <IfFeature
-      flag="components-page"
+      flag="component-model"
       fallback={
         <AppEmptyState emptyStateImg={emptyStateImgUrl} title="Feature flag disabled">
           <EmptyStateBody>
-            {`To view this page, enable the "${FLAGS['components-page'].description}" feature flag.`}
+            {`To view this page, enable the "${FLAGS['component-model'].description}" feature flag.`}
           </EmptyStateBody>
         </AppEmptyState>
       }
@@ -64,7 +64,7 @@ const ComponentVersionDetailsView: React.FC = () => {
         headTitle={versionRevision}
         title={
           <Content component={ContentVariants.h2}>
-            {component.metadata.name} <FeatureFlagIndicator flags={['components-page']} fullLabel />
+            {component.metadata.name} <FeatureFlagIndicator flags={['component-model']} fullLabel />
           </Content>
         }
         breadcrumbs={[

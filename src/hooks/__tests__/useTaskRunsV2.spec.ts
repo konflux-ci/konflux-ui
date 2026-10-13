@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { HttpError } from '~/k8s/error';
@@ -7,8 +7,8 @@ import {
   useKubearchiveGetResourceQuery,
   useKubearchiveListResourceQuery,
 } from '~/kubearchive/hooks';
-import { WatchK8sResource } from '~/types/k8s';
 import { TaskRunKind } from '~/types/task-run';
+import { renderHookWithQueryClient } from '~/unit-test-utils/mock-react-query';
 import {
   createUseApplicationMock,
   createK8sWatchResourceMock,
@@ -98,18 +98,45 @@ const mockTaskRun3: TaskRunKind = {
   status: {},
 };
 
+type KubearchiveListQueryMock = ReturnType<typeof useKubearchiveListResourceQuery<TaskRunKind>>;
+
+const mockKubearchiveListQuery = ({
+  pages,
+  hasNextPage = false,
+  isFetchingNextPage = false,
+  fetchNextPage = jest.fn(),
+  error = null,
+  isLoading = false,
+}: {
+  pages: TaskRunKind[][];
+  hasNextPage?: boolean;
+  isFetchingNextPage?: boolean;
+  fetchNextPage?: jest.Mock;
+  error?: Error | null;
+  isLoading?: boolean;
+}) => {
+  mockUseKubearchiveListResourceQuery.mockReturnValue({
+    data: { pages, pageParams: [] },
+    isLoading,
+    error,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } as unknown as KubearchiveListQueryMock);
+};
+
+const waitForMockToBeCalled = (mockFn: jest.Mock) =>
+  waitFor(() => {
+    expect(mockFn).toHaveBeenCalled();
+  });
+
+const waitForLoadedTrue = (getLoaded: () => boolean) =>
+  waitFor(() => {
+    expect(getLoaded()).toBe(true);
+  });
+
 describe('useTaskRunsV2', () => {
   let queryClient: QueryClient;
-
-  const renderHookWithQueryClient = (
-    namespace: string,
-    options?: Partial<Pick<WatchK8sResource, 'watch' | 'limit' | 'selector' | 'fieldSelector'>>,
-  ) => {
-    return renderHook(() => useTaskRunsV2(namespace, options), {
-      wrapper: ({ children }) =>
-        React.createElement(QueryClientProvider, { client: queryClient }, children),
-    });
-  };
 
   beforeEach(() => {
     queryClient = createTestQueryClient();
@@ -175,10 +202,14 @@ describe('useTaskRunsV2', () => {
         mockNextPageProps,
       ]);
 
-      const { result } = renderHookWithQueryClient('default', {
-        selector: { matchLabels: { 'tekton.dev/pipelineRun': 'test-pr' } },
-        limit: 5, // Set limit higher than cluster data to trigger needsMoreData
-      });
+      const { result } = renderHookWithQueryClient(
+        () =>
+          useTaskRunsV2('default', {
+            selector: { matchLabels: { 'tekton.dev/pipelineRun': 'test-pr' } },
+            limit: 5, // Set limit higher than cluster data to trigger needsMoreData
+          }),
+        { client: queryClient },
+      );
 
       await waitFor(() => {
         expect(result.current[1]).toBe(true); // loaded
@@ -235,7 +266,7 @@ describe('useTaskRunsV2', () => {
         { hasNextPage: false, isFetchingNextPage: false },
       ]);
 
-      const { result } = renderHookWithQueryClient('default');
+      const { result } = renderHookWithQueryClient(() => useTaskRunsV2('default'), { client: queryClient });
 
       await waitFor(() => {
         expect(result.current[1]).toBe(true);
@@ -265,7 +296,7 @@ describe('useTaskRunsV2', () => {
         error: null,
       });
 
-      const { result } = renderHookWithQueryClient('default', { limit: 2 });
+      const { result } = renderHookWithQueryClient(() => useTaskRunsV2('default', { limit: 2 }), { client: queryClient });
 
       await waitFor(() => {
         expect(result.current[1]).toBe(true);
@@ -297,9 +328,13 @@ describe('useTaskRunsV2', () => {
         { hasNextPage: false, isFetchingNextPage: false },
       ]);
 
-      const { result } = renderHookWithQueryClient('default', {
-        limit: 5, // Set limit higher than cluster data to trigger Tekton Results query
-      });
+      const { result } = renderHookWithQueryClient(
+        () =>
+          useTaskRunsV2('default', {
+            limit: 5, // Set limit higher than cluster data to trigger Tekton Results query
+          }),
+        { client: queryClient },
+      );
 
       await waitFor(() => {
         expect(result.current[1]).toBe(true); // loaded
@@ -330,7 +365,7 @@ describe('useTaskRunsV2', () => {
         { hasNextPage: false, isFetchingNextPage: false },
       ]);
 
-      const { result } = renderHookWithQueryClient('default');
+      const { result } = renderHookWithQueryClient(() => useTaskRunsV2('default'), { client: queryClient });
 
       await waitFor(() => {
         expect(result.current[1]).toBe(true); // loaded
@@ -354,7 +389,7 @@ describe('useTaskRunsV2', () => {
         mockNextPageProps,
       ]);
 
-      const { result } = renderHookWithQueryClient('default');
+      const { result } = renderHookWithQueryClient(() => useTaskRunsV2('default'), { client: queryClient });
 
       await waitFor(() => {
         expect(result.current[1]).toBe(true);
@@ -398,7 +433,7 @@ describe('useTaskRunsV2', () => {
         mockTektonRefetch,
       ]);
 
-      const { result } = renderHookWithQueryClient('default');
+      const { result } = renderHookWithQueryClient(() => useTaskRunsV2('default'), { client: queryClient });
 
       await waitFor(() => {
         expect(result.current[1]).toBe(true);
@@ -419,9 +454,8 @@ describe('useTaskRunsV2', () => {
         error: null,
       });
 
-      renderHook(() => useTaskRunsV2('default', undefined, { staleTime: Infinity }), {
-        wrapper: ({ children }) =>
-          React.createElement(QueryClientProvider, { client: queryClient }, children),
+      renderHookWithQueryClient(() => useTaskRunsV2('default', undefined, { staleTime: Infinity }), {
+        client: queryClient,
       });
 
       expect(useK8sWatchResourceMock).toHaveBeenCalledWith(
@@ -460,9 +494,13 @@ describe('useTaskRunsV2', () => {
         fetchNextPage: mockFetchNextPage,
       });
 
-      const { result } = renderHookWithQueryClient('default', {
-        selector: { matchLabels: { 'tekton.dev/pipelineRun': 'test-pr' } },
-      });
+      const { result } = renderHookWithQueryClient(
+        () =>
+          useTaskRunsV2('default', {
+            selector: { matchLabels: { 'tekton.dev/pipelineRun': 'test-pr' } },
+          }),
+        { client: queryClient },
+      );
 
       await waitFor(() => {
         expect(result.current[1]).toBe(true); // loaded
@@ -521,7 +559,7 @@ describe('useTaskRunsV2', () => {
         fetchNextPage: undefined,
       });
 
-      const { result } = renderHookWithQueryClient('default');
+      const { result } = renderHookWithQueryClient(() => useTaskRunsV2('default'), { client: queryClient });
 
       await waitFor(() => {
         expect(result.current[1]).toBe(true);
@@ -567,7 +605,7 @@ describe('useTaskRunsV2', () => {
         fetchNextPage: undefined,
       });
 
-      const { result } = renderHookWithQueryClient('default');
+      const { result } = renderHookWithQueryClient(() => useTaskRunsV2('default'), { client: queryClient });
 
       await waitFor(() => {
         expect(result.current[1]).toBe(true);
@@ -600,7 +638,7 @@ describe('useTaskRunsV2', () => {
         fetchNextPage: undefined,
       });
 
-      const { result } = renderHookWithQueryClient('default');
+      const { result } = renderHookWithQueryClient(() => useTaskRunsV2('default'), { client: queryClient });
 
       await waitFor(() => {
         expect(result.current[1]).toBe(true);
@@ -634,7 +672,7 @@ describe('useTaskRunsV2', () => {
         fetchNextPage: mockFetchNextPage,
       });
 
-      const { result } = renderHookWithQueryClient('default');
+      const { result } = renderHookWithQueryClient(() => useTaskRunsV2('default'), { client: queryClient });
 
       await waitFor(() => {
         expect(result.current[1]).toBe(true);
@@ -667,7 +705,7 @@ describe('useTaskRunsV2', () => {
         fetchNextPage: undefined,
       });
 
-      const { result } = renderHookWithQueryClient('default', { limit: 2 });
+      const { result } = renderHookWithQueryClient(() => useTaskRunsV2('default', { limit: 2 }), { client: queryClient });
 
       await waitFor(() => {
         expect(result.current[1]).toBe(true);
@@ -702,7 +740,7 @@ describe('useTaskRunsV2', () => {
         fetchNextPage: undefined,
       });
 
-      const { result } = renderHookWithQueryClient('default');
+      const { result } = renderHookWithQueryClient(() => useTaskRunsV2('default'), { client: queryClient });
 
       // Should be loading when either source is loading
       expect(result.current[1]).toBe(false); // not loaded
@@ -733,7 +771,7 @@ describe('useTaskRunsV2', () => {
         refetch: mockArchiveRefetch,
       });
 
-      const { result } = renderHookWithQueryClient('default');
+      const { result } = renderHookWithQueryClient(() => useTaskRunsV2('default'), { client: queryClient });
 
       await waitFor(() => {
         expect(result.current[1]).toBe(true);
@@ -751,7 +789,7 @@ describe('useTaskRunsV2', () => {
     it('should not fetch data when namespace is empty', () => {
       mockUseIsOnFeatureFlag.mockReturnValue(false);
 
-      const { result } = renderHookWithQueryClient('');
+      const { result } = renderHookWithQueryClient(() => useTaskRunsV2(''), { client: queryClient });
 
       const [taskRuns, loaded, error] = result.current;
       expect(taskRuns).toEqual([]);
@@ -784,7 +822,7 @@ describe('useTaskRunsV2', () => {
         jest.fn(),
       ]);
 
-      const { result, rerender } = renderHookWithQueryClient('default');
+      const { result, rerender } = renderHookWithQueryClient(() => useTaskRunsV2('default'), { client: queryClient });
 
       await waitFor(() => {
         expect(result.current[1]).toBe(true);
@@ -862,7 +900,7 @@ describe('useTaskRunsV2', () => {
         jest.fn(),
       ]);
 
-      const { result, rerender } = renderHookWithQueryClient('default');
+      const { result, rerender } = renderHookWithQueryClient(() => useTaskRunsV2('default'), { client: queryClient });
 
       await waitFor(() => {
         expect(result.current[1]).toBe(true);
@@ -894,6 +932,26 @@ describe('useTaskRunsV2', () => {
       mockUseIsOnFeatureFlag.mockReturnValue(false); // Default to Tekton Results for this test
     });
 
+    it('should not auto-fetch pages when the hook is disabled', () => {
+      const mockGetNextPage = jest.fn();
+
+      mockUseTRTaskRuns.mockReturnValue([
+        [],
+        false,
+        null,
+        mockGetNextPage,
+        { hasNextPage: true, isFetchingNextPage: false },
+      ]);
+
+      const { result } = renderHookWithQueryClient(
+        () => useTaskRunsForPipelineRuns(null, null),
+        { client: queryClient },
+      );
+
+      expect(mockGetNextPage).not.toHaveBeenCalled();
+      expect(result.current[1]).toBe(false);
+    });
+
     it('should call useTaskRunsV2 with correct selector including taskName when provided', async () => {
       // Mock the underlying useTaskRunsV2 to return sorted data
       const mockTaskRuns = [mockTaskRun1, mockTaskRun2];
@@ -912,12 +970,9 @@ describe('useTaskRunsV2', () => {
         { hasNextPage: false, isFetchingNextPage: false },
       ]);
 
-      const { result } = renderHook(
+      const { result } = renderHookWithQueryClient(
         () => useTaskRunsForPipelineRuns('test-ns', 'test-pipelinerun', 'test-task'),
-        {
-          wrapper: ({ children }) =>
-            React.createElement(QueryClientProvider, { client: queryClient }, children),
-        },
+        { client: queryClient },
       );
 
       await waitFor(() => {
@@ -958,12 +1013,9 @@ describe('useTaskRunsV2', () => {
         { hasNextPage: false, isFetchingNextPage: false },
       ]);
 
-      const { result } = renderHook(
+      const { result } = renderHookWithQueryClient(
         () => useTaskRunsForPipelineRuns('test-ns', 'test-pipelinerun'),
-        {
-          wrapper: ({ children }) =>
-            React.createElement(QueryClientProvider, { client: queryClient }, children),
-        },
+        { client: queryClient },
       );
 
       await waitFor(() => {
@@ -985,6 +1037,247 @@ describe('useTaskRunsV2', () => {
       // Verify that pipelineTask label is NOT in the selector when taskName is undefined
       const callArgs = useK8sWatchResourceMock.mock.calls[0][0];
       expect(callArgs.selector.matchLabels).not.toHaveProperty('tekton.dev/pipelineTask');
+    });
+
+    it('should fetch all TaskRun pages before reporting loaded', async () => {
+      const mockGetNextPage = jest.fn();
+      const oldestTaskRun: TaskRunKind = {
+        ...mockTaskRun2,
+        metadata: {
+          ...mockTaskRun2.metadata,
+          name: 'parse-pipeline-tests-tr',
+          labels: { 'tekton.dev/pipelineTask': 'parse-pipeline-tests' },
+        },
+        status: {
+          conditions: [{ type: 'Succeeded', status: 'True', reason: 'Succeeded' }],
+        },
+      };
+
+      useK8sWatchResourceMock.mockReturnValue({
+        data: [],
+        isLoading: false,
+        error: null,
+      });
+
+      mockUseTRTaskRuns.mockReturnValue([
+        [mockTaskRun1, mockTaskRun3],
+        true,
+        null,
+        mockGetNextPage,
+        { hasNextPage: true, isFetchingNextPage: false },
+      ]);
+
+      const { result, rerender } = renderHookWithQueryClient(
+        () => useTaskRunsForPipelineRuns('test-ns', 'test-pipelinerun', undefined, false),
+        { client: queryClient },
+      );
+
+      await waitFor(() => {
+        expect(mockGetNextPage).toHaveBeenCalled();
+      });
+
+      expect(result.current[1]).toBe(false);
+
+      mockUseTRTaskRuns.mockReturnValue([
+        [mockTaskRun1, mockTaskRun3, oldestTaskRun],
+        true,
+        null,
+        mockGetNextPage,
+        { hasNextPage: false, isFetchingNextPage: false },
+      ]);
+
+      rerender();
+
+      await waitFor(() => {
+        expect(result.current[1]).toBe(true);
+      });
+
+      expect(result.current[0]).toHaveLength(3);
+      expect(result.current[0].map((tr) => tr.metadata.name)).toContain('parse-pipeline-tests-tr');
+    });
+
+    it('should fetch all KubeArchive pages before reporting loaded', async () => {
+      mockUseIsOnFeatureFlag.mockReturnValue(true);
+
+      const mockFetchNextPage = jest.fn();
+      const oldestTaskRun: TaskRunKind = {
+        ...mockTaskRun2,
+        metadata: {
+          ...mockTaskRun2.metadata,
+          name: 'parse-pipeline-tests-tr',
+          labels: { 'tekton.dev/pipelineTask': 'parse-pipeline-tests' },
+        },
+        status: {
+          conditions: [{ type: 'Succeeded', status: 'True', reason: 'Succeeded' }],
+        },
+      };
+
+      useK8sWatchResourceMock.mockReturnValue({
+        data: [],
+        isLoading: false,
+        error: null,
+      });
+
+      mockKubearchiveListQuery({
+        pages: [[mockTaskRun1, mockTaskRun3]],
+        hasNextPage: true,
+        fetchNextPage: mockFetchNextPage,
+      });
+
+      const { result, rerender } = renderHookWithQueryClient(
+        () => useTaskRunsForPipelineRuns('test-ns', 'test-pipelinerun', undefined, false),
+        { client: queryClient },
+      );
+
+      await waitForMockToBeCalled(mockFetchNextPage);
+
+      expect(result.current[1]).toBe(false);
+      expect(mockUseTRTaskRuns).toHaveBeenCalledWith(
+        null,
+        expect.any(Object),
+        expect.objectContaining({ enabled: false }),
+      );
+
+      mockKubearchiveListQuery({
+        pages: [[mockTaskRun1, mockTaskRun3], [oldestTaskRun]],
+        fetchNextPage: mockFetchNextPage,
+      });
+
+      rerender();
+
+      await waitForLoadedTrue(() => result.current[1]);
+
+      expect(result.current[0]).toHaveLength(3);
+      expect(result.current[0].map((tr) => tr.metadata.name)).toContain('parse-pipeline-tests-tr');
+    });
+
+    it('should report loaded when KubeArchive pagination fails with an error', async () => {
+      mockUseIsOnFeatureFlag.mockReturnValue(true);
+
+      const mockFetchNextPage = jest.fn();
+      const paginationError = new Error('Failed to fetch page 2');
+
+      useK8sWatchResourceMock.mockReturnValue({
+        data: [],
+        isLoading: false,
+        error: null,
+      });
+
+      mockKubearchiveListQuery({
+        pages: [[mockTaskRun1, mockTaskRun3]],
+        hasNextPage: true,
+        error: paginationError,
+        fetchNextPage: mockFetchNextPage,
+      });
+
+      const { result } = renderHookWithQueryClient(
+        () => useTaskRunsForPipelineRuns('test-ns', 'test-pipelinerun', undefined, false),
+        { client: queryClient },
+      );
+
+      expect(mockFetchNextPage).not.toHaveBeenCalled();
+
+      await waitForLoadedTrue(() => result.current[1]);
+
+      expect(result.current[2]).toBe(paginationError);
+      expect(result.current[0]).toHaveLength(2);
+      expect(result.current[0].map((tr) => tr.metadata.name)).toEqual(
+        expect.arrayContaining(['task-run-1', 'task-run-3']),
+      );
+    });
+
+    it('should report loaded when pagination fails with an error', async () => {
+      const mockGetNextPage = jest.fn();
+
+      useK8sWatchResourceMock.mockReturnValue({
+        data: [],
+        isLoading: false,
+        error: null,
+      });
+
+      mockUseTRTaskRuns.mockReturnValue([
+        [mockTaskRun1, mockTaskRun3],
+        true,
+        new Error('Failed to fetch page 2'),
+        mockGetNextPage,
+        { hasNextPage: true, isFetchingNextPage: false },
+      ]);
+
+      const { result } = renderHookWithQueryClient(
+        () => useTaskRunsForPipelineRuns('test-ns', 'test-pipelinerun', undefined, false),
+        { client: queryClient },
+      );
+
+      expect(mockGetNextPage).not.toHaveBeenCalled();
+
+      await waitFor(() => {
+        expect(result.current[1]).toBe(true);
+      });
+
+      expect(result.current[2]).toBeTruthy();
+      expect(result.current[0]).toHaveLength(2);
+    });
+
+    it('should keep allPagesLoaded false while fetching the next page', () => {
+      mockUseTRTaskRuns.mockReturnValue([
+        [mockTaskRun1, mockTaskRun3],
+        true,
+        null,
+        jest.fn(),
+        { hasNextPage: true, isFetchingNextPage: true },
+      ]);
+
+      const { result } = renderHookWithQueryClient(
+        () => useTaskRunsForPipelineRuns('test-ns', 'test-pipelinerun', undefined, false),
+        { client: queryClient },
+      );
+
+      expect(result.current[1]).toBe(false);
+    });
+
+    it('should continue historical pagination when the cluster watch fails', async () => {
+      const clusterError = new Error('Cluster watch failed');
+      const mockGetNextPage = jest.fn();
+
+      useK8sWatchResourceMock.mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        error: clusterError,
+      });
+
+      mockUseTRTaskRuns.mockReturnValue([
+        [mockTaskRun1],
+        true,
+        null,
+        mockGetNextPage,
+        { hasNextPage: true, isFetchingNextPage: false },
+      ]);
+
+      const { result, rerender } = renderHookWithQueryClient(
+        () => useTaskRunsForPipelineRuns('test-ns', 'test-pipelinerun', undefined, false),
+        { client: queryClient },
+      );
+
+      await waitFor(() => {
+        expect(mockGetNextPage).toHaveBeenCalled();
+      });
+
+      expect(result.current[1]).toBe(false);
+      expect(result.current[2]).toBe(clusterError);
+
+      mockUseTRTaskRuns.mockReturnValue([
+        [mockTaskRun1, mockTaskRun2],
+        true,
+        null,
+        mockGetNextPage,
+        { hasNextPage: false, isFetchingNextPage: false },
+      ]);
+
+      rerender();
+
+      await waitFor(() => {
+        expect(result.current[1]).toBe(true);
+      });
     });
   });
 });

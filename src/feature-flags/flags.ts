@@ -72,7 +72,8 @@ const InternalFLAGS = {
   },
   'conforma-policy': {
     key: 'conforma-policy',
-    description: 'Show the Conforma Results tab on application details',
+    description:
+      'Show the Conforma Results tab on application details and the Conforma violations card on the Issues Dashboard',
     defaultEnabled: false,
     status: 'wip',
     guard: {
@@ -102,9 +103,9 @@ const InternalFLAGS = {
       visibleInFeatureFlagPanel: true,
     },
   },
-  'components-page': {
-    key: 'components-page',
-    description: 'New Application / Component model - Components page',
+  'component-model': {
+    key: 'component-model',
+    description: 'Use new component model',
     defaultEnabled: false,
     status: 'wip',
     guard: {
@@ -130,17 +131,23 @@ const InternalFLAGS = {
     defaultEnabled: true,
     status: 'wip',
   },
+  'ai-chat': {
+    key: 'ai-chat',
+    description: 'Enable Konflux AI chat bot',
+    defaultEnabled: false,
+    status: 'wip',
+    guard: {
+      allOf: ['isStagingCluster', 'isLightspeedAvailable'],
+      failureReason: 'Requires staging environment with Konflux AI available',
+      visibleInFeatureFlagPanel: false,
+    },
+  },
   'pipeline-runs-page': {
     key: 'pipeline-runs-page',
     description:
       'Cross-application Pipeline Runs page with saved views, advanced filters, and column management',
-    defaultEnabled: false,
+    defaultEnabled: true,
     status: 'wip',
-    guard: {
-      allOf: ['isStagingCluster'],
-      failureReason: 'Not a staging cluster',
-      visibleInFeatureFlagPanel: false,
-    },
   },
   mintmaker: {
     key: 'mintmaker',

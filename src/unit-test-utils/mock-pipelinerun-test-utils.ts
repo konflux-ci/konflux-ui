@@ -11,12 +11,13 @@ import { PipelineRunKind, TaskRunKind } from '~/types';
 export const createPipelineRunMockStates = () => ({
   loading: () => [null, false, undefined] as const,
   loaded: (data: PipelineRunKind) => [data, true, undefined] as const,
+  notFound: () => [undefined, true, undefined] as const,
   error: (error: { message: string; code: number }) => [null, true, error] as const,
 });
 
 /**
  * Mock state helpers for useTaskRunsForPipelineRuns hook
- * Returns [data, loaded, error, getNextPage, { hasNextPage, isFetchingNextPage }] tuple
+ * Returns [data, allPagesLoaded, error, getNextPage, { hasNextPage, isFetchingNextPage }] tuple
  */
 export const createTaskRunsMockStates = () => ({
   loading: () =>

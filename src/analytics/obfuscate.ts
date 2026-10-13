@@ -1,4 +1,5 @@
-import { SHA256Hash } from './gen/analytics-types';
+/** Branded type for SHA-256 obfuscated strings. */
+export type SHA256Hash = string & { readonly __brand: 'SHA256Hash' };
 
 /**
  * Obfuscates a string using SHA-256 via the Web Crypto API.

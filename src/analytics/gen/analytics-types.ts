@@ -2,7 +2,7 @@
  * ⚠️  AUTO-GENERATED FILE — DO NOT EDIT MANUALLY ⚠️
  *
  * This file was generated from the Konflux analytics schema.
- * Schema: https://github.com/konflux-ci/segment-bridge/blob/main/schema/ui.json
+ * Schema: https://github.com/konflux-ci/segment-bridge/blob/6a9a81249ff8222b39ca30256b62facb889fd44b/schema/ui.json
  * Docs:   docs/analytics.md
  *
  * To regenerate, run: yarn generate:analytics-types
@@ -11,10 +11,21 @@
  * from schema instead of editing this file directly.
  */
 
+import type { SHA256Hash } from '../obfuscate';
+
 /**
  * Union of all Konflux UI analytics event types
  */
-export type KonfluxUISegmentEvents = UserLoginEvent | UserLogoutEvent | FeedbackSubmittedEvent;
+export type KonfluxUISegmentEvents =
+  | UserLoginEvent
+  | UserLogoutEvent
+  | FeedbackSubmittedEvent
+  | UiSessionStartedEvent
+  | FeatureFlagsChangedEvent
+  | UserJourneyEvent
+  | ConformaViolationsLinkClickedEvent
+  | IntegrationTestRerunTriggeredEvent
+  | CopyLoginCommandClickedEvent;
 /**
  * Fired when a user successfully authenticates into Konflux
  */
@@ -38,6 +49,10 @@ export type UserLogoutEvent = CommonFields & {
  */
 export type FeedbackSubmittedEvent = CommonFields & {
   /**
+   * Unique identifier of the user. Obfuscated via sha256 with `clusterId` as salt.
+   */
+  userId: SHA256Hash;
+  /**
    * User satisfaction rating, typically on a 1-5 scale
    */
   rating: number;
@@ -50,19 +65,117 @@ export type FeedbackSubmittedEvent = CommonFields & {
    */
   email?: string;
 };
+/**
+ * Fired once per browser tab on the first app load, regardless of auth state, to capture how the user arrived at Konflux UI
+ */
+export type UiSessionStartedEvent = CommonFields & {
+  /**
+   * Unique identifier of the user. Obfuscated via sha256 with `clusterId` as salt.
+   */
+  userId: SHA256Hash;
+  /**
+   * Classification of document.referrer on first load, e.g. 'github' if the referrer host is github.com (or a subdomain).
+   */
+  arrivalSource: string;
+};
+/**
+ * Fired every time the Feature Flag Panel modal is closed. Contains only the flags whose effective state changed between panel open and panel close. changesCount may be 0 when user opened the panel but did not change anything (tracks panel awareness).
+ */
+export type FeatureFlagsChangedEvent = CommonFields & {
+  /**
+   * Unique identifier of the user. Obfuscated via sha256 with `clusterId` as salt.
+   */
+  userId: SHA256Hash;
+  /**
+   * Map of changed flag keys to their new boolean value. Empty object if no flags were changed.
+   */
+  changes: {
+    [k: string]: boolean;
+  };
+  /**
+   * Number of flags that changed. 0 means the user opened the panel but did not change anything.
+   */
+  changesCount: number;
+  /**
+   * Route pattern when the panel was opened (e.g. /ns/:workspaceName/applications), never the resolved URL
+   */
+  pagePattern: string;
+};
+/**
+ * Fired once per session, or once per part when the payload is auto-split, capturing the navigation path and per-page dwell times
+ */
+export type UserJourneyEvent = CommonFields & {
+  /**
+   * Unique identifier of the user. Obfuscated via sha256 with `clusterId` as salt.
+   */
+  userId: SHA256Hash;
+  /**
+   * ISO-8601 timestamp of when the session started
+   */
+  sessionStartedAt: string;
+  /**
+   * Duration of this journey part in milliseconds. For auto-split journeys, each part reports the duration of its own session segment rather than the full journey.
+   */
+  totalDurationMs: number;
+  /**
+   * Ordered list of steps (page visits) taken during the session
+   *
+   * @minItems 1
+   */
+  steps: [JourneyStep, ...JourneyStep[]];
+  /**
+   * Stable identifier linking all parts of a split journey. Only present when auto-split fires (payload exceeded size threshold).
+   */
+  journeyId?: string;
+  /**
+   * Zero-based index of this part within a split journey. Only present when auto-split fires.
+   */
+  journeyPartIndex?: number;
+};
+/**
+ * Fired when a user clicks an application link in the Conforma policy results card on the Issues Dashboard, navigating to that application's Conforma results tab
+ */
+export type ConformaViolationsLinkClickedEvent = CommonFields & {
+  /**
+   * Unique identifier of the user. Obfuscated via sha256 with `clusterId` as salt.
+   */
+  userId: SHA256Hash;
+};
+/**
+ * Fired when a user clicks the Rerun button for an integration test pipeline in the Activity / PipelineRuns list.
+ */
+export type IntegrationTestRerunTriggeredEvent = CommonFields & {
+  /**
+   * Unique identifier of the user. Obfuscated via sha256 with `clusterId` as salt.
+   */
+  userId: SHA256Hash;
+};
+/**
+ * Fired when a user clicks 'Copy login command' in the Help (?) menu.
+ */
+export type CopyLoginCommandClickedEvent = CommonFields & {
+  /**
+   * Unique identifier of the user. Obfuscated via sha256 with `clusterId` as salt.
+   */
+  userId: SHA256Hash;
+  /**
+   * True if the user opened the user-name menu on the same page (URL pathname) before clicking. Resets on pathname change and after each click.
+   */
+  userMenuOpenedBefore: boolean;
+};
 
 /**
  * Base fields required on every Segment event sent from Konflux UI
  */
 export interface CommonFields {
   /**
-   * Unique identifier of the cluster, used as salt for obfuscating PIA fields
+   * Random UUID generated in memory for the current browser tab; regenerated for each tab
    */
-  clusterId?: string;
+  sessionId: string;
   /**
    * Version of the OpenShift/Kubernetes cluster
    */
-  clusterVersion: string;
+  clusterVersion?: string;
   /**
    * Version of the Konflux instance
    */
@@ -76,8 +189,27 @@ export interface CommonFields {
    */
   openshiftVersion?: string;
 }
-/** Branded type for SHA-256 obfuscated strings. Use `obfuscate()` to create. */
-export type SHA256Hash = string & { readonly __brand: 'SHA256Hash' };
+/**
+ * A single step (page visit) within a user's navigation journey
+ */
+export interface JourneyStep {
+  /**
+   * Route pattern of the page, e.g. /ns/:workspaceName/applications. Must be the route pattern, not the resolved URL — never include workspace/tenant names or other identifiers from the actual path.
+   */
+  pagePattern: string;
+  /**
+   * Time in milliseconds the user spent on this step
+   */
+  durationMs: number;
+  /**
+   * Route pattern the user navigated to after leaving this step. Absent on the last (still-open) step. Must be the route pattern, not the resolved URL.
+   */
+  toPagePattern?: string;
+  /**
+   * Total milliseconds the browser tab was hidden (backgrounded) while the user was on this step. Allows computing active dwell time as durationMs - hiddenMs. Only present when greater than 0.
+   */
+  hiddenMs?: number;
+}
 
 /**
  * Event names for Segment track() calls.
@@ -86,15 +218,27 @@ export type SHA256Hash = string & { readonly __brand: 'SHA256Hash' };
 export enum TrackEvents {
   user_login_event = 'user_login',
   user_logout_event = 'user_logout',
+  user_journey_event = 'user_journey',
   feedback_submitted_event = 'feedback_submitted',
+  ui_session_started_event = 'ui_session_started',
+  feature_flags_changed_event = 'feature_flags_changed',
+  conforma_violations_link_clicked_event = 'conforma_violations_link_clicked',
+  integration_test_rerun_triggered_event = 'integration_test_rerun_triggered',
+  copy_login_command_clicked_event = 'copy_login_command_clicked',
 }
 
 /**
- * Maps each TrackEvents value to the event-specific properties callers must supply.
+ * Maps each TrackEvents value to its event-specific properties callers must supply.
  * CommonFields are excluded — they are merged automatically from commonProperties.
  */
 export type EventPropertiesMap = {
   [TrackEvents.user_login_event]: Omit<UserLoginEvent, keyof CommonFields>;
   [TrackEvents.user_logout_event]: Omit<UserLogoutEvent, keyof CommonFields>;
+  [TrackEvents.user_journey_event]: Omit<UserJourneyEvent, keyof CommonFields>;
   [TrackEvents.feedback_submitted_event]: Omit<FeedbackSubmittedEvent, keyof CommonFields>;
+  [TrackEvents.ui_session_started_event]: Omit<UiSessionStartedEvent, keyof CommonFields>;
+  [TrackEvents.feature_flags_changed_event]: Omit<FeatureFlagsChangedEvent, keyof CommonFields>;
+  [TrackEvents.conforma_violations_link_clicked_event]: Omit<ConformaViolationsLinkClickedEvent, keyof CommonFields>;
+  [TrackEvents.integration_test_rerun_triggered_event]: Omit<IntegrationTestRerunTriggeredEvent, keyof CommonFields>;
+  [TrackEvents.copy_login_command_clicked_event]: Omit<CopyLoginCommandClickedEvent, keyof CommonFields>;
 };

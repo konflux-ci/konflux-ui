@@ -5,7 +5,7 @@ import { useLocalStorage } from '~/shared/hooks/useLocalStorage';
 import { SavedView, SavedViewsConfig } from './types';
 import { generateSlug, isSlugUnique, STORAGE_KEY_PREFIX } from './utils';
 
-export const useSavedViews = (config: SavedViewsConfig) => {
+export const useSavedViews = (config: SavedViewsConfig, currentNamespace?: string) => {
   const { resourceKey, columnKeyPrefix } = config;
   const storageKey = `${STORAGE_KEY_PREFIX}:${resourceKey}`;
   const [activeViewSlug] = useQueryState('view', parseAsString);
@@ -24,11 +24,13 @@ export const useSavedViews = (config: SavedViewsConfig) => {
       label,
       searchParams,
       currentColumnStateKey,
+      namespace,
     }: {
       slug?: string;
       label: string;
       searchParams: string;
       currentColumnStateKey: string;
+      namespace: string;
     }): string => {
       // Validate searchParams — strip leading '?' and ensure it parses
       let sanitizedParams = searchParams;
@@ -56,7 +58,13 @@ export const useSavedViews = (config: SavedViewsConfig) => {
         localStorage.setItem(columnStateKey, columnState);
       }
 
-      const newView: SavedView = { slug, label, searchParams: sanitizedParams, columnStateKey };
+      const newView: SavedView = {
+        slug,
+        label,
+        searchParams: sanitizedParams,
+        columnStateKey,
+        namespace,
+      };
       setViews((prev) => [...(prev ?? []), newView]);
 
       return slug;
@@ -72,11 +80,11 @@ export const useSavedViews = (config: SavedViewsConfig) => {
         localStorage.removeItem(view.columnStateKey);
       }
       setViews((prev) => (prev ?? []).filter((v) => v.slug !== slug));
-      if (activeViewSlug === slug) {
-        navigate(`${config.routePath}?`, { replace: true });
+      if (activeViewSlug === slug && currentNamespace) {
+        navigate(`${config.routePathBuilder(currentNamespace)}?`, { replace: true });
       }
     },
-    [views, setViews, activeViewSlug, config.routePath, navigate],
+    [views, setViews, activeViewSlug, currentNamespace, config, navigate],
   );
 
   const renameView = useCallback(

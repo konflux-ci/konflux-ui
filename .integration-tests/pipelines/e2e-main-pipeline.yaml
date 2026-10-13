@@ -9,7 +9,6 @@ spec:
     - name: SNAPSHOT
       description: 'The JSON string representing the snapshot of the application under test.'
       # Should there be test image or UI builded image? Or are there both? Where to find out?
-      # Should be verified during https://redhat.atlassian.net/browse/KFLUXUI-1497
       default: '{"components": [{"name":"konflux-ui", "containerImage": "quay.io/konflux_ui_qe/konflux-ui-tests:latest"}]}'
       type: string
     - name: konflux-test-infra-secret
@@ -47,9 +46,15 @@ spec:
     - name: build-credentials-secret
       type: string
       default: build-credentials
+    - name: ui-image-pull-secret
+      description: >-
+        Konflux image pull secret (IPS) that can pull the private SNAPSHOT UI
+        image. Copied onto kind for deployment/proxy.
+      type: string
+      default: components-namespace-pull
     - name: spec-file
-      description: 'Cypress test spec file to run (for debugging, run single test)'
-      default: 'tests/basic-happy-path.spec.ts'
+      description: 'Cypress test spec file(s) to run (comma-separated; override for a single test)'
+      default: 'tests/component-lifecycle.spec.ts,tests/environment-config.spec.ts'
       type: string
     - name: job-type
       description: 'Type of job (pr-check, periodic-local, periodic-stage)'
@@ -59,11 +64,11 @@ spec:
       description: 'Skip sending the Slack notification'
       default: 'false'
       type: string
-    - name: test-image-tag
+    - name: test-image-repository
       description: >-
-        Tag for the E2E test image (quay.io/konflux_ui_qe/konflux-ui-tests:<tag>).
-        Repository is fixed so PipelineRuns cannot point the secret-bearing step at an arbitrary image.
-      default: 'latest'
+        E2E test image repository without tag. Must match e2e-output-image from
+        the konflux-ui build pipeline (e2e-on-pr-<sha> for pull_request, e2e-<sha> for push).
+      default: 'quay.io/redhat-user-workloads/konflux-ui-tenant/konflux-ui/konflux-ui'
       type: string
   tasks:
     - name: test-metadata
@@ -152,6 +157,32 @@ spec:
         - name: build-credentials
           value: $(params.build-credentials-secret)
 
+    # deploy-konflux-ci cannot reliably override the UI image (ui folder vs
+    # konflux-ui image name, digest pins). Patch proxy to the SNAPSHOT image.
+    - name: patch-konflux-ui-image
+      runAfter:
+        - deploy-konflux
+      when:
+        - input: '$(params.job-type)'
+          operator: notin
+          values: ['periodic-stage']
+      taskRef:
+        resolver: git
+        params:
+          - name: url
+            value: https://github.com/konflux-ci/konflux-ui
+          - name: revision
+            value: main
+          - name: pathInRepo
+            value: .integration-tests/tasks/patch-konflux-ui-image.yaml
+      params:
+        - name: cluster-access-secret
+          value: kfg-$(context.pipelineRun.name)
+        - name: container-image
+          value: $(tasks.test-metadata.results.container-image)
+        - name: pull-secret
+          value: $(params.ui-image-pull-secret)
+
     - name: monitor-webhook-logs
       runAfter:
         - deploy-konflux
@@ -172,9 +203,54 @@ spec:
         - name: monitoring-duration
           value: '5m'
 
+    - name: format-e2e-test-image
+      runAfter:
+        - patch-konflux-ui-image
+      taskSpec:
+        params:
+          - name: test-image-repository
+            type: string
+          - name: git-revision
+            type: string
+          - name: test-event-type
+            type: string
+        results:
+          - name: test-image
+            type: string
+        steps:
+          - name: format
+            image: registry.access.redhat.com/ubi9/ubi@sha256:4406835b776f05688a823ff532203587b9238510817645c9f37e0fdac1743b8c
+            computeResources:
+              limits:
+                memory: 128Mi
+              requests:
+                cpu: 10m
+                memory: 64Mi
+            script: |
+              #!/bin/bash
+              set -euo pipefail
+              event_type="$(params.test-event-type)"
+              git_revision="$(params.git-revision)"
+              repository="$(params.test-image-repository)"
+              if [[ "${event_type}" == "pull_request" ]]; then
+                tag="e2e-on-pr-${git_revision}"
+              else
+                tag="e2e-${git_revision}"
+              fi
+              image_ref="${repository}:${tag}"
+              echo "Image reference: ${image_ref}"
+              printf '%s' "${image_ref}" > "$(results.test-image.path)"
+      params:
+        - name: test-image-repository
+          value: $(params.test-image-repository)
+        - name: git-revision
+          value: $(tasks.test-metadata.results.git-revision)
+        - name: test-event-type
+          value: $(tasks.test-metadata.results.test-event-type)
+
     - name: run-e2e-konflux-ui
       runAfter:
-        - deploy-konflux
+        - format-e2e-test-image
       taskRef:
         resolver: git
         params:
@@ -185,7 +261,6 @@ spec:
           - name: pathInRepo
             value: .integration-tests/tasks/run-e2e-konflux-ui.yaml
       params:
-        # says if it is PR check or periodic job
         - name: job-type
           value: '$(params.job-type)'
           # oci for storing artefacts
@@ -193,8 +268,8 @@ spec:
           value: $(params.oci-container-repo):$(context.pipelineRun.name)
         - name: oci-credentials
           value: $(params.oci-credentials-secret)
-        - name: test-image-tag
-          value: $(params.test-image-tag)
+        - name: test-image
+          value: $(tasks.format-e2e-test-image.results.test-image)
         - name: spec-file
           value: $(params.spec-file)
         - name: github-credentials-secret
@@ -203,6 +278,16 @@ spec:
           value: $(params.cypress-credentials-secret)
         - name: cypress-cloud-secret
           value: $(params.cypress-cloud-secret)
+        - name: source-repo-url
+          value: $(tasks.test-metadata.results.source-repo-url)
+        - name: git-revision
+          value: $(tasks.test-metadata.results.git-revision)
+        - name: target-branch
+          value: $(tasks.test-metadata.results.target-repo-branch)
+        - name: target-repo-url
+          value: https://github.com/$(tasks.test-metadata.results.git-org)/$(tasks.test-metadata.results.git-repo)
+        - name: pipeline-run-name
+          value: $(context.pipelineRun.name)
   finally:
     - name: deprovision-kind-cluster
       when:

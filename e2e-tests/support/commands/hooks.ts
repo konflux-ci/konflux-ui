@@ -23,7 +23,7 @@ before(() => {
   //Clear namespace before running the tests
   Common.cleanNamespace();
 
-  const url = new URL(Cypress.env('KONFLUX_BASE_URL'));
+  const url = new URL(Cypress.expose('KONFLUX_BASE_URL'));
   cy.setCookie('notice_gdpr_prefs', '0,1,2:', { domain: url.hostname });
   cy.setCookie('cmapi_cookie_privacy', 'permit 1,2,3', { domain: url.hostname });
   cy.setCookie('notice_preferences', '2:', { domain: url.hostname });
@@ -34,11 +34,15 @@ before(() => {
     JSON.stringify({ 'application-list-getting-started-modal': true }),
   );
 
-  if (Cypress.env('LOGIN_PROVIDER') === 'openshift') {
+  if (Cypress.expose('STUDIO_MODE')) {
+    return;
+  }
+
+  if (Cypress.expose('LOGIN_PROVIDER') === 'openshift') {
     Login.openshiftLogin();
-  } else if (Cypress.env('LOCAL_CLUSTER')) {
+  } else if (Cypress.expose('LOCAL_CLUSTER')) {
     Login.localKonfluxLogin();
-  } else if (Cypress.env('PERIODIC_RUN_STAGE')) {
+  } else if (Cypress.expose('PERIODIC_RUN_STAGE')) {
     Login.stageKonfluxLogin();
   } else {
     Login.login();
@@ -46,6 +50,10 @@ before(() => {
 });
 
 afterEach(function () {
+  if (Cypress.expose('STUDIO_MODE')) {
+    return;
+  }
+
   if (this.currentTest?.state === 'failed') {
     cy.window().then((win) => {
       cy.log('Capturing DOM structure');
@@ -64,6 +72,10 @@ afterEach(function () {
 });
 
 after(() => {
+  if (Cypress.expose('STUDIO_MODE')) {
+    return;
+  }
+
   //Clear namespace after running the tests
   Common.cleanNamespace();
 });

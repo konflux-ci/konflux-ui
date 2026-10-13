@@ -56,6 +56,20 @@ export type ImageProxy = {
   oauthPath: string;
 };
 
+export type CliLogin = {
+  apiServerUrl: string;
+  /** Present for OpenShift clusters; unused for Kind / plain Kubernetes. */
+  oauthTokenRequestUrl?: string;
+  /**
+   * `openshift` → `oc login --web` (Openshift clusters).
+   * `kubernetes` → kubectl context (local Kind without OpenShift OAuth).
+   * When omitted, inferred from `openshiftVersion` / OAuth URL shape.
+   */
+  authMode?: 'openshift' | 'kubernetes';
+  /** Optional kubeconfig context name for Kubernetes / Kind clusters. */
+  kubeContext?: string;
+};
+
 export type KonfluxPublicInfo = {
   imageProxyUrl?: string; // Deprecated: kept for backward compatibility
   imageProxy?: ImageProxy;
@@ -69,4 +83,5 @@ export type KonfluxPublicInfo = {
   konfluxVersion?: string;
   kubernetesVersion?: string;
   openshiftVersion?: string;
+  cliLogin?: CliLogin;
 };

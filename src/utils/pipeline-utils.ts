@@ -315,8 +315,8 @@ export const getSbomTaskRun = (taskruns: TaskRunKind[]) =>
 
 export const taskName = (taskrun: TaskRunKind) =>
   taskrun.spec.taskRef?.name ||
-  taskrun.metadata.labels[TektonResourceLabel.pipelineTask] ||
-  taskrun.metadata.labels[TektonResourceLabel.task] ||
+  taskrun.metadata.labels?.[TektonResourceLabel.pipelineTask] ||
+  taskrun.metadata.labels?.[TektonResourceLabel.task] ||
   taskrun.spec.taskRef?.params?.find((r) => r.name === 'name')?.value;
 
 // Use optional chaining to handle null pipelineRun safely (e.g., during loading or error states)

@@ -135,4 +135,66 @@ describe('SecretSection', () => {
     expect(showModalMock).toHaveBeenCalledTimes(1);
     expect(showModalMock.mock.calls[0][0]).toEqual(expect.any(Function));
   });
+
+  it('should disable edit control when secret already exists in the cluster', () => {
+    formikRenderer(<SecretSection />, {
+      newSecrets: ['snyk-secret'],
+      importSecrets: [
+        {
+          secretName: 'snyk-secret',
+          type: SecretTypeDropdownLabel.opaque,
+          opaque: {
+            keyValues: [
+              { key: 'snyk-token', value: 'snyk-secret', readOnlyKey: true, readOnlyValue: true },
+            ],
+          },
+        },
+      ],
+    });
+
+    expect(screen.getByTestId('newSecrets-0-edit-button')).toHaveAttribute('aria-disabled', 'true');
+  });
+
+  it('should not open secret modal when edit is disabled for an existing cluster secret', () => {
+    formikRenderer(<SecretSection />, {
+      newSecrets: ['snyk-secret'],
+      importSecrets: [
+        {
+          secretName: 'snyk-secret',
+          type: SecretTypeDropdownLabel.opaque,
+          opaque: {
+            keyValues: [
+              { key: 'snyk-token', value: 'snyk-secret', readOnlyKey: true, readOnlyValue: true },
+            ],
+          },
+        },
+      ],
+    });
+
+    fireEvent.click(screen.getByTestId('newSecrets-0-edit-button'));
+
+    expect(showModalMock).not.toHaveBeenCalled();
+  });
+
+  it('should allow editing a unique secret even when key values are marked read-only', () => {
+    formikRenderer(<SecretSection />, {
+      newSecrets: ['doesnt-exist'],
+      importSecrets: [
+        {
+          secretName: 'doesnt-exist',
+          type: SecretTypeDropdownLabel.opaque,
+          opaque: {
+            keyValues: [
+              { key: 'token', value: 'secret-value', readOnlyKey: true, readOnlyValue: true },
+            ],
+          },
+        },
+      ],
+    });
+
+    expect(screen.getByTestId('newSecrets-0-edit-button')).not.toHaveAttribute(
+      'aria-disabled',
+      'true',
+    );
+  });
 });

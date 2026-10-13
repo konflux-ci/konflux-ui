@@ -12,14 +12,42 @@ describe('ConformaSummaryBar', () => {
     totalSuccesses: 20,
   };
 
-  it('renders all five metric items', () => {
+  it('renders three summary sections', () => {
     routerRenderer(<ConformaSummaryBar {...defaultProps} />);
 
     expect(screen.getByText('Components')).toBeInTheDocument();
-    expect(screen.getByText('Failed Components')).toBeInTheDocument();
-    expect(screen.getByText('Violations')).toBeInTheDocument();
-    expect(screen.getByText('Warnings')).toBeInTheDocument();
-    expect(screen.getByText('Successes')).toBeInTheDocument();
+    expect(screen.getByText('Upcoming changes')).toBeInTheDocument();
+    expect(screen.getByText('Results summary')).toBeInTheDocument();
+  });
+
+  it('renders component counts with separators in the Components section', () => {
+    const { container } = routerRenderer(<ConformaSummaryBar {...defaultProps} />);
+
+    const section = container.querySelector('[data-test="conforma-summary-components"]');
+    expect(section).toHaveTextContent('10');
+    expect(section).toHaveTextContent('total');
+    expect(section).toHaveTextContent('3');
+    expect(section).toHaveTextContent('failed');
+  });
+
+  it('renders warning count as pending in the Upcoming changes section', () => {
+    const { container } = routerRenderer(<ConformaSummaryBar {...defaultProps} />);
+
+    const section = container.querySelector('[data-test="conforma-summary-upcoming-changes"]');
+    expect(section).toHaveTextContent('4');
+    expect(section).toHaveTextContent('Pending');
+  });
+
+  it('renders violations, warnings, and success with separators in the Results summary section', () => {
+    const { container } = routerRenderer(<ConformaSummaryBar {...defaultProps} />);
+
+    const section = container.querySelector('[data-test="conforma-summary-results"]');
+    expect(section).toHaveTextContent('7');
+    expect(section).toHaveTextContent('violations');
+    expect(section).toHaveTextContent('4');
+    expect(section).toHaveTextContent('warnings');
+    expect(section).toHaveTextContent('20');
+    expect(section).toHaveTextContent('success');
   });
 
   it('renders with zero counts', () => {
@@ -33,63 +61,8 @@ describe('ConformaSummaryBar', () => {
       />,
     );
 
-    const zeroElements = screen.getAllByText('0');
-    expect(zeroElements).toHaveLength(5);
-  });
-
-  it('renders dividers between items', () => {
-    const { container } = routerRenderer(<ConformaSummaryBar {...defaultProps} />);
-    const dividers = container.querySelectorAll('[data-test="conforma-summary-divider"]');
-    expect(dividers.length).toBe(4);
-  });
-
-  it('renders metrics with icons and correct labels', () => {
-    routerRenderer(<ConformaSummaryBar {...defaultProps} />);
     expect(screen.getByText('Components')).toBeInTheDocument();
-    expect(screen.getByText('Failed Components')).toBeInTheDocument();
-    expect(screen.getByText('Violations')).toBeInTheDocument();
-    expect(screen.getByText('Warnings')).toBeInTheDocument();
-    expect(screen.getByText('Successes')).toBeInTheDocument();
-
-    expect(screen.getByText('10')).toBeInTheDocument();
-    expect(screen.getByText('3')).toBeInTheDocument();
-    expect(screen.getByText('7')).toBeInTheDocument();
-    expect(screen.getByText('4')).toBeInTheDocument();
-    expect(screen.getByText('20')).toBeInTheDocument();
-  });
-
-  it('does not show a raw-count qualifier when raw counts are not provided', () => {
-    routerRenderer(<ConformaSummaryBar {...defaultProps} />);
-
-    expect(screen.queryByText(/incl\. multi-arch/i)).not.toBeInTheDocument();
-  });
-
-  it('does not show a raw-count qualifier when raw counts match the collapsed counts', () => {
-    routerRenderer(
-      <ConformaSummaryBar
-        {...defaultProps}
-        totalViolationsRaw={defaultProps.totalViolations}
-        totalWarningsRaw={defaultProps.totalWarnings}
-        totalSuccessesRaw={defaultProps.totalSuccesses}
-      />,
-    );
-
-    expect(screen.queryByText(/incl\. multi-arch/i)).not.toBeInTheDocument();
-  });
-
-  it('shows a raw-count qualifier when collapsing hides real violations/warnings/successes', () => {
-    routerRenderer(
-      <ConformaSummaryBar
-        {...defaultProps}
-        totalViolationsRaw={12}
-        totalWarningsRaw={9}
-        totalSuccessesRaw={20}
-      />,
-    );
-
-    expect(screen.getByText('(12 incl. multi-arch)')).toBeInTheDocument();
-    expect(screen.getByText('(9 incl. multi-arch)')).toBeInTheDocument();
-    // totalSuccessesRaw equals totalSuccesses (20), so no qualifier for successes.
-    expect(screen.queryByText('(20 incl. multi-arch)')).not.toBeInTheDocument();
+    expect(screen.getByText('Upcoming changes')).toBeInTheDocument();
+    expect(screen.getByText('Results summary')).toBeInTheDocument();
   });
 });

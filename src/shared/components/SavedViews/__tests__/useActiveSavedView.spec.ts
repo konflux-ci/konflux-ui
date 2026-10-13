@@ -19,12 +19,14 @@ const mockViews: SavedView[] = [
     label: 'Failed Builds',
     searchParams: 'status=failed',
     columnStateKey: 'prns-columns:failed-builds',
+    namespace: 'test-ns',
   },
   {
     slug: 'recent-runs',
     label: 'Recent Runs',
     searchParams: 'sort=newest',
     columnStateKey: 'prns-columns:recent-runs',
+    namespace: 'test-ns',
   },
 ];
 

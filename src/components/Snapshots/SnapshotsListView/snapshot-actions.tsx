@@ -9,7 +9,11 @@ import { useNamespace } from '../../../shared/providers/Namespace';
 import { Snapshot } from '../../../types/coreBuildService';
 import { useAccessReviewForModel } from '../../../utils/rbac';
 
-export const useSnapshotActions = (snapshot: Snapshot, source?: ResourceSource): Action[] => {
+export const useSnapshotActions = (
+  snapshot: Snapshot,
+  source?: ResourceSource,
+  readOnly = false,
+): Action[] => {
   const namespace = useNamespace();
   const [canCreateRelease] = useAccessReviewForModel(ReleaseModel, 'create');
 
@@ -17,6 +21,8 @@ export const useSnapshotActions = (snapshot: Snapshot, source?: ResourceSource):
     if (!snapshot) {
       return [];
     }
+
+    if (readOnly) return [downloadYamlAction(snapshot)];
 
     const isArchived = source !== ResourceSource.Cluster;
     const canTriggerRelease = canCreateRelease && !isArchived;
@@ -47,7 +53,7 @@ export const useSnapshotActions = (snapshot: Snapshot, source?: ResourceSource):
         },
       },
     ];
-  }, [snapshot, canCreateRelease, namespace, source]);
+  }, [snapshot, canCreateRelease, namespace, source, readOnly]);
 
   return actions;
 };
@@ -55,7 +61,8 @@ export const useSnapshotActions = (snapshot: Snapshot, source?: ResourceSource):
 export const SnapshotActionCell: React.FC<{
   snapshot: Snapshot;
   source: ResourceSource | undefined;
-}> = React.memo(({ snapshot, source }) => {
-  const actions = useSnapshotActions(snapshot, source);
+  readOnly?: boolean;
+}> = React.memo(({ snapshot, source, readOnly }) => {
+  const actions = useSnapshotActions(snapshot, source, readOnly);
   return <ActionMenu actions={actions} />;
 });

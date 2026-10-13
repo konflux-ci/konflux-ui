@@ -73,6 +73,9 @@ const SecretSection: React.FC<SecretSectionProps> = ({ currentComponent }) => {
           ? { keyValuePairs }
           : null,
         image: secret.type === SecretTypeDropdownLabel.image ? { authType: '' } : null,
+        labels: secret.metadata.labels
+          ? Object.entries(secret.metadata.labels).map(([key, value]) => ({ key, value }))
+          : undefined,
       };
     });
   }, [secrets, secretsLoaded]);
@@ -144,6 +147,17 @@ const SecretSection: React.FC<SecretSectionProps> = ({ currentComponent }) => {
         {(props) => {
           const rowIndex = props.idx;
           const editTestId = `${props.name.replace('.', '-')}-edit-button`;
+          const importSecret = values.importSecrets?.[rowIndex];
+          const isExistingClusterSecret =
+            importSecret != null &&
+            partnerTaskSecrets.some((secret) => secret.name === importSecret.secretName);
+          const isEditDisabled = !canCreateSecret || isExistingClusterSecret;
+
+          const editTooltip = !canCreateSecret
+            ? "You don't have access to edit this secret"
+            : isExistingClusterSecret
+              ? 'You cannot edit a secret that already exists in the cluster'
+              : 'Edit';
 
           return (
             <Grid>
@@ -154,14 +168,14 @@ const SecretSection: React.FC<SecretSectionProps> = ({ currentComponent }) => {
                 <Flex spaceItems={{ default: 'spaceItemsNone' }}>
                   <FlexItem>
                     <IfFeature flag="edit-secret-page">
-                      <Tooltip content="Edit">
+                      <Tooltip content={editTooltip}>
                         <Button
                           icon={<PencilAltIcon />}
                           type={ButtonType.button}
                           variant={ButtonVariant.plain}
                           data-test={editTestId}
                           aria-label="Edit secret"
-                          isDisabled={!canCreateSecret}
+                          isAriaDisabled={isEditDisabled}
                           onClick={() => openEditSecretModal(rowIndex)}
                           style={{ paddingRight: 0 }}
                         />

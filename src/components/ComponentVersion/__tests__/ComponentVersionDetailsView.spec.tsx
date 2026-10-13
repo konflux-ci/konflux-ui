@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { screen } from '@testing-library/react';
 import { FLAGS } from '~/feature-flags/flags';
 import { useIsOnFeatureFlag, useFeatureFlags } from '~/feature-flags/hooks';
-import { useComponent } from '~/hooks/useComponents';
+import { useComponentV2 } from '~/hooks/useComponentsV2';
 import { ComponentKind, ComponentSpecs } from '~/types';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { renderWithQueryClientAndRouter } from '~/unit-test-utils/rendering-utils';
@@ -15,8 +15,8 @@ jest.mock('react-router-dom', () => ({
   Outlet: () => <div data-test="outlet" />,
 }));
 
-jest.mock('~/hooks/useComponents', () => ({
-  useComponent: jest.fn(),
+jest.mock('~/hooks/useComponentsV2', () => ({
+  useComponentV2: jest.fn(),
 }));
 
 jest.mock('~/feature-flags/hooks', () => {
@@ -35,7 +35,7 @@ jest.mock('~/feature-flags/hooks', () => {
       fallback?: React.ReactNode;
     }) => {
       const isEnabled = useIsOnFeatureFlagMock(flag);
-      return isEnabled ? children : fallback ?? null;
+      return isEnabled ? children : (fallback ?? null);
     },
   };
 });
@@ -45,7 +45,7 @@ jest.mock('~/hooks/useDocumentTitle', () => ({
 }));
 
 const useParamsMock = useParams as jest.Mock;
-const useComponentMock = useComponent as jest.Mock;
+const useComponentMock = useComponentV2 as jest.Mock;
 const mockUseIsOnFeatureFlag = useIsOnFeatureFlag as jest.Mock;
 const mockUseFeatureFlags = useFeatureFlags as jest.Mock;
 
@@ -75,11 +75,11 @@ describe('ComponentVersionDetailsView', () => {
   beforeEach(() => {
     useParamsMock.mockReturnValue({
       componentName: 'my-component',
-      versionRevision: 'ver-1.0',
+      versionRevision: 'Version 1.0',
     });
     useComponentMock.mockReturnValue([mockComponent, true, undefined]);
     mockUseIsOnFeatureFlag.mockReturnValue(true);
-    mockUseFeatureFlags.mockReturnValue([{ 'components-page': true }, jest.fn()]);
+    mockUseFeatureFlags.mockReturnValue([{ 'component-model': true }, jest.fn()]);
   });
 
   afterEach(() => {
@@ -133,7 +133,7 @@ describe('ComponentVersionDetailsView', () => {
     expect(screen.getByText('Feature flag disabled')).toBeInTheDocument();
     expect(
       screen.getByText(
-        `To view this page, enable the "${FLAGS['components-page'].description}" feature flag.`,
+        `To view this page, enable the "${FLAGS['component-model'].description}" feature flag.`,
       ),
     ).toBeInTheDocument();
   });

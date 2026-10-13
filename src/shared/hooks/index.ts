@@ -8,3 +8,5 @@ export * from './useDeepCompareMemoize';
 export * from './useMutationObserver';
 export * from './useLazyActionMenu';
 export * from './useFaviconStatusBadge';
+export * from './useContainerHeight';
+export * from './useCurrentTime';

@@ -16,6 +16,7 @@ import { useImageProxy } from '~/hooks/useImageProxy';
 import { useImageRepository } from '~/hooks/useImageRepository';
 import { useLatestSuccessfulBuildPipelineRunForComponentV2 } from '~/hooks/useLatestPushBuildPipeline';
 import { useTaskRunsForPipelineRuns } from '~/hooks/useTaskRunsV2';
+import { useIsImageControllerEnabled } from '~/image-controller/conditional-checks';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { COMMIT_DETAILS_PATH } from '../../../../routes/paths';
 import { Timestamp } from '../../../../shared/components/timestamp/Timestamp';
@@ -46,6 +47,7 @@ const ComponentLatestBuild: React.FC<React.PropsWithChildren<ComponentLatestBuil
     pipelineRun?.metadata?.name,
   );
   const buildLogsModal = useBuildLogViewerModal(component);
+  const { isImageControllerEnabled } = useIsImageControllerEnabled();
   const [urlInfo, proxyLoaded, proxyError] = useImageProxy();
 
   // Fetch ImageRepository for this component
@@ -61,12 +63,15 @@ const ComponentLatestBuild: React.FC<React.PropsWithChildren<ComponentLatestBuil
   const containerImage = component?.status?.lastPromotedImage ?? null;
 
   // Get the appropriate image URL based on visibility
+  // When image controller is disabled, skip proxy logic and use original URL
   // When proxy or imageRepo has error or urlInfo is null, fallback to original URL (null triggers fallback in getImageUrlForVisibility)
-  const displayImageUrl = getImageUrlForVisibility(
-    containerImage,
-    imageRepository?.spec?.image?.visibility ?? null,
-    proxyError || imageRepoError || !urlInfo ? null : urlInfo.hostname,
-  );
+  const displayImageUrl = isImageControllerEnabled
+    ? getImageUrlForVisibility(
+        containerImage,
+        imageRepository?.spec?.image?.visibility ?? null,
+        proxyError || imageRepoError || !urlInfo ? null : urlInfo.hostname,
+      )
+    : containerImage;
 
   if (pipelineRunError) {
     return getErrorState(pipelineRunError, pipelineRunLoaded, 'pipeline run', true);
@@ -76,12 +81,15 @@ const ComponentLatestBuild: React.FC<React.PropsWithChildren<ComponentLatestBuil
   // We don't show error state to avoid blocking the entire component
 
   // Wait for all required data including proxy for private images
+  // When image controller is disabled, skip waiting for image repo/proxy data
   // Once error occurs, fallback to display the content
-  const isPrivate = imageRepository?.spec?.image?.visibility === ImageRepositoryVisibility.private;
+  const isPrivate =
+    isImageControllerEnabled &&
+    imageRepository?.spec?.image?.visibility === ImageRepositoryVisibility.private;
   if (
     !pipelineRunLoaded ||
     !taskRunsLoaded ||
-    (!imageRepoLoaded && !imageRepoError) ||
+    (isImageControllerEnabled && !imageRepoLoaded && !imageRepoError) ||
     (isPrivate && !proxyLoaded && !proxyError)
   ) {
     return (

@@ -2,6 +2,7 @@ import '@testing-library/jest-dom';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { renderHook, act } from '@testing-library/react-hooks';
 import { DataState, testPipelineRuns } from '~/__data__/pipelinerun-data';
+import { TrackEvents } from '~/analytics';
 import { downloadYaml } from '~/utils/common-utils';
 import { PipelineRunEventType, PipelineRunLabel, runStatus } from '../../../../consts/pipelinerun';
 import { useComponent } from '../../../../hooks/useComponents';
@@ -46,6 +47,13 @@ jest.mock('../../../../hooks/useComponents', () => ({
   useComponent: jest.fn(),
 }));
 
+jest.mock('~/analytics/hooks', () => ({
+  useTrackAnalyticsEvent: jest.fn(),
+}));
+
+const useTrackAnalyticsEventMock = jest.requireMock('~/analytics/hooks')
+  .useTrackAnalyticsEvent as jest.Mock;
+
 const useAccessReviewForModelMock = useAccessReviewForModel as jest.Mock;
 const useNavigateMock = useNavigate as jest.Mock;
 const mockUseSnapshots = useSnapshot as jest.Mock;
@@ -61,6 +69,8 @@ const createMockLocation = (pathname: string | undefined | null) => ({
   state: {},
   key: 'test',
 });
+
+let trackEventMock: jest.Mock;
 
 jest.mock('../../../../k8s', () => ({
   ...jest.requireActual('../../../../k8s'),
@@ -139,6 +149,8 @@ describe('usePipelinerunActions', () => {
 
   beforeEach(() => {
     navigateMock = jest.fn();
+    trackEventMock = jest.fn();
+    useTrackAnalyticsEventMock.mockReturnValue(trackEventMock);
     useNavigateMock.mockImplementation(() => navigateMock);
     mockUseSnapshots.mockReturnValue([{ metadata: { name: 'snp1' } }, true]);
     mockWatchResource.mockReturnValue([[], false]);
@@ -460,8 +472,45 @@ describe('usePipelinerunActions', () => {
 describe('usePipelinererunAction', () => {
   let navigateMock: jest.Mock;
 
+  it('disables rerun when the pipeline run has no labels', () => {
+    useComponentMock.mockReturnValue([undefined, true, undefined]);
+    const { result } = renderHook(() =>
+      usePipelinererunAction({
+        ...testPipelineRuns[DataState.SUCCEEDED],
+        metadata: { name: 'unlabelled-run' },
+      }),
+    );
+    expect(result.current.isDisabled).toBe(true);
+  });
+
+  it('returns to the supplied destination after rerunning a build without an application', async () => {
+    useAccessReviewForModelMock.mockReturnValue([true, true]);
+    useComponentMock.mockReturnValue([
+      { ...mockComponent, spec: { ...mockComponent.spec, application: undefined } },
+      true,
+    ]);
+    mockUseLocation.mockReturnValue(createMockLocation('/ns/test-ns/pipelineruns/build-1'));
+    const run = {
+      ...testPipelineRuns[DataState.SUCCEEDED],
+      metadata: {
+        name: 'build-1',
+        labels: {
+          [PipelineRunLabel.PIPELINE_TYPE]: 'build',
+          [PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL]: PipelineRunEventType.PUSH,
+        },
+      },
+    };
+    const { result } = renderHook(() =>
+      usePipelinererunAction(run, '/ns/test-ns/components/api/activity/pipelineruns'),
+    );
+    await act(async () => result.current.cta());
+    expect(navigateMock).toHaveBeenCalledWith('/ns/test-ns/components/api/activity/pipelineruns');
+  });
+
   beforeEach(() => {
     navigateMock = jest.fn();
+    trackEventMock = jest.fn();
+    useTrackAnalyticsEventMock.mockReturnValue(trackEventMock);
     useNavigateMock.mockImplementation(() => navigateMock);
     mockUseSnapshots.mockReturnValue([[{ metadata: { name: 'snp1' } }], true, null]);
   });
@@ -510,6 +559,40 @@ describe('usePipelinererunAction', () => {
     );
 
     expect(action.cta).toBeDefined();
+  });
+
+  it('should track integration_test_rerun_triggered event when test pipeline rerun cta is called', async () => {
+    useAccessReviewForModelMock.mockReturnValue([true, true]);
+    mockUseSnapshots.mockReturnValue([
+      {
+        metadata: { name: 'snp1', namespace: 'test-ns' },
+        spec: { application: 'test-app' },
+      },
+      true,
+      null,
+    ]);
+    const { result } = renderHook(() =>
+      usePipelinererunAction({
+        metadata: {
+          labels: {
+            'pipelines.appstudio.openshift.io/type': 'test',
+            [PipelineRunLabel.SNAPSHOT]: 'snp1',
+            [PipelineRunLabel.TEST_SERVICE_SCENARIO]: 'scn1',
+          },
+        },
+        status: { conditions: [{ type: 'Succeeded', status: runStatus.Running }] },
+      } as unknown as PipelineRunKind),
+    );
+
+    await act(async () => {
+      await result.current.cta();
+    });
+
+    expect(trackEventMock).toHaveBeenCalledTimes(1);
+    expect(trackEventMock).toHaveBeenCalledWith(
+      TrackEvents.integration_test_rerun_triggered_event,
+      {},
+    );
   });
 
   it('should contain disabled rerun action when scenario missing', () => {
@@ -1053,6 +1136,8 @@ describe('useRerunActionLazy', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    trackEventMock = jest.fn();
+    useTrackAnalyticsEventMock.mockReturnValue(trackEventMock);
     mockUseLocation.mockReturnValue(
       createMockLocation('/ns/test-ns/applications/app/pipelineruns'),
     );
@@ -1174,6 +1259,41 @@ describe('useRerunActionLazy', () => {
         queryOptions: { ns: 'test-ns', name: 'snp1' },
       });
     });
+  });
+
+  it('should track integration_test_rerun_triggered event when test pipeline rerun cta is called via lazy hook', async () => {
+    const pipelineRun = {
+      metadata: {
+        labels: {
+          'pipelines.appstudio.openshift.io/type': 'test',
+          [PipelineRunLabel.SNAPSHOT]: 'snp1',
+          [PipelineRunLabel.TEST_SERVICE_SCENARIO]: 'scn1',
+          [PipelineRunLabel.APPLICATION]: 'test-app',
+        },
+      },
+      status: { conditions: [{ type: 'Succeeded', status: runStatus.Running }] },
+    } as unknown as PipelineRunKind;
+
+    k8sQueryGetResourceMock.mockResolvedValueOnce(mockSnapshot);
+
+    const { result } = renderHook(() => useRerunActionLazy(pipelineRun));
+
+    await act(async () => {
+      const [, onOpen] = result.current;
+      onOpen(true);
+      await Promise.resolve();
+    });
+
+    const [actions] = result.current;
+    await act(async () => {
+      await (actions[0].cta as () => Promise<void>)();
+    });
+
+    expect(trackEventMock).toHaveBeenCalledTimes(1);
+    expect(trackEventMock).toHaveBeenCalledWith(
+      TrackEvents.integration_test_rerun_triggered_event,
+      {},
+    );
   });
 
   describe('component fetch error handling', () => {

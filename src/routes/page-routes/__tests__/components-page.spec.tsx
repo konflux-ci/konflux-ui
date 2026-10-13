@@ -1,4 +1,5 @@
 import React from 'react';
+import { ComponentDependencyTab } from '~/components/ComponentsPage/tabs/ComponentDependencyTab';
 import { ComponentVersionsTab } from '~/components/ComponentsPage/tabs/ComponentVersionsTab';
 import { ActivityTabV2 } from '~/shared/components/activity-tab/ActivityTabV2';
 import {
@@ -57,9 +58,10 @@ describe('Components page routes configuration', () => {
     expect(detailsRoute.children).toBeDefined();
   });
 
-  it('should include index, activity, and version child routes', () => {
+  it('should include index, activity, version, and dependency update child routes', () => {
     const [, detailsRoute] = componentsPageRoutes as [{ path: string }, PathRoute];
-    const [indexRoute, activityWithTabRoute, activityRoute, versionsRoute] = detailsRoute.children;
+    const [indexRoute, activityWithTabRoute, activityRoute, versionsRoute, dependencyRoute] =
+      detailsRoute.children;
 
     expect(indexRoute.index).toBe(true);
     expect(indexRoute.element).toEqual(<ComponentDetailsTab />);
@@ -72,5 +74,8 @@ describe('Components page routes configuration', () => {
 
     expect(versionsRoute.path).toBe('versions');
     expect(versionsRoute.element).toEqual(<ComponentVersionsTab />);
+
+    expect(dependencyRoute.path).toBe('dep-updates');
+    expect(dependencyRoute.element).toEqual(<ComponentDependencyTab />);
   });
 });

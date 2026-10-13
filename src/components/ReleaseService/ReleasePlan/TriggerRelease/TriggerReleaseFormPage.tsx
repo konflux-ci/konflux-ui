@@ -60,7 +60,7 @@ export const TriggerReleaseFormPage: React.FC = () => {
         releasePlan: newRelease.spec.releasePlan,
         namespace,
       });
-      const application = releasePlans.filter((rp) => rp.metadata.name === values.releasePlan)?.[0]
+      const application = releasePlans?.filter((rp) => rp.metadata.name === values.releasePlan)?.[0]
         ?.spec?.application;
       navigate(
         APPLICATION_RELEASE_DETAILS_PATH.createPath({

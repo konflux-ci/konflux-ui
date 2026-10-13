@@ -2,10 +2,16 @@ import { act, renderHook } from '@testing-library/react';
 import type { LogSection } from '../types';
 import { useSectionFold } from '../useSectionFold';
 
-const section = (containerName: string, data: string, isCompleted?: boolean): LogSection => ({
+const section = (
+  containerName: string,
+  data: string,
+  isCompleted?: boolean,
+  hasTerminatedWithError?: boolean,
+): LogSection => ({
   containerName,
   data,
   isCompleted,
+  hasTerminatedWithError,
 });
 
 describe('useSectionFold', () => {
@@ -156,6 +162,50 @@ describe('useSectionFold', () => {
     expect(result.current.expandedSections.has(2)).toBe(true);
   });
 
+  it('should expand a completed section that terminated with an error', () => {
+    const sections = [section('build', 'log with error', true, true)];
+    const { result } = renderHook(() => useSectionFold(sections));
+
+    expect([...result.current.expandedSections]).toEqual([0]);
+  });
+
+  it('should keep errored sections expanded even when others complete', () => {
+    const sections = [
+      section('build', 'failed log', true, true),
+      section('test', 'done', true),
+      section('push', 'skipped', true),
+    ];
+    const { result } = renderHook(() => useSectionFold(sections));
+
+    expect([...result.current.expandedSections]).toEqual([0]);
+  });
+
+  it('should allow the user to fold an errored section they expanded by default', () => {
+    const sections = [section('build', 'failed log', true, true)];
+    const { result } = renderHook(() => useSectionFold(sections));
+
+    expect(result.current.expandedSections.has(0)).toBe(true);
+
+    act(() => {
+      result.current.toggleSection(0);
+    });
+
+    expect(result.current.expandedSections.has(0)).toBe(false);
+  });
+
+  it('should preserve the default expand policy when a section becomes errored but completed', () => {
+    const initialSections = [section('build', 'running', false)];
+    const { result, rerender } = renderHook(({ s }) => useSectionFold(s), {
+      initialProps: { s: initialSections },
+    });
+
+    expect(result.current.expandedSections.has(0)).toBe(true);
+
+    rerender({ s: [section('build', 'failed log', true, true)] });
+
+    expect(result.current.expandedSections.has(0)).toBe(true);
+  });
+
   it('should reset overrides when section identity changes (task switch)', () => {
     const { result, rerender } = renderHook(({ s }) => useSectionFold(s), {
       initialProps: {
@@ -173,5 +223,91 @@ describe('useSectionFold', () => {
     });
 
     expect([...result.current.expandedSections]).toEqual([]);
+  });
+
+  describe('toggleAllSections', () => {
+    it('should expand all sections when none are expanded', () => {
+      const sections = [
+        section('build', 'done', true),
+        section('test', 'done', true),
+        section('push', 'done', true),
+      ];
+      const { result } = renderHook(() => useSectionFold(sections));
+
+      expect([...result.current.expandedSections]).toEqual([]);
+
+      act(() => {
+        result.current.toggleAllSections();
+      });
+
+      expect([...result.current.expandedSections].sort()).toEqual([0, 1, 2]);
+    });
+
+    it('should expand all sections when exactly one is expanded', () => {
+      const sections = [section('build', 'done', true), section('test', 'running', false)];
+      const { result } = renderHook(() => useSectionFold(sections));
+
+      expect([...result.current.expandedSections]).toEqual([1]);
+
+      act(() => {
+        result.current.toggleAllSections();
+      });
+
+      expect([...result.current.expandedSections].sort()).toEqual([0, 1]);
+    });
+
+    it('should collapse all sections when multiple are expanded', () => {
+      const sections = [section('build', 'running', false), section('test', 'running', false)];
+      const { result } = renderHook(() => useSectionFold(sections));
+
+      expect([...result.current.expandedSections].sort()).toEqual([0, 1]);
+
+      act(() => {
+        result.current.toggleAllSections();
+      });
+
+      expect([...result.current.expandedSections]).toEqual([]);
+    });
+
+    it('should toggle between expand-all and collapse-all on successive calls', () => {
+      const sections = [section('build', 'running', false), section('test', 'running', false)];
+      const { result } = renderHook(() => useSectionFold(sections));
+
+      act(() => {
+        result.current.toggleAllSections();
+      });
+      expect([...result.current.expandedSections]).toEqual([]);
+
+      act(() => {
+        result.current.toggleAllSections();
+      });
+      expect([...result.current.expandedSections].sort()).toEqual([0, 1]);
+    });
+
+    it('should expand a manually collapsed section when toggling all', () => {
+      const sections = [section('build', 'running', false), section('test', 'running', false)];
+      const { result } = renderHook(() => useSectionFold(sections));
+
+      act(() => {
+        result.current.toggleSection(0);
+      });
+      expect(result.current.expandedSections.has(0)).toBe(false);
+      expect(result.current.expandedSections.has(1)).toBe(true);
+
+      act(() => {
+        result.current.toggleAllSections();
+      });
+      expect([...result.current.expandedSections].sort()).toEqual([0, 1]);
+    });
+
+    it('should do nothing when there are no sections', () => {
+      const { result } = renderHook(() => useSectionFold([]));
+
+      act(() => {
+        result.current.toggleAllSections();
+      });
+
+      expect([...result.current.expandedSections]).toEqual([]);
+    });
   });
 });

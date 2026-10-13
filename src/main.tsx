@@ -10,13 +10,10 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { NuqsAdapter } from 'nuqs/adapters/react-router/v6';
 import ReactDOM from 'react-dom/client';
 import { initAnalytics } from '~/analytics';
-import { analyticsService, consumeLoginSignal } from '~/analytics/AnalyticsService';
-import { obfuscate } from '~/analytics/obfuscate';
-import { useKonfluxPublicInfo } from '~/hooks/useKonfluxPublicInfo';
+import { captureArrivalSourceOnce } from '~/analytics/arrival-source';
+import { useAnalyticsInitialization } from '~/analytics/useAnalyticsInitialization';
 import { logger } from '~/monitoring/logger';
 import { AuthProvider } from './auth/AuthContext';
-import { useAuth } from './auth/useAuth';
-import { useAuthAnalytics } from './auth/useAuthAnalytics';
 import { forceEnableFlagsOnce } from './feature-flags/forceEnableFlagsOnce';
 import { FeatureFlagsStore } from './feature-flags/store';
 import { getAllConditionsKeysFromFlags } from './feature-flags/utils';
@@ -29,38 +26,18 @@ import '@patternfly/react-core/dist/styles/base.css';
 import '@patternfly/react-styles/css/utilities/Spacing/spacing.css';
 import './main.scss';
 
+// Must run before AuthProvider can mount and trigger the OAuth redirect,
+// otherwise document.referrer is overwritten before we can read it.
+// See src/analytics/arrival-source.ts for details.
+captureArrivalSourceOnce();
+
 // TEMP: Force-enable selected flags once per release/build
 forceEnableFlagsOnce(['kubearchive-logs', 'taskruns-kubearchive', 'pipelineruns-kubearchive'], {
   releaseId: '2025-11-17',
 });
 
-const App = () => {
-  const [publicInfo, loaded, error] = useKonfluxPublicInfo();
-  const { onLogin } = useAuthAnalytics();
-  const { user } = useAuth();
-
-  React.useEffect(() => {
-    if (!loaded && !error) {
-      return;
-    }
-
-    if (loaded && !error && publicInfo) {
-      analyticsService.setCommonProperties({
-        clusterId: publicInfo.clusterId,
-        clusterVersion: publicInfo.clusterVersion,
-        konfluxVersion: publicInfo.konfluxVersion,
-        kubernetesVersion: publicInfo.kubernetesVersion,
-        openshiftVersion: publicInfo.openshiftVersion,
-      });
-    }
-
-    void obfuscate(user.preferredUsername, publicInfo?.clusterId).then((userId) => {
-      analyticsService.setCommonProperties({ userId });
-      if (consumeLoginSignal()) {
-        onLogin();
-      }
-    });
-  }, [loaded, error, publicInfo, onLogin, user]);
+export const App = () => {
+  useAnalyticsInitialization();
 
   React.useEffect(() => {
     // webpack side effects to prevent tree-shaking
@@ -88,7 +65,10 @@ const App = () => {
 
 void (() => {
   void initAnalytics().catch((reason) => {
-    logger.error('Failed to initialize analytics', reason as Error);
+    logger.error(
+      'Failed to initialize analytics',
+      reason instanceof Error ? reason : new Error(String(reason)),
+    );
   });
 
   ReactDOM.createRoot(document.getElementById('root')).render(

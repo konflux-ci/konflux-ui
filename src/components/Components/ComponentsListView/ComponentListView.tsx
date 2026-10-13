@@ -10,15 +10,13 @@ import {
   Flex,
   FlexItem,
   pluralize,
-  Content,
-  ContentVariants,
-  Title,
 } from '@patternfly/react-core';
 import { capitalize } from 'lodash-es';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { MultiSelect } from '~/components/Filter/generic/MultiSelect';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 import { createFilterObj } from '~/components/Filter/utils/filter-utils';
+import ListLayout from '~/shared/components/list-layout/ListLayout';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { statuses } from '~/utils/commits-utils';
 import { pipelineRunStatus } from '~/utils/pipeline-utils';
@@ -246,16 +244,11 @@ const ComponentListView: React.FC<React.PropsWithChildren<ComponentListViewProps
   }
 
   return (
-    <>
-      <Title headingLevel="h3" className="pf-v6-u-mt-lg pf-v6-u-mb-sm">
-        Components
-      </Title>
-      <Content>
-        <Content component={ContentVariants.p}>
-          A component is an image built from source code in a repository. One or more components
-          that run together form an application.
-        </Content>
-      </Content>
+    <ListLayout
+      title="Components"
+      description="A component is an image built from source code in a repository. One or more components
+          that run together form an application."
+    >
       {pipelineRunsLoaded && pipelineRunsError ? (
         <Alert
           className="pf-v6-u-mt-md"
@@ -314,7 +307,7 @@ const ComponentListView: React.FC<React.PropsWithChildren<ComponentListViewProps
           })}
         />
       </div>
-    </>
+    </ListLayout>
   );
 };
 

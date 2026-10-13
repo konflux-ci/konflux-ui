@@ -1,4 +1,6 @@
-import { screen } from '@testing-library/react';
+import { BrowserRouter } from 'react-router-dom';
+import { screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { IssueSeverity, IssueState } from '~/kite/issue-type';
 import { createMockIssue } from '~/unit-test-utils/mock-issues';
 import { renderWithQueryClient } from '~/unit-test-utils/mock-react-query';
@@ -13,7 +15,25 @@ jest.mock('react-router-dom', () => {
   };
 });
 
+jest.mock('~/kite/kite-fetch', () => ({
+  resolveIssue: jest.fn(),
+}));
+
+const renderRow = (issue = createMockIssue()) =>
+  renderWithQueryClient(
+    <BrowserRouter>
+      <table>
+        <tbody>
+          <tr>
+            <IssuesListRow obj={issue} columns={[]} />
+          </tr>
+        </tbody>
+      </table>
+    </BrowserRouter>,
+  );
+
 describe('IssuesListRow', () => {
+  const user = userEvent.setup();
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -21,15 +41,7 @@ describe('IssuesListRow', () => {
   it('should render issue title', () => {
     const issue = createMockIssue({ title: 'Critical Build Failure' });
 
-    renderWithQueryClient(
-      <table>
-        <tbody>
-          <tr>
-            <IssuesListRow obj={issue} columns={[]} />
-          </tr>
-        </tbody>
-      </table>,
-    );
+    renderRow(issue);
 
     expect(screen.getByText('Critical Build Failure')).toBeInTheDocument();
   });
@@ -43,15 +55,7 @@ describe('IssuesListRow', () => {
       },
     });
 
-    renderWithQueryClient(
-      <table>
-        <tbody>
-          <tr>
-            <IssuesListRow obj={issue} columns={[]} />
-          </tr>
-        </tbody>
-      </table>,
-    );
+    renderRow(issue);
 
     const scopeButton = screen.getByText('Pipeline');
     expect(scopeButton).toBeInTheDocument();
@@ -60,15 +64,7 @@ describe('IssuesListRow', () => {
   it('should render critical severity with correct text', () => {
     const issue = createMockIssue({ severity: IssueSeverity.CRITICAL });
 
-    renderWithQueryClient(
-      <table>
-        <tbody>
-          <tr>
-            <IssuesListRow obj={issue} columns={[]} />
-          </tr>
-        </tbody>
-      </table>,
-    );
+    renderRow(issue);
 
     // Text appears in both the icon title and as text, so use getAllByText
     const criticalTexts = screen.getAllByText('Critical');
@@ -78,15 +74,7 @@ describe('IssuesListRow', () => {
   it('should render major severity with correct text', () => {
     const issue = createMockIssue({ severity: IssueSeverity.MAJOR });
 
-    renderWithQueryClient(
-      <table>
-        <tbody>
-          <tr>
-            <IssuesListRow obj={issue} columns={[]} />
-          </tr>
-        </tbody>
-      </table>,
-    );
+    renderRow(issue);
 
     expect(screen.getByText('Major')).toBeInTheDocument();
   });
@@ -94,15 +82,7 @@ describe('IssuesListRow', () => {
   it('should render minor severity with correct text', () => {
     const issue = createMockIssue({ severity: IssueSeverity.MINOR });
 
-    renderWithQueryClient(
-      <table>
-        <tbody>
-          <tr>
-            <IssuesListRow obj={issue} columns={[]} />
-          </tr>
-        </tbody>
-      </table>,
-    );
+    renderRow(issue);
 
     expect(screen.getByText('Minor')).toBeInTheDocument();
   });
@@ -110,15 +90,7 @@ describe('IssuesListRow', () => {
   it('should render info severity with correct text', () => {
     const issue = createMockIssue({ severity: IssueSeverity.INFO });
 
-    renderWithQueryClient(
-      <table>
-        <tbody>
-          <tr>
-            <IssuesListRow obj={issue} columns={[]} />
-          </tr>
-        </tbody>
-      </table>,
-    );
+    renderRow(issue);
 
     expect(screen.getByText('Info')).toBeInTheDocument();
   });
@@ -126,15 +98,7 @@ describe('IssuesListRow', () => {
   it('should render resolved status', () => {
     const issue = createMockIssue({ state: IssueState.RESOLVED });
 
-    renderWithQueryClient(
-      <table>
-        <tbody>
-          <tr>
-            <IssuesListRow obj={issue} columns={[]} />
-          </tr>
-        </tbody>
-      </table>,
-    );
+    renderRow(issue);
 
     // Text appears in both the icon title and as text, so use getAllByText
     const resolvedTexts = screen.getAllByText('Resolved');
@@ -144,15 +108,7 @@ describe('IssuesListRow', () => {
   it('should render active status', () => {
     const issue = createMockIssue({ state: IssueState.ACTIVE });
 
-    renderWithQueryClient(
-      <table>
-        <tbody>
-          <tr>
-            <IssuesListRow obj={issue} columns={[]} />
-          </tr>
-        </tbody>
-      </table>,
-    );
+    renderRow(issue);
 
     // Text appears in both the icon title and as text, so use getAllByText
     const activeTexts = screen.getAllByText('Active');
@@ -162,15 +118,7 @@ describe('IssuesListRow', () => {
   it('should render issue description', () => {
     const issue = createMockIssue({ description: 'Build failed due to missing dependencies' });
 
-    renderWithQueryClient(
-      <table>
-        <tbody>
-          <tr>
-            <IssuesListRow obj={issue} columns={[]} />
-          </tr>
-        </tbody>
-      </table>,
-    );
+    renderRow(issue);
 
     expect(screen.getByText('Build failed due to missing dependencies')).toBeInTheDocument();
   });
@@ -178,15 +126,7 @@ describe('IssuesListRow', () => {
   it('should render dash when description is null', () => {
     const issue = createMockIssue({ description: null });
 
-    renderWithQueryClient(
-      <table>
-        <tbody>
-          <tr>
-            <IssuesListRow obj={issue} columns={[]} />
-          </tr>
-        </tbody>
-      </table>,
-    );
+    renderRow(issue);
 
     expect(screen.queryByText('Build failed due to missing dependencies')).not.toBeInTheDocument();
     expect(screen.getByText('-')).toBeInTheDocument();
@@ -195,15 +135,7 @@ describe('IssuesListRow', () => {
   it('should render dash when description is undefined', () => {
     const issue = createMockIssue({ description: undefined });
 
-    renderWithQueryClient(
-      <table>
-        <tbody>
-          <tr>
-            <IssuesListRow obj={issue} columns={[]} />
-          </tr>
-        </tbody>
-      </table>,
-    );
+    renderRow(issue);
 
     expect(screen.queryByText('Build failed due to missing dependencies')).not.toBeInTheDocument();
     expect(screen.getByText('-')).toBeInTheDocument();
@@ -227,15 +159,7 @@ describe('IssuesListRow', () => {
       ],
     });
 
-    const { container } = renderWithQueryClient(
-      <table>
-        <tbody>
-          <tr>
-            <IssuesListRow obj={issue} columns={[]} />
-          </tr>
-        </tbody>
-      </table>,
-    );
+    const { container } = renderRow(issue);
 
     const links = container.querySelectorAll('a[href^="https://example.com"]');
     expect(links.length).toBe(2);
@@ -246,20 +170,11 @@ describe('IssuesListRow', () => {
   it('should render dash when no links are provided', () => {
     const issue = createMockIssue({ links: [] });
 
-    const { container } = renderWithQueryClient(
-      <table>
-        <tbody>
-          <tr>
-            <IssuesListRow obj={issue} columns={[]} />
-          </tr>
-        </tbody>
-      </table>,
-    );
+    const { container } = renderRow(issue);
 
-    // Check that the links column contains a dash
+    // Check that the links column contains a dash (second-to-last before kebab)
     const cells = container.querySelectorAll('td');
-    // The last cell should be the links column
-    const linksCell = cells[cells.length - 1];
+    const linksCell = cells[cells.length - 2];
     expect(linksCell?.textContent).toBe('-');
   });
 
@@ -267,15 +182,7 @@ describe('IssuesListRow', () => {
     const issue = createMockIssue({ createdAt: '2024-03-15T10:30:00Z' });
 
     // Timestamp component should be rendered (we're not testing exact format)
-    const { container } = renderWithQueryClient(
-      <table>
-        <tbody>
-          <tr>
-            <IssuesListRow obj={issue} columns={[]} />
-          </tr>
-        </tbody>
-      </table>,
-    );
+    const { container } = renderRow(issue);
 
     // Check that timestamp column exists
     const cells = container.querySelectorAll('td');
@@ -285,18 +192,33 @@ describe('IssuesListRow', () => {
   it('should render all table cells', () => {
     const issue = createMockIssue();
 
-    const { container } = renderWithQueryClient(
-      <table>
-        <tbody>
-          <tr>
-            <IssuesListRow obj={issue} columns={[]} />
-          </tr>
-        </tbody>
-      </table>,
-    );
+    const { container } = renderRow(issue);
 
-    // Should render 7 TableData components (columns)
+    // Should render 8 TableData components (columns including kebab)
     const cells = container.querySelectorAll('td');
-    expect(cells.length).toBe(7);
+    expect(cells.length).toBe(8);
+  });
+
+  it('should render kebab menu with Resolve action', async () => {
+    renderRow(createMockIssue({ state: IssueState.ACTIVE }));
+
+    await user.click(screen.getByTestId('kebab-button'));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('Resolve')).toBeInTheDocument();
+    });
+  });
+
+  it('should disable Resolve action for resolved issues', async () => {
+    renderRow(createMockIssue({ state: IssueState.RESOLVED }));
+
+    await user.click(screen.getByTestId('kebab-button'));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('Resolve').querySelector('button, a')).toHaveAttribute(
+        'aria-disabled',
+        'true',
+      );
+    });
   });
 });

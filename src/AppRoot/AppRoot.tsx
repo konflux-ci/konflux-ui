@@ -2,6 +2,8 @@ import * as React from 'react';
 import { Outlet } from 'react-router-dom';
 import { Page, PageSection } from '@patternfly/react-core';
 import { NAMESPACE_LIST_PATH, RELEASE_MONITOR_PATH } from '@routes/paths';
+import { useJourneyTracker } from '~/analytics/hooks';
+import { AIChatGate } from '~/components/AIChat/AIChatGate';
 import NotificationCenter from '~/components/KonfluxSystemNotifications/NotificationList';
 import SidePanelHost from '~/components/SidePanel/SidePanelHost';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
@@ -25,6 +27,7 @@ export const AppRoot: React.FC = () => {
   const [isSideBarOpen, setSideBarOpen] = React.useState<boolean>(true);
   const isActive = useActiveRouteChecker();
   usePreventWindowCloseIfTaskRunning();
+  useJourneyTracker();
   const isSystemNotificationsEnabled = useIsOnFeatureFlag('system-notifications');
 
   const showSwitcher = React.useMemo(() => {
@@ -63,6 +66,7 @@ export const AppRoot: React.FC = () => {
       {isSystemNotificationsEnabled && (
         <NotificationCenter isDrawerExpanded={isDrawerExpanded} closeDrawer={closeDrawer} />
       )}
+      <AIChatGate />
     </>
   );
 };

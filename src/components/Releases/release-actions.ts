@@ -1,5 +1,7 @@
 import * as React from 'react';
+import { ReleaseModel } from '~/models';
 import { downloadYamlAction } from '~/utils/common-utils';
+import { useAccessReviewForModel } from '~/utils/rbac';
 import { useAuth } from '../../auth/useAuth';
 import { PipelineRunLabel } from '../../consts/pipelinerun';
 import { Action } from '../../shared/components/action-menu/types';
@@ -14,6 +16,7 @@ export const useReleaseActions = (release: ReleaseKind): Action[] => {
   const {
     user: { email },
   } = useAuth();
+  const [canCreateRelease] = useAccessReviewForModel(ReleaseModel, 'create');
 
   const actions: Action[] = React.useMemo(() => {
     if (!release) {
@@ -25,6 +28,8 @@ export const useReleaseActions = (release: ReleaseKind): Action[] => {
         cta: () => releaseRerun(release, email),
         id: 're-run-release',
         label: 'Re-run release',
+        disabled: !canCreateRelease,
+        disabledTooltip: 'You do not have access to re-run release',
         analytics: {
           link_name: 're-run-release',
           link_location: 'release-actions',
@@ -35,7 +40,7 @@ export const useReleaseActions = (release: ReleaseKind): Action[] => {
       },
     ];
     return updatedActions;
-  }, [release, releaseName, applicationName, namespace, email]);
+  }, [release, releaseName, applicationName, namespace, email, canCreateRelease]);
 
   return actions;
 };

@@ -30,13 +30,14 @@ export type TaskRunWatchMeta = {
  * via useK8sWatchResource with KubeArchive historical data for complete coverage.
  * Otherwise, uses the similar implementation for tekton results.
  *
- * Returns interface matches existing useTaskRuns exactly with infinite loading support.
+ * Returns `[taskRuns, loaded, error, getNextPage, nextPageProps, watchMeta, historicalError]`.
+ * `historicalError` is the Tekton Results or KubeArchive error only (excludes cluster-watch failures).
  */
 export const useTaskRunsV2 = (
   namespace: string | null,
   options?: Partial<Pick<WatchK8sResource, 'watch' | 'limit' | 'selector' | 'fieldSelector'>>,
   queryOptions?: TQueryInfiniteOptions<TaskRunKind[], Error, InfiniteData<TaskRunKind[], unknown>>,
-): [TaskRunKind[], boolean, unknown, GetNextPage, NextPageProps, TaskRunWatchMeta] => {
+): [TaskRunKind[], boolean, unknown, GetNextPage, NextPageProps, TaskRunWatchMeta, unknown] => {
   const enableKubearchive = useIsOnFeatureFlag('taskruns-kubearchive');
   const etcdRunsRef = React.useRef<TaskRunKind[]>([]);
 
@@ -206,6 +207,16 @@ export const useTaskRunsV2 = (
       return clusterError || kubearchiveQuery.error;
     })();
 
+    const historicalError = (() => {
+      if (!namespace) return null;
+
+      if (!enableKubearchive) {
+        return shouldQueryTekton ? tektonError : null;
+      }
+
+      return kubearchiveQuery.error ?? null;
+    })();
+
     const getNextPage = !enableKubearchive ? tektonGetNextPage : kubearchiveQuery.fetchNextPage;
 
     const nextPageProps: NextPageProps = !enableKubearchive
@@ -221,7 +232,7 @@ export const useTaskRunsV2 = (
       refetch: composedRefetch,
     };
 
-    return [combinedData, loaded, error, getNextPage, nextPageProps, watchMeta];
+    return [combinedData, loaded, error, getNextPage, nextPageProps, watchMeta, historicalError];
   }, [
     enableKubearchive,
     kubearchiveQuery.data?.pages,
@@ -262,7 +273,10 @@ export const useTaskRunsV2 = (
  * @param pipelineRunName - Name of the pipeline run to fetch TaskRuns for
  * @param taskName - Optional specific task name to filter by
  * @param watch - Whether to watch for real-time updates (default: true). Set to false for completed pipeline runs.
- * @returns Tuple of [taskRuns, loaded, error] sorted by completion time
+ * @returns Tuple of [taskRuns, allPagesLoaded, error, getNextPage, nextPageProps] sorted by completion time.
+ * The second element is `allPagesLoaded` (not first-page loaded): false while historical pages are fetching,
+ * true when all pages are loaded or a historical-query error occurs. Consumers should wait for it before
+ * rendering task-run-dependent UI; partial data caused incorrect visualization for large pipeline runs.
  */
 export const useTaskRunsForPipelineRuns = (
   namespace: string | null,
@@ -280,7 +294,7 @@ export const useTaskRunsForPipelineRuns = (
     [pipelineRunName, taskName],
   );
 
-  const [taskRuns, loaded, error, getNextPage, nextPageProps] = useTaskRunsV2(
+  const [taskRuns, loaded, error, getNextPage, nextPageProps, , historicalError] = useTaskRunsV2(
     namespace,
     {
       selector,
@@ -292,9 +306,32 @@ export const useTaskRunsForPipelineRuns = (
     },
   );
 
+  React.useEffect(() => {
+    if (
+      nextPageProps.hasNextPage &&
+      !nextPageProps.isFetchingNextPage &&
+      loaded &&
+      !historicalError &&
+      getNextPage
+    ) {
+      getNextPage();
+    }
+  }, [
+    nextPageProps.hasNextPage,
+    nextPageProps.isFetchingNextPage,
+    loaded,
+    getNextPage,
+    historicalError,
+  ]);
+
+  const allPagesLoaded =
+    loaded &&
+    !nextPageProps.isFetchingNextPage &&
+    (!!historicalError || !nextPageProps.hasNextPage);
+
   const sortedTaskRuns = React.useMemo(() => sortTaskRunsByTime(taskRuns), [taskRuns]);
 
-  return [sortedTaskRuns, loaded, error, getNextPage, nextPageProps];
+  return [sortedTaskRuns, allPagesLoaded, error, getNextPage, nextPageProps];
 };
 
 export const useTaskRunV2 = (

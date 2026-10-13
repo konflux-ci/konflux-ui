@@ -34,6 +34,7 @@ const runStatusColorCategory: Record<runStatus, StatusColorCategory> = {
   [runStatus.TestWarning]: 'warning',
   [runStatus.TestFailed]: 'warning',
   [runStatus.Unknown]: 'neutral',
+  [runStatus.Queued]: 'neutral',
 };
 
 const getStatusColorCategory = (status: runStatus): StatusColorCategory =>

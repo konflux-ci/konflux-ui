@@ -9,8 +9,8 @@ import {
   Tabs,
 } from '@patternfly/react-core';
 import { ElementModel, GraphElement } from '@patternfly/react-topology';
-import { PipelineRunLabel } from '../../../../consts/pipelinerun';
-import { TASKRUN_DETAILS_PATH } from '../../../../routes/paths';
+import { PipelineRunKind } from '~/types';
+import { getTaskRunDetailsPath } from '~/utils/pipeline-run-routes';
 import { useNamespace } from '../../../../shared/providers/Namespace';
 import { StatusIconWithTextLabel } from '../../../StatusIcon/StatusIcon';
 import TaskRunLogs from '../../../TaskRuns/TaskRunLogs';
@@ -22,33 +22,26 @@ import './TaskRunPanel.scss';
 type Props = {
   onClose: () => void;
   taskNode: GraphElement<ElementModel, PipelineRunNodeData>;
+  pipelineRun?: PipelineRunKind;
 };
 
-const TaskRunPanel: React.FC<React.PropsWithChildren<Props>> = ({ taskNode, onClose }) => {
+const TaskRunPanel: React.FC<React.PropsWithChildren<Props>> = ({
+  taskNode,
+  onClose,
+  pipelineRun,
+}) => {
   const task = taskNode.getData().task;
   const taskRun = taskNode.getData().taskRun;
   const { status } = taskNode.getData();
   const namespace = useNamespace();
-  const applicationName = taskRun?.metadata?.labels[PipelineRunLabel.APPLICATION];
+  const path = taskRun && getTaskRunDetailsPath(taskRun, namespace, pipelineRun);
 
   return (
     <>
       <div className="task-run-panel__head">
         <DrawerHead data-id="task-run-panel-head-id">
           <span>
-            {applicationName ? (
-              <Link
-                to={TASKRUN_DETAILS_PATH.createPath({
-                  applicationName,
-                  workspaceName: namespace,
-                  taskRunName: taskRun.metadata?.name,
-                })}
-              >
-                {task.name}
-              </Link>
-            ) : (
-              task.name
-            )}{' '}
+            {path ? <Link to={path}>{task.name}</Link> : task.name}{' '}
             <StatusIconWithTextLabel status={status} />
           </span>
           <DrawerActions>

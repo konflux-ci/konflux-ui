@@ -5,8 +5,9 @@
 
 export enum PipelineRunLabel {
   APPLICATION = 'appstudio.openshift.io/application',
+  COMPONENT_GROUP = 'appstudio.openshift.io/component-group',
   COMPONENT = 'appstudio.openshift.io/component',
-  COMPONENT_VERSION = '', // TODO: add component version label, when it's defined
+  COMPONENT_VERSION = 'appstudio.openshift.io/version',
   PIPELINE_USED_BY = 'pipelines.openshift.io/used-by',
   PIPELINE_TYPE = 'pipelines.appstudio.openshift.io/type',
   PIPELINE_NAME = 'tekton.dev/pipeline',
@@ -34,6 +35,7 @@ export enum PipelineRunLabel {
   TEST_REPO_ORG_LABEL = 'pac.test.appstudio.openshift.io/url-org',
   TEST_COMMIT_EVENT_TYPE_LABEL = 'pac.test.appstudio.openshift.io/event-type',
   TEST_COMMIT_PROVIDER_LABEL = 'pac.test.appstudio.openshift.io/git-provider',
+  TEST_PULL_REQUEST_NUMBER_LABEL = 'pac.test.appstudio.openshift.io/pull-request',
   TEST_SERVICE_COMMIT = 'pac.test.appstudio.openshift.io/sha',
   TEST_SERVICE_COMMIT_TITLE = 'pac.test.appstudio.openshift.io/sha-title',
   TEST_SERVICE_EVENT_TYPE_LABEL = 'pac.test.appstudio.openshift.io/event-type',
@@ -46,6 +48,7 @@ export enum PipelineRunLabel {
 
   MINTMAKER_COMPONENT_LABEL = 'mintmaker.appstudio.redhat.com/component',
   MINTMAKER_NAMESPACE_LABEL = 'mintmaker.appstudio.redhat.com/namespace',
+  MINTMAKER_APPLICATION_LABEL = 'mintmaker.appstudio.redhat.com/application',
 }
 
 export enum PipelineRunType {
@@ -61,8 +64,10 @@ export enum PipelineRunEventType {
   PUSH = 'push',
   GITLAB_PUSH = 'Push',
   PULL = 'pull_request',
+  MERGE_REQUEST = 'Merge_Request',
   INCOMING = 'incoming',
   RETEST = 'retest-all-comment',
+  TEST_ALL_COMMENT = 'test-all-comment',
 }
 
 /** Event types that represent post-merge / manually re-triggered build pipelines. */
@@ -92,6 +97,7 @@ export enum runStatus {
   TestWarning = 'Test Warnings',
   TestFailed = 'Test Failures',
   Unknown = 'Unknown',
+  Queued = 'Queued',
 }
 
 // Status priority for sorting - active states first, then errors, then completed

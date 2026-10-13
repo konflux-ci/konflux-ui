@@ -38,7 +38,7 @@ const componentRoutes = [
         },
         async lazy() {
           const { ComponentDependencyTab } =
-            await import('~/components/Components/ComponentDependencyManager/ComponentDependencyTab');
+            await import('~/components/Components/ComponentDetails/tabs/ComponentDependencyTab');
           return { element: <ComponentDependencyTab /> };
         },
       },

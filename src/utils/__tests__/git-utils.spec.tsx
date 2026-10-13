@@ -1,7 +1,7 @@
 import * as React from 'react';
 import '@testing-library/jest-dom';
 import { render } from '@testing-library/react';
-import { createBranchUrl, getGitIcon, getGitPath } from '../git-utils';
+import { createBranchUrl, createPullRequestUrl, getGitIcon, getGitPath } from '../git-utils';
 
 jest.mock(
   '../../shared/assets/forgejo-logo.svg',
@@ -182,6 +182,80 @@ describe('git-utils', () => {
     it('should handle branches with slashes', () => {
       expect(createBranchUrl('https://github.com/org/repo', 'feature/my-branch')).toBe(
         'https://github.com/org/repo/tree/feature/my-branch',
+      );
+    });
+  });
+
+  describe('createPullRequestUrl', () => {
+    it('should return undefined when repoUrl is undefined', () => {
+      expect(createPullRequestUrl(undefined, '42')).toBeUndefined();
+    });
+
+    it('should return undefined when prNumber is undefined', () => {
+      expect(createPullRequestUrl('https://github.com/org/repo', undefined)).toBeUndefined();
+    });
+
+    it('should return undefined when repoUrl is empty', () => {
+      expect(createPullRequestUrl('', '42')).toBeUndefined();
+    });
+
+    it('should return undefined when prNumber is empty', () => {
+      expect(createPullRequestUrl('https://github.com/org/repo', '')).toBeUndefined();
+    });
+
+    it('should construct GitHub pull request URL', () => {
+      expect(createPullRequestUrl('https://github.com/org/repo', '42')).toBe(
+        'https://github.com/org/repo/pull/42',
+      );
+    });
+
+    it('should construct GitLab merge request URL', () => {
+      expect(createPullRequestUrl('https://gitlab.com/org/repo', '42')).toBe(
+        'https://gitlab.com/org/repo/-/merge_requests/42',
+      );
+    });
+
+    it('should construct Bitbucket pull request URL', () => {
+      expect(createPullRequestUrl('https://bitbucket.org/org/repo', '10')).toBe(
+        'https://bitbucket.org/org/repo/pull-requests/10',
+      );
+    });
+
+    it('should construct Forgejo pull request URL', () => {
+      expect(createPullRequestUrl('https://forgejo.org/org/repo', '5')).toBe(
+        'https://forgejo.org/org/repo/pulls/5',
+      );
+    });
+
+    it('should construct Codeberg pull request URL', () => {
+      expect(createPullRequestUrl('https://codeberg.org/org/repo', '7')).toBe(
+        'https://codeberg.org/org/repo/pulls/7',
+      );
+    });
+
+    it('should strip .git suffix', () => {
+      expect(createPullRequestUrl('https://gitlab.com/org/repo.git', '42')).toBe(
+        'https://gitlab.com/org/repo/-/merge_requests/42',
+      );
+    });
+
+    it('should return undefined for unknown git providers', () => {
+      expect(createPullRequestUrl('https://customrepo.com/org/repo', '42')).toBeUndefined();
+    });
+
+    it('should return undefined for a non-parseable URL', () => {
+      expect(createPullRequestUrl('not-a-url', '42')).toBeUndefined();
+    });
+
+    it('should match self-hosted GitLab instances', () => {
+      expect(createPullRequestUrl('https://gitlab.cee.redhat.com/org/repo', '42')).toBe(
+        'https://gitlab.cee.redhat.com/org/repo/-/merge_requests/42',
+      );
+    });
+
+    it('should match self-hosted Gitea instances', () => {
+      expect(createPullRequestUrl('https://gitea.mycompany.com/org/repo', '3')).toBe(
+        'https://gitea.mycompany.com/org/repo/pulls/3',
       );
     });
   });

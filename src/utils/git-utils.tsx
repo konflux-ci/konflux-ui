@@ -10,6 +10,7 @@ type ProviderConfig = {
   source: string;
   branchPath: (branch: string) => string;
   commitPath: (sha: string) => string;
+  pullRequestPath: (prNumber: string) => string;
   selfHostedKeywords?: string[]; // hostname segments that identify self hosted instances
 };
 
@@ -18,28 +19,33 @@ const providers: ProviderConfig[] = [
     source: 'github.com',
     branchPath: (branch) => `/tree/${branch}`,
     commitPath: (sha) => `/commit/${sha}`,
+    pullRequestPath: (pr) => `/pull/${pr}`,
   },
   {
     source: 'bitbucket.org',
     branchPath: (branch) => `/branch/${branch}`,
     commitPath: (sha) => `/commits/${sha}`,
+    pullRequestPath: (pr) => `/pull-requests/${pr}`,
   },
   {
     source: 'gitlab.com',
     branchPath: (branch) => `/-/tree/${branch}`,
     commitPath: (sha) => `/-/commit/${sha}`,
+    pullRequestPath: (pr) => `/-/merge_requests/${pr}`,
     selfHostedKeywords: ['gitlab'],
   },
   {
     source: 'forgejo.org',
     branchPath: (branch) => `/src/branch/${branch}`,
     commitPath: (sha) => `/commit/${sha}`,
+    pullRequestPath: (pr) => `/pulls/${pr}`,
     selfHostedKeywords: ['forgejo', 'gitea'],
   },
   {
     source: 'codeberg.org',
     branchPath: (branch) => `/src/branch/${branch}`,
     commitPath: (sha) => `/commit/${sha}`,
+    pullRequestPath: (pr) => `/pulls/${pr}`,
   },
 ];
 
@@ -112,4 +118,25 @@ export const createBranchUrl = (repoUrl?: string, branch?: string): string | und
 
   const cleanUrl = repoUrl.replace(/\.git$/, '');
   return `${cleanUrl}${provider.branchPath(branch)}`;
+};
+
+export const createPullRequestUrl = (repoUrl?: string, prNumber?: string): string | undefined => {
+  if (!repoUrl || !prNumber) {
+    return undefined;
+  }
+
+  let parsed: gitUrlParse.GitUrl;
+  try {
+    parsed = gitUrlParse(repoUrl);
+  } catch {
+    return undefined;
+  }
+
+  const provider = findProvider(parsed);
+  if (!provider) {
+    return undefined;
+  }
+
+  const cleanUrl = repoUrl.replace(/\.git$/, '');
+  return `${cleanUrl}${provider.pullRequestPath(prNumber)}`;
 };

@@ -1,5 +1,6 @@
 import { screen } from '@testing-library/react';
 import { useImageRepository } from '~/hooks/useImageRepository';
+import { useIsImageControllerEnabled } from '~/image-controller/conditional-checks';
 import { renderWithQueryClientAndRouter } from '~/unit-test-utils/rendering-utils';
 import { mockComponentsData } from '../../../ApplicationDetails/__data__';
 import SnapshotComponentsListRow, {
@@ -23,7 +24,12 @@ jest.mock('~/hooks/useImageProxy', () => ({
   ],
 }));
 
+jest.mock('~/image-controller/conditional-checks', () => ({
+  useIsImageControllerEnabled: jest.fn(),
+}));
+
 const useImageRepositoryMock = useImageRepository as jest.Mock;
+const useIsImageControllerEnabledMock = useIsImageControllerEnabled as jest.Mock;
 
 const rowData: SnapshotComponentTableData = {
   metadata: { uid: mockComponentsData[1].metadata.uid, name: mockComponentsData[1].metadata.name },
@@ -35,7 +41,8 @@ const rowData: SnapshotComponentTableData = {
 
 describe('SnapshotComponentsListRow', () => {
   beforeEach(() => {
-    // Mock useImageRepository to return null (no image repository data)
+    // Default: image controller is enabled, no image repository data
+    useIsImageControllerEnabledMock.mockReturnValue({ isImageControllerEnabled: true });
     useImageRepositoryMock.mockReturnValue([null, true, null]);
   });
 
@@ -130,6 +137,19 @@ describe('SnapshotComponentsListRow', () => {
       null,
     ]);
     renderWithQueryClientAndRouter(<SnapshotComponentsListRow columns={null} obj={rowData} />);
+    expect(screen.getByRole('button', { name: /copy/i })).toBeInTheDocument();
+  });
+
+  it('should display raw image URL when image controller is disabled', () => {
+    useIsImageControllerEnabledMock.mockReturnValue({ isImageControllerEnabled: false });
+    useImageRepositoryMock.mockReturnValue([
+      { spec: { image: { visibility: 'private' } } },
+      true,
+      null,
+    ]);
+    renderWithQueryClientAndRouter(<SnapshotComponentsListRow columns={null} obj={rowData} />);
+    // Should not show loading skeleton and should show raw URL
+    expect(screen.queryByLabelText('Loading image URL')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /copy/i })).toBeInTheDocument();
   });
 });

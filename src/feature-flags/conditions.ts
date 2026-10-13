@@ -5,6 +5,7 @@ const CONDITIONS = {
   IMAGE_CONTROLLER: 'isImageControllerEnabled',
   SYSTEM_NOTIFICATIONS: 'isSystemNotificationsAccessible',
   ANALYTICS: 'isAnalyticsEnabled',
+  LIGHTSPEED: 'isLightspeedAvailable',
 } as const;
 
 export type ConditionState = Partial<Record<ConditionKey, boolean>>;

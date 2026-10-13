@@ -201,6 +201,9 @@ export enum DataState {
   STATUS_WITH_INVALID_TEST_OUTPUT_RESULT = 'StatusWithInvalidTestOutputResult',
   STATUS_WITH_TEST_OUTPUT_SUCCESS = 'StatusWithTestOutputSuccess',
   STATUS_WITH_INVALID_TEST_OUTPUT_JSON_VALUE = 'StatusWithInvalidTestOutputJsonValue',
+  PIPELINE_RUN_QUEUED_PAC = 'PipelineRunQueuedPac',
+  PIPELINE_RUN_QUEUED_KUEUE = 'PipelineRunQueuedKueue',
+  PIPELINE_RUN_PENDING_NO_QUEUE_LABEL = 'PipelineRunPendingNoQueueLabel',
 }
 
 type TestPipelineRuns = { [key in DataState]?: PipelineRunKind };
@@ -998,6 +1001,77 @@ export const testPipelineRuns: TestPipelineRuns = {
         {
           name: 'TEST_OUTPUT',
           value: '{ invalid json',
+        },
+      ],
+    },
+  },
+  [DataState.PIPELINE_RUN_QUEUED_PAC]: {
+    ...samplePipelineRun,
+    metadata: {
+      ...samplePipelineRun.metadata,
+      labels: {
+        ...sampleLabels,
+        'pipelinesascode.tekton.dev/state': 'queued',
+      },
+    },
+    spec: {
+      ...samplePipelineRun,
+      status: 'PipelineRunPending',
+    },
+    status: {
+      pipelineSpec: samplePipelineSpec,
+      conditions: [
+        {
+          lastTransitionTime: '2022-11-28T12:08:22Z',
+          message: 'PipelineRun is pending',
+          reason: 'PipelineRunPending',
+          status: 'Unknown',
+          type: 'Succeeded',
+        },
+      ],
+    },
+  },
+  [DataState.PIPELINE_RUN_QUEUED_KUEUE]: {
+    ...samplePipelineRun,
+    metadata: {
+      ...samplePipelineRun.metadata,
+      labels: {
+        ...sampleLabels,
+        'kueue.x-k8s.io/queue-name': 'default-queue',
+      },
+    },
+    spec: {
+      ...samplePipelineRun,
+      status: 'PipelineRunPending',
+    },
+    status: {
+      pipelineSpec: samplePipelineSpec,
+      conditions: [
+        {
+          lastTransitionTime: '2022-11-28T12:08:22Z',
+          message: 'PipelineRun is pending',
+          reason: 'PipelineRunPending',
+          status: 'Unknown',
+          type: 'Succeeded',
+        },
+      ],
+    },
+  },
+  [DataState.PIPELINE_RUN_PENDING_NO_QUEUE_LABEL]: {
+    ...samplePipelineRun,
+    spec: {
+      ...samplePipelineRun,
+      status: 'PipelineRunPending',
+    },
+    status: {
+      pipelineSpec: samplePipelineSpec,
+      conditions: [
+        {
+          lastTransitionTime: '2022-11-28T12:08:22Z',
+          message: 'PipelineRun is pending',
+          reason: 'PipelineRunPending',
+          status: 'Unknown',
+          type: 'Succeeded',
         },
       ],
     },

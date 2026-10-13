@@ -41,8 +41,6 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = React.memo(({ chi
 
           monitoringService?.setUser({
             id: data.preferredUsername ?? undefined,
-            username: data.preferredUsername ?? undefined,
-            email: data.email ?? undefined,
           });
         }
       } catch (err) {
@@ -54,7 +52,9 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = React.memo(({ chi
   }, []);
 
   const signOut = async () => {
-    onLogout();
+    // Awaited so the logout/journey analytics events actually reach the
+    // network before we navigate away (see useAuthAnalytics#onLogout).
+    await onLogout();
     await fetch('/oauth2/sign_out');
     redirectToLogin();
   };

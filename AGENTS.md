@@ -12,7 +12,7 @@
 | Type check        | `yarn type-checks`                   |
 | Start dev server  | `yarn start`                         |
 
-CI runs two parallel jobs on Node 24: **lint** (`yarn lint` -> `yarn lint:restricted-imports` -> `yarn type-checks`) and **test** (`yarn test`).
+CI runs three parallel jobs on Node 24: **lint** (`yarn lint` -> `yarn lint:restricted-imports` -> `yarn type-checks`), **size-limit** (`yarn build` -> `yarn size-limit`), and **test** (`yarn test`).
 
 ## Setup
 
@@ -78,19 +78,21 @@ Always use the `--json` flag for deterministic parsing.
 
 Detailed guides for AI agents and developers:
 
-| Document                                      | Use When                                                                               |
-| --------------------------------------------- | -------------------------------------------------------------------------------------- |
-| `docs/guidelines/component-guidelines.md`     | Creating new components (imports, architecture, conventions)                           |
-| `docs/guidelines/table-component.md`          | Legacy table system (pre-TableV2) — reference only for unmigrated views                |
-| `docs/guidelines/table-v2.md`                 | **TableV2 system** — building list views with `@tanstack/react-table` + virtual scroll |
-| `docs/guidelines/filter-system.md`            | **Filter system** — config-driven URL-synced filters with `defineFilters` + nuqs       |
-| `docs/guidelines/layout-and-pages.md`         | Creating pages (list, detail, form, modal patterns)                                    |
-| `docs/guidelines/hooks-and-data-fetching.md`  | Using K8s hooks, React Query, RBAC, state management                                   |
-| `docs/guidelines/patternfly-guidelines.md`    | PatternFly components, layout, design tokens, SCSS                                     |
-| `docs/guidelines/unit-testing.md`             | Writing unit tests (mocks, renderers, patterns)                                        |
-| `docs/guidelines/single-file-verification.md` | Fast per-file lint/type-check workflow (overview)                                      |
-| `docs/guidelines/single-file-lint.md`         | Lint one `.ts`, `.tsx`, or `.scss` file                                                |
-| `docs/guidelines/single-file-type-check.md`   | Type-check one file (or fall back to project-wide)                                     |
+| Document                                      | Use When                                                                                |
+| --------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `docs/guidelines/component-guidelines.md`     | Creating new components (imports, architecture, conventions)                            |
+| `docs/guidelines/table-component.md`          | Legacy table system (pre-TableV2) — reference only for unmigrated views                 |
+| `docs/guidelines/table-v2.md`                 | **TableV2 system** — building list views with `@tanstack/react-table` + virtual scroll  |
+| `docs/guidelines/filter-system.md`            | **Filter system** — config-driven URL-synced filters with `defineFilters` + nuqs        |
+| `docs/guidelines/saved-views.md`              | **Saved views** — bookmarking filter + column configs, sidebar nav integration          |
+| `docs/guidelines/layout-and-pages.md`         | Creating pages (list, detail, form, modal patterns)                                     |
+| `docs/guidelines/hooks-and-data-fetching.md`  | Using K8s hooks, React Query, RBAC, state management                                    |
+| `docs/guidelines/patternfly-guidelines.md`    | PatternFly components, layout, design tokens, SCSS                                      |
+| `docs/guidelines/unit-testing.md`             | Writing unit tests (mocks, renderers, patterns)                                         |
+| `docs/guidelines/single-file-verification.md` | Fast per-file lint/type-check workflow (overview)                                       |
+| `docs/guidelines/single-file-lint.md`         | Lint one `.ts`, `.tsx`, or `.scss` file                                                 |
+| `docs/guidelines/single-file-type-check.md`   | Type-check one file (or fall back to project-wide)                                      |
+| `docs/guidelines/guided-tours.md`             | **Guided Tours** — config-driven interactive walkthroughs (step types, registry, merge) |
 
 ## Other Documentation (docs/)
 
@@ -102,4 +104,5 @@ Detailed guides for AI agents and developers:
 | `docs/conditions.md`           | Feature flag conditions (`allOf`/`anyOf` guards, `registerCondition`) |
 | `docs/analytics.md`            | Segment analytics (events, config, codegen, obfuscation)              |
 | `docs/kubearchive.md`          | KubeArchive dual-source data (cluster + archive hooks, deduplication) |
+| `docs/status-registry.md`      | Config-driven status display (registry, components, filters)          |
 | `docs/e2e-coverage.md`         | E2E coverage via Istanbul + Cypress                                   |

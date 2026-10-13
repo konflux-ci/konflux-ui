@@ -50,6 +50,7 @@ export type FilterConfigBase = {
   mode?: FilterMode; // defaults to 'client'
   /** Optional group name. Filters with the same group render in the same ToolbarGroup. */
   group?: string;
+  dataTour?: string; // optional target attribute for guided tours
 };
 
 /**

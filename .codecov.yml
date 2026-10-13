@@ -13,10 +13,18 @@ coverage:
     patch:
       default:
         target: 85%
-        threshold: 5%
+        informational: false
+        threshold: 0%
 
 ignore:
   - "**/*__data__*/*.ts"
+  - ".agents/**"
+  - ".claude/**"
+  - ".cursor/**"
+  - "skills/**"
+  - "docs/**"
+  - "*.md"
+  - "*.toml"
 
 comment:
   layout: "reach,diff,flags,files,footer"

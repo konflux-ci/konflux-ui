@@ -1,3 +1,5 @@
+import { KeyValueEntry } from '~/types';
+
 export const FIELD_SECRET_FOR_COMPONENT_OPTION = 'secretForComponentOption';
 export const IMAGE_PULL_SECRET_TYPES = [
   'kubernetes.io/dockerconfigjson',
@@ -22,3 +24,13 @@ export const IMPORT_SECRET_HELP_TEXT =
 export const SECRET_MAX_LABELS = 3;
 export const SECRET_LINK_OPTION_HELP_TEXT =
   'Select an option to link this secret with your desired components in the namespace.';
+
+export const DEFAULT_OPAQUE_KEY_VALUES: KeyValueEntry[] = [
+  { key: '', value: '', readOnlyKey: false },
+];
+
+export const DEFAULT_OPAQUE_LABELS: KeyValueEntry[] = [{ key: '', value: '' }];
+
+export const DEFAULT_IMAGE_PULL_KEY_VALUES: KeyValueEntry[] = [
+  { key: '.dockerconfigjson', value: '', readOnlyKey: true },
+];

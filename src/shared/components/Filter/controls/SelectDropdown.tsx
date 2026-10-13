@@ -36,6 +36,8 @@ export interface SelectDropdownProps {
   badge?: boolean;
   /** Test ID attribute applied to the toggle button. */
   'data-test'?: string;
+  /** Tour anchor attribute applied to the root Select element. */
+  'data-tour'?: string;
 }
 
 /**
@@ -56,6 +58,7 @@ export const SelectDropdown: React.FC<SelectDropdownProps> = ({
   isDisabled,
   badge,
   'data-test': dataTest,
+  'data-tour': dataTour,
 }) => {
   const [isOpen, setIsOpen] = React.useState(false);
 
@@ -81,6 +84,7 @@ export const SelectDropdown: React.FC<SelectDropdownProps> = ({
       icon={toggleIcon}
       data-test={dataTest}
       variant={toggleVariant}
+      data-tour={dataTour}
     >
       {toggleText}{' '}
       {badge && !isDisabled && selectedArray.length > 0 && (

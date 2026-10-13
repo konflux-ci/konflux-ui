@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
+import { ReleaseModel } from '~/models/release';
 import { ResourceSource } from '~/types/k8s';
-import { ReleaseModel } from '../../models';
 import { RELEASEPLAN_TRIGGER_PATH } from '../../routes/paths';
 import { Snapshot } from '../../types/coreBuildService';
 import { useAccessReviewForModel } from '../../utils/rbac';

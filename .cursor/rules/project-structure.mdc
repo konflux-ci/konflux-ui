@@ -13,6 +13,7 @@ See `docs/guidelines/` for detailed guides:
 - [docs/guidelines/hooks-and-data-fetching.md](mdc:docs/guidelines/hooks-and-data-fetching.md) -- Data fetching hooks
 - [docs/guidelines/patternfly-guidelines.md](mdc:docs/guidelines/patternfly-guidelines.md) -- PatternFly usage
 - [docs/guidelines/unit-testing.md](mdc:docs/guidelines/unit-testing.md) -- Unit test patterns
+- [docs/guidelines/saved-views.md](mdc:docs/guidelines/saved-views.md) -- Saved views system
 
 See `docs/` for other references:
 
@@ -20,5 +21,6 @@ See `docs/` for other references:
 - [docs/conditions.md](mdc:docs/conditions.md) -- Feature flag conditions
 - [docs/analytics.md](mdc:docs/analytics.md) -- Analytics integration
 - [docs/kubearchive.md](mdc:docs/kubearchive.md) -- KubeArchive dual-source data
+- [docs/status-registry.md](mdc:docs/status-registry.md) -- Config-driven status display
 - [docs/best-practices.md](mdc:docs/best-practices.md) -- Coding standards
 - [docs/pr-review-guidelines.md](mdc:docs/pr-review-guidelines.md) -- PR review checklist

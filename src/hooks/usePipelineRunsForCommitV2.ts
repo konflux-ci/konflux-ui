@@ -53,11 +53,18 @@ export const usePipelineRunsForCommitV2 = (
     options,
   );
 
+  // Gate loaded on both data sources when filtering by components — prevents
+  // a race where pipeline runs resolve before components, causing the filter
+  // to drop every run and the page to show a false 404. When there is an
+  // error we surface it immediately regardless of component state.
+  const effectivelyLoaded =
+    filterByComponents && !plrError ? plrsLoaded && componentsLoaded : plrsLoaded;
+
   return React.useMemo(() => {
-    if (!plrsLoaded || plrError) {
+    if (!effectivelyLoaded || plrError) {
       return [
         [],
-        plrsLoaded,
+        effectivelyLoaded,
         plrError,
         undefined,
         { hasNextPage: false, isFetchingNextPage: false },
@@ -69,14 +76,14 @@ export const usePipelineRunsForCommitV2 = (
           ? componentNames.includes(plr.metadata?.labels?.[PipelineRunLabel.COMPONENT])
           : true,
       ),
-      plrsLoaded,
+      effectivelyLoaded,
       plrError,
       getNextPage,
       nextPageProps,
     ];
   }, [
     pipelineRuns,
-    plrsLoaded,
+    effectivelyLoaded,
     plrError,
     getNextPage,
     nextPageProps,

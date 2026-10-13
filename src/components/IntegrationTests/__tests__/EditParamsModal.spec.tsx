@@ -135,7 +135,6 @@ describe('EditParamsModal', () => {
             value: [
               { name: 'colors', values: ['red', 'green', 'orange'] },
               { name: 'animal', value: 'tiger' },
-              { name: 'param3', values: [] },
             ],
           },
         ],
@@ -186,6 +185,50 @@ describe('EditParamsModal', () => {
               { name: 'colors', values: ['red', 'green', 'orange'] },
               { name: 'animal', value: 'tiger' },
               { name: 'param3', value: 'new value' },
+            ],
+          },
+        ],
+      }),
+    );
+  });
+
+  it('should trim whitespace from param names and values when editing', async () => {
+    patchResourceMock.mockResolvedValue({});
+    const onClose = jest.fn();
+    formikRenderer(
+      <EditParamsModal intTest={MockIntegrationTestsWithParams[1]} onClose={onClose} />,
+      initialValues,
+    );
+
+    const expandParam = screen.getByTestId('expand-param-2').childNodes[0].childNodes[0];
+
+    act(() => {
+      fireEvent.click(expandParam);
+    });
+
+    fireEvent.input(screen.getByTestId('param-1-name'), {
+      target: { value: '  animal  ' },
+    });
+    fireEvent.input(screen.getByTestId('param-1-value-0'), {
+      target: { value: '  tiger  ' },
+    });
+
+    await waitFor(() => {
+      const saveBtn = screen.getByRole('button', { name: /Save/ });
+      expect(saveBtn).not.toBeDisabled();
+      fireEvent.click(saveBtn);
+    });
+
+    expect(patchResourceMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        queryOptions: { name: 'test-app-test-2', ns: 'test-namespace' },
+        patches: [
+          {
+            op: 'replace',
+            path: '/spec/params',
+            value: [
+              { name: 'colors', values: ['red', 'green', 'orange'] },
+              { name: 'animal', value: 'tiger' },
             ],
           },
         ],

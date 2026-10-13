@@ -10,6 +10,7 @@ import {
   type SortingState,
   type Table,
   type Row,
+  type ExpandedState,
 } from '@tanstack/react-table';
 import { type ColumnDefinition, type ColumnState } from '../types';
 
@@ -43,6 +44,10 @@ export interface UseTableOptions<TData> {
   enableGrouping?: boolean;
   /** Arbitrary metadata passed to TanStack Table's `meta` option. */
   meta?: Record<string, unknown>;
+  /** External expansion state (for controlled expansion). */
+  expanded?: ExpandedState;
+  /** Callback when expansion state changes. */
+  onExpandedChange?: OnChangeFn<ExpandedState>;
 }
 
 /**
@@ -135,6 +140,8 @@ export function useTable<TData>(options: UseTableOptions<TData>): UseTableResult
     enableExpansion,
     enableRowSelection,
     meta,
+    expanded,
+    onExpandedChange,
   } = options;
 
   const columnDefs = useMemo(() => mapColumns(columns), [columns]);
@@ -193,7 +200,9 @@ export function useTable<TData>(options: UseTableOptions<TData>): UseTableResult
       columnOrder,
       ...(sorting ? { sorting } : {}),
       ...(enableRowSelection ? { rowSelection } : {}),
+      ...(expanded !== undefined ? { expanded } : {}),
     },
+    ...(onExpandedChange ? { onExpandedChange } : {}),
     meta,
   });
 

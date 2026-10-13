@@ -1,7 +1,7 @@
 import { createK8sUtilMock, createKubearchiveUtilMock } from '~/utils/test-utils';
 import { HttpError } from '../../k8s/error';
 import { TQueryOptions } from '../../k8s/query/type';
-import { ReleaseGroupVersionKind } from '../../models';
+import { ReleaseGroupVersionKind } from '../../models/release';
 import { K8sResourceCommon, ResourceSource, WatchK8sResource } from '../../types/k8s';
 import { isKubeArchiveEnabled } from '../conditional-checks';
 import { convertToKubearchiveQueryParams } from '../fetch-utils';

@@ -1,6 +1,10 @@
 import React from 'react';
 import { Bullseye, PageSection, Spinner } from '@patternfly/react-core';
 import ColumnManagement from '~/components/ColumnManagement/ColumnManagement';
+import {
+  plrNameSearchConfig,
+  plrStatusFilterConfig,
+} from '~/components/PipelineRunsPage/pipelineRunFilterConfigs';
 import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { useApplications } from '~/hooks/useApplications';
@@ -14,45 +18,23 @@ import {
   FilterToolbar,
   buildOptions,
 } from '~/shared/components/Filter';
-import { useActiveSavedView, SavedViewStar } from '~/shared/components/SavedViews';
-import { Table, TableContainer } from '~/shared/components/TableV2';
+import { useActiveSavedView, SavedViewActions } from '~/shared/components/SavedViews';
+import { Table, TableContainer, SortDropdown } from '~/shared/components/TableV2';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { PipelineRunKind, ComponentKind } from '~/types';
 import {
   PIPELINE_RUN_EVENT_TYPE_OPTIONS,
-  PIPELINE_RUN_STATUS_OPTIONS,
   PIPELINE_RUN_TYPE_OPTIONS,
   eventTypeFilterConfig,
   pipelineTypeFilterConfig,
-  statusFilterConfig,
 } from '~/utils/pipeline-run-filter-utils';
+import { PLRStatus } from '~/utils/plr-status-config';
 import PageLayout from '../PageLayout/PageLayout';
-import { getPipelineRunsColumns } from './PipelineRunsColumns';
+import { pipelineRunsColumns } from './PipelineRunsColumns';
 import { PipelineRunsEmptyState } from './PipelineRunsEmptyState';
 
 const filterConfigs = defineFilters<PipelineRunKind>()([
-  {
-    type: 'switchableSearch',
-    param: 'searchField',
-    label: 'Search',
-    fields: [
-      {
-        label: 'Name',
-        value: 'name',
-        param: 'name',
-        filterFn: (item, value) =>
-          (item.metadata?.name ?? '').toLowerCase().includes(value.toLowerCase()),
-      },
-      {
-        label: 'PR number',
-        value: 'prNumber',
-        param: 'prNumber',
-        multiValue: true,
-        filterFn: (item, value) =>
-          (item.metadata?.labels?.[PipelineRunLabel.PULL_REQUEST_NUMBER_LABEL] ?? '') === value,
-      },
-    ],
-  },
+  plrNameSearchConfig,
   {
     type: 'multiSelect',
     param: 'app',
@@ -68,7 +50,7 @@ const filterConfigs = defineFilters<PipelineRunKind>()([
     group: 'resource',
   },
   { ...eventTypeFilterConfig, group: 'resource' },
-  { ...statusFilterConfig, group: 'attributes' },
+  plrStatusFilterConfig,
   { ...pipelineTypeFilterConfig, group: 'attributes' },
 ] as const);
 
@@ -78,6 +60,7 @@ const TopFilter = defineFilters<PipelineRunKind>()([
     param: 'archive',
     label: 'Include archived',
     group: 'archive',
+    dataTour: 'pipeline-runs-archive-toggle',
   },
 ]);
 
@@ -180,7 +163,6 @@ export const PipelineRunsPage: React.FC = () => {
   const { filteredData } = useFilteredData(filterConfigs, pipelineRuns, clientFilterValues);
 
   // Column definitions
-  const columns = React.useMemo(() => getPipelineRunsColumns(namespace), [namespace]);
 
   // Column state key: saved view's key or default
   const columnStateKey = activeSavedView?.columnStateKey ?? 'prns-columns';
@@ -223,7 +205,7 @@ export const PipelineRunsPage: React.FC = () => {
     app: appOptions,
     component: componentOptions,
     eventType: PIPELINE_RUN_EVENT_TYPE_OPTIONS,
-    status: PIPELINE_RUN_STATUS_OPTIONS,
+    status: PLRStatus.filterOptions,
     type: PIPELINE_RUN_TYPE_OPTIONS,
   };
 
@@ -233,12 +215,13 @@ export const PipelineRunsPage: React.FC = () => {
       description="Monitor pipeline runs across applications and components."
       customActions={
         <FilterToolbar configs={TopFilter}>
-          <SavedViewStar
+          <SavedViewActions
             resourceKey="pipeline-runs"
             columnKeyPrefix="prns-columns"
             currentColumnStateKey={columnStateKey}
             isFiltered={isFiltered}
             activeSavedView={activeSavedView}
+            data-tour="pipeline-runs-saved-view-actions"
           />
         </FilterToolbar>
       }
@@ -247,16 +230,33 @@ export const PipelineRunsPage: React.FC = () => {
         <FilterToolbar
           configs={filterConfigs}
           options={optionsMap}
+          data-tour="pipeline-runs-filter-toolbar"
           groups={{
-            resource: { variant: 'filter-group' },
-            attributes: { variant: 'filter-group' },
+            search: {
+              variant: 'filter-group',
+              'data-tour': 'pipeline-runs-search-filter',
+            },
+            resource: {
+              variant: 'filter-group',
+              'data-tour': 'pipeline-runs-server-filters',
+            },
+            attributes: {
+              variant: 'filter-group',
+              'data-tour': 'pipeline-runs-client-filters',
+            },
             archive: { variant: 'filter-group' },
           }}
         >
+          <SortDropdown
+            columns={pipelineRunsColumns}
+            columnStateKey={columnStateKey}
+            data-tour="pipeline-runs-sort-dropdown"
+          />
           <ColumnManagement
-            columns={columns}
+            columns={pipelineRunsColumns}
             columnStateKey={columnStateKey}
             showColumnManagement
+            data-tour="pipeline-runs-column-management"
           />
         </FilterToolbar>
         {hasRequiredFilters ? (
@@ -270,13 +270,14 @@ export const PipelineRunsPage: React.FC = () => {
           >
             <Table
               data={filteredData}
-              columns={columns}
+              columns={pipelineRunsColumns}
               getRowId={(row) => row.metadata?.uid ?? row.metadata?.name ?? ''}
               aria-label="Pipeline runs"
               columnStateKey={columnStateKey}
               hasNextPage={hasNextPage}
               isFetchingNextPage={isFetchingNextPage}
               fetchNextPage={getNextPage}
+              enableSorting
             />
           </TableContainer>
         ) : (

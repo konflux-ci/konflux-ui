@@ -172,3 +172,33 @@ describe('validation-utils', () => {
     ).not.toThrow();
   });
 });
+
+describe('SecretFromSchema use-existing context', () => {
+  it('skips opaque key value requirements when isUsingExisting is true in context', () => {
+    expect(() =>
+      SecretFromSchema.validate(
+        {
+          secretName: 'cluster-secret',
+          type: SecretTypeDropdownLabel.opaque,
+          opaque: {
+            keyValues: [{ key: '', value: '', readOnlyKey: true, readOnlyValue: true }],
+          },
+        },
+        { context: { isUsingExisting: true } },
+      ),
+    ).not.toThrow();
+  });
+
+  it('requires opaque key values when isUsingExisting is false in context', async () => {
+    await expect(
+      SecretFromSchema.validate(
+        {
+          secretName: 'new-secret',
+          type: SecretTypeDropdownLabel.opaque,
+          opaque: { keyValues: [{ key: '', value: '' }] },
+        },
+        { context: { isUsingExisting: false } },
+      ),
+    ).rejects.toThrow();
+  });
+});

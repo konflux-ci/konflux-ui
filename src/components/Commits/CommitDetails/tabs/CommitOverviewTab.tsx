@@ -37,7 +37,7 @@ const CommitOverviewTab: React.FC = () => {
     applicationName,
     commitName,
     1,
-    undefined,
+    false,
     PipelineRunType.BUILD,
   );
 

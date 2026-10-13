@@ -7,7 +7,7 @@ import { DetailsPage } from '~/components/DetailsPage';
 import { createDetailsPageAction } from '~/components/DetailsPage/utils';
 import { StatusIconWithTextLabel } from '~/components/topology/StatusIcon';
 import { PipelineRunLabel, runStatus } from '~/consts/pipelinerun';
-import { CONFORMA_TASK } from '~/consts/security';
+import { CONFORMA_TASK, ROXCTL_SCAN_TASK } from '~/consts/security';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { usePipelineRunV2 } from '~/hooks/usePipelineRunsV2';
 import { useStatusOnFavicon } from '~/hooks/useStatusOnFavicon';
@@ -40,7 +40,8 @@ export const TaskRunDetailsView: React.FC = () => {
 
   useStatusOnFavicon(trStatus);
 
-  const applicationName = taskRun?.metadata?.labels?.[PipelineRunLabel.APPLICATION];
+  const applicationName =
+    params.applicationName || taskRun?.metadata?.labels?.[PipelineRunLabel.APPLICATION];
   const baseURL = TASKRUN_DETAILS_PATH.createPath({
     applicationName,
     workspaceName: namespace,
@@ -73,6 +74,9 @@ export const TaskRunDetailsView: React.FC = () => {
   const showSecurityTab =
     isResourceEnterpriseContract(taskRun) ||
     taskRun.metadata?.labels?.[TektonResourceLabel.pipelineTask] === CONFORMA_TASK;
+
+  const showVulnerabilitiesTab =
+    taskRun.metadata?.labels?.[TektonResourceLabel.pipelineTask] === ROXCTL_SCAN_TASK;
 
   return (
     <DetailsPage
@@ -135,6 +139,14 @@ export const TaskRunDetailsView: React.FC = () => {
               {
                 key: 'security',
                 label: 'Security',
+              },
+            ]
+          : []),
+        ...(showVulnerabilitiesTab
+          ? [
+              {
+                key: 'vulnerabilities',
+                label: 'Vulnerabilities',
               },
             ]
           : []),

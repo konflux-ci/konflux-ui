@@ -32,7 +32,26 @@ export function computeStickySectionHeader(options: {
     }
   }
 
-  const headerTop = (idx: number) => headerTopByIndex.get(idx) ?? idx * itemSize;
+  const headerTop = (idx: number): number => {
+    const exact = headerTopByIndex.get(idx);
+    if (exact !== undefined) return exact;
+
+    // When a section header is off-screen, extrapolate from the nearest
+    // visible virtual item instead of using `idx * itemSize`. The visible
+    // items have accurate `start` positions that account for variable
+    // row heights (e.g. wrapped log lines), avoiding a premature header
+    // switch in large sections with wrapped content.
+    if (virtualItems.length > 0) {
+      const first = virtualItems[0];
+      const last = virtualItems[virtualItems.length - 1];
+      if (idx <= first.index) {
+        return first.start - (first.index - idx) * itemSize;
+      }
+      return last.start + (idx - last.index) * itemSize;
+    }
+
+    return idx * itemSize;
+  };
 
   let currentBucket = -1;
   for (let j = 0; j < sectionHeaderRowIndices.length; j++) {

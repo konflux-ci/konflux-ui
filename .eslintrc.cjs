@@ -153,6 +153,15 @@ module.exports = {
     'require-atomic-updates': 0,
     'rulesdir/forbid-pf-relative-imports': 'off', // We don't need this rule after https://github.com/patternfly/patternfly-react/pull/9298.
   },
+  overrides: [
+    {
+      files: ['src/analytics/gen/**'],
+      rules: {
+        '@typescript-eslint/ban-types': 'off',
+        '@typescript-eslint/no-duplicate-type-constituents': 'off',
+      },
+    },
+  ],
   settings: {
     'import/extensions': ['.js', '.jsx', '.ts', '.tsx'],
     'import/parsers': {

@@ -7,12 +7,12 @@ import {
   Content,
   ContentVariants,
 } from '@patternfly/react-core';
+import { useComponentV2 } from '~/hooks/useComponentsV2';
 import { getErrorState } from '~/shared/utils/error-utils';
 import emptyStateImgUrl from '../../../assets/Components.svg';
 import { FeatureFlagIndicator } from '../../../feature-flags/FeatureFlagIndicator';
 import { FLAGS } from '../../../feature-flags/flags';
-import { IfFeature } from '../../../feature-flags/hooks';
-import { useComponent } from '../../../hooks/useComponents';
+import { IfFeature, useIsOnFeatureFlag } from '../../../feature-flags/hooks';
 import { COMPONENTS_PATH, COMPONENT_DETAILS_V2_PATH } from '../../../routes/paths';
 import { RouterParams } from '../../../routes/utils';
 import AppEmptyState from '../../../shared/components/empty-state/AppEmptyState';
@@ -25,7 +25,8 @@ export const COMPONENTS_GS_LOCAL_STORAGE_KEY = 'components-getting-started-modal
 const ComponentDetailsView: React.FC = () => {
   const { componentName } = useParams<RouterParams>();
   const namespace = useNamespace();
-  const [component, loaded, componentError] = useComponent(namespace, componentName);
+  const [component, loaded, componentError] = useComponentV2(namespace, componentName);
+  const isMintMakerEnabled = useIsOnFeatureFlag('mintmaker');
 
   if (!loaded) {
     return (
@@ -41,11 +42,11 @@ const ComponentDetailsView: React.FC = () => {
 
   return (
     <IfFeature
-      flag="components-page"
+      flag="component-model"
       fallback={
         <AppEmptyState emptyStateImg={emptyStateImgUrl} title="Feature flag disabled">
           <EmptyStateBody>
-            {`To view this page, enable the "${FLAGS['components-page'].description}" feature flag.`}
+            {`To view this page, enable the "${FLAGS['component-model'].description}" feature flag.`}
           </EmptyStateBody>
         </AppEmptyState>
       }
@@ -55,7 +56,7 @@ const ComponentDetailsView: React.FC = () => {
         headTitle={component.metadata.name}
         title={
           <Content component={ContentVariants.h2}>
-            {component.metadata.name} <FeatureFlagIndicator flags={['components-page']} fullLabel />
+            {component.metadata.name} <FeatureFlagIndicator flags={['component-model']} fullLabel />
           </Content>
         }
         description={<GitRepoLink url={component.spec?.source?.url} />}
@@ -90,6 +91,7 @@ const ComponentDetailsView: React.FC = () => {
             key: 'versions',
             label: 'Versions',
           },
+          ...(isMintMakerEnabled ? [{ key: 'dep-updates', label: 'Dependency updates' }] : []),
         ]}
       />
     </IfFeature>

@@ -1,14 +1,10 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
-import { ClipboardCopy, Skeleton } from '@patternfly/react-core';
 import GitRepoLink from '~/components/GitLink/GitRepoLink';
-import { useImageProxy } from '~/hooks/useImageProxy';
-import { useImageRepository } from '~/hooks/useImageRepository';
+import SnapshotComponentImage from '~/components/SnapshotDetails/tabs/SnapshotComponentImage';
 import { COMMIT_DETAILS_PATH, COMPONENT_DETAILS_PATH } from '~/routes/paths';
 import { RowFunctionArgs, TableData } from '~/shared/components/table';
 import { useNamespace } from '~/shared/providers/Namespace';
-import { ImageRepositoryVisibility } from '~/types';
-import { getImageUrlForVisibility } from '~/utils/component-utils';
 import { commitsTableColumnClasses } from './SnapshotComponentsListHeader';
 
 export type SnapshotComponentTableData = {
@@ -23,26 +19,6 @@ const SnapshotComponentsListRow: React.FC<
   React.PropsWithChildren<RowFunctionArgs<SnapshotComponentTableData>>
 > = ({ obj }) => {
   const namespace = useNamespace();
-  const [urlInfo, proxyLoaded, proxyError] = useImageProxy();
-
-  // Fetch ImageRepository to get visibility setting
-  const [imageRepository, imageRepoLoaded, imageRepoError] = useImageRepository(
-    namespace,
-    obj.name,
-    obj.application,
-    false,
-  );
-
-  // Get the appropriate image URL based on visibility
-  // When proxy has error or urlInfo is null, fallback to original URL
-  const displayImageUrl = getImageUrlForVisibility(
-    obj.containerImage,
-    imageRepository?.spec?.image?.visibility ?? null,
-    proxyError || !urlInfo ? null : urlInfo.hostname,
-  );
-
-  const isPrivate = imageRepository?.spec?.image?.visibility === ImageRepositoryVisibility.private;
-
   return (
     <>
       <TableData data-test="snapshot-component-list-row" className={commitsTableColumnClasses.name}>
@@ -57,13 +33,7 @@ const SnapshotComponentsListRow: React.FC<
         </Link>
       </TableData>
       <TableData className={commitsTableColumnClasses.image}>
-        {(!imageRepoLoaded && !imageRepoError) || (isPrivate && !proxyLoaded && !proxyError) ? (
-          <Skeleton aria-label="Loading image URL" />
-        ) : (
-          <ClipboardCopy isReadOnly hoverTip="Copy" clickTip="Copied">
-            {displayImageUrl}
-          </ClipboardCopy>
-        )}
+        <SnapshotComponentImage {...obj} />
       </TableData>
       {obj.source?.git && (
         <TableData className={commitsTableColumnClasses.url}>

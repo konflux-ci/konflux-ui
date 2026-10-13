@@ -8,9 +8,14 @@ import { columnManagementModalLauncher } from './ColumnManagementModal';
 interface ColumnManagementProps<T> {
   columns: ColumnDefinition<T>[];
   columnStateKey: string;
+  'data-tour'?: string;
 }
 
-const ColumnManagement_ = <T,>({ columns, columnStateKey }: ColumnManagementProps<T>) => {
+const ColumnManagement_ = <T,>({
+  columns,
+  columnStateKey,
+  'data-tour': dataTour,
+}: ColumnManagementProps<T>) => {
   const { columnState, setColumnState } = useColumnState(columnStateKey, columns);
   const showModal = useModalLauncher();
 
@@ -44,7 +49,13 @@ const ColumnManagement_ = <T,>({ columns, columnStateKey }: ColumnManagementProp
     );
   }, [showModal, columnInfoForModal, columnState, defaultColumnState, setColumnState]);
   return (
-    <Button variant="plain" aria-label="Manage columns" onClick={openColumnManagement} isInline>
+    <Button
+      variant="plain"
+      aria-label="Manage columns"
+      onClick={openColumnManagement}
+      isInline
+      data-tour={dataTour}
+    >
       <TableIcon />
     </Button>
   );
@@ -54,11 +65,14 @@ function ColumnManagement<T>({
   columns,
   columnStateKey,
   showColumnManagement = false,
+  'data-tour': dataTour,
 }: ColumnManagementProps<T> & { showColumnManagement?: boolean }) {
   if (!showColumnManagement && columns.length <= 5) {
     return null;
   }
-  return <ColumnManagement_<T> columns={columns} columnStateKey={columnStateKey} />;
+  return (
+    <ColumnManagement_<T> columns={columns} columnStateKey={columnStateKey} data-tour={dataTour} />
+  );
 }
 
 export default ColumnManagement;
