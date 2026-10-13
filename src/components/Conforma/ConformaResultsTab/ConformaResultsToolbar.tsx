@@ -17,6 +17,8 @@ import {
   type ConformaResultRow,
 } from '~/types/conforma';
 import { ConformaToggle } from '../ConformaToggle';
+import { ShowPolicyExceptionsToggle } from '../ShowPolicyExceptionsToggle';
+import type { PolicyExceptionFilter } from '../usePolicyExceptionFilter';
 import type { GroupByMode } from './conforma-grouping-utils';
 import { ConformaRefreshIndicator } from './ConformaRefreshIndicator';
 import { useConformaFilters } from './useConformaFilters';
@@ -30,6 +32,7 @@ type ConformaResultsToolbarProps = {
   onToggleExpandAll: () => void;
   showDuplicates: boolean;
   onShowDuplicatesChange: (checked: boolean) => void;
+  policyExceptionFilter: PolicyExceptionFilter;
   refresh: ConformaRefreshState;
 };
 
@@ -55,6 +58,7 @@ export const ConformaResultsToolbar: React.FC<ConformaResultsToolbarProps> = ({
   onToggleExpandAll,
   showDuplicates,
   onShowDuplicatesChange,
+  policyExceptionFilter,
   refresh,
 }) => {
   const { setFilters, onClearFilters } = React.useContext(FilterContext);
@@ -129,6 +133,7 @@ export const ConformaResultsToolbar: React.FC<ConformaResultsToolbarProps> = ({
       >
         {allExpanded ? 'Collapse all' : 'Expand all'}
       </Button>
+      <ShowPolicyExceptionsToggle filter={policyExceptionFilter} />
       <ConformaToggle
         id="conforma-show-duplicates"
         label="Show multi-arch duplicates"

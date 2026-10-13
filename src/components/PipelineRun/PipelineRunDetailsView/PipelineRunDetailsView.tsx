@@ -70,11 +70,7 @@ export const PipelineRunDetailsView: React.FC = () => {
     return getErrorState({ code: 404, message: 'Pipeline run not found' }, true, 'pipeline run');
   }
 
-  // TODO: remove — the Security tab is forced on so the Conforma results can be
-  // previewed against mock data. Restore by setting this to false.
-  const FORCE_SECURITY_TAB: boolean = true;
-  const showSecurityTab =
-    FORCE_SECURITY_TAB || isResourceEnterpriseContract(pipelineRun) || hasConformaTaskRun;
+  const showSecurityTab = isResourceEnterpriseContract(pipelineRun) || hasConformaTaskRun;
 
   const applicationName = pipelineRun.metadata?.labels?.[PipelineRunLabel.APPLICATION];
   const integrationTestName = queryParams.get('integrationTestName') || '';

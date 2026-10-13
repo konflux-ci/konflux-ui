@@ -1,9 +1,5 @@
 import dayjs from 'dayjs';
-import {
-  CONFORMA_RESULT_STATUS,
-  type ComponentConformaResult,
-  type ConformaResultRow,
-} from '~/types/conforma';
+import { type ComponentConformaResult } from '~/types/conforma';
 
 export enum PolicyExceptionKind {
   /** A policy exception waiving the rule is about to lapse. */
@@ -109,29 +105,19 @@ export const collectPolicyExceptions = (
   );
 
 /**
- * Rules carrying a policy exception are namespaced under `volatile_config` by
- * Conforma — the exception itself lives in the policy's volatile config.
+ * Rules whose warnings describe a policy exception. Conforma namespaces them
+ * under `volatile_config` because the exception itself lives in the policy's
+ * volatile config. The set is enumerated rather than prefix-matched so that a
+ * new `volatile_config.*` rule cannot silently widen what the "Show policy
+ * exceptions" filter pulls in.
  */
-export const POLICY_EXCEPTION_RULE_PREFIX = 'volatile_config.';
-
-/** True when the row is a warning raised by a `volatile_config.*` rule. */
-export const isPolicyExceptionRow = (row: ConformaResultRow): boolean =>
-  row.status === CONFORMA_RESULT_STATUS.warnings &&
-  !!row.code?.startsWith(POLICY_EXCEPTION_RULE_PREFIX);
-
-/**
- * Distinct `volatile_config.*` rule codes present in the rows, sorted. Feeds
- * the rule filter array so the table filter and its toolbar labels stay in step.
- */
-export const getPolicyExceptionRuleCodes = (rows: ConformaResultRow[]): string[] =>
-  Array.from(
-    new Set(
-      rows
-        .filter(isPolicyExceptionRow)
-        .map((row) => row.code)
-        .filter((code): code is string => !!code),
-    ),
-  ).sort();
+export const POLICY_EXCEPTION_RULE_CODES = [
+  'volatile_config.expiring_rule',
+  'volatile_config.expired_rule',
+  'volatile_config.invalid_config',
+  'volatile_config.no_expiration',
+  'volatile_config.pending_rule',
+] as const;
 
 export const countExceptionsByKind = (
   exceptions: PolicyException[],

@@ -8,17 +8,18 @@ import {
 } from '~/unit-test-utils/mock-useSearchParam';
 import { routerRenderer } from '../../../utils/test-utils';
 import { mockConformaUIData } from '../__data__/mockConformaLogsJson';
-import { useMockConformaResult } from '../__data__/mockConformaResults';
 import { WrappedConformaRow } from '../ConformaTable/ConformaRow';
+import { POLICY_EXCEPTION_RULE_CODES } from '../policy-exception-utils';
 import { SecurityConformaTab } from '../SecurityConformaTab';
+import { useConformaResult } from '../useConformaResult';
+import { POLICY_EXCEPTION_FILTER_KEY } from '../usePolicyExceptionFilter';
 import '@testing-library/jest-dom';
 
 jest.useFakeTimers();
 
 // Mock the custom hook
-jest.mock('../__data__/mockConformaResults', () => ({
-  ...jest.requireActual('../__data__/mockConformaResults'),
-  useMockConformaResult: jest.fn(),
+jest.mock('../useConformaResult', () => ({
+  useConformaResult: jest.fn(),
 }));
 
 jest.mock('~/hooks/useSearchParam', () => ({
@@ -68,10 +69,12 @@ jest.mock('../../../shared/components/table/TableComponent', () => {
   };
 });
 
-const mockUseConformaResult = useMockConformaResult as jest.Mock;
+const mockUseConformaResult = useConformaResult as jest.Mock;
 
 const securityConforma = (pipelineRun: string) => (
-  <FilterContextProvider filterParams={['rule', 'status', 'component']}>
+  <FilterContextProvider
+    filterParams={['rule', 'status', 'component', POLICY_EXCEPTION_FILTER_KEY]}
+  >
     <SecurityConformaTab pipelineRunName={pipelineRun} />
   </FilterContextProvider>
 );
@@ -211,10 +214,10 @@ describe('SecurityConformaTab', () => {
       msg: 'CVEs are waived until the exception lapses',
       collection: ['minimal'],
       images: [],
-      code: 'volatile_config.cve_waiver',
+      code: 'volatile_config.expiring_rule',
     };
 
-    // A warning that is NOT a policy exception: right status, wrong namespace.
+    // A warning that is NOT a policy exception: right status, unlisted rule.
     const plainWarningRule = {
       ...exceptionRule,
       title: 'Attestation signature check',
@@ -223,7 +226,7 @@ describe('SecurityConformaTab', () => {
       expiresAt: undefined,
     };
 
-    it('should filter the table down to warnings from volatile_config rules', () => {
+    it('should filter the table down to warnings from policy exception rules', () => {
       mockUseConformaResult.mockReturnValue([
         [...mockConformaUIData, exceptionRule, plainWarningRule],
         true,
@@ -243,7 +246,7 @@ describe('SecurityConformaTab', () => {
       // Violations and successes are gone...
       expect(screen.queryByText('Missing CVE scan results')).not.toBeInTheDocument();
       expect(screen.queryByText('No tasks run')).not.toBeInTheDocument();
-      // ...and so is a warning that is not a volatile_config rule
+      // ...and so is a warning that is not a policy exception rule
       expect(screen.queryByText('Attestation signature check')).not.toBeInTheDocument();
     });
 
@@ -334,7 +337,7 @@ describe('SecurityConformaTab', () => {
         ...exceptionRule,
         title: 'SBOM check',
         msg: 'No SBOM found for the image',
-        code: 'volatile_config.sbom_waiver',
+        code: 'volatile_config.pending_rule',
       };
       mockUseConformaResult.mockReturnValue([
         [...mockConformaUIData, exceptionRule, secondRule],
@@ -355,6 +358,46 @@ describe('SecurityConformaTab', () => {
       expect(screen.queryByText('CVE exception')).not.toBeInTheDocument();
     });
 
+    it('should turn on and label every rule even when no row matches', () => {
+      // Only rules that are not policy exceptions.
+      mockUseConformaResult.mockReturnValue([mockConformaUIData, true, undefined]);
+      const view = routerRenderer(securityConforma('dummy-1'));
+
+      fireEvent.click(screen.getByTestId('conforma-show-policy-exceptions'));
+      view.rerender(securityConforma('dummy-1'));
+
+      expect(screen.getByTestId('conforma-show-policy-exceptions')).toBeChecked();
+      POLICY_EXCEPTION_RULE_CODES.forEach((code) => {
+        const more = screen.queryByRole('button', { name: /\d+ more/ });
+        if (more) fireEvent.click(more);
+        screen.getByRole('button', { name: `Close ${code}` });
+      });
+      expect(screen.queryByText('Missing CVE scan results')).not.toBeInTheDocument();
+    });
+
+    it('should write every rule code and the Warning status to the URL', () => {
+      mockUseConformaResult.mockReturnValue([
+        [...mockConformaUIData, exceptionRule],
+        true,
+        undefined,
+      ]);
+      const view = routerRenderer(securityConforma('dummy-1'));
+
+      fireEvent.click(screen.getByTestId('conforma-show-policy-exceptions'));
+      view.rerender(securityConforma('dummy-1'));
+
+      const [getValues] = mockUseSearchParamBatch() as [
+        () => Record<string, string>,
+        (values: Record<string, string>) => void,
+        () => void,
+      ];
+      const params = getValues();
+      expect(JSON.parse(params[POLICY_EXCEPTION_FILTER_KEY])).toEqual([
+        ...POLICY_EXCEPTION_RULE_CODES,
+      ]);
+      expect(JSON.parse(params.status)).toEqual([CONFORMA_RESULT_STATUS.warnings]);
+    });
+
     it('should switch the toggle off when the last rule label is removed', () => {
       mockUseConformaResult.mockReturnValue([
         [...mockConformaUIData, exceptionRule],
@@ -366,8 +409,14 @@ describe('SecurityConformaTab', () => {
       fireEvent.click(screen.getByTestId('conforma-show-policy-exceptions'));
       view.rerender(securityConforma('dummy-1'));
 
-      fireEvent.click(screen.getByRole('button', { name: `Close ${exceptionRule.code}` }));
-      view.rerender(securityConforma('dummy-1'));
+      // Every policy exception rule is labelled, not just the ones present in
+      // the table, so the toggle only clears once the last label has gone.
+      POLICY_EXCEPTION_RULE_CODES.forEach((code) => {
+        const more = screen.queryByRole('button', { name: /\d+ more/ });
+        if (more) fireEvent.click(more);
+        fireEvent.click(screen.getByRole('button', { name: `Close ${code}` }));
+        view.rerender(securityConforma('dummy-1'));
+      });
 
       expect(screen.getByTestId('conforma-show-policy-exceptions')).not.toBeChecked();
       screen.getByText('Missing CVE scan results');
