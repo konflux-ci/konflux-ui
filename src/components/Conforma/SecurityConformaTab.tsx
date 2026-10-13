@@ -1,28 +1,23 @@
 import * as React from 'react';
-import {
-  Bullseye,
-  Button,
-  Flex,
-  FlexItem,
-  Spinner,
-  Content,
-  ContentVariants,
-} from '@patternfly/react-core';
+import { Bullseye, Button, Spinner, Content, ContentVariants } from '@patternfly/react-core';
 import { CONFORMA_POLICY_AVAILABLE_RULE_COLLECTIONS_URL } from '~/consts/documentation';
 import { useDeepCompareMemoize } from '~/shared';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { TaskRunKind } from '~/types';
 import { CONFORMA_RESULT_STATUS, ConformaResultRow } from '~/types/conforma';
-import { textMatch } from '~/utils/text-filter-utils';
 import FilteredEmptyState from '../../shared/components/empty-state/FilteredEmptyState';
 import { FilterContext } from '../Filter/generic/FilterContext';
 import { MultiSelect } from '../Filter/generic/MultiSelect';
 import { BaseTextFilterToolbar } from '../Filter/toolbars/BaseTextFIlterToolbar';
 import { createFilterObj } from '../Filter/utils/filter-utils';
+import { useMockConformaResult } from './__data__/mockConformaResults';
+import { countResultsByStatus, filterResults } from './ConformaResultsTab/conforma-grouping-utils';
+import { ConformaSummaryBar } from './ConformaResultsTab/ConformaSummaryBar';
 import { ConformaTable } from './ConformaTable/ConformaTable';
+import { getPolicyExceptionRuleCodes } from './policy-exception-utils';
 import SecurityTabEmptyState from './SecurityTabEmptyState';
-import { useConformaResult } from './useConformaResult';
-import { getRuleStatus } from './utils';
+import { ShowPolicyExceptionsToggle } from './ShowPolicyExceptionsToggle';
+// import { useConformaResult } from './useConformaResult';
 
 const statuses = [
   CONFORMA_RESULT_STATUS.violations,
@@ -30,24 +25,32 @@ const statuses = [
   CONFORMA_RESULT_STATUS.successes,
 ];
 
-const getResultsSummary = (CRs, crLoaded) => {
-  const statusFilter = Object.fromEntries(statuses.map((status) => [status, 0]));
-  return crLoaded && CRs
-    ? CRs?.reduce((acc, cr) => {
-        if (acc[cr.status]) {
-          acc[cr.status] += 1;
-        } else {
-          acc[cr.status] = 1;
-        }
-        return acc;
-      }, statusFilter)
-    : statusFilter;
+/** Components scanned and how many of them have at least one violation. */
+const getComponentTotals = (results: ConformaResultRow[]) => {
+  const failedComponents = new Set<string>();
+  const allComponents = new Set<string>();
+
+  results.forEach((result) => {
+    allComponents.add(result.component);
+    if (result.status === CONFORMA_RESULT_STATUS.violations) {
+      failedComponents.add(result.component);
+    }
+  });
+
+  return { totalComponents: allComponents.size, totalFailed: failedComponents.size };
 };
 
 export const SecurityConformaTab: React.FC<
   React.PropsWithChildren<{ pipelineRunName: string; taskRun?: TaskRunKind }>
-> = ({ pipelineRunName, taskRun }) => {
-  const [conformaResult, crLoaded, crError] = useConformaResult(pipelineRunName, taskRun);
+> = ({ pipelineRunName }) => {
+  // TODO: restore the live hook once policy exception data is available from the
+  // cluster — mock data is wired up meanwhile so the tab can be previewed.
+  // const [conformaResult, crLoaded, crError] = useConformaResult(pipelineRunName);
+  const [conformaResult, crLoaded, crError] = useMockConformaResult(pipelineRunName);
+  const [showPolicyExceptions, setShowPolicyExceptions] = React.useState(false);
+  const [exceptionRuleCodes, setExceptionRuleCodes] = React.useState<string[]>([]);
+  // Status selection to put back when the toggle is switched off again.
+  const statusBeforeToggle = React.useRef<string[]>([]);
   const componentOptions = React.useMemo(
     () => Array.from(new Set(conformaResult?.map((cr) => cr.component) ?? [])),
     [conformaResult],
@@ -78,31 +81,89 @@ export const SecurityConformaTab: React.FC<
     [conformaResult, crLoaded, componentOptions],
   );
 
-  // filter data in table
+  // Filter data in table, sharing ConformaResultsTab's filter so both tabs
+  // narrow results the same way. The toggle contributes its matched rule codes
+  // as just another filter array.
   const filteredCRResult = React.useMemo(() => {
     return crLoaded && conformaResult
-      ? conformaResult?.filter((rule: ConformaResultRow) => {
-          return (
-            textMatch(rule.title, ruleFilter) &&
-            (!statusFilter.length || statusFilter.includes(rule.status)) &&
-            (!componentFilter.length || componentFilter.includes(rule.component))
-          );
-        })
+      ? filterResults(
+          conformaResult,
+          ruleFilter,
+          statusFilter,
+          componentFilter,
+          showPolicyExceptions ? exceptionRuleCodes : [],
+        )
       : undefined;
-  }, [componentFilter, conformaResult, crLoaded, ruleFilter, statusFilter]);
+  }, [
+    componentFilter,
+    conformaResult,
+    crLoaded,
+    ruleFilter,
+    statusFilter,
+    showPolicyExceptions,
+    exceptionRuleCodes,
+  ]);
 
-  // result summary
-  const resultSummary = React.useMemo(
-    () => getResultsSummary(filteredCRResult, crLoaded),
-    [filteredCRResult, crLoaded],
+  /** Distinct `volatile_config.*` rule codes carrying a policy exception. */
+  const policyExceptionCodes = React.useMemo(
+    () => getPolicyExceptionRuleCodes(conformaResult ?? []),
+    [conformaResult],
   );
+
+  // Switching the toggle on applies the Warning status filter as well, so the
+  // narrowed table is described by the usual toolbar labels rather than by
+  // hidden state. The previous status selection comes back on switch-off.
+  const handleShowPolicyExceptionsChange = React.useCallback(
+    (checked: boolean) => {
+      setShowPolicyExceptions(checked);
+      if (checked) {
+        statusBeforeToggle.current = statusFilter;
+        setExceptionRuleCodes(policyExceptionCodes);
+        setFilters({ ...filters, status: [CONFORMA_RESULT_STATUS.warnings] });
+      } else {
+        setExceptionRuleCodes([]);
+        setFilters({ ...filters, status: statusBeforeToggle.current });
+      }
+    },
+    [filters, policyExceptionCodes, setFilters, statusFilter],
+  );
+
+  // Removing the last rule label would leave an empty table with no obvious way
+  // back, so it switches the toggle off instead.
+  const handleRuleCodesChange = React.useCallback(
+    (codes: string[]) => {
+      if (codes.length === 0) {
+        handleShowPolicyExceptionsChange(false);
+        return;
+      }
+      setExceptionRuleCodes(codes);
+    },
+    [handleShowPolicyExceptionsChange],
+  );
+
+  // The exceptions toggle can empty the table on its own, so clearing filters
+  // resets it too — otherwise the empty state offers no way back.
+  const handleClearFilters = React.useCallback(() => {
+    setShowPolicyExceptions(false);
+    setExceptionRuleCodes([]);
+    onClearFilters();
+  }, [onClearFilters]);
+
+  // Result summary covers every evaluated rule, not just the filtered rows, so
+  // the component totals keep their "scanned / failed" meaning while filters
+  // narrow the table below.
+  const allResults = React.useMemo(() => conformaResult ?? [], [conformaResult]);
+
+  const resultCounts = React.useMemo(() => countResultsByStatus(allResults), [allResults]);
+
+  const componentTotals = React.useMemo(() => getComponentTotals(allResults), [allResults]);
 
   const toolbar = (
     <BaseTextFilterToolbar
       text={ruleFilter}
       label="rule"
       setText={(rule) => setFilters({ ...filters, rule })}
-      onClearFilters={onClearFilters}
+      onClearFilters={handleClearFilters}
       dataTest="security-conforma-list-toolbar"
     >
       <MultiSelect
@@ -118,6 +179,12 @@ export const SecurityConformaTab: React.FC<
         filterKey="status"
         setValues={(status) => setFilters({ ...filters, status })}
         options={statusFilterObj}
+      />
+      <ShowPolicyExceptionsToggle
+        isChecked={showPolicyExceptions}
+        onChange={handleShowPolicyExceptionsChange}
+        ruleCodes={exceptionRuleCodes}
+        onRuleCodesChange={handleRuleCodesChange}
       />
     </BaseTextFilterToolbar>
   );
@@ -177,45 +244,23 @@ export const SecurityConformaTab: React.FC<
           .
         </Content>
       </Content>
-      <Flex style={{ marginTop: 'var(--pf-t--global--spacer--xl)' }}>
-        <FlexItem style={{ marginRight: 'var(--pf-t--global--spacer--2xl)' }}>
-          <Content>
-            <Content component={ContentVariants.h3}>Results</Content>
-          </Content>
-          {toolbar}
-        </FlexItem>
-        <Flex direction={{ default: 'column' }}>
-          <FlexItem>
-            <Content>
-              <Content component={ContentVariants.h3}>Results summary</Content>
-            </Content>
-          </FlexItem>
-          <Flex data-test="result-summary" spaceItems={{ default: 'spaceItemsXl' }}>
-            <FlexItem spacer={{ default: 'spacerXl' }}>
-              <span style={{ marginRight: 'var(--pf-t--global--spacer--sm)' }}>
-                {getRuleStatus(CONFORMA_RESULT_STATUS.violations)}
-              </span>
-              <b>{resultSummary[CONFORMA_RESULT_STATUS.violations]}</b>
-            </FlexItem>
-            <FlexItem>
-              <span style={{ marginRight: 'var(--pf-t--global--spacer--sm)' }}>
-                {getRuleStatus(CONFORMA_RESULT_STATUS.warnings)}
-              </span>
-              <b>{resultSummary[CONFORMA_RESULT_STATUS.warnings]}</b>
-            </FlexItem>
-            <FlexItem>
-              <span style={{ marginRight: 'var(--pf-t--global--spacer--sm)' }}>
-                {getRuleStatus(CONFORMA_RESULT_STATUS.successes)}
-              </span>
-              <b>{resultSummary[CONFORMA_RESULT_STATUS.successes]}</b>
-            </FlexItem>
-          </Flex>
-        </Flex>
-      </Flex>
+      <div style={{ marginTop: 'var(--pf-t--global--spacer--xl)' }} data-test="result-summary">
+        <ConformaSummaryBar
+          totalComponents={componentTotals.totalComponents}
+          totalFailed={componentTotals.totalFailed}
+          totalViolations={resultCounts.totalViolations}
+          totalWarnings={resultCounts.totalWarnings}
+          totalSuccesses={resultCounts.totalSuccesses}
+        />
+      </div>
+      <Content style={{ marginTop: 'var(--pf-t--global--spacer--xl)' }}>
+        <Content component={ContentVariants.h3}>Results</Content>
+      </Content>
+      {toolbar}
       {crLoaded && filteredCRResult.length > 0 ? (
         <ConformaTable conformaResult={filteredCRResult} />
       ) : (
-        <FilteredEmptyState onClearFilters={() => onClearFilters()} />
+        <FilteredEmptyState onClearFilters={handleClearFilters} />
       )}
     </>
   );
