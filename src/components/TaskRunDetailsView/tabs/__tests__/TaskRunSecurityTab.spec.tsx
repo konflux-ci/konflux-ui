@@ -4,7 +4,7 @@ import { useTaskRunV2 } from '../../../../hooks/useTaskRunsV2';
 import { renderWithQueryClientAndRouter } from '../../../../unit-test-utils/rendering-utils';
 import { createUseParamsMock } from '../../../../utils/test-utils';
 import { mockConformaUIData } from '../../../Conforma/__data__/mockConformaLogsJson';
-import { useConformaResult } from '../../../Conforma/useConformaResult';
+import { useMockConformaResult } from '../../../Conforma/__data__/mockConformaResults';
 import { testTaskRuns } from '../../../TaskRunListView/__data__/mock-TaskRun-data';
 import { TaskRunSecurityTab } from '../TaskRunSecurityTab';
 
@@ -12,12 +12,13 @@ jest.mock('../../../../hooks/useTaskRunsV2', () => ({
   useTaskRunV2: jest.fn(),
 }));
 
-jest.mock('../../../Conforma/useConformaResult', () => ({
-  useConformaResult: jest.fn(),
+jest.mock('../../../Conforma/__data__/mockConformaResults', () => ({
+  ...jest.requireActual('../../../Conforma/__data__/mockConformaResults'),
+  useMockConformaResult: jest.fn(),
 }));
 
 const mockUseTaskRunV2 = useTaskRunV2 as jest.Mock;
-const mockUseConformaResult = useConformaResult as jest.Mock;
+const mockUseConformaResult = useMockConformaResult as jest.Mock;
 
 describe('TaskRunSecurityTab', () => {
   createUseParamsMock({ taskRunName: 'test-taskrun' });

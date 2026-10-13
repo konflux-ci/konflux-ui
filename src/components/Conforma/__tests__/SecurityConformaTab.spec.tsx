@@ -1,19 +1,24 @@
 import { Table, Thead, Tr, Th, Tbody } from '@patternfly/react-table';
 import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
-import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
+import { CONFORMA_RESULT_STATUS } from '~/types/conforma';
+import {
+  mockUseSearchParamBatch,
+  resetMockSearchParams,
+} from '~/unit-test-utils/mock-useSearchParam';
 import { routerRenderer } from '../../../utils/test-utils';
 import { mockConformaUIData } from '../__data__/mockConformaLogsJson';
+import { useMockConformaResult } from '../__data__/mockConformaResults';
 import { WrappedConformaRow } from '../ConformaTable/ConformaRow';
 import { SecurityConformaTab } from '../SecurityConformaTab';
-import { useConformaResult } from '../useConformaResult';
 import '@testing-library/jest-dom';
 
 jest.useFakeTimers();
 
 // Mock the custom hook
-jest.mock('../useConformaResult', () => ({
-  useConformaResult: jest.fn(),
+jest.mock('../__data__/mockConformaResults', () => ({
+  ...jest.requireActual('../__data__/mockConformaResults'),
+  useMockConformaResult: jest.fn(),
 }));
 
 jest.mock('~/hooks/useSearchParam', () => ({
@@ -63,7 +68,7 @@ jest.mock('../../../shared/components/table/TableComponent', () => {
   };
 });
 
-const mockUseConformaResult = useConformaResult as jest.Mock;
+const mockUseConformaResult = useMockConformaResult as jest.Mock;
 
 const securityConforma = (pipelineRun: string) => (
   <FilterContextProvider filterParams={['rule', 'status', 'component']}>
@@ -73,6 +78,9 @@ const securityConforma = (pipelineRun: string) => (
 
 describe('SecurityConformaTab', () => {
   beforeEach(() => {
+    // Filter state lives in a module-level mock shared by every test in this
+    // file; reset it so applied filters do not leak between tests.
+    resetMockSearchParams();
     mockUseConformaResult.mockReturnValue([mockConformaUIData, true, undefined]);
   });
 
@@ -162,17 +170,225 @@ describe('SecurityConformaTab', () => {
     expect(sortstatus[1].textContent.trim()).toEqual('Success');
   });
 
-  it('should render result summary', () => {
+  it('should render the summary bar with component and result totals', () => {
     routerRenderer(securityConforma('dummy-1'));
+
     const resultSummary = screen.getByTestId('result-summary');
-    const status = resultSummary.getElementsByTagName('span');
-    expect(status[0].textContent.trim()).toBe('Failed');
-    expect(status[1].textContent.trim()).toBe('Warning');
-    expect(status[2].textContent.trim()).toBe('Success');
-    const value = resultSummary.getElementsByTagName('b');
-    expect(value[0].textContent).toBe('1');
-    expect(value[1].textContent).toBe('0');
-    expect(value[2].textContent).toBe('1');
+    expect(resultSummary).toContainElement(screen.getByTestId('conforma-summary-bar'));
+
+    const components = screen.getByTestId('conforma-summary-components');
+    expect(components).toHaveTextContent('1 total');
+    expect(components).toHaveTextContent('1 failed');
+
+    const results = screen.getByTestId('conforma-summary-results');
+    expect(results).toHaveTextContent('1 violations');
+    expect(results).toHaveTextContent('0 warnings');
+    expect(results).toHaveTextContent('1 success');
+  });
+
+  it('should summarise every result, not just the filtered rows', () => {
+    const view = routerRenderer(securityConforma('dummy-1'));
+
+    fireEvent.input(screen.getByPlaceholderText('Filter by rule...'), {
+      target: { value: 'No tasks' },
+    });
+    act(() => {
+      jest.advanceTimersByTime(700);
+    });
+    view.rerender(securityConforma('dummy-1'));
+
+    expect(screen.queryByText('Missing CVE scan results')).not.toBeInTheDocument();
+    expect(screen.getByTestId('conforma-summary-results')).toHaveTextContent('1 violations');
+  });
+
+  describe('Show policy exceptions toggle', () => {
+    const exceptionRule = {
+      title: 'CVE exception',
+      description: 'Outstanding CVEs are waived by a policy exception.',
+      status: CONFORMA_RESULT_STATUS.warnings,
+      expiresAt: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(),
+      component: 'devfile-sample-python-basic-aw05',
+      msg: 'CVEs are waived until the exception lapses',
+      collection: ['minimal'],
+      images: [],
+      code: 'volatile_config.cve_waiver',
+    };
+
+    // A warning that is NOT a policy exception: right status, wrong namespace.
+    const plainWarningRule = {
+      ...exceptionRule,
+      title: 'Attestation signature check',
+      msg: 'Provenance attestation is not signed',
+      code: 'slsa_provenance.attestation_signed',
+      expiresAt: undefined,
+    };
+
+    it('should filter the table down to warnings from volatile_config rules', () => {
+      mockUseConformaResult.mockReturnValue([
+        [...mockConformaUIData, exceptionRule, plainWarningRule],
+        true,
+        undefined,
+      ]);
+      const view = routerRenderer(securityConforma('dummy-1'));
+
+      // Unfiltered: every rule is listed
+      screen.getByText('Missing CVE scan results');
+      screen.getByText('CVE exception');
+      screen.getByText('Attestation signature check');
+
+      fireEvent.click(screen.getByTestId('conforma-show-policy-exceptions'));
+      view.rerender(securityConforma('dummy-1'));
+
+      screen.getByText('CVE exception');
+      // Violations and successes are gone...
+      expect(screen.queryByText('Missing CVE scan results')).not.toBeInTheDocument();
+      expect(screen.queryByText('No tasks run')).not.toBeInTheDocument();
+      // ...and so is a warning that is not a volatile_config rule
+      expect(screen.queryByText('Attestation signature check')).not.toBeInTheDocument();
+    });
+
+    it('should restore every rule when the toggle is switched back off', () => {
+      mockUseConformaResult.mockReturnValue([
+        [...mockConformaUIData, exceptionRule],
+        true,
+        undefined,
+      ]);
+      const view = routerRenderer(securityConforma('dummy-1'));
+
+      fireEvent.click(screen.getByTestId('conforma-show-policy-exceptions'));
+      view.rerender(securityConforma('dummy-1'));
+      expect(screen.queryByText('Missing CVE scan results')).not.toBeInTheDocument();
+
+      fireEvent.click(screen.getByTestId('conforma-show-policy-exceptions'));
+      view.rerender(securityConforma('dummy-1'));
+      screen.getByText('Missing CVE scan results');
+    });
+
+    it('should show the filtered empty state when no rule has an upcoming change', () => {
+      // mockConformaUIData has no warnings at all
+      const view = routerRenderer(securityConforma('dummy-1'));
+
+      fireEvent.click(screen.getByTestId('conforma-show-policy-exceptions'));
+      view.rerender(securityConforma('dummy-1'));
+
+      screen.getByText('No results found');
+      expect(screen.queryByText('Missing CVE scan results')).not.toBeInTheDocument();
+    });
+
+    it('should reset the toggle when filters are cleared', () => {
+      const view = routerRenderer(securityConforma('dummy-1'));
+
+      fireEvent.click(screen.getByTestId('conforma-show-policy-exceptions'));
+      view.rerender(securityConforma('dummy-1'));
+      screen.getByText('No results found');
+
+      fireEvent.click(screen.getAllByText('Clear all filters')[0]);
+      view.rerender(securityConforma('dummy-1'));
+
+      screen.getByText('Missing CVE scan results');
+      expect(screen.getByTestId('conforma-show-policy-exceptions')).not.toBeChecked();
+    });
+
+    it('should apply the Warning status label and a label per matched rule', () => {
+      mockUseConformaResult.mockReturnValue([
+        [...mockConformaUIData, exceptionRule],
+        true,
+        undefined,
+      ]);
+      const view = routerRenderer(securityConforma('dummy-1'));
+
+      fireEvent.click(screen.getByTestId('conforma-show-policy-exceptions'));
+      view.rerender(securityConforma('dummy-1'));
+
+      // Status label, same chip the Status dropdown produces
+      screen.getByRole('button', { name: `Close ${CONFORMA_RESULT_STATUS.warnings}` });
+      // Rule label per matched code
+      screen.getByRole('button', { name: `Close ${exceptionRule.code}` });
+    });
+
+    it('should restore the previous status selection when switched off', () => {
+      mockUseConformaResult.mockReturnValue([
+        [...mockConformaUIData, exceptionRule],
+        true,
+        undefined,
+      ]);
+      const view = routerRenderer(securityConforma('dummy-1'));
+
+      // Pre-select a different status before using the toggle
+      fireEvent.click(screen.getByRole('button', { name: /status filter menu/i }));
+      fireEvent.click(screen.getByLabelText(/failed/i, { selector: 'input' }));
+      view.rerender(securityConforma('dummy-1'));
+      screen.getByRole('button', { name: `Close ${CONFORMA_RESULT_STATUS.violations}` });
+
+      fireEvent.click(screen.getByTestId('conforma-show-policy-exceptions'));
+      view.rerender(securityConforma('dummy-1'));
+      screen.getByRole('button', { name: `Close ${CONFORMA_RESULT_STATUS.warnings}` });
+
+      fireEvent.click(screen.getByTestId('conforma-show-policy-exceptions'));
+      view.rerender(securityConforma('dummy-1'));
+      screen.getByRole('button', { name: `Close ${CONFORMA_RESULT_STATUS.violations}` });
+    });
+
+    it('should drop a rule from the table when its label is removed', () => {
+      const secondRule = {
+        ...exceptionRule,
+        title: 'SBOM check',
+        msg: 'No SBOM found for the image',
+        code: 'volatile_config.sbom_waiver',
+      };
+      mockUseConformaResult.mockReturnValue([
+        [...mockConformaUIData, exceptionRule, secondRule],
+        true,
+        undefined,
+      ]);
+      const view = routerRenderer(securityConforma('dummy-1'));
+
+      fireEvent.click(screen.getByTestId('conforma-show-policy-exceptions'));
+      view.rerender(securityConforma('dummy-1'));
+      screen.getByText('CVE exception');
+      screen.getByText('SBOM check');
+
+      fireEvent.click(screen.getByRole('button', { name: `Close ${exceptionRule.code}` }));
+      view.rerender(securityConforma('dummy-1'));
+
+      screen.getByText('SBOM check');
+      expect(screen.queryByText('CVE exception')).not.toBeInTheDocument();
+    });
+
+    it('should switch the toggle off when the last rule label is removed', () => {
+      mockUseConformaResult.mockReturnValue([
+        [...mockConformaUIData, exceptionRule],
+        true,
+        undefined,
+      ]);
+      const view = routerRenderer(securityConforma('dummy-1'));
+
+      fireEvent.click(screen.getByTestId('conforma-show-policy-exceptions'));
+      view.rerender(securityConforma('dummy-1'));
+
+      fireEvent.click(screen.getByRole('button', { name: `Close ${exceptionRule.code}` }));
+      view.rerender(securityConforma('dummy-1'));
+
+      expect(screen.getByTestId('conforma-show-policy-exceptions')).not.toBeChecked();
+      screen.getByText('Missing CVE scan results');
+    });
+
+    it('should leave the summary bar untouched', () => {
+      mockUseConformaResult.mockReturnValue([
+        [...mockConformaUIData, exceptionRule],
+        true,
+        undefined,
+      ]);
+      const view = routerRenderer(securityConforma('dummy-1'));
+
+      fireEvent.click(screen.getByTestId('conforma-show-policy-exceptions'));
+      view.rerender(securityConforma('dummy-1'));
+
+      const results = screen.getByTestId('conforma-summary-results');
+      expect(results).toHaveTextContent('1 violations');
+      expect(results).toHaveTextContent('1 warnings');
+      expect(results).toHaveTextContent('1 success');
+    });
   });
 
   it('should render links with correct appName and component Name', () => {

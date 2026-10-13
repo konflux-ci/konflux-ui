@@ -70,6 +70,7 @@ jest.mock('../useWorkspaceConformaViolations', () => ({
     totalViolations: 0,
     totalWarnings: 0,
     applications: [],
+    exceptions: [],
     loaded: true,
     settling: false,
     error: undefined,
@@ -110,14 +111,14 @@ describe('IssuesOverview', () => {
     );
     expect(outerGridItems).toHaveLength(2);
 
-    // Left column should contain a nested grid with 3 grid items
+    // Left column should contain a nested grid with 4 grid items
     const nestedGrid = outerGridItems[0].querySelector('.pf-v6-l-grid');
     expect(nestedGrid).toBeInTheDocument();
 
     const nestedGridItems = Array.from(nestedGrid.children).filter((child) =>
       child.classList.contains('pf-v6-l-grid__item'),
     );
-    expect(nestedGridItems).toHaveLength(3);
+    expect(nestedGridItems).toHaveLength(4);
   });
 
   it('should render ConformaViolationsCard when conforma-policy feature flag is enabled', () => {

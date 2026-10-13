@@ -1,9 +1,18 @@
+import dayjs from 'dayjs';
+import type { WorkspaceConformaViolations } from '~/components/Issues/useWorkspaceConformaViolations';
 import type { ApplicationConformaResults, ComponentConformaStatus } from '~/types/conforma';
 import {
   ComponentConformaResult,
   CONFORMA_RESULT_STATUS,
   ConformaResultRow,
 } from '~/types/conforma';
+import { collectPolicyExceptions } from '../policy-exception-utils';
+
+/**
+ * Policy dates are relative so the mock always demonstrates live upcoming
+ * changes — a fixed date would silently fall into the past.
+ */
+const daysFromNow = (days: number) => dayjs().add(days, 'day').toISOString();
 
 const CONTAINER_IMAGE_A =
   'quay.io/redhat-appstudio/user-workload@sha256:aaa111222333444555666777888999000aaabbbcccdddeeefff0001112223334';
@@ -60,8 +69,8 @@ export const mockConformaComponentResults: ComponentConformaResult[] = [
           description:
             'The task uses a deprecated Tekton API version that will be removed in a future release.',
           collections: ['minimal'],
-          code: 'tasks.deprecated_api',
-          ['effective_on']: '2026-08-06T00:00:00Z',
+          code: 'volatile_config.deprecated_api_waiver',
+          ['effective_until']: daysFromNow(5),
           solution: 'Migrate tasks to tekton.dev/v1 API version.',
         },
         msg: 'Task uses tekton.dev/v1beta1 which is deprecated',
@@ -73,7 +82,7 @@ export const mockConformaComponentResults: ComponentConformaResult[] = [
             'A Software Bill of Materials was not found attached to the image attestation.',
           collections: ['slsa3'],
           code: 'sbom.missing',
-          ['effective_on']: '2026-09-15T00:00:00Z',
+          ['effective_on']: daysFromNow(15),
           solution: 'Ensure the SBOM generation task is part of the build pipeline.',
         },
         msg: 'No SBOM found for the image',
@@ -140,10 +149,22 @@ export const mockConformaComponentResults: ComponentConformaResult[] = [
             'The build process made network calls during execution, which may affect reproducibility.',
           collections: ['slsa3'],
           code: 'hermetic.network_access',
-          ['effective_on']: '2026-08-20T00:00:00Z',
+          ['effective_on']: daysFromNow(45),
           solution: 'Configure the build to run in a hermetic environment.',
         },
         msg: 'Network access detected during build step',
+      },
+      {
+        metadata: {
+          title: 'Leftover vulnerabilities',
+          description:
+            'Unresolved vulnerabilities are currently waived by a policy exception that is about to lapse.',
+          collections: ['minimal'],
+          code: 'volatile_config.leftover_vulnerabilities_waiver',
+          ['effective_until']: daysFromNow(2),
+          solution: 'Remediate the outstanding CVEs before the exception expires.',
+        },
+        msg: 'Leftover vulnerabilities found in the image',
       },
     ],
     successes: [
@@ -276,19 +297,19 @@ export const mockConformaUIDataMixed: ConformaResultRow[] = [
     description:
       'The task uses a deprecated Tekton API version that will be removed in a future release.',
     status: CONFORMA_RESULT_STATUS.warnings,
-    timestamp: '2026-08-06T00:00:00Z',
+    expiresAt: daysFromNow(5),
     component: 'frontend-service',
     msg: 'Task uses tekton.dev/v1beta1 which is deprecated',
     solution: 'Migrate tasks to tekton.dev/v1 API version.',
     collection: ['minimal'],
     images: [CONTAINER_IMAGE_A],
-    code: 'tasks.deprecated_api',
+    code: 'volatile_config.deprecated_api_waiver',
   },
   {
     title: 'Missing SBOM',
     description: 'A Software Bill of Materials was not found attached to the image attestation.',
     status: CONFORMA_RESULT_STATUS.warnings,
-    timestamp: '2026-09-15T00:00:00Z',
+    timestamp: daysFromNow(15),
     component: 'frontend-service',
     msg: 'No SBOM found for the image',
     solution: 'Ensure the SBOM generation task is part of the build pipeline.',
@@ -301,13 +322,26 @@ export const mockConformaUIDataMixed: ConformaResultRow[] = [
     description:
       'The build process made network calls during execution, which may affect reproducibility.',
     status: CONFORMA_RESULT_STATUS.warnings,
-    timestamp: '2026-08-20T00:00:00Z',
+    timestamp: daysFromNow(45),
     component: 'backend-api',
     msg: 'Network access detected during build step',
     solution: 'Configure the build to run in a hermetic environment.',
     collection: ['slsa3'],
     images: [CONTAINER_IMAGE_B],
     code: 'hermetic.network_access',
+  },
+  {
+    title: 'Leftover vulnerabilities',
+    description:
+      'Unresolved vulnerabilities are currently waived by a policy exception that is about to lapse.',
+    status: CONFORMA_RESULT_STATUS.warnings,
+    expiresAt: daysFromNow(2),
+    component: 'backend-api',
+    msg: 'Leftover vulnerabilities found in the image',
+    solution: 'Remediate the outstanding CVEs before the exception expires.',
+    collection: ['minimal'],
+    images: [CONTAINER_IMAGE_B],
+    code: 'volatile_config.leftover_vulnerabilities_waiver',
   },
   // 7 successes
   {
@@ -416,6 +450,30 @@ const mockComponentStatuses: ComponentConformaStatus[] = mockConformaComponentRe
     successCount,
     pipelineRunName: `mock-pipeline-run-${c.name}`,
   };
+});
+
+/** Drop-in stand-in for `useConformaResult` while previewing without a cluster. */
+export const useMockConformaResult = (
+  _pipelineRunName: string, // eslint-disable-line @typescript-eslint/no-unused-vars
+): [ConformaResultRow[] | undefined, boolean, unknown] => [mockConformaUIDataMixed, true, undefined];
+
+/** Drop-in stand-in for `useWorkspaceConformaViolations` while previewing without a cluster. */
+export const useMockWorkspaceConformaViolations = (): WorkspaceConformaViolations => ({
+  totalViolations: mockConformaComponentResults.reduce(
+    (acc, c) => acc + (c.violations?.length ?? 0),
+    0,
+  ),
+  totalWarnings: mockConformaComponentResults.reduce(
+    (acc, c) => acc + (c.warnings?.length ?? 0),
+    0,
+  ),
+  applications: [
+    { applicationName: 'mock-application', violationCount: 5, warningCount: 4 },
+  ],
+  exceptions: collectPolicyExceptions(mockConformaComponentResults),
+  loaded: true,
+  settling: false,
+  error: undefined,
 });
 
 export const useMockApplicationConformaResults = (
