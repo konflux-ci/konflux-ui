@@ -1,19 +1,17 @@
 import { screen } from '@testing-library/react';
-import { useMockWorkspaceConformaViolations } from '~/components/Conforma/__data__/mockConformaResults';
 import {
   PolicyExceptionKind,
   type PolicyException,
 } from '~/components/Conforma/policy-exception-utils';
 import { renderWithQueryClient } from '~/unit-test-utils/mock-react-query';
 import IssuesPolicyExceptionCard from '../IssuesPolicyExceptionCard';
+import { useWorkspaceConformaViolations } from '../useWorkspaceConformaViolations';
 
-
-jest.mock('~/components/Conforma/__data__/mockConformaResults', () => ({
-  ...jest.requireActual('~/components/Conforma/__data__/mockConformaResults'),
-  useMockWorkspaceConformaViolations: jest.fn(),
+jest.mock('../useWorkspaceConformaViolations', () => ({
+  useWorkspaceConformaViolations: jest.fn(),
 }));
 
-const mockUseWorkspaceConformaViolations = useMockWorkspaceConformaViolations as jest.Mock;
+const mockUseWorkspaceConformaViolations = useWorkspaceConformaViolations as jest.Mock;
 
 const expiring: PolicyException = {
   code: 'attestation_type.known_attestation_type',
@@ -31,7 +29,7 @@ const upcoming: PolicyException = {
   daysRemaining: 15,
 };
 
-const mockHookState = (overrides: Partial<ReturnType<typeof useMockWorkspaceConformaViolations>>) =>
+const mockHookState = (overrides: Partial<ReturnType<typeof useWorkspaceConformaViolations>>) =>
   mockUseWorkspaceConformaViolations.mockReturnValue({
     totalViolations: 0,
     totalWarnings: 0,

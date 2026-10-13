@@ -1,45 +1,44 @@
 import * as React from 'react';
 import { ToolbarFilter } from '@patternfly/react-core';
 import { ConformaToggle } from './ConformaToggle';
+import type { PolicyExceptionFilter } from './usePolicyExceptionFilter';
+
+const SHOW_POLICY_EXCEPTIONS_LABEL = 'Show policy exceptions';
+
+/** Chip group the matched rule codes are listed under. */
+const POLICY_EXCEPTION_LABEL_CATEGORY = 'Rule code';
 
 const HELP_TEXT =
-  'When enabled, the table is narrowed to upcoming policy changes: rules whose exception is about to lapse, and rules that start being enforced on a future date.';
+  'When enabled, the table is narrowed to the policy exception rules: exceptions that are expiring or already expired, those with an invalid config or no expiration, and rules that are pending enforcement.';
 
 type ShowPolicyExceptionsToggleProps = {
-  isChecked: boolean;
-  onChange: (checked: boolean) => void;
-  /** Rule codes the table is currently narrowed to; shown as removable labels. */
-  ruleCodes?: string[];
-  /** Called with the remaining codes when one is removed. */
-  onRuleCodesChange?: (codes: string[]) => void;
+  filter: PolicyExceptionFilter;
 };
 
 /**
- * Narrows a Conforma result table down to rules with an upcoming policy change.
+ * Narrows a Conforma result table down to rules carrying a policy exception.
  * The matched rule codes are surfaced as toolbar labels so the applied filter
  * stays visible and individually removable, the same way the status and
- * component filters behave.
+ * component filters behave. Shared by SecurityConformaTab and
+ * ConformaResultsTab so both render the same control and the same labels.
  */
 export const ShowPolicyExceptionsToggle: React.FC<ShowPolicyExceptionsToggleProps> = ({
-  isChecked,
-  onChange,
-  ruleCodes = [],
-  onRuleCodesChange,
+  filter,
 }) => (
   <ToolbarFilter
-    categoryName="Rule"
-    labels={isChecked ? ruleCodes : []}
+    categoryName={POLICY_EXCEPTION_LABEL_CATEGORY}
+    labels={filter.isChecked ? filter.ruleCodes : []}
     deleteLabel={(_category, label) =>
-      onRuleCodesChange?.(ruleCodes.filter((code) => code !== String(label)))
+      filter.onRuleCodesChange(filter.ruleCodes.filter((code) => code !== String(label)))
     }
-    deleteLabelGroup={() => onChange(false)}
+    deleteLabelGroup={() => filter.onChange(false)}
   >
     <ConformaToggle
       id="conforma-show-policy-exceptions"
-      label="Show policy exceptions"
+      label={SHOW_POLICY_EXCEPTIONS_LABEL}
       helpText={HELP_TEXT}
-      isChecked={isChecked}
-      onChange={onChange}
+      isChecked={filter.isChecked}
+      onChange={filter.onChange}
     />
   </ToolbarFilter>
 );

@@ -5,9 +5,8 @@ import { PipelineRunSecurityTab } from '../PipelineRunSecurityTab';
 
 const mockUseConformaResult = jest.fn();
 
-jest.mock('~/components/Conforma/__data__/mockConformaResults', () => ({
-  ...jest.requireActual('~/components/Conforma/__data__/mockConformaResults'),
-  useMockConformaResult: (...args: unknown[]) => mockUseConformaResult(...args),
+jest.mock('~/components/Conforma/useConformaResult', () => ({
+  useConformaResult: (...args: unknown[]) => mockUseConformaResult(...args),
 }));
 
 describe('PipelineRunSecurityTab', () => {

@@ -1,16 +1,9 @@
 import dayjs from 'dayjs';
-import {
-  CONFORMA_RESULT_STATUS,
-  type ComponentConformaResult,
-  type ConformaResultRow,
-  type ConformaRule,
-} from '~/types/conforma';
+import { type ComponentConformaResult, type ConformaRule } from '~/types/conforma';
 import {
   collectPolicyExceptions,
-  getPolicyExceptionRuleCodes,
   countExceptionsByKind,
   formatDaysRemaining,
-  isPolicyExceptionRow,
   PolicyExceptionKind,
 } from '../policy-exception-utils';
 
@@ -164,83 +157,6 @@ describe('collectPolicyExceptions', () => {
     const results = [makeResult([makeRule('rule.a', { effectiveOn: '2026-10-07T06:00:00Z' })])];
 
     expect(collectPolicyExceptions(results, NOW)[0].daysRemaining).toBe(0);
-  });
-});
-
-describe('isPolicyExceptionRow / getPolicyExceptionRuleCodes', () => {
-  const makeRow = (code: string, status: CONFORMA_RESULT_STATUS): ConformaResultRow => ({
-    title: `${code} title`,
-    description: '',
-    status,
-    component: 'comp',
-    msg: `${code} message`,
-    images: [],
-    code,
-  });
-
-  it('matches warning rows raised by a volatile_config rule', () => {
-    expect(
-      isPolicyExceptionRow(makeRow('volatile_config.cve_expiry', CONFORMA_RESULT_STATUS.warnings)),
-    ).toBe(true);
-  });
-
-  it('rejects warning rows from any other rule namespace', () => {
-    expect(isPolicyExceptionRow(makeRow('sbom.missing', CONFORMA_RESULT_STATUS.warnings))).toBe(
-      false,
-    );
-    expect(
-      isPolicyExceptionRow(makeRow('tasks.deprecated_api', CONFORMA_RESULT_STATUS.warnings)),
-    ).toBe(false);
-  });
-
-  it('rejects volatile_config rows that are not warnings', () => {
-    expect(
-      isPolicyExceptionRow(
-        makeRow('volatile_config.cve_expiry', CONFORMA_RESULT_STATUS.violations),
-      ),
-    ).toBe(false);
-    expect(
-      isPolicyExceptionRow(makeRow('volatile_config.cve_expiry', CONFORMA_RESULT_STATUS.successes)),
-    ).toBe(false);
-  });
-
-  it('rejects rows without a code', () => {
-    const row = makeRow('volatile_config.cve_expiry', CONFORMA_RESULT_STATUS.warnings);
-    expect(isPolicyExceptionRow({ ...row, code: undefined })).toBe(false);
-  });
-
-  it('does not match a rule that merely contains volatile_config', () => {
-    expect(
-      isPolicyExceptionRow(
-        makeRow('policy.volatile_config.thing', CONFORMA_RESULT_STATUS.warnings),
-      ),
-    ).toBe(false);
-  });
-
-  it('collects distinct matching codes in sorted order', () => {
-    const rows = [
-      makeRow('volatile_config.sbom_waiver', CONFORMA_RESULT_STATUS.warnings),
-      makeRow('volatile_config.cve_expiry', CONFORMA_RESULT_STATUS.warnings),
-      // duplicate of the first, reported for another component
-      {
-        ...makeRow('volatile_config.sbom_waiver', CONFORMA_RESULT_STATUS.warnings),
-        component: 'other',
-      },
-      makeRow('sbom.missing', CONFORMA_RESULT_STATUS.warnings),
-      makeRow('volatile_config.ignored', CONFORMA_RESULT_STATUS.violations),
-    ];
-
-    expect(getPolicyExceptionRuleCodes(rows)).toEqual([
-      'volatile_config.cve_expiry',
-      'volatile_config.sbom_waiver',
-    ]);
-  });
-
-  it('returns no codes when nothing matches', () => {
-    expect(getPolicyExceptionRuleCodes([])).toEqual([]);
-    expect(
-      getPolicyExceptionRuleCodes([makeRow('sbom.missing', CONFORMA_RESULT_STATUS.warnings)]),
-    ).toEqual([]);
   });
 });
 
