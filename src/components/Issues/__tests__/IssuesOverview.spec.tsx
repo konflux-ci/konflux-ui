@@ -131,4 +131,15 @@ describe('IssuesOverview', () => {
     const { queryByTestId } = renderComponent();
     expect(queryByTestId('conforma-violations-card')).not.toBeInTheDocument();
   });
+
+  it('should render IssuesPolicyExceptionCard when conforma-policy feature flag is enabled', () => {
+    const { getByTestId } = renderComponent();
+    expect(getByTestId('issues-policy-exception-card')).toBeInTheDocument();
+  });
+
+  it('should not render IssuesPolicyExceptionCard when conforma-policy feature flag is disabled', () => {
+    mockUseIsOnFeatureFlag.mockImplementation(() => false);
+    const { queryByTestId } = renderComponent();
+    expect(queryByTestId('issues-policy-exception-card')).not.toBeInTheDocument();
+  });
 });

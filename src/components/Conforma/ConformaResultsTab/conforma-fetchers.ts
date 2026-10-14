@@ -72,7 +72,6 @@ const mapToConformaResultRow = (
   solution: v.metadata?.solution,
   images: compResult.containerImage ? [compResult.containerImage] : [],
   code: v.metadata?.code,
-  expiresAt: v.metadata?.effective_until,
   pipelineRunName,
 });
 
