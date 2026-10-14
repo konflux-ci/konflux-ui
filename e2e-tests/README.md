@@ -11,6 +11,7 @@ The important bits are as follows:
 | `cypress.config.ts` | cypress configuration file, contains all the environment and plugin setup                           |
 | `support`           | contains helper files for cypress, like hooks, custom commands, page objects, or plugin integration |
 | `tests`             | the actual spec files reside here                                                                   |
+| `test-docs`         | high-level, human-readable docs of what each spec/describe/it covers — see `test-docs/README.md`    |
 | `utils`             | utilities for easier test development, from UI interaction tasks to network requests                |
 | `cypress`           | test results, including screenshots, video recordings, HTML reports, xunit files, etc.              |
 
