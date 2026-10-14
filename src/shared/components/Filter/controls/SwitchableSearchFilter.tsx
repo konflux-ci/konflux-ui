@@ -30,6 +30,10 @@ const DEFAULT_DEBOUNCE = 600;
 type SwitchableSearchFilterProps<T> = {
   /** Switchable-search filter configuration. */
   config: SwitchableSearchFilterConfig<T>;
+  /** Ref attached to the underlying input, used by the toolbar's `/` shortcut. */
+  inputRef?: React.RefObject<HTMLInputElement>;
+  /** Keyboard shortcut advertised to assistive technology via `aria-keyshortcuts`. */
+  keyShortcut?: string;
 };
 
 /**
@@ -57,7 +61,8 @@ const ChipInput: React.FC<{
   onClearAll: () => void;
   label: string;
   inputRef: React.RefObject<HTMLInputElement>;
-}> = ({ values, onAdd, onRemove, onClearAll, label, inputRef }) => {
+  keyShortcut?: string;
+}> = ({ values, onAdd, onRemove, onClearAll, label, inputRef, keyShortcut }) => {
   const [inputValue, setInputValue] = React.useState('');
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -79,6 +84,7 @@ const ChipInput: React.FC<{
         onChange={(_e, val) => setInputValue(val)}
         onKeyDown={handleKeyDown}
         aria-label={label}
+        inputProps={keyShortcut ? { 'aria-keyshortcuts': keyShortcut } : undefined}
         placeholder={values.length === 0 ? `Filter by ${label}...` : ''}
       >
         {values.length > 0 && (
@@ -116,7 +122,11 @@ const ChipInput: React.FC<{
  *
  * @typeParam T - The data-item type being filtered.
  */
-export const SwitchableSearchFilter = <T,>({ config }: SwitchableSearchFilterProps<T>) => {
+export const SwitchableSearchFilter = <T,>({
+  config,
+  inputRef,
+  keyShortcut,
+}: SwitchableSearchFilterProps<T>) => {
   const { param, fields, debounce: debounceMs = DEFAULT_DEBOUNCE } = config;
 
   const [isOpen, setIsOpen] = React.useState(false);
@@ -137,7 +147,10 @@ export const SwitchableSearchFilter = <T,>({ config }: SwitchableSearchFilterPro
     isMultiValue ? '' : ((fieldValues[activeParam] as string) ?? ''),
   );
 
-  const searchInputRef = React.useRef<HTMLInputElement>(null);
+  // The toolbar may own the ref so its `/` shortcut can focus this input; otherwise keep a
+  // local one for the focus-after-field-switch behaviour below.
+  const localInputRef = React.useRef<HTMLInputElement>(null);
+  const searchInputRef = inputRef ?? localInputRef;
 
   const debouncedSetUrl = useDebounceCallback((value: string) => {
     void setFieldValues({ [activeParam]: value || null });
@@ -245,11 +258,13 @@ export const SwitchableSearchFilter = <T,>({ config }: SwitchableSearchFilterPro
               onClearAll={handleChipClearAll}
               label={activeField.label}
               inputRef={searchInputRef}
+              keyShortcut={keyShortcut}
             />
           ) : (
             <SearchInput
               ref={searchInputRef}
               aria-label={activeField.label}
+              inputProps={keyShortcut ? { 'aria-keyshortcuts': keyShortcut } : undefined}
               placeholder={`Filter by ${activeField.label}...`}
               value={localValue}
               onChange={handleSearchChange}
