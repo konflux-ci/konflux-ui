@@ -208,6 +208,108 @@ const MyFeatureOverviewTab: React.FC = () => (
 );
 ```
 
+#### Tab data-fetching responsibilities
+
+When implementing tabs within a detail view, split responsibilities cleanly between the **tab container** and the **tab content**:
+
+- **Tab container (route-level component):** Fetches the primary resource, handles the loading spinner, error empty state, and not-found case. It only renders the tab content component once data is fully resolved and guaranteed valid. Examples: `VulnerabilitiesTab`, `PipelineRunVulnerabilitiesTab`.
+- **Tab content (presentational component):** Receives guaranteed non-null resource props. It focuses on display logic rather than the fetch lifecycle of the primary resource. It may perform secondary queries (such as fetching reports or child resources), but it must not duplicate the tab container's loading or error handling for the primary resource. Example: `VulnerabilitiesTabContent`.
+
+**Before (anti-pattern):** The tab content component accepts nullable or optional props and handles all fetch lifecycle states internally:
+
+```tsx
+// Before: tab content handles primary fetch lifecycle and nullable resource
+type VulnerabilitiesTabContentProps = {
+  taskRun?: TaskRunKind;
+  loaded?: boolean;
+  error?: unknown;
+};
+
+export const VulnerabilitiesTabContent: React.FC<VulnerabilitiesTabContentProps> = ({
+  taskRun,
+  loaded,
+  error,
+}) => {
+  if (!loaded) {
+    return (
+      <Bullseye>
+        <Spinner size="lg" />
+      </Bullseye>
+    );
+  }
+
+  if (error || !taskRun) {
+    return getErrorState(error ?? { code: 404, message: 'Task run not found' }, loaded, 'task run');
+  }
+
+  return (
+    <PageSection data-test="vulnerabilities-tab">
+      <VulnerabilitiesTable data={[]} />
+    </PageSection>
+  );
+};
+```
+
+**After (recommended pattern):** The tab container resolves the resource and handles states; the tab content receives a guaranteed non-null resource:
+
+```tsx
+// After: tab container handles loading, error, and not-found states
+export const VulnerabilitiesTab: React.FC = () => {
+  const { taskRunName = '' } = useParams();
+  const namespace = useNamespace();
+  const [taskRun, taskRunLoaded, taskRunError] = useTaskRunV2(namespace, taskRunName);
+
+  if (!taskRunLoaded) {
+    return (
+      <Bullseye>
+        <Spinner size="lg" />
+      </Bullseye>
+    );
+  }
+
+  if (taskRunError) {
+    return getErrorState(taskRunError, taskRunLoaded, 'task run');
+  }
+
+  if (!taskRun) {
+    return getErrorState({ code: 404, message: 'Task run not found' }, true, 'task run');
+  }
+
+  return <VulnerabilitiesTabContent taskRun={taskRun} />;
+};
+
+// Tab content receives guaranteed non-null resource props
+type VulnerabilitiesTabContentProps = {
+  taskRun: TaskRunKind;
+};
+
+export const VulnerabilitiesTabContent: React.FC<VulnerabilitiesTabContentProps> = ({
+  taskRun,
+}) => {
+  const { data, isLoading, error } = useRoxctlCveReport(taskRun);
+
+  if (isLoading) {
+    return (
+      <Bullseye>
+        <Spinner size="lg" />
+      </Bullseye>
+    );
+  }
+
+  if (error) {
+    return getErrorState(error, !isLoading, 'vulnerabilities');
+  }
+
+  return (
+    <PageSection data-test="vulnerabilities-tab">
+      <VulnerabilitiesTable data={data ?? []} />
+    </PageSection>
+  );
+};
+```
+
+**Scope and exceptions:** This pattern applies to detail-view tabs where the tab container represents a distinct route responsible for resolving its primary resource before rendering. Whether this pattern applies universally across all tabs in the application is currently an open question; detail-view tabs must always adhere to this container/content separation. For other tab types or self-contained workflows, evaluate whether hoisting data fetching and lifecycle states to a separate container provides a cleaner design or unnecessary indirection.
+
 ### Form Page Pattern
 
 ```
