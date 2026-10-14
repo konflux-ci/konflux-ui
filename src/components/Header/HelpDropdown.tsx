@@ -20,7 +20,11 @@ import { ExternalLink } from '~/shared';
 import { collectAndMerge, getToursByRoute, useTour } from '~/shared/components/GuidedTours';
 import { createAboutModal } from './AboutModal';
 
-export const HelpDropdown: React.FC = () => {
+type HelpDropdownProps = {
+  onCliLoginClick?: () => void;
+};
+
+export const HelpDropdown: React.FC<HelpDropdownProps> = ({ onCliLoginClick }) => {
   const [isOpen, setIsOpen] = React.useState(false);
   const showModal = useModalLauncher();
   const { startTour, currentRoute } = useTour();
@@ -36,6 +40,7 @@ export const HelpDropdown: React.FC = () => {
   };
 
   const handleCliLoginClick = () => {
+    onCliLoginClick?.();
     setIsOpen(false);
     showModal(createCliLoginModal());
   };
