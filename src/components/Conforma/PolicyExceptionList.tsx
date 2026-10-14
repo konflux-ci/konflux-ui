@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { Flex, FlexItem, Label } from '@patternfly/react-core';
+import classNames from 'classnames';
 import { WarningIcon } from '~/shared/components/status/icons';
 import {
   formatDaysRemaining,
@@ -51,18 +52,18 @@ export const PolicyExceptionList: React.FC<PolicyExceptionListProps> = ({
   emptyMessage = 'No expiring exceptions or upcoming activations.',
   className,
 }) => {
-  const classNames = ['policy-exception-list', className].filter(Boolean).join(' ');
+  const listClassName = classNames('policy-exception-list', className);
 
   if (exceptions.length === 0) {
     return (
-      <div className={classNames} data-test="policy-exception-empty">
+      <div className={listClassName} data-test="policy-exception-empty">
         {emptyMessage}
       </div>
     );
   }
 
   return (
-    <div className={classNames} data-test="policy-exception-list">
+    <div className={listClassName} data-test="policy-exception-list">
       {exceptions.map((exception) => (
         <PolicyExceptionRow key={`${exception.kind}:${exception.code}`} exception={exception} />
       ))}

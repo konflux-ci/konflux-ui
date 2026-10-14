@@ -209,7 +209,6 @@ describe('SecurityConformaTab', () => {
       title: 'CVE exception',
       description: 'Outstanding CVEs are waived by a policy exception.',
       status: CONFORMA_RESULT_STATUS.warnings,
-      expiresAt: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(),
       component: 'devfile-sample-python-basic-aw05',
       msg: 'CVEs are waived until the exception lapses',
       collection: ['minimal'],
@@ -223,7 +222,6 @@ describe('SecurityConformaTab', () => {
       title: 'Attestation signature check',
       msg: 'Provenance attestation is not signed',
       code: 'slsa_provenance.attestation_signed',
-      expiresAt: undefined,
     };
 
     it('should filter the table down to warnings from policy exception rules', () => {

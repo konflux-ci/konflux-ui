@@ -17,9 +17,11 @@ const IssuesOverview: React.FunctionComponent = () => {
     >
       <GridItem span={8}>
         <Grid hasGutter>
-          <GridItem>
-            <IssuesPolicyExceptionCard />
-          </GridItem>
+          <IfFeature flag="conforma-policy">
+            <GridItem>
+              <IssuesPolicyExceptionCard />
+            </GridItem>
+          </IfFeature>
           <GridItem>
             <IssueDistributionCard />
           </GridItem>

@@ -81,8 +81,6 @@ export type ConformaResultRow = {
   images: string[];
   /** Policy rule code — stable identifier used as primary group key. Optional for backward-compat. */
   code?: string;
-  /** Expiry of the policy exception waiving this rule, when one is configured. */
-  expiresAt?: string;
   pipelineRunName?: string;
 };
 
