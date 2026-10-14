@@ -90,6 +90,7 @@ export const filterResults = (
   searchText: string,
   statusFilters: string[],
   componentFilters: string[] = [],
+  ruleFilters: string[] = [],
 ): ConformaResultRow[] =>
   results.filter((row) => {
     if (
@@ -106,6 +107,10 @@ export const filterResults = (
     }
 
     if (componentFilters.length > 0 && !componentFilters.includes(row.component)) {
+      return false;
+    }
+
+    if (ruleFilters.length > 0 && (!row.code || !ruleFilters.includes(row.code))) {
       return false;
     }
 

@@ -64,7 +64,11 @@ describe('TaskRunSecurityResults', () => {
         />
       </Routes>,
     );
-    expect(await screen.findAllByText('1')).toHaveLength(2);
+    // The counts are rendered alongside their labels, so assert on the summary
+    // text rather than on bare numbers.
+    const summary = await screen.findByTestId('result-summary');
+    expect(summary.textContent).toContain('1 violations');
+    expect(summary.textContent).toContain('1 success');
     expect(getTaskRunLog).toHaveBeenCalledWith('team', 'task-uid', 'parent-uid');
     expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
   });

@@ -2,24 +2,23 @@ import * as React from 'react';
 import {
   Button,
   ButtonVariant,
-  Flex,
-  FlexItem,
   MenuToggle,
   Select,
   SelectList,
   SelectOption,
-  Switch,
 } from '@patternfly/react-core';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { MultiSelect } from '~/components/Filter/generic/MultiSelect';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 import { createFilterObj } from '~/components/Filter/utils/filter-utils';
-import { HelpTooltipIcon } from '~/shared';
 import {
   CONFORMA_RESULT_STATUS,
   type ConformaRefreshState,
   type ConformaResultRow,
 } from '~/types/conforma';
+import { ConformaToggle } from '../ConformaToggle';
+import { ShowPolicyExceptionsToggle } from '../ShowPolicyExceptionsToggle';
+import type { PolicyExceptionFilter } from '../usePolicyExceptionFilter';
 import type { GroupByMode } from './conforma-grouping-utils';
 import { ConformaRefreshIndicator } from './ConformaRefreshIndicator';
 import { useConformaFilters } from './useConformaFilters';
@@ -33,6 +32,7 @@ type ConformaResultsToolbarProps = {
   onToggleExpandAll: () => void;
   showDuplicates: boolean;
   onShowDuplicatesChange: (checked: boolean) => void;
+  policyExceptionFilter: PolicyExceptionFilter;
   refresh: ConformaRefreshState;
 };
 
@@ -58,6 +58,7 @@ export const ConformaResultsToolbar: React.FC<ConformaResultsToolbarProps> = ({
   onToggleExpandAll,
   showDuplicates,
   onShowDuplicatesChange,
+  policyExceptionFilter,
   refresh,
 }) => {
   const { setFilters, onClearFilters } = React.useContext(FilterContext);
@@ -132,20 +133,14 @@ export const ConformaResultsToolbar: React.FC<ConformaResultsToolbarProps> = ({
       >
         {allExpanded ? 'Collapse all' : 'Expand all'}
       </Button>
-      <Flex alignItems={{ default: 'alignItemsCenter' }} gap={{ default: 'gapSm' }}>
-        <FlexItem>
-          <Switch
-            id="conforma-show-duplicates"
-            label="Show multi-arch duplicates"
-            isChecked={showDuplicates}
-            onChange={(_event, checked) => onShowDuplicatesChange(checked)}
-            data-test="conforma-show-duplicates"
-          />
-        </FlexItem>
-        <FlexItem>
-          <HelpTooltipIcon content={SHOW_DUPLICATES_HELP_TEXT} />
-        </FlexItem>
-      </Flex>
+      <ShowPolicyExceptionsToggle filter={policyExceptionFilter} />
+      <ConformaToggle
+        id="conforma-show-duplicates"
+        label="Show multi-arch duplicates"
+        helpText={SHOW_DUPLICATES_HELP_TEXT}
+        isChecked={showDuplicates}
+        onChange={onShowDuplicatesChange}
+      />
       <ConformaRefreshIndicator refresh={refresh} />
     </BaseTextFilterToolbar>
   );

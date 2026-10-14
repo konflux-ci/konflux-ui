@@ -47,9 +47,9 @@ export const getBuildStatusIcon = (status: runStatus) => {
     case runStatus.Cancelling:
       return <InProgressIcon className="status-icon-spin" />;
     case runStatus.Cancelled:
-      return <WarningTriangleIcon color={orangeColor.value} />;
+      return <WarningTriangleIcon color={orangeColor.var} />;
     case runStatus.PipelineNotStarted:
-      return <WarningTriangleIcon color={orangeColor.value} />;
+      return <WarningTriangleIcon color={orangeColor.var} />;
     default:
       return <NotStartedIcon />;
   }
