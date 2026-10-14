@@ -1,13 +1,18 @@
-name: 'Periodic job: Cleanup GH repos, Quay repos, and bots, Konflux resources'
+name: 'Periodic job: Cleanup GH repos, Quay repos, and bots'
 
-# Can be triggered manually with dryrun and specific branch
+# Can be triggered manually with a specific branch.
+#
+# Konflux staging Application cleanup was moved out of this workflow into an
+# in-cluster CronJob in infra-deployments (application-cleaner):
+#   https://github.com/redhat-appstudio/infra-deployments/tree/main/components/application-cleaner
+# Migration PR: https://github.com/redhat-appstudio/infra-deployments/pull/13246
+#
+# For ad-hoc/manual cleanup from a local environment, scripts/ci_cleanup.sh
+# still supports a `konflux` target (requires oc + a personal token with
+# delete access to Applications in the target namespace).
 on:
   workflow_dispatch:
     inputs:
-      dry_run:
-        description: Dry run mode
-        type: boolean
-        default: false
       ref:
         description: Git ref
         required: true
@@ -22,17 +27,11 @@ jobs:
     runs-on: ubuntu-latest
     env:
       JOB_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-      # Dry run mode (only applies to Konflux cleanup)
-      DRY_RUN: ${{ github.event_name == 'schedule' && 'false' || github.event.inputs.dry_run }}
       PERIODIC_JOBS_SLACK_WEBHOOK_URL: ${{ secrets.PERIODIC_JOBS_SLACK_WEBHOOK_URL }}
       # secrets
       GH_TOKEN: ${{ secrets.HAC_TEST_GH_TOKEN }}
       QUAY_TOKEN: ${{ secrets.QUAY_CLEANUP_TOKEN }}
       QUAY_TEST_ORG: ${{ secrets.QUAY_TEST_ORG }}
-      # Konflux staging credentials
-      KONFLUX_API_SERVER: ${{ secrets.KONFLUX_PUBLIC_STAGE_API_SERVER }}
-      KONFLUX_TOKEN: ${{ secrets.KONFLUX_AUTOMATION_CLEANER }}
-      KONFLUX_NAMESPACE: ${{ secrets.KONFLUX_AUTOMATION_NAMESPACE }}
       JOB_TYPE: 'periodic-cleanup'
     steps:
       - name: Checkout repository
@@ -54,31 +53,10 @@ jobs:
         run: |
           ./scripts/ci_cleanup.sh quay
 
-      # We have to install oc, kubectl does not support login cmds
-      - name: Install OpenShift CLI
-        id: install-oc
-        if: ${{ always() }}
-        run: |
-          # Get the same version OC with stage konflux
-          DOMAIN=$(echo "$KONFLUX_API_SERVER" | sed -E 's#https://api\.([^:]+).*#\1#')
-          curl -kLo oc.tar \
-            https://downloads-openshift-console.apps.${DOMAIN}/amd64/linux/oc.tar
-          tar -xf oc.tar oc
-          chmod +x oc
-          sudo mv oc /usr/local/bin/
-          oc version --client
-
-      # Use the oc cmds with sa token to delete resources
-      - name: Cleanup Konflux staging resources
-        id: konflux
-        if: ${{ steps.install-oc.conclusion == 'success' }}
-        run: |
-          ./scripts/ci_cleanup.sh konflux
-
       - name: Report job result to Slack
         if: ${{ always() }}
         run: |
-          if [[ "${{ steps.github.outcome }}" == 'success' && "${{ steps.quay.outcome }}" == 'success' && "${{ steps.konflux.outcome }}" == 'success' ]]; then
+          if [[ "${{ steps.github.outcome }}" == 'success' && "${{ steps.quay.outcome }}" == 'success' ]]; then
             ./pr_check.sh send-report success
           else
             ./pr_check.sh send-report failure
