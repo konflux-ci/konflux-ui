@@ -1,79 +1,66 @@
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
-import Chatbot from '@patternfly/chatbot/dist/dynamic/Chatbot';
-import ChatbotContent from '@patternfly/chatbot/dist/dynamic/ChatbotContent';
-import ChatbotFooter, { ChatbotFootnote } from '@patternfly/chatbot/dist/dynamic/ChatbotFooter';
-import ChatbotHeader, {
-  ChatbotHeaderActions,
-  ChatbotHeaderCloseButton,
-  ChatbotHeaderMain,
-  ChatbotHeaderTitle,
-} from '@patternfly/chatbot/dist/dynamic/ChatbotHeader';
-import ChatbotToggle from '@patternfly/chatbot/dist/dynamic/ChatbotToggle';
-import ChatbotWelcomePrompt from '@patternfly/chatbot/dist/dynamic/ChatbotWelcomePrompt';
-import MessageBar from '@patternfly/chatbot/dist/dynamic/MessageBar';
-import MessageBox from '@patternfly/chatbot/dist/dynamic/MessageBox';
-import KonfluxLogo from '~/assets/konflux-logo.svg';
-import {
-  KONFLUX_AI_DISPLAY_MODE,
-  KONFLUX_AI_FOOTNOTE,
-  KONFLUX_AI_MESSAGE_PLACEHOLDER,
-  KONFLUX_AI_TOGGLE_BUTTON_LABEL,
-  KONFLUX_AI_TOGGLE_TOOLTIP,
-  KONFLUX_AI_WELCOME_DESCRIPTION,
-  KONFLUX_AI_WELCOME_TITLE,
-} from '~/components/AIChat/const';
+import { AIStateProvider } from '@redhat-cloud-services/ai-react-state';
+import { AIChatFooter } from '~/components/AIChat/components/AIChatFooter';
+import { AIChatHeader } from '~/components/AIChat/components/AIChatHeader';
+import { AIChatMessageList } from '~/components/AIChat/components/AIChatMessageList';
+import { AIChatPanel } from '~/components/AIChat/components/AIChatPanel';
+import { AIChatToggle } from '~/components/AIChat/components/AIChatToggle';
+import { AIChatInitProvider, useAIChatInit } from '~/components/AIChat/hooks/useAIChatInit';
+import { AIChatSendProvider, useAIChatSend } from '~/components/AIChat/hooks/useAIChatSend';
+import { getLightspeedClient } from '~/lightspeed/lightspeedClient';
 
 import '@patternfly/chatbot/dist/css/main.css';
 import './AIChat.scss';
 
-/**
- * Basic PatternFly chatbot shell with no backend/send behavior.
- */
-export const AIChatDock: React.FC = () => {
-  const [isChatbotVisible, setIsChatbotVisible] = React.useState(false);
+const AIChatDockContent: React.FC = () => {
+  const [isVisible, setIsVisible] = React.useState(false);
+  const { initError, retryInit } = useAIChatInit();
+  const { clearSendError } = useAIChatSend();
 
-  return ReactDOM.createPortal(
+  const clearChatError = () => {
+    clearSendError();
+    if (initError) {
+      retryInit();
+    }
+  };
+
+  const hide = () => {
+    setIsVisible(false);
+    clearChatError();
+  };
+
+  const toggle = () => {
+    if (isVisible) {
+      clearChatError();
+    }
+    setIsVisible(!isVisible);
+  };
+
+  return (
     <div className="ai-chat" data-test="ai-chat-dock">
-      <ChatbotToggle
-        tooltipLabel={KONFLUX_AI_TOGGLE_TOOLTIP}
-        toggleButtonLabel={KONFLUX_AI_TOGGLE_BUTTON_LABEL}
-        isChatbotVisible={isChatbotVisible}
-        onToggleChatbot={() => setIsChatbotVisible((visible) => !visible)}
-      />
-      <Chatbot displayMode={KONFLUX_AI_DISPLAY_MODE} isVisible={isChatbotVisible}>
-        <ChatbotHeader>
-          <ChatbotHeaderMain>
-            <ChatbotHeaderTitle>
-              <KonfluxLogo
-                aria-label="Konflux"
-                className="ai-chat__brand"
-                height={36}
-              />
-            </ChatbotHeaderTitle>
-          </ChatbotHeaderMain>
-          <ChatbotHeaderActions>
-            <ChatbotHeaderCloseButton onClick={() => setIsChatbotVisible(false)} />
-          </ChatbotHeaderActions>
-        </ChatbotHeader>
-        <ChatbotContent>
-          <MessageBox>
-            <ChatbotWelcomePrompt
-              title={KONFLUX_AI_WELCOME_TITLE}
-              description={KONFLUX_AI_WELCOME_DESCRIPTION}
-            />
-          </MessageBox>
-        </ChatbotContent>
-        <ChatbotFooter>
-          <MessageBar
-            hasAttachButton={false}
-            onSendMessage={() => undefined}
-            placeholder={KONFLUX_AI_MESSAGE_PLACEHOLDER}
-          />
-          <ChatbotFootnote label={KONFLUX_AI_FOOTNOTE} />
-        </ChatbotFooter>
-      </Chatbot>
-    </div>,
-    document.body,
+      <AIChatToggle isVisible={isVisible} onToggle={toggle} />
+      <AIChatPanel isVisible={isVisible}>
+        <AIChatHeader onClose={hide} />
+        <AIChatMessageList />
+        <AIChatFooter />
+      </AIChatPanel>
+    </div>
   );
 };
+
+/**
+ * PatternFly chatbot dock. Lazy-loaded from {@link AIChatGate} so Lightspeed /
+ * ai-react-state stay out of the main bundle. Init/send providers wrap children;
+ * message list and footer read AI state hooks directly.
+ */
+export const AIChatDock: React.FC = () => (
+  <AIStateProvider client={getLightspeedClient()}>
+    <AIChatInitProvider>
+      <AIChatSendProvider>
+        <AIChatDockContent />
+      </AIChatSendProvider>
+    </AIChatInitProvider>
+  </AIStateProvider>
+);
+
+export default AIChatDock;

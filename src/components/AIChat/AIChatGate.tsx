@@ -1,29 +1,28 @@
 import * as React from 'react';
 import { IfFeature } from '~/feature-flags/hooks';
-import { useIsLightspeedAvailable } from '~/lightspeed/conditional-checks';
+import { useIsLightspeedAvailable } from '~/lightspeed/useIsLightspeedAvailable';
 import { lazyLoad, LazyLoadArguments } from '~/shared/components/lazy-load/lazy';
 
-const AIChatDock = lazyLoad<LazyLoadArguments>(() =>
-  import(
-    '~/components/AIChat/AIChatDock' /* webpackChunkName: "ai-chat-dock" */
-  ).then((module) => ({ default: module.AIChatDock })),
+const LazyAIChatDock = lazyLoad<LazyLoadArguments>(() =>
+  import('~/components/AIChat/AIChatDock' /* webpackChunkName: "ai-chat-dock" */),
 );
 
-const AIChatDockLoader: React.FC = () => {
+const AIChatAvailabilityGate: React.FC = () => {
   const { isLightspeedAvailable } = useIsLightspeedAvailable();
 
   if (!isLightspeedAvailable) {
     return null;
   }
 
-  return <AIChatDock fallback={<></>} />;
+  return <LazyAIChatDock />;
 };
 
 /**
- * Lazy-loads the PatternFly chatbot UI only when the experimental `ai-chat` flag is on.
+ * Lazy-loads the PatternFly chatbot UI only when the experimental `ai-chat` flag is on
+ * and Lightspeed is available (`useIsLightspeedAvailable`).
  */
 export const AIChatGate: React.FC = () => (
   <IfFeature flag="ai-chat">
-    <AIChatDockLoader />
+    <AIChatAvailabilityGate />
   </IfFeature>
 );

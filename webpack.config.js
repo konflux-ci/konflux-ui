@@ -118,6 +118,14 @@ export default {
           priority: 20,
           enforce: true,
         },
+        // Keep @redhat-cloud-services AI client packages out of shared vendor (async with ai-chat-dock).
+        aiChat: {
+          test: /[\\/]node_modules[\\/]@redhat-cloud-services[\\/]/,
+          name: 'ai-chat-vendor',
+          chunks: 'async',
+          priority: 25,
+          enforce: true,
+        },
       },
     },
   },
