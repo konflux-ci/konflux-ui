@@ -3,10 +3,8 @@ import { IfFeature } from '~/feature-flags/hooks';
 import { useIsLightspeedAvailable } from '~/lightspeed/useIsLightspeedAvailable';
 import { lazyLoad, LazyLoadArguments } from '~/shared/components/lazy-load/lazy';
 
-const AIChatDockLoader = lazyLoad<LazyLoadArguments>(() =>
-  import(
-    '~/components/AIChat/AIChatDockLoader' /* webpackChunkName: "ai-chat-dock" */
-  ).then((module) => ({ default: module.default })),
+const LazyAIChatDock = lazyLoad<LazyLoadArguments>(() =>
+  import('~/components/AIChat/AIChatDock' /* webpackChunkName: "ai-chat-dock" */),
 );
 
 const AIChatAvailabilityGate: React.FC = () => {
@@ -16,7 +14,7 @@ const AIChatAvailabilityGate: React.FC = () => {
     return null;
   }
 
-  return <AIChatDockLoader />;
+  return <LazyAIChatDock />;
 };
 
 /**

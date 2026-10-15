@@ -2,9 +2,9 @@ import * as React from 'react';
 
 /**
  * Returns a ref to place at the end of a scrollable list. Scrolls that
- * element into view whenever `dependency` changes (e.g. a messages array).
+ * element into view whenever `dependency` changes.
  */
-export const useAIChatScrollToBottom = (
+export const useScrollToBottom = (
   dependency: unknown,
 ): React.RefObject<HTMLDivElement | null> => {
   const scrollToBottomRef = React.useRef<HTMLDivElement>(null);

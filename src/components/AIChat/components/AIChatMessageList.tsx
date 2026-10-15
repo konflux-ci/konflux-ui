@@ -12,9 +12,9 @@ import {
   KONFLUX_AI_WELCOME_TITLE,
 } from '~/components/AIChat/const';
 import { useAIChatInit } from '~/components/AIChat/hooks/useAIChatInit';
-import { useAIChatScrollToBottom } from '~/components/AIChat/hooks/useAIChatScrollToBottom';
 import { useAIChatSend } from '~/components/AIChat/hooks/useAIChatSend';
 import { stateMessagesToMessageProps } from '~/components/AIChat/message-utils';
+import { useScrollToBottom } from '~/shared/hooks/useScrollToBottom';
 
 /**
  * Renders chat messages, welcome prompt, error alert, and auto-scrolls on updates.
@@ -42,7 +42,7 @@ export const AIChatMessageList: React.FC = () => {
     return `Message from ${lastMessage.name}: ${lastMessage.content}`;
   }, [messages]);
 
-  const scrollToBottomRef = useAIChatScrollToBottom(messages);
+  const scrollToBottomRef = useScrollToBottom(messages);
   const hasMessages = messages.length > 0;
   const rehypePlugins = useChatMessageRehypePlugins(hasMessages);
   const chatError = sendError ?? initError;
