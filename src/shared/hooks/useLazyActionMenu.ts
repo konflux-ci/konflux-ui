@@ -5,7 +5,10 @@ type UseLazyActionMenuParams<TAction> = {
   loadContext?: () => Promise<unknown>;
 };
 
-export type LazyActionHookResult<TAction> = [actions: TAction[], onOpen: (isOpen: boolean) => void];
+export type LazyActionHookResult<TAction> = [
+  actions: TAction[],
+  onOpen?: (isOpen: boolean) => void,
+];
 
 export const useLazyActionMenu = <TAction>({
   buildActions,
@@ -53,7 +56,9 @@ export const useLazyActionMenu = <TAction>({
 export function composeLazyActions<TAction>(
   ...hooks: LazyActionHookResult<TAction>[]
 ): LazyActionHookResult<TAction> {
-  const onOpenCallbacks = hooks.map((h) => h[1]);
+  const onOpenCallbacks = hooks
+    .map((h) => h[1])
+    .filter((callback): callback is (isOpen: boolean) => void => callback !== undefined);
   const allActions = hooks.map((h) => h[0]);
 
   const onOpen = (isOpen: boolean) => {
