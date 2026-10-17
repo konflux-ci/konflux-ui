@@ -1950,30 +1950,43 @@ __metadata:
   linkType: hard
 
 "@dotenvx/dotenvx@npm:^2.0.0":
-  version: 2.23.0
-  resolution: "@dotenvx/dotenvx@npm:2.23.0"
+  version: 2.34.2
+  resolution: "@dotenvx/dotenvx@npm:2.34.2"
   dependencies:
-    "@dotenvx/primitives": "npm:^2.2.0"
-    "@dotenvx/tooling": "npm:^1.0.3"
+    "@dotenvx/primitives": "npm:^3.3.0"
+    "@dotenvx/providers": "npm:^0.3.5"
+    "@dotenvx/tooling": "npm:^1.0.5"
+    undici: "npm:^6.28.1"
+    write-file-atomic: "npm:^5.0.1"
     yocto-spinner: "npm:^1.2.1"
   bin:
     dotenvx: src/cli/dotenvx.js
     dx: src/cli/dotenvx.js
-  checksum: 10/ebc3aed6caa701b7c7d903f2703facf53d1ee838ae65e7148ecd25ae64e124ce09cf7372923bd36fc399033cd8ad8adc36b067eab9c6f5eeee2595fd4c1429a7
+  checksum: 10/7b1b4b14bce73ec2ae51cd41f25227082e9f39d68579684da6ded8e64a9eb0476b1a5b95250fba339cfed6330644ef21e881010a72cf0467ce33fe1cc5da1d87
   languageName: node
   linkType: hard
 
-"@dotenvx/primitives@npm:^2.2.0":
-  version: 2.2.0
-  resolution: "@dotenvx/primitives@npm:2.2.0"
-  checksum: 10/77425cd0589b5bc85a9bfcc92d7de14e8466e35fddb42a9dae79a978e3ceb59ece65a6b2558de94cd6071cb5aedb2b24bbdfcd7f93622ebea525f8e712c99e68
+"@dotenvx/primitives@npm:^3.3.0":
+  version: 3.3.0
+  resolution: "@dotenvx/primitives@npm:3.3.0"
+  checksum: 10/645f9174746bd355ea0385e4ab7bd9ad3fdc70e2872b43faf87b60004760c20f9d8bcdc75038ee791069bb719b5ac0c350845073e9f8dde543f9f9bf0f737414
   languageName: node
   linkType: hard
 
-"@dotenvx/tooling@npm:^1.0.3":
-  version: 1.0.3
-  resolution: "@dotenvx/tooling@npm:1.0.3"
-  checksum: 10/b85a276d0d37c8bf2947043e6fa02ead6035f438c7ddd5d5e5d156145469f593247cb88b0a82f215c25dcbcc6ae49142a0eab164416c7ea5fa53111748befc56
+"@dotenvx/providers@npm:^0.3.5":
+  version: 0.3.5
+  resolution: "@dotenvx/providers@npm:0.3.5"
+  dependencies:
+    "@dotenvx/primitives": "npm:^3.3.0"
+    "@dotenvx/tooling": "npm:^1.0.4"
+  checksum: 10/2e174381be29985bb03f9cf7c696fe2a12c2826c0b733729955a7fd2f053d8db3868ed8368f36acb884a9b91bfc9d9b32902603a471531e226be688e85a47e91
+  languageName: node
+  linkType: hard
+
+"@dotenvx/tooling@npm:^1.0.4, @dotenvx/tooling@npm:^1.0.5":
+  version: 1.0.5
+  resolution: "@dotenvx/tooling@npm:1.0.5"
+  checksum: 10/7b129c7937153f9bf416721e85a82862b8239a77daf46ed86bccd676fb3025f66308249fbe80e881f24514a2d47a9d21cb731156e271bcdc3fa0962b5111cb18
   languageName: node
   linkType: hard
 
@@ -20512,6 +20525,13 @@ __metadata:
   version: 7.16.0
   resolution: "undici-types@npm:7.16.0"
   checksum: 10/db43439f69c2d94cc29f75cbfe9de86df87061d6b0c577ebe9bb3255f49b22c50162a7d7eb413b0458b6510b8ca299ac7cff38c3a29fbd31af9f504bcf7fbc0d
+  languageName: node
+  linkType: hard
+
+"undici@npm:^6.28.1":
+  version: 6.29.0
+  resolution: "undici@npm:6.29.0"
+  checksum: 10/fd4969cfc846cb4da7f7b1b225536d629e17b17b4a1913287f1264f30c855b9eb65a6da6cde46ba1ddfe42f113a3969ab2697029c2b920401be2b7b3b40abef8
   languageName: node
   linkType: hard
 
