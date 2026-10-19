@@ -1,6 +1,12 @@
 # .fullsend/harness/code.yaml
 base: https://raw.githubusercontent.com/fullsend-ai/agents/464978aaf476ee134e7315ca763df74c746dbae4/harness/code.yaml#sha256=acc740396e9b5959fb976550ddc7eafc7778dd7611b385131f4fbd252ed8c08d
 
+openshell:
+  profiles:
+    - profiles/fullsend-vertex-ai.yaml
+    - profiles/fullsend-package-registries.yaml
+    - profiles/fullsend-gitleaks.yaml
+
 trigger: >
   event.entity.kind == "work_item"
     && (
