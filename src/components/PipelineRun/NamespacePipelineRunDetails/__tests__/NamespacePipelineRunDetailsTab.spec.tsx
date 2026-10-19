@@ -4,7 +4,7 @@ import { DataState, testPipelineRuns } from '~/__data__/pipelinerun-data';
 import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { useImageProxy } from '~/hooks/useImageProxy';
 import { useImageRepository } from '~/hooks/useImageRepository';
-import { usePipelineRunV2 } from '~/hooks/usePipelineRunsV2';
+import { usePipelineRunsV2, usePipelineRunV2 } from '~/hooks/usePipelineRunsV2';
 import { useTaskRunsForPipelineRuns } from '~/hooks/useTaskRunsV2';
 import { useIsImageControllerEnabled } from '~/image-controller/conditional-checks';
 import {
@@ -16,6 +16,7 @@ import NamespacePipelineRunDetailsTab from '../NamespacePipelineRunDetailsTab';
 
 jest.mock('~/hooks/usePipelineRunsV2', () => ({
   usePipelineRunV2: jest.fn(),
+  usePipelineRunsV2: jest.fn(),
 }));
 jest.mock('~/hooks/useTaskRunsV2', () => ({ useTaskRunsForPipelineRuns: jest.fn() }));
 jest.mock('~/hooks/useUIInstance', () => ({ useSbomUrl: () => () => undefined }));
@@ -50,6 +51,15 @@ describe('NamespacePipelineRunDetailsTab', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    jest
+      .mocked(usePipelineRunsV2)
+      .mockReturnValue([
+        [],
+        true,
+        undefined,
+        undefined,
+        { hasNextPage: false, isFetchingNextPage: false },
+      ]);
     (useIsImageControllerEnabled as jest.Mock).mockReturnValue({ isImageControllerEnabled: false });
     jest.mocked(useImageProxy).mockReturnValue([undefined, true, undefined]);
     jest.mocked(useImageRepository).mockReturnValue([undefined, true, undefined]);
@@ -199,6 +209,12 @@ describe('NamespacePipelineRunDetailsTab', () => {
     expect(screen.getByText('Unable to load task runs')).toBeInTheDocument();
   });
 
+  it('includes related pipeline runs in the details metadata', () => {
+    renderWithQueryClientAndRouter(<NamespacePipelineRunDetailsTab />);
+    expect(screen.getByText('Related pipeline runs')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '0 pipeline runs' })).toBeInTheDocument();
+  });
+
   it('matches the existing details field order within each column', () => {
     renderWithQueryClientAndRouter(<NamespacePipelineRunDetailsTab />);
     expect(
@@ -228,6 +244,7 @@ describe('NamespacePipelineRunDetailsTab', () => {
       'Component',
       'Commit',
       'Integration test',
+      'Related pipeline runs',
     ]);
     expect(screen.queryByText('Started')).not.toBeInTheDocument();
   });

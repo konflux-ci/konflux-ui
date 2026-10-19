@@ -10,6 +10,8 @@ import { getCommitShortName } from '../../../utils/commits-utils';
 
 import './CommitLabel.scss';
 
+const GITEA_PROVIDER = 'gitea';
+
 const tipText = {
   [GitProvider.GITHUB]: 'Open in GitHub',
   [GitProvider.GITLAB]: 'Open in GitLab',
@@ -40,12 +42,13 @@ const CommitLabel: React.FC<React.PropsWithChildren<CommitLabelProps>> = ({
   sha,
   shaURL,
 }) => {
+  const provider = gitProvider === GITEA_PROVIDER ? GitProvider.FORGEJO : gitProvider;
   const commitShortName = getCommitShortName(sha);
   const label = (
     <Label
       color="blue"
-      className={css('commit-label', gitProvider === GitProvider.GITHUB && 'black-icon')}
-      icon={providerIcon[gitProvider]}
+      className={css('commit-label', provider === GitProvider.GITHUB && 'black-icon')}
+      icon={providerIcon[provider]}
       isCompact
       render={({ className, content }) => (
         <a
@@ -62,7 +65,7 @@ const CommitLabel: React.FC<React.PropsWithChildren<CommitLabelProps>> = ({
       {commitShortName}
     </Label>
   );
-  const tooltip = tipText[gitProvider];
+  const tooltip = tipText[provider];
   if (tooltip) {
     return <Tooltip content={tooltip}>{label}</Tooltip>;
   }

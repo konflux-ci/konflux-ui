@@ -4,7 +4,7 @@ import { screen, waitFor } from '@testing-library/react';
 import { NuqsTestingAdapter } from 'nuqs/adapters/testing';
 import ComponentGroupComponentsList from '~/components/ComponentGroups/ComponentGroupDetails/tabs/ComponentGroupComponents/ComponentGroupComponentsList';
 import { useComponentGroup } from '~/hooks/useComponentGroups';
-import { useComponentsByName } from '~/hooks/useComponents';
+import { useComponentsByNameV2 } from '~/hooks/useComponentsV2';
 import { ComponentGroupKind } from '~/types';
 import { ComponentKind } from '~/types/component';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
@@ -29,8 +29,8 @@ jest.mock('~/hooks/useComponentGroups', () => ({
   useComponentGroup: jest.fn(),
 }));
 
-jest.mock('~/hooks/useComponents', () => ({
-  useComponentsByName: jest.fn(),
+jest.mock('~/hooks/useComponentsV2', () => ({
+  useComponentsByNameV2: jest.fn(),
 }));
 
 jest.mock('~/components/GitLink/GitRepoLink', () => ({
@@ -53,7 +53,7 @@ jest.mock('~/components/LatestBuild/LatestPushBuildSection', () => ({
 
 const useParamsMock = useParams as jest.Mock;
 const useComponentGroupMock = useComponentGroup as jest.Mock;
-const useComponentsByNameMock = useComponentsByName as jest.Mock;
+const useComponentsByNameMock = useComponentsByNameV2 as jest.Mock;
 
 const group = {
   apiVersion: 'appstudio.redhat.com/v1beta2',
@@ -77,7 +77,7 @@ const group = {
 
 const createComponent = (name: string, url?: string): ComponentKind =>
   ({
-    apiVersion: 'appstudio.redhat.com/v1alpha1',
+    apiVersion: 'konflux-ci.dev/v1alpha1',
     kind: 'Component',
     metadata: { name, namespace: 'test-ns' },
     spec: {
@@ -196,6 +196,24 @@ describe('ComponentGroupComponentsList', () => {
       ['frontend', 'backend', 'docs'],
       true,
     );
+  });
+
+  it('should not show references missing from the new Component API', () => {
+    useComponentsByNameMock.mockReturnValue([[mockComponents[0]], true, undefined]);
+    renderWithQueryClient(<TestedComponent />);
+    expect(screen.getAllByTestId('component-name')).toHaveLength(1);
+    expect(screen.getByTestId('component-name')).toHaveTextContent('frontend');
+  });
+
+  it('should not treat nested group references as components', () => {
+    useComponentGroupMock.mockReturnValue([
+      { ...group, spec: { components: [{ name: 'frontend', kind: 'componentGroup' }] } },
+      true,
+      undefined,
+    ]);
+    renderWithQueryClient(<TestedComponent />);
+    expect(useComponentsByNameMock).toHaveBeenCalledWith('test-ns', [], true);
+    expect(screen.queryByTestId('component-name')).not.toBeInTheDocument();
   });
 
   it('should filter group components by name from the URL', async () => {

@@ -6,7 +6,7 @@ import {
 } from '~/components/ComponentList/component-table-config';
 import { ComponentsListEmptyState } from '~/components/ComponentList/ComponentsListEmptyState';
 import PageLayout from '~/components/PageLayout/PageLayout';
-import { useAllComponents } from '~/hooks/useComponents';
+import { useAllComponentsV2 } from '~/hooks/useComponentsV2';
 import FilteredEmptyState from '~/shared/components/empty-state/FilteredEmptyState';
 import { FilterToolbar, useFilteredData, useFilterState } from '~/shared/components/Filter';
 import { Table, TableContainer } from '~/shared/components/TableV2';
@@ -17,7 +17,7 @@ const ComponentsListView: React.FC = () => {
   const namespace = useNamespace();
   const { clientFilterValues, clearAll, isFiltered } = useFilterState(componentsFilterConfig);
 
-  const [components, compLoaded, compError] = useAllComponents(namespace);
+  const [components, compLoaded, compError] = useAllComponentsV2(namespace);
 
   const { filteredData } = useFilteredData(componentsFilterConfig, components, clientFilterValues);
 

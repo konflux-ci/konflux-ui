@@ -4,7 +4,7 @@ import { PageSection } from '@patternfly/react-core';
 import { ComponentGroupComponentsEmptyState } from '~/components/ComponentGroups/ComponentGroupDetails/tabs/ComponentGroupComponents/ComponentGroupComponentsEmptyState';
 import PageLayout from '~/components/PageLayout/PageLayout';
 import { useComponentGroup } from '~/hooks/useComponentGroups';
-import { useComponentsByName } from '~/hooks/useComponents';
+import { useComponentsByNameV2 } from '~/hooks/useComponentsV2';
 import FilteredEmptyState from '~/shared/components/empty-state/FilteredEmptyState';
 import { FilterToolbar, useFilteredData, useFilterState } from '~/shared/components/Filter';
 import { Table, TableContainer } from '~/shared/components/TableV2';
@@ -23,12 +23,23 @@ const ComponentGroupComponentsList: React.FC = () => {
   const { clientFilterValues, clearAll, isFiltered } = useFilterState(cgComponentsFilterConfig);
 
   const [group, groupLoaded, groupError] = useComponentGroup(namespace, groupName, true);
-  const componentNames = React.useMemo(
-    () => (groupLoaded && !groupError && group ? group.spec.components.map((c) => c.name) : []),
+  const componentReferences = React.useMemo(
+    () =>
+      groupLoaded && !groupError && group
+        ? group.spec.components.filter((c) => !c.kind || c.kind.toLowerCase() === 'component')
+        : [],
     [group, groupError, groupLoaded],
   );
+  const componentNames = React.useMemo(
+    () => componentReferences.map((c) => c.name),
+    [componentReferences],
+  );
 
-  const [components, compLoaded, compError] = useComponentsByName(namespace, componentNames, true);
+  const [components, compLoaded, compError] = useComponentsByNameV2(
+    namespace,
+    componentNames,
+    true,
+  );
   const componentsMap = React.useMemo(
     () => (components ? new Map(components.map((c) => [c.metadata.name, c])) : new Map()),
     [components],
@@ -37,23 +48,34 @@ const ComponentGroupComponentsList: React.FC = () => {
   const componentListItems: CgComponentListItem[] = React.useMemo(
     () =>
       group && groupLoaded && !groupError && compLoaded && !compError
-        ? group.spec.components.map((c) => {
-            const version = c.componentVersion?.version;
-            const latestCandidate = getLatestPromotedBuild(
-              group.status?.globalCandidateList ?? [],
-              c.name,
-              version,
-            );
-            return {
-              componentName: c.name,
-              namespace,
-              gitUrl: componentsMap.get(c.name)?.spec.source?.url,
-              imageUrl: latestCandidate?.lastPromotedImage,
-              version: version ?? latestCandidate?.version,
-            };
-          })
+        ? componentReferences
+            .filter((c) => componentsMap.has(c.name))
+            .map((c) => {
+              const version = c.componentVersion?.version;
+              const latestCandidate = getLatestPromotedBuild(
+                group.status?.globalCandidateList ?? [],
+                c.name,
+                version,
+              );
+              return {
+                componentName: c.name,
+                namespace,
+                gitUrl: componentsMap.get(c.name)?.spec.source?.url,
+                imageUrl: latestCandidate?.lastPromotedImage,
+                version: version ?? latestCandidate?.version,
+              };
+            })
         : [],
-    [group, namespace, groupLoaded, groupError, compLoaded, compError, componentsMap],
+    [
+      group,
+      namespace,
+      groupLoaded,
+      groupError,
+      compLoaded,
+      compError,
+      componentsMap,
+      componentReferences,
+    ],
   );
 
   const { filteredData } = useFilteredData(

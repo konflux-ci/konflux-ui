@@ -1,5 +1,7 @@
 import * as React from 'react';
-import { render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { routerRenderer } from '~/unit-test-utils';
 import '@testing-library/jest-dom';
 import { GitProvider } from '../../../../shared/utils/git-utils';
 import CommitLabel from '../CommitLabel';
@@ -24,6 +26,17 @@ const shaURL =
   'https://github.com/test-owner/test-repo/commit/9135b3ad0a2c16726523b12cf3b8f0365be33566';
 
 describe('CommitLabel', () => {
+  it.each(['forgejo', 'gitea'])(
+    'should render the Forgejo icon and tooltip for %s',
+    async (gitProvider) => {
+      const user = userEvent.setup();
+      routerRenderer(<CommitLabel gitProvider={gitProvider} sha={sha} shaURL={shaURL} />);
+      expect(screen.getByRole('img', { name: 'Forgejo' })).toBeInTheDocument();
+      await user.hover(screen.getByRole('link'));
+      expect(await screen.findByRole('tooltip')).toHaveTextContent('Open in Forgejo');
+    },
+  );
+
   it('should render commit label', () => {
     const label = render(<CommitLabel gitProvider="github" sha={sha} shaURL={shaURL} />);
     const link = label.getByTestId(`commit-label-9135b3a`);

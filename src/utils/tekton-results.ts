@@ -105,6 +105,7 @@ export const commitShaFilter = (commitSha: string): string =>
     EQ(`data.metadata.labels["${PipelineRunLabel.COMMIT_LABEL}"]`, commitSha),
     EQ(`data.metadata.labels["${PipelineRunLabel.TEST_SERVICE_COMMIT}"]`, commitSha),
     EQ(`data.metadata.annotations["${PipelineRunLabel.COMMIT_ANNOTATION}"]`, commitSha),
+    EQ(`data.metadata.annotations["${PipelineRunLabel.TEST_SERVICE_COMMIT}"]`, commitSha),
   );
 
 const CONTAINS = (field: string, value: string) => `${field}.contains("${value}")`;
@@ -275,7 +276,7 @@ export const createTektonResultsUrl = (
     ['order_by']: 'create_time desc',
     ['page_size']: `${Math.max(
       MINIMUM_PAGE_SIZE,
-      Math.min(MAXIMUM_PAGE_SIZE, options?.limit >= 0 ? options.limit : options?.pageSize ?? 30),
+      Math.min(MAXIMUM_PAGE_SIZE, options?.limit >= 0 ? options.limit : (options?.pageSize ?? 30)),
     )}`,
     ...(nextPageToken ? { ['page_token']: nextPageToken } : {}),
     // get partial response with required fields

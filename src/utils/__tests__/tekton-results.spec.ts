@@ -1,3 +1,4 @@
+import { PipelineRunLabel } from '~/consts/pipelinerun';
 import {
   AND,
   createTektonResultsUrl,
@@ -141,6 +142,7 @@ describe('tekton-results', () => {
     it('should decode base64', () => {
       expect(decodeValue('eyJoZWxsbyI6IndvcmxkIn0=')).toEqual('{"hello":"world"}');
     });
+
     it('should decode base64 to JSON', () => {
       expect(decodeValueJson('eyJoZWxsbyI6IndvcmxkIn0=')).toStrictEqual({ hello: 'world' });
     });
@@ -175,6 +177,7 @@ describe('tekton-results', () => {
       );
     });
   });
+
   describe('expressionsToFilter', () => {
     it('should convert empty expressions', () => {
       expect(expressionsToFilter([])).toEqual('');
@@ -187,6 +190,7 @@ describe('tekton-results', () => {
         ]),
       ).toThrow();
     });
+
     it('should convert Exists operator', () => {
       expect(
         expressionsToFilter([
@@ -341,6 +345,7 @@ describe('tekton-results', () => {
         expect(result).toMatch(/\|\|/);
       });
     });
+
     it('should convert In operator', () => {
       expect(
         expressionsToFilter([
@@ -689,5 +694,18 @@ describe('tekton-results', () => {
         code: 404,
       });
     });
+  });
+
+  it('includes integration commit annotations in a group-scoped Tekton Results query', () => {
+    const filter = selectorToFilter({
+      matchLabels: { [PipelineRunLabel.COMPONENT_GROUP]: 'checkout' },
+      filterByCommit: 'sha',
+    });
+    expect(filter).toContain(
+      'data.metadata.annotations["pac.test.appstudio.openshift.io/sha"] == "sha"',
+    );
+    expect(filter).toContain(
+      'data.metadata.labels["appstudio.openshift.io/component-group"] == "checkout"',
+    );
   });
 });
