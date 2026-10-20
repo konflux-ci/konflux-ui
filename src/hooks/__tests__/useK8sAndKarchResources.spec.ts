@@ -5,7 +5,6 @@ import * as React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import { HttpError } from '~/k8s/error';
-import * as k8sFetch from '~/k8s/k8s-fetch';
 import { K8sResourceReadOptions } from '~/k8s/k8s-fetch';
 import { useIsKubeArchiveEnabled } from '~/kubearchive/conditional-checks';
 import {
@@ -31,11 +30,6 @@ jest.mock('~/kubearchive/conditional-checks', () => ({
   useIsKubeArchiveEnabled: jest.fn(() => ({ isKubearchiveEnabled: false })),
 }));
 
-jest.mock('~/k8s/k8s-fetch', () => ({
-  __esModule: true,
-  K8sGetResource: jest.fn(),
-}));
-
 const mockUseK8sWatchResource = createK8sWatchResourceMock();
 const mockUseKubearchiveListResourceQuery = useKubearchiveListResourceQuery as jest.MockedFunction<
   typeof useKubearchiveListResourceQuery
@@ -46,7 +40,6 @@ const mockUseKubearchiveGetResourceQuery = useKubearchiveGetResourceQuery as jes
 const mockUseIsKubeArchiveEnabled = useIsKubeArchiveEnabled as jest.MockedFunction<
   typeof useIsKubeArchiveEnabled
 >;
-const mockK8sGetResource = k8sFetch.K8sGetResource as jest.Mock;
 
 // Sample test data
 interface TestResource extends K8sResourceCommon {
@@ -803,7 +796,6 @@ describe('useK8sAndKarchResource', () => {
     mockUseIsKubeArchiveEnabled.mockReturnValue({
       isKubearchiveEnabled: false,
     } as ReturnType<typeof useIsKubeArchiveEnabled>);
-    mockK8sGetResource.mockReset();
   });
 
   const mockResourceInit: K8sResourceReadOptions = {

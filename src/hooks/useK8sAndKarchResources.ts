@@ -2,6 +2,7 @@ import * as React from 'react';
 import { useK8sWatchResource } from '~/k8s';
 import { WebSocketOptions } from '~/k8s/web-socket/types';
 import { useIsKubeArchiveEnabled } from '~/kubearchive/conditional-checks';
+import { has404Error } from '~/utils/common-utils';
 import { K8sResourceReadOptions } from '../k8s/k8s-fetch';
 import { TQueryOptions } from '../k8s/query/type';
 import {
@@ -10,7 +11,6 @@ import {
 } from '../kubearchive/hooks';
 import { useDeepCompareMemoize } from '../shared';
 import { K8sModelCommon, K8sResourceCommon, ResourceSource, WatchK8sResource } from '../types/k8s';
-import { has404Error } from '../utils/common-utils';
 
 const getResourceId = (resource: K8sResourceCommon): string => {
   return resource.metadata?.uid || `${resource.metadata?.name}-${resource.metadata?.namespace}`;
@@ -232,7 +232,7 @@ export function useK8sAndKarchResource<TResource extends K8sResourceCommon>(
     memoizedResourceInit?.model,
     {
       ...memoizedQueryOptions,
-      retry: (_, error) => !has404Error(error),
+      retry: memoizedQueryOptions?.retry === false ? false : (_, error) => !has404Error(error),
     },
     memoizedWatchOptions,
   );
@@ -261,9 +261,9 @@ export function useK8sAndKarchResource<TResource extends K8sResourceCommon>(
       data: clusterQuery.data,
       source,
       isLoading: clusterQuery.isLoading,
-      fetchError: clusterQuery.error,
+      fetchError: null,
       wsError,
-      isError: !!(clusterQuery.error || wsError),
+      isError: !!wsError,
     };
   }
 
