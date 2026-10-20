@@ -1,11 +1,13 @@
-import { waitFor } from '@testing-library/react';
+import * as React from 'react';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { renderHook, waitFor } from '@testing-library/react';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
+import { PipelineRunKind } from '~/types';
 import { createTestQueryClient, renderHookWithQueryClient } from '~/unit-test-utils';
+import { KUEUE_QUEUE_NAME_LABEL } from '../const';
 import { fetchKueuePendingWorkloads } from '../kueue-fetch';
-import { useKueuePendingWorkloads } from '../kueue-hooks';
+import { useKueueQueuePositionForPipelineRun } from '../kueue-hooks';
 
-// `refetchInterval` is a real, runtime-populated field on a Query's merged options,
-// but it isn't part of the public `QueryOptions` TS type -- widen locally to read it.
 const getRefetchInterval = (query: { options: unknown }): number | false | undefined =>
   (query.options as { refetchInterval?: number | false }).refetchInterval;
 
@@ -22,190 +24,230 @@ const mockFetchKueuePendingWorkloads = fetchKueuePendingWorkloads as jest.Mocked
   typeof fetchKueuePendingWorkloads
 >;
 
-describe('useKueuePendingWorkloads', () => {
+const createPipelineRun = (name: string, queueName?: string): PipelineRunKind =>
+  ({
+    apiVersion: 'tekton.dev/v1',
+    kind: 'PipelineRun',
+    metadata: {
+      name,
+      namespace: 'test-ns',
+      uid: `uid-${name}`,
+      labels: queueName ? { [KUEUE_QUEUE_NAME_LABEL]: queueName } : {},
+    },
+  }) as PipelineRunKind;
+
+describe('useKueueQueuePositionForPipelineRun', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  it('should not fetch and return an empty map when the feature flag is off', () => {
+  it('should not fetch and return undefined queuePosition when the feature flag is off', () => {
     mockUseIsOnFeatureFlag.mockReturnValue(false);
+    const plr = createPipelineRun('plr-1', 'pipelines-queue');
 
     const { result } = renderHookWithQueryClient(() =>
-      useKueuePendingWorkloads('test-ns', ['pipelines-queue']),
+      useKueueQueuePositionForPipelineRun('test-ns', plr),
     );
 
-    expect(result.current.queuePositionsByPipelineRun).toEqual({});
+    expect(result.current.queuePosition).toBeUndefined();
     expect(result.current.isLoading).toBe(false);
     expect(mockFetchKueuePendingWorkloads).not.toHaveBeenCalled();
   });
 
   it('should not fetch when namespace is undefined', () => {
     mockUseIsOnFeatureFlag.mockReturnValue(true);
-
-    renderHookWithQueryClient(() => useKueuePendingWorkloads(undefined, ['pipelines-queue']));
-
-    expect(mockFetchKueuePendingWorkloads).not.toHaveBeenCalled();
-  });
-
-  it('should not fetch when there are no queue names', () => {
-    mockUseIsOnFeatureFlag.mockReturnValue(true);
-
-    renderHookWithQueryClient(() => useKueuePendingWorkloads('test-ns', []));
-
-    expect(mockFetchKueuePendingWorkloads).not.toHaveBeenCalled();
-  });
-
-  it('should fetch once per unique queue name and merge results into a single lookup map', async () => {
-    mockUseIsOnFeatureFlag.mockReturnValue(true);
-    mockFetchKueuePendingWorkloads.mockImplementation((_ns, queueName) =>
-      Promise.resolve({
-        items: [
-          {
-            metadata: {
-              name: `workload-${queueName}`,
-              creationTimestamp: '2026-01-01T00:00:00Z',
-              ownerReferences: [
-                {
-                  apiVersion: 'tekton.dev/v1',
-                  kind: 'PipelineRun',
-                  name: `plr-${queueName}`,
-                  uid: `uid-${queueName}`,
-                },
-              ],
-            },
-            priority: 700,
-            localQueueName: queueName,
-            positionInClusterQueue: 2,
-            positionInLocalQueue: 0,
-          },
-        ],
-      }),
-    );
+    const plr = createPipelineRun('plr-1', 'pipelines-queue');
 
     const { result } = renderHookWithQueryClient(() =>
-      useKueuePendingWorkloads('test-ns', ['pipelines-queue', 'other-queue']),
+      useKueueQueuePositionForPipelineRun(undefined, plr),
+    );
+
+    expect(result.current.queuePosition).toBeUndefined();
+    expect(mockFetchKueuePendingWorkloads).not.toHaveBeenCalled();
+  });
+
+  it('should not fetch when the PipelineRun has no queue label', () => {
+    mockUseIsOnFeatureFlag.mockReturnValue(true);
+    const plr = createPipelineRun('plr-1');
+
+    const { result } = renderHookWithQueryClient(() =>
+      useKueueQueuePositionForPipelineRun('test-ns', plr),
+    );
+
+    expect(result.current.queuePosition).toBeUndefined();
+    expect(mockFetchKueuePendingWorkloads).not.toHaveBeenCalled();
+  });
+
+  it('should resolve the queue position for a matching PipelineRun', async () => {
+    mockUseIsOnFeatureFlag.mockReturnValue(true);
+    mockFetchKueuePendingWorkloads.mockResolvedValue({
+      items: [
+        {
+          metadata: {
+            name: 'workload-plr-1',
+            creationTimestamp: '2026-01-01T00:00:00Z',
+            ownerReferences: [
+              {
+                apiVersion: 'tekton.dev/v1',
+                kind: 'PipelineRun',
+                name: 'plr-1',
+                uid: 'uid-plr-1',
+              },
+            ],
+          },
+          priority: 700,
+          localQueueName: 'pipelines-queue',
+          positionInClusterQueue: 3,
+          positionInLocalQueue: 1,
+        },
+      ],
+    });
+
+    const plr = createPipelineRun('plr-1', 'pipelines-queue');
+    const { result } = renderHookWithQueryClient(() =>
+      useKueueQueuePositionForPipelineRun('test-ns', plr),
     );
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-    expect(mockFetchKueuePendingWorkloads).toHaveBeenCalledTimes(2);
+    expect(mockFetchKueuePendingWorkloads).toHaveBeenCalledTimes(1);
     expect(mockFetchKueuePendingWorkloads).toHaveBeenCalledWith('test-ns', 'pipelines-queue');
-    expect(mockFetchKueuePendingWorkloads).toHaveBeenCalledWith('test-ns', 'other-queue');
-    expect(result.current.queuePositionsByPipelineRun).toEqual({
-      'plr-pipelines-queue': {
-        positionInClusterQueue: 2,
-        positionInLocalQueue: 0,
-        priority: 700,
-        creationTimestamp: '2026-01-01T00:00:00Z',
-      },
-      'plr-other-queue': {
-        positionInClusterQueue: 2,
-        positionInLocalQueue: 0,
-        priority: 700,
-        creationTimestamp: '2026-01-01T00:00:00Z',
-      },
+    expect(result.current.queuePosition).toEqual({
+      positionInClusterQueue: 3,
+      positionInLocalQueue: 1,
+      priority: 700,
+      creationTimestamp: '2026-01-01T00:00:00Z',
     });
+    expect(result.current.error).toBeNull();
   });
 
-  it('should return an empty map and surface the error when a queue request fails (e.g. missing RBAC)', async () => {
+  it('should return undefined queuePosition when the PipelineRun is not among pending workloads', async () => {
+    mockUseIsOnFeatureFlag.mockReturnValue(true);
+    mockFetchKueuePendingWorkloads.mockResolvedValue({
+      items: [
+        {
+          metadata: {
+            name: 'workload-other',
+            ownerReferences: [
+              {
+                apiVersion: 'tekton.dev/v1',
+                kind: 'PipelineRun',
+                name: 'plr-other',
+                uid: 'uid-other',
+              },
+            ],
+          },
+          priority: 500,
+          localQueueName: 'pipelines-queue',
+          positionInClusterQueue: 0,
+          positionInLocalQueue: 0,
+        },
+      ],
+    });
+
+    const plr = createPipelineRun('plr-1', 'pipelines-queue');
+    const { result } = renderHookWithQueryClient(() =>
+      useKueueQueuePositionForPipelineRun('test-ns', plr),
+    );
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(result.current.queuePosition).toBeUndefined();
+  });
+
+  it('should expose the error when the fetch fails', async () => {
     mockUseIsOnFeatureFlag.mockReturnValue(true);
     const error = new Error('Forbidden');
     mockFetchKueuePendingWorkloads.mockRejectedValue(error);
 
+    const plr = createPipelineRun('plr-1', 'pipelines-queue');
     const { result } = renderHookWithQueryClient(() =>
-      useKueuePendingWorkloads('test-ns', ['pipelines-queue']),
+      useKueueQueuePositionForPipelineRun('test-ns', plr),
     );
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-    expect(result.current.queuePositionsByPipelineRun).toEqual({});
+    expect(result.current.queuePosition).toBeUndefined();
     expect(result.current.error).toBe(error);
   });
 
-  it('should report isLoading true while requests are in flight', () => {
+  it('should report isLoading true while the request is in flight', () => {
     mockUseIsOnFeatureFlag.mockReturnValue(true);
-    mockFetchKueuePendingWorkloads.mockReturnValue(new Promise(() => {})); // never resolves
+    mockFetchKueuePendingWorkloads.mockReturnValue(new Promise(() => {}));
 
+    const plr = createPipelineRun('plr-1', 'pipelines-queue');
     const { result } = renderHookWithQueryClient(() =>
-      useKueuePendingWorkloads('test-ns', ['pipelines-queue']),
+      useKueueQueuePositionForPipelineRun('test-ns', plr),
     );
 
     expect(result.current.isLoading).toBe(true);
-    expect(result.current.queuePositionsByPipelineRun).toEqual({});
+    expect(result.current.queuePosition).toBeUndefined();
   });
 
-  it('should keep data from queues that succeed even when a sibling queue fails (partial failure)', async () => {
-    mockUseIsOnFeatureFlag.mockReturnValue(true);
-    const error = new Error('Forbidden');
-    mockFetchKueuePendingWorkloads.mockImplementation((_ns, queueName) => {
-      if (queueName === 'broken-queue') {
-        return Promise.reject(error);
-      }
-      return Promise.resolve({
-        items: [
-          {
-            metadata: {
-              name: 'workload-ok',
-              creationTimestamp: '2026-01-01T00:00:00Z',
-              ownerReferences: [
-                { apiVersion: 'tekton.dev/v1', kind: 'PipelineRun', name: 'plr-ok', uid: 'uid-ok' },
-              ],
-            },
-            priority: 500,
-            localQueueName: queueName,
-            positionInClusterQueue: 1,
-            positionInLocalQueue: 0,
-          },
-        ],
-      });
-    });
-
-    const { result } = renderHookWithQueryClient(() =>
-      useKueuePendingWorkloads('test-ns', ['pipelines-queue', 'broken-queue']),
-    );
-
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
-
-    expect(result.current.queuePositionsByPipelineRun).toEqual({
-      'plr-ok': {
-        positionInClusterQueue: 1,
-        positionInLocalQueue: 0,
-        priority: 500,
-        creationTimestamp: '2026-01-01T00:00:00Z',
-      },
-    });
-    expect(result.current.error).toBe(error);
-  });
-
-  it('should configure React Query to poll on the given interval, defaulting to 30s', () => {
+  it('should configure polling at the default 30s interval', () => {
     mockUseIsOnFeatureFlag.mockReturnValue(true);
     mockFetchKueuePendingWorkloads.mockResolvedValue({ items: [] });
 
-    const defaultClient = createTestQueryClient();
-    renderHookWithQueryClient(() => useKueuePendingWorkloads('test-ns', ['pipelines-queue']), {
-      client: defaultClient,
-    });
-    const [defaultQuery] = defaultClient.getQueryCache().findAll();
-    expect(getRefetchInterval(defaultQuery)).toBe(30_000);
-
-    const customClient = createTestQueryClient();
-    renderHookWithQueryClient(
-      () => useKueuePendingWorkloads('test-ns', ['pipelines-queue'], 5_000),
-      { client: customClient },
-    );
-    const [customQuery] = customClient.getQueryCache().findAll();
-    expect(getRefetchInterval(customQuery)).toBe(5_000);
-  });
-
-  it('should set refetchInterval to false (no polling) when disabled', () => {
-    mockUseIsOnFeatureFlag.mockReturnValue(false);
-
     const client = createTestQueryClient();
-    renderHookWithQueryClient(() => useKueuePendingWorkloads('test-ns', ['pipelines-queue']), {
+    const plr = createPipelineRun('plr-1', 'pipelines-queue');
+
+    renderHookWithQueryClient(() => useKueueQueuePositionForPipelineRun('test-ns', plr), {
       client,
     });
 
     const [query] = client.getQueryCache().findAll();
+    expect(getRefetchInterval(query)).toBe(30_000);
+  });
+
+  it('should configure polling at a custom interval', () => {
+    mockUseIsOnFeatureFlag.mockReturnValue(true);
+    mockFetchKueuePendingWorkloads.mockResolvedValue({ items: [] });
+
+    const client = createTestQueryClient();
+    const plr = createPipelineRun('plr-1', 'pipelines-queue');
+
+    renderHookWithQueryClient(
+      () => useKueueQueuePositionForPipelineRun('test-ns', plr, 5_000),
+      { client },
+    );
+
+    const [query] = client.getQueryCache().findAll();
+    expect(getRefetchInterval(query)).toBe(5_000);
+  });
+
+  it('should set refetchInterval to false when disabled (flag off)', () => {
+    mockUseIsOnFeatureFlag.mockReturnValue(false);
+
+    const client = createTestQueryClient();
+    const plr = createPipelineRun('plr-1', 'pipelines-queue');
+
+    renderHookWithQueryClient(
+      () => useKueueQueuePositionForPipelineRun('test-ns', plr),
+      { client },
+    );
+
+    const [query] = client.getQueryCache().findAll();
     expect(getRefetchInterval(query)).toBe(false);
+  });
+
+  it('should share a single fetch when two hook instances use the same queue', async () => {
+    mockUseIsOnFeatureFlag.mockReturnValue(true);
+    mockFetchKueuePendingWorkloads.mockResolvedValue({ items: [] });
+
+    const client = createTestQueryClient();
+    const wrapper = ({ children }: { children: React.ReactNode }) =>
+      React.createElement(QueryClientProvider, { client }, children);
+
+    const plrA = createPipelineRun('plr-a', 'pipelines-queue');
+    const plrB = createPipelineRun('plr-b', 'pipelines-queue');
+
+    renderHook(() => useKueueQueuePositionForPipelineRun('test-ns', plrA), { wrapper });
+    renderHook(() => useKueueQueuePositionForPipelineRun('test-ns', plrB), { wrapper });
+
+    await waitFor(() => {
+      expect(mockFetchKueuePendingWorkloads).toHaveBeenCalledTimes(1);
+    });
+
+    expect(client.getQueryCache().findAll()).toHaveLength(1);
   });
 });

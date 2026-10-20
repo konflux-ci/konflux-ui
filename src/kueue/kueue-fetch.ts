@@ -5,8 +5,9 @@ import { KueuePendingWorkloadsSummary } from './types';
 /**
  * Fetches the pending (not-yet-admitted) workloads for a single Kueue LocalQueue.
  *
- * Called once per unique LocalQueue name, not once per PipelineRun -- see
- * `getKueueQueueNames` in `./kueue-utils`.
+ * Called once per unique LocalQueue name, not once per PipelineRun. Multiple
+ * row-level hooks sharing the same `(namespace, queueName)` pair will share a
+ * single request via React Query dedup.
  *
  * `GET /apis/visibility.kueue.x-k8s.io/v1beta2/namespaces/{ns}/localqueues/{queueName}/pendingworkloads`
  *
