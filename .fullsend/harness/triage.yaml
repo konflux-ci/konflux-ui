@@ -20,7 +20,7 @@ allowed_remote_resources:
   - https://raw.githubusercontent.com/fullsend-ai/agents/
 
 overlays:
-  - when: 'runtime.forge == "jira"'
+  - when: '(has(event.source) && event.source.system == "jira") || (!has(event.source) && runtime.forge == "jira")'
     env:
       runner:
         # KFLUXUI doesn't have special transitions - just "closed"
