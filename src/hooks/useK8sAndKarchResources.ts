@@ -1,15 +1,16 @@
 import * as React from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { createGetQueryOptions, useK8sWatchResource } from '~/k8s';
-import { HttpError } from '~/k8s/error';
+import { useK8sWatchResource } from '~/k8s';
 import { WebSocketOptions } from '~/k8s/web-socket/types';
 import { useIsKubeArchiveEnabled } from '~/kubearchive/conditional-checks';
-import { withKubearchivePathPrefix } from '~/kubearchive/fetch-utils';
 import { K8sResourceReadOptions } from '../k8s/k8s-fetch';
 import { TQueryOptions } from '../k8s/query/type';
-import { useKubearchiveListResourceQuery } from '../kubearchive/hooks';
+import {
+  useKubearchiveGetResourceQuery,
+  useKubearchiveListResourceQuery,
+} from '../kubearchive/hooks';
 import { useDeepCompareMemoize } from '../shared';
 import { K8sModelCommon, K8sResourceCommon, ResourceSource, WatchK8sResource } from '../types/k8s';
+import { has404Error } from '../utils/common-utils';
 
 const getResourceId = (resource: K8sResourceCommon): string => {
   return resource.metadata?.uid || `${resource.metadata?.name}-${resource.metadata?.namespace}`;
@@ -226,64 +227,63 @@ export function useK8sAndKarchResource<TResource extends K8sResourceCommon>(
     [memoizedResourceInit, watch, queryEnabled],
   );
 
-  const clusterQueryOptions = React.useMemo(
-    () => ({
-      ...memoizedQueryOptions,
-      enabled: queryEnabled,
-    }),
-    [memoizedQueryOptions, queryEnabled],
-  );
-
   const clusterQuery = useK8sWatchResource<TResource>(
-    clusterResourceInit,
+    queryEnabled ? clusterResourceInit : undefined,
     memoizedResourceInit?.model,
-    clusterQueryOptions,
+    {
+      ...memoizedQueryOptions,
+      retry: (_, error) => !has404Error(error),
+    },
     memoizedWatchOptions,
   );
 
-  const clusterErrorIs404 =
-    clusterQuery.isFetched &&
-    clusterQuery.error instanceof HttpError &&
-    clusterQuery.error.code === 404;
+  const is404Error = has404Error(clusterQuery.error);
 
-  const archiveQueryOptions = React.useMemo(
-    () =>
-      memoizedResourceInit && queryEnabled && clusterErrorIs404 && isKubearchiveEnabled
-        ? {
-            ...createGetQueryOptions<TResource>(
-              withKubearchivePathPrefix(memoizedResourceInit),
-              memoizedQueryOptions,
-            ),
-            enabled: true,
-            staleTime: Infinity,
-          }
-        : { queryKey: ['disabled'], enabled: false },
-    [
-      memoizedResourceInit,
-      queryEnabled,
-      clusterErrorIs404,
-      isKubearchiveEnabled,
-      memoizedQueryOptions,
-    ],
+  const archiveQuery = useKubearchiveGetResourceQuery(
+    clusterResourceInit,
+    memoizedResourceInit?.model,
+    {
+      enabled: isKubearchiveEnabled && queryEnabled && is404Error,
+      staleTime: Infinity,
+    },
+    memoizedWatchOptions,
   );
 
-  const archiveQuery = useQuery<TResource>(archiveQueryOptions);
-
-  const data = archiveQuery.data ?? clusterQuery.data;
-  const source = archiveQuery.data
-    ? ResourceSource.Archive
-    : clusterQuery.data
-      ? ResourceSource.Cluster
+  const source = clusterQuery.data
+    ? ResourceSource.Cluster
+    : archiveQuery.data
+      ? ResourceSource.Archive
       : undefined;
-  const fetchError = data ? null : (clusterQuery.error ?? archiveQuery.error);
   const wsError = source === ResourceSource.Archive ? undefined : clusterQuery.wsError;
 
+  if (clusterQuery.data && !is404Error) {
+    return {
+      data: clusterQuery.data,
+      source,
+      isLoading: clusterQuery.isLoading,
+      fetchError: clusterQuery.error,
+      wsError,
+      isError: !!(clusterQuery.error || wsError),
+    };
+  }
+
+  if (archiveQuery.data) {
+    return {
+      data: archiveQuery.data as TResource,
+      source: ResourceSource.Archive,
+      isLoading: archiveQuery.isLoading,
+      fetchError: archiveQuery.error,
+      wsError: undefined,
+      isError: !!archiveQuery.error,
+    };
+  }
+
   return {
-    data,
+    data: undefined,
     source,
-    isLoading: queryEnabled && (clusterQuery.isLoading || archiveQuery.isLoading),
-    fetchError,
+    isLoading: clusterQuery.isLoading || archiveQuery.isLoading,
+    fetchError: archiveQuery.error || clusterQuery.error,
     wsError,
-    isError: !!(fetchError || wsError),
+    isError: !!(archiveQuery.error || clusterQuery.error || wsError),
   };
 }
