@@ -57,6 +57,11 @@ const validateStatus = async (response: Response) => {
 export const applyDefaults = <TObject>(obj: TObject, defaults: unknown): TObject =>
   defaultsDeep({}, obj, defaults);
 
+export type K8sRequestInit = RequestInit & {
+  wsPrefix?: string;
+  pathPrefix?: string;
+};
+
 const basicFetch = async (url: string, requestInit: RequestInit = {}): Promise<Response> => {
   try {
     return validateStatus(
@@ -68,7 +73,7 @@ const basicFetch = async (url: string, requestInit: RequestInit = {}): Promise<R
 };
 
 export type FetchOptionArgs = [
-  requestInit?: RequestInit & { wsPrefix?: string; pathPrefix?: string },
+  requestInit?: K8sRequestInit,
   timeout?: number,
   isK8sApiRequest?: boolean,
 ];
@@ -80,9 +85,11 @@ const defaultTimeout = 60_000;
 export const commonFetch = async (
   ...[apiUrl, requestInit = {}, timeout = defaultTimeout]: ResourceReadArgs
 ): Promise<Response> => {
-  const { pathPrefix, ...cleanRequestInit } = requestInit as RequestInit & { pathPrefix?: string };
+  const { pathPrefix, ...cleanRequestInit } = requestInit;
 
-  const url = pathPrefix ? `/api/k8s/${pathPrefix}${apiUrl}` : `/api/k8s${apiUrl}`;
+  const url = pathPrefix
+    ? `/api/k8s/${pathPrefix}${apiUrl}`
+    : `/api/k8s${apiUrl}`;
 
   const fetchPromise = basicFetch(url, applyDefaults(cleanRequestInit, { method: 'GET' }));
 

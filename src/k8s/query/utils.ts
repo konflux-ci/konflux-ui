@@ -14,12 +14,16 @@ export const createQueryKeys = ({
   model,
   queryOptions,
   prefix,
+  fetchOptions,
 }: {
   model: K8sModelCommon;
   queryOptions?: Partial<QueryOptionsWithSelector>;
   prefix?: string;
+  fetchOptions?: K8sResourceBaseOptions['fetchOptions'];
 }) => {
+  const pathPrefix = prefix ?? fetchOptions?.requestInit?.pathPrefix;
   const idKey = queryOptions?.name ? [{ metadata: { name: queryOptions.name } }] : [];
+  const pathKey = queryOptions?.path ? [queryOptions.path] : [];
   const selector = queryOptions?.queryParams?.labelSelector
     ? [queryOptions?.queryParams?.labelSelector]
     : [];
@@ -29,7 +33,7 @@ export const createQueryKeys = ({
       ? [{ name: qp?.name, creationTimestampAfter: qp?.creationTimestampAfter }]
       : [];
   return [
-    ...(prefix ? [prefix] : []),
+    ...(pathPrefix ? [pathPrefix] : []),
     queryOptions?.ns,
     {
       group: model?.apiGroup ?? 'core',
@@ -37,6 +41,7 @@ export const createQueryKeys = ({
       kind: model?.kind,
     },
     ...idKey,
+    ...pathKey,
     ...selector,
     ...filterParams,
   ];

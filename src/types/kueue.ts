@@ -1,5 +1,5 @@
 /* v8 ignore start -- pure TypeScript interfaces; no runtime code to cover */
-import { OwnerReference } from '~/types/k8s';
+import type { K8sResourceCommon, OwnerReference } from '~/types/k8s';
 
 /**
  * A single pending (not-yet-admitted) workload entry as returned by the Kueue
@@ -25,11 +25,11 @@ export interface KueuePendingWorkload {
 }
 
 /** Response shape of `GET .../localqueues/{name}/pendingworkloads`. */
-export interface KueuePendingWorkloadsSummary {
+export interface KueuePendingWorkloadsSummary extends K8sResourceCommon {
   items: KueuePendingWorkload[];
 }
 
-/** Per-PipelineRun queue info resolved by `useKueuePendingWorkloads`. */
+/** Per-PipelineRun queue info resolved by `useKueueQueuePositionForPipelineRun`. */
 export interface KueueQueuePosition {
   /** 0-based position in the cluster-wide ClusterQueue (display as +1 for a 1-based position). */
   positionInClusterQueue: number;
@@ -39,6 +39,3 @@ export interface KueueQueuePosition {
   /** When the workload entered the queue; used to compute wait time. */
   creationTimestamp?: string;
 }
-
-/** Lookup map: PipelineRun name -> its queue position info. */
-export type KueueQueuePositionsByPipelineRun = Record<string, KueueQueuePosition>;

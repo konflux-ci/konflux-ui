@@ -4,6 +4,8 @@ export const KUEUE_VISIBILITY_API_VERSION = 'v1beta2';
 /** Base path of the Kueue visibility API, proxied through the k8s API server. */
 export const KUEUE_VISIBILITY_API_PATH = `/apis/${KUEUE_VISIBILITY_API_GROUP}/${KUEUE_VISIBILITY_API_VERSION}`;
 
+export const KUEUE_PENDING_WORKLOADS_PATH_SUFFIX = 'pendingworkloads';
+
 /**
  * Label set by the tekton-kueue admission webhook on every PipelineRun it admits,
  * naming the Kueue LocalQueue the PipelineRun was submitted to. A namespace may
@@ -19,3 +21,10 @@ export const KUEUE_QUEUE_NAME_LABEL = 'kueue.x-k8s.io/queue-name';
  * freshness against load on the API server, per the feature's design doc.
  */
 export const DEFAULT_KUEUE_POLLING_INTERVAL_MS = 30_000;
+
+/**
+ * How long (ms) to cache the `isKueueAvailable` condition result before
+ * re-running the API discovery check. A finite TTL ensures that a transient
+ * network failure doesn't permanently disable Kueue features.
+ */
+export const KUEUE_CONDITION_TTL_MS = 30_000;
