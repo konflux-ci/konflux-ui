@@ -232,6 +232,7 @@ export function useK8sAndKarchResource<TResource extends K8sResourceCommon>(
     memoizedResourceInit?.model,
     {
       ...memoizedQueryOptions,
+      enabled: queryEnabled,
       retry: memoizedQueryOptions?.retry === false ? false : (_, error) => !has404Error(error),
     },
     memoizedWatchOptions,
@@ -249,21 +250,14 @@ export function useK8sAndKarchResource<TResource extends K8sResourceCommon>(
     memoizedWatchOptions,
   );
 
-  const source = clusterQuery.data
-    ? ResourceSource.Cluster
-    : archiveQuery.data
-      ? ResourceSource.Archive
-      : undefined;
-  const wsError = source === ResourceSource.Archive ? undefined : clusterQuery.wsError;
-
   if (clusterQuery.data && !is404Error) {
     return {
       data: clusterQuery.data,
-      source,
+      source: ResourceSource.Cluster,
       isLoading: clusterQuery.isLoading,
       fetchError: null,
-      wsError,
-      isError: !!wsError,
+      wsError: clusterQuery.wsError,
+      isError: !!clusterQuery.wsError,
     };
   }
 
@@ -280,10 +274,10 @@ export function useK8sAndKarchResource<TResource extends K8sResourceCommon>(
 
   return {
     data: undefined,
-    source,
+    source: undefined,
     isLoading: clusterQuery.isLoading || archiveQuery.isLoading,
     fetchError: archiveQuery.error || clusterQuery.error,
-    wsError,
-    isError: !!(archiveQuery.error || clusterQuery.error || wsError),
+    wsError: undefined,
+    isError: !!(archiveQuery.error || clusterQuery.error),
   };
 }

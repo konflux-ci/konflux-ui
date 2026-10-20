@@ -882,13 +882,16 @@ describe('useK8sAndKarchResource', () => {
     expect(mockUseKubearchiveGetResourceQuery).toHaveBeenCalled();
   });
 
-  it('should surface the cluster error when neither source has the resource', async () => {
-    const error = HttpError.fromCode(404);
-    mockUseK8sWatchResource.mockReturnValue(mockClusterQueryResult({ error }) as any);
+  it('should surface the archive error when neither source has the resource (archive error takes priority)', async () => {
+    const clusterError = HttpError.fromCode(404);
+    const archiveError = new Error('Archive fetch failed');
+    mockUseK8sWatchResource.mockReturnValue(mockClusterQueryResult({ error: clusterError }) as any);
     mockUseIsKubeArchiveEnabled.mockReturnValue({
       isKubearchiveEnabled: true,
     } as ReturnType<typeof useIsKubeArchiveEnabled>);
-    mockUseKubearchiveGetResourceQuery.mockReturnValue(mockArchiveQueryResult({ error }) as any);
+    mockUseKubearchiveGetResourceQuery.mockReturnValue(
+      mockArchiveQueryResult({ error: archiveError }) as any,
+    );
 
     const { result } = renderHookWithQueryClient(mockResourceInit);
 
@@ -898,7 +901,7 @@ describe('useK8sAndKarchResource', () => {
 
     expect(result.current.data).toBeUndefined();
     expect(result.current.source).toBeUndefined();
-    expect(result.current.fetchError).toBe(error);
+    expect(result.current.fetchError).toBe(archiveError);
     expect(result.current.isError).toBe(true);
   });
 
