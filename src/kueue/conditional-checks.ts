@@ -13,7 +13,7 @@ export const checkIfKueueIsAvailable = async () => {
   try {
     await commonFetch(KUEUE_VISIBILITY_API_PATH);
     return true;
-  } catch (error) {
+  } catch {
     return false;
   }
 };

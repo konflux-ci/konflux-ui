@@ -1,20 +1,23 @@
 import { filter, isEqual } from 'lodash-es';
-import { K8sResourceCommon } from '../types/k8s';
-import { K8sResourceBaseOptions } from './k8s-fetch';
+import type { K8sResourceCommon } from '../types/k8s';
+import type { K8sRequestInit } from './fetch';
+import type { K8sResourceBaseOptions } from './k8s-fetch';
 import { k8sWatch } from './k8s-utils';
 import { queryClient } from './query/core';
 import { createQueryKeys } from './query/utils';
-import { MessageDataType, WebSocketOptions } from './web-socket/types';
+import type { MessageDataType, WebSocketOptions } from './web-socket/types';
 
 type K8sEvent = { type: 'ADDED' | 'DELETED' | 'MODIFIED'; object: K8sResourceCommon };
 
 export const watchListResource = (
   { model, queryOptions }: K8sResourceBaseOptions,
-  fetchOptions?: Partial<
-    WebSocketOptions & RequestInit & { wsPrefix?: string; pathPrefix?: string }
-  >,
+  fetchOptions?: Partial<WebSocketOptions & K8sRequestInit>,
 ) => {
-  const queryKey = createQueryKeys({ model, queryOptions });
+  const queryKey = createQueryKeys({
+    model,
+    queryOptions,
+    prefix: fetchOptions?.pathPrefix,
+  });
   return k8sWatch(
     model,
     {
@@ -80,11 +83,13 @@ export const watchListResource = (
 
 export const watchObjectResource = (
   { model, queryOptions }: K8sResourceBaseOptions,
-  fetchOptions?: Partial<
-    WebSocketOptions & RequestInit & { wsPrefix?: string; pathPrefix?: string }
-  >,
+  fetchOptions?: Partial<WebSocketOptions & K8sRequestInit>,
 ) => {
-  const queryKey = createQueryKeys({ model, queryOptions });
+  const queryKey = createQueryKeys({
+    model,
+    queryOptions,
+    prefix: fetchOptions?.pathPrefix,
+  });
   return k8sWatch(
     model,
     {

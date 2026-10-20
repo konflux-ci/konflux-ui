@@ -1,8 +1,9 @@
-export const KUEUE_VISIBILITY_API_GROUP = 'visibility.kueue.x-k8s.io';
-export const KUEUE_VISIBILITY_API_VERSION = 'v1beta2';
+import { KueueLocalQueueModel } from '~/models/kueue';
 
 /** Base path of the Kueue visibility API, proxied through the k8s API server. */
-export const KUEUE_VISIBILITY_API_PATH = `/apis/${KUEUE_VISIBILITY_API_GROUP}/${KUEUE_VISIBILITY_API_VERSION}`;
+export const KUEUE_VISIBILITY_API_PATH = `/apis/${KueueLocalQueueModel.apiGroup}/${KueueLocalQueueModel.apiVersion}`;
+
+export const KUEUE_PENDING_WORKLOADS_PATH_SUFFIX = 'pendingworkloads';
 
 /**
  * Label set by the tekton-kueue admission webhook on every PipelineRun it admits,
@@ -15,7 +16,14 @@ export const KUEUE_QUEUE_NAME_LABEL = 'kueue.x-k8s.io/queue-name';
 
 /**
  * Default polling interval (ms) for the Kueue visibility API. The API does not
- * support watch, so the UI must poll for updated queue positions. 30s balances
- * freshness against load on the API server, per the feature's design doc.
+ * support watch, so the UI must poll for updated queue positions. 60s balances
+ * freshness against load on the API server.
  */
-export const DEFAULT_KUEUE_POLLING_INTERVAL_MS = 30_000;
+export const DEFAULT_KUEUE_POLLING_INTERVAL_MS = 60_000;
+
+/**
+ * How long (ms) to cache the `isKueueAvailable` condition result before
+ * re-running the API discovery check. A finite TTL ensures that a transient
+ * network failure doesn't permanently disable Kueue features.
+ */
+export const KUEUE_CONDITION_TTL_MS = 30_000;
