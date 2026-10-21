@@ -1,16 +1,16 @@
 import * as React from 'react';
 import { useK8sWatchResource } from '~/k8s';
+import { K8sResourceReadOptions } from '~/k8s/k8s-fetch';
+import { TQueryOptions } from '~/k8s/query/type';
 import { WebSocketOptions } from '~/k8s/web-socket/types';
 import { useIsKubeArchiveEnabled } from '~/kubearchive/conditional-checks';
-import { has404Error } from '~/utils/common-utils';
-import { K8sResourceReadOptions } from '../k8s/k8s-fetch';
-import { TQueryOptions } from '../k8s/query/type';
 import {
   useKubearchiveGetResourceQuery,
   useKubearchiveListResourceQuery,
-} from '../kubearchive/hooks';
-import { useDeepCompareMemoize } from '../shared';
-import { K8sModelCommon, K8sResourceCommon, ResourceSource, WatchK8sResource } from '../types/k8s';
+} from '~/kubearchive/hooks';
+import { useDeepCompareMemoize } from '~/shared';
+import { K8sModelCommon, K8sResourceCommon, ResourceSource, WatchK8sResource } from '~/types/k8s';
+import { has404Error } from '~/utils/common-utils';
 
 const getResourceId = (resource: K8sResourceCommon): string => {
   return resource.metadata?.uid || `${resource.metadata?.name}-${resource.metadata?.namespace}`;
@@ -238,12 +238,13 @@ export function useK8sAndKarchResource<TResource extends K8sResourceCommon>(
     memoizedWatchOptions,
   );
 
-  const is404Error = has404Error(clusterQuery.error);
+  const is404Error = clusterQuery.isError && has404Error(clusterQuery.error);
 
   const archiveQuery = useKubearchiveGetResourceQuery(
     clusterResourceInit,
     memoizedResourceInit?.model,
     {
+      ...memoizedQueryOptions,
       enabled: isKubearchiveEnabled && queryEnabled && is404Error,
       staleTime: Infinity,
     },
@@ -277,7 +278,7 @@ export function useK8sAndKarchResource<TResource extends K8sResourceCommon>(
     source: undefined,
     isLoading: clusterQuery.isLoading || archiveQuery.isLoading,
     fetchError: archiveQuery.error || clusterQuery.error,
-    wsError: undefined,
-    isError: !!(archiveQuery.error || clusterQuery.error),
+    wsError: clusterQuery.wsError,
+    isError: !!(archiveQuery.error || clusterQuery.error || clusterQuery.wsError),
   };
 }
