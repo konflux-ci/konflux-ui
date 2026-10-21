@@ -936,7 +936,7 @@ describe('useK8sAndKarchResource', () => {
         watch: true,
       },
       mockModel,
-      expect.objectContaining({ retry: false }),
+      expect.objectContaining({ enabled: true, retry: false }),
       {},
     );
   });
@@ -950,7 +950,7 @@ describe('useK8sAndKarchResource', () => {
     expect(mockUseK8sWatchResource).toHaveBeenCalledWith(
       expect.objectContaining({ watch: false }),
       mockModel,
-      expect.objectContaining({ retry: false }),
+      expect.objectContaining({ enabled: true, retry: false }),
       {},
     );
   });
@@ -980,7 +980,7 @@ describe('useK8sAndKarchResource', () => {
     expect(mockUseK8sWatchResource).toHaveBeenCalledWith(
       undefined,
       mockModel,
-      expect.objectContaining({ retry: false }),
+      expect.objectContaining({ enabled: false, retry: false }),
       {},
     );
   });
@@ -996,7 +996,7 @@ describe('useK8sAndKarchResource', () => {
     expect(mockUseK8sWatchResource).toHaveBeenCalledWith(
       undefined,
       undefined,
-      expect.objectContaining({ retry: false }),
+      expect.objectContaining({ enabled: false, retry: false }),
       {},
     );
   });
@@ -1033,7 +1033,7 @@ describe('useK8sAndKarchResource', () => {
     expect(mockUseK8sWatchResource).toHaveBeenCalledWith(
       expect.objectContaining({ watch: false }),
       mockModel,
-      expect.objectContaining({ timeout: 5000, retry: false }),
+      expect.objectContaining({ timeout: 5000, enabled: true, retry: false }),
       {},
     );
   });
