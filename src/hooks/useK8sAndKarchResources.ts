@@ -233,7 +233,7 @@ export function useK8sAndKarchResource<TResource extends K8sResourceCommon>(
     {
       ...memoizedQueryOptions,
       enabled: queryEnabled,
-      retry: memoizedQueryOptions?.retry === false ? false : (_, error) => !has404Error(error),
+      retry: false,
     },
     memoizedWatchOptions,
   );
@@ -266,9 +266,9 @@ export function useK8sAndKarchResource<TResource extends K8sResourceCommon>(
       data: archiveQuery.data as TResource,
       source: ResourceSource.Archive,
       isLoading: archiveQuery.isLoading,
-      fetchError: archiveQuery.error,
+      fetchError: null,
       wsError: undefined,
-      isError: !!archiveQuery.error,
+      isError: false,
     };
   }
 
