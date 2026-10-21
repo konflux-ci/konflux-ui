@@ -82,7 +82,7 @@ describe('Table', () => {
   it('calls useColumnState with columnStateKey and columns', () => {
     render(<Table {...defaultProps} columnStateKey="my-table" />);
 
-    expect(useColumnState).toHaveBeenCalledWith('my-table', columns);
+    expect(useColumnState).toHaveBeenCalledWith('my-table', columns, undefined);
   });
 
   it('calls useResponsiveColumns with columns', () => {
