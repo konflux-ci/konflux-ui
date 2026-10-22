@@ -472,6 +472,41 @@ describe('usePipelinerunActions', () => {
 describe('usePipelinererunAction', () => {
   let navigateMock: jest.Mock;
 
+  it('disables rerun when the pipeline run has no labels', () => {
+    useComponentMock.mockReturnValue([undefined, true, undefined]);
+    const { result } = renderHook(() =>
+      usePipelinererunAction({
+        ...testPipelineRuns[DataState.SUCCEEDED],
+        metadata: { name: 'unlabelled-run' },
+      }),
+    );
+    expect(result.current.isDisabled).toBe(true);
+  });
+
+  it('returns to the supplied destination after rerunning a build without an application', async () => {
+    useAccessReviewForModelMock.mockReturnValue([true, true]);
+    useComponentMock.mockReturnValue([
+      { ...mockComponent, spec: { ...mockComponent.spec, application: undefined } },
+      true,
+    ]);
+    mockUseLocation.mockReturnValue(createMockLocation('/ns/test-ns/pipelineruns/build-1'));
+    const run = {
+      ...testPipelineRuns[DataState.SUCCEEDED],
+      metadata: {
+        name: 'build-1',
+        labels: {
+          [PipelineRunLabel.PIPELINE_TYPE]: 'build',
+          [PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL]: PipelineRunEventType.PUSH,
+        },
+      },
+    };
+    const { result } = renderHook(() =>
+      usePipelinererunAction(run, '/ns/test-ns/components/api/activity/pipelineruns'),
+    );
+    await act(async () => result.current.cta());
+    expect(navigateMock).toHaveBeenCalledWith('/ns/test-ns/components/api/activity/pipelineruns');
+  });
+
   beforeEach(() => {
     navigateMock = jest.fn();
     trackEventMock = jest.fn();

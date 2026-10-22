@@ -122,6 +122,15 @@ describe('ComponentGroupReleasesTab', () => {
     jest.clearAllMocks();
   });
 
+  it('links release names to details within the current group', () => {
+    useReleasesMock.mockReturnValue(mockBaseResult);
+    renderWithQueryClient(<TestedComponent />);
+    expect(screen.getByRole('link', { name: 'release-one' })).toHaveAttribute(
+      'href',
+      '/ns/test-ns/groups/my-group/releases/release-one',
+    );
+  });
+
   it('should call useReleases with the current namespace and group match labels', () => {
     renderWithQueryClient(<TestedComponent />);
 

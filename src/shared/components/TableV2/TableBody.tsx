@@ -61,6 +61,8 @@ export const TableBody = <TData,>({
     : 0;
 
   const topSpacerHeight = virtualRows.length > 0 ? virtualRows[0].start - scrollMargin : 0;
+  const leadingCellCount = Number(Boolean(enableExpansion)) + Number(Boolean(enableRowSelection));
+  const expandedContentColumnCount = visibleColumnCount - leadingCellCount;
 
   return (
     // Multiple <Tbody> siblings (not nested) — each becomes a direct child of the
@@ -76,8 +78,8 @@ export const TableBody = <TData,>({
         const row = rows[virtualRow.index];
         if (!row) return null;
         const rowId = getRowId(row.original);
-        const isExpanded = enableExpansion && row.getIsExpanded() && expandedContent;
-        
+        const isExpanded = Boolean(enableExpansion && row.getIsExpanded() && expandedContent);
+
         return (
           // No explicit role needed: <Tbody> renders a native <tbody> whose implicit
           // ARIA role is "rowgroup", correctly grouping the main row with its optional
@@ -86,6 +88,7 @@ export const TableBody = <TData,>({
             key={rowId}
             ref={measureElement}
             data-index={virtualRow.index}
+            isExpanded={isExpanded}
             style={{ overflowAnchor: 'none' }}
           >
             <TableRow
@@ -93,13 +96,21 @@ export const TableBody = <TData,>({
               rowId={rowId}
               virtualIndex={virtualRow.index}
               enableExpansion={enableExpansion}
+              isContentExpanded={isExpanded}
               enableRowSelection={enableRowSelection}
             />
             {isExpanded && (
-              <Tr>
-                <Td colSpan={visibleColumnCount}>
+              <Tr isExpanded>
+                {enableRowSelection && <Td />}
+                {enableExpansion && <Td />}
+                <Td colSpan={expandedContentColumnCount}>
                   <ExpandableRowContent>{expandedContent(row.original)}</ExpandableRowContent>
                 </Td>
+              </Tr>
+            )}
+            {enableExpansion && (
+              <Tr isBorderRow aria-hidden="true">
+                <Td noPadding colSpan={visibleColumnCount} />
               </Tr>
             )}
           </Tbody>

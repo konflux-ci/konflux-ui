@@ -29,13 +29,13 @@ spec:
       type: string
       default: 'slack-credentials'
       description: 'Secret containing Slack webhook URL'
-    - name: console-url
+    - name: konflux-url
       type: string
-      default: 'https://console.redhat.com/preview/application-pipeline'
-      description: 'Console base URL (e.g., https://console.redhat.com/preview/application-pipeline)'
+      default: 'https://konflux-ui.apps.stone-prd-rh01.pg1f.p1.openshiftapps.com'
+      description: 'Konflux UI base URL for pipeline run links'
   steps:
     - name: send-notification
-      image: registry.access.redhat.com/ubi9/ubi@sha256:abdef1603c7dd3281d9223b0419e3cc59446e4a8137f2a7ed5cc5bd7da981f8b
+      image: registry.access.redhat.com/ubi9/ubi@sha256:81c4fc967bbc29b1c6982087275370eae7871cbe39a81c25b7d310723f62c68c
       env:
         - name: PIPELINE_STATUS
           value: $(params.pipeline-aggregate-status)
@@ -45,12 +45,16 @@ spec:
           value: $(params.job-type)
         - name: SUITE
           value: $(params.suite)
-        - name: CONSOLE_URL
-          value: $(params.console-url)
+        - name: KONFLUX_URL
+          value: $(params.konflux-url)
         - name: TEKTON_NAMESPACE
-          value: $(context.taskRun.namespace)
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
         - name: TEKTON_PIPELINE_RUN
-          value: $(context.pipelineRun.name)
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.labels['tekton.dev/pipelineRun']
         - name: SLACK_WEBHOOK_URL
           valueFrom:
             secretKeyRef:
@@ -98,7 +102,7 @@ spec:
         esac
 
         # Construct job URL dynamically
-        JOB_URL="${CONSOLE_URL}/workspaces/${TEKTON_NAMESPACE}/pipelineruns/${TEKTON_PIPELINE_RUN}"
+        JOB_URL="${KONFLUX_URL}/ns/${TEKTON_NAMESPACE}/applications/konflux-ui/pipelineruns/${TEKTON_PIPELINE_RUN}"
         MESSAGE="FROM KONFLUX: ${MESSAGE} ${JOB_URL}"
 
         echo "Status: ${EXIT_STATUS}"

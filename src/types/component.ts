@@ -18,7 +18,7 @@ export type ComponentSourceVersion = {
   context?: string;
   dockerfileUri?: string;
   'skip-builds'?: boolean;
-  'build-pipeline'?: Record<string, unknown>;
+  'build-pipeline'?: ComponentBuildPipeline;
 };
 
 export type ComponentSource = {
@@ -33,7 +33,6 @@ export type ComponentSource = {
   };
   versions?: ComponentSourceVersion[];
   dockerfileUri?: string;
-
 };
 
 export type RepositorySettings = {

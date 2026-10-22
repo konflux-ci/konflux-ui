@@ -5,6 +5,7 @@ import { css } from '@patternfly/react-styles';
 import {
   APPLICATION_LIST_PATH,
   COMPONENTS_PATH,
+  DEPENDENCY_SCHEDULE_PATH,
   GROUPS_PATH,
   ISSUES_PATH,
   NAMESPACE_LIST_PATH,
@@ -189,6 +190,19 @@ export const AppSideBar: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
                 User Access
               </NavLink>
             </NavItem>
+
+            <IfFeature flag="mintmaker">
+              <NavItem isActive={isActive(DEPENDENCY_SCHEDULE_PATH.path)}>
+                <NavLink to={DEPENDENCY_SCHEDULE_PATH.createPath({} as never)}>
+                  Dependency updates schedule{' '}
+                  <FeatureFlagIndicator
+                    flags={['mintmaker']}
+                    hasNoPadding
+                    popOverTriggerAction="hover"
+                  />
+                </NavLink>
+              </NavItem>
+            </IfFeature>
           </NavList>
         </Nav>
       </PageSidebarBody>

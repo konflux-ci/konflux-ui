@@ -1,166 +1,59 @@
-import * as React from 'react';
 import { Link, useParams } from 'react-router-dom';
-import {
-  Bullseye,
-  DescriptionList,
-  DescriptionListDescription,
-  DescriptionListGroup,
-  DescriptionListTerm,
-  Flex,
-  FlexItem,
-  Spinner,
-  Title,
-} from '@patternfly/react-core';
+import { Bullseye, Spinner } from '@patternfly/react-core';
 import { COMPONENT_DETAILS_PATH, SNAPSHOT_DETAILS_PATH } from '@routes/paths';
 import { RouterParams } from '@routes/utils';
-import MetadataList from '~/components/MetadataList';
-import { StatusIconWithText } from '~/components/StatusIcon/StatusIcon';
+import ReleaseMetadata from '~/components/Releases/ReleaseMetadata';
 import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { useRelease } from '~/hooks/useReleases';
-import { useReleaseStatus } from '~/hooks/useReleaseStatus';
-import { Timestamp } from '~/shared/components/timestamp/Timestamp';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
-import { calculateDuration } from '~/utils/pipeline-utils';
 
-const ReleaseOverviewTab: React.FC = () => {
+const ReleaseOverviewTab = () => {
   const { releaseName } = useParams<RouterParams>();
   const namespace = useNamespace();
   const [release, loaded, error] = useRelease(namespace, releaseName);
-  const status = useReleaseStatus(release);
-
-  if (!loaded) {
+  if (!loaded)
     return (
       <Bullseye>
         <Spinner size="lg" />
       </Bullseye>
     );
-  }
-
-  if (error) {
-    return getErrorState(error, loaded, 'release');
-  }
-
+  if (error) return getErrorState(error, loaded, 'release');
+  if (!release) return getErrorState({ code: 404 }, loaded, 'release');
   const applicationName = release.metadata.labels?.[PipelineRunLabel.APPLICATION];
   const componentName = release.metadata.labels?.[PipelineRunLabel.COMPONENT];
-  const duration = calculateDuration(
-    typeof release.status?.startTime === 'string' ? release.status?.startTime : '',
-    typeof release.status?.completionTime === 'string' ? release.status?.completionTime : '',
-  );
-
   return (
-    <>
-      <Title headingLevel="h4" className="pf-v6-c-title pf-v6-u-mt-lg pf-v6-u-mb-lg" size="lg">
-        Release details
-      </Title>
-      <Flex className="pf-v6-u-py-lg">
-        <FlexItem flex={{ default: 'flex_3' }}>
-          <DescriptionList
-            data-test="release-details"
-            columnModifier={{
-              default: '1Col',
-            }}
+    <ReleaseMetadata
+      release={release}
+      namespace={namespace}
+      component={
+        componentName ? (
+          <Link
+            to={COMPONENT_DETAILS_PATH.createPath({
+              workspaceName: namespace,
+              applicationName,
+              componentName,
+            })}
           >
-            <DescriptionListGroup>
-              <DescriptionListTerm>Created at</DescriptionListTerm>
-              <DescriptionListDescription>
-                <Timestamp timestamp={release.metadata.creationTimestamp ?? '-'} />
-              </DescriptionListDescription>
-            </DescriptionListGroup>
-            <DescriptionListGroup>
-              <DescriptionListTerm>Duration</DescriptionListTerm>
-              <DescriptionListDescription>{duration ?? '-'}</DescriptionListDescription>
-            </DescriptionListGroup>
-            <DescriptionListGroup>
-              <DescriptionListTerm>Release Plan</DescriptionListTerm>
-              <DescriptionListDescription>{release.spec.releasePlan}</DescriptionListDescription>
-            </DescriptionListGroup>
-            <DescriptionListGroup>
-              <DescriptionListTerm>
-                Release Target {namespace !== release.status?.target ? '(Managed Namespace)' : ''}
-              </DescriptionListTerm>
-              <DescriptionListDescription>
-                <>{release.status?.target ?? '-'}</>
-              </DescriptionListDescription>
-            </DescriptionListGroup>
-            <DescriptionListGroup>
-              <DescriptionListTerm>Labels</DescriptionListTerm>
-              <DescriptionListDescription>
-                <MetadataList metadata={release.metadata?.labels} />
-              </DescriptionListDescription>
-            </DescriptionListGroup>
-            <DescriptionListGroup>
-              <DescriptionListTerm>Annotations</DescriptionListTerm>
-              <DescriptionListDescription>
-                <MetadataList metadata={release.metadata?.annotations} />
-              </DescriptionListDescription>
-            </DescriptionListGroup>
-          </DescriptionList>
-        </FlexItem>
-        <Flex flex={{ default: 'flex_3' }}>
-          <FlexItem flex={{ default: 'flex_3' }}>
-            <DescriptionList
-              data-test="release-details-col-2"
-              columnModifier={{
-                default: '1Col',
-              }}
-            >
-              <DescriptionListGroup>
-                <DescriptionListTerm>Status</DescriptionListTerm>
-                <DescriptionListDescription>
-                  <StatusIconWithText
-                    status={status}
-                    dataTestAttribute={'release-details status'}
-                  />
-                </DescriptionListDescription>
-              </DescriptionListGroup>
-              <DescriptionListGroup>
-                <DescriptionListTerm>Release Trigger</DescriptionListTerm>
-                <DescriptionListDescription>
-                  {release.status?.automated ? 'Automatic' : 'Manual'}
-                </DescriptionListDescription>
-              </DescriptionListGroup>
-              <DescriptionListGroup>
-                <DescriptionListTerm>Component</DescriptionListTerm>
-                <DescriptionListDescription>
-                  {componentName ? (
-                    <Link
-                      to={COMPONENT_DETAILS_PATH.createPath({
-                        workspaceName: namespace,
-                        applicationName,
-                        componentName,
-                      })}
-                    >
-                      {componentName}
-                    </Link>
-                  ) : (
-                    '-'
-                  )}
-                </DescriptionListDescription>
-              </DescriptionListGroup>
-              {release.spec.snapshot && (
-                <DescriptionListGroup>
-                  <DescriptionListTerm>Snapshot</DescriptionListTerm>
-                  <DescriptionListDescription>
-                    <Link
-                      to={SNAPSHOT_DETAILS_PATH.createPath({
-                        workspaceName: namespace,
-                        applicationName,
-                        snapshotName: release.spec.snapshot,
-                      })}
-                      state={{ type: 'snapshot' }}
-                    >
-                      {release.spec.snapshot}
-                    </Link>
-                  </DescriptionListDescription>
-                </DescriptionListGroup>
-              )}
-            </DescriptionList>
-          </FlexItem>
-        </Flex>
-      </Flex>
-    </>
+            {componentName}
+          </Link>
+        ) : (
+          '-'
+        )
+      }
+      snapshot={
+        <Link
+          to={SNAPSHOT_DETAILS_PATH.createPath({
+            workspaceName: namespace,
+            applicationName,
+            snapshotName: release.spec.snapshot,
+          })}
+          state={{ type: 'snapshot' }}
+        >
+          {release.spec.snapshot}
+        </Link>
+      }
+    />
   );
 };
-
 export default ReleaseOverviewTab;

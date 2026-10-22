@@ -19,14 +19,12 @@ import {
 import GitRepoLink from '~/components/GitLink/GitRepoLink';
 import MetadataList from '~/components/MetadataList';
 import { useModalLauncher } from '~/components/modal/ModalProvider';
+import { usePipelineRunImageData } from '~/components/PipelineRun/PipelineRunDetailsView/usePipelineRunImageData';
 import { StatusIconWithText } from '~/components/StatusIcon/StatusIcon';
 import { PipelineRunLabel, runStatus } from '~/consts/pipelinerun';
-import { useImageProxy } from '~/hooks/useImageProxy';
-import { useImageRepository } from '~/hooks/useImageRepository';
 import { usePipelineRunV2 } from '~/hooks/usePipelineRunsV2';
 import { useTaskRunsForPipelineRuns } from '~/hooks/useTaskRunsV2';
 import { useSbomUrl } from '~/hooks/useUIInstance';
-import { useIsImageControllerEnabled } from '~/image-controller/conditional-checks';
 import {
   SNAPSHOT_DETAILS_PATH,
   PIPELINE_RUNS_LOG_PATH,
@@ -42,15 +40,8 @@ import { ErrorDetailsWithStaticLog } from '~/shared/components/pipeline-run-logs
 import { getPLRLogSnippet } from '~/shared/components/pipeline-run-logs/logs/pipelineRunLogSnippet';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
-import { ImageRepositoryVisibility } from '~/types/image-repository';
 import { getCommitSha, getCommitShortName } from '~/utils/commits-utils';
-import { getImageUrlForVisibility } from '~/utils/component-utils';
-import {
-  calculateDuration,
-  getPipelineRunStatusResultForName,
-  getPipelineRunStatusResults,
-  pipelineRunStatus,
-} from '~/utils/pipeline-utils';
+import { calculateDuration, pipelineRunStatus } from '~/utils/pipeline-utils';
 import { getSourceUrl } from '~/utils/pipelinerun-utils';
 import RelatedPipelineRuns from '../RelatedPipelineRuns';
 import { getSBOMsFromTaskRuns } from '../utils/pipelinerun-utils';
@@ -60,27 +51,6 @@ import RunParamsList from './RunParamsList';
 import RunResultsList from './RunResultsList';
 import ScanDescriptionListGroup from './ScanDescriptionListGroup';
 import { SnapshotCreationStatus } from './SnapshotCreationStatus';
-
-const addProxyUrlParamValue = <T extends { name: string; value: string | string[] }>(
-  items: T[] | undefined | null,
-  paramName: string,
-  visibility: ImageRepositoryVisibility,
-  proxyHost: string | null | undefined,
-): T[] | null | undefined => {
-  if (!items || visibility !== ImageRepositoryVisibility.private) {
-    return items;
-  }
-  return items.flatMap((r) => {
-    if (r.name !== paramName || typeof r.value !== 'string') {
-      return r;
-    }
-    const proxyUrl = getImageUrlForVisibility(r.value, visibility, proxyHost ?? null);
-    if (proxyUrl == null || proxyUrl === r.value) {
-      return [r];
-    }
-    return [r, { ...r, name: `${paramName} (via access proxy)`, value: proxyUrl }];
-  });
-};
 
 const PipelineRunDetailsTab: React.FC = () => {
   const pipelineRunName = useParams<RouterParams>().pipelineRunName;
@@ -94,67 +64,16 @@ const PipelineRunDetailsTab: React.FC = () => {
     pipelineRunName,
   );
 
-  const { isImageControllerEnabled } = useIsImageControllerEnabled();
-  const componentName = pipelineRun?.metadata?.labels?.[PipelineRunLabel.COMPONENT];
-  const [urlInfo, imageProxyLoaded, proxyError] = useImageProxy();
-  const [imageRepository, imageRepoLoaded, imageRepoError] = useImageRepository(
-    namespace,
-    componentName,
-    null,
-    false,
-  );
-
   const sboms = React.useMemo(
     () => (taskRuns ? getSBOMsFromTaskRuns(taskRuns, generateSbomUrl) : []),
     [taskRuns, generateSbomUrl],
   );
 
-  const results = getPipelineRunStatusResults(pipelineRun);
-  const patchedResultsForProxy = React.useMemo(
-    () =>
-      isImageControllerEnabled &&
-      imageProxyLoaded &&
-      imageRepoLoaded &&
-      !!imageRepository?.spec?.image?.visibility
-        ? addProxyUrlParamValue(
-            results,
-            'IMAGE_URL',
-            imageRepository.spec.image.visibility,
-            urlInfo?.hostname,
-          )
-        : results,
-    [
-      isImageControllerEnabled,
-      imageProxyLoaded,
-      imageRepoLoaded,
-      imageRepository?.spec.image?.visibility,
-      results,
-      urlInfo?.hostname,
-    ],
-  );
-  const specParams = pipelineRun?.spec?.params;
-  const patchedSpecParamsForProxy = React.useMemo(
-    () =>
-      isImageControllerEnabled &&
-      imageProxyLoaded &&
-      imageRepoLoaded &&
-      !!imageRepository?.spec?.image?.visibility
-        ? addProxyUrlParamValue(
-            specParams,
-            'output-image',
-            imageRepository.spec.image.visibility,
-            urlInfo?.hostname,
-          )
-        : specParams,
-    [
-      isImageControllerEnabled,
-      imageProxyLoaded,
-      imageRepoLoaded,
-      imageRepository?.spec.image?.visibility,
-      specParams,
-      urlInfo?.hostname,
-    ],
-  );
+  const {
+    results: patchedResultsForProxy,
+    params: patchedSpecParamsForProxy,
+    imageUrl: displayImageUrl,
+  } = usePipelineRunImageData(pipelineRun, namespace);
 
   if (!(loaded && taskRunsLoaded)) {
     return (
@@ -178,18 +97,6 @@ const PipelineRunDetailsTab: React.FC = () => {
   );
   const sha = getCommitSha(pipelineRun);
   const applicationName = pipelineRun.metadata?.labels[PipelineRunLabel.APPLICATION];
-
-  const buildImage =
-    pipelineRun.metadata?.annotations?.[PipelineRunLabel.BUILD_IMAGE_ANNOTATION] ||
-    getPipelineRunStatusResultForName(`IMAGE_URL`, pipelineRun)?.value;
-
-  const displayImageUrl = isImageControllerEnabled
-    ? getImageUrlForVisibility(
-        buildImage,
-        imageRepository?.spec?.image?.visibility ?? null,
-        proxyError || imageRepoError || !urlInfo ? null : urlInfo.hostname,
-      )
-    : (buildImage ?? null);
 
   const sourceUrl = getSourceUrl(pipelineRun);
   const pipelineStatus = !error ? pipelineRunStatus(pipelineRun) : null;

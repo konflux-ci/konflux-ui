@@ -1,32 +1,41 @@
 import React from 'react';
-import { screen } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
+import { useActiveRouteChecker } from '~/hooks/useActiveRouteChecker';
 import { Issue, IssueSeverity, IssueState, IssueType } from '~/kite/issue-type';
 import { useCriticalAndMajorIssues } from '~/kite/kite-hooks';
-import { useActiveRouteChecker } from '../../../src/hooks/useActiveRouteChecker';
-import { useNamespace } from '../../shared/providers/Namespace';
-import { routerRenderer } from '../../utils/test-utils';
+import { useSavedViews } from '~/shared/components/SavedViews/useSavedViews';
+import { useNamespace } from '~/shared/providers/Namespace';
+import { routerRenderer } from '~/unit-test-utils';
 import { AppSideBar } from '../AppSideBar';
 
-jest.mock('../../../src/hooks/useActiveRouteChecker', () => ({
+jest.mock('~/hooks/useActiveRouteChecker', () => ({
   useActiveRouteChecker: jest.fn(),
 }));
 
-jest.mock('../../shared/providers/Namespace', () => ({
+jest.mock('~/shared/providers/Namespace', () => ({
   useNamespace: jest.fn(),
 }));
 
-jest.mock('~/shared/components/SavedViews', () => ({
-  SavedViewNavSection: ({ title, 'data-test': dataTest, ...rest }: Record<string, unknown>) => (
-    <li data-test={dataTest} className={rest.disabled ? 'app-side-bar__nav-item--disabled' : ''}>
-      {typeof title === 'string' ? title : 'Pipeline Runs'}
-    </li>
-  ),
-}));
+const mockFeatureFlags: Record<string, boolean> = {
+  'component-model': true,
+  'pipeline-runs-page': true,
+  mintmaker: true,
+};
+
+jest.mock('~/shared/components/SavedViews/useSavedViews');
 
 jest.mock('~/feature-flags/hooks', () => ({
   ...jest.requireActual('~/feature-flags/hooks'),
-  useIsOnFeatureFlag: () => true,
-  IfFeature: ({ children }: { children: React.ReactNode }) => children,
+  useIsOnFeatureFlag: (flag: string) => mockFeatureFlags[flag] ?? false,
+  IfFeature: ({
+    flag,
+    children,
+    fallback,
+  }: {
+    flag: string;
+    children: React.ReactNode;
+    fallback?: React.ReactNode;
+  }) => <>{mockFeatureFlags[flag] ? children : (fallback ?? null)}</>,
 }));
 
 jest.mock('~/feature-flags/FeatureFlagIndicator', () => ({
@@ -76,6 +85,25 @@ const createMockIssue = (severity: IssueSeverity, state: IssueState, id: string)
 describe('AppSideBar', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockFeatureFlags['component-model'] = true;
+    mockFeatureFlags['pipeline-runs-page'] = true;
+    mockFeatureFlags.mintmaker = true;
+    jest.mocked(useSavedViews).mockReturnValue({
+      views: [
+        {
+          slug: 'running-builds',
+          label: 'Running Builds',
+          searchParams: 'status=running',
+          columnStateKey: 'prns-columns:running-builds',
+          namespace: 'test-namespace',
+        },
+      ],
+      saveView: jest.fn(),
+      deleteView: jest.fn(),
+      renameView: jest.fn(),
+      updateView: jest.fn(),
+      isSlugAvailable: jest.fn(),
+    });
     // Default mock - no issues
     mockUseCriticalAndMajorIssues.mockReturnValue({
       data: [
@@ -137,7 +165,7 @@ describe('AppSideBar', () => {
     expect(screen.getByText('Issues').closest('li')).toHaveClass(
       'app-side-bar__nav-item--disabled',
     );
-    expect(screen.getByTestId('pipeline-runs-nav-group')).toHaveClass(
+    expect(screen.getByRole('link', { name: 'Pipeline Runs' }).closest('li')).toHaveClass(
       'app-side-bar__nav-item--disabled',
     );
     expect(screen.getByText('Secrets').closest('li')).toHaveClass(
@@ -169,6 +197,23 @@ describe('AppSideBar', () => {
     expect(screen.getByText('User Access')).toHaveAttribute('href', '/ns/test-namespace/access');
   });
 
+  it.each([true, false])(
+    'should render each saved view once under Pipeline Runs when MintMaker is %s',
+    (mintmakerEnabled) => {
+      mockFeatureFlags.mintmaker = mintmakerEnabled;
+      jest.mocked(useActiveRouteChecker).mockReturnValue(() => false);
+      jest.mocked(useNamespace).mockReturnValue('test-namespace');
+
+      routerRenderer(<AppSideBar isOpen={true} />);
+
+      expect(screen.getAllByRole('link', { name: 'Running Builds' })).toHaveLength(1);
+      const pipelineRunsGroup = screen.getByTestId('pipeline-runs-nav-group');
+      expect(
+        within(pipelineRunsGroup).getByRole('link', { name: 'Running Builds' }),
+      ).toHaveAttribute('href', '/ns/test-namespace/prns?status=running&view=running-builds');
+    },
+  );
+
   it('should render the Pipeline Runs nav expandable group', () => {
     (useActiveRouteChecker as jest.Mock).mockReturnValue(() => false);
     (useNamespace as jest.Mock).mockReturnValue('test-namespace');
@@ -178,14 +223,25 @@ describe('AppSideBar', () => {
     expect(screen.getByText('Pipeline Runs')).toBeInTheDocument();
   });
 
-  it('should disable Pipeline Runs group when no namespace is selected', () => {
+  it('should disable Pipeline Runs when no namespace is selected', () => {
     (useActiveRouteChecker as jest.Mock).mockReturnValue(() => false);
     (useNamespace as jest.Mock).mockReturnValue(null);
 
     routerRenderer(<AppSideBar isOpen={true} />);
-    expect(screen.getByTestId('pipeline-runs-nav-group')).toHaveClass(
+    expect(screen.getByRole('link', { name: 'Pipeline Runs' }).closest('li')).toHaveClass(
       'app-side-bar__nav-item--disabled',
     );
+  });
+
+  it('should hide saved-view navigation when Pipeline Runs is disabled', () => {
+    mockFeatureFlags['pipeline-runs-page'] = false;
+    (useActiveRouteChecker as jest.Mock).mockReturnValue(() => false);
+    (useNamespace as jest.Mock).mockReturnValue('test-namespace');
+
+    routerRenderer(<AppSideBar isOpen={true} />);
+
+    expect(screen.queryByTestId('pipeline-runs-nav-group')).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Running Builds' })).not.toBeInTheDocument();
   });
 
   it('should not render links for disabled namespace-dependent routes when no namespace is available', () => {
@@ -202,6 +258,31 @@ describe('AppSideBar', () => {
     expect(screen.getByText('Secrets')).toHaveAttribute('href', '/');
     expect(screen.getByText('Releases')).toHaveAttribute('href', '/');
     expect(screen.getByText('User Access')).toHaveAttribute('href', '/');
+    expect(screen.queryByRole('link', { name: 'Running Builds' })).not.toBeInTheDocument();
+  });
+
+  it('should render the dependency updates schedule link when MintMaker is enabled', () => {
+    (useActiveRouteChecker as jest.Mock).mockReturnValue(() => false);
+    (useNamespace as jest.Mock).mockReturnValue('test-namespace');
+
+    routerRenderer(<AppSideBar isOpen={true} />);
+
+    expect(screen.getByRole('link', { name: /Dependency updates schedule/ })).toHaveAttribute(
+      'href',
+      '/dep-updates-schedule',
+    );
+  });
+
+  it('should hide the dependency updates schedule link when MintMaker is disabled', () => {
+    mockFeatureFlags.mintmaker = false;
+    (useActiveRouteChecker as jest.Mock).mockReturnValue(() => false);
+    (useNamespace as jest.Mock).mockReturnValue('test-namespace');
+
+    routerRenderer(<AppSideBar isOpen={true} />);
+
+    expect(
+      screen.queryByRole('link', { name: /Dependency updates schedule/ }),
+    ).not.toBeInTheDocument();
   });
 
   it('should render the Groups nav item', () => {

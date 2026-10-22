@@ -18,13 +18,19 @@ const PipelineRunLogsTab: React.FC = () => {
     pipelineRunName,
   );
   const [activeTask, setActiveTask, unSetActiveTask] = useSearchParam('task', undefined);
+  const [selection, setSelection] = React.useState<{ task: string | undefined }>();
 
-  const handleActiveTaskChange = React.useCallback(
-    (value: string | undefined) => {
-      value ? setActiveTask(value) : unSetActiveTask();
-    },
-    [setActiveTask, unSetActiveTask],
-  );
+  const handleActiveTaskChange = React.useCallback((value: string | undefined) => {
+    setSelection({ task: value });
+  }, []);
+
+  // The log viewer selects its first task during mount, before the router can navigate.
+  React.useEffect(() => {
+    if (selection) {
+      selection.task ? setActiveTask(selection.task) : unSetActiveTask();
+      setSelection(undefined);
+    }
+  }, [selection, setActiveTask, unSetActiveTask]);
 
   if (!(loaded && taskRunsLoaded)) {
     return (

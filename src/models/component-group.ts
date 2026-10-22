@@ -8,7 +8,7 @@ export const ComponentGroupModel: K8sModelCommon = {
   namespaced: true,
 };
 
-export const ComponentGroupGroupVersionKind: K8sGroupVersionKind = {
+export const ComponentGroupGVK: K8sGroupVersionKind = {
   group: ComponentGroupModel.apiGroup,
   version: ComponentGroupModel.apiVersion,
   kind: ComponentGroupModel.kind,
