@@ -50,7 +50,7 @@ export const useKueueQueuePositionForPipelineRun = (
   });
 
   const queuePosition =
-    data && pipelineRunName
+    enabled && data && pipelineRunName
       ? getKueueQueuePositionForPipelineRun(data.items, pipelineRunName)
       : undefined;
 

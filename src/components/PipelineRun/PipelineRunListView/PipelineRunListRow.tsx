@@ -14,6 +14,8 @@ import {
 } from '~/consts/pipelinerun';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useKarchScanResults } from '~/hooks/useScanResults';
+import { useKueueQueuePositionForPipelineRun } from '~/kueue/kueue-hooks';
+import { useQueueStatusText } from '~/kueue/QueuePositionText';
 import {
   PIPELINE_RUNS_DETAILS_PATH,
   COMPONENT_DETAILS_PATH,
@@ -29,6 +31,7 @@ import { ReleaseKind, ReleasePlanKind } from '~/types/coreBuildService';
 import { createCommitObjectFromPLR } from '~/utils/commits-utils';
 import { getEventTypeLabel } from '~/utils/pipeline-run-filter-utils';
 import { pipelineRunStatus } from '~/utils/pipeline-utils';
+import { PIPELINE_RUN_STATUS_REGISTRY } from '~/utils/plr-status-config';
 import { ScanResults } from '~/utils/scan/scan-utils';
 import { usePipelinerunActionsLazy } from './pipelinerun-actions';
 import { pipelineRunTableColumnClasses, getDynamicColumnClasses } from './PipelineRunListHeader';
@@ -163,8 +166,10 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
     customData,
   );
 
-  const status = pipelineRunStatus(obj);
+  const status = PIPELINE_RUN_STATUS_REGISTRY.deriveStatus(obj);
   const isFinished = !UNFINISHED_PLR_STATUSES.includes(status);
+  const { queuePosition } = useKueueQueuePositionForPipelineRun(namespace, obj);
+  const queueStatusText = useQueueStatusText(status, queuePosition);
   const [actions, onOpen] = usePipelinerunActionsLazy(obj);
   if (!obj.metadata?.labels) {
     obj.metadata.labels = {};
@@ -216,7 +221,7 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
         </TableData>
       ) : null}
       <TableData className={pipelineRunTableColumnClasses.duration}>
-        {status !== runStatus.Pending ? (
+        {status !== runStatus.Pending && status !== runStatus.Queued ? (
           <Duration
             startTime={
               typeof obj.status?.startTime === 'string' ? obj.status?.startTime : undefined
@@ -232,7 +237,7 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
         )}
       </TableData>
       <TableData data-test="status" className={pipelineRunTableColumnClasses.status}>
-        <StatusIconWithText status={status} />
+        <StatusIconWithText status={status} text={queueStatusText} />
       </TableData>
       {showTestResult ? (
         <PipelineRunTestResultCell
@@ -350,8 +355,10 @@ const DynamicPipelineRunListRow: React.FC<
     customData,
   );
 
-  const status = pipelineRunStatus(obj);
+  const status = PIPELINE_RUN_STATUS_REGISTRY.deriveStatus(obj);
   const isFinished = !UNFINISHED_PLR_STATUSES.includes(status);
+  const { queuePosition } = useKueueQueuePositionForPipelineRun(namespace, obj);
+  const queueStatusText = useQueueStatusText(status, queuePosition);
   const [actions, onOpen] = usePipelinerunActionsLazy(obj);
   if (!obj.metadata?.labels) {
     obj.metadata.labels = {};
@@ -405,7 +412,7 @@ const DynamicPipelineRunListRow: React.FC<
       )}
       {visibleColumns.has('duration') && (
         <TableData className={dynamicClasses.duration}>
-          {status !== runStatus.Pending ? (
+          {status !== runStatus.Pending && status !== runStatus.Queued ? (
             <Duration
               startTime={
                 typeof obj.status?.startTime === 'string' ? obj.status?.startTime : undefined
@@ -423,7 +430,7 @@ const DynamicPipelineRunListRow: React.FC<
       )}
       {visibleColumns.has('status') && (
         <TableData className={dynamicClasses.status}>
-          <StatusIconWithText status={status} />
+          <StatusIconWithText status={status} text={queueStatusText} />
         </TableData>
       )}
       {visibleColumns.has('testResult') && (
