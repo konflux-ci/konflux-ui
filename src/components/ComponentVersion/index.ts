@@ -1,13 +1,13 @@
-import { k8sQueryGetResource } from '../../k8s';
-import { ComponentModel } from '../../models';
-import { RouterParams } from '../../routes/utils';
-import { createLoaderWithAccessCheck } from '../../utils/rbac';
+import { k8sQueryGetResource } from '~/k8s';
+import { ComponentModelV2 } from '~/models';
+import { RouterParams } from '~/routes/utils';
+import { createLoaderWithAccessCheck } from '~/utils/rbac';
 
 export const componentVersionDetailsViewLoader = createLoaderWithAccessCheck(
   async ({ params }) => {
     const ns = params[RouterParams.workspaceName];
     return k8sQueryGetResource({
-      model: ComponentModel,
+      model: ComponentModelV2,
       queryOptions: {
         ns,
         name: params[RouterParams.componentName],
@@ -15,7 +15,7 @@ export const componentVersionDetailsViewLoader = createLoaderWithAccessCheck(
     });
   },
   {
-    model: ComponentModel,
+    model: ComponentModelV2,
     verb: 'get',
   },
 );

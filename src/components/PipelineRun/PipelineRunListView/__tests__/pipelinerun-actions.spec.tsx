@@ -16,6 +16,7 @@ import {
   useDownloadYamlActionLazy,
   usePipelinererunAction,
   usePipelinerunActions,
+  usePipelinerunActionsLazy,
   useRerunActionLazy,
 } from '../pipelinerun-actions';
 
@@ -469,8 +470,80 @@ describe('usePipelinerunActions', () => {
   });
 });
 
+describe('usePipelinerunActionsLazy', () => {
+  beforeEach(() => {
+    useAccessReviewForModelMock.mockReturnValue([true, true]);
+    useNavigateMock.mockReturnValue(jest.fn());
+    useComponentMock.mockReturnValue([mockComponent, true]);
+    mockUseSnapshots.mockReturnValue([{ metadata: { name: 'snp1' } }, true]);
+  });
+
+  it('composes View vulnerabilities between Cancel and Download YAML', () => {
+    const { result } = renderHook(() =>
+      usePipelinerunActionsLazy({
+        metadata: {
+          name: 'pipeline-run-1',
+          namespace: 'test-ns',
+          labels: {
+            [PipelineRunLabel.APPLICATION]: 'test-app',
+            [PipelineRunLabel.PIPELINE_TYPE]: 'build',
+          },
+        },
+        status: {
+          completionTime: '2026-10-04T10:00:00Z',
+          conditions: [{ type: 'Succeeded', status: 'True' }],
+          pipelineSpec: { tasks: [{ name: 'roxctl-scan' }] },
+        },
+      } as unknown as PipelineRunKind),
+    );
+
+    expect(result.current[0].map((action) => action.label)).toEqual([
+      'Rerun',
+      'Stop',
+      'Cancel',
+      'View vulnerabilities',
+      'Download YAML',
+    ]);
+  });
+});
+
 describe('usePipelinererunAction', () => {
   let navigateMock: jest.Mock;
+
+  it('disables rerun when the pipeline run has no labels', () => {
+    useComponentMock.mockReturnValue([undefined, true, undefined]);
+    const { result } = renderHook(() =>
+      usePipelinererunAction({
+        ...testPipelineRuns[DataState.SUCCEEDED],
+        metadata: { name: 'unlabelled-run' },
+      }),
+    );
+    expect(result.current.isDisabled).toBe(true);
+  });
+
+  it('returns to the supplied destination after rerunning a build without an application', async () => {
+    useAccessReviewForModelMock.mockReturnValue([true, true]);
+    useComponentMock.mockReturnValue([
+      { ...mockComponent, spec: { ...mockComponent.spec, application: undefined } },
+      true,
+    ]);
+    mockUseLocation.mockReturnValue(createMockLocation('/ns/test-ns/pipelineruns/build-1'));
+    const run = {
+      ...testPipelineRuns[DataState.SUCCEEDED],
+      metadata: {
+        name: 'build-1',
+        labels: {
+          [PipelineRunLabel.PIPELINE_TYPE]: 'build',
+          [PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL]: PipelineRunEventType.PUSH,
+        },
+      },
+    };
+    const { result } = renderHook(() =>
+      usePipelinererunAction(run, '/ns/test-ns/components/api/activity/pipelineruns'),
+    );
+    await act(async () => result.current.cta());
+    expect(navigateMock).toHaveBeenCalledWith('/ns/test-ns/components/api/activity/pipelineruns');
+  });
 
   beforeEach(() => {
     navigateMock = jest.fn();

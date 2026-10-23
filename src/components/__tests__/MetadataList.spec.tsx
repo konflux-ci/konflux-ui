@@ -3,8 +3,8 @@ import { PipelineRunLabel } from '../../consts/pipelinerun';
 import MetadataList from '../MetadataList';
 
 describe('GetMetadataList', () => {
-  it('should render "-" for empty metadata', () => {
-    render(<MetadataList metadata={null} />);
+  it('should render "-" for undefined metadata', () => {
+    render(<MetadataList metadata={undefined} />);
     screen.getByText('-');
   });
 

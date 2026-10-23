@@ -37,8 +37,8 @@ export const initPerfMeasuring = (logFile: string) => {
   });
 
   Cypress.Commands.add('perfGroupStart', (groupName: string) => {
-    if (Cypress.browser.isHeaded && !Cypress.env('perfmark')) {
-      Cypress.env('perfmark', true);
+    if (Cypress.browser.isHeaded && !Cypress.expose('perfmark')) {
+      Cypress.expose('perfmark', true);
       cy.task('deleteFile', fileName);
     }
 

@@ -44,7 +44,10 @@ describe('ComponentVersionListRow', () => {
     );
     const link = screen.getByText('Version 1.0');
     expect(link).toBeInTheDocument();
-    expect(link.closest('a')).toHaveAttribute('href', expect.stringContaining('ver-1.0'));
+    expect(link.closest('a')).toHaveAttribute(
+      'href',
+      '/ns/test-ns/components/my-component/versions/Version 1.0',
+    );
   });
 
   it('should render revision as an external link for GitHub repos', () => {

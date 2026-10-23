@@ -167,6 +167,66 @@ describe('BaseTextFilterToolbar', () => {
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
   });
 
+  describe('`/` keyboard shortcut', () => {
+    it('should focus the search input when `/` is pressed', async () => {
+      const user = userEvent.setup();
+
+      render(
+        <BaseTextFilterToolbar
+          text=""
+          label="name"
+          setText={mockSetText}
+          onClearFilters={mockOnClearFilters}
+        />,
+      );
+
+      const searchInput = screen.getByRole('textbox');
+      expect(searchInput).not.toHaveFocus();
+
+      await user.keyboard('/');
+
+      expect(searchInput).toHaveFocus();
+      expect(searchInput).toHaveValue('');
+    });
+
+    it('should not hijack `/` while another input is focused', async () => {
+      const user = userEvent.setup();
+
+      render(
+        <>
+          <input data-test="other-input" aria-label="other input" />
+          <BaseTextFilterToolbar
+            text=""
+            label="name"
+            setText={mockSetText}
+            onClearFilters={mockOnClearFilters}
+          />
+        </>,
+      );
+
+      const otherInput = screen.getByLabelText('other input');
+      await user.click(otherInput);
+      await user.keyboard('/');
+
+      expect(otherInput).toHaveFocus();
+      expect(otherInput).toHaveValue('/');
+      expect(screen.getByRole('textbox', { name: 'name filter' })).not.toHaveFocus();
+    });
+
+    it('should expose the shortcut to assistive technology', () => {
+      render(
+        <BaseTextFilterToolbar
+          text=""
+          label="name"
+          setText={mockSetText}
+          onClearFilters={mockOnClearFilters}
+        />,
+      );
+
+      expect(screen.getByRole('textbox')).toHaveAttribute('aria-keyshortcuts', '/');
+    });
+  });
+
   it('should apply no left padding when noLeftPadding is true', () => {
     const { container } = render(
       <BaseTextFilterToolbar

@@ -4,7 +4,7 @@ import { goToApplicationsPagePo } from '../support/pageObjects/pages-po';
 
 export class Common {
   static openAppStudioBaseURL() {
-    cy.visit(Cypress.env('KONFLUX_BASE_URL'));
+    cy.visit(Cypress.expose('KONFLUX_BASE_URL'));
   }
 
   static navigateTo(link: NavItem) {
@@ -13,7 +13,12 @@ export class Common {
         .contains('a', NavItem[item], { timeout: 30000 })
         .should('be.visible');
     }
-    cy.get(navigation.sideNavigation).contains('a', link).click();
+
+    // Fail fast with a clear signal if the click didn't actually navigate.
+    cy.location('pathname').then((previousPath) => {
+      cy.get(navigation.sideNavigation).contains('a', link).click();
+      cy.location('pathname', { timeout: 10000 }).should('not.eq', previousPath);
+    });
     Common.waitForLoad();
   }
 
@@ -36,7 +41,7 @@ export class Common {
       const [, namespace = ''] = url.match(workspacePathMatcher) || [];
 
       Common.openURL(
-        `${Cypress.env(
+        `${Cypress.expose(
           'KONFLUX_BASE_URL',
         )}/ns/${namespace}/applications/${applicationName.replace('.', '-')}`,
       );
@@ -67,7 +72,7 @@ export class Common {
   }
 
   static cleanNamespace() {
-    if (Cypress.env('CLEAN_NAMESPACE') === 'true') {
+    if (Cypress.expose('CLEAN_NAMESPACE') === 'true') {
       cy.exec('export KUBECONFIG=~/.kube/appstudio-config && ./delete-script.sh', {
         timeout: 600000,
       })
@@ -77,7 +82,7 @@ export class Common {
   }
 
   static getOrigin() {
-    return new URL(Cypress.env('KONFLUX_BASE_URL')).origin;
+    return new URL(Cypress.expose('KONFLUX_BASE_URL')).origin;
   }
 
   static checkRowValues(locator: string, valuesToAssert: string[]) {
@@ -86,9 +91,9 @@ export class Common {
     }
   }
 
-  static getGitHub2FAOTP(): string {
-    const secret = Cypress.env('GH_SETUP_KEY');
-    const token = require('otplib').authenticator.generate(secret);
-    return token;
+  static getGitHub2FAOTP(): Cypress.Chainable<string> {
+    return cy
+      .env(['GH_SETUP_KEY'])
+      .then(({ GH_SETUP_KEY }) => require('otplib').authenticator.generate(GH_SETUP_KEY));
   }
 }

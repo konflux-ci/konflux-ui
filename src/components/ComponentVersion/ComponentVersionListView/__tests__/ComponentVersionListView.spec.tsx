@@ -1,7 +1,7 @@
 import { Table as PfTable, Tbody, Tr } from '@patternfly/react-table';
 import { act, fireEvent, screen } from '@testing-library/react';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
-import { useComponent } from '~/hooks/useComponents';
+import { useComponentV2 } from '~/hooks/useComponentsV2';
 import { ComponentKind, ComponentSpecs } from '~/types/component';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
@@ -15,8 +15,8 @@ jest.mock('~/hooks/useSearchParam', () => ({
   useSearchParamBatch: () => mockUseSearchParamBatch(),
 }));
 
-jest.mock('~/hooks/useComponents', () => ({
-  useComponent: jest.fn(),
+jest.mock('~/hooks/useComponentsV2', () => ({
+  useComponentV2: jest.fn(),
 }));
 
 jest.mock('~/shared/components/table/TableComponent', () => {
@@ -46,7 +46,7 @@ jest.mock('~/utils/rbac', () => ({
   createLoaderWithAccessCheck: jest.fn(),
 }));
 
-const useComponentMock = useComponent as jest.Mock;
+const useComponentMock = useComponentV2 as jest.Mock;
 
 const mockComponent: Partial<ComponentKind> = {
   metadata: {

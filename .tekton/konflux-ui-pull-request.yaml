@@ -7,7 +7,13 @@ metadata:
     build.appstudio.redhat.com/pull_request_number: '{{pull_request_number}}'
     build.appstudio.redhat.com/target_branch: '{{target_branch}}'
     pipelinesascode.tekton.dev/max-keep-runs: '3'
-    pipelinesascode.tekton.dev/on-cel-expression: (event == "pull_request" && target_branch == "main" && ( !has(body.pull_request) || !body.pull_request.draft) ) || (event == "push" && target_branch.startsWith("gh-readonly-queue/main/") && body.head_commit != "null" )
+    pipelinesascode.tekton.dev/on-cel-expression: |
+      (event == "pull_request" &&
+        (target_branch == "main" ||
+          (has(body.pull_request) && has(body.pull_request.stack) &&
+            body.pull_request.stack != null && body.pull_request.stack.base.ref == "main")) &&
+        (!has(body.pull_request) || !body.pull_request.draft)) ||
+      (event == "push" && target_branch.startsWith("gh-readonly-queue/main/") && body.head_commit != "null")
   creationTimestamp:
   labels:
     appstudio.openshift.io/application: konflux-ui
@@ -43,6 +49,10 @@ spec:
       value: e2e-tests
     - name: e2e-prefetch-input
       value: '{"type": "yarn", "path": "e2e-tests"}'
+    - name: instrumented-output-image
+      value: quay.io/redhat-user-workloads/konflux-ui-tenant/konflux-ui/konflux-ui:instrumented-on-pr-{{revision}}
+    - name: instrumented-dockerfile
+      value: Dockerfile.instrumented
   pipelineSpec:
     description: |
       This pipeline is ideal for building container images from a Containerfile while maintaining trust after pipeline customization.
@@ -136,6 +146,12 @@ spec:
       - default: ''
         name: e2e-prefetch-input
         type: string
+      - description: Fully qualified output image for the instrumented UI (e2e coverage)
+        name: instrumented-output-image
+        type: string
+      - default: Dockerfile.instrumented
+        name: instrumented-dockerfile
+        type: string
     results:
       - description: ''
         name: IMAGE_URL
@@ -149,6 +165,12 @@ spec:
       - description: ''
         name: E2E_IMAGE_DIGEST
         value: $(tasks.build-e2e-container.results.IMAGE_DIGEST)
+      - description: ''
+        name: INSTRUMENTED_IMAGE_URL
+        value: $(tasks.build-instrumented-container.results.IMAGE_URL)
+      - description: ''
+        name: INSTRUMENTED_IMAGE_DIGEST
+        value: $(tasks.build-instrumented-container.results.IMAGE_DIGEST)
       - description: ''
         name: CHAINS-GIT_URL
         value: $(tasks.clone-repository.results.url)
@@ -307,6 +329,77 @@ spec:
               - e2e-{{revision}}
         runAfter:
           - build-e2e-container
+        taskRef:
+          params:
+            - name: name
+              value: apply-tags
+            - name: bundle
+              value: quay.io/konflux-ci/tekton-catalog/task-apply-tags:0.3.1@sha256:c177fc2b2482b1299e713c51bf258eba4972c016ef260d9f45335c2550dc7b2b
+            - name: kind
+              value: task
+          resolver: bundles
+      - name: build-instrumented-container
+        params:
+          - name: IMAGE
+            value: $(params.instrumented-output-image)
+          - name: DOCKERFILE
+            value: $(params.instrumented-dockerfile)
+          - name: CONTEXT
+            value: $(params.path-context)
+          - name: HERMETIC
+            value: $(params.hermetic)
+          - name: PREFETCH_INPUT
+            value: $(params.prefetch-input)
+          - name: IMAGE_EXPIRES_AFTER
+            value: $(params.image-expires-after)
+          - name: COMMIT_SHA
+            value: $(tasks.clone-repository.results.commit)
+          - name: BUILD_ARGS
+            value:
+              - $(params.build-args[*])
+          - name: BUILD_ARGS_FILE
+            value: $(params.build-args-file)
+          - name: SOURCE_URL
+            value: $(tasks.clone-repository.results.url)
+          - name: BUILDAH_FORMAT
+            value: $(params.buildah-format)
+          - name: HTTP_PROXY
+            value: $(tasks.init.results.http-proxy)
+          - name: NO_PROXY
+            value: $(tasks.init.results.no-proxy)
+          - name: SOURCE_DATE_EPOCH
+            value: $(params.source-date-epoch)
+          - name: REWRITE_TIMESTAMP
+            value: $(params.rewrite-timestamp)
+          - name: OMIT_HISTORY
+            value: $(params.omit-history)
+          - name: SOURCE_ARTIFACT
+            value: $(tasks.prefetch-dependencies.results.SOURCE_ARTIFACT)
+          - name: CACHI2_ARTIFACT
+            value: $(tasks.prefetch-dependencies.results.CACHI2_ARTIFACT)
+        runAfter:
+          - prefetch-dependencies
+        taskRef:
+          params:
+            - name: name
+              value: buildah-oci-ta
+            - name: bundle
+              value: quay.io/konflux-ci/tekton-catalog/task-buildah-oci-ta:0.10.5@sha256:5fcf620537b0dece56a9c9a8090ce7592a874da92cc2a5d398abdc2382eb8a3c
+            - name: kind
+              value: task
+          resolver: bundles
+      - name: apply-tags-instrumented
+        params:
+          - name: IMAGE_URL
+            value: $(tasks.build-instrumented-container.results.IMAGE_URL)
+          - name: IMAGE_DIGEST
+            value: $(tasks.build-instrumented-container.results.IMAGE_DIGEST)
+          # Merge-queue (push) resolves instrumented-{{revision}}; PRs keep instrumented-on-pr-{{revision}}.
+          - name: ADDITIONAL_TAGS
+            value:
+              - instrumented-{{revision}}
+        runAfter:
+          - build-instrumented-container
         taskRef:
           params:
             - name: name

@@ -1,5 +1,5 @@
 import { ComponentKind, ComponentVersion } from '~/types';
-import { getComponentVersion } from '../version-utils';
+import { getComponentVersion } from '~/utils/version-utils';
 
 const mockVersions: ComponentVersion[] = [
   { name: 'Version 1.0', revision: 'ver-1.0', context: './frontend' },
@@ -19,14 +19,18 @@ const mockComponent = {
 } as unknown as ComponentKind;
 
 describe('getComponentVersion', () => {
-  it('should return the version matching the given revision', () => {
-    const result = getComponentVersion(mockComponent, 'ver-1.0');
+  it('should return the version matching the given name', () => {
+    const result = getComponentVersion(mockComponent, 'Version 1.0');
     expect(result).toEqual(mockVersions[0]);
   });
 
-  it('should return the correct version when revision contains slashes', () => {
-    const result = getComponentVersion(mockComponent, 'feature/my-branch');
+  it('should return the named version whose Git revision contains slashes', () => {
+    const result = getComponentVersion(mockComponent, 'Feature branch');
     expect(result).toEqual(mockVersions[2]);
+  });
+
+  it('should not match a Git revision instead of a version name', () => {
+    expect(getComponentVersion(mockComponent, 'ver-1.0')).toBeUndefined();
   });
 
   it('should return undefined when no version matches', () => {

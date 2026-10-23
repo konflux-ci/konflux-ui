@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Truncate } from '@patternfly/react-core';
-import { COMPONENT_DETAILS_PATH } from '@routes/paths';
+import { COMPONENT_DETAILS_PATH, COMPONENT_DETAILS_V2_PATH } from '@routes/paths';
 import { TableData } from '~/shared';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { ConformaResultRow } from '~/types/conforma';
@@ -16,6 +16,11 @@ type ConformaRowType = {
 const ConformaRow: React.FC<ConformaRowType> = ({ data }) => {
   const namespace = useNamespace();
   const { applicationName } = useParams();
+  const componentParams = {
+    workspaceName: namespace,
+    applicationName,
+    componentName: data.component,
+  };
   return (
     <>
       <TableData className={`${conformaTableColumnClasses.rules} vertical-center-cell`}>
@@ -32,11 +37,9 @@ const ConformaRow: React.FC<ConformaRowType> = ({ data }) => {
       </TableData>
       <TableData className={`${conformaTableColumnClasses.component} vertical-center-cell`}>
         <Link
-          to={COMPONENT_DETAILS_PATH.createPath({
-            workspaceName: namespace,
-            applicationName: applicationName || '',
-            componentName: data.component,
-          })}
+          to={(applicationName ? COMPONENT_DETAILS_PATH : COMPONENT_DETAILS_V2_PATH).createPath(
+            componentParams,
+          )}
         >
           {data.component}
         </Link>

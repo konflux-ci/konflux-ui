@@ -11,6 +11,7 @@ import type {
   OptionItem,
   SearchFilterConfig,
   SingleSelectFilterConfig,
+  SwitchableSearchFilterConfig,
 } from '~/shared/components/Filter/types';
 
 type Item = { name: string; status: string; active: boolean };
@@ -148,5 +149,89 @@ describe('FilterToolbar', () => {
 
     const togglesGroup = screen.getByTestId('filter-group-toggles');
     expect(togglesGroup).toHaveClass('pf-m-action-group-plain');
+  });
+
+  describe('`/` keyboard shortcut', () => {
+    const switchableConfig: SwitchableSearchFilterConfig<Item> = {
+      type: 'switchableSearch',
+      param: 'searchBy',
+      label: 'Search by',
+      fields: [
+        {
+          value: 'commit',
+          param: 'commit',
+          label: 'Commit',
+          filterFn: (item, value) => item.name.includes(value),
+        },
+      ],
+    };
+
+    it('should focus the search input when `/` is pressed', async () => {
+      const user = userEvent.setup();
+      renderToolbar([searchConfig]);
+
+      const searchInput = screen.getByRole('textbox', { name: 'Name' });
+      expect(searchInput).not.toHaveFocus();
+
+      await user.keyboard('/');
+
+      expect(searchInput).toHaveFocus();
+      expect(searchInput).toHaveValue('');
+    });
+
+    it('should focus the first search control when several are configured', async () => {
+      const user = userEvent.setup();
+      renderToolbar([booleanConfig, searchConfig, switchableConfig]);
+
+      await user.keyboard('/');
+
+      expect(screen.getByRole('textbox', { name: 'Name' })).toHaveFocus();
+    });
+
+    it('should focus a switchable search control when it is the only search filter', async () => {
+      const user = userEvent.setup();
+      renderToolbar([switchableConfig]);
+
+      await user.keyboard('/');
+
+      expect(screen.getByRole('textbox', { name: 'Commit' })).toHaveFocus();
+    });
+
+    it('should not hijack `/` while another input is focused', async () => {
+      const user = userEvent.setup();
+      render(
+        <MemoryRouter>
+          <NuqsAdapter>
+            <input aria-label="other input" />
+            <FilterToolbar configs={[searchConfig]} />
+          </NuqsAdapter>
+        </MemoryRouter>,
+      );
+
+      const otherInput = screen.getByLabelText('other input');
+      await user.click(otherInput);
+      await user.keyboard('/');
+
+      expect(otherInput).toHaveFocus();
+      expect(otherInput).toHaveValue('/');
+      expect(screen.getByRole('textbox', { name: 'Name' })).not.toHaveFocus();
+    });
+
+    it('should expose the shortcut to assistive technology', () => {
+      renderToolbar([searchConfig]);
+      expect(screen.getByRole('textbox', { name: 'Name' })).toHaveAttribute(
+        'aria-keyshortcuts',
+        '/',
+      );
+    });
+
+    it('should not advertise the shortcut on controls that do not own it', () => {
+      renderToolbar([searchConfig, switchableConfig]);
+
+      const inputs = screen.getAllByRole('textbox');
+      expect(inputs).toHaveLength(2);
+      expect(inputs[0]).toHaveAttribute('aria-keyshortcuts', '/');
+      expect(inputs[1]).not.toHaveAttribute('aria-keyshortcuts');
+    });
   });
 });

@@ -7,12 +7,12 @@ import {
   Content,
   ContentVariants,
 } from '@patternfly/react-core';
+import { useComponentV2 } from '~/hooks/useComponentsV2';
 import { getErrorState } from '~/shared/utils/error-utils';
 import emptyStateImgUrl from '../../../assets/Components.svg';
 import { FeatureFlagIndicator } from '../../../feature-flags/FeatureFlagIndicator';
 import { FLAGS } from '../../../feature-flags/flags';
 import { IfFeature, useIsOnFeatureFlag } from '../../../feature-flags/hooks';
-import { useComponent } from '../../../hooks/useComponents';
 import { COMPONENTS_PATH, COMPONENT_DETAILS_V2_PATH } from '../../../routes/paths';
 import { RouterParams } from '../../../routes/utils';
 import AppEmptyState from '../../../shared/components/empty-state/AppEmptyState';
@@ -25,7 +25,7 @@ export const COMPONENTS_GS_LOCAL_STORAGE_KEY = 'components-getting-started-modal
 const ComponentDetailsView: React.FC = () => {
   const { componentName } = useParams<RouterParams>();
   const namespace = useNamespace();
-  const [component, loaded, componentError] = useComponent(namespace, componentName);
+  const [component, loaded, componentError] = useComponentV2(namespace, componentName);
   const isMintMakerEnabled = useIsOnFeatureFlag('mintmaker');
 
   if (!loaded) {

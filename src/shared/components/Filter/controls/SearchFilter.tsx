@@ -10,6 +10,10 @@ const DEFAULT_DEBOUNCE = 600;
 type SearchFilterProps<T> = {
   /** Search filter configuration. */
   config: SearchFilterConfig<T>;
+  /** Ref attached to the underlying input, used by the toolbar's `/` shortcut. */
+  inputRef?: React.RefObject<HTMLInputElement>;
+  /** Keyboard shortcut advertised to assistive technology via `aria-keyshortcuts`. */
+  keyShortcut?: string;
 };
 
 /**
@@ -21,7 +25,7 @@ type SearchFilterProps<T> = {
  *
  * @typeParam T - The data-item type being filtered.
  */
-export const SearchFilter = <T,>({ config }: SearchFilterProps<T>) => {
+export const SearchFilter = <T,>({ config, inputRef, keyShortcut }: SearchFilterProps<T>) => {
   const { param, label, placeholder, debounce: debounceMs = DEFAULT_DEBOUNCE } = config;
 
   const [urlValue, setUrlValue] = useQueryState(param, parseAsString.withDefault(''));
@@ -50,8 +54,10 @@ export const SearchFilter = <T,>({ config }: SearchFilterProps<T>) => {
   return (
     <ToolbarItem>
       <SearchInput
+        ref={inputRef}
         aria-label={label}
         data-test={`search-filter-${param}`}
+        inputProps={keyShortcut ? { 'aria-keyshortcuts': keyShortcut } : undefined}
         placeholder={placeholder ?? `Filter by ${label}...`}
         value={localValue}
         onChange={handleChange}

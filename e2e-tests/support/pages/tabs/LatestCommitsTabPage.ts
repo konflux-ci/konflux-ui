@@ -29,7 +29,7 @@ export class LatestCommitsTabPage {
       body,
     ).then((result) => {
       cy.log(`${commitMessage}_SHA : ${result.body.commit.sha}`);
-      Cypress.env(`${commitMessage}_SHA`, result.body.commit.sha);
+      Cypress.expose(`${commitMessage}_SHA`, result.body.commit.sha);
     });
   }
 
@@ -60,7 +60,7 @@ export class LatestCommitsTabPage {
       UIhelper.verifyRowInTable('Commit List', commitsRow.name, [
         'main',
         commitsRow.component,
-        Cypress.env('GH_USERNAME'),
+        Cypress.expose('GH_USERNAME'),
         'Succeeded',
       ]);
     });
