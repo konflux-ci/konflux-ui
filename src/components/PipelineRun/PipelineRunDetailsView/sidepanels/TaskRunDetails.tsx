@@ -1,5 +1,7 @@
 import * as React from 'react';
 import {
+  CodeBlock,
+  CodeBlockCode,
   DescriptionList,
   DescriptionListDescription,
   DescriptionListGroup,
@@ -7,9 +9,13 @@ import {
   Divider,
 } from '@patternfly/react-core';
 import { runStatus } from '~/consts/pipelinerun';
+import {
+  calculateDuration,
+  getTaskRunInfrastructureDiagnostic,
+  isTaskV1Beta1,
+} from '~/utils/pipeline-utils';
 import { SyncMarkdownView, Timestamp } from '../../../../shared';
 import { TaskRunKind } from '../../../../types';
-import { calculateDuration, isTaskV1Beta1 } from '../../../../utils/pipeline-utils';
 import RunParamsList from '../tabs/RunParamsList';
 import RunResultsList from '../tabs/RunResultsList';
 import ScanDescriptionListGroup from '../tabs/ScanDescriptionListGroup';
@@ -47,6 +53,7 @@ const TaskRunDetails: React.FC<React.PropsWithChildren<Props>> = ({
   const results = isTaskV1Beta1(taskRun) ? taskRun?.status?.taskResults : taskRun?.status?.results;
   const specParams = taskRun?.spec?.params;
   const taskDescription = getTaskDescription(taskRun, description);
+  const infrastructureDiagnostic = getTaskRunInfrastructureDiagnostic(taskRun);
   return (
     <>
       {status !== runStatus.Skipped ? (
@@ -69,6 +76,18 @@ const TaskRunDetails: React.FC<React.PropsWithChildren<Props>> = ({
           </DescriptionList>
           <DescriptionList className="pf-v6-u-mt-lg">
             <TaskDescriptionGroup content={taskDescription} />
+            {infrastructureDiagnostic && (
+              <DescriptionListGroup>
+                <DescriptionListTerm>Infrastructure diagnostic</DescriptionListTerm>
+                <DescriptionListDescription>
+                  <CodeBlock>
+                    <CodeBlockCode style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
+                      {infrastructureDiagnostic}
+                    </CodeBlockCode>
+                  </CodeBlock>
+                </DescriptionListDescription>
+              </DescriptionListGroup>
+            )}
             <ScanDescriptionListGroup taskRuns={[taskRun]} hideIfNotFound />
           </DescriptionList>
         </>

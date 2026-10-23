@@ -15,6 +15,13 @@ import {
   Bullseye,
   Spinner,
 } from '@patternfly/react-core';
+import {
+  calculateDuration,
+  getTaskRunInfrastructureDiagnostic,
+  isTaskV1Beta1,
+  taskName,
+  taskRunStatus,
+} from '~/utils/pipeline-utils';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
 import { useTaskRunV2 } from '../../../hooks/useTaskRunsV2';
 import {
@@ -30,12 +37,6 @@ import { getTRLogSnippet } from '../../../shared/components/pipeline-run-logs/lo
 import { Timestamp } from '../../../shared/components/timestamp/Timestamp';
 import { useNamespace } from '../../../shared/providers/Namespace';
 import { TektonResourceLabel } from '../../../types';
-import {
-  calculateDuration,
-  isTaskV1Beta1,
-  taskName,
-  taskRunStatus,
-} from '../../../utils/pipeline-utils';
 import MetadataList from '../../MetadataList';
 import RunParamsList from '../../PipelineRun/PipelineRunDetailsView/tabs/RunParamsList';
 import RunResultsList from '../../PipelineRun/PipelineRunDetailsView/tabs/RunResultsList';
@@ -56,6 +57,7 @@ const TaskRunDetailsTab: React.FC = () => {
   }
 
   const taskRunFailed = (getTRLogSnippet(taskRun) || {}) as ErrorDetailsWithStaticLog;
+  const infrastructureDiagnostic = getTaskRunInfrastructureDiagnostic(taskRun);
   const results = isTaskV1Beta1(taskRun) ? taskRun?.status?.taskResults : taskRun?.status?.results;
   const hasStart = typeof taskRun?.status?.startTime === 'string' && !!taskRun.status.startTime;
   const hasEnd =
@@ -158,6 +160,18 @@ const TaskRunDetailsTab: React.FC = () => {
                     />
                   </DescriptionListDescription>
                 </DescriptionListGroup>
+                {infrastructureDiagnostic && (
+                  <DescriptionListGroup>
+                    <DescriptionListTerm>Infrastructure diagnostic</DescriptionListTerm>
+                    <DescriptionListDescription>
+                      <CodeBlock>
+                        <CodeBlockCode style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
+                          {infrastructureDiagnostic}
+                        </CodeBlockCode>
+                      </CodeBlock>
+                    </DescriptionListDescription>
+                  </DescriptionListGroup>
+                )}
                 <ScanDescriptionListGroup taskRuns={[taskRun]} hideIfNotFound />
                 {Object.keys(taskRunFailed).length > 0 && (
                   <>
