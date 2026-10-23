@@ -4003,6 +4003,23 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@patternfly/react-core@npm:^6.7.0":
+  version: 6.7.0
+  resolution: "@patternfly/react-core@npm:6.7.0"
+  dependencies:
+    "@patternfly/react-icons": "npm:^6.7.0"
+    "@patternfly/react-styles": "npm:^6.7.0"
+    "@patternfly/react-tokens": "npm:^6.7.0"
+    focus-trap: "npm:7.6.6"
+    react-dropzone: "npm:^14.3.5"
+    tslib: "npm:^2.8.1"
+  peerDependencies:
+    react: ^17 || ^18 || ^19
+    react-dom: ^17 || ^18 || ^19
+  checksum: 10/130b0a406162925a8bb7069ddef51d66fb5835d4b8e2cd97e3f69977c04fe4d682768a04b51539819a25426d691661fe6a4640299e92bc387d14d8696576f642
+  languageName: node
+  linkType: hard
+
 "@patternfly/react-drag-drop@npm:^6.5.1":
   version: 6.6.2
   resolution: "@patternfly/react-drag-drop@npm:6.6.2"
@@ -4043,6 +4060,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@patternfly/react-icons@npm:^6.7.0":
+  version: 6.7.0
+  resolution: "@patternfly/react-icons@npm:6.7.0"
+  dependencies:
+    tslib: "npm:^2.8.1"
+  peerDependencies:
+    react: ^17 || ^18 || ^19
+    react-dom: ^17 || ^18 || ^19
+  checksum: 10/cf91cf7de332f09e6f97c0fb59d62f6cf5e55e3541aaf5a2f08f8884ec8e48d2ef4f326bb62a6e837fb4cf44297b515f0f1f6088798cd0a269822147576be4aa
+  languageName: node
+  linkType: hard
+
 "@patternfly/react-log-viewer@npm:6.5.0":
   version: 6.5.0
   resolution: "@patternfly/react-log-viewer@npm:6.5.0"
@@ -4079,20 +4108,27 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@patternfly/react-table@npm:6.6.1":
-  version: 6.6.1
-  resolution: "@patternfly/react-table@npm:6.6.1"
+"@patternfly/react-styles@npm:^6.7.0":
+  version: 6.7.0
+  resolution: "@patternfly/react-styles@npm:6.7.0"
+  checksum: 10/2481f7260ddbd5a26bd4e7f8ed121a78a3cede6a65a312a6e01f9887f61ffa224a8b794e7b661e67cc5dd96cd181f8ba0c8f19d91fa48aaf2b6782e4fb09c88c
+  languageName: node
+  linkType: hard
+
+"@patternfly/react-table@npm:6.7.0":
+  version: 6.7.0
+  resolution: "@patternfly/react-table@npm:6.7.0"
   dependencies:
-    "@patternfly/react-core": "npm:^6.6.1"
-    "@patternfly/react-icons": "npm:^6.6.1"
-    "@patternfly/react-styles": "npm:^6.6.1"
-    "@patternfly/react-tokens": "npm:^6.6.1"
+    "@patternfly/react-core": "npm:^6.7.0"
+    "@patternfly/react-icons": "npm:^6.7.0"
+    "@patternfly/react-styles": "npm:^6.7.0"
+    "@patternfly/react-tokens": "npm:^6.7.0"
     lodash: "npm:^4.18.1"
     tslib: "npm:^2.8.1"
   peerDependencies:
     react: ^17 || ^18 || ^19
     react-dom: ^17 || ^18 || ^19
-  checksum: 10/016cadf04e7ad16c1ee7f6c5f26e412ac7bed6a2286ce7f5a6bf97310fb5acb5ef2e2f18f19f208d7546a1209ead2fa99ef0c351183e6f1c911e938d04295c08
+  checksum: 10/1d0ce10695970253024ec460872466e20679e4cb154e7f2b50c092145d45053152ed6355e3464d158743b86001dd17fb4dcd7a477966db7e19a2de6162364de6
   languageName: node
   linkType: hard
 
@@ -4131,6 +4167,13 @@ __metadata:
   version: 6.5.1
   resolution: "@patternfly/react-tokens@npm:6.5.1"
   checksum: 10/dcd0d56ca48d7f4c4bab0cec167ede28f998fa088de1483652e35377d1d91a27c313745eb27d29bc9c61e50b033a01d635e07c74b13587a5c376fc647bba9a05
+  languageName: node
+  linkType: hard
+
+"@patternfly/react-tokens@npm:^6.7.0":
+  version: 6.7.0
+  resolution: "@patternfly/react-tokens@npm:6.7.0"
+  checksum: 10/ed2e9db8b9b0bf1d4ea833737d2f82286b52e2efc27d7fd7c998601c49a60252f7dde88eb8ac9b3822ba3d708234c7ab6367336481b1792ef1795d8618245f17
   languageName: node
   linkType: hard
 
@@ -14461,7 +14504,7 @@ __metadata:
     "@patternfly/react-icons": "npm:6.6.1"
     "@patternfly/react-log-viewer": "npm:6.5.0"
     "@patternfly/react-styles": "npm:6.6.1"
-    "@patternfly/react-table": "npm:6.6.1"
+    "@patternfly/react-table": "npm:6.7.0"
     "@patternfly/react-tokens": "npm:6.6.1"
     "@patternfly/react-topology": "npm:6.6.0"
     "@patternfly/react-virtualized-extension": "npm:6.2.0"
