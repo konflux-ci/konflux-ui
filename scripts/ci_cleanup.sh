@@ -1,6 +1,12 @@
 #!/bin/bash
 set -euo pipefail
 # Purpose: This script cleans up repositories and bots that remain on GitHub and Quay after CI automation runs.
+#
+# The `konflux` target is kept for ad-hoc/manual cleanup from a local environment
+# (oc + personal token). Automated staging Application cleanup lives in
+# infra-deployments as the application-cleaner CronJob:
+#   https://github.com/redhat-appstudio/infra-deployments/tree/main/components/application-cleaner
+#   https://github.com/redhat-appstudio/infra-deployments/pull/13246
 GH_ORG="redhat-hac-qe"
 GH_SEARCH_PHASE_OLD="devfile-sample-code-with-quarkus-"
 GH_SEARCH_PHASE="testrepo-"

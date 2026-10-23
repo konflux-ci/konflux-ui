@@ -12,7 +12,9 @@ export const TaskRunSecurityTab: React.FC = () => {
   const { taskRunName } = useParams<RouterParams>();
   const namespace = useNamespace();
   const [taskRun, loaded] = useTaskRunV2(namespace, taskRunName);
-  const plrName = taskRun?.metadata?.labels?.[TektonResourceLabel.pipelinerun];
+  const plrName =
+    taskRun?.metadata?.labels?.[TektonResourceLabel.pipelinerun] ||
+    taskRun?.metadata?.ownerReferences?.find((owner) => owner.kind === 'PipelineRun')?.name;
 
   if (!loaded) {
     return (
@@ -24,7 +26,7 @@ export const TaskRunSecurityTab: React.FC = () => {
 
   return (
     <FilterContextProvider filterParams={['rule', 'status', 'component']}>
-      <SecurityConformaTab pipelineRunName={plrName} />
+      <SecurityConformaTab pipelineRunName={plrName} taskRun={taskRun} />
     </FilterContextProvider>
   );
 };

@@ -8,7 +8,11 @@ import {
 } from '@patternfly/react-core';
 import { useAuth } from '~/auth/useAuth';
 
-export const UserDropdown: React.FC = () => {
+type UserDropdownProps = {
+  onOpen?: () => void;
+};
+
+export const UserDropdown: React.FC<UserDropdownProps> = ({ onOpen }) => {
   const [isOpen, setIsOpen] = React.useState(false);
   const {
     user: { email },
@@ -26,6 +30,9 @@ export const UserDropdown: React.FC = () => {
           ref={toggleRef}
           isFullHeight
           onClick={() => {
+            if (!isOpen) {
+              onOpen?.();
+            }
             setIsOpen(!isOpen);
           }}
         >

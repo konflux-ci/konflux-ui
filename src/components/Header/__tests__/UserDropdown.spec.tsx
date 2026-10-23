@@ -46,4 +46,23 @@ describe('UserDropdown', () => {
 
     expect(signOut).toHaveBeenCalledTimes(1);
   });
+
+  it('calls onOpen once when the menu is opened', async () => {
+    const onOpen = jest.fn();
+    render(<UserDropdown onOpen={onOpen} />);
+
+    await user.click(screen.getByText('user@example.com'));
+
+    expect(onOpen).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not call onOpen when the menu is closed', async () => {
+    const onOpen = jest.fn();
+    render(<UserDropdown onOpen={onOpen} />);
+
+    await user.click(screen.getByText('user@example.com'));
+    await user.click(screen.getByText('user@example.com'));
+
+    expect(onOpen).toHaveBeenCalledTimes(1);
+  });
 });

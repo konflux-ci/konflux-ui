@@ -40,7 +40,8 @@ export const TaskRunDetailsView: React.FC = () => {
 
   useStatusOnFavicon(trStatus);
 
-  const applicationName = taskRun?.metadata?.labels?.[PipelineRunLabel.APPLICATION];
+  const applicationName =
+    params.applicationName || taskRun?.metadata?.labels?.[PipelineRunLabel.APPLICATION];
   const baseURL = TASKRUN_DETAILS_PATH.createPath({
     applicationName,
     workspaceName: namespace,

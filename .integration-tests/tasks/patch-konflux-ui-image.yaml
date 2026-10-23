@@ -1,0 +1,139 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: patch-konflux-ui-image
+  annotations:
+    tekton.dev/displayName: 'Patch Konflux UI image'
+    tekton.dev/categories: 'Pipeline'
+    tekton.dev/tags: 'e2e,konflux-ui,deploy'
+spec:
+  description: >-
+    Replaces the stock UI image pinned by konflux-ci deploy with the SNAPSHOT
+    image under test. Copies a dockerconfigjson pull secret onto the kind
+    cluster, attaches it to the proxy SA/deployment, scales down
+    konflux-operator, then patches deployment/proxy initContainer
+    copy-static-content.
+
+    Needed because deploy-konflux-ci cannot reliably override the UI image
+    (folder name ui vs image quay.io/konflux-ci/konflux-ui, digest pins, etc.).
+  params:
+    - name: cluster-access-secret
+      type: string
+      description: Secret with kubeconfig for the kind cluster (kfg-<pipelinerun>).
+    - name: container-image
+      type: string
+      description: >-
+        Full image reference from SNAPSHOT (test-metadata container-image),
+        e.g. quay.io/redhat-user-workloads/.../konflux-ui@sha256:... or :tag.
+    - name: pull-secret
+      type: string
+      description: >-
+        Konflux image pull secret (IPS) in the PipelineRun namespace that can
+        pull the SNAPSHOT image (kubernetes.io/dockerconfigjson).
+  volumes:
+    - name: cluster-credentials
+      secret:
+        secretName: $(params.cluster-access-secret)
+    - name: pull-secret
+      secret:
+        secretName: $(params.pull-secret)
+  steps:
+    - name: patch-proxy-ui-image
+      image: quay.io/konflux-ci/tekton-integration-catalog/utils@sha256:79707a56aa34a59f8ebb97db855114b840cbbf60bece4a0edf8ef8c7d7d5acd1
+      env:
+        - name: KUBECONFIG
+          value: /cluster-credentials/kubeconfig
+        - name: CONTAINER_IMAGE
+          value: $(params.container-image)
+      volumeMounts:
+        - name: cluster-credentials
+          mountPath: /cluster-credentials
+        - name: pull-secret
+          mountPath: /pull-secret
+      script: |
+        #!/usr/bin/env bash
+        set -euo pipefail
+
+        echo "=== Patching Konflux UI image ==="
+        KIND_PULL_SECRET_NAME=snapshot-ui-pull
+
+        if [[ -z "${CONTAINER_IMAGE}" ]]; then
+          echo "ERROR: container-image param is empty; expected SNAPSHOT image"
+          exit 1
+        fi
+
+        DOCKERCONFIG=/pull-secret/.dockerconfigjson
+        if [[ ! -f "${DOCKERCONFIG}" ]]; then
+          echo "ERROR: pull-secret missing .dockerconfigjson (expected a Konflux IPS)"
+          ls -la /pull-secret || true
+          exit 1
+        fi
+
+        echo "=== Using SNAPSHOT image ==="
+        echo "Container image: ${CONTAINER_IMAGE}"
+
+        echo "=== Scaling down konflux-operator ==="
+        if kubectl get deployment/konflux-operator-controller-manager -n konflux-operator &>/dev/null; then
+          kubectl scale deployment/konflux-operator-controller-manager \
+            -n konflux-operator --replicas=0
+          kubectl wait --for=delete pod -l control-plane=controller-manager \
+            -n konflux-operator --timeout=2m || true
+        else
+          echo "konflux-operator-controller-manager not found; continuing"
+        fi
+
+        echo "=== Creating pull secret ${KIND_PULL_SECRET_NAME} in konflux-ui ==="
+        kubectl create secret generic "${KIND_PULL_SECRET_NAME}" \
+          --namespace=konflux-ui \
+          --type=kubernetes.io/dockerconfigjson \
+          --from-file=.dockerconfigjson="${DOCKERCONFIG}" \
+          --dry-run=client -o yaml | kubectl apply -f -
+
+        echo "=== Attaching pull secret to serviceaccount/proxy ==="
+        kubectl patch serviceaccount proxy -n konflux-ui --type=merge \
+          -p "{\"imagePullSecrets\":[{\"name\":\"${KIND_PULL_SECRET_NAME}\"}]}"
+
+        echo "=== Current proxy initContainers ==="
+        kubectl get deployment proxy -n konflux-ui \
+          -o jsonpath='{range .spec.template.spec.initContainers[*]}{.name}={.image}{"\n"}{end}' \
+          || true
+
+        echo "=== Patching deployment/proxy copy-static-content ==="
+        # Escape JSON-sensitive characters in the image reference.
+        IMAGE_JSON=$(printf '%s' "${CONTAINER_IMAGE}" | sed 's/\\/\\\\/g; s/"/\\"/g')
+        kubectl patch deployment proxy -n konflux-ui --type='strategic' -p="{
+          \"spec\": {
+            \"template\": {
+              \"spec\": {
+                \"imagePullSecrets\": [
+                  {\"name\": \"${KIND_PULL_SECRET_NAME}\"}
+                ],
+                \"initContainers\": [
+                  {
+                    \"name\": \"copy-static-content\",
+                    \"image\": \"${IMAGE_JSON}\",
+                    \"imagePullPolicy\": \"Always\"
+                  }
+                ]
+              }
+            }
+          }
+        }"
+
+        echo "=== Waiting for proxy rollout ==="
+        if ! kubectl rollout status deployment/proxy -n konflux-ui --timeout=5m; then
+          echo "ERROR: Proxy deployment rollout failed"
+          kubectl describe deployment proxy -n konflux-ui
+          kubectl get pods -n konflux-ui -l app=proxy -o wide
+          for pod in $(kubectl get pods -n konflux-ui -l app=proxy -o name); do
+            echo "=== ${pod} ==="
+            kubectl describe "${pod}" -n konflux-ui
+            kubectl logs "${pod}" -n konflux-ui --all-containers --previous 2>/dev/null || true
+          done
+          exit 1
+        fi
+
+        echo "=== Proxy initContainers after patch ==="
+        kubectl get deployment proxy -n konflux-ui \
+          -o jsonpath='{range .spec.template.spec.initContainers[*]}{.name}={.image}{"\n"}{end}'
+        echo "=== UI image patch complete ==="

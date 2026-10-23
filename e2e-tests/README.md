@@ -65,10 +65,10 @@ For headless execution:
 $ yarn run cy:run
 ```
 
-Runs all available specs, by default in the Electron browser. Flags that might come in handy are `-b` to specify the browser, or `-s` to filter spec files based on a glob pattern. For example, running the basic happy path spec in Chrome:
+Runs all available specs, by default in the Electron browser. Flags that might come in handy are `-b` to specify the browser, or `-s` to filter spec files based on a glob pattern. For example, running the default suite specs in Chrome:
 
 ```
-$ yarn run cy:run -b chrome -s 'tests/basic-happy-path*'
+$ yarn run cy:run -b chrome -s 'tests/component-lifecycle.spec.ts,tests/environment-config.spec.ts'
 ```
 
 ### Running test from source against local Konflux UI and local Konflux backend
@@ -87,7 +87,15 @@ Run tests by using the command `$ yarn run cy:open` or pick some other way descr
 
 The `e2e-tests` folder contains a Containerfile used for test automation.
 
-**Containerfile** is based on the public `cypress/factory` image and installs additional dependencies required by the tests (e.g. skopeo, kubectl, cosign). It copies files from the `e2e-tests` folder so tests can be run directly from the image. Konflux builds the test image in parallel with the UI image via the `konflux-ui` component build pipeline (`.tekton/konflux-ui-*.yaml`), tagged `e2e-on-pr-<sha>` on pull requests and `e2e-<sha>` on push (same Quay repository as the UI image). Integration tests resolve the matching tag from the snapshot event type. It is also available on quay.io https://quay.io/repository/konflux_ui_qe/konflux-ui-tests and should be updated by [GitHub Action](https://github.com/konflux-ci/konflux-ui/blob/main/.github/workflows/post-merge.yaml#L47) once PR is merged to main.
+**Containerfile** is based on the public `cypress/factory` image and installs additional dependencies required by the tests (e.g. skopeo, kubectl, cosign). It copies files from the `e2e-tests` folder so tests can be run directly from the image. Konflux builds the test image in parallel with the UI image via the `konflux-ui` component build pipeline (`.tekton/konflux-ui-*.yaml`), tagged `e2e-on-pr-<sha>` on pull requests and `e2e-<sha>` on push (same Quay repository as the UI image). Integration tests resolve the matching tag from the snapshot event type. On each push to `main`, the push pipeline also mirrors that image to the public QE tag [`quay.io/konflux_ui_qe/konflux-ui-tests:konflux`](https://quay.io/repository/konflux_ui_qe/konflux-ui-tests) via the `publish-e2e-qe-image` task (skopeo copy).
+
+> [!NOTE]
+> During a transition period, two public tags are published independently to [`quay.io/konflux_ui_qe/konflux-ui-tests`](https://quay.io/repository/konflux_ui_qe/konflux-ui-tests):
+>
+> - **`:latest`** — built with `podman build` and pushed by the [`.github/workflows/post-merge.yaml`](../.github/workflows/post-merge.yaml) GitHub Action on every merge to `main`. This is the current canonical tag for the manual `podman run` examples below.
+> - **`:konflux`** — a mirror of the Konflux-pipeline-built image, copied by the Tekton `publish-e2e-qe-image` task (skopeo copy). Use this when you want the image that matches the Konflux build pipeline.
+>
+> The examples below use `:latest`. You can substitute `:konflux` if you prefer the Konflux-built mirror.
 
 If there are no changes in your local test code, you can pull and run the image from quay, providing the required environment variables. Feel free to use docker or podman, we will be using podman in this example:
 
@@ -117,7 +125,7 @@ The cypress run command can be customized using flags, as per the [documentation
 For example, we can limit what spec files will be run:
 
 ```
-$ podman run -e CYPRESS_KONFLUX_BASE_URL=https://<HOSTNAME>/hac/application-pipeline quay.io/konflux_ui_qe/konflux-ui-tests:latest --spec tests/basic-happy-path.spec.ts
+$ podman run -e CYPRESS_KONFLUX_BASE_URL=https://<HOSTNAME>/hac/application-pipeline quay.io/konflux_ui_qe/konflux-ui-tests:latest --spec tests/component-lifecycle.spec.ts,tests/environment-config.spec.ts
 ```
 
 Or if instead of using container environment variables, you prefer to pass them directly to cypress:
@@ -191,7 +199,7 @@ The test step executes `pr_check.sh` file which does the tests setup and runs te
 
 #### Konflux integration pipeline
 
-Konflux also runs E2E tests via the integration pipeline (`.integration-tests/pipelines/e2e-main-pipeline.yaml`) using the `run-e2e-konflux-ui` Tekton task. The test runner image is built in parallel with the UI image by the `konflux-ui` component build pipeline and referenced by revision tag (`e2e-on-pr-<sha>` for pull requests, `e2e-<sha>` for push). For `pr-check` jobs on **fork → upstream** PRs only, the task may overlay PR `e2e-tests/` sources:
+Konflux also runs E2E tests via the integration pipeline (`.integration-tests/pipelines/e2e-main-pipeline.yaml`) using the `run-e2e-konflux-ui` Tekton task. After `deploy-konflux`, the pipeline runs **`patch-konflux-ui-image`**, which replaces the stock UI image on Kind (`deployment/proxy` initContainer `copy-static-content`) with the SNAPSHOT image under test and attaches a pull secret so Kind can pull it. That step is required because `deploy-konflux-ci` cannot reliably override the UI image. Next, `format-e2e-test-image` resolves the test runner image built in parallel with the UI by the `konflux-ui` component build pipeline (`e2e-on-pr-<sha>` for pull requests, `e2e-<sha>` for push). For `pr-check` jobs on **fork → upstream** PRs only, the task may overlay PR `e2e-tests/` sources:
 
 1. **`prepare-e2e-sources` step** — Skipped for same-repo PRs (uses image-baked tests, like `pr_check.sh` on upstream). For fork → upstream PRs, fetches the PR commit from the fork and compares `e2e-tests/` against upstream `main`; stages changed files into `/e2e` when needed.
 2. **`run-e2e-test` step** — If `/e2e` contains staged sources, installs dependencies and runs Cypress from `/e2e`. Otherwise uses image-baked sources at `/tmp/e2e`.

@@ -14,6 +14,7 @@ import { ThemeDropdown } from '~/shared/theme';
 import { NotificationBadgeWrapper } from '../KonfluxSystemNotifications/NotificationBadgeWrapper';
 import { useModalLauncher } from '../modal/ModalProvider';
 import { HelpDropdown } from './HelpDropdown';
+import { useCopyLoginCommandAnalytics } from './useCopyLoginCommandAnalytics';
 import { UserDropdown } from './UserDropdown';
 
 interface HeaderProps {
@@ -23,6 +24,7 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ isDrawerExpanded, toggleDrawer }) => {
   const showModal = useModalLauncher();
+  const { onUserMenuOpen, onCopyLoginCommandClick } = useCopyLoginCommandAnalytics();
   return (
     <Toolbar isFullHeight>
       <ToolbarContent>
@@ -48,10 +50,10 @@ export const Header: React.FC<HeaderProps> = ({ isDrawerExpanded, toggleDrawer }
             <ThemeDropdown />
           </ToolbarItem>
           <ToolbarItem>
-            <HelpDropdown />
+            <HelpDropdown onCliLoginClick={onCopyLoginCommandClick} />
           </ToolbarItem>
           <ToolbarItem>
-            <UserDropdown />
+            <UserDropdown onOpen={onUserMenuOpen} />
           </ToolbarItem>
         </ToolbarGroup>
       </ToolbarContent>
