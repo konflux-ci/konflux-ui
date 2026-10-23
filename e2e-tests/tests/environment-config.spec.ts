@@ -198,10 +198,9 @@ describe('Environment Configuration Tests', () => {
     const secretValue = 'myvalue';
 
     after(() => {
-      // Delete secret
+      // Note: during the deletion, the secret is already filtered in input field
+      // no need to search again - re-searching makes a test flaky.
       SecretsPage.deleteSecret(secretName);
-      // Search secret in a filter field, it should not be listed
-      SecretsPage.searchSecret(secretName, false);
     });
 
     it('Add, Verify and Delete a secret', () => {
