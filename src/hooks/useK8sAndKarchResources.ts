@@ -11,7 +11,7 @@ import { useKubearchiveListResourceQuery } from '../kubearchive/hooks';
 import { useDeepCompareMemoize } from '../shared';
 import { K8sModelCommon, K8sResourceCommon, ResourceSource, WatchK8sResource } from '../types/k8s';
 
-const getResourceId = (resource: K8sResourceCommon): string => {
+export const getResourceId = (resource: K8sResourceCommon): string => {
   return resource.metadata?.uid || `${resource.metadata?.name}-${resource.metadata?.namespace}`;
 };
 
