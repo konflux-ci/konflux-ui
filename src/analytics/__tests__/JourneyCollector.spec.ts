@@ -1,6 +1,6 @@
 import { mockAnalyticsServiceFn } from '~/unit-test-utils';
 import { TrackEvents } from '../gen/analytics-types';
-import { JourneyCollector, MAX_PAYLOAD_BYTES } from '../JourneyCollector';
+import { INACTIVITY_THRESHOLD_MS, JourneyCollector, MAX_PAYLOAD_BYTES } from '../JourneyCollector';
 
 const trackMock = mockAnalyticsServiceFn('track');
 const trackAndWaitMock = mockAnalyticsServiceFn('trackAndWait');
@@ -37,8 +37,8 @@ describe('JourneyCollector', () => {
       }),
     );
     const properties = trackMock.mock.calls[0][1];
-    expect(properties.journeyId).toBeUndefined();
-    expect(properties.journeyPartIndex).toBeUndefined();
+    expect(properties.journeyId).toEqual(expect.any(String));
+    expect(properties.journeyPartIndex).toBe(0);
     expect(properties.steps[0]).not.toHaveProperty('path');
     expect(properties.steps[0]).not.toHaveProperty('title');
   });
@@ -51,7 +51,7 @@ describe('JourneyCollector', () => {
     expect(trackMock).not.toHaveBeenCalled();
   });
 
-  it('keeps checkpoints non-destructive', () => {
+  it('does not emit a checkpoint before the first route transition', () => {
     const collector = new JourneyCollector();
     collector.recordStep('/a');
     jest.advanceTimersByTime(2000);
@@ -61,7 +61,7 @@ describe('JourneyCollector', () => {
     jest.advanceTimersByTime(1000);
     collector.flush();
 
-    expect(trackMock.mock.calls[1][1].steps).toEqual([
+    expect(trackMock.mock.calls[0][1].steps).toEqual([
       { pagePattern: '/a', durationMs: 4000, toPagePattern: '/b' },
       { pagePattern: '/b', durationMs: 1000 },
     ]);
@@ -100,6 +100,7 @@ describe('JourneyCollector', () => {
       trackAndWaitMock.mockResolvedValueOnce(false);
       const collector = new JourneyCollector();
       collector.recordStep('/a');
+      collector.recordStep('/b');
 
       expect(await collector.flushAndWait({ force: true })).toBe(false);
       jest.advanceTimersByTime(1000);
@@ -111,6 +112,7 @@ describe('JourneyCollector', () => {
       trackAndWaitMock.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
       const collector = new JourneyCollector();
       collector.recordStep('/a');
+      collector.recordStep('/b');
 
       await expect(collector.flushAndWait()).resolves.toBe(false);
       await expect(collector.flushAndWait()).resolves.toBe(true);
@@ -126,6 +128,7 @@ describe('JourneyCollector', () => {
       );
       const collector = new JourneyCollector();
       collector.recordStep('/a');
+      collector.recordStep('/b');
 
       const first = collector.flushAndWait();
       expect(collector.flush()).toBe(false);
@@ -138,6 +141,7 @@ describe('JourneyCollector', () => {
     it('respects checkpoint deduplication unless forced', async () => {
       const collector = new JourneyCollector();
       collector.recordStep('/a');
+      collector.recordStep('/b');
 
       expect(await collector.flushAndWait()).toBe(true);
       expect(await collector.flushAndWait()).toBe(false);
@@ -154,12 +158,17 @@ describe('JourneyCollector', () => {
     expect(collector.flush()).toBe(false);
     collector.recordStep('/new');
     jest.advanceTimersByTime(300);
+    collector.recordStep('/newer');
+    jest.advanceTimersByTime(200);
     collector.flush();
 
     const properties = trackMock.mock.calls[0][1];
     expect(properties.sessionStartedAt).toBe(new Date(NOW.getTime() + 1000).toISOString());
-    expect(properties.totalDurationMs).toBe(300);
-    expect(properties.steps).toEqual([{ pagePattern: '/new', durationMs: 300 }]);
+    expect(properties.totalDurationMs).toBe(500);
+    expect(properties.steps).toEqual([
+      { pagePattern: '/new', durationMs: 300, toPagePattern: '/newer' },
+      { pagePattern: '/newer', durationMs: 200 },
+    ]);
   });
 
   it('ignores same-pattern records without resetting dwell time', () => {
@@ -201,6 +210,7 @@ describe('JourneyCollector', () => {
       const boundaryPattern = recordUntilSplit(collector);
       const firstPart = trackMock.mock.calls[0][1];
       jest.advanceTimersByTime(5000);
+      collector.recordStep('/after-split');
       collector.flush();
       const secondPart = trackMock.mock.calls[1][1];
 
@@ -213,7 +223,12 @@ describe('JourneyCollector', () => {
         expect.objectContaining({ pagePattern: boundaryPattern }),
       );
       expect(secondPart.steps).toEqual([
-        expect.objectContaining({ pagePattern: boundaryPattern, durationMs: 5000 }),
+        expect.objectContaining({
+          pagePattern: boundaryPattern,
+          durationMs: 5000,
+          toPagePattern: '/after-split',
+        }),
+        { pagePattern: '/after-split', durationMs: 0 },
       ]);
       const firstPatterns = new Set(
         (firstPart.steps as { pagePattern: string }[]).map(({ pagePattern }) => pagePattern),
@@ -245,18 +260,177 @@ describe('JourneyCollector', () => {
   it('force-flushes the final logout journey before reset', () => {
     const collector = new JourneyCollector();
     collector.recordStep('/a');
-    collector.flush();
     jest.advanceTimersByTime(100);
     collector.recordStep('/b');
 
     expect(collector.flush({ force: true })).toBe(true);
     collector.reset();
 
-    expect(trackMock.mock.calls[1][1].steps).toEqual([
+    expect(trackMock.mock.calls[0][1].steps).toEqual([
       { pagePattern: '/a', durationMs: 100, toPagePattern: '/b' },
       { pagePattern: '/b', durationMs: 0 },
     ]);
     expect(collector.flush()).toBe(false);
   });
 
+  describe('checkpointing', () => {
+    it('defers a new checkpoint inside the deduplication window and sends it afterward', () => {
+      const collector = new JourneyCollector();
+      collector.recordStep('/a');
+      jest.advanceTimersByTime(1000);
+      collector.recordStep('/b');
+
+      expect(collector.flush()).toBe(true);
+      collector.recordStep('/c');
+
+      expect(collector.isEligibleForCheckpoint()).toBe(true);
+      expect(collector.flush()).toBe(false);
+      expect(trackMock).toHaveBeenCalledTimes(1);
+      expect(collector.isEligibleForCheckpoint()).toBe(true);
+
+      jest.advanceTimersByTime(1000);
+      expect(collector.flush()).toBe(true);
+      expect(trackMock).toHaveBeenCalledTimes(2);
+    });
+
+    it('initial route alone remains silent across flush and forced flush', () => {
+      const collector = new JourneyCollector();
+      collector.recordStep('/a');
+
+      expect(collector.flush()).toBe(false);
+      expect(collector.flush({ force: true })).toBe(false);
+      expect(trackMock).not.toHaveBeenCalled();
+    });
+
+    it('isEligibleForCheckpoint returns false for single-page journey', () => {
+      const collector = new JourneyCollector();
+      collector.recordStep('/a');
+
+      expect(collector.isEligibleForCheckpoint()).toBe(false);
+    });
+
+    it('isEligibleForCheckpoint returns true after a distinct transition', () => {
+      const collector = new JourneyCollector();
+      collector.recordStep('/a');
+      jest.advanceTimersByTime(1000);
+      collector.recordStep('/b');
+
+      expect(collector.isEligibleForCheckpoint()).toBe(true);
+    });
+
+    it('successful flush clears dirty flag', () => {
+      const collector = new JourneyCollector();
+      collector.recordStep('/a');
+      jest.advanceTimersByTime(1000);
+      collector.recordStep('/b');
+
+      expect(collector.isEligibleForCheckpoint()).toBe(true);
+      expect(collector.flush()).toBe(true);
+      expect(collector.isEligibleForCheckpoint()).toBe(false);
+    });
+
+    it('starts a new segment after a checkpoint while retaining the active route boundary', () => {
+      const collector = new JourneyCollector();
+      collector.recordStep('/a');
+      jest.advanceTimersByTime(1000);
+      collector.recordStep('/b');
+      collector.flush();
+
+      const firstSegment = trackMock.mock.calls[0][1];
+
+      expect(collector.isEligibleForCheckpoint()).toBe(false);
+
+      jest.advanceTimersByTime(1000);
+      collector.recordStep('/c');
+
+      expect(collector.isEligibleForCheckpoint()).toBe(true);
+      jest.advanceTimersByTime(1000);
+      expect(collector.flush({ force: true })).toBe(true);
+      expect(trackMock.mock.calls[1][1].steps).toEqual([
+        { pagePattern: '/b', durationMs: 1000, toPagePattern: '/c' },
+        { pagePattern: '/c', durationMs: 1000 },
+      ]);
+      expect(trackMock.mock.calls[1][1]).toEqual(
+        expect.objectContaining({
+          journeyId: firstSegment.journeyId,
+          journeyPartIndex: 1,
+          totalDurationMs: 2000,
+        }),
+      );
+    });
+
+    it('failed dispatch leaves dirty flag for retry', () => {
+      trackMock.mockReturnValueOnce(false);
+      const collector = new JourneyCollector();
+      collector.recordStep('/a');
+      jest.advanceTimersByTime(1000);
+      collector.recordStep('/b');
+
+      expect(collector.flush()).toBe(false);
+      expect(collector.isEligibleForCheckpoint()).toBe(true);
+
+      jest.advanceTimersByTime(1000);
+      trackMock.mockReturnValue(true);
+      expect(collector.flush()).toBe(true);
+      expect(collector.isEligibleForCheckpoint()).toBe(false);
+    });
+
+    it('journeyId and journeyPartIndex are always present', () => {
+      const collector = new JourneyCollector();
+      collector.recordStep('/a');
+      jest.advanceTimersByTime(1000);
+      collector.recordStep('/b');
+      collector.flush();
+
+      const properties = trackMock.mock.calls[0][1];
+      expect(properties.journeyId).toEqual(expect.any(String));
+      expect(properties.journeyPartIndex).toBe(0);
+    });
+  });
+
+  describe('inactivity rotation', () => {
+    it('starts a new journey after 20 minutes of route inactivity', () => {
+      const collector = new JourneyCollector();
+      collector.recordStep('/a');
+      jest.advanceTimersByTime(INACTIVITY_THRESHOLD_MS + 60 * 1000);
+      collector.recordStep('/b');
+
+      // The first journey never had a distinct transition, so no flush fired
+      // as part of the rotation.
+      expect(trackMock).not.toHaveBeenCalled();
+
+      jest.advanceTimersByTime(1000);
+      collector.recordStep('/c');
+      expect(collector.flush()).toBe(true);
+
+      const properties = trackMock.mock.calls[0][1];
+      expect(properties.journeyId).toEqual(expect.any(String));
+      expect(properties.sessionStartedAt).not.toBe(NOW.toISOString());
+    });
+
+    it('flushes dirty journey before rotation', () => {
+      const collector = new JourneyCollector();
+      collector.recordStep('/a');
+      jest.advanceTimersByTime(1000);
+      collector.recordStep('/b');
+
+      jest.advanceTimersByTime(INACTIVITY_THRESHOLD_MS + 60 * 1000);
+      collector.recordStep('/c');
+
+      expect(trackMock).toHaveBeenCalledTimes(1);
+      expect(trackMock.mock.calls[0][1].steps).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ pagePattern: '/a', toPagePattern: '/b' }),
+        ]),
+      );
+      const firstJourneyId = trackMock.mock.calls[0][1].journeyId;
+
+      jest.advanceTimersByTime(1000);
+      collector.recordStep('/d');
+      expect(collector.flush()).toBe(true);
+
+      const secondJourneyId = trackMock.mock.calls[1][1].journeyId;
+      expect(secondJourneyId).not.toBe(firstJourneyId);
+    });
+  });
 });
