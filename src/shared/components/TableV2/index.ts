@@ -3,6 +3,7 @@ export type {
   CellContext,
   ColumnDefinition,
   ColumnState,
+  DefaultSort,
   TableProps,
   TableContainerProps,
 } from './types';
