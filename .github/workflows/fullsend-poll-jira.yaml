@@ -38,10 +38,21 @@ jobs:
             --input-driver jira-poll \
             --jira-url "${JIRA_BASE_URL}" \
             --jira-project KFLUXUI \
-            --jql '(project=KFLUXUI OR (project=KONFLUX AND component=UI)) and type=Bug and statusCategory != Done and updated > -1week and labels=fullsend' \
+            --jql 'project=KFLUXUI and type=Bug and statusCategory != Done and updated > -1week and labels=fullsend' \
             --target-repo "${TARGET_REPO}" \
-            --output dispatches.json \
+            --output dispatches-kfluxui.json \
             --fullsend-dir .fullsend
+
+          fullsend poll \
+            --input-driver jira-poll \
+            --jira-url "${JIRA_BASE_URL}" \
+            --jira-project KONFLUX \
+            --jql 'project=KONFLUX and component=UI and type=Bug and statusCategory != Done and updated > -1week and labels=fullsend' \
+            --target-repo "${TARGET_REPO}" \
+            --output dispatches-konflux.json \
+            --fullsend-dir .fullsend
+
+          jq -s 'add' dispatches-kfluxui.json dispatches-konflux.json > dispatches.json
 
       - name: Build dispatch matrix
         id: build-matrix
