@@ -156,4 +156,13 @@ describe('composeLazyActions', () => {
     expect(onOpenA).toHaveBeenCalledWith(false);
     expect(onOpenB).toHaveBeenCalledWith(false);
   });
+
+  it('combines action-only hooks without requiring an onOpen callback', () => {
+    const actions: TestAction[] = [{ label: 'A' }];
+
+    const [combinedActions, onOpen] = composeLazyActions<TestAction>([actions]);
+
+    expect(combinedActions).toEqual(actions);
+    expect(() => onOpen(true)).not.toThrow();
+  });
 });

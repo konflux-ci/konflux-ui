@@ -10,7 +10,10 @@ import {
   PipelineRunTaskRunsTab,
   PipelineRunVulnerabilitiesTab,
 } from '../../components/PipelineRun/PipelineRunDetailsView';
-import { PIPELINE_RUNS_DETAILS_PATH, NAMESPACE_PIPELINE_RUN_DETAILS_PATH } from '../paths';
+import {
+  NAMESPACE_PIPELINE_RUN_DETAILS_PATH,
+  PIPELINE_RUNS_DETAILS_PATH,
+} from '../paths';
 import { RouteErrorBoundry } from '../RouteErrorBoundary';
 
 const pipelineRoutes = [
