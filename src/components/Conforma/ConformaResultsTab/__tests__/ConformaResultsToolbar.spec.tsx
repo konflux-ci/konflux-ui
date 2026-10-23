@@ -6,6 +6,7 @@ import {
   type ConformaResultRow,
 } from '~/types/conforma';
 import { routerRenderer } from '~/unit-test-utils/mock-react-router';
+import type { PolicyExceptionFilter } from '../../usePolicyExceptionFilter';
 import type { GroupByMode } from '../conforma-grouping-utils';
 import { ConformaResultsToolbar } from '../ConformaResultsToolbar';
 import '@testing-library/jest-dom';
@@ -38,6 +39,15 @@ describe('ConformaResultsToolbar', () => {
   const onToggleExpandAll = jest.fn();
 
   const onShowDuplicatesChange = jest.fn();
+  const onShowPolicyExceptionsChange = jest.fn();
+  const onPolicyExceptionRuleCodesChange = jest.fn();
+
+  const policyExceptionFilter: PolicyExceptionFilter = {
+    isChecked: false,
+    ruleCodes: [],
+    onChange: onShowPolicyExceptionsChange,
+    onRuleCodesChange: onPolicyExceptionRuleCodesChange,
+  };
 
   const defaultProps = {
     allResults,
@@ -47,6 +57,7 @@ describe('ConformaResultsToolbar', () => {
     onToggleExpandAll,
     showDuplicates: false,
     onShowDuplicatesChange,
+    policyExceptionFilter,
     refresh: makeRefresh(),
   };
 
