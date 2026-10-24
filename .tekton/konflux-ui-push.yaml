@@ -349,7 +349,7 @@ spec:
                 secretName: build-credentials-secret
           steps:
             - name: skopeo-copy
-              image: registry.access.redhat.com/ubi9/skopeo@sha256:6ebbdfce633f9915a6a99d8ee035d9fd258121aa1acf944229e90696eb353549
+              image: registry.access.redhat.com/ubi9/skopeo@sha256:19cae356e81b1ec890ddfe5ab977c0031af8b2988935e8ca8150c1376f03795d
               env:
                 - name: SOURCE_IMAGE_URL
                   value: $(params.SOURCE_IMAGE_URL)
