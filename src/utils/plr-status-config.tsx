@@ -173,3 +173,5 @@ export const PIPELINE_RUN_STATUS_REGISTRY = createStatusRegistry<
 export type PLRStatusRegistry = typeof PIPELINE_RUN_STATUS_REGISTRY;
 
 export const PLRStatus = createStatusComponents(PIPELINE_RUN_STATUS_REGISTRY);
+
+export const ACTIVE_PLR_STATUSES = PLRStatus.registry.getStatusesByTag('active');

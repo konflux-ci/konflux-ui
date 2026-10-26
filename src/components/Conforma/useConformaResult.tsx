@@ -3,6 +3,7 @@ import { CONFORMA_TASK, EC_TASK } from '~/consts/security';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { usePipelineRunV2 } from '~/hooks/usePipelineRunsV2';
 import { logger } from '~/monitoring/logger';
+import { TaskRunKind } from '~/types';
 import { ComponentConformaResult, ConformaResult, ConformaResultRow } from '~/types/conforma';
 import { isResourceEnterpriseContract } from '~/utils/conforma-utils';
 import { isTaskRunInPipelineRun } from '~/utils/pipeline-utils';
@@ -17,11 +18,12 @@ export { mapConformaResultData };
 
 export const useConformaResultFromLogs = (
   pipelineRunName: string,
+  selectedTaskRun?: TaskRunKind,
 ): [ComponentConformaResult[], boolean, unknown] => {
   const namespace = useNamespace();
   const isKubearchiveEnabled = useIsOnFeatureFlag('kubearchive-logs');
   const [pipelineRun, pipelineRunLoaded, pipelineRunError] = usePipelineRunV2(
-    namespace,
+    selectedTaskRun ? undefined : namespace,
     pipelineRunName,
   );
   const securityTaskRunName = React.useMemo(() => {
@@ -40,13 +42,15 @@ export const useConformaResultFromLogs = (
     return undefined;
   }, [pipelineRun, pipelineRunLoaded, pipelineRunError]);
   const [taskRuns, taskRunLoaded, taskRunError] = useTaskRunsForPipelineRuns(
-    securityTaskRunName ? namespace : undefined,
+    !selectedTaskRun && securityTaskRunName ? namespace : undefined,
     pipelineRunName,
     securityTaskRunName,
   );
   const [crJson, setCrJson] = React.useState<ConformaResult | undefined>();
   const [crLoaded, setCrLoaded] = React.useState<boolean>(false);
-  const [taskRun] = taskRuns ?? [];
+  const taskRun = selectedTaskRun ?? taskRuns?.[0];
+  const hasSelectedTask = !!selectedTaskRun;
+  const loaded = hasSelectedTask || taskRunLoaded;
 
   // Keep a ref to the latest taskRun so the effect body always reads the
   // current value without adding the (potentially unstable) object reference
@@ -55,13 +59,14 @@ export const useConformaResultFromLogs = (
   // task runs without metadata (e.g. some test/edge-case runs) are still served.
   const taskRunRef = React.useRef(taskRun);
   taskRunRef.current = taskRun;
-  const taskRunId = taskRun?.metadata?.uid ?? taskRun?.status?.podName;
+  const taskRunId = taskRun?.metadata?.uid ?? taskRun?.status?.podName ?? taskRun?.metadata?.name;
+  const taskRunVersion = taskRun?.metadata?.resourceVersion;
 
   React.useEffect(() => {
     setCrJson(undefined);
     setCrLoaded(false);
 
-    if (!taskRunLoaded || !securityTaskRunName || !taskRunId) return;
+    if (!loaded || (!hasSelectedTask && !securityTaskRunName) || !taskRunId) return;
 
     const currentTaskRun = taskRunRef.current;
     if (!currentTaskRun) return;
@@ -86,7 +91,15 @@ export const useConformaResultFromLogs = (
     return () => {
       cancelled = true;
     };
-  }, [taskRunLoaded, taskRunId, securityTaskRunName, namespace, isKubearchiveEnabled]);
+  }, [
+    loaded,
+    hasSelectedTask,
+    taskRunId,
+    taskRunVersion,
+    securityTaskRunName,
+    namespace,
+    isKubearchiveEnabled,
+  ]);
 
   const conformaResult = React.useMemo(() => {
     // filter out components for which Conforma didn't execute because invalid image URL
@@ -102,15 +115,16 @@ export const useConformaResultFromLogs = (
       : undefined;
   }, [crJson, crLoaded]);
 
-  const error = pipelineRunError ?? taskRunError;
+  const error = hasSelectedTask ? undefined : (pipelineRunError ?? taskRunError);
 
   return [conformaResult, error ? true : crLoaded, error];
 };
 
 export const useConformaResult = (
   pipelineRunName: string,
+  selectedTaskRun?: TaskRunKind,
 ): [ConformaResultRow[] | undefined, boolean, unknown] => {
-  const [cr, crLoaded, crError] = useConformaResultFromLogs(pipelineRunName);
+  const [cr, crLoaded, crError] = useConformaResultFromLogs(pipelineRunName, selectedTaskRun);
   const conformaResult = React.useMemo(() => {
     return crLoaded && cr && !crError ? mapConformaResultData(cr) : undefined;
   }, [cr, crLoaded, crError]);

@@ -69,6 +69,13 @@ describe('IntegrationTestsListView', () => {
     expect(screen.getByText('test-app-test-2'));
   });
 
+  it('should render row actions for each integration test', () => {
+    useK8sWatchResourceMock.mockReturnValue([MockIntegrationTests, true, undefined]);
+    render(IntegrationTestsList);
+
+    expect(screen.getAllByRole('button', { name: /actions/i }).length).toBeGreaterThan(0);
+  });
+
   it('should filter the table when a name is entered', () => {
     useK8sWatchResourceMock.mockReturnValue([MockIntegrationTests, true, undefined]);
     render(IntegrationTestsList);

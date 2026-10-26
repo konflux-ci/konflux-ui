@@ -1,3 +1,6 @@
+import { PipelineRunLabel } from '../consts/pipelinerun';
+import { ReleaseLabel } from '../consts/release';
+import { MatchLabels } from '../types/k8s';
 import { ReleaseKind } from '../types/release';
 
 export const getNamespaceAndPRName = (
@@ -50,4 +53,16 @@ export const generateNewReleaseName = (currentName: string): string => {
   const newName = `${baseName}-rerun-`;
 
   return newName;
+};
+
+export const getApplicationMatchLabels = (
+  applicationName: string | undefined,
+): MatchLabels | undefined => {
+  if (!applicationName) return undefined;
+  return { [PipelineRunLabel.APPLICATION]: applicationName };
+};
+
+export const getGroupNameMatchLabels = (groupName: string | undefined): MatchLabels | undefined => {
+  if (!groupName) return undefined;
+  return { [ReleaseLabel.COMPONENT_GROUP]: groupName };
 };

@@ -12,8 +12,7 @@ import { usePipelineRunsV2 } from './usePipelineRunsV2';
 export const useLatestBuildPipelineRunForComponentV2 = (
   namespace: string,
   componentName: string,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _version?: string,
+  version?: string,
 ): [PipelineRunKind, boolean, unknown] => {
   const result = usePipelineRunsV2(
     namespace,
@@ -23,13 +22,12 @@ export const useLatestBuildPipelineRunForComponentV2 = (
           matchLabels: {
             [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.BUILD,
             [PipelineRunLabel.COMPONENT]: componentName,
-            // TODO: use when version label is added to pipeline run
-            // ...(version && {[PipelineRunLabel.COMPONENT_VERSION]: version})
+            ...(version && { [PipelineRunLabel.COMPONENT_VERSION]: version }),
           },
         },
         limit: 1,
       }),
-      [componentName],
+      [componentName, version],
     ),
   ) as unknown as [PipelineRunKind[], boolean, unknown];
 
@@ -39,8 +37,9 @@ export const useLatestBuildPipelineRunForComponentV2 = (
 export const useLatestSuccessfulBuildPipelineRunForComponentV2 = (
   namespace: string,
   componentName: string,
+  version?: string,
 ): [PipelineRunKind, boolean, unknown] => {
-  const [pipelines, loaded, error, getNextPage] = usePipelineRunsV2(
+  const [pipelines, loaded, error, getNextPage, nextPageProps] = usePipelineRunsV2(
     namespace,
     React.useMemo(
       () => ({
@@ -48,10 +47,11 @@ export const useLatestSuccessfulBuildPipelineRunForComponentV2 = (
           matchLabels: {
             [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.BUILD,
             [PipelineRunLabel.COMPONENT]: componentName,
+            ...(version && { [PipelineRunLabel.COMPONENT_VERSION]: version }),
           },
         },
       }),
-      [componentName],
+      [componentName, version],
     ),
   );
 
@@ -63,18 +63,23 @@ export const useLatestSuccessfulBuildPipelineRunForComponentV2 = (
     [error, loaded, pipelines],
   );
 
+  const hasNextPage = nextPageProps?.hasNextPage ?? false;
+  const isFetchingNextPage = nextPageProps?.isFetchingNextPage ?? false;
   React.useEffect(() => {
-    if (loaded && !error && !latestSuccess && getNextPage) {
+    if (loaded && !error && !latestSuccess && hasNextPage && !isFetchingNextPage && getNextPage) {
       getNextPage();
     }
-  }, [loaded, error, getNextPage, latestSuccess]);
+  }, [loaded, error, getNextPage, latestSuccess, hasNextPage, isFetchingNextPage]);
 
-  return [latestSuccess, loaded, error];
+  const searchComplete =
+    loaded && (!!error || !!latestSuccess || (!hasNextPage && !isFetchingNextPage));
+  return [latestSuccess, searchComplete, error];
 };
 
 export const useLatestPushBuildPipelineRunForComponentV2 = (
   namespace: string,
   componentName: string,
+  version?: string,
 ): [PipelineRunKind, boolean, unknown] => {
   const result = usePipelineRunsV2(
     namespace,
@@ -84,6 +89,7 @@ export const useLatestPushBuildPipelineRunForComponentV2 = (
           matchLabels: {
             [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.BUILD,
             [PipelineRunLabel.COMPONENT]: componentName,
+            ...(version && { [PipelineRunLabel.COMPONENT_VERSION]: version }),
           },
           matchExpressions: [
             {
@@ -95,7 +101,7 @@ export const useLatestPushBuildPipelineRunForComponentV2 = (
         },
         limit: 1,
       }),
-      [componentName],
+      [componentName, version],
     ),
   );
 

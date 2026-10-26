@@ -1,5 +1,7 @@
 # Konflux UI
 
+[![Build](https://img.shields.io/github/check-runs/konflux-ci/konflux-ui/main?nameFilter=Red%20Hat%20Konflux%20%2F%20konflux-ui-on-push&label=Build)](https://github.com/konflux-ci/konflux-ui/commits/main) [![EC](https://img.shields.io/github/check-runs/konflux-ci/konflux-ui/main?nameFilter=Red%20Hat%20Konflux%20%2F%20ec%20%2F%20konflux-ui&label=EC)](https://github.com/konflux-ci/konflux-ui/commits/main)
+
 UI for [Konflux](https://github.com/konflux-ci/konflux-ci)
 
 ## Contributing
@@ -138,6 +140,7 @@ Example field to merge into the current `info.json`:
 In the project directory, you can run:
 
 - `yarn build`: Builds the app for production using webpack with the production configuration file.
+- `yarn size-limit`: Checks production bundle sizes against the gzip budgets in `.size-limit.json`. Run `yarn build` first. See [docs/bundle-size-budgets.md](docs/bundle-size-budgets.md).
 - `yarn start`: Runs the app in development mode. Opens the app in your default browser.
 - `yarn test`: Runs unit tests using jest.
 - `yarn coverage`: Runs the test suite with coverage report.

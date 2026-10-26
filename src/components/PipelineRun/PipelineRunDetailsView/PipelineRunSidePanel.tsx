@@ -5,15 +5,20 @@ import {
   useVisualizationState,
   Node,
 } from '@patternfly/react-topology';
+import { PipelineRunKind } from '~/types';
 import SidePanel from '../../SidePanel/SidePanel';
 import TaskRunPanel from './sidepanels/TaskRunPanel';
 import { isTaskNode } from './visualization/utils/pipelinerun-graph-utils';
 
 type Props = {
   scrollIntoView?: (node: Node) => void;
+  pipelineRun?: PipelineRunKind;
 };
 
-const PipelineRunSidePanel: React.FC<React.PropsWithChildren<Props>> = ({ scrollIntoView }) => {
+const PipelineRunSidePanel: React.FC<React.PropsWithChildren<Props>> = ({
+  scrollIntoView,
+  pipelineRun,
+}) => {
   const [[selectedId], setSelectedIds] = useVisualizationState<string[]>(SELECTION_STATE, []);
   const controller = useVisualizationController();
 
@@ -28,7 +33,11 @@ const PipelineRunSidePanel: React.FC<React.PropsWithChildren<Props>> = ({ scroll
   }, [controller, selectedId]);
 
   const panel = taskNode ? (
-    <TaskRunPanel onClose={() => setSelectedIds([])} taskNode={taskNode} />
+    <TaskRunPanel
+      onClose={() => setSelectedIds([])}
+      taskNode={taskNode}
+      pipelineRun={pipelineRun}
+    />
   ) : null;
 
   const isExpanded = !!panel;

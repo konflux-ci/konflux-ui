@@ -46,9 +46,15 @@ spec:
     - name: build-credentials-secret
       type: string
       default: build-credentials
+    - name: ui-image-pull-secret
+      description: >-
+        Konflux image pull secret (IPS) that can pull the private SNAPSHOT UI
+        image. Copied onto kind for deployment/proxy.
+      type: string
+      default: components-namespace-pull
     - name: spec-file
-      description: 'Cypress test spec file to run (for debugging, run single test)'
-      default: 'tests/basic-happy-path.spec.ts'
+      description: 'Cypress test spec file(s) to run (comma-separated; override for a single test)'
+      default: 'tests/component-lifecycle.spec.ts,tests/environment-config.spec.ts'
       type: string
     - name: job-type
       description: 'Type of job (pr-check, periodic-local, periodic-stage)'
@@ -60,9 +66,20 @@ spec:
       type: string
     - name: test-image-repository
       description: >-
-        E2E test image repository without tag. Must match e2e-output-image from
-        the konflux-ui build pipeline (e2e-on-pr-<sha> for pull_request, e2e-<sha> for push).
+        Image repository without tag for e2e and instrumented builds. Must match
+        the use-instrumented build pipeline output repository.
       default: 'quay.io/redhat-user-workloads/konflux-ui-tenant/konflux-ui/konflux-ui'
+      type: string
+    - name: enable-coverage
+      description: >-
+        When true, deploy the instrumented UI image and run Cypress with coverage
+        collection (cy:run:coverage). Coverage is stored in OCI artifacts and
+        uploaded to Codecov when codecov-credentials-secret is present.
+      default: 'true'
+      type: string
+    - name: codecov-credentials-secret
+      description: 'Secret containing Codecov token (key: token). Optional; upload is skipped if missing.'
+      default: 'codecov-credentials'
       type: string
   tasks:
     - name: test-metadata
@@ -151,6 +168,94 @@ spec:
         - name: build-credentials
           value: $(params.build-credentials-secret)
 
+    # Resolve instrumented UI tag for coverage (instrumented-on-pr-<sha> / instrumented-<sha>).
+    - name: format-instrumented-ui-image
+      runAfter:
+        - test-metadata
+      taskSpec:
+        params:
+          - name: test-image-repository
+            type: string
+          - name: git-revision
+            type: string
+          - name: test-event-type
+            type: string
+          - name: enable-coverage
+            type: string
+          - name: snapshot-container-image
+            type: string
+        results:
+          - name: ui-image
+            type: string
+        steps:
+          - name: format
+            image: registry.access.redhat.com/ubi9/ubi@sha256:4406835b776f05688a823ff532203587b9238510817645c9f37e0fdac1743b8c
+            computeResources:
+              limits:
+                memory: 128Mi
+              requests:
+                cpu: 10m
+                memory: 64Mi
+            script: |
+              #!/bin/bash
+              set -euo pipefail
+              enable_coverage="$(params.enable-coverage)"
+              snapshot_image="$(params.snapshot-container-image)"
+              if [[ "${enable_coverage}" != "true" ]]; then
+                echo "Coverage disabled — using SNAPSHOT image: ${snapshot_image}"
+                printf '%s' "${snapshot_image}" > "$(results.ui-image.path)"
+                exit 0
+              fi
+              event_type="$(params.test-event-type)"
+              git_revision="$(params.git-revision)"
+              repository="$(params.test-image-repository)"
+              if [[ "${event_type}" == "pull_request" ]]; then
+                tag="instrumented-on-pr-${git_revision}"
+              else
+                tag="instrumented-${git_revision}"
+              fi
+              image_ref="${repository}:${tag}"
+              echo "Instrumented UI image: ${image_ref}"
+              printf '%s' "${image_ref}" > "$(results.ui-image.path)"
+      params:
+        - name: test-image-repository
+          value: $(params.test-image-repository)
+        - name: git-revision
+          value: $(tasks.test-metadata.results.git-revision)
+        - name: test-event-type
+          value: $(tasks.test-metadata.results.test-event-type)
+        - name: enable-coverage
+          value: $(params.enable-coverage)
+        - name: snapshot-container-image
+          value: $(tasks.test-metadata.results.container-image)
+
+    # deploy-konflux-ci cannot reliably override the UI image (ui folder vs
+    # konflux-ui image name, digest pins). Patch proxy to the instrumented image
+    - name: patch-konflux-ui-image
+      runAfter:
+        - deploy-konflux
+        - format-instrumented-ui-image
+      when:
+        - input: '$(params.job-type)'
+          operator: notin
+          values: ['periodic-stage']
+      taskRef:
+        resolver: git
+        params:
+          - name: url
+            value: https://github.com/konflux-ci/konflux-ui
+          - name: revision
+            value: main
+          - name: pathInRepo
+            value: .integration-tests/tasks/patch-konflux-ui-image.yaml
+      params:
+        - name: cluster-access-secret
+          value: kfg-$(context.pipelineRun.name)
+        - name: container-image
+          value: $(tasks.format-instrumented-ui-image.results.ui-image)
+        - name: pull-secret
+          value: $(params.ui-image-pull-secret)
+
     - name: monitor-webhook-logs
       runAfter:
         - deploy-konflux
@@ -173,7 +278,7 @@ spec:
 
     - name: format-e2e-test-image
       runAfter:
-        - deploy-konflux
+        - patch-konflux-ui-image
       taskSpec:
         params:
           - name: test-image-repository
@@ -240,6 +345,10 @@ spec:
           value: $(tasks.format-e2e-test-image.results.test-image)
         - name: spec-file
           value: $(params.spec-file)
+        - name: enable-coverage
+          value: $(params.enable-coverage)
+        - name: codecov-credentials-secret
+          value: $(params.codecov-credentials-secret)
         - name: github-credentials-secret
           value: $(params.github-credentials-secret)
         - name: cypress-credentials-secret

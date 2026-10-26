@@ -2,7 +2,7 @@ import { useParams } from 'react-router-dom';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useFeatureFlags, useIsOnFeatureFlag } from '~/feature-flags/hooks';
-import { useComponent } from '~/hooks/useComponents';
+import { useComponentV2 } from '~/hooks/useComponentsV2';
 import { renderWithQueryClientAndRouter } from '~/unit-test-utils';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { ComponentDependencyTab } from '../ComponentDependencyTab';
@@ -12,8 +12,8 @@ jest.mock('react-router-dom', () => ({
   useParams: jest.fn(),
 }));
 
-jest.mock('~/hooks/useComponents', () => ({
-  useComponent: jest.fn(),
+jest.mock('~/hooks/useComponentsV2', () => ({
+  useComponentV2: jest.fn(),
 }));
 
 jest.mock('~/feature-flags/hooks', () => ({
@@ -32,7 +32,7 @@ jest.mock('~/components/MintMaker/DependencyRuns/DependencyRunsListView', () => 
 }));
 
 const useParamsMock = useParams as jest.Mock;
-const useComponentMock = useComponent as jest.Mock;
+const useComponentMock = useComponentV2 as jest.Mock;
 const useFeatureFlagsMock = useFeatureFlags as jest.Mock;
 const useIsOnFeatureFlagMock = useIsOnFeatureFlag as jest.Mock;
 const setFlagMock = jest.fn();

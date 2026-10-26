@@ -6,7 +6,7 @@ import { DependencyRunsListView } from '~/components/MintMaker/DependencyRuns/De
 import { DisabledFeatureFlagAlert } from '~/feature-flags/DisabledFeatureFlagAlert';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
-import { useComponent } from '~/hooks/useComponents';
+import { useComponentV2 } from '~/hooks/useComponentsV2';
 import { RouterParams } from '~/routes/utils';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
@@ -14,7 +14,7 @@ import { getErrorState } from '~/shared/utils/error-utils';
 export const ComponentDependencyTab: React.FC = () => {
   const namespace = useNamespace();
   const { componentName } = useParams<RouterParams>();
-  const [component, loaded, error] = useComponent(namespace, componentName, true);
+  const [component, loaded, error] = useComponentV2(namespace, componentName, true);
 
   const isKubeArchivePlrEnabled = useIsOnFeatureFlag('pipelineruns-kubearchive');
 

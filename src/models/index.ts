@@ -1,5 +1,6 @@
 export * from './application';
 export * from './component';
+export * from './component-v2';
 export * from './component-group';
 export * from './gitops-deployment';
 export * from './environment';
