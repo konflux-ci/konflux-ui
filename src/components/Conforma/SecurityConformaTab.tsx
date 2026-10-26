@@ -73,11 +73,6 @@ export const SecurityConformaTab: React.FC<
     [conformaResult, crLoaded, componentOptions],
   );
 
-  // Result summary covers every evaluated rule, not just the filtered rows, so
-  // the component totals keep their "scanned / failed" meaning while filters
-  // narrow the table below.
-  const allResults = React.useMemo(() => conformaResult ?? [], [conformaResult]);
-
   const policyExceptionFilter = usePolicyExceptionFilter();
 
   // Filter data in table, sharing ConformaResultsTab's filter so both tabs
@@ -102,9 +97,18 @@ export const SecurityConformaTab: React.FC<
     policyExceptionFilter.ruleCodes,
   ]);
 
-  const resultCounts = React.useMemo(() => countResultsByStatus(allResults), [allResults]);
+  // Result summary covers every evaluated rule, not just the filtered rows, so
+  // the component totals keep their "scanned / failed" meaning while filters
+  // narrow the table below.
+  const resultCounts = React.useMemo(
+    () => countResultsByStatus(conformaResult ?? []),
+    [conformaResult],
+  );
 
-  const componentTotals = React.useMemo(() => getComponentTotals(allResults), [allResults]);
+  const componentTotals = React.useMemo(
+    () => getComponentTotals(conformaResult ?? []),
+    [conformaResult],
+  );
 
   const toolbar = (
     <BaseTextFilterToolbar

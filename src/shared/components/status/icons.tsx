@@ -23,15 +23,6 @@ export const GrayPencilAltIcon: React.FC<
   />
 );
 
-/**
- * Standard warning icon. The colour comes from the PatternFly CSS variable
- * rather than the token's static `value`: the generated `value` snapshot for
- * this token is the dark text shade (#73480b), while the variable resolves to
- * the yellow-orange status colour (#dca614 in the light theme) and follows the
- * active theme.
- */
 export const WarningIcon: React.FC<
   ColoredIconProps & React.ComponentProps<typeof ExclamationTriangleIcon>
-> = (props) => (
-  <ExclamationTriangleIcon color={warningColor.var} {...props} />
-);
+> = (props) => <ExclamationTriangleIcon color={warningColor.value} {...props} />;

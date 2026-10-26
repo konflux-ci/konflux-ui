@@ -3,9 +3,9 @@ import { ExclamationCircleIcon } from '@patternfly/react-icons/dist/esm/icons/ex
 import WarningTriangleIcon from '@patternfly/react-icons/dist/esm/icons/exclamation-triangle-icon';
 import { InProgressIcon } from '@patternfly/react-icons/dist/esm/icons/in-progress-icon';
 import { NotStartedIcon } from '@patternfly/react-icons/dist/esm/icons/not-started-icon';
-import { t_global_icon_color_status_danger_default as redColor } from '@patternfly/react-tokens/dist/js/t_global_icon_color_status_danger_default';
-import { t_global_icon_color_status_success_default as greenColor } from '@patternfly/react-tokens/dist/js/t_global_icon_color_status_success_default';
-import { t_global_icon_color_status_warning_default as orangeColor } from '@patternfly/react-tokens/dist/js/t_global_icon_color_status_warning_default';
+import { t_global_icon_color_status_danger_default as dangerColor } from '@patternfly/react-tokens/dist/js/t_global_icon_color_status_danger_default';
+import { t_global_icon_color_status_success_default as successColor } from '@patternfly/react-tokens/dist/js/t_global_icon_color_status_success_default';
+import { t_global_icon_color_status_warning_default as warningColor } from '@patternfly/react-tokens/dist/js/t_global_icon_color_status_warning_default';
 import { runStatus } from '~/consts/pipelinerun';
 import {
   GitOpsDeploymentHealthStatus,
@@ -18,9 +18,9 @@ import './gitops-utils.scss';
 export const getGitOpsDeploymentHealthStatusIcon = (status: GitOpsDeploymentHealthStatus) => {
   switch (status) {
     case GitOpsDeploymentHealthStatus.Healthy:
-      return <CheckCircleIcon color={greenColor.value} />;
+      return <CheckCircleIcon color={successColor.value} />;
     case GitOpsDeploymentHealthStatus.Degraded:
-      return <ExclamationCircleIcon color={redColor.value} />;
+      return <ExclamationCircleIcon color={dangerColor.value} />;
     case GitOpsDeploymentHealthStatus.Progressing:
       return <InProgressIcon />;
     case GitOpsDeploymentHealthStatus.Suspended:
@@ -39,17 +39,17 @@ export const getGitOpsDeploymentStrategy = (resource: GitOpsDeploymentKind) => {
 export const getBuildStatusIcon = (status: runStatus) => {
   switch (status) {
     case runStatus.Succeeded:
-      return <CheckCircleIcon color={greenColor.value} />;
+      return <CheckCircleIcon color={successColor.value} />;
     case runStatus.Failed:
-      return <ExclamationCircleIcon color={redColor.value} />;
+      return <ExclamationCircleIcon color={dangerColor.value} />;
     case runStatus.Running:
     case runStatus['In Progress']:
     case runStatus.Cancelling:
       return <InProgressIcon className="status-icon-spin" />;
     case runStatus.Cancelled:
-      return <WarningTriangleIcon color={orangeColor.var} />;
+      return <WarningTriangleIcon color={warningColor.value} />;
     case runStatus.PipelineNotStarted:
-      return <WarningTriangleIcon color={orangeColor.var} />;
+      return <WarningTriangleIcon color={warningColor.value} />;
     default:
       return <NotStartedIcon />;
   }
