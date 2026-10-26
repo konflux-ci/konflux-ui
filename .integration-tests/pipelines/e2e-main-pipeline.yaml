@@ -68,7 +68,7 @@ spec:
       description: >-
         Image repository without tag for e2e and instrumented builds. Must match
         the use-instrumented build pipeline output repository.
-      default: 'quay.io/redhat-user-workloads-stage/mtakac-tenant/use-instrumented'
+      default: 'quay.io/redhat-user-workloads/konflux-ui-tenant/konflux-ui/konflux-ui'
       type: string
     - name: enable-coverage
       description: >-

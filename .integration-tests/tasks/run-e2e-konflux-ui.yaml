@@ -592,11 +592,12 @@ spec:
           done
         fi
         if [ -z "${COVERPORT_BIN}" ]; then
-          echo "ERROR: coverport binary not found in image"
-          exit 1
+          echo "WARN: coverport binary not found in image — skipping Codecov upload"
+          exit 0
         fi
 
         mkdir -p /artifacts/coverport-output
+        set +e
         "${COVERPORT_BIN}" process \
           --coverage-dir="${COVERAGE_DIR}" \
           --format=nyc \
@@ -605,6 +606,13 @@ spec:
           --workspace=/artifacts/coverport-output \
           --codecov-flags=e2e \
           --keep-workspace
+        UPLOAD_RESULT=$?
+        set -e
+
+        if [ "${UPLOAD_RESULT}" -ne 0 ]; then
+          echo "WARN: Codecov upload failed with exit code ${UPLOAD_RESULT} — not failing the Task"
+          exit 0
+        fi
 
         echo "✅ Coverage uploaded to Codecov"
 
