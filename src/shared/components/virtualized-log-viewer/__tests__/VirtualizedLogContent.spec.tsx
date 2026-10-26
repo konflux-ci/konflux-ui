@@ -45,11 +45,21 @@ describe('VirtualizedLogContent Integration Tests', () => {
     jest.clearAllMocks();
 
     // Setup DOM dimensions for virtualization to work properly
+    // @tanstack/virtual-core v3.19+ reads clientHeight/clientWidth (not offset*)
+    // to determine the scroll-element rect, so both pairs must be mocked.
     Object.defineProperty(HTMLElement.prototype, 'offsetHeight', {
       configurable: true,
       value: 600,
     });
     Object.defineProperty(HTMLElement.prototype, 'offsetWidth', {
+      configurable: true,
+      value: 800,
+    });
+    Object.defineProperty(HTMLElement.prototype, 'clientHeight', {
+      configurable: true,
+      value: 600,
+    });
+    Object.defineProperty(HTMLElement.prototype, 'clientWidth', {
       configurable: true,
       value: 800,
     });
