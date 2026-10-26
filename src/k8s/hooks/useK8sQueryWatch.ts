@@ -105,6 +105,8 @@ export const useK8sQueryWatch = (
   }, [hashedKey, deepOptions, deepResourceInit, startWatch]);
 
   // Recover WebSocket when tab becomes visible after being backgrounded
+  // Note: uses manual addEventListener because src/k8s import boundaries
+  // do not allow importing useEventListener from ~/shared/hooks
   React.useEffect(() => {
     if (!deepResourceInit) return;
 
@@ -112,6 +114,10 @@ export const useK8sQueryWatch = (
       if (document.visibilityState === 'visible') {
         const currentWs = WS.get(hashedKey);
         if (!currentWs || currentWs.getState() !== WebSocketState.OPENED) {
+          if (retryTimeoutRef.current) {
+            clearTimeout(retryTimeoutRef.current);
+            retryTimeoutRef.current = undefined;
+          }
           retryCountRef.current = 0;
           setWsError(null);
           startWatch();

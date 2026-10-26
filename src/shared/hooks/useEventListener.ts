@@ -10,7 +10,7 @@ import { useEvent } from './useEvent';
  * @param {AddEventListenerOptions} options Options for the event listener
  */
 export const useEventListener = <
-  T extends HTMLElement | SVGAElement | MediaQueryList = HTMLElement,
+  T extends HTMLElement | SVGAElement | MediaQueryList | Document = HTMLElement,
 >(
   eventName: string,
   handler: (event: Event) => void,

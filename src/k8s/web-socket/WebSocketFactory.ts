@@ -118,7 +118,7 @@ export class WebSocketFactory {
       console.info(`websocket open: ${this.id}`);
       this.state = WebSocketState.OPENED;
       this.triggerEvent('open', undefined);
-      if (this.connectionAttempt) {
+      if (this.connectionAttempt !== -1) {
         window.clearTimeout(this.connectionAttempt);
         this.connectionAttempt = -1;
       }
