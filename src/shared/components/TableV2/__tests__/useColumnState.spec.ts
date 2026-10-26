@@ -2,10 +2,13 @@ import { renderHook, act } from '@testing-library/react';
 import { type ColumnDefinition } from '~/shared/components/TableV2';
 import { useColumnState } from '~/shared/components/TableV2/hooks/useColumnState';
 import { useLocalStorage } from '~/shared/hooks/useLocalStorage';
+import { useSessionStorage } from '~/shared/hooks/useSessionStorage';
 
 jest.mock('~/shared/hooks/useLocalStorage');
+jest.mock('~/shared/hooks/useSessionStorage');
 
 const mockUseLocalStorage = jest.mocked(useLocalStorage);
+const mockUseSessionStorage = jest.mocked(useSessionStorage);
 
 // --- Test data ---
 
@@ -23,12 +26,17 @@ const columns: ColumnDefinition<TestRow>[] = [
 
 describe('useColumnState', () => {
   let mockSetValue: jest.Mock;
+  let mockSetSortValue: jest.Mock;
+  let mockRemoveSortValue: jest.Mock;
 
   beforeEach(() => {
     jest.clearAllMocks();
     mockSetValue = jest.fn();
+    mockSetSortValue = jest.fn();
+    mockRemoveSortValue = jest.fn();
     // Default: no persisted state
     mockUseLocalStorage.mockReturnValue([undefined, mockSetValue, jest.fn()]);
+    mockUseSessionStorage.mockReturnValue([undefined, mockSetSortValue, mockRemoveSortValue]);
   });
 
   describe('default state derivation', () => {
@@ -74,6 +82,8 @@ describe('useColumnState', () => {
       expect(mockSetValue).toHaveBeenCalledWith({
         visibleColumns: ['name', 'status'],
         columnOrder: ['name', 'status', 'id'],
+      });
+      expect(mockSetSortValue).toHaveBeenCalledWith({
         sortColumn: 'name',
         sortDirection: 'asc',
       });
@@ -83,10 +93,13 @@ describe('useColumnState', () => {
       const persisted = {
         visibleColumns: ['status', 'name', 'id'],
         columnOrder: ['status', 'name', 'id'],
-        sortColumn: 'status',
-        sortDirection: 'desc' as const,
       };
       mockUseLocalStorage.mockReturnValue([persisted, mockSetValue, jest.fn()]);
+      mockUseSessionStorage.mockReturnValue([
+        { sortColumn: 'status', sortDirection: 'desc' },
+        mockSetSortValue,
+        mockRemoveSortValue,
+      ]);
 
       const { result } = renderHook(() => useColumnState('test-key', columns));
 
@@ -115,10 +128,13 @@ describe('useColumnState', () => {
       const persisted = {
         visibleColumns: ['name', 'status', 'id'],
         columnOrder: ['name', 'status', 'id'],
-        sortColumn: 'deleted-col',
-        sortDirection: 'asc' as const,
       };
       mockUseLocalStorage.mockReturnValue([persisted, mockSetValue, jest.fn()]);
+      mockUseSessionStorage.mockReturnValue([
+        { sortColumn: 'deleted-col', sortDirection: 'asc' },
+        mockSetSortValue,
+        mockRemoveSortValue,
+      ]);
 
       const { result } = renderHook(() => useColumnState('test-key', columns));
 
@@ -207,6 +223,8 @@ describe('useColumnState', () => {
 
       // useLocalStorage is called (Rules of Hooks) but setValue should not be used
       expect(mockSetValue).not.toHaveBeenCalled();
+      expect(mockSetSortValue).not.toHaveBeenCalled();
+      expect(mockRemoveSortValue).not.toHaveBeenCalled();
     });
 
     it('does not persist to localStorage when key is empty string', () => {
@@ -222,6 +240,8 @@ describe('useColumnState', () => {
       });
 
       expect(mockSetValue).not.toHaveBeenCalled();
+      expect(mockSetSortValue).not.toHaveBeenCalled();
+      expect(mockRemoveSortValue).not.toHaveBeenCalled();
     });
 
     it('uses React state in ephemeral mode and supports setColumnState', () => {
@@ -257,23 +277,24 @@ describe('useColumnState', () => {
         });
       });
 
-      expect(mockSetValue).toHaveBeenCalledWith(
-        expect.objectContaining({
-          columnOrder: ['name', 'status', 'id'],
-          sortColumn: 'name',
-          sortDirection: 'asc',
-        }),
-      );
+      expect(mockSetValue).toHaveBeenCalledWith({
+        visibleColumns: ['name', 'status', 'id'],
+        columnOrder: ['name', 'status', 'id'],
+      });
+      expect(mockSetSortValue).toHaveBeenCalledWith({ sortColumn: 'name', sortDirection: 'asc' });
     });
 
     it('restores persisted sort state', () => {
       const persisted = {
         visibleColumns: ['name', 'status', 'id'],
         columnOrder: ['name', 'status', 'id'],
-        sortColumn: 'status',
-        sortDirection: 'asc' as const,
       };
       mockUseLocalStorage.mockReturnValue([persisted, mockSetValue, jest.fn()]);
+      mockUseSessionStorage.mockReturnValue([
+        { sortColumn: 'status', sortDirection: 'asc' },
+        mockSetSortValue,
+        mockRemoveSortValue,
+      ]);
 
       const { result } = renderHook(() => useColumnState('test-key', columns));
 
