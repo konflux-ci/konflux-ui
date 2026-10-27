@@ -101,11 +101,18 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
     threshold: NAMESPACE_THRESHOLD,
   });
 
-  const { releases, isLoading, error } = useMonitoredReleases(namespacesToFetch);
+  const {
+    releases,
+    isLoading: monitoredReleasesLoading,
+    error: monitoredReleasesError,
+  } = useMonitoredReleases(namespacesToFetch);
 
   // `useNamespacesToFetch` resolves its namespaces in an effect, so the render in between
   // has nothing to fetch yet and must still count as loading.
-  const loading = !loaded || (namespaces.length > 0 && namespacesToFetch.length === 0) || isLoading;
+  const loading =
+    !loaded ||
+    (namespaces.length > 0 && namespacesToFetch.length === 0) ||
+    monitoredReleasesLoading;
 
   const filterOptions = React.useMemo(() => {
     if (releases.length === 0 && namespaces.length === 0) {
@@ -288,8 +295,8 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
     [onClearFilters],
   );
 
-  if (error) {
-    return getErrorState(error, loaded, 'applications');
+  if (monitoredReleasesError) {
+    return getErrorState(monitoredReleasesError, loaded, 'applications');
   }
 
   const isFiltered =
