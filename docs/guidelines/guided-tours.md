@@ -21,8 +21,8 @@ Each tour step is one of three types:
 ### 1. Define a tour config
 
 ```ts
-// src/tours/applications-tour.ts
-import { TourConfig } from '~/shared/components/GuidedTours';
+// src/tours/applications.tour.ts
+import type { TourConfig } from '~/shared/components/GuidedTours';
 
 export const applicationsTour: TourConfig = {
   id: 'applications-overview',
@@ -54,8 +54,9 @@ export const applicationsTour: TourConfig = {
 ### 2. Register the tour
 
 ```ts
-// src/tours/applications-tour.ts (same file, at module level)
+// src/guided-tours.ts
 import { registerTour } from '~/shared/components/GuidedTours';
+import { applicationsTour } from '~/tours/applications.tour';
 
 registerTour(applicationsTour);
 ```
@@ -137,18 +138,19 @@ interface HighlightStepConfig extends BaseStepConfig {
 
 ## Registering Tours
 
-Call `registerTour()` at module level. The function adds the config to an internal `Map<route, TourConfig[]>` using the `route` field as an exact key (no pattern matching occurs in the registry itself; URL-to-route resolution happens in `useTourAutoTrigger` via React Router's `matchPath`).
+Export configuration objects from `*.tour.ts` files, then import and register them in `src/guided-tours.ts`. The function adds the config to an internal `Map<route, TourConfig[]>` using the `route` field as an exact key (no pattern matching occurs in the registry itself; URL-to-route resolution happens in `useTourAutoTrigger` via React Router's `matchPath`).
 
 ```ts
-import { registerTour, TourConfig } from '~/shared/components/GuidedTours';
+// src/guided-tours.ts
+import { registerTour } from '~/shared/components/GuidedTours';
+import { myTour } from '~/tours/my.tour';
 
-const myTour: TourConfig = { /* ... */ };
 registerTour(myTour);
 ```
 
 Multiple tours can be registered for the same route -- they are merged at runtime (see [Merging and Hints](#merging-and-hints)).
 
-**Where to put tour configs:** Create tour files under `src/tours/` or colocate with the feature they belong to. The only requirement is that the file is imported so `registerTour()` executes.
+**Where to put tour configs:** Create `*.tour.ts` files under `src/tours/` or colocate with the feature they belong to. These files only export configuration objects. `src/main.tsx` eagerly imports `src/guided-tours.ts`, which is listed in `package.json`'s `sideEffects` so Webpack preserves registration.
 
 ## Step Types in Detail
 
@@ -418,9 +420,9 @@ User clicks Next/Back/Skip/Done  -->  dispatch action  -->  update state / local
 
 ## Adding a New Tour -- Checklist
 
-1. **Create the tour config file** -- define `TourConfig` with an `id`, `route`, `trigger`, and `steps` array
-2. **Call `registerTour()`** at module level in the same file
-3. **Import the file eagerly** so registration executes before `TourAutoTrigger`'s initial route check. Import it from a central tour index or a module loaded before the router mounts -- **not** from a lazy-loaded page component, which may land in a code-split chunk and miss the first route check
+1. **Create the tour config file** -- export a `TourConfig` from a `*.tour.ts` file with an `id`, `route`, `trigger`, and `steps` array
+2. **Import and register the config** in `src/guided-tours.ts` using `registerTour()`
+3. **Keep registration eager** -- `src/main.tsx` imports `src/guided-tours.ts` before the router mounts, and `package.json` marks it as side-effectful. Add new tours to this central module so they are registered before `TourAutoTrigger`'s initial route check
 4. **Add `data-tour` attributes** to any target elements referenced by spotlight/highlight steps
 5. **Verify auto-trigger works** -- `TourAutoTrigger` is already mounted at the app root; tours with `trigger: 'auto'` are triggered automatically when the user navigates to the matching route
 6. **Test locally** -- clear `konflux-tours` from localStorage to re-trigger, verify each step renders correctly
