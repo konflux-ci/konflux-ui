@@ -38,6 +38,7 @@ const mockHookState = (overrides: Partial<ReturnType<typeof useWorkspaceConforma
     loaded: true,
     settling: false,
     error: undefined,
+    partialError: undefined,
     ...overrides,
   });
 
@@ -104,5 +105,45 @@ describe('IssuesPolicyExceptionCard', () => {
     expect(summary).toHaveTextContent('0 upcoming activations');
     expect(screen.getByTestId('policy-exception-empty')).toBeInTheDocument();
     expect(screen.queryByTestId('policy-exception-list')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('policy-exception-partial-error')).not.toBeInTheDocument();
+  });
+
+  it('warns that results are incomplete when a log query failed and no exceptions arrived', () => {
+    mockHookState({ partialError: new Error('log fetch failed') });
+    renderWithQueryClient(<IssuesPolicyExceptionCard />);
+
+    const alert = screen.getByTestId('policy-exception-partial-error');
+    expect(alert).toHaveTextContent('Some policy results could not be loaded');
+    expect(alert).toHaveTextContent('log fetch failed');
+    // The zero-count empty state must not be presented as a complete result.
+    expect(screen.getByTestId('policy-exception-empty')).toBeInTheDocument();
+  });
+
+  it('falls back to a generic message when the partial error has no message', () => {
+    mockHookState({ partialError: new Error() });
+    renderWithQueryClient(<IssuesPolicyExceptionCard />);
+
+    expect(screen.getByTestId('policy-exception-partial-error')).toHaveTextContent(
+      'One or more policy result fetches failed',
+    );
+  });
+
+  it('still warns about incomplete results alongside the exceptions that did load', () => {
+    mockHookState({ exceptions: [expiring], partialError: new Error('log fetch failed') });
+    renderWithQueryClient(<IssuesPolicyExceptionCard />);
+
+    expect(screen.getByTestId('policy-exception-summary')).toBeInTheDocument();
+    expect(screen.getByText(expiring.message)).toBeInTheDocument();
+    expect(screen.getByTestId('policy-exception-partial-error')).toBeInTheDocument();
+  });
+
+  it('does not show the partial-error warning when the whole query errored', () => {
+    mockHookState({
+      error: { code: 500, message: 'Server error' },
+      partialError: new Error('log fetch failed'),
+    });
+    renderWithQueryClient(<IssuesPolicyExceptionCard />);
+
+    expect(screen.queryByTestId('policy-exception-partial-error')).not.toBeInTheDocument();
   });
 });

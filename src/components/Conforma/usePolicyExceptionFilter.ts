@@ -8,7 +8,7 @@ import { POLICY_EXCEPTION_RULE_CODES } from './policy-exception-utils';
  * narrowed to. Must be listed in the surrounding `FilterContextProvider`'s
  * `filterParams` for the filter to survive navigation and be shareable.
  */
-export const POLICY_EXCEPTION_FILTER_KEY = 'ruleCode';
+export const POLICY_EXCEPTION_FILTER_KEY = 'policyException';
 
 export type PolicyExceptionFilter = {
   /** Whether the "Show policy exceptions" toggle is on — derived from the URL. */
@@ -28,11 +28,12 @@ const toStringArray = (value: unknown): string[] =>
 /**
  * Shared "Show policy exceptions" filter for the Conforma tables.
  *
- * Switching the toggle writes the policy exception rule codes to the `ruleCode`
- * search param (alongside the Warning status) in a single update, and nothing
- * else: the table and the toolbar both read their state back out of the URL, so
- * a narrowed view is reloadable and shareable, and "Clear all filters" resets
- * the toggle for free because it unsets every managed param.
+ * Switching the toggle writes the policy exception rule codes to the
+ * `policyException` search param (alongside the Warning status) in a single
+ * update, and nothing else: the table and the toolbar both read their state
+ * back out of the URL, so a narrowed view is reloadable and shareable, and
+ * "Clear all filters" resets the toggle for free because it unsets every
+ * managed param.
  *
  * The codes written are the full known set, independent of what the current
  * result set happens to contain — the filter describes what is being asked for,

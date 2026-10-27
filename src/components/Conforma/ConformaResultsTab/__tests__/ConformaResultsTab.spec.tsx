@@ -558,7 +558,7 @@ describe('ConformaResultsTab', () => {
     // assertions below rely on the other codes being table-only.
     const tableText = () => document.body.textContent ?? '';
 
-    const ruleCodeParam = () =>
+    const policyExceptionParam = () =>
       new URLSearchParams(window.location.search).get(POLICY_EXCEPTION_FILTER_KEY);
 
     /**
@@ -632,7 +632,7 @@ describe('ConformaResultsTab', () => {
       fireEvent.click(screen.getByRole('button', { name: 'Close volatile_config.expiring_rule' }));
 
       expect(screen.getByRole('switch', { name: /show policy exceptions/i })).toBeChecked();
-      expect(JSON.parse(ruleCodeParam())).not.toContain('volatile_config.expiring_rule');
+      expect(JSON.parse(policyExceptionParam())).not.toContain('volatile_config.expiring_rule');
     });
 
     it('switches the toggle off when the last rule label is removed', () => {
@@ -653,7 +653,7 @@ describe('ConformaResultsTab', () => {
 
       fireEvent.click(screen.getByRole('switch', { name: /show policy exceptions/i }));
 
-      expect(JSON.parse(ruleCodeParam())).toEqual([...POLICY_EXCEPTION_RULE_CODES]);
+      expect(JSON.parse(policyExceptionParam())).toEqual([...POLICY_EXCEPTION_RULE_CODES]);
       expect(JSON.parse(new URLSearchParams(window.location.search).get('status'))).toEqual([
         CONFORMA_RESULT_STATUS.warnings,
       ]);
@@ -666,7 +666,7 @@ describe('ConformaResultsTab', () => {
       fireEvent.click(toggle);
       fireEvent.click(toggle);
 
-      expect(ruleCodeParam()).toBeNull();
+      expect(policyExceptionParam()).toBeNull();
     });
 
     it('restores the narrowed table from the URL on load', () => {

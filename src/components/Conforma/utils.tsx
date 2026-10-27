@@ -24,7 +24,7 @@ export const RULE_STATUS_CONFIG: Record<CONFORMA_RESULT_STATUS, RuleStatusConfig
   },
   [CONFORMA_RESULT_STATUS.warnings]: {
     Icon: WarningIcon,
-    iconColor: yellowColor.var,
+    iconColor: yellowColor.value,
     labelColor: 'yellow',
     statusText: CONFORMA_RESULT_STATUS.warnings,
   },

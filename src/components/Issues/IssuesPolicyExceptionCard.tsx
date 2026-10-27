@@ -1,8 +1,8 @@
 import * as React from 'react';
-import { Card, CardBody, CardTitle } from '@patternfly/react-core';
+import { Alert, AlertVariant, Card, CardBody, CardTitle } from '@patternfly/react-core';
 import { OutlinedClockIcon } from '@patternfly/react-icons/dist/esm/icons/outlined-clock-icon';
 import { t_global_icon_color_subtle as subtleColor } from '@patternfly/react-tokens/dist/js/t_global_icon_color_subtle';
-import { ConformaSummaryBarSection } from '~/components/Conforma/ConformaResultsTab/ConformaSummaryBarSection';
+import { ConformaSummaryBarSection } from '~/components/Conforma/ConformaSummaryBarSection';
 import {
   countExceptionsByKind,
   PolicyExceptionKind,
@@ -14,7 +14,7 @@ import { getErrorState } from '~/shared/utils/error-utils';
 import { useWorkspaceConformaViolations } from './useWorkspaceConformaViolations';
 
 const IssuesPolicyExceptionCard: React.FC = () => {
-  const { exceptions, loaded, settling, error } = useWorkspaceConformaViolations();
+  const { exceptions, loaded, settling, error, partialError } = useWorkspaceConformaViolations();
 
   // While settling, keep the skeleton until at least one exception arrives so
   // the summary never flashes a premature "0 expiring exceptions".
@@ -52,6 +52,19 @@ const IssuesPolicyExceptionCard: React.FC = () => {
             />
             <PolicyExceptionList exceptions={exceptions} className="pf-v6-u-mt-md" />
           </>
+        )}
+        {loaded && !error && partialError && (
+          <Alert
+            data-test="policy-exception-partial-error"
+            className="pf-v6-u-mt-md"
+            variant={AlertVariant.warning}
+            isInline
+            title="Some policy results could not be loaded"
+          >
+            {partialError instanceof Error && partialError.message
+              ? partialError.message
+              : 'One or more policy result fetches failed. Upcoming policy changes shown may be incomplete.'}
+          </Alert>
         )}
       </CardBody>
     </Card>
