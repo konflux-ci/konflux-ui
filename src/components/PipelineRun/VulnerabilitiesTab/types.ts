@@ -58,6 +58,11 @@ export type RoxctlSeverity =
   | 'IMPORTANT_VULNERABILITY_SEVERITY'
   | 'CRITICAL_VULNERABILITY_SEVERITY';
 
+export type RoxctlAdvisory = {
+  name?: string;
+  link?: string;
+};
+
 /**
  * Top-level structure of a single architecture's CVE report as emitted by
  * the `proccess-output` step (after the jq transformation).
@@ -86,7 +91,7 @@ export type RoxctlCveReport = {
  */
 export type RoxctlFlatCveEntry = {
   cve: string;
-  advisory?: Array<{ name?: string; link?: string }>;
+  advisory?: RoxctlAdvisory[];
   summary?: string;
   links?: string[];
   fixedBy?: string;
@@ -105,6 +110,8 @@ export type RoxctlFlatCveEntry = {
 export type RoxctlCveTableRow = {
   cve: string;
   severity: RoxctlSeverity;
+  advisory?: RoxctlAdvisory[];
+  links?: string[];
   fixedBy?: string;
   summary?: string;
   link?: string;
@@ -132,6 +139,8 @@ export type RoxctlCveReportResolution = {
 export type RoxctlCveRow = {
   cve: string;
   severity: RoxctlSeverity;
+  advisory?: RoxctlAdvisory[];
+  links?: string[];
   summary?: string;
   link?: string;
   fixedBy?: string;
