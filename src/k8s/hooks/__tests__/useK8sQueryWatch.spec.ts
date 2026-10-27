@@ -1,6 +1,7 @@
 import { renderHook, act } from '@testing-library/react-hooks';
 import { K8sModelCommon } from '../../../types/k8s';
 import { watchListResource, watchObjectResource } from '../../watch-utils';
+import { WebSocketState } from '../../web-socket/WebSocketFactory';
 import { useK8sQueryWatch } from '../useK8sQueryWatch';
 
 jest.mock('../../watch-utils', () => ({
@@ -27,6 +28,7 @@ describe('useK8sQueryWatch', () => {
     destroy: jest.fn(),
     onClose: jest.fn(),
     onError: jest.fn(),
+    getState: jest.fn().mockReturnValue(WebSocketState.OPENED),
   };
 
   const mockResourceInit = {
@@ -174,5 +176,118 @@ describe('useK8sQueryWatch', () => {
     });
 
     expect(result.current).toBeNull();
+  });
+
+  it('should restart WebSocket when tab becomes visible after connection loss', () => {
+    const closedMockWebSocket = {
+      ...mockWebSocket,
+      destroy: jest.fn(),
+      onClose: jest.fn(),
+      onError: jest.fn(),
+      getState: jest.fn().mockReturnValue(WebSocketState.CLOSED),
+    };
+
+    (watchListResource as jest.Mock).mockReturnValue(closedMockWebSocket);
+
+    renderHook(() => useK8sQueryWatch(mockResourceInit, true, mockHashedKey, mockOptions));
+
+    expect(watchListResource).toHaveBeenCalledTimes(1);
+
+    // Simulate tab becoming visible with a closed WebSocket
+    act(() => {
+      Object.defineProperty(document, 'visibilityState', {
+        configurable: true,
+        value: 'visible',
+      });
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+
+    // Should have restarted the watch
+    expect(watchListResource).toHaveBeenCalledTimes(2);
+  });
+
+  it('should not restart WebSocket when tab becomes visible if connection is open', () => {
+    (watchListResource as jest.Mock).mockReturnValue(mockWebSocket);
+
+    renderHook(() => useK8sQueryWatch(mockResourceInit, true, mockHashedKey, mockOptions));
+
+    expect(watchListResource).toHaveBeenCalledTimes(1);
+
+    // Simulate tab becoming visible with an open WebSocket
+    act(() => {
+      Object.defineProperty(document, 'visibilityState', {
+        configurable: true,
+        value: 'visible',
+      });
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+
+    // Should NOT have restarted
+    expect(watchListResource).toHaveBeenCalledTimes(1);
+  });
+
+  it('should not restart WebSocket when resourceInit is null and tab becomes visible', () => {
+    renderHook(() => useK8sQueryWatch(null, true, mockHashedKey, mockOptions));
+
+    // No WebSocket should have been created
+    expect(watchListResource).not.toHaveBeenCalled();
+
+    // Simulate tab becoming visible
+    act(() => {
+      Object.defineProperty(document, 'visibilityState', {
+        configurable: true,
+        value: 'visible',
+      });
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+
+    // Still no WebSocket created — handler is a no-op when resourceInit is null
+    expect(watchListResource).not.toHaveBeenCalled();
+  });
+
+  it('should clear pending retry timeout when tab becomes visible after close', () => {
+    jest.useFakeTimers();
+    let closeHandler: (event: { code: number }) => void;
+
+    const closedMockWebSocket = {
+      ...mockWebSocket,
+      destroy: jest.fn(),
+      onClose: jest.fn((handler: (event: { code: number }) => void) => {
+        closeHandler = handler;
+      }),
+      onError: jest.fn(),
+      getState: jest.fn().mockReturnValue(WebSocketState.CLOSED),
+    };
+
+    (watchListResource as jest.Mock).mockReturnValue(closedMockWebSocket);
+
+    renderHook(() => useK8sQueryWatch(mockResourceInit, true, mockHashedKey, mockOptions));
+
+    expect(watchListResource).toHaveBeenCalledTimes(1);
+
+    // Simulate WebSocket close with code 1006 (schedules a retry timeout)
+    act(() => {
+      closeHandler({ code: 1006 });
+    });
+
+    // Tab becomes visible before the retry timeout fires
+    act(() => {
+      Object.defineProperty(document, 'visibilityState', {
+        configurable: true,
+        value: 'visible',
+      });
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+
+    // Visibility handler should have triggered one reconnect
+    expect(watchListResource).toHaveBeenCalledTimes(2);
+
+    // Advance past the retry delay — it should have been cleared by the visibility handler
+    act(() => {
+      jest.advanceTimersByTime(WEBSOCKET_RETRY_DELAY * 2);
+    });
+
+    // No additional reconnect from the cleared retry timeout
+    expect(watchListResource).toHaveBeenCalledTimes(2);
   });
 });

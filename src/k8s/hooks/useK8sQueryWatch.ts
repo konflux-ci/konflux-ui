@@ -3,6 +3,7 @@ import { isEqual } from 'lodash-es';
 import { K8sResourceBaseOptions } from '../k8s-fetch';
 import { watchListResource, watchObjectResource } from '../watch-utils';
 import { WebSocketOptions } from '../web-socket/types';
+import { WebSocketState } from '../web-socket/WebSocketFactory';
 
 export const useDeepCompareMemoize = <T = unknown>(value: T, strinfigy?: boolean): T => {
   const ref = React.useRef<T>();
@@ -102,6 +103,33 @@ export const useK8sQueryWatch = (
       setWsError(null);
     };
   }, [hashedKey, deepOptions, deepResourceInit, startWatch]);
+
+  // Recover WebSocket when tab becomes visible after being backgrounded.
+  // Note: uses manual addEventListener because src/k8s import boundaries
+  // do not allow importing useEventListener from ~/shared/hooks.
+  React.useEffect(() => {
+    if (!deepResourceInit) return;
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        const currentWs = WS.get(hashedKey);
+        if (!currentWs || currentWs.getState() !== WebSocketState.OPENED) {
+          if (retryTimeoutRef.current) {
+            clearTimeout(retryTimeoutRef.current);
+            retryTimeoutRef.current = undefined;
+          }
+          retryCountRef.current = 0;
+          setWsError(null);
+          startWatch();
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [hashedKey, deepResourceInit, startWatch]);
 
   return wsError;
 };
