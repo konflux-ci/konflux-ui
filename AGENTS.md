@@ -38,7 +38,7 @@ One-command setup: `yarn setup` or `./setup.sh` (checks Node.js >= 24, enables C
 | Category                                      | Location                          | Example                                   |
 | --------------------------------------------- | --------------------------------- | ----------------------------------------- |
 | K8s model definitions                         | `~/models/`                       | `~/models/pod.ts`                         |
-| Shared React components                       | `~/shared/components/<Name>/`     | `~/shared/components/CopyIconButton.tsx`  |
+| Shared React components                       | `~/shared/components/<Name>/`     | `~/shared/components/TableV2/Table.tsx`   |
 | Shared hooks                                  | `~/shared/hooks/`                 | `~/shared/hooks/useEventListener.ts`      |
 | General-purpose utilities (domain-agnostic)   | `~/shared/utils/`                 | `~/shared/utils/json-utils.ts`            |
 | Domain-specific utilities (cross-feature)     | `~/utils/`                        | `~/utils/pipeline-utils.ts`              |
