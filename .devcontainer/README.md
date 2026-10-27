@@ -92,7 +92,7 @@ yarn type-checks
 # Build for production
 yarn build
 
-# Check production bundle sizes against budgets in .size-limit.json
+# Report production chunk gzip sizes (.size-limit.json); CI enforces +2 kB total vs base
 yarn size-limit
 
 # Analyze bundle size
