@@ -35,17 +35,18 @@ One-command setup: `yarn setup` or `./setup.sh` (checks Node.js >= 24, enables C
 
 ## File Organization
 
-| Category | Location | Example |
-| -------- | -------- | ------- |
-| K8s model definitions | `src/models/` | `src/models/pod.ts` |
-| Shared React components | `src/shared/components/<ComponentName>/` | with barrel `index.ts` |
-| Shared hooks | `src/shared/hooks/` | `useEventListener.ts` |
-| Shared utilities (used across features) | `src/shared/utils/` | `json-utils.ts` |
-| Cross-feature utilities (not React-specific) | `src/utils/` | `pod-logs.ts`, `text-filter-utils.ts` |
-| Feature-specific code | `src/components/<Feature>/` | co-located with its UI |
-| Constants | `src/consts/` | `security.ts` |
+| Category                                  | Location                                 | Example                                     |
+| ----------------------------------------- | ---------------------------------------- | ------------------------------------------- |
+| K8s model definitions                     | `src/models/`                            | `pod.ts`                                    |
+| Shared React components                   | `src/shared/components/<ComponentName>/` | with barrel `index.ts`                      |
+| Shared hooks                              | `src/shared/hooks/`                      | `useEventListener.ts`                       |
+| Shared utilities (generic/infrastructure) | `src/shared/utils/`                      | `json-utils.ts`                             |
+| Cross-feature domain utilities            | `src/utils/`                             | `pipeline-utils.ts`, `text-filter-utils.ts` |
+| App-level data hooks                      | `src/hooks/`                             | `useApplications.ts`                        |
+| Feature-specific code                     | `src/components/<Feature>/`              | co-located with its UI                      |
+| Constants                                 | `src/consts/`                            | `security.ts`                               |
 
-New utility functions used by more than one feature domain must go in `src/shared/utils/` or `src/utils/`, not in a feature directory. New K8s model definitions must go in `src/models/`.
+New utility functions used by more than one feature domain go in `src/shared/utils/` (generic infrastructure — DOM helpers, JSON processing, error handling) or `src/utils/` (domain-specific — pipeline, component, release logic). When in doubt, prefer `src/utils/`. New K8s model definitions must go in `src/models/`.
 
 ## Commits
 
