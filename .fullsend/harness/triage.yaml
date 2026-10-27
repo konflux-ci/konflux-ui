@@ -1,5 +1,5 @@
 # .fullsend/harness/triage.yaml
-base: https://raw.githubusercontent.com/fullsend-ai/agents/d8a9bc78b9566158a03efda6265d904c7dfc1981/harness/triage.yaml#sha256=32e6b07f141487bb2c2f66bf18421f2161397ad7f9f8cc7053c36da084419a7e
+base: https://raw.githubusercontent.com/fullsend-ai/agents/27399d0707897bb705e544588df8ecccfc8f9b43/harness/triage.yaml#sha256=4ac80dccd7199c183e730e41a236e934ea8ae0d353032e741dc8558b988a0380
 
 trigger: >
   event.entity.kind == "work_item"
