@@ -39,10 +39,11 @@ One-command setup: `yarn setup` or `./setup.sh` (checks Node.js >= 24, enables C
 | --------------------------------------------- | --------------------------------- | ----------------------------------------- |
 | K8s model definitions                         | `~/models/`                       | `~/models/pod.ts`                         |
 | Shared React components                       | `~/shared/components/<Name>/`     | `~/shared/components/TableV2/Table.tsx`   |
-| Shared hooks                                  | `~/shared/hooks/`                 | `~/shared/hooks/useEventListener.ts`      |
+| Shared hooks (generic, framework-level)       | `~/shared/hooks/`                 | `~/shared/hooks/useEventListener.ts`      |
+| K8s data-fetching hooks                       | `~/hooks/`                        | `~/hooks/useApplications.ts`              |
 | General-purpose utilities (domain-agnostic)   | `~/shared/utils/`                 | `~/shared/utils/json-utils.ts`            |
 | Domain-specific utilities (cross-feature)     | `~/utils/`                        | `~/utils/pipeline-utils.ts`              |
-| Feature-specific code                         | `~/components/<Feature>/`         | co-located with its UI                    |
+| Feature-specific code                         | `~/components/<Feature>/`         | `~/components/PipelineRun/`               |
 | Constants                                     | `~/consts/`                       | `~/consts/security.ts`                    |
 
 - New utility functions used by more than one feature domain must go in `~/shared/utils/` or `~/utils/`, not in a feature directory. Prefer `~/shared/utils/` for domain-agnostic helpers (JSON, DOM, storage); use `~/utils/` for utilities that depend on domain models or K8s resources.
