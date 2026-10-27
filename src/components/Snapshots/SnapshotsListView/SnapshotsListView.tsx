@@ -137,7 +137,11 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
         toolbar={
           isFiltered || (snapshots ?? []).length > 0 ? (
             <FilterToolbar configs={filterConfigs} options={filterOptions}>
-              <SortDropdown columns={SNAPSHOTS_LIST_COLUMNS} columnStateKey={columnStateKey} />
+              <SortDropdown
+                columns={SNAPSHOTS_LIST_COLUMNS}
+                columnStateKey={columnStateKey}
+                data-tour="snapshots-list-sort-dropdown"
+              />
               <ColumnManagement<Snapshot>
                 columns={SNAPSHOTS_LIST_COLUMNS}
                 columnStateKey={columnStateKey}

@@ -1,5 +1,5 @@
 import { PIPELINE_RUNS_PAGE_PATH } from '@routes/paths';
-import { registerTour, type TourConfig } from '~/shared/components/GuidedTours';
+import type { TourConfig } from '~/shared/components/GuidedTours';
 
 /**
  * Guided tour for the Pipeline Runs page.
@@ -87,5 +87,3 @@ export const pipelineRunsTour: TourConfig = {
     },
   ],
 };
-
-registerTour(pipelineRunsTour);

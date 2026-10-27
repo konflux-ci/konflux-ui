@@ -63,6 +63,7 @@ export const SpotlightStep: React.FC<SpotlightStepProps> = ({
         headerContent={title}
         bodyContent={content}
         appendTo={() => document.querySelector('#hacDev-modal-container') ?? document.body}
+        hideOnOutsideClick={false}
         data-test="tour-spotlight-step"
       />
     </>
