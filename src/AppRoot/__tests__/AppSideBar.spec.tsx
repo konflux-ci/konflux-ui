@@ -18,7 +18,6 @@ jest.mock('~/shared/providers/Namespace', () => ({
 
 const mockFeatureFlags: Record<string, boolean> = {
   'component-model': true,
-  mintmaker: true,
 };
 
 jest.mock('~/shared/components/SavedViews/useSavedViews');
@@ -85,7 +84,6 @@ describe('AppSideBar', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockFeatureFlags['component-model'] = true;
-    mockFeatureFlags.mintmaker = true;
     jest.mocked(useSavedViews).mockReturnValue({
       views: [
         {
@@ -195,22 +193,19 @@ describe('AppSideBar', () => {
     expect(screen.getByText('User Access')).toHaveAttribute('href', '/ns/test-namespace/access');
   });
 
-  it.each([true, false])(
-    'should render each saved view once under Pipeline Runs when MintMaker is %s',
-    (mintmakerEnabled) => {
-      mockFeatureFlags.mintmaker = mintmakerEnabled;
-      jest.mocked(useActiveRouteChecker).mockReturnValue(() => false);
-      jest.mocked(useNamespace).mockReturnValue('test-namespace');
+  it('should render each saved view once under Pipeline Runs', () => {
+    jest.mocked(useActiveRouteChecker).mockReturnValue(() => false);
+    jest.mocked(useNamespace).mockReturnValue('test-namespace');
 
-      routerRenderer(<AppSideBar isOpen={true} />);
+    routerRenderer(<AppSideBar isOpen={true} />);
 
-      expect(screen.getAllByRole('link', { name: 'Running Builds' })).toHaveLength(1);
-      const pipelineRunsGroup = screen.getByTestId('pipeline-runs-nav-group');
-      expect(
-        within(pipelineRunsGroup).getByRole('link', { name: 'Running Builds' }),
-      ).toHaveAttribute('href', '/ns/test-namespace/prns?status=running&view=running-builds');
-    },
-  );
+    expect(screen.getAllByRole('link', { name: 'Running Builds' })).toHaveLength(1);
+    const pipelineRunsGroup = screen.getByTestId('pipeline-runs-nav-group');
+    expect(within(pipelineRunsGroup).getByRole('link', { name: 'Running Builds' })).toHaveAttribute(
+      'href',
+      '/ns/test-namespace/prns?status=running&view=running-builds',
+    );
+  });
 
   it('should render the Pipeline Runs nav expandable group', () => {
     (useActiveRouteChecker as jest.Mock).mockReturnValue(() => false);
@@ -248,7 +243,7 @@ describe('AppSideBar', () => {
     expect(screen.queryByRole('link', { name: 'Running Builds' })).not.toBeInTheDocument();
   });
 
-  it('should render the dependency updates schedule link when MintMaker is enabled', () => {
+  it('should render the dependency updates schedule link', () => {
     (useActiveRouteChecker as jest.Mock).mockReturnValue(() => false);
     (useNamespace as jest.Mock).mockReturnValue('test-namespace');
 
@@ -258,18 +253,6 @@ describe('AppSideBar', () => {
       'href',
       '/dep-updates-schedule',
     );
-  });
-
-  it('should hide the dependency updates schedule link when MintMaker is disabled', () => {
-    mockFeatureFlags.mintmaker = false;
-    (useActiveRouteChecker as jest.Mock).mockReturnValue(() => false);
-    (useNamespace as jest.Mock).mockReturnValue('test-namespace');
-
-    routerRenderer(<AppSideBar isOpen={true} />);
-
-    expect(
-      screen.queryByRole('link', { name: /Dependency updates schedule/ }),
-    ).not.toBeInTheDocument();
   });
 
   it('should render the Groups nav item', () => {

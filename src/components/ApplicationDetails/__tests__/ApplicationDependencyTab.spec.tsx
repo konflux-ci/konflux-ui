@@ -66,7 +66,7 @@ describe('ApplicationDependencyTab', () => {
     useParamsMock.mockReturnValue({ applicationName: 'test-application' });
     useApplicationMock.mockReturnValue([application, true, undefined]);
     useComponentsMock.mockReturnValue([components, true, undefined]);
-    useFeatureFlagsMock.mockReturnValue([{ mintmaker: true }, setFlagMock]);
+    useFeatureFlagsMock.mockReturnValue([{}, setFlagMock]);
     useIsOnFeatureFlagMock.mockReturnValue(true);
   });
 

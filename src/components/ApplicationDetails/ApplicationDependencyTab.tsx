@@ -4,7 +4,6 @@ import { Bullseye, Spinner } from '@patternfly/react-core';
 import { DetailsSection } from '~/components/DetailsPage';
 import { DependencyRunsListView } from '~/components/MintMaker/DependencyRuns/DependencyRunsListView';
 import { DisabledFeatureFlagAlert } from '~/feature-flags/DisabledFeatureFlagAlert';
-import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useApplication } from '~/hooks/useApplications';
 import { useComponents } from '~/hooks/useComponents';
@@ -56,13 +55,7 @@ export const ApplicationDependencyTab: React.FC = () => {
   }
 
   return (
-    <DetailsSection
-      title={
-        <>
-          Dependency updates <FeatureFlagIndicator flags={['mintmaker']} />
-        </>
-      }
-    >
+    <DetailsSection title="Dependency updates">
       <DependencyRunsListView
         applicationName={applicationName}
         componentNames={components.map((component) => component.metadata.name)}
