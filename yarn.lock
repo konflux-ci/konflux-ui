@@ -4160,9 +4160,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@patternfly/react-topology@npm:6.6.0":
-  version: 6.6.0
-  resolution: "@patternfly/react-topology@npm:6.6.0"
+"@patternfly/react-topology@npm:6.7.0":
+  version: 6.7.0
+  resolution: "@patternfly/react-topology@npm:6.7.0"
   dependencies:
     "@dagrejs/dagre": "npm:1.1.2"
     "@patternfly/react-core": "npm:^6.5.1"
@@ -4180,7 +4180,7 @@ __metadata:
   peerDependencies:
     react: ^17 || ^18 || ^19
     react-dom: ^17 || ^18 || ^19
-  checksum: 10/efd2f74c7e58194ec87c0219766bbd95f959b7b8ff20ddb189904b5105d282bc636877309d88cfe2d8ecb97b5871aff80b9ed0359ae80d1b0f6ea31811b86dd5
+  checksum: 10/e432c9b964fc8cee7826127fe9c1dc0bcdfb8e14ff501840fe8461d91a96b7800c99a6a52b2a30ce04c28821ea449f20e1413a7eeccd5439ed0950aadd643339
   languageName: node
   linkType: hard
 
@@ -14489,7 +14489,7 @@ __metadata:
     "@patternfly/react-styles": "npm:6.6.1"
     "@patternfly/react-table": "npm:6.6.1"
     "@patternfly/react-tokens": "npm:6.6.1"
-    "@patternfly/react-topology": "npm:6.6.0"
+    "@patternfly/react-topology": "npm:6.7.0"
     "@patternfly/react-virtualized-extension": "npm:6.2.0"
     "@pmmmwh/react-refresh-webpack-plugin": "npm:^0.5.15"
     "@redhat-cloud-services/ai-client-common": "npm:^0.13.0"
