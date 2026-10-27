@@ -528,7 +528,7 @@ spec:
 
     - name: upload-coverage
       onError: continue
-      image: quay.io/konflux-ci/konflux-devprod/coverport-cli@sha256:bd8dc5b1048d3385d77a17954638e1b8ae1ac2236a65560612e535e5d0888e27
+      image: quay.io/konflux-ci/konflux-devprod/coverport-cli@sha256:f8c2b29053ef103999509ae77dabe6cd0e276bee7770e420f2cc06e0b7e5acf3
       env:
         - name: CODECOV_TOKEN
           valueFrom:
