@@ -20,7 +20,7 @@
   "devDependencies": {
     "@cypress/code-coverage": "^4.0.3",
     "@types/fs-extra": "^9.0.13",
-    "@types/node": "^24.0.0",
+    "@types/node": "^26.0.0",
     "axe-core": "^4.10.2",
     "cypress": "^15.20.0",
     "cypress-axe": "^1.6.0",

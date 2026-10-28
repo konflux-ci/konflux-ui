@@ -507,7 +507,7 @@ __metadata:
   dependencies:
     "@cypress/code-coverage": "npm:^4.0.3"
     "@types/fs-extra": "npm:^9.0.13"
-    "@types/node": "npm:^24.0.0"
+    "@types/node": "npm:^26.0.0"
     axe-core: "npm:^4.10.2"
     cypress: "npm:^15.20.0"
     cypress-axe: "npm:^1.6.0"
@@ -594,12 +594,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^24.0.0":
-  version: 24.13.6
-  resolution: "@types/node@npm:24.13.6"
+"@types/node@npm:^26.0.0":
+  version: 26.6.5
+  resolution: "@types/node@npm:26.6.5"
   dependencies:
-    undici-types: "npm:~7.18.0"
-  checksum: 10/855324e2042ea683a6cbf23ae24458033188f276560b0aa4e36ccc5953f378552c7c1140386067b2c17ea24f2b430c7246f3bc81d74dd04fcfcfb3c6304c5dcb
+    undici-types: "npm:~8.9.0"
+  checksum: 10/03780cc68280b566af47c0f673318e665258dbdcc953737a83c11593424d55aecb8b2642a573da33f76cb4dd5457379548388b78ab284cb3b762030e5d58b252
   languageName: node
   linkType: hard
 
@@ -4589,13 +4589,6 @@ __metadata:
     has-symbols: "npm:^1.1.0"
     which-boxed-primitive: "npm:^1.1.1"
   checksum: 10/fadb347020f66b2c8aeacf8b9a79826fa34cc5e5457af4eb0bbc4e79bd87fed0fa795949825df534320f7c13f199259516ad30abc55a6e7b91d8d996ca069e50
-  languageName: node
-  linkType: hard
-
-"undici-types@npm:~7.18.0":
-  version: 7.18.2
-  resolution: "undici-types@npm:7.18.2"
-  checksum: 10/e61a5918f624d68420c3ca9d301e9f15b61cba6e97be39fe2ce266dd6151e4afe424d679372638826cb506be33952774e0424141200111a9857e464216c009af
   languageName: node
   linkType: hard
 
