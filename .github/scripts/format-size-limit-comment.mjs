@@ -17,14 +17,15 @@ const docsUrl = 'https://github.com/konflux-ci/konflux-ui/blob/main/docs/bundle-
 /** @param {number} size */
 function formatBytes(size) {
   const units = ['B', 'kB', 'MB', 'GB'];
-  let value = size;
+  const sign = size < 0 ? '-' : '';
+  let value = Math.abs(size);
   let unitIndex = 0;
   while (value >= 1000 && unitIndex < units.length - 1) {
     value /= 1000;
     unitIndex += 1;
   }
   const rounded = unitIndex === 0 ? String(Math.round(value)) : `${Math.round(value * 100) / 100}`;
-  return `${rounded} ${units[unitIndex]}`;
+  return `${sign}${rounded} ${units[unitIndex]}`;
 }
 
 /** @param {number} maxBytes */
