@@ -118,13 +118,18 @@ jobs:
 
       - name: Upload bundle size results
         if: failure() && steps.size-limit.outcome == 'failure'
+        run: |
+          staging="${RUNNER_TEMP}/size-limit-log"
+          mkdir -p "${staging}"
+          cp bundle-size-delta.json "${staging}/"
+          cp "${RUNNER_TEMP}/base-size-limit.json" "${staging}/"
+          cp "${RUNNER_TEMP}/pr-size-limit.json" "${staging}/"
+      - name: Upload size-limit-log artifact
+        if: failure() && steps.size-limit.outcome == 'failure'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: size-limit-log
-          path: |
-            bundle-size-delta.json
-            ${{ runner.temp }}/base-size-limit.json
-            ${{ runner.temp }}/pr-size-limit.json
+          path: ${{ runner.temp }}/size-limit-log
 
   # Unit tests — sharded across 2 runners for parallel execution
   test:

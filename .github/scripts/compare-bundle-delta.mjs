@@ -28,7 +28,7 @@ function parseArgs(argv) {
       maxBytes = value;
     } else if (arg === '--output') {
       outputPath = argv[++i];
-      if (!outputPath) {
+      if (!outputPath || outputPath.startsWith('-')) {
         console.error('--output requires a file path');
         process.exit(2);
       }
@@ -71,25 +71,12 @@ function checksByName(checks) {
   const map = new Map();
   for (const check of checks) {
     if (!check.name || typeof check.size !== 'number') {
-      continue;
+      console.error('Invalid size-limit entry: each item must have a name and numeric size');
+      process.exit(2);
     }
     map.set(check.name, check.size);
   }
   return map;
-}
-
-/** @param {{ name?: string }[]} prChecks @param {{ name?: string }[]} baseChecks */
-function orderedChunkNames(prChecks, baseChecks) {
-  const seen = new Set();
-  /** @type {string[]} */
-  const names = [];
-  for (const check of [...prChecks, ...baseChecks]) {
-    if (check.name && !seen.has(check.name)) {
-      seen.add(check.name);
-      names.push(check.name);
-    }
-  }
-  return names;
 }
 
 /** Gzip sizes use decimal kB (1000 B = 1 kB), matching size-limit output. */
@@ -230,7 +217,7 @@ const prChecks = readSizeLimitJson(prPath);
 const baseByName = checksByName(baseChecks);
 const prByName = checksByName(prChecks);
 
-const names = orderedChunkNames(prChecks, baseChecks);
+const names = [...new Set([...prByName.keys(), ...baseByName.keys()])];
 
 /** @type {ChunkResult[]} */
 const chunks = [];
@@ -286,7 +273,6 @@ if (summaryPath) {
 }
 
 if (!passed) {
-  console.error('');
   if (overall.reason) {
     console.error(`Failed: ${overall.reason}`);
   } else {
