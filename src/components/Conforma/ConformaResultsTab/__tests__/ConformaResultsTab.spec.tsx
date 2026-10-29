@@ -1,4 +1,6 @@
 import { act, fireEvent, screen } from '@testing-library/react';
+import { POLICY_EXCEPTION_RULE_CODES } from '~/components/Conforma/policy-exception-utils';
+import { POLICY_EXCEPTION_FILTER_KEY } from '~/components/Conforma/usePolicyExceptionFilter';
 import type { ApplicationConformaResults, ConformaResultRow } from '~/types/conforma';
 import { CONFORMA_RESULT_STATUS } from '~/types/conforma';
 import { setupVirtualizerMock } from '~/unit-test-utils';
@@ -147,6 +149,9 @@ describe('ConformaResultsTab', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     setupVirtualizerMock();
+    // FilterContext syncs to the URL, which jsdom keeps between tests in this
+    // file; reset it so applied filters do not leak from one test to the next.
+    window.history.replaceState({}, '', '/');
   });
 
   afterEach(() => {
@@ -502,4 +507,192 @@ describe('ConformaResultsTab', () => {
     jest.useRealTimers();
   });
 
+  describe('Show policy exceptions toggle', () => {
+    const exceptionRow = createMockRow({
+      title: 'CVE exception',
+      status: CONFORMA_RESULT_STATUS.warnings,
+      code: 'volatile_config.expiring_rule',
+      component: 'test-component',
+    });
+    const plainWarningRow = createMockRow({
+      title: 'Deprecated API usage',
+      status: CONFORMA_RESULT_STATUS.warnings,
+      code: 'tasks.deprecated_api',
+      component: 'test-component',
+    });
+    const violationRow = createMockRow({
+      title: 'Missing CVE scan results',
+      status: CONFORMA_RESULT_STATUS.violations,
+      code: 'cve.missing_cve_scan_results',
+      component: 'test-component',
+    });
+
+    const mixedResults: ApplicationConformaResults = {
+      ...emptyResults,
+      componentStatuses: [
+        {
+          componentName: 'test-component',
+          status: 'fail',
+          violationCount: 1,
+          warningCount: 2,
+          successCount: 0,
+        },
+      ],
+      allResults: [violationRow, plainWarningRow, exceptionRow],
+      totalComponents: 1,
+      totalFailed: 1,
+    };
+
+    beforeEach(() => {
+      mockUseApplicationConformaResults.mockReturnValue(mixedResults);
+    });
+
+    it('renders the switch unchecked by default', () => {
+      routerRenderer(<ConformaResultsTab />);
+
+      expect(screen.getByRole('switch', { name: /show policy exceptions/i })).not.toBeChecked();
+    });
+
+    // Groups are keyed by rule code, so the table rows read as codes. Only the
+    // volatile_config codes can also appear in toolbar labels, and the
+    // assertions below rely on the other codes being table-only.
+    const tableText = () => document.body.textContent ?? '';
+
+    const policyExceptionParam = () =>
+      new URLSearchParams(window.location.search).get(POLICY_EXCEPTION_FILTER_KEY);
+
+    /**
+     * The label group collapses past three labels, so reveal the rest before
+     * asserting on the full set.
+     */
+    const expandRuleCodeLabels = () => {
+      const more = screen.queryByRole('button', { name: /\d+ more/ });
+      if (more) fireEvent.click(more);
+    };
+
+    it('narrows the table to warnings from policy exception rules', () => {
+      routerRenderer(<ConformaResultsTab />);
+
+      expect(tableText()).toContain('cve.missing_cve_scan_results');
+      expect(tableText()).toContain('tasks.deprecated_api');
+      expect(tableText()).toContain('volatile_config.expiring_rule');
+
+      fireEvent.click(screen.getByRole('switch', { name: /show policy exceptions/i }));
+
+      expect(tableText()).toContain('volatile_config.expiring_rule');
+      expect(tableText()).not.toContain('cve.missing_cve_scan_results');
+      expect(tableText()).not.toContain('tasks.deprecated_api');
+    });
+
+    it('attaches the Warning status label and a label for every policy exception rule', () => {
+      routerRenderer(<ConformaResultsTab />);
+
+      fireEvent.click(screen.getByRole('switch', { name: /show policy exceptions/i }));
+
+      screen.getByRole('button', { name: `Close ${CONFORMA_RESULT_STATUS.warnings}` });
+      expandRuleCodeLabels();
+      POLICY_EXCEPTION_RULE_CODES.forEach((code) => {
+        screen.getByRole('button', { name: `Close ${code}` });
+      });
+    });
+
+    it('turns on and labels every rule even when the table has no matching rows', () => {
+      mockUseApplicationConformaResults.mockReturnValue({
+        ...mixedResults,
+        // Only rules that are not policy exceptions.
+        allResults: [violationRow, plainWarningRow],
+      });
+      routerRenderer(<ConformaResultsTab />);
+
+      fireEvent.click(screen.getByRole('switch', { name: /show policy exceptions/i }));
+
+      expect(screen.getByRole('switch', { name: /show policy exceptions/i })).toBeChecked();
+      expandRuleCodeLabels();
+      POLICY_EXCEPTION_RULE_CODES.forEach((code) => {
+        screen.getByRole('button', { name: `Close ${code}` });
+      });
+      expect(screen.getByText('No results match the current filters.')).toBeInTheDocument();
+    });
+
+    it('restores every rule when switched back off', () => {
+      routerRenderer(<ConformaResultsTab />);
+
+      const toggle = screen.getByRole('switch', { name: /show policy exceptions/i });
+      fireEvent.click(toggle);
+      expect(tableText()).not.toContain('cve.missing_cve_scan_results');
+
+      fireEvent.click(toggle);
+      expect(tableText()).toContain('cve.missing_cve_scan_results');
+    });
+
+    it('stays on while at least one rule label remains', () => {
+      routerRenderer(<ConformaResultsTab />);
+
+      fireEvent.click(screen.getByRole('switch', { name: /show policy exceptions/i }));
+      fireEvent.click(screen.getByRole('button', { name: 'Close volatile_config.expiring_rule' }));
+
+      expect(screen.getByRole('switch', { name: /show policy exceptions/i })).toBeChecked();
+      expect(JSON.parse(policyExceptionParam())).not.toContain('volatile_config.expiring_rule');
+    });
+
+    it('switches the toggle off when the last rule label is removed', () => {
+      routerRenderer(<ConformaResultsTab />);
+
+      fireEvent.click(screen.getByRole('switch', { name: /show policy exceptions/i }));
+      POLICY_EXCEPTION_RULE_CODES.forEach((code) => {
+        expandRuleCodeLabels();
+        fireEvent.click(screen.getByRole('button', { name: `Close ${code}` }));
+      });
+
+      expect(screen.getByRole('switch', { name: /show policy exceptions/i })).not.toBeChecked();
+      expect(tableText()).toContain('cve.missing_cve_scan_results');
+    });
+
+    it('writes every policy exception rule code and the Warning status to the URL', () => {
+      routerRenderer(<ConformaResultsTab />);
+
+      fireEvent.click(screen.getByRole('switch', { name: /show policy exceptions/i }));
+
+      expect(JSON.parse(policyExceptionParam())).toEqual([...POLICY_EXCEPTION_RULE_CODES]);
+      expect(JSON.parse(new URLSearchParams(window.location.search).get('status'))).toEqual([
+        CONFORMA_RESULT_STATUS.warnings,
+      ]);
+    });
+
+    it('clears the rule codes from the URL when switched off', () => {
+      routerRenderer(<ConformaResultsTab />);
+
+      const toggle = screen.getByRole('switch', { name: /show policy exceptions/i });
+      fireEvent.click(toggle);
+      fireEvent.click(toggle);
+
+      expect(policyExceptionParam()).toBeNull();
+    });
+
+    it('restores the narrowed table from the URL on load', () => {
+      window.history.replaceState(
+        {},
+        '',
+        `/?${POLICY_EXCEPTION_FILTER_KEY}=${encodeURIComponent(
+          JSON.stringify(['volatile_config.expiring_rule']),
+        )}`,
+      );
+
+      routerRenderer(<ConformaResultsTab />);
+
+      expect(screen.getByRole('switch', { name: /show policy exceptions/i })).toBeChecked();
+      expect(tableText()).toContain('volatile_config.expiring_rule');
+      expect(tableText()).not.toContain('cve.missing_cve_scan_results');
+    });
+
+    it('leaves the summary bar counts untouched', () => {
+      const { container } = routerRenderer(<ConformaResultsTab />);
+
+      fireEvent.click(screen.getByRole('switch', { name: /show policy exceptions/i }));
+
+      const resultsSection = container.querySelector('[data-test="conforma-summary-results"]');
+      expect(resultsSection).toHaveTextContent('1 violations');
+      expect(resultsSection).toHaveTextContent('2 warnings');
+    });
+  });
 });

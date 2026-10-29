@@ -1,8 +1,13 @@
 import * as React from 'react';
 import { aggregateCounts } from '~/components/Conforma/conforma-fetch-utils';
 import { useComponentsConformaResults } from '~/components/Conforma/ConformaResultsTab/useComponentsConformaResults';
+import {
+  collectPolicyExceptions,
+  type PolicyException,
+} from '~/components/Conforma/policy-exception-utils';
 import { useAllComponents } from '~/hooks/useComponents';
 import { useNamespace } from '~/shared/providers/Namespace';
+import type { ComponentConformaResult } from '~/types/conforma';
 
 export type ApplicationViolationSummary = {
   applicationName: string;
@@ -14,6 +19,8 @@ export type WorkspaceConformaViolations = {
   totalViolations: number;
   totalWarnings: number;
   applications: ApplicationViolationSummary[];
+  /** Upcoming policy changes derived from warnings: expiring exceptions and pending activations. */
+  exceptions: PolicyException[];
   loaded: boolean;
   settling: boolean;
   error?: unknown;
@@ -49,6 +56,7 @@ export const useWorkspaceConformaViolations = (): WorkspaceConformaViolations =>
         totalViolations: 0,
         totalWarnings: 0,
         applications: [],
+        exceptions: [],
         loaded: false,
         settling: false,
         error,
@@ -58,6 +66,7 @@ export const useWorkspaceConformaViolations = (): WorkspaceConformaViolations =>
     let totalViolations = 0;
     let totalWarnings = 0;
     const perApp = new Map<string, ApplicationViolationSummary>();
+    const allResults: ComponentConformaResult[] = [];
 
     components.forEach((comp) => {
       const compName = comp.metadata?.name;
@@ -66,6 +75,8 @@ export const useWorkspaceConformaViolations = (): WorkspaceConformaViolations =>
 
       const compData = conformaByComponent.get(compName);
       if (!compData) return;
+
+      allResults.push(...compData.results);
 
       const { violationCount, warningCount } = aggregateCounts(compData.results);
       totalViolations += violationCount;
@@ -87,6 +98,7 @@ export const useWorkspaceConformaViolations = (): WorkspaceConformaViolations =>
       totalViolations,
       totalWarnings,
       applications: Array.from(perApp.values()),
+      exceptions: collectPolicyExceptions(allResults),
       loaded: true,
       settling: !allSettled,
       error,
