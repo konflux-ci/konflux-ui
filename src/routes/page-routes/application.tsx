@@ -82,13 +82,7 @@ const applicationRoutes = [
       },
       {
         path: 'conforma-results',
-        loader: createLoaderWithAccessCheck(
-          () => {
-            ensureFeatureFlagOnLoader('conforma-policy');
-            return null;
-          },
-          { model: TaskRunModel, verb: 'list' },
-        ),
+        loader: createLoaderWithAccessCheck(() => null, { model: TaskRunModel, verb: 'list' }),
         errorElement: <RouteErrorBoundry />,
         element: <ConformaResultsTab />,
       },
