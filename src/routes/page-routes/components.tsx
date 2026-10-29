@@ -31,9 +31,6 @@ const componentRoutes = [
       },
       {
         path: `dep-updates`,
-        loader: () => {
-          return null;
-        },
         async lazy() {
           const { ComponentDependencyTab } =
             await import('~/components/Components/ComponentDetails/tabs/ComponentDependencyTab');
