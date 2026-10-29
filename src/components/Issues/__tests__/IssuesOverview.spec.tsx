@@ -1,6 +1,5 @@
 import * as React from 'react';
 import { MemoryRouter } from 'react-router-dom';
-import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { IssueSeverity, IssueState, IssueType } from '~/kite/issue-type';
 import { renderWithQueryClient } from '~/unit-test-utils/mock-react-query';
 import IssuesOverview from '../IssuesOverview';
@@ -76,8 +75,6 @@ jest.mock('../useWorkspaceConformaViolations', () => ({
   })),
 }));
 
-const mockUseIsOnFeatureFlag = jest.mocked(useIsOnFeatureFlag);
-
 describe('IssuesOverview', () => {
   const renderComponent = () => {
     return renderWithQueryClient(
@@ -89,7 +86,6 @@ describe('IssuesOverview', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockUseIsOnFeatureFlag.mockImplementation((flag) => flag === 'conforma-policy');
   });
 
   it('should render without crashing', () => {
@@ -120,14 +116,8 @@ describe('IssuesOverview', () => {
     expect(nestedGridItems).toHaveLength(3);
   });
 
-  it('should render ConformaViolationsCard when conforma-policy feature flag is enabled', () => {
+  it('should render ConformaViolationsCard', () => {
     const { getByTestId } = renderComponent();
     expect(getByTestId('conforma-violations-card')).toBeInTheDocument();
-  });
-
-  it('should not render ConformaViolationsCard when conforma-policy feature flag is disabled', () => {
-    mockUseIsOnFeatureFlag.mockImplementation(() => false);
-    const { queryByTestId } = renderComponent();
-    expect(queryByTestId('conforma-violations-card')).not.toBeInTheDocument();
   });
 });
