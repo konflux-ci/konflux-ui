@@ -148,6 +148,17 @@ const InternalFLAGS = {
     defaultEnabled: true,
     status: 'wip',
   },
+  'kueue-queue-position': {
+    key: 'kueue-queue-position',
+    description: 'Show queue position and priority for pending PipelineRuns',
+    defaultEnabled: false,
+    status: 'wip',
+    guard: {
+      allOf: ['isKueueAvailable'],
+      failureReason: 'Kueue is not available on this cluster',
+      visibleInFeatureFlagPanel: true,
+    },
+  },
 } satisfies Record<string, FeatureMeta>;
 
 export type FlagKey = keyof typeof InternalFLAGS;
