@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Flex, FlexItem } from '@patternfly/react-core';
+import { Flex, FlexItem, Label } from '@patternfly/react-core';
 import {
   COMPONENT_DETAILS_V2_PATH,
   COMPONENT_VERSION_DETAILS_PATH,
@@ -97,6 +97,31 @@ export const componentGroupsTableColumns: ColumnDefinition<ComponentGroupKind>[]
             <Timestamp timestamp={latestBuild.lastPromotedBuildTime ?? ''} />
           </FlexItem>
         </Flex>
+      );
+    },
+  },
+  {
+    id: 'buildStatus',
+    header: 'Build status',
+    cell: (info) => {
+      const group = info.row.original;
+
+      const gcl = group.status?.globalCandidateList || [];
+      const promoted = gcl.filter((c) => c.lastPromotedImage).length;
+      const total = gcl.length;
+
+      if (total === 0) {
+        return <span data-test="component-group-no-builds">-</span>;
+      }
+
+      const allPromoted = promoted === total;
+      return (
+        <Label
+          data-test="component-group-build-status"
+          color={allPromoted ? 'green' : promoted === 0 ? 'grey' : 'orange'}
+        >
+          {promoted}/{total} promoted
+        </Label>
       );
     },
   },
