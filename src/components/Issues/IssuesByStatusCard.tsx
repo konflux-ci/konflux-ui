@@ -8,12 +8,10 @@ import {
   Content,
   ContentVariants,
 } from '@patternfly/react-core';
-import { CheckCircleIcon } from '@patternfly/react-icons/dist/esm/icons/check-circle-icon';
 import { LockOpenIcon } from '@patternfly/react-icons/dist/esm/icons/lock-open-icon';
-import { t_global_color_nonstatus_green_default as greenColor } from '@patternfly/react-tokens/dist/js/t_global_color_nonstatus_green_default';
 import dayjs from 'dayjs';
 import { useIssues } from '~/kite/kite-hooks';
-import { LoadingSkeleton } from '~/shared';
+import { LoadingSkeleton, SuccessIcon } from '~/shared';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { Issue, IssueState } from '../../kite/issue-type';
@@ -68,7 +66,7 @@ const IssuesByStatusCard = () => {
             <SplitItem style={{ paddingLeft: '1rem' }}>
               <Content>
                 <Content component={ContentVariants.h6}>
-                  <CheckCircleIcon color={greenColor.value} /> Resolved
+                  <SuccessIcon isInline /> Resolved
                 </Content>
               </Content>
               {isLoading ? (

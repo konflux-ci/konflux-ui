@@ -5,17 +5,19 @@ import { ExclamationCircleIcon } from '@patternfly/react-icons/dist/esm/icons/ex
 import { t_global_icon_color_status_danger_default as redColor } from '@patternfly/react-tokens/dist/js/t_global_icon_color_status_danger_default';
 import { t_global_icon_color_status_success_default as greenColor } from '@patternfly/react-tokens/dist/js/t_global_icon_color_status_success_default';
 import { t_global_icon_color_status_warning_default as yellowColor } from '@patternfly/react-tokens/dist/js/t_global_icon_color_status_warning_default';
-import { WarningIcon } from '~/shared/components/status/icons';
+import { ErrorIcon, SuccessIcon, WarningIcon } from '~/shared/components/status/icons';
 import { CONFORMA_RESULT_STATUS, ConformaResult } from '~/types/conforma';
 
 export type RuleStatusConfig = {
   Icon: React.ComponentType<{ color?: string }>;
-  iconColor: string;
-  labelColor: 'red' | 'yellow' | 'green' | 'grey';
   statusText: string;
 };
+export type RuleStatusConfigBadge = RuleStatusConfig & {
+  iconColor: string;
+  labelColor: 'red' | 'yellow' | 'green' | 'grey';
+};
 
-export const RULE_STATUS_CONFIG: Record<CONFORMA_RESULT_STATUS, RuleStatusConfig> = {
+export const RULE_STATUS_CONFIG_BADGE: Record<CONFORMA_RESULT_STATUS, RuleStatusConfigBadge> = {
   [CONFORMA_RESULT_STATUS.violations]: {
     Icon: ExclamationCircleIcon,
     iconColor: redColor.value,
@@ -36,6 +38,22 @@ export const RULE_STATUS_CONFIG: Record<CONFORMA_RESULT_STATUS, RuleStatusConfig
   },
 };
 
+export const RULE_STATUS_CONFIG: Record<CONFORMA_RESULT_STATUS, RuleStatusConfig>= {
+  [CONFORMA_RESULT_STATUS.violations]: {
+    Icon: ErrorIcon,
+    statusText: CONFORMA_RESULT_STATUS.violations,
+  },
+  [CONFORMA_RESULT_STATUS.warnings]: {
+    Icon: WarningIcon,
+    statusText: CONFORMA_RESULT_STATUS.warnings,
+  },
+  [CONFORMA_RESULT_STATUS.successes]: {
+    Icon: SuccessIcon,
+    statusText: CONFORMA_RESULT_STATUS.successes,
+  },
+};
+
+
 export const getRuleStatus = (type: CONFORMA_RESULT_STATUS) => {
   const config = RULE_STATUS_CONFIG[type];
   if (!config) {
@@ -45,10 +63,10 @@ export const getRuleStatus = (type: CONFORMA_RESULT_STATUS) => {
       </>
     );
   }
-  const { Icon, iconColor, statusText } = config;
+  const { Icon, statusText } = config;
   return (
     <>
-      <Icon color={iconColor} /> {statusText}
+      <Icon /> {statusText}
     </>
   );
 };
