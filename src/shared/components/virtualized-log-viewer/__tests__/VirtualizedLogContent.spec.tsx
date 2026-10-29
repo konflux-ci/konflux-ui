@@ -420,14 +420,13 @@ describe('VirtualizedLogContent Integration Tests', () => {
       expect(listElement).toBeInTheDocument();
     });
 
-    it('should render a split layout with a fixed gutter track when wrapLines is disabled', () => {
+    it('should render a width measure row when wrapLines is disabled', () => {
       renderWithQueryClientAndRouter(
         <VirtualizedLogContent {...defaultProps} wrapLines={false} />,
       );
 
-      expect(document.querySelector('.log-content__nowrap-layout')).toBeInTheDocument();
-      expect(document.querySelector('.log-content__gutter-track')).toBeInTheDocument();
-      expect(document.querySelector('.log-content__content-scroll')).toBeInTheDocument();
+      expect(document.querySelector('.log-content__width-measure')).toBeInTheDocument();
+      expect(document.querySelector('.log-content__nowrap-layout')).not.toBeInTheDocument();
     });
   });
 

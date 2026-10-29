@@ -6,32 +6,13 @@ import type { LogDisplayRow } from './types';
 import './LineNumberGutter.scss';
 import './VirtualizedLogContent.scss';
 
-/** Which slice of a row to render in the nowrap split layout. */
-export type VirtualRowPart = 'full' | 'gutter' | 'content';
-
-const virtualRowStyle = (
-  start: number,
-  rowPart: VirtualRowPart = 'full',
-): React.CSSProperties => {
-  const baseStyle: React.CSSProperties = {
-    position: 'absolute',
-    top: `${start}px`,
-    left: 0,
-  };
-
-  switch (rowPart) {
-    case 'gutter':
-      return { ...baseStyle, right: 0 };
-    case 'content':
-      return { ...baseStyle, width: 'max-content', minWidth: '100%' };
-    default:
-      return {
-        ...baseStyle,
-        width: '100%',
-        display: 'flex',
-      };
-  }
-};
+const virtualRowStyle = (start: number): React.CSSProperties => ({
+  position: 'absolute',
+  top: `${start}px`,
+  left: 0,
+  width: '100%',
+  display: 'flex',
+});
 
 function getRowLineNumber(row: LogDisplayRow): number | null {
   if (row.kind === 'section-header') return row.lineNumber;
@@ -81,7 +62,6 @@ type SectionedVirtualRowProps = {
   virtualIndex: number;
   start: number;
   row: LogDisplayRow;
-  rowPart?: VirtualRowPart;
   measureElement?: Virtualizer<HTMLDivElement, Element>['measureElement'];
   isLineHighlighted: (lineNumber: number) => boolean;
   onToggleSection: (sectionIndex: number) => void;
@@ -95,7 +75,6 @@ export const SectionedVirtualRow: React.FC<SectionedVirtualRowProps> = ({
   virtualIndex,
   start,
   row,
-  rowPart = 'full',
   measureElement,
   isLineHighlighted,
   onToggleSection,
@@ -138,7 +117,7 @@ export const SectionedVirtualRow: React.FC<SectionedVirtualRowProps> = ({
     'data-index': virtualIndex,
     ref: measureElement,
     className: rowClassName,
-    style: virtualRowStyle(start, rowPart),
+    style: virtualRowStyle(start),
   };
 
   const rowContentProps = {
@@ -149,20 +128,6 @@ export const SectionedVirtualRow: React.FC<SectionedVirtualRowProps> = ({
     renderLogLine,
   };
 
-  // Nowrap split layout: render only the gutter or content column.
-  if (rowPart === 'gutter') {
-    return <div {...rowProps}>{gutterCell}</div>;
-  }
-
-  if (rowPart === 'content') {
-    return (
-      <div {...rowProps} className={`${rowClassName} log-content__row-content`}>
-        <RowContent {...rowContentProps} />
-      </div>
-    );
-  }
-
-  // Full row: gutter + content side by side (used in wrap mode).
   return (
     <div {...rowProps}>
       {gutterCell}

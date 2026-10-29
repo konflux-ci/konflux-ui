@@ -2,7 +2,7 @@ import React, { forwardRef, useImperativeHandle } from 'react';
 import { Content } from '@patternfly/react-core';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { normalizeSection } from './log-viewer-utils';
-import { SectionedVirtualRow, type VirtualRowPart } from './SectionedVirtualRow';
+import { SectionedVirtualRow } from './SectionedVirtualRow';
 import { StickySectionHeaderBar } from './SectionLogUI';
 import { computeStickySectionHeader } from './sticky-section-header';
 import type { LogSection, NormalizedLogSection, SearchedWord } from './types';
@@ -130,6 +130,15 @@ export const VirtualizedLogContent = forwardRef<
       searchRegex,
       currentSearchMatch,
     });
+
+    const longestLine = React.useMemo(
+      () =>
+        allLines.reduce<string | null>(
+          (widest, line) => (line.length > (widest?.length ?? 0) ? line : widest),
+          null,
+        ),
+      [allLines],
+    );
 
     const normalizedSectionsRef = React.useRef(effectiveNormalizedSections);
     normalizedSectionsRef.current = effectiveNormalizedSections;
@@ -326,26 +335,22 @@ export const VirtualizedLogContent = forwardRef<
 
     const virtualInnerStyle: React.CSSProperties = {
       height: `${virtualizer.getTotalSize()}px`,
-      width: '100%',
+      width: wrapLines ? '100%' : 'max-content',
+      minWidth: wrapLines ? undefined : '100%',
       position: 'relative',
     };
 
-    const renderVirtualRow = (
-      virtualItem: (typeof virtualItems)[number],
-      rowPart: VirtualRowPart,
-      adjustForSticky = false,
-    ) => {
+    const renderVirtualRow = (virtualItem: (typeof virtualItems)[number]) => {
       const row = displayRows[virtualItem.index];
       if (!row) return null;
 
       return (
         <SectionedVirtualRow
-          key={`${rowPart}-${virtualItem.key}`}
+          key={virtualItem.key}
           virtualIndex={virtualItem.index}
-          start={adjustForSticky ? virtualItem.start - scrollOffset : virtualItem.start}
+          start={virtualItem.start}
           row={row}
-          rowPart={rowPart}
-          measureElement={rowPart === 'gutter' ? undefined : virtualizer.measureElement}
+          measureElement={virtualizer.measureElement}
           isLineHighlighted={isLineHighlighted}
           onToggleSection={toggleSection}
           onDownloadFullLogs={onDownloadFullLogs}
@@ -366,7 +371,7 @@ export const VirtualizedLogContent = forwardRef<
     }`;
 
     return (
-      <div className="log-content__container">
+      <div className="log-content__container" style={{ width: '100%', minWidth: 0 }}>
         <div
           ref={measureCallbackRef}
           className="pf-v6-c-log-viewer__list-item"
@@ -377,43 +382,28 @@ export const VirtualizedLogContent = forwardRef<
           </Content>
         </div>
 
-        {!wrapLines ? (
-          <div
-            ref={scrollContainerRef}
-            className={sharedListClassName}
-            tabIndex={0}
-            style={{ ...containerDimensions, overflowY: 'auto', overflowX: 'hidden' }}
-            onClick={() => scrollRef.current?.focus({ preventScroll: true })}
-          >
-            <div
-              className="log-content__nowrap-layout"
-              style={{ height: `${virtualizer.getTotalSize()}px` }}
-            >
-              <div className="log-content__gutter-track" style={{ height: `${height}px` }}>
-                <div className="log-content__gutter-inner">
-                  {virtualItems.map((vi) => renderVirtualRow(vi, 'gutter', true))}
+        <div
+          ref={scrollContainerRef}
+          className={sharedListClassName}
+          tabIndex={0}
+          style={{ ...containerDimensions, overflow: 'auto' }}
+          onClick={() => scrollRef.current?.focus({ preventScroll: true })}
+        >
+          <div style={virtualInnerStyle}>
+            {!wrapLines && longestLine !== null && (
+              <div
+                aria-hidden="true"
+                className="pf-v6-c-log-viewer__list-item log-content__width-measure"
+              >
+                <div className="log-content__gutter" />
+                <div className="log-content__row-content">
+                  <span className="pf-v6-c-log-viewer__text">{longestLine || '\u00A0'}</span>
                 </div>
               </div>
-              <div className="log-content__content-scroll" style={{ height: `${height}px` }}>
-                <div className="log-content__content-inner" style={{ height: `${height}px` }}>
-                  {virtualItems.map((vi) => renderVirtualRow(vi, 'content', true))}
-                </div>
-              </div>
-            </div>
+            )}
+            {virtualItems.map((vi) => renderVirtualRow(vi))}
           </div>
-        ) : (
-          <div
-            ref={scrollContainerRef}
-            className={sharedListClassName}
-            tabIndex={0}
-            style={{ ...containerDimensions, overflow: 'auto' }}
-            onClick={() => scrollRef.current?.focus({ preventScroll: true })}
-          >
-            <div style={virtualInnerStyle}>
-              {virtualItems.map((vi) => renderVirtualRow(vi, 'full'))}
-            </div>
-          </div>
-        )}
+        </div>
 
         {stickyRow && (
           <StickySectionHeaderBar
