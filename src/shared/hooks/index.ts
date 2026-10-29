@@ -11,3 +11,4 @@ export * from './useFaviconStatusBadge';
 export * from './useContainerHeight';
 export * from './useCurrentTime';
 export * from './useSearchShortcut';
+export * from './useSessionStorage';
