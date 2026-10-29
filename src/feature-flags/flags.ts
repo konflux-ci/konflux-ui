@@ -136,13 +136,6 @@ const InternalFLAGS = {
       visibleInFeatureFlagPanel: false,
     },
   },
-  'pipeline-runs-page': {
-    key: 'pipeline-runs-page',
-    description:
-      'Cross-application Pipeline Runs page with saved views, advanced filters, and column management',
-    defaultEnabled: true,
-    status: 'wip',
-  },
   mintmaker: {
     key: 'mintmaker',
     description: 'Enable MintMaker in the UI',

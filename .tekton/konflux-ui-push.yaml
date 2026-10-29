@@ -210,6 +210,8 @@ spec:
         params:
           - name: input
             value: $(params.prefetch-input)
+          - name: enable-package-registry-proxy
+            value: 'true'
           - name: SOURCE_ARTIFACT
             value: $(tasks.clone-repository.results.SOURCE_ARTIFACT)
           - name: ociStorage
@@ -236,6 +238,8 @@ spec:
         params:
           - name: input
             value: $(params.e2e-prefetch-input)
+          - name: enable-package-registry-proxy
+            value: 'true'
           - name: SOURCE_ARTIFACT
             value: $(tasks.clone-repository.results.SOURCE_ARTIFACT)
           - name: ociStorage
