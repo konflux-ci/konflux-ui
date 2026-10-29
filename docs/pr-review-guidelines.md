@@ -19,6 +19,7 @@ A process checklist for reviewing pull requests. For coding standards and detail
 - [ ] **[Best practices](./best-practices.md) are followed.** Verify against the full coding standards document, paying special attention to:
   - No `as` type assertions or `any` types
   - No `useEffect` for derived state (use `useMemo`)
+  - `useMemo` only for non-trivial computations or reference stability (not simple property access or string ops)
   - `useCallback` only where reference stability matters
   - Custom hook outputs are memoized
   - PatternFly components used over raw HTML elements
@@ -78,6 +79,7 @@ Skip this section if the PR has no UI changes.
 | `// eslint-disable` | Fix the underlying issue |
 | `console.log(...)` | Use `logger` from `~/monitoring/logger` |
 | `useEffect` + `setState` from props | Use `useMemo` |
+| `useMemo(() => obj.name, [obj])` | Remove `useMemo` — trivial expression |
 | `style={{ ... }}` | Use co-located SCSS with BEM |
 | `import ... from '../../../'` | Use `~/` absolute import |
 | `localStorage.getItem(...)` | Use `useLocalStorage` hook |
