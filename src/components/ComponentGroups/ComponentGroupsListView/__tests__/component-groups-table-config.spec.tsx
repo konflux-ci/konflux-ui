@@ -41,7 +41,7 @@ describe('componentGroupsTableColumns', () => {
       const result = promotionStatusColumn?.cell?.(info);
       render(<>{result}</>);
 
-      expect(screen.getByTestId('component-group-no-builds')).toHaveTextContent('-');
+      expect(screen.getByTestId('component-group-no-promotions')).toHaveTextContent('-');
     });
 
     it('should show "-" when globalCandidateList is missing', () => {
@@ -51,7 +51,7 @@ describe('componentGroupsTableColumns', () => {
       const result = promotionStatusColumn?.cell?.(info);
       render(<>{result}</>);
 
-      expect(screen.getByTestId('component-group-no-builds')).toHaveTextContent('-');
+      expect(screen.getByTestId('component-group-no-promotions')).toHaveTextContent('-');
     });
 
     it('should show "-" when status is missing', () => {
@@ -71,7 +71,7 @@ describe('componentGroupsTableColumns', () => {
       const result = promotionStatusColumn?.cell?.(info);
       render(<>{result}</>);
 
-      expect(screen.getByTestId('component-group-no-builds')).toHaveTextContent('-');
+      expect(screen.getByTestId('component-group-no-promotions')).toHaveTextContent('-');
     });
 
     it('should show green label when all components are promoted', () => {

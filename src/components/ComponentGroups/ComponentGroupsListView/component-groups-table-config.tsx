@@ -112,7 +112,7 @@ export const componentGroupsTableColumns: ColumnDefinition<ComponentGroupKind>[]
       const total = candidateList.length;
 
       if (total === 0) {
-        return <span data-test="component-group-no-builds">-</span>;
+        return <span data-test="component-group-no-promotions">-</span>;
       }
 
       const allPromoted = promoted === total;
