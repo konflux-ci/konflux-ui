@@ -350,7 +350,7 @@ spec:
           volumes:
             - name: qe-quay-auth
               secret:
-                secretName: build-credentials-secret
+                secretName: quay-repo
           steps:
             - name: skopeo-copy
               image: registry.access.redhat.com/ubi9/skopeo@sha256:6ebbdfce633f9915a6a99d8ee035d9fd258121aa1acf944229e90696eb353549

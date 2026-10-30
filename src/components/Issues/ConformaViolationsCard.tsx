@@ -16,10 +16,8 @@ import {
 } from '@patternfly/react-core';
 import { CheckCircleIcon } from '@patternfly/react-icons/dist/esm/icons/check-circle-icon';
 import { ExclamationCircleIcon } from '@patternfly/react-icons/dist/esm/icons/exclamation-circle-icon';
-import { ExclamationTriangleIcon } from '@patternfly/react-icons/dist/esm/icons/exclamation-triangle-icon';
 import { t_global_icon_color_status_danger_default as dangerColor } from '@patternfly/react-tokens/dist/js/t_global_icon_color_status_danger_default';
 import { t_global_icon_color_status_success_default as successColor } from '@patternfly/react-tokens/dist/js/t_global_icon_color_status_success_default';
-import { t_global_icon_color_status_warning_default as warningColor } from '@patternfly/react-tokens/dist/js/t_global_icon_color_status_warning_default';
 import { TrackEvents } from '~/analytics';
 import { useTrackAnalyticsEvent } from '~/analytics/hooks';
 import {
@@ -28,6 +26,7 @@ import {
 } from '~/components/Issues/useWorkspaceConformaViolations';
 import { APPLICATION_CONFORMA_RESULTS_PATH } from '~/routes/paths';
 import { LoadingSkeleton } from '~/shared';
+import { WarningIcon } from '~/shared/components/status/icons';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
 
@@ -131,7 +130,7 @@ export const ConformaViolationsCard: React.FC = () => {
               ) : (
                 <>
                   <FlexItem>
-                    <ExclamationTriangleIcon color={warningColor.value} />
+                    <WarningIcon />
                   </FlexItem>
                   <FlexItem>
                     <Content component={ContentVariants.p}>
