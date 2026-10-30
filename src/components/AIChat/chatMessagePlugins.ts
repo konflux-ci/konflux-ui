@@ -24,17 +24,22 @@ export const loadChatMessageRehypePlugins = (): Promise<PluggableList> => {
   if (!chatMessageRehypePluginsPromise) {
     chatMessageRehypePluginsPromise = import(
       'rehype-sanitize' /* webpackChunkName: "rehype-sanitize" */
-    ).then(({ default: rehypeSanitize, defaultSchema }) => {
-      const chatMessageSanitizeSchema = {
-        ...defaultSchema,
-        attributes: {
-          ...defaultSchema.attributes,
-          a: [...(defaultSchema.attributes?.a ?? []), 'target', 'rel'],
-        },
-      };
+    )
+      .then(({ default: rehypeSanitize, defaultSchema }) => {
+        const chatMessageSanitizeSchema = {
+          ...defaultSchema,
+          attributes: {
+            ...defaultSchema.attributes,
+            a: [...(defaultSchema.attributes?.a ?? []), 'target', 'rel'],
+          },
+        };
 
-      return [[rehypeSanitize, chatMessageSanitizeSchema]] as PluggableList;
-    });
+        return [[rehypeSanitize, chatMessageSanitizeSchema]] as PluggableList;
+      })
+      .catch((error: unknown) => {
+        chatMessageRehypePluginsPromise = undefined;
+        throw error;
+      });
   }
 
   return chatMessageRehypePluginsPromise;
@@ -60,6 +65,9 @@ export const useChatMessageRehypePlugins = (): PluggableList | undefined => {
           'Failed to load rehype-sanitize for AI chat messages',
           error instanceof Error ? error : new Error(String(error)),
         );
+        if (!cancelled) {
+          setPlugins([]);
+        }
       });
 
     return () => {

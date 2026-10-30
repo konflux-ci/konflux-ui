@@ -5,6 +5,8 @@ import {
 } from '~/components/AIChat/chatMessagePlugins';
 
 const mockRehypeSanitize = jest.fn();
+const mockImportError = new Error('Failed to load rehype-sanitize');
+let mockShouldFailImport = false;
 const mockDefaultSchema = {
   attributes: {
     a: ['href'],
@@ -12,16 +14,22 @@ const mockDefaultSchema = {
   },
 };
 
-jest.mock('rehype-sanitize', () => ({
-  __esModule: true,
-  default: mockRehypeSanitize,
-  defaultSchema: {
-    attributes: {
-      a: ['href'],
-      img: ['src'],
+jest.mock('rehype-sanitize', () => {
+  if (mockShouldFailImport) {
+    throw mockImportError;
+  }
+
+  return {
+    __esModule: true,
+    default: mockRehypeSanitize,
+    defaultSchema: {
+      attributes: {
+        a: ['href'],
+        img: ['src'],
+      },
     },
-  },
-}));
+  };
+});
 
 jest.mock('~/monitoring/logger', () => ({
   logger: {
@@ -31,6 +39,19 @@ jest.mock('~/monitoring/logger', () => ({
 
 describe('chatMessagePlugins', () => {
   describe('loadChatMessageRehypePlugins', () => {
+    it('renders with no extra plugins and retries after an import failure', async () => {
+      mockShouldFailImport = true;
+      const { result } = renderHook(() => useChatMessageRehypePlugins());
+
+      await waitFor(() => {
+        expect(result.current).toEqual([]);
+      });
+
+      mockShouldFailImport = false;
+
+      await expect(loadChatMessageRehypePlugins()).resolves.toHaveLength(1);
+    });
+
     it('loads rehype-sanitize with a schema that keeps target and rel on anchors', async () => {
       const plugins = await loadChatMessageRehypePlugins();
 
