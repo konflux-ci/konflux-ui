@@ -4,8 +4,10 @@ import { ComponentGroupKind } from '~/types';
 import { componentGroupsTableColumns } from '../component-groups-table-config';
 
 describe('componentGroupsTableColumns', () => {
-  describe('Build status column', () => {
-    const buildStatusColumn = componentGroupsTableColumns.find((col) => col.id === 'build-status');
+  describe('Promotion status column', () => {
+    const promotionStatusColumn = componentGroupsTableColumns.find(
+      (col) => col.id === 'promotion-status',
+    );
 
     const createMockGroup = (
       globalCandidateList?: Array<{ name: string; lastPromotedImage?: string }>,
@@ -29,14 +31,14 @@ describe('componentGroupsTableColumns', () => {
         },
         getValue: () => null,
         renderValue: () => null,
-        column: { id: 'build-status' },
+        column: { id: 'promotion-status' },
       }) as CellContext<ComponentGroupKind, unknown>;
 
     it('should show "-" when globalCandidateList is empty', () => {
       const group = createMockGroup([]);
       const info = createMockInfo(group);
 
-      const result = buildStatusColumn?.cell?.(info);
+      const result = promotionStatusColumn?.cell?.(info);
       render(<>{result}</>);
 
       expect(screen.getByTestId('component-group-no-builds')).toHaveTextContent('-');
@@ -46,7 +48,7 @@ describe('componentGroupsTableColumns', () => {
       const group = createMockGroup(undefined);
       const info = createMockInfo(group);
 
-      const result = buildStatusColumn?.cell?.(info);
+      const result = promotionStatusColumn?.cell?.(info);
       render(<>{result}</>);
 
       expect(screen.getByTestId('component-group-no-builds')).toHaveTextContent('-');
@@ -66,7 +68,7 @@ describe('componentGroupsTableColumns', () => {
       };
       const info = createMockInfo(group);
 
-      const result = buildStatusColumn?.cell?.(info);
+      const result = promotionStatusColumn?.cell?.(info);
       render(<>{result}</>);
 
       expect(screen.getByTestId('component-group-no-builds')).toHaveTextContent('-');
@@ -80,10 +82,10 @@ describe('componentGroupsTableColumns', () => {
       ]);
       const info = createMockInfo(group);
 
-      const result = buildStatusColumn?.cell?.(info);
+      const result = promotionStatusColumn?.cell?.(info);
       render(<>{result}</>);
 
-      const label = screen.getByTestId('component-group-build-status');
+      const label = screen.getByTestId('component-group-promotion-status');
       expect(label).toHaveTextContent('3/3 promoted');
       expect(label).toHaveClass('pf-v6-c-label');
       expect(label).toHaveClass('pf-m-green');
@@ -93,10 +95,10 @@ describe('componentGroupsTableColumns', () => {
       const group = createMockGroup([{ name: 'comp1' }, { name: 'comp2' }, { name: 'comp3' }]);
       const info = createMockInfo(group);
 
-      const result = buildStatusColumn?.cell?.(info);
+      const result = promotionStatusColumn?.cell?.(info);
       render(<>{result}</>);
 
-      const label = screen.getByTestId('component-group-build-status');
+      const label = screen.getByTestId('component-group-promotion-status');
       expect(label).toHaveTextContent('0/3 promoted');
       expect(label).toHaveClass('pf-v6-c-label');
       // PatternFly v6 doesn't add a color modifier for grey labels
@@ -112,10 +114,10 @@ describe('componentGroupsTableColumns', () => {
       ]);
       const info = createMockInfo(group);
 
-      const result = buildStatusColumn?.cell?.(info);
+      const result = promotionStatusColumn?.cell?.(info);
       render(<>{result}</>);
 
-      const label = screen.getByTestId('component-group-build-status');
+      const label = screen.getByTestId('component-group-promotion-status');
       expect(label).toHaveTextContent('2/3 promoted');
       expect(label).toHaveClass('pf-v6-c-label');
       expect(label).toHaveClass('pf-m-orange');
@@ -131,10 +133,10 @@ describe('componentGroupsTableColumns', () => {
       ]);
       const info = createMockInfo(group);
 
-      const result = buildStatusColumn?.cell?.(info);
+      const result = promotionStatusColumn?.cell?.(info);
       render(<>{result}</>);
 
-      const label = screen.getByTestId('component-group-build-status');
+      const label = screen.getByTestId('component-group-promotion-status');
       expect(label).toHaveTextContent('1/5 promoted');
       expect(label).toHaveClass('pf-v6-c-label');
       expect(label).toHaveClass('pf-m-orange');
@@ -144,10 +146,10 @@ describe('componentGroupsTableColumns', () => {
       const group = createMockGroup([{ name: 'comp1', lastPromotedImage: 'image1' }]);
       const info = createMockInfo(group);
 
-      const result = buildStatusColumn?.cell?.(info);
+      const result = promotionStatusColumn?.cell?.(info);
       render(<>{result}</>);
 
-      const label = screen.getByTestId('component-group-build-status');
+      const label = screen.getByTestId('component-group-promotion-status');
       expect(label).toHaveTextContent('1/1 promoted');
       expect(label).toHaveClass('pf-v6-c-label');
       expect(label).toHaveClass('pf-m-green');
@@ -157,10 +159,10 @@ describe('componentGroupsTableColumns', () => {
       const group = createMockGroup([{ name: 'comp1' }]);
       const info = createMockInfo(group);
 
-      const result = buildStatusColumn?.cell?.(info);
+      const result = promotionStatusColumn?.cell?.(info);
       render(<>{result}</>);
 
-      const label = screen.getByTestId('component-group-build-status');
+      const label = screen.getByTestId('component-group-promotion-status');
       expect(label).toHaveTextContent('0/1 promoted');
       expect(label).toHaveClass('pf-v6-c-label');
       // PatternFly v6 doesn't add a color modifier for grey labels

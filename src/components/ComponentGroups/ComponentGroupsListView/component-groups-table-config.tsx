@@ -101,8 +101,9 @@ export const componentGroupsTableColumns: ColumnDefinition<ComponentGroupKind>[]
     },
   },
   {
-    id: 'build-status',
-    header: 'Build status',
+    id: 'promotion-status',
+    header: 'Promotion status',
+    nonHidable: true,
     cell: (info) => {
       const group = info.row.original;
 
@@ -117,7 +118,7 @@ export const componentGroupsTableColumns: ColumnDefinition<ComponentGroupKind>[]
       const allPromoted = promoted === total;
       return (
         <Label
-          data-test="component-group-build-status"
+          data-test="component-group-promotion-status"
           color={allPromoted ? 'green' : promoted === 0 ? 'grey' : 'orange'}
         >
           {promoted}/{total} promoted
