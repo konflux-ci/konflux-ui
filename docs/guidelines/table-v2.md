@@ -436,6 +436,101 @@ const MyListView = () => {
 - `nonHidable` columns have a disabled checkbox
 - "Restore defaults" resets to the original column order and visibility
 
+## SortDropdown
+
+The `SortDropdown` component provides a toolbar widget for user-controlled sorting. When a table has sortable columns (`sortable: true`), include a `SortDropdown` in the toolbar alongside filters and column management.
+
+**Import:** `import { SortDropdown } from '~/shared/components/TableV2';`
+
+### Props (`SortDropdownProps<TData>`)
+
+| Prop             | Type                        | Required | Description                                                              |
+| ---------------- | --------------------------- | -------- | ------------------------------------------------------------------------ |
+| `columns`        | `ColumnDefinition<TData>[]` | Yes      | Column definitions — only columns with `sortable: true` appear           |
+| `columnStateKey` | `string`                    | Yes      | localStorage key for persisting sort state (shared with `useColumnState`) |
+| `data-tour`      | `string`                    | No       | Tour anchor attribute passed through to the root element                 |
+
+### How It Works
+
+`SortDropdown` renders a dropdown with two option groups:
+
+1. **Sort by** — one option per sortable column, labeled with the column's `header` (or `id` if `header` is not a string).
+2. **Direction** — Ascending / Descending.
+
+It uses `useColumnState` internally with the same `columnStateKey` as the `Table`, so sort state is automatically shared and persisted.
+
+### Convention: Sortable Tables Should Include SortDropdown
+
+When a table has columns with `enableSorting: true` (or individual columns with `sortable: true`), add **both**:
+
+1. **Column-header sort indicators** — built into `TableHeader`, these are read-only icons that show the current sort state. They are non-interactive; users cannot click column headers to sort.
+2. **`SortDropdown` in the toolbar** — this is how users actually control sorting.
+
+### Wiring It Up
+
+Place `SortDropdown` inside the toolbar's `FilterToolbar`, alongside `ColumnManagement`:
+
+```tsx
+import {
+  Table,
+  TableContainer,
+  SortDropdown,
+  useColumnState,
+  type ColumnDefinition,
+} from '~/shared/components/TableV2';
+import { FilterToolbar } from '~/shared/components/Filter';
+import ColumnManagement from '~/components/Filter/components/ColumnManagement';
+
+const COLUMN_STATE_KEY = 'my-sortable-table';
+
+const columns: ColumnDefinition<MyItem>[] = [
+  { id: 'name', header: 'Name', accessorFn: (r) => r.name, sortable: true, size: 3 },
+  { id: 'status', header: 'Status', accessorFn: (r) => r.status, size: 1 },
+  { id: 'created', header: 'Created', accessorFn: (r) => r.createdAt, sortable: true, size: 2 },
+];
+
+const MyListView = () => {
+  const { data, isLoading } = useMyData();
+
+  return (
+    <TableContainer
+      data={data ?? []}
+      unfilteredData={data ?? []}
+      loaded={!isLoading}
+      toolbar={
+        <FilterToolbar configs={filterConfigs}>
+          <SortDropdown columns={columns} columnStateKey={COLUMN_STATE_KEY} />
+          <ColumnManagement
+            columns={columns}
+            columnStateKey={COLUMN_STATE_KEY}
+            showColumnManagement
+          />
+        </FilterToolbar>
+      }
+    >
+      <Table
+        data={data ?? []}
+        columns={columns}
+        getRowId={(row) => row.id}
+        aria-label="My items"
+        enableSorting
+        columnStateKey={COLUMN_STATE_KEY}
+      />
+    </TableContainer>
+  );
+};
+```
+
+### Existing Views Using SortDropdown
+
+For reference, these views demonstrate `SortDropdown` usage:
+
+- `PipelineRunsPage` — includes `data-tour` for guided tours
+- `VulnerabilitiesTable` — paired with column management
+- `SnapshotPipelineRunsTabV2` — tab-level table with sorting
+- `IntegrationTestPipelineRunTabV2` — tab-level table with sorting
+- `ComponentGroupPipelineRunsTab` — grouped pipeline runs
+
 ## Usage Patterns
 
 ### 1. Minimal Table
@@ -468,12 +563,13 @@ const MyListView = () => {
 
 ### 2. Full-Featured Table
 
-Sorting, infinite scroll, column persistence, column management, filtering:
+Sorting, infinite scroll, column persistence, column management, sort dropdown, filtering:
 
 ```tsx
 import {
   Table,
   TableContainer,
+  SortDropdown,
   useColumnState,
   type ColumnDefinition,
   type ColumnState,
@@ -526,7 +622,9 @@ const MyListView = () => {
       noDataState={<EmptyState>No items yet</EmptyState>}
       toolbar={
         isFiltered || (data ?? []).length > 0 ? (
-          <FilterToolbar configs={filterConfigs} />
+          <FilterToolbar configs={filterConfigs}>
+            <SortDropdown columns={columns} columnStateKey="my-table" />
+          </FilterToolbar>
         ) : undefined
       }
     >
