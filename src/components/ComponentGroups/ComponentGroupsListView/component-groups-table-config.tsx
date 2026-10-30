@@ -11,6 +11,7 @@ import { ColumnDefinition } from '~/shared/components/TableV2';
 import { ComponentGroupKind } from '~/types';
 import { getLatestPromotedBuild } from '~/utils/component-group-utils';
 import { textMatch } from '~/utils/text-filter-utils';
+import ComponentGroupPromotionStatus from '../ComponentGroupPromotionStatus';
 
 export const componentGroupsFilterConfig = defineFilters<ComponentGroupKind>()([
   {
@@ -98,6 +99,14 @@ export const componentGroupsTableColumns: ColumnDefinition<ComponentGroupKind>[]
           </FlexItem>
         </Flex>
       );
+    },
+  },
+  {
+    id: 'promotion-status',
+    header: 'Promotion status',
+    cell: (info) => {
+      const group = info.row.original;
+      return <ComponentGroupPromotionStatus group={group} />;
     },
   },
 ] as const;
