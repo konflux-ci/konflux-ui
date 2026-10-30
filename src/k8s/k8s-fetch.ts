@@ -1,13 +1,14 @@
 import { AnyObject } from '../types/common';
 import { K8sModelCommon, K8sResourceCommon, Patch, QueryOptionsWithSelector } from '../types/k8s';
 import { commonFetchJSON } from './fetch';
+import type { K8sRequestInit } from './fetch';
 import { getK8sResourceURL } from './k8s-utils';
 
 export type K8sResourceBaseOptions<TQueryOptions = Partial<QueryOptionsWithSelector>> = {
   model: K8sModelCommon;
   queryOptions?: TQueryOptions;
   fetchOptions?: Partial<{
-    requestInit: RequestInit & { wsPrefix?: string; pathPrefix?: string };
+    requestInit: K8sRequestInit;
     timeout: number;
   }>;
 };

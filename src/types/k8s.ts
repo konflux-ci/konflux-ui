@@ -165,6 +165,8 @@ export type WatchK8sResource = {
   optional?: boolean;
   partialMetadata?: boolean;
   watch?: boolean;
+  /** Sub-resource path appended after the resource name (e.g. 'pendingworkloads'). */
+  path?: string;
 };
 
 export enum ResourceSource {

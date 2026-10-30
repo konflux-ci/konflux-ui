@@ -1,8 +1,9 @@
 import * as React from 'react';
 import { isEqual } from 'lodash-es';
-import { K8sResourceBaseOptions } from '../k8s-fetch';
+import type { K8sRequestInit } from '../fetch';
+import type { K8sResourceBaseOptions } from '../k8s-fetch';
 import { watchListResource, watchObjectResource } from '../watch-utils';
-import { WebSocketOptions } from '../web-socket/types';
+import type { WebSocketOptions } from '../web-socket/types';
 
 export const useDeepCompareMemoize = <T = unknown>(value: T, strinfigy?: boolean): T => {
   const ref = React.useRef<T>();
@@ -25,7 +26,7 @@ export const useK8sQueryWatch = (
   resourceInit: K8sResourceBaseOptions,
   isList: boolean,
   hashedKey: string,
-  options?: Partial<WebSocketOptions & RequestInit & { wsPrefix?: string; pathPrefix?: string }>,
+  options?: Partial<WebSocketOptions & K8sRequestInit>,
 ) => {
   const deepResourceInit = useDeepCompareMemoize(resourceInit);
   const deepOptions = useDeepCompareMemoize(options);
