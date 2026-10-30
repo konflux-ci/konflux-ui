@@ -41,6 +41,11 @@ export type ConformaRule = {
     code: string;
 
     effective_on?: string;
+    /**
+     * Expiry of a policy exception (volatile-config exclusion) covering this rule.
+     * Only present when the policy config waives the rule until a given date.
+     */
+    effective_until?: string;
     solution?: string;
   };
   msg: string;

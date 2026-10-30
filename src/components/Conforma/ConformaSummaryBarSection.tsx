@@ -1,6 +1,8 @@
 import * as React from 'react';
 import { Content, ContentVariants, Divider, Flex, FlexItem, Tooltip } from '@patternfly/react-core';
 
+import './ConformaSummaryBarSection.scss';
+
 type SummaryItemDef = {
   icon: React.ReactNode;
   count: number;
