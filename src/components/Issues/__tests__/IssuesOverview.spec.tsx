@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { MemoryRouter } from 'react-router-dom';
 import { IssueSeverity, IssueState, IssueType } from '~/kite/issue-type';
 import { renderWithQueryClient } from '~/unit-test-utils/mock-react-query';
@@ -45,23 +44,6 @@ jest.mock('~/kite/kite-hooks', () => ({
 
 jest.mock('~/shared/providers/Namespace', () => ({
   useNamespace: () => 'test-namespace',
-}));
-
-jest.mock('~/feature-flags/hooks', () => ({
-  ...jest.requireActual('~/feature-flags/hooks'),
-  useIsOnFeatureFlag: jest.fn(),
-  IfFeature: ({
-    flag,
-    children,
-    fallback,
-  }: {
-    flag: string;
-    children: React.ReactNode;
-    fallback?: React.ReactNode;
-  }) => {
-    const { useIsOnFeatureFlag: mockFlag } = jest.requireMock('~/feature-flags/hooks');
-    return mockFlag(flag) ? <>{children}</> : <>{fallback ?? null}</>;
-  },
 }));
 
 jest.mock('../useWorkspaceConformaViolations', () => ({
