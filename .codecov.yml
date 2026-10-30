@@ -1,6 +1,7 @@
 codecov:
   require_ci_to_pass: true
   notify:
+    after_n_builds: 2 # 2 builds are required for merge queue. To wait for both shards to finish before announcing the coverage status
     wait_for_ci: true
 
 coverage:
