@@ -41,17 +41,12 @@ export const loadChatMessageRehypePlugins = (): Promise<PluggableList> => {
 };
 
 /**
- * Loads rehype-sanitize only when `enabled` is true (e.g. there are messages).
  * Returns `undefined` until the chunk is ready so callers avoid unsanitized markdown.
  */
-export const useChatMessageRehypePlugins = (enabled: boolean): PluggableList | undefined => {
+export const useChatMessageRehypePlugins = (): PluggableList | undefined => {
   const [plugins, setPlugins] = React.useState<PluggableList>();
 
   React.useEffect(() => {
-    if (!enabled) {
-      return;
-    }
-
     let cancelled = false;
 
     void loadChatMessageRehypePlugins()
@@ -70,7 +65,7 @@ export const useChatMessageRehypePlugins = (enabled: boolean): PluggableList | u
     return () => {
       cancelled = true;
     };
-  }, [enabled]);
+  }, []);
 
   return plugins;
 };
