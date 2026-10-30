@@ -1,3 +1,4 @@
+import { pluralize } from '@patternfly/react-core';
 import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { ComponentReference, ComponentState, PipelineRunKind } from '~/types';
 
@@ -57,4 +58,28 @@ export const getLatestPromotedBuild = (
 
     return buildTime > latestTime ? build : latest;
   }, undefined);
+};
+
+export const getComponentsAndGroupsCount = (
+  components: ComponentReference[],
+): { components: number; groups: number } => {
+  const componentCount = components.filter(
+    (c) => c.kind?.toLowerCase() !== 'componentgroup',
+  ).length;
+  const groupCount = components.filter((c) => c.kind?.toLowerCase() === 'componentgroup').length;
+  return { components: componentCount, groups: groupCount };
+};
+
+export const getComponentsAndGroupsCountString = (components: ComponentReference[]): string => {
+  const { components: componentCount, groups: groupCount } =
+    getComponentsAndGroupsCount(components);
+
+  if (componentCount > 0 && groupCount > 0) {
+    return `${pluralize(componentCount, 'Component', 'Components')} and ${pluralize(groupCount, 'Group', 'Groups')}`;
+  } else if (componentCount > 0) {
+    return `${pluralize(componentCount, 'Component', 'Components')}`;
+  } else if (groupCount > 0) {
+    return `${pluralize(groupCount, 'Group', 'Groups')}`;
+  }
+  return '-';
 };
