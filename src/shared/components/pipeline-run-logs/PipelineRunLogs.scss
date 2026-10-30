@@ -48,6 +48,7 @@
   }
   &__container {
     flex: 1;
+    min-width: 0;
     display: flex;
     //ensure log viewer can be seen on narrow screens
     flex-direction: column;

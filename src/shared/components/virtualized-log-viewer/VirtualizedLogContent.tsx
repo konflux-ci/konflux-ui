@@ -42,6 +42,8 @@ export interface VirtualizedLogContentProps {
   onDownloadFullLogs?: (sectionIndex: number) => Promise<void>;
   onViewFullLogs?: (sectionIndex: number) => void;
   lineNumberNavigationProps?: UseLineNumberNavigationResult;
+  /** When false, lines are not wrapped and scroll horizontally instead. */
+  wrapLines?: boolean;
   setExpanded?: (expanded: boolean) => void;
 }
 
@@ -66,6 +68,7 @@ export const VirtualizedLogContent = forwardRef<
       onDownloadFullLogs,
       onViewFullLogs,
       lineNumberNavigationProps,
+      wrapLines = true,
       setExpanded,
     },
     ref,
@@ -128,6 +131,15 @@ export const VirtualizedLogContent = forwardRef<
       currentSearchMatch,
     });
 
+    const longestLine = React.useMemo(
+      () =>
+        allLines.reduce<string | null>(
+          (widest, line) => (line.length > (widest?.length ?? 0) ? line : widest),
+          null,
+        ),
+      [allLines],
+    );
+
     const normalizedSectionsRef = React.useRef(effectiveNormalizedSections);
     normalizedSectionsRef.current = effectiveNormalizedSections;
 
@@ -169,12 +181,15 @@ export const VirtualizedLogContent = forwardRef<
         if (itemSize === 0) return VIRTUALIZATION_CONFIG.FALLBACK_LINE_HEIGHT;
 
         const row = displayRows[index];
-        if (!row || row.kind !== 'content') return itemSize;
+        if (!row || row.kind !== 'content' || !wrapLines) return itemSize;
         const text = allLines[row.flatLineIndex] || '';
         const estimatedLines = Math.max(1, Math.ceil(text.length / charsPerLineRef.current));
+        if (estimatedLines === 1) {
+          return itemSize;
+        }
         return Math.ceil(itemSize * estimatedLines * getSafetyMargin(rowCount));
       },
-      [displayRows, allLines, itemSize, rowCount],
+      [displayRows, allLines, itemSize, rowCount, wrapLines],
     );
 
     const virtualizer = useVirtualizer<HTMLDivElement, Element>({
@@ -184,6 +199,11 @@ export const VirtualizedLogContent = forwardRef<
       overscan: getOverscanCount(rowCount),
       useFlushSync: false,
     });
+
+    // Remeasure rows when wrap mode changes so cached heights match the new layout.
+    React.useEffect(() => {
+      virtualizer.measure();
+    }, [wrapLines, virtualizer]);
 
     const effectiveScrollToRow = React.useMemo(() => {
       if (!scrollToRow || scrollToRow <= 0) return undefined;
@@ -303,7 +323,8 @@ export const VirtualizedLogContent = forwardRef<
     );
 
     const virtualItems = virtualizer.getVirtualItems();
-    const scrollTop = isMultiSection ? (virtualizer.scrollOffset ?? 0) : 0;
+    const scrollOffset = virtualizer.scrollOffset ?? 0;
+    const scrollTop = isMultiSection ? scrollOffset : 0;
     const { stickyRow, pushUpOffset } = computeStickySectionHeader({
       enabled: isMultiSection,
       scrollTop,
@@ -312,8 +333,45 @@ export const VirtualizedLogContent = forwardRef<
       itemSize,
     });
 
+    const virtualInnerStyle: React.CSSProperties = {
+      height: `${virtualizer.getTotalSize()}px`,
+      width: wrapLines ? '100%' : 'max-content',
+      minWidth: wrapLines ? undefined : '100%',
+      position: 'relative',
+    };
+
+    const renderVirtualRow = (virtualItem: (typeof virtualItems)[number]) => {
+      const row = displayRows[virtualItem.index];
+      if (!row) return null;
+
+      return (
+        <SectionedVirtualRow
+          key={virtualItem.key}
+          virtualIndex={virtualItem.index}
+          start={virtualItem.start}
+          row={row}
+          measureElement={virtualizer.measureElement}
+          isLineHighlighted={isLineHighlighted}
+          onToggleSection={toggleSection}
+          onDownloadFullLogs={onDownloadFullLogs}
+          onViewFullLogs={onViewFullLogs}
+          renderLogLine={renderLine}
+          onLineClick={handleLineClick}
+        />
+      );
+    };
+
+    const containerDimensions: React.CSSProperties = {
+      height: `${height}px`,
+      width: typeof width === 'number' ? `${width}px` : width,
+    };
+
+    const sharedListClassName = `log-content__list log-content__with-gutter${
+      !wrapLines ? ' log-content__list--nowrap' : ''
+    }`;
+
     return (
-      <div className="log-content__container">
+      <div className="log-content__container" style={{ width: '100%', minWidth: 0 }}>
         <div
           ref={measureCallbackRef}
           className="pf-v6-c-log-viewer__list-item"
@@ -326,41 +384,24 @@ export const VirtualizedLogContent = forwardRef<
 
         <div
           ref={scrollContainerRef}
-          className="log-content__list log-content__with-gutter"
+          className={sharedListClassName}
           tabIndex={0}
-          style={{
-            height: `${height}px`,
-            width: typeof width === 'number' ? `${width}px` : width,
-            overflow: 'auto',
-          }}
+          style={{ ...containerDimensions, overflow: 'auto' }}
           onClick={() => scrollRef.current?.focus({ preventScroll: true })}
         >
-          <div
-            style={{
-              height: `${virtualizer.getTotalSize()}px`,
-              width: '100%',
-              position: 'relative',
-            }}
-          >
-            {virtualItems.map((virtualItem) => {
-              const row = displayRows[virtualItem.index];
-              if (!row) return null;
-              return (
-                <SectionedVirtualRow
-                  key={virtualItem.key}
-                  virtualIndex={virtualItem.index}
-                  start={virtualItem.start}
-                  row={row}
-                  measureElement={virtualizer.measureElement}
-                  isLineHighlighted={isLineHighlighted}
-                  onToggleSection={toggleSection}
-                  onDownloadFullLogs={onDownloadFullLogs}
-                  onViewFullLogs={onViewFullLogs}
-                  renderLogLine={renderLine}
-                  onLineClick={handleLineClick}
-                />
-              );
-            })}
+          <div style={virtualInnerStyle}>
+            {!wrapLines && longestLine !== null && (
+              <div
+                aria-hidden="true"
+                className="pf-v6-c-log-viewer__list-item log-content__width-measure"
+              >
+                <div className="log-content__gutter" />
+                <div className="log-content__row-content">
+                  <span className="pf-v6-c-log-viewer__text">{longestLine || '\u00A0'}</span>
+                </div>
+              </div>
+            )}
+            {virtualItems.map((vi) => renderVirtualRow(vi))}
           </div>
         </div>
 

@@ -8,11 +8,10 @@ import './VirtualizedLogContent.scss';
 
 const virtualRowStyle = (start: number): React.CSSProperties => ({
   position: 'absolute',
-  top: 0,
+  top: `${start}px`,
   left: 0,
   width: '100%',
   display: 'flex',
-  transform: `translateY(${start}px)`,
 });
 
 function getRowLineNumber(row: LogDisplayRow): number | null {
@@ -21,11 +20,49 @@ function getRowLineNumber(row: LogDisplayRow): number | null {
   return null;
 }
 
+type RowContentProps = {
+  row: LogDisplayRow;
+  onToggleSection: (sectionIndex: number) => void;
+  onDownloadFullLogs?: (sectionIndex: number) => Promise<void>;
+  onViewFullLogs?: (sectionIndex: number) => void;
+  renderLogLine: (flatLineIndex: number) => React.ReactNode;
+};
+
+/** Log text / section chrome without the line-number gutter. */
+function RowContent({
+  row,
+  onToggleSection,
+  onDownloadFullLogs,
+  onViewFullLogs,
+  renderLogLine,
+}: RowContentProps) {
+  if (row.kind === 'section-header') {
+    return (
+      <SectionHeaderButton
+        row={row}
+        onToggle={() => onToggleSection(row.sectionIndex)}
+        onDownloadFullLogs={
+          row.isTailed && onDownloadFullLogs ? () => onDownloadFullLogs(row.sectionIndex) : undefined
+        }
+        onViewFullLogs={
+          row.isTailed && onViewFullLogs ? () => onViewFullLogs(row.sectionIndex) : undefined
+        }
+      />
+    );
+  }
+
+  if (row.kind === 'fold-indicator') {
+    return <FoldIndicatorLine lineCount={row.lineCount} />;
+  }
+
+  return renderLogLine(row.flatLineIndex);
+}
+
 type SectionedVirtualRowProps = {
   virtualIndex: number;
   start: number;
   row: LogDisplayRow;
-  measureElement: Virtualizer<HTMLDivElement, Element>['measureElement'];
+  measureElement?: Virtualizer<HTMLDivElement, Element>['measureElement'];
   isLineHighlighted: (lineNumber: number) => boolean;
   onToggleSection: (sectionIndex: number) => void;
   onDownloadFullLogs?: (sectionIndex: number) => Promise<void>;
@@ -83,43 +120,20 @@ export const SectionedVirtualRow: React.FC<SectionedVirtualRowProps> = ({
     style: virtualRowStyle(start),
   };
 
-  if (row.kind === 'section-header') {
-    return (
-      <div {...rowProps}>
-        {gutterCell}
-        <div className="log-content__row-content">
-          <SectionHeaderButton
-            row={row}
-            onToggle={() => onToggleSection(row.sectionIndex)}
-            onDownloadFullLogs={
-              row.isTailed && onDownloadFullLogs
-                ? () => onDownloadFullLogs(row.sectionIndex)
-                : undefined
-            }
-            onViewFullLogs={
-              row.isTailed && onViewFullLogs ? () => onViewFullLogs(row.sectionIndex) : undefined
-            }
-          />
-        </div>
-      </div>
-    );
-  }
-
-  if (row.kind === 'fold-indicator') {
-    return (
-      <div {...rowProps}>
-        {gutterCell}
-        <div className="log-content__row-content">
-          <FoldIndicatorLine lineCount={row.lineCount} />
-        </div>
-      </div>
-    );
-  }
+  const rowContentProps = {
+    row,
+    onToggleSection,
+    onDownloadFullLogs,
+    onViewFullLogs,
+    renderLogLine,
+  };
 
   return (
     <div {...rowProps}>
       {gutterCell}
-      <div className="log-content__row-content">{renderLogLine(row.flatLineIndex)}</div>
+      <div className="log-content__row-content">
+        <RowContent {...rowContentProps} />
+      </div>
     </div>
   );
 };
