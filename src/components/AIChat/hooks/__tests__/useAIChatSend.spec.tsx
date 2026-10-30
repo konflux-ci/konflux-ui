@@ -1,7 +1,10 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { AIClientError } from '@redhat-cloud-services/ai-client-common';
+import { LightspeedClientError } from '@redhat-cloud-services/lightspeed-client';
 import {
+  KONFLUX_AI_ERROR_MESSAGE_TOO_LONG,
   KONFLUX_AI_ERROR_PERMISSION,
+  KONFLUX_AI_ERROR_QUOTA,
   KONFLUX_AI_ERROR_UNAVAILABLE,
 } from '~/components/AIChat/const';
 import { useAIChatSend } from '~/components/AIChat/hooks/useAIChatSend';
@@ -63,8 +66,12 @@ describe('useAIChatSend', () => {
     expect(sendStreamMessage).not.toHaveBeenCalled();
   });
 
-  it('maps AIClientError status codes to user-facing send errors', async () => {
-    sendStreamMessage.mockRejectedValue(new AIClientError(403, 'Forbidden', 'denied'));
+  it.each<[number, string]>([
+    [403, KONFLUX_AI_ERROR_PERMISSION],
+    [413, KONFLUX_AI_ERROR_MESSAGE_TOO_LONG],
+    [429, KONFLUX_AI_ERROR_QUOTA],
+  ])('maps Lightspeed HTTP %s to the appropriate send error', async (status, expectedMessage) => {
+    sendStreamMessage.mockRejectedValue(new LightspeedClientError(status, 'Error', 'request failed'));
     const { result } = renderHook(() => useAIChatSend());
 
     await act(async () => {
@@ -72,7 +79,7 @@ describe('useAIChatSend', () => {
     });
 
     await waitFor(() => {
-      expect(result.current.sendError).toBe(KONFLUX_AI_ERROR_PERMISSION);
+      expect(result.current.sendError).toBe(expectedMessage);
     });
     expect(mockLoggerError).toHaveBeenCalled();
   });
