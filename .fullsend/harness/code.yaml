@@ -1,5 +1,5 @@
 # .fullsend/harness/code.yaml
-base: https://raw.githubusercontent.com/fullsend-ai/agents/27399d0707897bb705e544588df8ecccfc8f9b43/harness/code.yaml#sha256=ae8ee7019ed5238f74d052015225af146217e264237badc4c632b13d2cd947bb
+base: https://raw.githubusercontent.com/fullsend-ai/agents/27399d0707897bb705e544588df8ecccfc8f9b43/harness/code.yaml#sha256=ae8ee7019ed5238f74d052015225af146217e264237badc4c632b13d2cd947bb # v0.50.0
 
 trigger: >
   event.entity.kind == "work_item"
