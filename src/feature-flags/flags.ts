@@ -125,12 +125,6 @@ const InternalFLAGS = {
       visibleInFeatureFlagPanel: true,
     },
   },
-  'edit-secret-page': {
-    key: 'edit-secret-page',
-    description: 'Editing existing secrets',
-    defaultEnabled: true,
-    status: 'wip',
-  },
   'ai-chat': {
     key: 'ai-chat',
     description: 'Enable Konflux AI chat bot',

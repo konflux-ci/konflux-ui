@@ -19,10 +19,11 @@ A process checklist for reviewing pull requests. For coding standards and detail
 - [ ] **[Best practices](./best-practices.md) are followed.** Verify against the full coding standards document, paying special attention to:
   - No `as` type assertions or `any` types
   - No `useEffect` for derived state (use `useMemo`)
+  - `useMemo` only for non-trivial computations or reference stability (not simple property access or string ops)
   - `useCallback` only where reference stability matters
   - Custom hook outputs are memoized
   - PatternFly components used over raw HTML elements
-  - Absolute imports via `~/` alias
+  - Absolute imports (`~/`) for cross-directory paths; single-level relative imports (`./types`) acceptable for same-directory files
 - [ ] **No `pf-v5-` CSS class prefixes.** All PatternFly CSS classes must use the `pf-v6-` prefix (e.g., `pf-v6-u-ml-sm`). The `pf-v5-` prefix is incompatible with PatternFly v6.
 - [ ] **No `eslint-disable` comments** without a documented justification directly above. Never suppress `exhaustive-deps` or `no-explicit-any`.
 - [ ] **No `console.*` calls.** Use `logger` from `~/monitoring/logger`.
@@ -78,6 +79,7 @@ Skip this section if the PR has no UI changes.
 | `// eslint-disable` | Fix the underlying issue |
 | `console.log(...)` | Use `logger` from `~/monitoring/logger` |
 | `useEffect` + `setState` from props | Use `useMemo` |
+| `useMemo(() => obj.name, [obj])` | Remove `useMemo` — trivial expression |
 | `style={{ ... }}` | Use co-located SCSS with BEM |
 | `import ... from '../../../'` | Use `~/` absolute import |
 | `localStorage.getItem(...)` | Use `useLocalStorage` hook |

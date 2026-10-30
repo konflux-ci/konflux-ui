@@ -76,6 +76,15 @@ describe('TriggerReleaseForm', () => {
     screen.getByTestId('add-reference-button');
   });
 
+  it('should not show outdated comma-separated helper text for References', () => {
+    const values = {};
+    const props = { values } as FormikProps<TriggerReleaseFormValues>;
+    formikRenderer(TriggerRelease(props), values);
+    expect(
+      screen.queryByText('Any URLs entered must be separated by commas.'),
+    ).not.toBeInTheDocument();
+  });
+
   it('should render without crashing when releasePlans is null and loaded is true', () => {
     useReleasePlansMock.mockReturnValue([null, true]);
     const values = {};
