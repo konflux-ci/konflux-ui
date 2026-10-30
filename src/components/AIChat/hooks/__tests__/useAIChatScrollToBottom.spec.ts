@@ -1,11 +1,11 @@
 import { renderHook } from '@testing-library/react';
-import { useScrollToBottom } from '~/shared/hooks/useScrollToBottom';
+import { useAIChatScrollToBottom } from '~/components/AIChat/hooks/useAIChatScrollToBottom';
 
-describe('useScrollToBottom', () => {
+describe('useAIChatScrollToBottom', () => {
   it('scrolls the ref target into view when the dependency changes', () => {
     const scrollIntoView = jest.fn();
     const { result, rerender } = renderHook(
-      ({ dependency }) => useScrollToBottom(dependency),
+      ({ dependency }) => useAIChatScrollToBottom(dependency),
       { initialProps: { dependency: ['msg-1'] } },
     );
 
@@ -17,5 +17,11 @@ describe('useScrollToBottom', () => {
     rerender({ dependency: ['msg-1', 'msg-2'] });
 
     expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'end' });
+  });
+
+  it('does not throw when the ref has not been attached yet', () => {
+    expect(() => {
+      renderHook(() => useAIChatScrollToBottom(['msg-1']));
+    }).not.toThrow();
   });
 });

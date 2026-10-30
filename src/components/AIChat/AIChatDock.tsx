@@ -1,65 +1,49 @@
 import * as React from 'react';
-import { AIStateProvider } from '@redhat-cloud-services/ai-react-state';
 import { AIChatFooter } from '~/components/AIChat/components/AIChatFooter';
 import { AIChatHeader } from '~/components/AIChat/components/AIChatHeader';
 import { AIChatMessageList } from '~/components/AIChat/components/AIChatMessageList';
 import { AIChatPanel } from '~/components/AIChat/components/AIChatPanel';
 import { AIChatToggle } from '~/components/AIChat/components/AIChatToggle';
-import { getLightspeedClient } from '~/lightspeed/lightspeedClient';
-import { useLightspeedChat } from '~/lightspeed/useLightspeedChat';
-import { useToggle } from '~/shared/hooks/useToggle';
+import { AIChatInitProvider, useAIChatInit } from '~/components/AIChat/hooks/useAIChatInit';
+import { AIChatSendProvider, useAIChatSend } from '~/components/AIChat/hooks/useAIChatSend';
+import { useAIChatVisibility } from '~/components/AIChat/hooks/useAIChatVisibility';
 
 import '@patternfly/chatbot/dist/css/main.css';
 import './AIChat.scss';
 
 const AIChatDockContent: React.FC = () => {
-  const [isVisible, toggle] = useToggle();
-  const {
-    messages,
-    announcement,
-    isInProgress,
-    isInitializing,
-    chatError,
-    clearChatError,
-    sendMessage,
-  } = useLightspeedChat();
+  const { initError, retryInit } = useAIChatInit();
+  const { clearSendError } = useAIChatSend();
 
-  const handleToggle = React.useCallback(() => {
-    if (!isVisible) {
-      clearChatError();
+  const clearChatError = React.useCallback(() => {
+    clearSendError();
+    if (initError) {
+      retryInit();
     }
-    toggle();
-  }, [clearChatError, isVisible, toggle]);
+  }, [clearSendError, initError, retryInit]);
 
-  const isSendDisabled = isInProgress || !!chatError || isInitializing;
+  const { isVisible, toggle, hide } = useAIChatVisibility(clearChatError);
 
   return (
     <div className="ai-chat" data-test="ai-chat-dock">
-      <AIChatToggle isVisible={isVisible} onToggle={handleToggle} />
+      <AIChatToggle isVisible={isVisible} onToggle={toggle} />
       <AIChatPanel isVisible={isVisible}>
-        <AIChatHeader onClose={toggle} />
-        <AIChatMessageList
-          messages={messages}
-          announcement={announcement}
-          isInitializing={isInitializing}
-          chatError={chatError}
-        />
-        <AIChatFooter
-          isSendDisabled={isSendDisabled}
-          onSend={(message) => {
-            void sendMessage(message);
-          }}
-        />
+        <AIChatHeader onClose={hide} />
+        <AIChatMessageList />
+        <AIChatFooter />
       </AIChatPanel>
     </div>
   );
 };
 
-/** PatternFly chatbot dock backed by the Red Hat AI state provider. */
-const AIChatDock: React.FC = () => (
-  <AIStateProvider client={getLightspeedClient()}>
-    <AIChatDockContent />
-  </AIStateProvider>
+/**
+ * PatternFly chatbot dock. Init/send providers wrap children; message list and
+ * footer read AI state hooks directly — no chat props from this shell.
+ */
+export const AIChatDock: React.FC = () => (
+  <AIChatInitProvider>
+    <AIChatSendProvider>
+      <AIChatDockContent />
+    </AIChatSendProvider>
+  </AIChatInitProvider>
 );
-
-export default AIChatDock;
