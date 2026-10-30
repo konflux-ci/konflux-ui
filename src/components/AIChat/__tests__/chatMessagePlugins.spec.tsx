@@ -51,14 +51,8 @@ describe('chatMessagePlugins', () => {
   });
 
   describe('useChatMessageRehypePlugins', () => {
-    it('returns undefined until enabled', () => {
-      const { result } = renderHook(() => useChatMessageRehypePlugins(false));
-
-      expect(result.current).toBeUndefined();
-    });
-
-    it('loads plugins when enabled', async () => {
-      const { result } = renderHook(() => useChatMessageRehypePlugins(true));
+    it('loads plugins when mounted', async () => {
+      const { result } = renderHook(() => useChatMessageRehypePlugins());
 
       await waitFor(() => {
         expect(result.current).toBeDefined();
