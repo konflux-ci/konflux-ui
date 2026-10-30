@@ -6,6 +6,7 @@ import AIChatDock from '~/components/AIChat/AIChatDock';
 const mockUseAIChatInit = jest.fn();
 const mockUseAIChatSend = jest.fn();
 const mockUseInProgress = jest.fn();
+const mockAIChatFooter = jest.fn();
 
 jest.mock('@redhat-cloud-services/ai-react-state', () => ({
   AIStateProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
@@ -41,7 +42,10 @@ jest.mock('~/components/AIChat/components/AIChatMessageList', () => ({
 }));
 
 jest.mock('~/components/AIChat/components/AIChatFooter', () => ({
-  AIChatFooter: () => null,
+  AIChatFooter: (props: unknown) => {
+    mockAIChatFooter(props);
+    return null;
+  },
 }));
 
 describe('AIChatDock', () => {
@@ -85,5 +89,24 @@ describe('AIChatDock', () => {
     await user.click(screen.getByRole('button', { name: 'Toggle chat' }));
 
     expect(retryInit).toHaveBeenCalledTimes(1);
+  });
+
+  it('allows sending after a send error when initialization is healthy', () => {
+    mockUseAIChatInit.mockReturnValue({
+      initError: undefined,
+      isInitializing: false,
+      retryInit,
+    });
+    mockUseAIChatSend.mockReturnValue({
+      sendError: 'Sending failed',
+      clearSendError,
+      sendMessage: jest.fn(),
+    });
+
+    render(<AIChatDock />);
+
+    expect(mockAIChatFooter).toHaveBeenLastCalledWith(
+      expect.objectContaining({ isSendDisabled: false }),
+    );
   });
 });

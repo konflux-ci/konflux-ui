@@ -30,7 +30,7 @@ const AIChatDockContent: React.FC = () => {
   }, [clearSendError, initError, isVisible, retryInit, toggle]);
 
   const chatError = sendError ?? initError;
-  const isSendDisabled = isInProgress || !!chatError || isInitializing;
+  const isSendDisabled = isInProgress || !!initError || isInitializing;
 
   return (
     <div className="ai-chat" data-test="ai-chat-dock">
