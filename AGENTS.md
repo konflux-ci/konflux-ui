@@ -33,21 +33,6 @@ One-command setup: `yarn setup` or `./setup.sh` (checks Node.js >= 24, enables C
 - `noUnusedLocals` and `noUnusedParameters` enforced -- prefix unused params with `_`
 - Never add `Co-Authored-By` to commit messages; use `Assisted-by: Claude` trailer instead
 
-## File Organization
-
-| Category                                  | Location                                 | Example                                     |
-| ----------------------------------------- | ---------------------------------------- | ------------------------------------------- |
-| K8s model definitions                     | `src/models/`                            | `pod.ts`                                    |
-| Shared React components                   | `src/shared/components/<ComponentName>/` | with barrel `index.ts`                      |
-| Shared hooks                              | `src/shared/hooks/`                      | `useEventListener.ts`                       |
-| Shared utilities (generic/infrastructure) | `src/shared/utils/`                      | `json-utils.ts`                             |
-| Cross-feature domain utilities            | `src/utils/`                             | `pipeline-utils.ts`, `text-filter-utils.ts` |
-| App-level data hooks                      | `src/hooks/`                             | `useApplications.ts`                        |
-| Feature-specific code                     | `src/components/<Feature>/`              | co-located with its UI                      |
-| Constants                                 | `src/consts/`                            | `security.ts`                               |
-
-New utility functions used by more than one feature domain go in `src/shared/utils/` (generic infrastructure — DOM helpers, JSON processing, error handling) or `src/utils/` (domain-specific — pipeline, component, release logic). When in doubt, prefer `src/utils/`. New K8s model definitions must go in `src/models/`.
-
 ## Commits
 
 Conventional Commits enforced by commitlint: `feat:`, `fix:`, `chore:`, etc. Husky pre-commit runs `lint-staged` (prettier + restricted-imports on TS, stylelint on SCSS).
@@ -113,7 +98,7 @@ Detailed guides for AI agents and developers:
 
 | Document                       | Purpose                                                               |
 | ------------------------------ | --------------------------------------------------------------------- |
-| `docs/best-practices.md`       | Full coding standards and conventions                                 |
+| `docs/best-practices.md`       | Full coding standards, file organization, and conventions             |
 | `docs/pr-review-guidelines.md` | PR review checklist                                                   |
 | `docs/feature-flags.md`        | Feature flag system (flags, persistence, URL grammar, lifecycle)      |
 | `docs/conditions.md`           | Feature flag conditions (`allOf`/`anyOf` guards, `registerCondition`) |
