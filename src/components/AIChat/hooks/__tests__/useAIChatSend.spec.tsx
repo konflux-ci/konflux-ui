@@ -1,14 +1,10 @@
-import * as React from 'react';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { AIClientError } from '@redhat-cloud-services/ai-client-common';
 import {
   KONFLUX_AI_ERROR_PERMISSION,
   KONFLUX_AI_ERROR_UNAVAILABLE,
 } from '~/components/AIChat/const';
-import {
-  AIChatSendProvider,
-  useAIChatSend,
-} from '~/components/AIChat/hooks/useAIChatSend';
+import { useAIChatSend } from '~/components/AIChat/hooks/useAIChatSend';
 
 const mockUseSendStreamMessage = jest.fn();
 const mockUseInProgress = jest.fn();
@@ -25,11 +21,7 @@ jest.mock('~/monitoring/logger', () => ({
   },
 }));
 
-const wrapper = ({ children }: { children: React.ReactNode }) => (
-  <AIChatSendProvider>{children}</AIChatSendProvider>
-);
-
-describe('AIChatSendProvider / useAIChatSend', () => {
+describe('useAIChatSend', () => {
   const sendStreamMessage = jest.fn();
 
   beforeEach(() => {
@@ -39,18 +31,8 @@ describe('AIChatSendProvider / useAIChatSend', () => {
     mockUseInProgress.mockReturnValue(false);
   });
 
-  it('throws when used outside the provider', () => {
-    const consoleError = jest.spyOn(console, 'error').mockImplementation(() => undefined);
-
-    expect(() => renderHook(() => useAIChatSend())).toThrow(
-      'useAIChatSend must be used within AIChatSendProvider',
-    );
-
-    consoleError.mockRestore();
-  });
-
   it('sends a trimmed message', async () => {
-    const { result } = renderHook(() => useAIChatSend(), { wrapper });
+    const { result } = renderHook(() => useAIChatSend());
 
     await act(async () => {
       await result.current.sendMessage('  hello world  ');
@@ -61,7 +43,7 @@ describe('AIChatSendProvider / useAIChatSend', () => {
   });
 
   it('does not send blank messages', async () => {
-    const { result } = renderHook(() => useAIChatSend(), { wrapper });
+    const { result } = renderHook(() => useAIChatSend());
 
     await act(async () => {
       await result.current.sendMessage('   ');
@@ -72,7 +54,7 @@ describe('AIChatSendProvider / useAIChatSend', () => {
 
   it('does not send while a response is already in progress', async () => {
     mockUseInProgress.mockReturnValue(true);
-    const { result } = renderHook(() => useAIChatSend(), { wrapper });
+    const { result } = renderHook(() => useAIChatSend());
 
     await act(async () => {
       await result.current.sendMessage('hello');
@@ -83,7 +65,7 @@ describe('AIChatSendProvider / useAIChatSend', () => {
 
   it('maps AIClientError status codes to user-facing send errors', async () => {
     sendStreamMessage.mockRejectedValue(new AIClientError(403, 'Forbidden', 'denied'));
-    const { result } = renderHook(() => useAIChatSend(), { wrapper });
+    const { result } = renderHook(() => useAIChatSend());
 
     await act(async () => {
       await result.current.sendMessage('hello');
@@ -97,7 +79,7 @@ describe('AIChatSendProvider / useAIChatSend', () => {
 
   it('maps unexpected errors to the unavailable message without exposing raw details', async () => {
     sendStreamMessage.mockRejectedValue(new Error('fetch failed https://internal.example'));
-    const { result } = renderHook(() => useAIChatSend(), { wrapper });
+    const { result } = renderHook(() => useAIChatSend());
 
     await act(async () => {
       await result.current.sendMessage('hello');
@@ -111,7 +93,7 @@ describe('AIChatSendProvider / useAIChatSend', () => {
 
   it('clears send errors', async () => {
     sendStreamMessage.mockRejectedValue(new AIClientError(503, 'Unavailable', 'down'));
-    const { result } = renderHook(() => useAIChatSend(), { wrapper });
+    const { result } = renderHook(() => useAIChatSend());
 
     await act(async () => {
       await result.current.sendMessage('hello');

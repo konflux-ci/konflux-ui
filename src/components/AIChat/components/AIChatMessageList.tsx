@@ -11,20 +11,21 @@ import {
   KONFLUX_AI_WELCOME_DESCRIPTION,
   KONFLUX_AI_WELCOME_TITLE,
 } from '~/components/AIChat/const';
-import { useAIChatInit } from '~/components/AIChat/hooks/useAIChatInit';
-import { useAIChatScrollToBottom } from '~/components/AIChat/hooks/useAIChatScrollToBottom';
-import { useAIChatSend } from '~/components/AIChat/hooks/useAIChatSend';
 import { stateMessagesToMessageProps } from '~/components/AIChat/message-utils';
+import { useScrollToBottom } from '~/shared/hooks/useScrollToBottom';
+
+type AIChatMessageListProps = {
+  isInitializing: boolean;
+  chatError?: string;
+};
 
 /**
  * Renders chat messages, welcome prompt, error alert, and auto-scrolls on updates.
  * Reads message/init/send state from AI providers — no props from the dock.
  */
-export const AIChatMessageList: React.FC = () => {
+export const AIChatMessageList: React.FC<AIChatMessageListProps> = ({ isInitializing, chatError }) => {
   const stateMessages = useMessages();
   const isInProgress = useInProgress();
-  const { initError, isInitializing } = useAIChatInit();
-  const { sendError } = useAIChatSend();
 
   const messages = React.useMemo(
     () => stateMessagesToMessageProps(stateMessages, isInProgress),
@@ -42,10 +43,8 @@ export const AIChatMessageList: React.FC = () => {
     return `Message from ${lastMessage.name}: ${lastMessage.content}`;
   }, [messages]);
 
-  const scrollToBottomRef = useAIChatScrollToBottom(messages);
-  const hasMessages = messages.length > 0;
-  const rehypePlugins = useChatMessageRehypePlugins(hasMessages);
-  const chatError = sendError ?? initError;
+  const scrollToBottomRef = useScrollToBottom(messages);
+  const rehypePlugins = useChatMessageRehypePlugins();
 
   return (
     <ChatbotContent>
