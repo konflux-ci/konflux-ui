@@ -101,14 +101,14 @@ export const componentGroupsTableColumns: ColumnDefinition<ComponentGroupKind>[]
     },
   },
   {
-    id: 'buildStatus',
+    id: 'build-status',
     header: 'Build status',
     cell: (info) => {
       const group = info.row.original;
 
-      const gcl = group.status?.globalCandidateList || [];
-      const promoted = gcl.filter((c) => c.lastPromotedImage).length;
-      const total = gcl.length;
+      const candidateList = group.status?.globalCandidateList ?? [];
+      const promoted = candidateList.filter((c) => c.lastPromotedImage).length;
+      const total = candidateList.length;
 
       if (total === 0) {
         return <span data-test="component-group-no-builds">-</span>;
