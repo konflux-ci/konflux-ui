@@ -17,14 +17,14 @@ jest.mock('~/lightspeed/useIsLightspeedAvailable', () => ({
   useIsLightspeedAvailable: () => mockUseIsLightspeedAvailable(),
 }));
 
-jest.mock('~/components/AIChat/AIChatDock', () => ({
+jest.mock('~/components/AIChat/AIChatDockLoader', () => ({
   __esModule: true,
-  default: () => <div data-test="ai-chat-dock">AI Chat Dock</div>,
+  default: () => <div data-test="ai-chat-dock-loader">AI Chat Dock Loader</div>,
 }));
 
 jest.mock('~/shared/components/lazy-load/lazy', () => ({
   lazyLoad: () => {
-    const Loader = jest.requireMock('~/components/AIChat/AIChatDock').default as React.FC;
+    const Loader = jest.requireMock('~/components/AIChat/AIChatDockLoader').default as React.FC;
     return function LazyGateComponent() {
       return <Loader />;
     };
@@ -64,7 +64,7 @@ describe('AIChatGate', () => {
     render(<AIChatGate />);
 
     await waitFor(() => {
-      expect(screen.getByTestId('ai-chat-dock')).toBeInTheDocument();
+      expect(screen.getByTestId('ai-chat-dock-loader')).toBeInTheDocument();
     });
   });
 });
