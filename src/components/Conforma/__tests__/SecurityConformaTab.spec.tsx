@@ -176,12 +176,12 @@ describe('SecurityConformaTab', () => {
   it('should render the summary bar with component and result totals', () => {
     routerRenderer(securityConforma('dummy-1'));
 
-    const resultSummary = screen.getByTestId('result-summary');
-    expect(resultSummary).toContainElement(screen.getByTestId('conforma-summary-bar'));
-
     const components = screen.getByTestId('conforma-summary-components');
     expect(components).toHaveTextContent('1 total');
     expect(components).toHaveTextContent('1 failed');
+
+    const upcoming = screen.getByTestId('conforma-summary-upcoming-changes');
+    expect(upcoming).toHaveTextContent('0 Pending');
 
     const results = screen.getByTestId('conforma-summary-results');
     expect(results).toHaveTextContent('1 violations');
