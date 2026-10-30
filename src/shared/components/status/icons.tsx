@@ -1,12 +1,10 @@
 import * as React from 'react';
-import { PencilAltIcon } from '@patternfly/react-icons/dist/esm/icons/pencil-alt-icon';
-import { t_global_text_color_subtle as grayColor } from '@patternfly/react-tokens/dist/js/t_global_text_color_subtle';
-import {
-  RhUiCheckCircleFillIcon,
-  RhUiErrorFillIcon,
-  RhUiWarningFillIcon,
-} from '@patternfly/react-icons';
 import { Icon } from '@patternfly/react-core';
+import { PencilAltIcon } from '@patternfly/react-icons/dist/esm/icons/pencil-alt-icon';
+import { RhUiCheckCircleFillIcon } from '@patternfly/react-icons/dist/esm/icons/rh-ui-check-circle-fill-icon';
+import { RhUiErrorFillIcon } from '@patternfly/react-icons/dist/esm/icons/rh-ui-error-fill-icon';
+import { RhUiWarningFillIcon } from '@patternfly/react-icons/dist/esm/icons/rh-ui-warning-fill-icon';
+import { t_global_text_color_subtle as grayColor } from '@patternfly/react-tokens/dist/js/t_global_text_color_subtle';
 
 export type ColoredIconProps = {
   className?: string;
