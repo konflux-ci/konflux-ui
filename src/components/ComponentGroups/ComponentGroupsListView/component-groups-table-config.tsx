@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Flex, FlexItem, Label } from '@patternfly/react-core';
+import { Flex, FlexItem } from '@patternfly/react-core';
 import {
   COMPONENT_DETAILS_V2_PATH,
   COMPONENT_VERSION_DETAILS_PATH,
@@ -11,6 +11,7 @@ import { ColumnDefinition } from '~/shared/components/TableV2';
 import { ComponentGroupKind } from '~/types';
 import { getLatestPromotedBuild } from '~/utils/component-group-utils';
 import { textMatch } from '~/utils/text-filter-utils';
+import ComponentGroupPromotionStatus from '../ComponentGroupPromotionStatus';
 
 export const componentGroupsFilterConfig = defineFilters<ComponentGroupKind>()([
   {
@@ -103,27 +104,9 @@ export const componentGroupsTableColumns: ColumnDefinition<ComponentGroupKind>[]
   {
     id: 'promotion-status',
     header: 'Promotion status',
-    nonHidable: true,
     cell: (info) => {
       const group = info.row.original;
-
-      const candidateList = group.status?.globalCandidateList ?? [];
-      const promoted = candidateList.filter((c) => c.lastPromotedImage).length;
-      const total = candidateList.length;
-
-      if (total === 0) {
-        return <span data-test="component-group-no-promotions">-</span>;
-      }
-
-      const allPromoted = promoted === total;
-      return (
-        <Label
-          data-test="component-group-promotion-status"
-          color={allPromoted ? 'green' : promoted === 0 ? 'grey' : 'orange'}
-        >
-          {promoted}/{total} promoted
-        </Label>
-      );
+      return <ComponentGroupPromotionStatus group={group} />;
     },
   },
 ] as const;
