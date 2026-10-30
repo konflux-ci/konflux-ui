@@ -22,7 +22,7 @@ A process checklist for reviewing pull requests. For coding standards and detail
   - `useCallback` only where reference stability matters
   - Custom hook outputs are memoized
   - PatternFly components used over raw HTML elements
-  - Absolute imports via `~/` alias
+  - Absolute imports (`~/`) for cross-directory paths; single-level relative imports (`./types`) acceptable for same-directory files
 - [ ] **No `pf-v5-` CSS class prefixes.** All PatternFly CSS classes must use the `pf-v6-` prefix (e.g., `pf-v6-u-ml-sm`). The `pf-v5-` prefix is incompatible with PatternFly v6.
 - [ ] **No `eslint-disable` comments** without a documented justification directly above. Never suppress `exhaustive-deps` or `no-explicit-any`.
 - [ ] **No `console.*` calls.** Use `logger` from `~/monitoring/logger`.
