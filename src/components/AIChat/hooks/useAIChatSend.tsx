@@ -4,13 +4,11 @@ import { useInProgress, useSendStreamMessage } from '@redhat-cloud-services/ai-r
 import { getUserFacingErrorMessage } from '~/components/AIChat/message-utils';
 import { logger } from '~/monitoring/logger';
 
-type AIChatSendContextValue = {
+type UseAIChatSendResult = {
   sendError?: string;
   clearSendError: () => void;
   sendMessage: (message: string) => Promise<void>;
 };
-
-const AIChatSendContext = React.createContext<AIChatSendContextValue | null>(null);
 
 const getErrorMessage = (error: unknown): string => {
   if (error instanceof AIClientError) {
@@ -21,9 +19,9 @@ const getErrorMessage = (error: unknown): string => {
 };
 
 /**
- * Owns send/SSE + send errors under `AIStateProvider`. Announcements live in the message list.
+ * Sends streaming messages through the Red Hat AI state provider.
  */
-export const AIChatSendProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
+export const useAIChatSend = (): UseAIChatSendResult => {
   const [sendError, setSendError] = React.useState<string>();
   const sendStreamMessage = useSendStreamMessage();
   const isInProgress = useInProgress();
@@ -58,18 +56,5 @@ export const AIChatSendProvider: React.FC<React.PropsWithChildren> = ({ children
     [isInProgress, sendStreamMessage],
   );
 
-  const value = React.useMemo(
-    () => ({ sendError, clearSendError, sendMessage }),
-    [sendError, clearSendError, sendMessage],
-  );
-
-  return <AIChatSendContext.Provider value={value}>{children}</AIChatSendContext.Provider>;
-};
-
-export const useAIChatSend = (): AIChatSendContextValue => {
-  const value = React.useContext(AIChatSendContext);
-  if (!value) {
-    throw new Error('useAIChatSend must be used within AIChatSendProvider');
-  }
-  return value;
+  return { sendError, clearSendError, sendMessage };
 };

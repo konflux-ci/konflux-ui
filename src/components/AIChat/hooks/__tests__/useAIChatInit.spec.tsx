@@ -5,10 +5,7 @@ import {
   KONFLUX_AI_ERROR_PERMISSION,
   KONFLUX_AI_ERROR_UNAVAILABLE,
 } from '~/components/AIChat/const';
-import {
-  AIChatInitProvider,
-  useAIChatInit,
-} from '~/components/AIChat/hooks/useAIChatInit';
+import { useAIChatInit } from '~/components/AIChat/hooks/useAIChatInit';
 
 const mockUseIsInitializing = jest.fn();
 const mockInit = jest.fn();
@@ -26,33 +23,23 @@ jest.mock('~/monitoring/logger', () => ({
   },
 }));
 
-// Re-import after mock so the provider uses our mocked AIStateContext value via a wrapper.
+// Re-import after mock so the hook uses our mocked AIStateContext value via a wrapper.
 const { AIStateContext }: {
   AIStateContext: React.Context<{ getState: () => { init: typeof mockInit } }>;
 } = jest.requireMock('@redhat-cloud-services/ai-react-state');
 
 const wrapper = ({ children }: { children: React.ReactNode }) => (
   <AIStateContext.Provider value={{ getState: mockGetState }}>
-    <AIChatInitProvider>{children}</AIChatInitProvider>
+    {children}
   </AIStateContext.Provider>
 );
 
-describe('AIChatInitProvider / useAIChatInit', () => {
+describe('useAIChatInit', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockUseIsInitializing.mockReturnValue(false);
     mockInit.mockResolvedValue(undefined);
     mockGetState.mockReturnValue({ init: mockInit });
-  });
-
-  it('throws when used outside the provider', () => {
-    const consoleError = jest.spyOn(console, 'error').mockImplementation(() => undefined);
-
-    expect(() => renderHook(() => useAIChatInit())).toThrow(
-      'useAIChatInit must be used within AIChatInitProvider',
-    );
-
-    consoleError.mockRestore();
   });
 
   it('initializes the Lightspeed client on mount', async () => {
