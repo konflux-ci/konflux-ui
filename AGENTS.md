@@ -1,5 +1,7 @@
 # AGENTS.md — konflux-ui
 
+<!-- CLAUDE.md is a symlink to this file. Edits here apply to both. Do not create or modify CLAUDE.md directly. -->
+
 ## Build & Test Commands
 
 | Task              | Command                              |
