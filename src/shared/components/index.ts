@@ -8,6 +8,7 @@ export * from './countdown';
 export * from './markdown-view';
 export * from './help-tooltip';
 export * from './pipeline-run-logs';
+export * from './TaskRunInfrastructureDiagnostic';
 export * from './ContextSwitcher';
 export * from './image-display';
 export { default as ExternalLink } from './links/ExternalLink';

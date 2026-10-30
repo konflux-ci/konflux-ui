@@ -1,10 +1,9 @@
 import { mockPipelineRuns } from '~/components/ApplicationDetails/__data__/mock-pipeline-run';
 import { testTaskRuns } from '~/components/TaskRunListView/__data__/mock-TaskRun-data';
 import { runStatus } from '~/consts/pipelinerun';
-import { DataState, testPipelineRuns } from '../../__data__/pipelinerun-data';
-import { PipelineRunKind, TaskRunKind, TektonResultsRun } from '../../types';
 import {
   calculateDuration,
+  getTaskRunInfrastructureDiagnostic,
   getDuration,
   getPipelineRunData,
   getRandomChars,
@@ -17,9 +16,69 @@ import {
   isTaskRunInPipelineRun,
   getDisplayNameFromChildReferences,
   sortTaskRunsByTime,
-} from '../pipeline-utils';
+} from '~/utils/pipeline-utils';
+import { DataState, testPipelineRuns } from '../../__data__/pipelinerun-data';
+import { PipelineRunKind, TaskRunKind, TektonResultsRun } from '../../types';
 
 const samplePipelineRun = testPipelineRuns[DataState.SUCCEEDED];
+
+describe('getTaskRunInfrastructureDiagnostic', () => {
+  const message =
+    'Last observed Pod warning: FailedMount: secret "missing" not found\n  資源 unavailable  ';
+  const taskRun: TaskRunKind = { ...testTaskRuns[0], status: undefined };
+
+  it.each<{ name: string; resource?: TaskRunKind; expected?: string }>([
+    { name: 'no TaskRun' },
+    { name: 'no status', resource: taskRun },
+    { name: 'no conditions', resource: { ...taskRun, status: {} } },
+    { name: 'empty conditions', resource: { ...taskRun, status: { conditions: [] } } },
+    {
+      name: 'no Succeeded condition',
+      resource: {
+        ...taskRun,
+        status: { conditions: [{ type: 'Ready', status: 'False', message }] },
+      },
+    },
+    {
+      name: 'no message',
+      resource: { ...taskRun, status: { conditions: [{ type: 'Succeeded', status: 'False' }] } },
+    },
+    ...['', 'Task failed', `Failure: ${message}`, ` ${message}`].map((value) => ({
+      name: `nonmatching message ${JSON.stringify(value)}`,
+      resource: {
+        ...taskRun,
+        status: { conditions: [{ type: 'Succeeded', status: 'False', message: value }] },
+      },
+    })),
+    {
+      name: 'warning only on an unrelated condition',
+      resource: {
+        ...taskRun,
+        status: {
+          conditions: [
+            { type: 'Ready', status: 'False', message },
+            { type: 'Succeeded', status: 'False', message: 'Task failed' },
+          ],
+        },
+      },
+    },
+    ...['False', 'Unknown', 'True'].map((status) => ({
+      name: `matching message with status ${status} after another condition`,
+      resource: {
+        ...taskRun,
+        status: {
+          conditions: [
+            { type: 'Ready', status: 'True', message: 'Unrelated' },
+            { type: 'Succeeded', status, message },
+          ],
+        },
+      },
+      expected: message,
+    })),
+  ])('returns the exact diagnostic or undefined for $name', ({ resource, expected }) => {
+    expect(getTaskRunInfrastructureDiagnostic(resource)).toBe(expected);
+  });
+});
 
 describe('getDuration', () => {
   it('handles invalid values', () => {

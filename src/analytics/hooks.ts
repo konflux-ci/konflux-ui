@@ -3,7 +3,7 @@ import { useMatches } from 'react-router-dom';
 import { analyticsService } from './AnalyticsService';
 import { useIsAnalyticsEnabled } from './conditional-checks';
 import type { EventPropertiesMap, TrackEvents } from './gen/analytics-types';
-import { journeyCollector } from './JourneyCollector';
+import { CHECKPOINT_INTERVAL_MS, journeyCollector } from './JourneyCollector';
 
 export const useTrackAnalyticsEvent = (): (<E extends TrackEvents>(
   event: E,
@@ -34,4 +34,18 @@ export const useJourneyTracker = (): void => {
       journeyCollector.recordStep(pattern);
     }
   }, [pattern, isAnalyticsEnabled]);
+
+  React.useEffect(() => {
+    if (!isAnalyticsEnabled) {
+      return;
+    }
+
+    const id = setInterval(() => {
+      if (journeyCollector.isEligibleForCheckpoint()) {
+        journeyCollector.flush();
+      }
+    }, CHECKPOINT_INTERVAL_MS);
+
+    return () => clearInterval(id);
+  }, [isAnalyticsEnabled]);
 };

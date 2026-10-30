@@ -275,6 +275,15 @@ export const taskResultsStatus = (taskResults: TektonResultsRun[]): runStatus =>
   return runStatus.Succeeded;
 };
 
+const TASKRUN_POD_WARNING_DIAGNOSTIC_PREFIX = 'Last observed Pod warning:';
+
+export const getTaskRunInfrastructureDiagnostic = (taskRun?: TaskRunKind): string | undefined => {
+  const message = taskRun?.status?.conditions?.find(
+    (condition) => condition.type === 'Succeeded',
+  )?.message;
+  return message?.startsWith(TASKRUN_POD_WARNING_DIAGNOSTIC_PREFIX) ? message : undefined;
+};
+
 export const taskRunStatus = (taskRun: TaskRunKind): runStatus => {
   if (!taskRun?.status?.conditions?.length) {
     return runStatus.Pending;

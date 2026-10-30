@@ -6,7 +6,6 @@ import { isEmpty } from 'lodash-es';
 import PageLayout from '~/components/PageLayout/PageLayout';
 import { secretFormValidationSchema } from '~/components/Secrets/utils/secret-validation';
 import { LEARN_MORE_ABOUT_SECRETS_CREATION } from '~/consts/documentation';
-import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { useSearchParam } from '~/hooks/useSearchParam';
 import { useSecretMetadata } from '~/hooks/useSecretMetadata';
 import { logger } from '~/monitoring/logger';
@@ -256,12 +255,7 @@ const EditSecretForm: React.FC = () => {
         >
           <PageLayout
             breadcrumbs={getSecretBreadcrumbs(namespace, 'Edit')}
-            title={
-              <>
-                Edit secret
-                <FeatureFlagIndicator flags={['edit-secret-page']} />
-              </>
-            }
+            title="Edit secret"
             description={
               <>
                 Edit a secret that is stored using AWS Secret Manager to keep your data private.{' '}

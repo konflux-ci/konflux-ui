@@ -7,6 +7,7 @@ import { RouterParams } from '../../../routes/utils';
 import { useNamespace } from '../../../shared/providers/Namespace';
 import { TektonResourceLabel } from '../../../types';
 import { SecurityConformaTab } from '../../Conforma/SecurityConformaTab';
+import { POLICY_EXCEPTION_FILTER_KEY } from '../../Conforma/usePolicyExceptionFilter';
 
 export const TaskRunSecurityTab: React.FC = () => {
   const { taskRunName } = useParams<RouterParams>();
@@ -25,7 +26,9 @@ export const TaskRunSecurityTab: React.FC = () => {
   }
 
   return (
-    <FilterContextProvider filterParams={['rule', 'status', 'component']}>
+    <FilterContextProvider
+      filterParams={['rule', 'status', 'component', POLICY_EXCEPTION_FILTER_KEY]}
+    >
       <SecurityConformaTab pipelineRunName={plrName} taskRun={taskRun} />
     </FilterContextProvider>
   );
