@@ -37,7 +37,6 @@ const state = (overrides: Partial<Record<FlagKey, boolean>>) =>
   ({
     'column-management': true,
     'kubearchive-logs': true,
-    mintmaker: false,
     ...overrides,
   }) as Record<FlagKey, boolean>;
 
@@ -60,11 +59,11 @@ describe('computeFeatureFlagChanges', () => {
   });
 
   it('reports multiple flag changes, each with its new value', () => {
-    const before = state({ 'kubearchive-logs': true, mintmaker: false });
-    const after = state({ 'kubearchive-logs': false, mintmaker: true });
+    const before = state({ 'kubearchive-logs': true, 'column-management': false });
+    const after = state({ 'kubearchive-logs': false, 'column-management': true });
 
     expect(computeFeatureFlagChanges(before, after)).toEqual({
-      changes: { 'kubearchive-logs': false, mintmaker: true },
+      changes: { 'kubearchive-logs': false, 'column-management': true },
       changesCount: 2,
     });
   });
@@ -92,11 +91,11 @@ describe('computeFeatureFlagChanges', () => {
   });
 
   it('reports every flag as changed when resetting to defaults changes multiple flags', () => {
-    const before = state({ 'kubearchive-logs': false, mintmaker: true });
-    const after = state({ 'kubearchive-logs': true, mintmaker: false });
+    const before = state({ 'kubearchive-logs': false, 'column-management': true });
+    const after = state({ 'kubearchive-logs': true, 'column-management': false });
 
     expect(computeFeatureFlagChanges(before, after)).toEqual({
-      changes: { 'kubearchive-logs': true, mintmaker: false },
+      changes: { 'kubearchive-logs': true, 'column-management': false },
       changesCount: 2,
     });
   });

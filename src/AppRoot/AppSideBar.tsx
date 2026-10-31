@@ -180,18 +180,11 @@ export const AppSideBar: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
               </NavLink>
             </NavItem>
 
-            <IfFeature flag="mintmaker">
-              <NavItem isActive={isActive(DEPENDENCY_SCHEDULE_PATH.path)}>
-                <NavLink to={DEPENDENCY_SCHEDULE_PATH.createPath({} as never)}>
-                  Dependency updates schedule{' '}
-                  <FeatureFlagIndicator
-                    flags={['mintmaker']}
-                    hasNoPadding
-                    popOverTriggerAction="hover"
-                  />
-                </NavLink>
-              </NavItem>
-            </IfFeature>
+            <NavItem isActive={isActive(DEPENDENCY_SCHEDULE_PATH.path)}>
+              <NavLink to={DEPENDENCY_SCHEDULE_PATH.createPath({} as never)}>
+                Dependency updates schedule
+              </NavLink>
+            </NavItem>
           </NavList>
         </Nav>
       </PageSidebarBody>

@@ -94,10 +94,6 @@ const applicationRoutes = [
       },
       {
         path: `dep-updates`,
-        loader: () => {
-          ensureFeatureFlagOnLoader('mintmaker');
-          return null;
-        },
         errorElement: <RouteErrorBoundry />,
         element: <ApplicationDependencyTab />,
       },

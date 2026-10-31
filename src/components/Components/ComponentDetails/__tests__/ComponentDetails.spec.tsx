@@ -1,6 +1,5 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { screen, fireEvent, act } from '@testing-library/react';
-import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useComponent } from '../../../../hooks/useComponents';
 import { PACState } from '../../../../hooks/usePACState';
 import { mockUseNamespaceHook } from '../../../../unit-test-utils/mock-namespace';
@@ -54,7 +53,6 @@ jest.mock('../../../../hooks/usePACState', () => {
 const useNavigateMock = useNavigate as jest.Mock;
 const useParamsMock = useParams as jest.Mock;
 const useComponentMock = useComponent as jest.Mock;
-const useIsOnFeatureFlagMock = useIsOnFeatureFlag as jest.Mock;
 const watchResourceMock = createK8sWatchResourceMock();
 const useModalLauncherMock = useModalLauncher as jest.Mock;
 
@@ -113,14 +111,7 @@ describe('ComponentDetailsView', () => {
     );
   });
 
-  it('should not show the dependency updates tab when mintmaker is disabled', () => {
-    useIsOnFeatureFlagMock.mockReturnValue(false);
-    renderWithQueryClientAndRouter(<ComponentDetailsViewWrapper />);
-    expect(screen.queryByTestId('app-details__tabItem dependencyupdates')).not.toBeInTheDocument();
-  });
-
-  it('should show the dependency updates tab when mintmaker is enabled', async () => {
-    useIsOnFeatureFlagMock.mockReturnValue(true);
+  it('should show the dependency updates tab', async () => {
     renderWithQueryClientAndRouter(<ComponentDetailsViewWrapper />);
     const dependencyTab = screen.getByTestId('app-details__tabItem dependencyupdates');
     expect(dependencyTab).toBeInTheDocument();

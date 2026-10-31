@@ -53,7 +53,7 @@ describe('ComponentsPage ComponentDependencyTab', () => {
   beforeEach(() => {
     useParamsMock.mockReturnValue({ componentName: 'standalone-component' });
     useComponentMock.mockReturnValue([component, true, undefined]);
-    useFeatureFlagsMock.mockReturnValue([{ mintmaker: true }, setFlagMock]);
+    useFeatureFlagsMock.mockReturnValue([{}, setFlagMock]);
     useIsOnFeatureFlagMock.mockReturnValue(true);
   });
 
