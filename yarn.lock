@@ -4458,6 +4458,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@redhat-cloud-services/ai-client-common@npm:0.14.1":
+  version: 0.14.1
+  resolution: "@redhat-cloud-services/ai-client-common@npm:0.14.1"
+  checksum: 10/8a75baace0e942199fb488245f194c3cf995145c888fe9b1276b26ae69df9fa8053c89f1cfc2fe56fee118e38400555b22331870211bc7e3d6218292bb6c5c64
+  languageName: node
+  linkType: hard
+
 "@redhat-cloud-services/ai-client-state@npm:0.15.0, @redhat-cloud-services/ai-client-state@npm:^0.15.0":
   version: 0.15.0
   resolution: "@redhat-cloud-services/ai-client-state@npm:0.15.0"
@@ -4479,12 +4486,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@redhat-cloud-services/lightspeed-client@npm:^0.15.0":
-  version: 0.15.0
-  resolution: "@redhat-cloud-services/lightspeed-client@npm:0.15.0"
+"@redhat-cloud-services/lightspeed-client@npm:^0.16.0":
+  version: 0.16.1
+  resolution: "@redhat-cloud-services/lightspeed-client@npm:0.16.1"
   dependencies:
-    "@redhat-cloud-services/ai-client-common": "npm:0.13.0"
-  checksum: 10/9bd4799292ea7d3e9779ec1b2bd11968a5d67c74d28fcb86fb29a1f093cc5cee528c9acf373711a6ccbb8e5fdc9b6f555114edfc8e764a6a2870318f58593e7b
+    "@redhat-cloud-services/ai-client-common": "npm:0.14.1"
+  checksum: 10/58b84f589f1a660d352b9c2c119af7771854f9b668b15093d2bae88355a27d8308ac8cd6ec3c2fa17223e6f854110b6731268257154d4308599d259b6208bbfc
   languageName: node
   linkType: hard
 
@@ -14495,7 +14502,7 @@ __metadata:
     "@redhat-cloud-services/ai-client-common": "npm:^0.13.0"
     "@redhat-cloud-services/ai-client-state": "npm:^0.15.0"
     "@redhat-cloud-services/ai-react-state": "npm:^0.15.0"
-    "@redhat-cloud-services/lightspeed-client": "npm:^0.15.0"
+    "@redhat-cloud-services/lightspeed-client": "npm:^0.16.0"
     "@segment/analytics-next": "npm:^1.81.1"
     "@sentry/react": "npm:^10.38.0"
     "@size-limit/file": "npm:^13.0.3"
