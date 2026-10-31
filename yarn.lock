@@ -4458,7 +4458,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@redhat-cloud-services/ai-client-state@npm:0.15.0, @redhat-cloud-services/ai-client-state@npm:^0.15.0":
+"@redhat-cloud-services/ai-client-common@npm:0.14.1":
+  version: 0.14.1
+  resolution: "@redhat-cloud-services/ai-client-common@npm:0.14.1"
+  checksum: 10/8a75baace0e942199fb488245f194c3cf995145c888fe9b1276b26ae69df9fa8053c89f1cfc2fe56fee118e38400555b22331870211bc7e3d6218292bb6c5c64
+  languageName: node
+  linkType: hard
+
+"@redhat-cloud-services/ai-client-state@npm:0.16.1":
+  version: 0.16.1
+  resolution: "@redhat-cloud-services/ai-client-state@npm:0.16.1"
+  dependencies:
+    "@redhat-cloud-services/ai-client-common": "npm:0.14.1"
+  checksum: 10/bcc91a4301add36b1ac2560ac209c2350d2e7b329c8c0a44bac05ea18c14c7c8490f8be2ebf824b1ca148e8ea4831ca989df638f64bc6ac97de135ff590f8150
+  languageName: node
+  linkType: hard
+
+"@redhat-cloud-services/ai-client-state@npm:^0.15.0":
   version: 0.15.0
   resolution: "@redhat-cloud-services/ai-client-state@npm:0.15.0"
   dependencies:
@@ -4467,15 +4483,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@redhat-cloud-services/ai-react-state@npm:^0.15.0":
-  version: 0.15.0
-  resolution: "@redhat-cloud-services/ai-react-state@npm:0.15.0"
+"@redhat-cloud-services/ai-react-state@npm:^0.16.0":
+  version: 0.16.1
+  resolution: "@redhat-cloud-services/ai-react-state@npm:0.16.1"
   dependencies:
-    "@redhat-cloud-services/ai-client-common": "npm:0.13.0"
-    "@redhat-cloud-services/ai-client-state": "npm:0.15.0"
+    "@redhat-cloud-services/ai-client-common": "npm:0.14.1"
+    "@redhat-cloud-services/ai-client-state": "npm:0.16.1"
   peerDependencies:
-    react: ">=16.8.0"
-  checksum: 10/bdb3c0f3b5ca9f069d8a5b12b6dd1af74b72b2ecd8ee8741672f1a6f04122393c19ddefd64807b62cbbf86e764336b084a62b304d9e05b9921631ec24d9e1e38
+    react: ">=16.14.0"
+  checksum: 10/1e21574ee63089abed1ca363cc20458c178340bf74218268a609906e075e35c9cfdfe73738cea91cc5de985d10575a176885450f0b00bea20b0b5913962ae20d
   languageName: node
   linkType: hard
 
@@ -14494,7 +14510,7 @@ __metadata:
     "@pmmmwh/react-refresh-webpack-plugin": "npm:^0.5.15"
     "@redhat-cloud-services/ai-client-common": "npm:^0.13.0"
     "@redhat-cloud-services/ai-client-state": "npm:^0.15.0"
-    "@redhat-cloud-services/ai-react-state": "npm:^0.15.0"
+    "@redhat-cloud-services/ai-react-state": "npm:^0.16.0"
     "@redhat-cloud-services/lightspeed-client": "npm:^0.15.0"
     "@segment/analytics-next": "npm:^1.81.1"
     "@sentry/react": "npm:^10.38.0"
