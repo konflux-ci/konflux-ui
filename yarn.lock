@@ -4458,12 +4458,28 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@redhat-cloud-services/ai-client-state@npm:0.15.0, @redhat-cloud-services/ai-client-state@npm:^0.15.0":
+"@redhat-cloud-services/ai-client-common@npm:0.14.1":
+  version: 0.14.1
+  resolution: "@redhat-cloud-services/ai-client-common@npm:0.14.1"
+  checksum: 10/8a75baace0e942199fb488245f194c3cf995145c888fe9b1276b26ae69df9fa8053c89f1cfc2fe56fee118e38400555b22331870211bc7e3d6218292bb6c5c64
+  languageName: node
+  linkType: hard
+
+"@redhat-cloud-services/ai-client-state@npm:0.15.0":
   version: 0.15.0
   resolution: "@redhat-cloud-services/ai-client-state@npm:0.15.0"
   dependencies:
     "@redhat-cloud-services/ai-client-common": "npm:0.13.0"
   checksum: 10/36cfc4fbae309be2861fbe9f287412b6e94647000b6b11540fc38c667d6ef7e03f1f1a8ddd7ee617e465147c66b884293f41acfef53b1e289309ab991feb751f
+  languageName: node
+  linkType: hard
+
+"@redhat-cloud-services/ai-client-state@npm:^0.16.0":
+  version: 0.16.1
+  resolution: "@redhat-cloud-services/ai-client-state@npm:0.16.1"
+  dependencies:
+    "@redhat-cloud-services/ai-client-common": "npm:0.14.1"
+  checksum: 10/bcc91a4301add36b1ac2560ac209c2350d2e7b329c8c0a44bac05ea18c14c7c8490f8be2ebf824b1ca148e8ea4831ca989df638f64bc6ac97de135ff590f8150
   languageName: node
   linkType: hard
 
@@ -14493,7 +14509,7 @@ __metadata:
     "@patternfly/react-virtualized-extension": "npm:6.2.0"
     "@pmmmwh/react-refresh-webpack-plugin": "npm:^0.5.15"
     "@redhat-cloud-services/ai-client-common": "npm:^0.13.0"
-    "@redhat-cloud-services/ai-client-state": "npm:^0.15.0"
+    "@redhat-cloud-services/ai-client-state": "npm:^0.16.0"
     "@redhat-cloud-services/ai-react-state": "npm:^0.15.0"
     "@redhat-cloud-services/lightspeed-client": "npm:^0.15.0"
     "@segment/analytics-next": "npm:^1.81.1"
