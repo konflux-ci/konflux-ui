@@ -118,6 +118,14 @@ export default {
           priority: 20,
           enforce: true,
         },
+        // Keep the Lightspeed client libraries in the async AI chat chunk.
+        aiChat: {
+          test: /[\\/]node_modules[\\/]@redhat-cloud-services[\\/](lightspeed-client|ai-react-state|ai-client-state|ai-client-common)[\\/]/,
+          name: 'ai-chat-vendor',
+          chunks: 'async',
+          priority: 25,
+          enforce: true,
+        },
       },
     },
   },
