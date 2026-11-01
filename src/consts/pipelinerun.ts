@@ -104,19 +104,20 @@ export enum runStatus {
 export const RUN_STATUS_PRIORITY: Record<string, number> = {
   [runStatus.Running]: 1,
   [runStatus['In Progress']]: 2,
-  [runStatus.Pending]: 3,
-  [runStatus.PipelineNotStarted]: 4,
-  [runStatus.Idle]: 5,
-  [runStatus.Cancelling]: 6,
-  [runStatus.FailedToStart]: 7,
-  [runStatus.Failed]: 8,
-  [runStatus.TestFailed]: 9,
-  [runStatus.TestWarning]: 10,
-  [runStatus.NeedsMerge]: 11,
-  [runStatus.Cancelled]: 12,
-  [runStatus.Succeeded]: 13,
-  [runStatus.Skipped]: 14,
-  [runStatus.Unknown]: 15,
+  [runStatus.Queued]: 3,
+  [runStatus.Pending]: 4,
+  [runStatus.PipelineNotStarted]: 5,
+  [runStatus.Idle]: 6,
+  [runStatus.Cancelling]: 7,
+  [runStatus.FailedToStart]: 8,
+  [runStatus.Failed]: 9,
+  [runStatus.TestFailed]: 10,
+  [runStatus.TestWarning]: 11,
+  [runStatus.NeedsMerge]: 12,
+  [runStatus.Cancelled]: 13,
+  [runStatus.Succeeded]: 14,
+  [runStatus.Skipped]: 15,
+  [runStatus.Unknown]: 16,
 };
 
 export enum SucceedConditionReason {
@@ -149,6 +150,7 @@ export const STALE_ARCHIVE_SUCCEEDED_REASONS: ReadonlySet<string> = new Set([
 
 export const UNFINISHED_PLR_STATUSES = [
   runStatus.Pending,
+  runStatus.Queued,
   runStatus.Running,
   runStatus.Idle,
   runStatus.Cancelling,

@@ -1,6 +1,8 @@
 import * as React from 'react';
 import { runStatus } from '~/consts/pipelinerun';
 import { useTaskRunsForPipelineRuns } from '~/hooks/useTaskRunsV2';
+import { useKueueQueuePositionForPipelineRun } from '~/kueue/kueue-hooks';
+import { useQueueStatusText } from '~/kueue/QueuePositionText';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { PipelineRunKind } from '~/types';
 import { PLRStatus } from '~/utils/plr-status-config';
@@ -16,6 +18,8 @@ const PipelineRunStatus: React.FC<PipelineRunStatusProps> = React.memo(
   ({ plr, isTooltipVisible = true, isLabel = false }) => {
     const namespace = useNamespace();
     const { status, message } = PLRStatus.useStatusDisplay(plr);
+    const { queuePosition } = useKueueQueuePositionForPipelineRun(namespace, plr);
+    const queueStatusText = useQueueStatusText(status ?? runStatus.Unknown, queuePosition);
 
     const isFailed = status === runStatus.Failed;
     const shouldFetchTaskRuns = isFailed && isTooltipVisible;
@@ -42,9 +46,21 @@ const PipelineRunStatus: React.FC<PipelineRunStatusProps> = React.memo(
     if (!status) return null;
 
     if (isLabel) {
-      return <PLRStatus.StatusIconWithTextLabel status={status} tooltip={tooltip} />;
+      return (
+        <PLRStatus.StatusIconWithTextLabel
+          status={status}
+          text={queueStatusText}
+          tooltip={tooltip}
+        />
+      );
     }
-    return <PLRStatus.StatusIconWithText status={status} tooltip={tooltip} />;
+    return (
+      <PLRStatus.StatusIconWithText
+        status={status}
+        text={queueStatusText}
+        tooltip={tooltip}
+      />
+    );
   },
 );
 
