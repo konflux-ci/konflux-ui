@@ -93,7 +93,7 @@ When writing custom CSS:
 - Place styles in a co-located SCSS file (e.g., `MyComponent.scss`) alongside the component.
 - Use BEM naming: `.my-component__section--loading`.
 - Use PF tokens for all values (spacing, color, borders).
-- Never use inline styles (`style={{ ... }}`).
+- Never use inline styles (`style={{ ... }}`). Exception: virtualized row positioning styles (e.g., `position: 'absolute'`, `top`, `height`) are required by virtualizers — memoize the style object with `useMemo` rather than recreating it on every render.
 
 ---
 
