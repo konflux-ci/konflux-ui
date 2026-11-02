@@ -3,7 +3,6 @@ const CONDITIONS = {
   KITESERVICE: 'isKiteServiceEnabled',
   STAGING: 'isStagingCluster',
   IMAGE_CONTROLLER: 'isImageControllerEnabled',
-  SYSTEM_NOTIFICATIONS: 'isSystemNotificationsAccessible',
   ANALYTICS: 'isAnalyticsEnabled',
   LIGHTSPEED: 'isLightspeedAvailable',
 } as const;
