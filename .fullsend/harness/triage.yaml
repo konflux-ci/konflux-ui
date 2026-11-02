@@ -1,5 +1,5 @@
 # .fullsend/harness/triage.yaml
-base: https://raw.githubusercontent.com/fullsend-ai/agents/7879955ea557deb6d24e3265fdb89288f0844170/harness/triage.yaml#sha256=73ef167017bcf1061d8f9107c95a6f3fcdc4ee41ba57eeff82270d7a57333f37
+base: https://raw.githubusercontent.com/fullsend-ai/agents/27399d0707897bb705e544588df8ecccfc8f9b43/harness/triage.yaml#sha256=4ac80dccd7199c183e730e41a236e934ea8ae0d353032e741dc8558b988a0380
 
 trigger: >
   event.entity.kind == "work_item"
@@ -20,7 +20,7 @@ allowed_remote_resources:
   - https://raw.githubusercontent.com/fullsend-ai/agents/
 
 overlays:
-  - when: 'runtime.forge == "jira"'
+  - when: '(has(event.source) && event.source.system == "jira") || (!has(event.source) && runtime.forge == "jira")'
     env:
       runner:
         # KFLUXUI doesn't have special transitions - just "closed"

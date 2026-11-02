@@ -20,7 +20,7 @@ One-command setup: `yarn setup` or `./setup.sh` (checks Node.js >= 24, enables C
 
 ## Key Conventions
 
-- `~/` -> `src/`, `@routes/` -> `src/routes/` -- use absolute imports, never `../../../`
+- `~/` -> `src/`, `@routes/` -> `src/routes/` -- use `~/` absolute imports for cross-directory imports, never deep relative paths (`../../..`). Single-level relative imports (`./types`, `./utils`) are acceptable for same-directory files.
 - PatternFly v6 CSS classes must use the `pf-v6-` prefix (e.g., `pf-v6-u-ml-sm`), never `pf-v5-`. The `pf-v5-` prefix is incompatible with PatternFly v6.
 - `@patternfly/react-icons` -> use `@patternfly/react-icons/dist/esm/icons/<kebab-case-name>`
 - `lodash` -> use `lodash-es/<funcName>` (jest maps `lodash-es` to `lodash` automatically)

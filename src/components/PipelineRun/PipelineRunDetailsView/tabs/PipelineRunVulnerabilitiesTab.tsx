@@ -9,13 +9,13 @@ import {
   Spinner,
 } from '@patternfly/react-core';
 import { SearchIcon } from '@patternfly/react-icons/dist/esm/icons/search-icon';
+import { VulnerabilitiesTabContent } from '~/components/PipelineRun/VulnerabilitiesTab/VulnerabilitiesTabContent';
 import { ROXCTL_SCAN_TASK } from '~/consts/security';
 import { usePipelineRunV2 } from '~/hooks/usePipelineRunsV2';
 import { useTaskRunsForPipelineRuns } from '~/hooks/useTaskRunsV2';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
-import { ActivePLRStatuses, PLRStatus } from '~/utils/plr-status-config';
-import { VulnerabilitiesTabContent } from '../../VulnerabilitiesTab/VulnerabilitiesTabContent';
+import { ACTIVE_PLR_STATUSES, PLRStatus } from '~/utils/plr-status-config';
 
 const PIPELINE_SCAN_SKIPPED_COPY = {
   title: 'Vulnerability scan skipped',
@@ -65,7 +65,7 @@ export const PipelineRunVulnerabilitiesTab: React.FC = () => {
   );
   const roxctlScanTaskRun = taskRuns[0];
   const isPipelineRunActive =
-    !!pipelineRun && ActivePLRStatuses.includes(PLRStatus.registry.deriveStatus(pipelineRun));
+    !!pipelineRun && ACTIVE_PLR_STATUSES.includes(PLRStatus.registry.deriveStatus(pipelineRun));
   const hasRoxctlChildReference =
     pipelineRun?.status?.childReferences?.some(
       (ref) => ref.pipelineTaskName === ROXCTL_SCAN_TASK,

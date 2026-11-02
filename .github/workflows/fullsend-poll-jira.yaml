@@ -82,7 +82,7 @@ jobs:
       issues: write
       packages: read
       pull-requests: write
-    uses: fullsend-ai/fullsend/.github/workflows/reusable-dispatch.yml@v0.43.0
+    uses: fullsend-ai/fullsend/.github/workflows/reusable-dispatch.yml@5163a55332d09571fa9c33d78a66155eb70fc6ea # v0.50.0
     with:
       matrix: ${{ needs.poll.outputs.matrix }}
       mint_url: ${{ vars.FULLSEND_MINT_URL }}

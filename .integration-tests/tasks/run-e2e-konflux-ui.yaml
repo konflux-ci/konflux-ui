@@ -30,6 +30,17 @@ spec:
     - name: spec-file
       type: string
       default: 'tests/component-lifecycle.spec.ts,tests/environment-config.spec.ts'
+    - name: enable-coverage
+      type: string
+      default: 'true'
+      description: >-
+        When true (and job-type is not periodic-stage), run Cypress with
+        cy:run:coverage, archive .nyc_output, and upload to Codecov when a
+        token is available.
+    - name: codecov-credentials-secret
+      type: string
+      default: 'codecov-credentials'
+      description: 'Secret with Codecov token (key: token). Upload skipped if missing.'
     - name: oci-ref
       type: string
       description: 'OCI repository to store test artifacts'
@@ -73,6 +84,10 @@ spec:
         items:
           - key: oci-storage-dockerconfigjson
             path: oci-storage-dockerconfigjson
+    - name: codecov-credentials
+      secret:
+        secretName: $(params.codecov-credentials-secret)
+        optional: true
   stepTemplate:
     volumeMounts:
       - name: test-artifacts
@@ -267,6 +282,7 @@ spec:
           fi
           export CYPRESS_KONFLUX_BASE_URL="${LOCAL_KONFLUX_BASE_URL}"
           export CYPRESS_LOCAL_CLUSTER=true
+          export CYPRESS_HAC_NAMESPACE=user-ns2
         fi
         echo "Konflux base URL: ${CYPRESS_KONFLUX_BASE_URL}"
 
@@ -417,10 +433,19 @@ spec:
         STARTED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 
         # KEEP
+        ENABLE_COVERAGE="$(params.enable-coverage)"
+        if [ "$(params.job-type)" = "periodic-stage" ]; then
+          ENABLE_COVERAGE="false"
+        fi
+        echo "Coverage collection: ${ENABLE_COVERAGE}"
 
         # Run tests and capture exit code (don't exit on failure)
         set +e
-        yarn run cy:run --spec "${SPEC_FILE}"
+        if [ "${ENABLE_COVERAGE}" = "true" ]; then
+          yarn run cy:run:coverage --spec "${SPEC_FILE}"
+        else
+          yarn run cy:run --spec "${SPEC_FILE}"
+        fi
         TEST_RESULT=$?
 
         # KEEP END
@@ -467,13 +492,23 @@ spec:
           fi
         done
 
+        # Copy Istanbul coverage output for Codecov / OCI artifacts
+        if [ -d "${E2E_DIR}/.nyc_output" ]; then
+          echo "Copying coverage data from ${E2E_DIR}/.nyc_output..."
+          cp -a "${E2E_DIR}/.nyc_output" /artifacts/ || true
+        else
+          echo "No .nyc_output directory found under ${E2E_DIR}"
+        fi
+
         # Create a simple test log
         echo "Test execution completed with exit code: ${TEST_RESULT}" > /artifacts/e2e-tests.log
         echo "Timestamp: $(date)" >> /artifacts/e2e-tests.log
         echo "Base URL: ${CYPRESS_KONFLUX_BASE_URL}" >> /artifacts/e2e-tests.log
+        echo "Coverage enabled: ${ENABLE_COVERAGE}" >> /artifacts/e2e-tests.log
 
         # Save test result for later steps
         echo "${TEST_RESULT}" > /artifacts/test-exit-code
+        echo "${ENABLE_COVERAGE}" > /artifacts/coverage-enabled
 
         # List collected artifacts
         echo "Artifacts collected:"
@@ -490,6 +525,96 @@ spec:
           echo "✅ E2E tests passed"
           exit 0
         fi
+
+    - name: upload-coverage
+      onError: continue
+      image: quay.io/konflux-ci/konflux-devprod/coverport-cli@sha256:f8c2b29053ef103999509ae77dabe6cd0e276bee7770e420f2cc06e0b7e5acf3
+      env:
+        - name: CODECOV_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: $(params.codecov-credentials-secret)
+              key: token
+              optional: true
+        - name: SOURCE_REPO_URL
+          value: $(params.source-repo-url)
+        - name: GIT_REVISION
+          value: $(params.git-revision)
+        - name: TARGET_REPO_URL
+          value: $(params.target-repo-url)
+      volumeMounts:
+        - name: codecov-credentials
+          mountPath: /codecov-credentials
+          readOnly: true
+      script: |
+        #!/usr/bin/env bash
+        set -euo pipefail
+
+        if [ "$(params.enable-coverage)" != "true" ] || [ "$(params.job-type)" = "periodic-stage" ]; then
+          echo "Coverage upload skipped (enable-coverage=$(params.enable-coverage), job-type=$(params.job-type))"
+          exit 0
+        fi
+
+        COVERAGE_DIR="/artifacts/.nyc_output"
+        if [ ! -d "${COVERAGE_DIR}" ] || [ ! -f "${COVERAGE_DIR}/out.json" ]; then
+          echo "No coverage data at ${COVERAGE_DIR}/out.json — skipping Codecov upload"
+          exit 0
+        fi
+
+        if [ -z "${CODECOV_TOKEN:-}" ] && [ -f /codecov-credentials/token ]; then
+          CODECOV_TOKEN="$(cat /codecov-credentials/token)"
+          export CODECOV_TOKEN
+        fi
+
+        if [ -z "${CODECOV_TOKEN:-}" ]; then
+          echo "CODECOV_TOKEN not available — skipping Codecov upload"
+          exit 0
+        fi
+
+        REPO_URL="${TARGET_REPO_URL:-${SOURCE_REPO_URL}}"
+        COMMIT_SHA="${GIT_REVISION}"
+        if [ -z "${REPO_URL}" ] || [ -z "${COMMIT_SHA}" ]; then
+          echo "Missing repo URL or commit SHA — skipping Codecov upload"
+          exit 0
+        fi
+
+        echo "=== Uploading e2e coverage to Codecov ==="
+        echo "Repository: ${REPO_URL}"
+        echo "Commit SHA: ${COMMIT_SHA}"
+
+        COVERPORT_BIN="$(command -v coverport || true)"
+        if [ -z "${COVERPORT_BIN}" ]; then
+          for candidate in /usr/local/bin/coverport /usr/bin/coverport /bin/coverport; do
+            if [ -x "${candidate}" ]; then
+              COVERPORT_BIN="${candidate}"
+              break
+            fi
+          done
+        fi
+        if [ -z "${COVERPORT_BIN}" ]; then
+          echo "WARN: coverport binary not found in image — skipping Codecov upload"
+          exit 0
+        fi
+
+        mkdir -p /artifacts/coverport-output
+        set +e
+        "${COVERPORT_BIN}" process \
+          --coverage-dir="${COVERAGE_DIR}" \
+          --format=nyc \
+          --repo-url="${REPO_URL}" \
+          --commit-sha="${COMMIT_SHA}" \
+          --workspace=/artifacts/coverport-output \
+          --codecov-flags=e2e \
+          --keep-workspace
+        UPLOAD_RESULT=$?
+        set -e
+
+        if [ "${UPLOAD_RESULT}" -ne 0 ]; then
+          echo "WARN: Codecov upload failed with exit code ${UPLOAD_RESULT} — not failing the Task"
+          exit 0
+        fi
+
+        echo "✅ Coverage uploaded to Codecov"
 
     - name: secure-push-oci
       ref:

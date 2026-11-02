@@ -1,0 +1,22 @@
+.policy-exception-list {
+  &__row {
+    padding-block: var(--pf-t--global--spacer--xs);
+    border-block-end: 1px solid var(--pf-t--global--border--color--default);
+
+    &:last-child {
+      border-block-end: 0;
+    }
+  }
+
+  &__message {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  &__code {
+    color: var(--pf-t--global--text--color--subtle);
+    font-size: var(--pf-t--global--font--size--sm);
+  }
+}

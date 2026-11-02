@@ -18,7 +18,6 @@ jest.mock('~/shared/providers/Namespace', () => ({
 
 const mockFeatureFlags: Record<string, boolean> = {
   'component-model': true,
-  'pipeline-runs-page': true,
   mintmaker: true,
 };
 
@@ -86,7 +85,6 @@ describe('AppSideBar', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockFeatureFlags['component-model'] = true;
-    mockFeatureFlags['pipeline-runs-page'] = true;
     mockFeatureFlags.mintmaker = true;
     jest.mocked(useSavedViews).mockReturnValue({
       views: [
@@ -231,17 +229,6 @@ describe('AppSideBar', () => {
     expect(screen.getByRole('link', { name: 'Pipeline Runs' }).closest('li')).toHaveClass(
       'app-side-bar__nav-item--disabled',
     );
-  });
-
-  it('should hide saved-view navigation when Pipeline Runs is disabled', () => {
-    mockFeatureFlags['pipeline-runs-page'] = false;
-    (useActiveRouteChecker as jest.Mock).mockReturnValue(() => false);
-    (useNamespace as jest.Mock).mockReturnValue('test-namespace');
-
-    routerRenderer(<AppSideBar isOpen={true} />);
-
-    expect(screen.queryByTestId('pipeline-runs-nav-group')).not.toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: 'Running Builds' })).not.toBeInTheDocument();
   });
 
   it('should not render links for disabled namespace-dependent routes when no namespace is available', () => {

@@ -16,7 +16,6 @@ import { PlusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/plus-circ
 import { useFormikContext } from 'formik';
 import { Base64 } from 'js-base64';
 import { IMPORT_SECRET_HELP_TEXT } from '~/consts/secrets';
-import { IfFeature } from '~/feature-flags/hooks';
 import { InputField } from '~/shared/components/formik-base';
 import TextColumnField from '~/shared/components/formik-fields/text-column-field/TextColumnField';
 import { useSecrets } from '../../../hooks/useSecrets';
@@ -167,20 +166,18 @@ const SecretSection: React.FC<SecretSectionProps> = ({ currentComponent }) => {
               <GridItem span={6}>
                 <Flex spaceItems={{ default: 'spaceItemsNone' }}>
                   <FlexItem>
-                    <IfFeature flag="edit-secret-page">
-                      <Tooltip content={editTooltip}>
-                        <Button
-                          icon={<PencilAltIcon />}
-                          type={ButtonType.button}
-                          variant={ButtonVariant.plain}
-                          data-test={editTestId}
-                          aria-label="Edit secret"
-                          isAriaDisabled={isEditDisabled}
-                          onClick={() => openEditSecretModal(rowIndex)}
-                          style={{ paddingRight: 0 }}
-                        />
-                      </Tooltip>
-                    </IfFeature>
+                    <Tooltip content={editTooltip}>
+                      <Button
+                        icon={<PencilAltIcon />}
+                        type={ButtonType.button}
+                        variant={ButtonVariant.plain}
+                        data-test={editTestId}
+                        aria-label="Edit secret"
+                        isAriaDisabled={isEditDisabled}
+                        onClick={() => openEditSecretModal(rowIndex)}
+                        style={{ paddingRight: 0 }}
+                      />
+                    </Tooltip>
                   </FlexItem>
                   <FlexItem>{props.removeButton}</FlexItem>
                 </Flex>

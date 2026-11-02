@@ -8,8 +8,9 @@ metadata:
     tekton.dev/tags: 'e2e,konflux-ui,deploy'
 spec:
   description: >-
-    Replaces the stock UI image pinned by konflux-ci deploy with the SNAPSHOT
-    image under test. Copies a dockerconfigjson pull secret onto the kind
+    Replaces the stock UI image pinned by konflux-ci deploy with the image
+    under test (typically the instrumented UI for e2e coverage, or the
+    SNAPSHOT image). Copies a dockerconfigjson pull secret onto the kind
     cluster, attaches it to the proxy SA/deployment, scales down
     konflux-operator, then patches deployment/proxy initContainer
     copy-static-content.
@@ -23,8 +24,8 @@ spec:
     - name: container-image
       type: string
       description: >-
-        Full image reference from SNAPSHOT (test-metadata container-image),
-        e.g. quay.io/redhat-user-workloads/.../konflux-ui@sha256:... or :tag.
+        Full UI image reference to deploy (instrumented tag for coverage, or
+        SNAPSHOT image), e.g. .../use-instrumented:instrumented-on-pr-<sha>.
     - name: pull-secret
       type: string
       description: >-
@@ -69,7 +70,7 @@ spec:
           exit 1
         fi
 
-        echo "=== Using SNAPSHOT image ==="
+        echo "=== Using UI image under test ==="
         echo "Container image: ${CONTAINER_IMAGE}"
 
         echo "=== Scaling down konflux-operator ==="
