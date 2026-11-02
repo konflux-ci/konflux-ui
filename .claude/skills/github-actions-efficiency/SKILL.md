@@ -59,7 +59,7 @@ if command -v gh >/dev/null 2>&1 && gh run list --limit 10; then
     printf 'No workflow runs are available; report static analysis only.\n'
   fi
 else
-  printf 'GitHub Actions run history is unavailable; report static analysis only.\n'
+  printf 'GitHub Actions run history is unavailable; install gh if it is missing, or authenticate it if installed. Report static analysis only.\n'
 fi
 ```
 
