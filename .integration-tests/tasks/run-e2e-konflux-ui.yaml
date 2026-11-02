@@ -224,10 +224,10 @@ spec:
       # workingDir is set dynamically in the script: /e2e when PR sources are staged, /tmp/e2e otherwise.
       computeResources:
         limits:
-          memory: 8Gi
+          memory: 3Gi
           cpu: '2'
         requests:
-          memory: 8Gi
+          memory: 2Gi
           cpu: '1'
       volumeMounts:
         # Mount the dshm (shared memory) volume at /dev/shm for UI end-to-end (E2E) tests.
