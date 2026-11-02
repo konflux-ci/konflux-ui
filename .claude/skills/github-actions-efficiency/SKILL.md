@@ -13,7 +13,7 @@ Current repository guidance expects these CI checks on Node 24:
 
 - **Lint:** `yarn lint`, `yarn lint:restricted-imports`, and `yarn type-checks`
 - **Size limit:** `yarn build` and `yarn size-limit`
-- **Tests:** `yarn test`
+- **Tests:** Coverage-enabled Jest shards `1/2` and `2/2` in `.github/workflows/main.yaml`. The workflow runs `yarn test --maxWorkers=2 --coverage --silent --ci --verbose=false --shard=${{ matrix.shard }}/2`.
 
 Before proposing workflow changes, confirm the current workflows and required checks. Preserve this validation coverage and the documented Node 24 runtime unless maintainers update the policy. Recheck this baseline against the workflow files before relying on it.
 
@@ -41,10 +41,26 @@ If no workflows exist yet, load [`references/actions.md`](./references/actions.m
 ### 1. Measure first
 
 ```bash
-rg -n "on:|concurrency:|paths:|paths-ignore:|strategy:|matrix:|cache:" .github/workflows
-gh run list --limit 10
-run_id=$(gh run list --limit 1 --json databaseId --jq '.[0].databaseId')
-gh run view "$run_id" --log-failed
+workflow_files=
+if [ -d .github/workflows ]; then
+  workflow_files=$(find .github/workflows -type f \( -name '*.yml' -o -name '*.yaml' \) -print)
+fi
+
+if [ -n "$workflow_files" ]; then
+  rg -n "on:|concurrency:|paths:|paths-ignore:|strategy:|matrix:|cache:" .github/workflows --glob '*.yml' --glob '*.yaml'
+else
+  printf 'No GitHub Actions workflow files found; establish required checks before auditing.\n'
+fi
+
+if command -v gh >/dev/null 2>&1 && gh run list --limit 10; then
+  if run_id=$(gh run list --limit 1 --json databaseId --jq '.[0].databaseId // empty') && [ -n "$run_id" ]; then
+    gh run view "$run_id" --log-failed
+  else
+    printf 'No workflow runs are available; report static analysis only.\n'
+  fi
+else
+  printf 'GitHub Actions run history is unavailable; report static analysis only.\n'
+fi
 ```
 
 Look for: missing dependency caches, missing `concurrency` cancellation, over-broad triggers, duplicate workflow coverage, and expensive jobs that run on every change regardless of scope.
@@ -55,7 +71,7 @@ Check each proposed fix against these rules before recommending it:
 
 1. Does not hide required validation — drop any fix that removes release, schema, migration, or shared-library checks.
 2. Does not reduce parallelism without justification — drop unless the user prioritised cost over latency _and_ the new critical path stays within 1.25× the original.
-3. Preserves only documented matrix legs — drop matrix legs with no explicit version or platform commitment.
+3. Preserves documented matrix legs. Keep shard legs that divide one test suite, such as both Jest shards; dropping a shard skips tests even when the legs share a version and platform.
 4. Write-back jobs use opt-in triggers — flag (do not drop) formatter or bot jobs that run automatically; recommend an opt-in trigger instead.
 5. Repo changes stay separate from org settings — split any fix that mixes repo-editable YAML with org-level or GitHub-account settings into two distinct recommendations.
 
@@ -72,7 +88,7 @@ From the six candidates below, keep only those supported by audit evidence from 
 
 ### 4. Verify
 
-- If `gh` CLI access is available, validate path-gating and concurrency cancellation with a live test push on a non-protected branch.
+- If `gh` CLI access is available, validate path-gating and concurrency cancellation with a live test push on an existing, non-protected branch. Do not use that branch's first push as path-filter evidence.
 - If live validation is not possible, state that explicitly in the output.
 - Treat unexpected live behavior as a real bug even when the YAML looks correct.
 

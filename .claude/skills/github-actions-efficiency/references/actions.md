@@ -9,7 +9,7 @@ If the repo is onboarding GitHub Actions for the first time, define a minimal ba
 Inspect in this order:
 
 1. If `.github/workflows/` is missing or empty, gather baseline requirements first: triggering events, required checks, runtime versions, and repository-specific validation policy.
-2. `.github/workflows/*.yml`
+2. `.github/workflows/*.yml` and `.github/workflows/*.yaml`
 3. Docs describing CI expectations
 4. Existing reports or run history if the user wants measured impact
 
@@ -44,6 +44,7 @@ Match matrix breadth to the decision being made:
 - Full matrix for releases or explicit compatibility validation
 - Reduced compatibility matrix for runtime, plugin, packaging, or framework-integration changes
 - Single representative latest-version leg for ordinary code changes
+- Keep all shard legs that split one test suite; removing a shard skips tests even when the legs share a version and platform
 - No heavy test job for clearly non-runtime changes when lighter protection already exists
 
 ### Optional maintenance jobs
@@ -71,7 +72,7 @@ Prefer live GitHub validation when possible:
 
 - Trigger `workflow_dispatch` workflows once
 - Verify stale-run cancellation with two quick updates
-- Verify path-gating with an incremental ignored-only or workflow-only change on an existing branch
+- Verify path-gating with an incremental ignored-only or workflow-only change on an existing, non-protected branch; do not use its first push as evidence
 - Confirm heavy jobs skip in the UI instead of assuming they would
 
 Do not treat the first push on a brand-new branch as a clean path-ignore test.
