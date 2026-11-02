@@ -35,6 +35,7 @@ If no workflows exist yet, load [`references/actions.md`](./references/actions.m
 - [`references/actions.md`](./references/actions.md) — audits, job gating, matrix reduction, live validation, and workflow-specific fixes.
 - [`references/reporting.md`](./references/reporting.md) — when the user asks for a before/after efficiency report.
 - [`references/patterns.md`](./references/patterns.md) — full YAML examples when inline audit commands are not enough.
+- [`references/review-rubric.md`](./references/review-rubric.md) — when reviewing completed efficiency work.
 
 ## Core Workflow
 
