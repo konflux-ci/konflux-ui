@@ -7,16 +7,15 @@ import { registerCondition } from './feature-flags/conditions';
 import { checkIfImageControllerIsEnabled } from './image-controller/conditional-checks';
 import { checkIfKiteServiceIsEnabled } from './kite/conditional-checks';
 import { checkIfKubeArchiveIsEnabled } from './kubearchive/conditional-checks';
+import { checkIfKueueIsAvailable } from './kueue/conditional-checks';
+import { KUEUE_CONDITION_TTL_MS } from './kueue/const';
 
 registerCondition('isKubearchiveEnabled', checkIfKubeArchiveIsEnabled);
 registerCondition('isKiteServiceEnabled', checkIfKiteServiceIsEnabled);
 registerCondition('isImageControllerEnabled', checkIfImageControllerIsEnabled);
 registerCondition('isAnalyticsEnabled', checkIfAnalyticsIsEnabled);
-registerCondition(
-  'isLightspeedAvailable',
-  checkIfLightspeedIsAvailable,
-  LIGHTSPEED_CONDITION_TTL_MS,
-);
+registerCondition('isLightspeedAvailable', checkIfLightspeedIsAvailable, LIGHTSPEED_CONDITION_TTL_MS);
+registerCondition('isKueueAvailable', checkIfKueueIsAvailable, KUEUE_CONDITION_TTL_MS);
 
 registerCondition('isStagingCluster', async () => {
   try {
