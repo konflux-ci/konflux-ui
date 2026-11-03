@@ -5,10 +5,12 @@ import * as React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import { HttpError } from '~/k8s/error';
-import * as k8sFetch from '~/k8s/k8s-fetch';
 import { K8sResourceReadOptions } from '~/k8s/k8s-fetch';
 import { useIsKubeArchiveEnabled } from '~/kubearchive/conditional-checks';
-import { useKubearchiveListResourceQuery } from '~/kubearchive/hooks';
+import {
+  useKubearchiveListResourceQuery,
+  useKubearchiveGetResourceQuery,
+} from '~/kubearchive/hooks';
 import {
   K8sResourceCommon,
   K8sModelCommon,
@@ -21,25 +23,23 @@ import { useK8sAndKarchResources, useK8sAndKarchResource } from '../useK8sAndKar
 // Mock the kubearchive hooks and functions
 jest.mock('~/kubearchive/hooks', () => ({
   useKubearchiveListResourceQuery: jest.fn(),
+  useKubearchiveGetResourceQuery: jest.fn(),
 }));
 
 jest.mock('~/kubearchive/conditional-checks', () => ({
   useIsKubeArchiveEnabled: jest.fn(() => ({ isKubearchiveEnabled: false })),
 }));
 
-jest.mock('~/k8s/k8s-fetch', () => ({
-  __esModule: true,
-  K8sGetResource: jest.fn(),
-}));
-
 const mockUseK8sWatchResource = createK8sWatchResourceMock();
 const mockUseKubearchiveListResourceQuery = useKubearchiveListResourceQuery as jest.MockedFunction<
   typeof useKubearchiveListResourceQuery
 >;
+const mockUseKubearchiveGetResourceQuery = useKubearchiveGetResourceQuery as jest.MockedFunction<
+  typeof useKubearchiveGetResourceQuery
+>;
 const mockUseIsKubeArchiveEnabled = useIsKubeArchiveEnabled as jest.MockedFunction<
   typeof useIsKubeArchiveEnabled
 >;
-const mockK8sGetResource = k8sFetch.K8sGetResource as jest.Mock;
 
 // Sample test data
 interface TestResource extends K8sResourceCommon {
@@ -796,7 +796,6 @@ describe('useK8sAndKarchResource', () => {
     mockUseIsKubeArchiveEnabled.mockReturnValue({
       isKubearchiveEnabled: false,
     } as ReturnType<typeof useIsKubeArchiveEnabled>);
-    mockK8sGetResource.mockReset();
   });
 
   const mockResourceInit: K8sResourceReadOptions = {
@@ -840,8 +839,17 @@ describe('useK8sAndKarchResource', () => {
     ...overrides,
   });
 
+  const mockArchiveQueryResult = (overrides: Record<string, any> = {}) => ({
+    data: undefined,
+    isLoading: false,
+    isError: false,
+    error: null,
+    ...overrides,
+  });
+
   it('should fetch resource successfully from cluster', () => {
     mockUseK8sWatchResource.mockReturnValue(mockClusterQueryResult({ data: testResource1 }) as any);
+    mockUseKubearchiveGetResourceQuery.mockReturnValue(mockArchiveQueryResult() as any);
 
     const { result } = renderHookWithQueryClient(mockResourceInit);
 
@@ -854,12 +862,14 @@ describe('useK8sAndKarchResource', () => {
 
   it('should fetch resource from kubearchive when cluster returns 404', async () => {
     mockUseK8sWatchResource.mockReturnValue(
-      mockClusterQueryResult({ error: HttpError.fromCode(404) }) as any,
+      mockClusterQueryResult({ error: HttpError.fromCode(404), isError: true }) as any,
     );
     mockUseIsKubeArchiveEnabled.mockReturnValue({
       isKubearchiveEnabled: true,
     } as ReturnType<typeof useIsKubeArchiveEnabled>);
-    mockK8sGetResource.mockResolvedValue(archiveResource);
+    mockUseKubearchiveGetResourceQuery.mockReturnValue(
+      mockArchiveQueryResult({ data: archiveResource }) as any,
+    );
 
     const { result } = renderHookWithQueryClient(mockResourceInit);
 
@@ -869,16 +879,26 @@ describe('useK8sAndKarchResource', () => {
 
     expect(result.current.source).toBe(ResourceSource.Archive);
     expect(result.current.fetchError).toBeNull();
-    expect(mockK8sGetResource).toHaveBeenCalled();
+    expect(mockUseKubearchiveGetResourceQuery).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      expect.objectContaining({ enabled: true }),
+      expect.anything(),
+    );
   });
 
-  it('should surface the cluster error when neither source has the resource', async () => {
-    const error = HttpError.fromCode(404);
-    mockUseK8sWatchResource.mockReturnValue(mockClusterQueryResult({ error }) as any);
+  it('should surface the archive error when neither source has the resource (archive error takes priority)', async () => {
+    const clusterError = HttpError.fromCode(404);
+    const archiveError = new Error('Archive fetch failed');
+    mockUseK8sWatchResource.mockReturnValue(
+      mockClusterQueryResult({ error: clusterError, isError: true }) as any,
+    );
     mockUseIsKubeArchiveEnabled.mockReturnValue({
       isKubearchiveEnabled: true,
     } as ReturnType<typeof useIsKubeArchiveEnabled>);
-    mockK8sGetResource.mockRejectedValue(error);
+    mockUseKubearchiveGetResourceQuery.mockReturnValue(
+      mockArchiveQueryResult({ error: archiveError }) as any,
+    );
 
     const { result } = renderHookWithQueryClient(mockResourceInit);
 
@@ -888,13 +908,14 @@ describe('useK8sAndKarchResource', () => {
 
     expect(result.current.data).toBeUndefined();
     expect(result.current.source).toBeUndefined();
-    expect(result.current.fetchError).toBe(error);
+    expect(result.current.fetchError).toBe(archiveError);
     expect(result.current.isError).toBe(true);
   });
 
   it('should handle fetch errors correctly', () => {
     const fetchError = new Error('Failed to fetch resource');
     mockUseK8sWatchResource.mockReturnValue(mockClusterQueryResult({ error: fetchError }) as any);
+    mockUseKubearchiveGetResourceQuery.mockReturnValue(mockArchiveQueryResult() as any);
 
     const { result } = renderHookWithQueryClient(mockResourceInit);
 
@@ -906,6 +927,7 @@ describe('useK8sAndKarchResource', () => {
 
   it('should enable watching when watch=true and resource is from cluster', () => {
     mockUseK8sWatchResource.mockReturnValue(mockClusterQueryResult({ data: testResource1 }) as any);
+    mockUseKubearchiveGetResourceQuery.mockReturnValue(mockArchiveQueryResult() as any);
 
     renderHookWithQueryClient(mockResourceInit, undefined, true);
 
@@ -921,20 +943,21 @@ describe('useK8sAndKarchResource', () => {
         watch: true,
       },
       mockModel,
-      expect.objectContaining({ enabled: true }),
+      expect.objectContaining({ enabled: true, retry: false }),
       {},
     );
   });
 
   it('should not enable watching when watch=false', () => {
     mockUseK8sWatchResource.mockReturnValue(mockClusterQueryResult() as any);
+    mockUseKubearchiveGetResourceQuery.mockReturnValue(mockArchiveQueryResult() as any);
 
     renderHookWithQueryClient(mockResourceInit, undefined, false);
 
     expect(mockUseK8sWatchResource).toHaveBeenCalledWith(
       expect.objectContaining({ watch: false }),
       mockModel,
-      expect.objectContaining({ enabled: true }),
+      expect.objectContaining({ enabled: true, retry: false }),
       {},
     );
   });
@@ -944,6 +967,7 @@ describe('useK8sAndKarchResource', () => {
     mockUseK8sWatchResource.mockReturnValue(
       mockClusterQueryResult({ data: testResource1, wsError }) as any,
     );
+    mockUseKubearchiveGetResourceQuery.mockReturnValue(mockArchiveQueryResult() as any);
 
     const { result } = renderHookWithQueryClient(mockResourceInit, undefined, true);
 
@@ -954,21 +978,23 @@ describe('useK8sAndKarchResource', () => {
 
   it('should not fetch when enabled=false', () => {
     mockUseK8sWatchResource.mockReturnValue(mockClusterQueryResult() as any);
+    mockUseKubearchiveGetResourceQuery.mockReturnValue(mockArchiveQueryResult() as any);
 
     const { result } = renderHookWithQueryClient(mockResourceInit, undefined, false, {}, false);
 
     expect(result.current.isLoading).toBe(false);
     expect(result.current.data).toBeUndefined();
     expect(mockUseK8sWatchResource).toHaveBeenCalledWith(
-      expect.objectContaining({ watch: false }),
+      undefined,
       mockModel,
-      expect.objectContaining({ enabled: false }),
+      expect.objectContaining({ enabled: false, retry: false }),
       {},
     );
   });
 
   it('should not fetch when resourceInit is null', () => {
     mockUseK8sWatchResource.mockReturnValue(mockClusterQueryResult() as any);
+    mockUseKubearchiveGetResourceQuery.mockReturnValue(mockArchiveQueryResult() as any);
 
     const { result } = renderHookWithQueryClient(null);
 
@@ -977,7 +1003,7 @@ describe('useK8sAndKarchResource', () => {
     expect(mockUseK8sWatchResource).toHaveBeenCalledWith(
       undefined,
       undefined,
-      expect.objectContaining({ enabled: false }),
+      expect.objectContaining({ enabled: false, retry: false }),
       {},
     );
   });
@@ -988,25 +1014,33 @@ describe('useK8sAndKarchResource', () => {
     } as ReturnType<typeof useIsKubeArchiveEnabled>);
 
     mockUseK8sWatchResource.mockReturnValue(
-      mockClusterQueryResult({ error: HttpError.fromCode(404) }) as any,
+      mockClusterQueryResult({ error: HttpError.fromCode(404), isError: true }) as any,
     );
+    mockUseKubearchiveGetResourceQuery.mockReturnValue(mockArchiveQueryResult() as any);
 
     const { result } = renderHookWithQueryClient(null);
 
-    expect(mockK8sGetResource).not.toHaveBeenCalled();
+    // Archive query is called but with enabled: false since queryEnabled is false
+    expect(mockUseKubearchiveGetResourceQuery).toHaveBeenCalledWith(
+      undefined,
+      undefined,
+      expect.objectContaining({ enabled: false }),
+      {},
+    );
     expect(result.current.data).toBeUndefined();
   });
 
   it('should pass query options to the cluster query', () => {
     const queryOptions = { timeout: 5000 };
     mockUseK8sWatchResource.mockReturnValue(mockClusterQueryResult({ data: testResource1 }) as any);
+    mockUseKubearchiveGetResourceQuery.mockReturnValue(mockArchiveQueryResult() as any);
 
     renderHookWithQueryClient(mockResourceInit, queryOptions);
 
     expect(mockUseK8sWatchResource).toHaveBeenCalledWith(
       expect.objectContaining({ watch: false }),
       mockModel,
-      expect.objectContaining({ timeout: 5000, enabled: true }),
+      expect.objectContaining({ timeout: 5000, enabled: true, retry: false }),
       {},
     );
   });
@@ -1014,6 +1048,7 @@ describe('useK8sAndKarchResource', () => {
   it('should pass watch options through', () => {
     const watchOptions = { wsPrefix: 'custom-prefix', timeout: 1000 };
     mockUseK8sWatchResource.mockReturnValue(mockClusterQueryResult({ data: testResource1 }) as any);
+    mockUseKubearchiveGetResourceQuery.mockReturnValue(mockArchiveQueryResult() as any);
 
     renderHookWithQueryClient(mockResourceInit, undefined, true, watchOptions);
 

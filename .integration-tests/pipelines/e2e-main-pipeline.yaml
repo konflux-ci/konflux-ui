@@ -71,6 +71,17 @@ spec:
         (e2e[-on-pr]-<sha>, instrumented[-on-pr]-<sha>).
       default: 'quay.io/redhat-user-workloads/konflux-ui-tenant/konflux-ui/konflux-ui'
       type: string
+    - name: enable-coverage
+      description: >-
+        When true, deploy the instrumented UI image and run Cypress with coverage
+        collection (cy:run:coverage). Coverage is stored in OCI artifacts and
+        uploaded to Codecov when codecov-credentials-secret is present.
+      default: 'true'
+      type: string
+    - name: codecov-credentials-secret
+      description: 'Secret containing Codecov token (key: token). Optional; upload is skipped if missing.'
+      default: 'codecov-credentials'
+      type: string
   tasks:
     - name: test-metadata
       taskRef:
@@ -258,6 +269,10 @@ spec:
           value: $(tasks.format-images.results.test-image)
         - name: spec-file
           value: $(params.spec-file)
+        - name: enable-coverage
+          value: $(params.enable-coverage)
+        - name: codecov-credentials-secret
+          value: $(params.codecov-credentials-secret)
         - name: github-credentials-secret
           value: $(params.github-credentials-secret)
         - name: cypress-credentials-secret

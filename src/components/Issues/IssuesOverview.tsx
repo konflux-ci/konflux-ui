@@ -4,6 +4,7 @@ import { IfFeature } from '~/feature-flags/hooks';
 import { ConformaViolationsCard } from './ConformaViolationsCard';
 import { IssueDistributionCard } from './IssueDistributionCard';
 import IssuesByStatusCard from './IssuesByStatusCard';
+import IssuesPolicyExceptionCard from './IssuesPolicyExceptionCard';
 import { LatestIssuesCard } from './LatestIssuesCard';
 
 const IssuesOverview: React.FunctionComponent = () => {
@@ -16,6 +17,11 @@ const IssuesOverview: React.FunctionComponent = () => {
     >
       <GridItem span={8}>
         <Grid hasGutter>
+          <IfFeature flag="conforma-policy">
+            <GridItem>
+              <IssuesPolicyExceptionCard />
+            </GridItem>
+          </IfFeature>
           <GridItem>
             <IssueDistributionCard />
           </GridItem>

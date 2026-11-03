@@ -6,7 +6,6 @@ import {
   plrStatusFilterConfig,
 } from '~/components/PipelineRunsPage/pipelineRunFilterConfigs';
 import { PipelineRunLabel } from '~/consts/pipelinerun';
-import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { useApplications } from '~/hooks/useApplications';
 import { useAllComponents } from '~/hooks/useComponents';
 import { usePipelineRunsV2 } from '~/hooks/usePipelineRunsV2';
@@ -194,12 +193,7 @@ export const PipelineRunsPage: React.FC = () => {
     );
   }
 
-  const pageTitle = (
-    <>
-      {activeSavedView?.label ?? 'Pipeline Runs'}{' '}
-      <FeatureFlagIndicator flags={['pipeline-runs-page']} />
-    </>
-  );
+  const pageTitle = activeSavedView?.label ?? 'Pipeline Runs';
 
   const optionsMap = {
     app: appOptions,

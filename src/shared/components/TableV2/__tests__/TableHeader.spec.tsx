@@ -157,7 +157,7 @@ describe('TableHeader', () => {
     expect(columnHeaders[0]).toHaveStyle({ width: '200px' });
   });
 
-  it('renders an empty first Th when enableExpansion is true', () => {
+  it('renders an accessible expansion header when enableExpansion is true', () => {
     const table = createMockTable(defaultHeaders);
     renderTableHeader(
       <TableHeader table={table as never} columnWidths={defaultWidths} enableExpansion />,
@@ -167,6 +167,7 @@ describe('TableHeader', () => {
     const columnHeaders = within(thead).getAllByRole('columnheader');
     // expansion placeholder + 2 headers = 3
     expect(columnHeaders).toHaveLength(3);
+    within(thead).getByRole('columnheader', { name: 'Row expansion' });
   });
 
   it('does not render expansion placeholder when enableExpansion is false', () => {

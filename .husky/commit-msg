@@ -1,4 +1,5 @@
 #!/bin/bash
+if [ -z "${BASH_VERSION:-}" ]; then exec bash "$0" "$@"; fi
 # Git commit-msg hook: validates commit messages with commitlint and automatically
 # adds "Assisted-by" trailers for AI tool usage (Claude/Cursor) based on running
 # processes and commit message content for authorized users.

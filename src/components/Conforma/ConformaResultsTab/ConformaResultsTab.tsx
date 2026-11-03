@@ -11,6 +11,10 @@ import {
   Spinner,
   Title,
 } from '@patternfly/react-core';
+import {
+  POLICY_EXCEPTION_FILTER_KEY,
+  usePolicyExceptionFilter,
+} from '~/components/Conforma/usePolicyExceptionFilter';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { RouterParams } from '~/routes/utils';
 import { getErrorState } from '~/shared/utils/error-utils';
@@ -59,6 +63,8 @@ const ConformaResultsTabContent: React.FC = () => {
   const [expandedGroups, setExpandedGroups] = React.useState<Set<string>>(new Set());
   const [showDuplicates, setShowDuplicates] = React.useState(false);
 
+  const policyExceptionFilter = usePolicyExceptionFilter();
+
   const handleGroupByChange = React.useCallback((mode: GroupByMode) => {
     setGroupBy(mode);
     setExpandedGroups(new Set());
@@ -77,8 +83,15 @@ const ConformaResultsTabContent: React.FC = () => {
   const rawCounts = React.useMemo(() => countResultsByStatus(allResults), [allResults]);
 
   const filteredResults = React.useMemo(
-    () => filterResults(displayResults, nameFilter, statusFilter, componentFilter),
-    [displayResults, nameFilter, statusFilter, componentFilter],
+    () =>
+      filterResults(
+        displayResults,
+        nameFilter,
+        statusFilter,
+        componentFilter,
+        policyExceptionFilter.ruleCodes,
+      ),
+    [displayResults, nameFilter, statusFilter, componentFilter, policyExceptionFilter.ruleCodes],
   );
 
   const allComponentNames = React.useMemo(
@@ -170,6 +183,7 @@ const ConformaResultsTabContent: React.FC = () => {
           onToggleExpandAll={handleToggleExpandAll}
           showDuplicates={showDuplicates}
           onShowDuplicatesChange={setShowDuplicates}
+          policyExceptionFilter={policyExceptionFilter}
           refresh={refresh}
         />
 
@@ -220,7 +234,9 @@ const ConformaResultsTabContent: React.FC = () => {
  * same pattern used by CommitsListViewV2 and PipelineRunsListViewV2.
  */
 export const ConformaResultsTab: React.FC = () => (
-  <FilterContextProvider filterParams={['name', 'status', 'component']}>
+  <FilterContextProvider
+    filterParams={['name', 'status', 'component', POLICY_EXCEPTION_FILTER_KEY]}
+  >
     <ConformaResultsTabContent />
   </FilterContextProvider>
 );

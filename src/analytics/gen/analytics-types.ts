@@ -102,7 +102,7 @@ export type FeatureFlagsChangedEvent = CommonFields & {
   pagePattern: string;
 };
 /**
- * Fired once per session, or once per part when the payload is auto-split, capturing the navigation path and per-page dwell times
+ * Fired as a non-overlapping journey segment; may fire multiple times per session, capturing the navigation path and per-page dwell times since the previous delivery
  */
 export type UserJourneyEvent = CommonFields & {
   /**
@@ -114,7 +114,7 @@ export type UserJourneyEvent = CommonFields & {
    */
   sessionStartedAt: string;
   /**
-   * Duration of this journey part in milliseconds. For auto-split journeys, each part reports the duration of its own session segment rather than the full journey.
+   * Duration of this journey segment in milliseconds.
    */
   totalDurationMs: number;
   /**
@@ -124,13 +124,13 @@ export type UserJourneyEvent = CommonFields & {
    */
   steps: [JourneyStep, ...JourneyStep[]];
   /**
-   * Stable identifier linking all parts of a split journey. Only present when auto-split fires (payload exceeded size threshold).
+   * Stable identifier linking all delivered segments and split parts of a journey
    */
-  journeyId?: string;
+  journeyId: string;
   /**
-   * Zero-based index of this part within a split journey. Only present when auto-split fires.
+   * Zero-based index of this delivered segment within a journey
    */
-  journeyPartIndex?: number;
+  journeyPartIndex: number;
 };
 /**
  * Fired when a user clicks an application link in the Conforma policy results card on the Issues Dashboard, navigating to that application's Conforma results tab
@@ -238,7 +238,16 @@ export type EventPropertiesMap = {
   [TrackEvents.feedback_submitted_event]: Omit<FeedbackSubmittedEvent, keyof CommonFields>;
   [TrackEvents.ui_session_started_event]: Omit<UiSessionStartedEvent, keyof CommonFields>;
   [TrackEvents.feature_flags_changed_event]: Omit<FeatureFlagsChangedEvent, keyof CommonFields>;
-  [TrackEvents.conforma_violations_link_clicked_event]: Omit<ConformaViolationsLinkClickedEvent, keyof CommonFields>;
-  [TrackEvents.integration_test_rerun_triggered_event]: Omit<IntegrationTestRerunTriggeredEvent, keyof CommonFields>;
-  [TrackEvents.copy_login_command_clicked_event]: Omit<CopyLoginCommandClickedEvent, keyof CommonFields>;
+  [TrackEvents.conforma_violations_link_clicked_event]: Omit<
+    ConformaViolationsLinkClickedEvent,
+    keyof CommonFields
+  >;
+  [TrackEvents.integration_test_rerun_triggered_event]: Omit<
+    IntegrationTestRerunTriggeredEvent,
+    keyof CommonFields
+  >;
+  [TrackEvents.copy_login_command_clicked_event]: Omit<
+    CopyLoginCommandClickedEvent,
+    keyof CommonFields
+  >;
 };

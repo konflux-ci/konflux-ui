@@ -25,22 +25,27 @@ src/components/MyFeature/
 
 ## Import Rules
 
-- Use absolute imports via `~/` alias (maps to `src/`).
+- Use `~/` absolute imports for cross-directory paths (alias maps to `src/`).
 - Use `@routes/` alias for route imports.
-- Never use relative imports like `../../../`.
+- Single-level relative imports (`./types`, `./utils`) are acceptable for same-directory files.
+- Never use deep relative imports like `../../../`.
 - Import PatternFly icons from deep ESM paths: `@patternfly/react-icons/dist/esm/icons/<kebab-case-name>`.
 - Import lodash functions from `lodash-es/<funcName>`.
 - Never use `console.*` -- use `logger` from `~/monitoring/logger`.
 
 ```tsx
-// Correct
+// Correct — cross-directory absolute imports
 import { useComponents } from '~/hooks/useComponents';
 import { ApplicationModel } from '~/models';
 import { renderWithQueryClientAndRouter } from '~/unit-test-utils';
 import { ExternalLinkAltIcon } from '@patternfly/react-icons/dist/esm/icons/external-link-alt-icon';
 import sortBy from 'lodash-es/sortBy';
 
-// Wrong
+// Correct — same-directory relative imports
+import { MyComponentTypes } from './types';
+import { helperFn } from './utils';
+
+// Wrong — deep relative imports
 import { useComponents } from '../../../hooks/useComponents';
 import { ExternalLinkAltIcon } from '@patternfly/react-icons';
 import { sortBy } from 'lodash';

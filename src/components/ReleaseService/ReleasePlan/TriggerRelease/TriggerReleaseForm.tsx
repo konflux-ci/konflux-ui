@@ -135,7 +135,6 @@ export const TriggerReleaseForm: React.FC<Props> = ({
           <TextColumnField
             name="references"
             label="References"
-            helpText="Any URLs entered must be separated by commas."
             isReadOnly
             onChange={(v) => setValue(references.value.filter?.((r) => v.includes(r)))}
           >

@@ -126,29 +126,18 @@ export const AppSideBar: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
               </Link>
             </NavItem>
 
-            <IfFeature flag="pipeline-runs-page">
-              <SavedViewNavSection
-                title={
-                  <>
-                    Pipeline Runs{' '}
-                    <FeatureFlagIndicator
-                      flags={['pipeline-runs-page']}
-                      hasNoPadding
-                      popOverTriggerAction="hover"
-                    />
-                  </>
-                }
-                config={pipelineRunsSavedViewsConfig}
-                isActive={isActive(PIPELINE_RUNS_PAGE_PATH.path)}
-                disabled={disabled}
-                href={
-                  namespace
-                    ? PIPELINE_RUNS_PAGE_PATH.createPath({ workspaceName: namespace })
-                    : undefined
-                }
-                data-test="pipeline-runs-nav-group"
-              />
-            </IfFeature>
+            <SavedViewNavSection
+              title="Pipeline Runs"
+              config={pipelineRunsSavedViewsConfig}
+              isActive={isActive(PIPELINE_RUNS_PAGE_PATH.path)}
+              disabled={disabled}
+              href={
+                namespace
+                  ? PIPELINE_RUNS_PAGE_PATH.createPath({ workspaceName: namespace })
+                  : undefined
+              }
+              data-test="pipeline-runs-nav-group"
+            />
 
             <NavItem
               className={css({ 'app-side-bar__nav-item--disabled': disabled })}
@@ -191,18 +180,11 @@ export const AppSideBar: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
               </NavLink>
             </NavItem>
 
-            <IfFeature flag="mintmaker">
-              <NavItem isActive={isActive(DEPENDENCY_SCHEDULE_PATH.path)}>
-                <NavLink to={DEPENDENCY_SCHEDULE_PATH.createPath({} as never)}>
-                  Dependency updates schedule{' '}
-                  <FeatureFlagIndicator
-                    flags={['mintmaker']}
-                    hasNoPadding
-                    popOverTriggerAction="hover"
-                  />
-                </NavLink>
-              </NavItem>
-            </IfFeature>
+            <NavItem isActive={isActive(DEPENDENCY_SCHEDULE_PATH.path)}>
+              <NavLink to={DEPENDENCY_SCHEDULE_PATH.createPath({} as never)}>
+                Dependency updates schedule
+              </NavLink>
+            </NavItem>
           </NavList>
         </Nav>
       </PageSidebarBody>

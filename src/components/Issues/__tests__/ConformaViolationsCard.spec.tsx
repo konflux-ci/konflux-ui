@@ -36,6 +36,7 @@ describe('ConformaViolationsCard', () => {
       totalViolations: 0,
       totalWarnings: 0,
       applications: [],
+      exceptions: [],
       loaded: false,
       settling: false,
     });
@@ -50,6 +51,7 @@ describe('ConformaViolationsCard', () => {
       totalViolations: 0,
       totalWarnings: 0,
       applications: [{ applicationName: 'clean-app', violationCount: 0, warningCount: 0 }],
+      exceptions: [],
       loaded: true,
       settling: false,
     });
@@ -64,6 +66,7 @@ describe('ConformaViolationsCard', () => {
       totalViolations: 0,
       totalWarnings: 0,
       applications: [],
+      exceptions: [],
       loaded: true,
       settling: false,
       error: new Error('fetch failed'),
@@ -79,6 +82,7 @@ describe('ConformaViolationsCard', () => {
       totalViolations: 1,
       totalWarnings: 0,
       applications: [{ applicationName: 'my-app', violationCount: 1, warningCount: 0 }],
+      exceptions: [],
       loaded: true,
       settling: false,
       partialError: new Error('log fetch failed'),
@@ -95,6 +99,7 @@ describe('ConformaViolationsCard', () => {
       totalViolations: 1,
       totalWarnings: 0,
       applications: [{ applicationName: 'my-app', violationCount: 1, warningCount: 0 }],
+      exceptions: [],
       loaded: true,
       settling: false,
       partialError: new Error(),
@@ -113,6 +118,7 @@ describe('ConformaViolationsCard', () => {
       totalViolations: 0,
       totalWarnings: 0,
       applications: [],
+      exceptions: [],
       loaded: true,
       settling: false,
     });
@@ -127,6 +133,7 @@ describe('ConformaViolationsCard', () => {
       totalViolations: 3,
       totalWarnings: 0,
       applications: [{ applicationName: 'my-app', violationCount: 3, warningCount: 0 }],
+      exceptions: [],
       loaded: true,
       settling: false,
     });
@@ -141,6 +148,7 @@ describe('ConformaViolationsCard', () => {
       totalViolations: 1,
       totalWarnings: 0,
       applications: [{ applicationName: 'my-app', violationCount: 1, warningCount: 0 }],
+      exceptions: [],
       loaded: true,
       settling: false,
     });
@@ -154,6 +162,7 @@ describe('ConformaViolationsCard', () => {
       totalViolations: 2,
       totalWarnings: 3,
       applications: [{ applicationName: 'my-app', violationCount: 2, warningCount: 3 }],
+      exceptions: [],
       loaded: true,
       settling: false,
     });
@@ -170,6 +179,7 @@ describe('ConformaViolationsCard', () => {
       totalViolations: 0,
       totalWarnings: 0,
       applications: [],
+      exceptions: [],
       loaded: true,
       settling: true,
     });
@@ -185,6 +195,7 @@ describe('ConformaViolationsCard', () => {
       totalViolations: 0,
       totalWarnings: 0,
       applications: [{ applicationName: 'clean-app', violationCount: 0, warningCount: 0 }],
+      exceptions: [],
       loaded: true,
       settling: true,
     });
@@ -200,6 +211,7 @@ describe('ConformaViolationsCard', () => {
       totalViolations: 0,
       totalWarnings: 2,
       applications: [{ applicationName: 'app-b', violationCount: 0, warningCount: 2 }],
+      exceptions: [],
       loaded: true,
       settling: false,
     });
@@ -217,6 +229,7 @@ describe('ConformaViolationsCard', () => {
         { applicationName: 'app-one', violationCount: 3, warningCount: 0 },
         { applicationName: 'app-two', violationCount: 2, warningCount: 0 },
       ],
+      exceptions: [],
       loaded: true,
       settling: false,
     });
@@ -231,6 +244,7 @@ describe('ConformaViolationsCard', () => {
       totalViolations: 1,
       totalWarnings: 0,
       applications: [{ applicationName: 'my-app', violationCount: 1, warningCount: 0 }],
+      exceptions: [],
       loaded: true,
       settling: false,
     });
@@ -249,6 +263,7 @@ describe('ConformaViolationsCard', () => {
         { applicationName: 'app-one', violationCount: 1, warningCount: 0 },
         { applicationName: 'app-two', violationCount: 1, warningCount: 0 },
       ],
+      exceptions: [],
       loaded: true,
       settling: false,
     });
@@ -257,6 +272,9 @@ describe('ConformaViolationsCard', () => {
     await user.click(screen.getByRole('link', { name: 'app-one' }));
 
     expect(trackEventMock).toHaveBeenCalledTimes(1);
-    expect(trackEventMock).toHaveBeenCalledWith(TrackEvents.conforma_violations_link_clicked_event, {});
+    expect(trackEventMock).toHaveBeenCalledWith(
+      TrackEvents.conforma_violations_link_clicked_event,
+      {},
+    );
   });
 });

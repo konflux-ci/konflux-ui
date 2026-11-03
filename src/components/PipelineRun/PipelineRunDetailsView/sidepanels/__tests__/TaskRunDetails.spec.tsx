@@ -1,6 +1,8 @@
-import { render, within } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import { testTaskRuns } from '~/components/TaskRunListView/__data__/mock-TaskRun-data';
 import { runStatus } from '~/consts/pipelinerun';
+import { renderWithQueryClientAndRouter } from '~/unit-test-utils';
 import { TaskRunKind } from '../../../../../types';
 import TaskRunDetails from '../TaskRunDetails';
 
@@ -13,6 +15,94 @@ jest.mock('react-router-dom', () => {
 });
 
 describe('TaskRunDetails', () => {
+  describe('infrastructure diagnostic', () => {
+    const message = 'Last observed Pod warning: FailedMount: secret "missing" not found';
+    const taskRun: TaskRunKind = {
+      ...testTaskRuns[0],
+      status: {
+        ...testTaskRuns[0].status,
+        conditions: [{ type: 'Succeeded', status: 'False', message }],
+        results: [{ name: 'TEST_OUTPUT', value: 'Task result remains separate' }],
+      },
+    };
+
+    it.each([
+      ['False', runStatus.Failed],
+      ['Unknown', runStatus.Pending],
+    ])('shows the exact warning for condition status %s', (conditionStatus, status) => {
+      renderWithQueryClientAndRouter(
+        <TaskRunDetails
+          status={status}
+          taskRun={{
+            ...taskRun,
+            status: {
+              ...taskRun.status,
+              conditions: [{ type: 'Succeeded', status: conditionStatus, message }],
+            },
+          }}
+        />,
+      );
+      expect(screen.getByText('Infrastructure diagnostic')).toBeInTheDocument();
+      expect(screen.getByText(message).textContent).toBe(message);
+      if (status === runStatus.Pending) {
+        expect(screen.getByText('TEST_OUTPUT')).toBeInTheDocument();
+        expect(screen.getByText('Task result remains separate')).toBeInTheDocument();
+      } else {
+        expect(screen.getByText('No results available due to failure')).toBeInTheDocument();
+      }
+    });
+
+    it.each([undefined, 'Task failed'])('omits the diagnostic for message %s', (value) => {
+      renderWithQueryClientAndRouter(
+        <TaskRunDetails
+          status={runStatus.Failed}
+          taskRun={{
+            ...taskRun,
+            status: {
+              conditions: [{ type: 'Succeeded', status: 'False', message: value }],
+            },
+          }}
+        />,
+      );
+      expect(screen.queryByText('Infrastructure diagnostic')).not.toBeInTheDocument();
+    });
+
+    it('omits the diagnostic without a TaskRun', () => {
+      renderWithQueryClientAndRouter(<TaskRunDetails status={runStatus.Pending} />);
+      expect(screen.queryByText('Infrastructure diagnostic')).not.toBeInTheDocument();
+    });
+
+    it('removes the diagnostic when selecting a task with a generic failure', () => {
+      const view = renderWithQueryClientAndRouter(
+        <TaskRunDetails status={runStatus.Failed} taskRun={taskRun} />,
+      );
+      expect(screen.getByText(message)).toBeInTheDocument();
+      view.rerender(
+        <TaskRunDetails
+          status={runStatus.Failed}
+          taskRun={{
+            ...taskRun,
+            metadata: { ...taskRun.metadata, name: 'another-task' },
+            status: {
+              conditions: [{ type: 'Succeeded', status: 'False', message: 'Task failed' }],
+            },
+          }}
+        />,
+      );
+      expect(screen.queryByText(message)).not.toBeInTheDocument();
+      expect(screen.queryByText('Infrastructure diagnostic')).not.toBeInTheDocument();
+    });
+
+    it('keeps skipped tasks unchanged even with a persisted warning', () => {
+      renderWithQueryClientAndRouter(
+        <TaskRunDetails status={runStatus.Skipped} taskRun={taskRun} />,
+      );
+      expect(screen.getByText('This task was skipped.')).toBeInTheDocument();
+      expect(screen.queryByText('Infrastructure diagnostic')).not.toBeInTheDocument();
+      expect(screen.queryByText(message)).not.toBeInTheDocument();
+    });
+  });
+
   it('should handle skipped tasks', () => {
     const { container } = render(<TaskRunDetails status={runStatus.Skipped} />);
     expect(container).toHaveTextContent('This task was skipped.');

@@ -10,7 +10,7 @@ import { WarningIcon } from '~/shared/components/status/icons';
 import {
   ConformaSummaryBarSection,
   type ConformaSummaryBarSectionProps,
-} from './ConformaSummaryBarSection';
+} from '../ConformaSummaryBarSection';
 
 type ConformaSummaryBarProps = {
   totalComponents: number;
