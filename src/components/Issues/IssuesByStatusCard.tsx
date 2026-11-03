@@ -11,7 +11,8 @@ import {
 import { LockOpenIcon } from '@patternfly/react-icons/dist/esm/icons/lock-open-icon';
 import dayjs from 'dayjs';
 import { useIssues } from '~/kite/kite-hooks';
-import { LoadingSkeleton, SuccessIcon } from '~/shared';
+import { LoadingSkeleton } from '~/shared';
+import { SuccessIcon } from '~/shared/components/status/icons';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { Issue, IssueState } from '../../kite/issue-type';

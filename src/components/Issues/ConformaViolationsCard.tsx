@@ -25,6 +25,7 @@ import { LoadingSkeleton } from '~/shared';
 import { ErrorIcon, SuccessIcon, WarningIcon } from '~/shared/components/status/icons';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
+
 import './ConformaViolationsCard.scss';
 
 type AppListProps = {
@@ -97,7 +98,7 @@ export const ConformaViolationsCard: React.FC = () => {
         ) : allPassed ? (
           <Flex alignItems={{ default: 'alignItemsCenter' }}>
             <FlexItem>
-               <SuccessIcon/>
+              <SuccessIcon />
             </FlexItem>
             <FlexItem>
               <Content component={ContentVariants.p}>All applications passed</Content>
@@ -109,7 +110,7 @@ export const ConformaViolationsCard: React.FC = () => {
               {hasViolations ? (
                 <>
                   <FlexItem>
-                    <ErrorIcon/>
+                    <ErrorIcon />
                   </FlexItem>
                   <FlexItem>
                     <Content component={ContentVariants.p}>
@@ -125,7 +126,7 @@ export const ConformaViolationsCard: React.FC = () => {
               ) : (
                 <>
                   <FlexItem>
-                    <WarningIcon/>
+                    <WarningIcon />
                   </FlexItem>
                   <FlexItem>
                     <Content component={ContentVariants.p}>

@@ -10,16 +10,10 @@ export type ColoredIconProps = {
   className?: string;
   title?: string;
   size?: 'sm' | 'md' | 'lg' | 'xl';
-  color?:string
 };
 
-export type SuccessIconProps = {
-  isInline?: boolean;
-};
-
-export type ErrorIconProps = {
-  isInline?: boolean;
-};
+/** Props for status icons backed by PatternFly `Icon` (color comes from `status`, not `color`). */
+export type StatusIconProps = Omit<React.ComponentProps<typeof Icon>, 'status' | 'children'>;
 
 export const GrayPencilAltIcon: React.FC<
   React.PropsWithChildren<ColoredIconProps & React.ComponentProps<typeof PencilAltIcon>>
@@ -34,20 +28,20 @@ export const GrayPencilAltIcon: React.FC<
   />
 );
 
-export const WarningIcon : React.FC<React.PropsWithChildren<SuccessIconProps & ColoredIconProps>> = ({ size })=> (
-  <Icon status="warning" size={size}>
+export const WarningIcon: React.FC<StatusIconProps> = (props) => (
+  <Icon status="warning" {...props}>
     <RhUiWarningFillIcon />
   </Icon>
 );
 
-export const SuccessIcon: React.FC<React.PropsWithChildren<SuccessIconProps & ColoredIconProps>> = ({ isInline }) => (
-  <Icon status="success" isInline={isInline}>
+export const SuccessIcon: React.FC<StatusIconProps> = (props) => (
+  <Icon status="success" {...props}>
     <RhUiCheckCircleFillIcon />
   </Icon>
 );
 
-export const ErrorIcon: React.FC<React.PropsWithChildren<ErrorIconProps  & ColoredIconProps>> = ({ isInline }) => (
-  <Icon status="danger" isInline={isInline}>
+export const ErrorIcon: React.FC<StatusIconProps> = (props) => (
+  <Icon status="danger" {...props}>
     <RhUiErrorFillIcon />
   </Icon>
 );
