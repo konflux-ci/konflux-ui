@@ -4,6 +4,10 @@
   overflow-x: hidden !important;
   width: 100% !important;
 
+  &--nowrap {
+    overflow-x: auto !important;
+  }
+
   &.log-content__with-gutter {
     padding-bottom: var(--pf-t--global--spacer--xs);
 
@@ -26,17 +30,21 @@
   flex-shrink: 0;
   width: var(--pf-t--global--spacer--3xl);
   display: flex;
-  align-items: center;
+  align-items: start;
   justify-content: flex-end;
   padding-right: var(--pf-t--global--spacer--sm);
-  background-color: var(
-    --pf-v6-c-log-viewer__main--BackgroundColor,
-    var(--pf-t--global--background--color--primary--default)
-  );
   border-right: var(--pf-t--global--border--width--box--default) solid
     var(--pf-t--global--border--color--default);
   user-select: none;
   overflow: hidden;
+
+  .log-content__list--nowrap & {
+    z-index: 2;
+    background-color: var(
+      --pf-v6-c-log-viewer__main--BackgroundColor,
+      var(--pf-t--global--background--color--primary--default)
+    );
+  }
 
   &--highlighted {
     background-color: var(--pf-t--global--color--status--warning--100);
@@ -63,5 +71,32 @@
 
   .pf-m-dark & {
     background-color: var(--pf-t--global--color--nonstatus--yellow--hover);
+  }
+}
+
+// In nowrap mode, each row is only as wide as its text.
+// Extend the highlight to the full scrollable width so short highlighted lines
+// appear highlighted edge-to-edge. box-shadow doesn't create scrollable overflow,
+// so the highlight never extends beyond the widest actual line.
+.log-content__list--nowrap .log-content__line--highlighted {
+  box-shadow: 0 0 0 9999px var(--pf-t--global--color--status--warning--default);
+  clip-path: inset(0 -9999px 0 0);
+
+  .pf-m-dark & {
+    box-shadow: 0 0 0 9999px var(--pf-t--global--color--nonstatus--yellow--hover);
+  }
+}
+
+.log-content__list .log-content__width-measure {
+  display: flex;
+  width: max-content;
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+  white-space: pre;
+
+  .log-content__row-content {
+    flex: none;
+    min-width: max-content;
   }
 }

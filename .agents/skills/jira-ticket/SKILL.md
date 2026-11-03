@@ -17,14 +17,14 @@ description: >
 
 ## Context Gathering
 
-Scan conversation history, `$ARGUMENTS`, and session context (errors, stack traces, test failures) before starting. Pre-fill fields from context — only ask for what you can't infer.
+Scan conversation history, any invocation arguments, and session context (errors, stack traces, test failures) before starting. Pre-fill fields from context — only ask for what you can't infer.
 
 ## Interview Flow
 
 Do NOT call any Jira create tool until all required fields are collected and confirmed.
 
 ### Step 1 — Determine issue type
-If obvious from context or slash command, set type silently. Otherwise ask.
+If obvious from context or the way the skill was invoked, set type silently. Otherwise ask.
 
 ### Step 2 — Collect title
 Propose a title formatted per conventions.md (`[Area] imperative summary`). Ask for approval.
@@ -74,7 +74,7 @@ jira_create_issue(
 
 **If MCP NOT available:** Render the same draft format from Step 5 with a note:
 > Jira MCP server is not configured. Create this ticket manually at \<Jira URL from conventions.md\>.
-> To enable, configure the `atlassian` MCP server with `pipx run mcp-atlassian --env-file <path>` and restart Claude Code.
+> To enable, configure the `atlassian` MCP server with `pipx run mcp-atlassian --env-file <path>` and reload or restart the active agent host.
 
 ### Step 7 — Post-creation
 Report ticket key and URL. If conventions.md has a PR linking rule and there's a current PR, offer to add it as a comment.

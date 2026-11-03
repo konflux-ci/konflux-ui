@@ -136,11 +136,16 @@ const InternalFLAGS = {
       visibleInFeatureFlagPanel: false,
     },
   },
-  mintmaker: {
-    key: 'mintmaker',
-    description: 'Enable MintMaker in the UI',
-    defaultEnabled: true,
+  'kueue-queue-position': {
+    key: 'kueue-queue-position',
+    description: 'Show queue position and priority for pending PipelineRuns',
+    defaultEnabled: false,
     status: 'wip',
+    guard: {
+      allOf: ['isKueueAvailable'],
+      failureReason: 'Kueue is not available on this cluster',
+      visibleInFeatureFlagPanel: true,
+    },
   },
 } satisfies Record<string, FeatureMeta>;
 

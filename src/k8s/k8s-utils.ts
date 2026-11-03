@@ -14,7 +14,7 @@ import type {
   K8sStatus,
   QueryOptionsWithSelector,
 } from '../types/k8s';
-import { WebSocketOptions } from './web-socket/types';
+import type { WebSocketOptions } from './web-socket/types';
 import { WebSocketFactory } from './web-socket/WebSocketFactory';
 
 type CreateQueryParams = Pick<
@@ -202,9 +202,7 @@ export const k8sWatch = (
     ns?: string;
     fieldSelector?: string;
   } = {},
-  options: Partial<
-    WebSocketOptions & RequestInit & { wsPrefix?: string; pathPrefix?: string }
-  > = {},
+  options: Partial<WebSocketOptions & RequestInit & { wsPrefix?: string; pathPrefix?: string }> = {},
 ) => {
   const queryParams: QueryParams<Selector> = { watch: 'true' };
   const opts: {
