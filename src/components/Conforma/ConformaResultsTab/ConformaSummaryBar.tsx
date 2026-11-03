@@ -49,7 +49,7 @@ export const ConformaSummaryBar: React.FC<ConformaSummaryBarProps> = ({
           tooltip: 'Total number of components scanned',
         },
         {
-          icon: <ErrorIcon/>,
+          icon: <ErrorIcon />,
           count: totalFailed,
           label: 'failed',
           tooltip: 'Components with at least one violation',
@@ -75,7 +75,7 @@ export const ConformaSummaryBar: React.FC<ConformaSummaryBarProps> = ({
       'data-test': 'conforma-summary-results',
       items: [
         {
-          icon: <ErrorIcon/>,
+          icon: <ErrorIcon />,
           count: totalViolations,
           rawCount: totalViolationsRaw,
           label: 'violations',
@@ -89,7 +89,7 @@ export const ConformaSummaryBar: React.FC<ConformaSummaryBarProps> = ({
           tooltip: 'Rules with warnings',
         },
         {
-          icon: <SuccessIcon/>,
+          icon: <SuccessIcon />,
           count: totalSuccesses,
           rawCount: totalSuccessesRaw,
           label: 'success',
