@@ -33,6 +33,15 @@ jest.mock('~/feature-flags/hooks', () => ({
   IfFeature: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
+jest.mock('~/components/ComponentGroups/TestGraphVisualization', () => ({
+  __esModule: true,
+  default: ({ namespace, groupName }: { namespace: string; groupName: string }) => (
+    <div data-test="test-graph-visualization">
+      TestGraph for {groupName} in {namespace}
+    </div>
+  ),
+}));
+
 const useIntegrationTestScenariosByComponentGroupMock =
   useIntegrationTestScenariosByComponentGroup as jest.Mock;
 mockUseNamespaceHook('test-ns');
@@ -214,5 +223,13 @@ describe('ComponentGroupIntegrationTestsTab', () => {
 
     expect(screen.getByText('group-test-1')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /actions/i })).not.toBeInTheDocument();
+  });
+
+  it('should render TestGraphVisualization with correct props', () => {
+    renderWithQueryClient(<TestedComponent />);
+
+    const testGraphViz = screen.getByTestId('test-graph-visualization');
+    expect(testGraphViz).toBeInTheDocument();
+    expect(testGraphViz).toHaveTextContent('TestGraph for test-group in test-ns');
   });
 });

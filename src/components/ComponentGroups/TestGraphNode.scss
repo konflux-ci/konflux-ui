@@ -1,0 +1,39 @@
+.testgraph-node {
+  cursor: pointer;
+
+  &__tooltip {
+    &.pf-v6-c-tooltip {
+      max-width: 350px;
+    }
+
+    &--content {
+      color: var(--pf-t--global--text--color--on-brand--default);
+      display: flex;
+      flex-direction: column;
+      gap: var(--pf-t--global--spacer--sm);
+    }
+
+    &--title {
+      font-size: var(--pf-t--global--font--size--sm);
+      font-weight: var(--pf-t--global--font--weight--heading--bold);
+    }
+
+    &--warning {
+      font-size: var(--pf-t--global--font--size--body--sm);
+      display: flex;
+      align-items: center;
+      gap: var(--pf-t--global--spacer--xs);
+    }
+
+    &--link {
+      color: var(--pf-t--global--text--color--on-brand--default);
+      text-decoration: underline;
+      font-size: var(--pf-t--global--font--size--body--sm);
+
+      &:hover {
+        color: var(--pf-t--global--text--color--on-brand--default);
+        text-decoration: none;
+      }
+    }
+  }
+}
