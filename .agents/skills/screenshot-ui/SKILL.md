@@ -12,9 +12,9 @@ Capture screenshots of UI components changed in the current branch using Playwri
 
 ## Critical Constraints
 
-- **DO NOT delegate this skill to a subagent (Task tool).** Playwright MCP tools (`browser_navigate`, `browser_snapshot`, `browser_click`, `browser_take_screenshot`, `browser_close`, `browser_hover`) are only available in the root agent's MCP context. Subagents cannot access MCP servers.
+- **DO NOT delegate this skill to a subagent.** Playwright MCP tools (`browser_navigate`, `browser_snapshot`, `browser_click`, `browser_take_screenshot`, `browser_close`, `browser_hover`) may only be available in the current agent's MCP context, which subagents might not inherit.
 - **DO NOT loop or retry indefinitely.** If a navigation step fails twice, skip that target and move on.
-- **If Playwright MCP is unavailable**, stop immediately — do not attempt a fallback. Tell the user to check that the Playwright MCP server is configured and restart Cursor if needed.
+- **If Playwright MCP is unavailable**, stop immediately — do not attempt a fallback. Tell the user to check that the server is configured and enabled for the active agent host, then reload or restart that host if needed.
 - **Only navigate to `https://localhost:8080`.** The MCP server's `--allowed-origins` flag enforces this. Never call `browser_navigate` with any other host.
 
 ## When to Use
@@ -25,7 +25,7 @@ Capture screenshots of UI components changed in the current branch using Playwri
 
 ## Prerequisites
 
-1. **Playwright MCP available** — configured in `.cursor/mcp.json` and `.mcp.json` via `scripts/launch_playwright_mcp.sh`. The browser runs **headless** with a persistent profile (`.playwright-mcp/profile`), so authentication cookies survive across sessions. Verify by calling `browser_snapshot`; if it errors, stop. If running using Cursor, the user also has to have it enabled in Cursor Settings.
+1. **Playwright MCP available** — configured in `.mcp.json` via `scripts/launch_playwright_mcp.sh`; Cursor also reads `.cursor/mcp.json`. The browser runs **headless** with a persistent profile (`.playwright-mcp/profile`), so authentication cookies survive across sessions. Verify by calling `browser_snapshot`; if it errors, stop. Cursor users may also need to enable it in Cursor Settings.
 2. **Dev server running** on `https://localhost:8080` (`yarn start`). Check:
 
    ```bash

@@ -258,9 +258,9 @@ For example: _Assisted-by: Cursor_
 
 **Loading project rules into AI tools:**
 
-This project tracks AI development guidelines in [.cursor/rules/](.cursor/rules/) (for Cursor) and includes a `CLAUDE.md` with project conventions, build commands, and guidelines that Claude Code loads automatically. The `.claude/` directory also contains additional skills and commands for common workflows - no extra setup needed, just run Claude Code from the repo root.
+Project-wide agent instructions live in [`AGENTS.md`](AGENTS.md); `CLAUDE.md` points to the same file. Shared repository skills live in [`.agents/skills/`](.agents/skills/). Create new skills and edit existing ones there. The `.claude/skills/` and `.cursor/skills/` paths are symlinks for tool discovery; do not edit skills through those paths.
 
-Other AI tools may have different ways of configuring rules - please check their documentation and make sure project conventions are loaded before generating code.
+Some configuration remains tool-specific, including [`.cursor/rules/`](.cursor/rules/) and `.claude/commands/`. Keep shared skill instructions provider-neutral, and label setup steps that apply only to a particular tool. Check the active tool's documentation for any additional setup needed to load project instructions and skills.
 
 ---
 

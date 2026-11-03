@@ -10,7 +10,7 @@ description: >
 
 ## Startup
 
-1. Read the project's commit conventions from `CLAUDE.md` at the repo root.
+1. Read the project's commit conventions from `AGENTS.md` at the repo root.
 2. Check if the `atlassian` MCP server is available (for Jira ticket transitions). Record availability.
 3. Read `.github/PULL_REQUEST_TEMPLATE.md` to know the PR structure.
 
@@ -19,7 +19,7 @@ description: >
 Before creating the PR, scan for existing context to build a rich description:
 
 - **Conversation history**: what task the user was working on, decisions made, trade-offs discussed, problems solved, and approaches taken.
-- **Command arguments**: if invoked via `/create-pr` with `$ARGUMENTS`, use those as input.
+- **Invocation arguments**: use any arguments supplied when this skill was invoked.
 - **Git state**: commits on the branch, diff against main, branch name.
 
 The PR description should reflect the full story of the change — not just a mechanical summary of the diff. Use conversation context to explain the _why_ and _how_.
@@ -31,7 +31,7 @@ The PR description should reflect the full story of the change — not just a me
 - Run `git status` (never use `-uall`)
 - If there are staged or unstaged changes relevant to current work:
   - Stage relevant files (prefer specific files over `git add .`)
-  - Follow commit conventions from `CLAUDE.md`
+  - Follow commit conventions from `AGENTS.md`
   - If the commit type is ambiguous, ask the user
 - If there are no changes and no commits ahead of main, stop and tell the user there is nothing to ship
 
@@ -61,7 +61,7 @@ Fill the PR template from `.github/PULL_REQUEST_TEMPLATE.md` using **all availab
 
 ### Step 4.1 — Capture UI screenshots (optional)
 
-1. Invoke the **`screenshot-ui` skill** (`.claude/skills/screenshot-ui/SKILL.md`)
+1. Invoke the **`screenshot-ui` skill** (`.agents/skills/screenshot-ui/SKILL.md`)
    - This uses Playwright MCP to navigate the running dev server and capture screenshots into `.screenshots/<branch-slug>/<run-id>/`
    - If it returns screenshots, inform the user to add them to the PR body
    - If it fails or is skipped, note "Screenshots not available" in that section
