@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { useParams } from 'react-router-dom';
 import ColumnManagement from '~/components/ColumnManagement/ColumnManagement';
+import TestGraphVisualization from '~/components/ComponentGroups/TestGraphVisualization';
 import {
   BASE_INTEGRATION_TESTS_COLUMNS,
   INTEGRATION_TESTS_LIST_FILTERS,
@@ -44,6 +45,7 @@ export const ComponentGroupIntegrationTestsTab: React.FC = () => {
         title="Integration tests"
         description="Add an integration test to test all your components after you commit code."
       >
+        <TestGraphVisualization namespace={namespace} groupName={groupName || ''} />
         <TableContainer
           data={filteredData}
           unfilteredData={integrationTests ?? []}
