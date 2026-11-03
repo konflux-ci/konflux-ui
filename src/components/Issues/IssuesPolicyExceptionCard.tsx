@@ -59,6 +59,7 @@ const IssuesPolicyExceptionCard: React.FC = () => {
             className="pf-v6-u-mt-md"
             variant={AlertVariant.warning}
             isInline
+            customIcon={<WarningIcon />}
             title="Some policy results could not be loaded"
           >
             {partialError instanceof Error && partialError.message
