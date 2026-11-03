@@ -31,6 +31,8 @@ When `pathSuffix` is provided, it is automatically:
 - Appended to the resource URL path (e.g. `/apis/.../localqueues/{name}/pendingworkloads`)
 - Included in the React Query cache key for proper query isolation
 
+> **Note:** `pathSuffix` is applied to single-resource (named) fetches only. List fetches do not append `pathSuffix` to the URL.
+
 ### Data Flow
 
 ```
@@ -197,10 +199,10 @@ For K8s API sub-resources that follow standard request/response conventions but 
 
 **How it works:**
 
-1. **Model the parent resource** with standard GVK fields — the model represents the parent (e.g. `LocalQueue`), not the sub-resource.
+1. **Model the parent resource** with standard GVK fields -- the model represents the parent (e.g. `LocalQueue`), not the sub-resource.
 2. **Pass `pathSuffix`** in the 4th argument to append the sub-resource path after the resource name.
 3. **Set `watch: false`** because sub-resource endpoints typically do not support WebSocket watch.
-4. **Use `refetchInterval`** for polling — set a minimum of 60 seconds (`60_000` ms) to balance freshness against API server load.
+4. **Use `refetchInterval`** for polling -- set a minimum of 60 seconds (`60_000` ms) to balance freshness against API server load.
 5. **Type the response** to match the sub-resource shape, not the parent resource.
 
 **Canonical example** — Kueue pending workloads (`src/kueue/kueue-hooks.ts`):
