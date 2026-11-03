@@ -23,7 +23,7 @@ The 4th `options` parameter merges WebSocket and request configuration. Key fiel
 | ------------ | -------- | ---------------- | ------------------------------------------------------------------------------------------- |
 | `pathSuffix` | `string` | `K8sRequestInit` | Sub-resource path appended after the resource name (e.g. `'pendingworkloads'`)               |
 | `pathPrefix` | `string` | `K8sRequestInit` | Custom path prefix (overrides the default API path construction)                             |
-| `wsPrefix`   | `string` | `K8sRequestInit` | WebSocket path prefix                                                                       |
+| `wsPrefix`   | `string` | `K8sRequestInit` | WebSocket path prefix (type-only -- not consumed in current WebSocket URL construction)      |
 
 `K8sRequestInit` extends the standard `RequestInit` (fetch API) with `pathSuffix`, `pathPrefix`, and `wsPrefix`. `WebSocketOptions` controls WebSocket behavior (reconnect, buffering, timeouts). Both types are defined in `src/k8s/fetch.ts` and `src/k8s/web-socket/types.ts` respectively.
 
@@ -205,7 +205,7 @@ For K8s API sub-resources that follow standard request/response conventions but 
 4. **Use `refetchInterval`** for polling -- set a minimum of 60 seconds (`60_000` ms) to balance freshness against API server load.
 5. **Type the response** to match the sub-resource shape, not the parent resource.
 
-**Canonical example** — Kueue pending workloads (`src/kueue/kueue-hooks.ts`):
+**Simplified example** -- Kueue pending workloads (inspired by `src/kueue/kueue-hooks.ts`):
 
 ```ts
 import { useK8sWatchResource } from '~/k8s';
@@ -233,6 +233,8 @@ const { data, isLoading, error } = useK8sWatchResource<KueuePendingWorkloadsSumm
 // Response type is KueuePendingWorkloadsSummary, not LocalQueue
 ```
 
+> **Note:** The real implementation in `src/kueue/kueue-hooks.ts` gates `enabled` on a feature flag (`isKueueQueuePositionEnabled`) and a namespace check in addition to `queueName`. The example above is simplified to focus on the `pathSuffix` pattern.
+
 This produces a fetch to `/apis/visibility.kueue.x-k8s.io/v1beta2/namespaces/{ns}/localqueues/{name}/pendingworkloads` and creates a cache key that includes `'pendingworkloads'`, isolating it from regular `LocalQueue` queries.
 
 **Key files:**
@@ -240,8 +242,8 @@ This produces a fetch to `/apis/visibility.kueue.x-k8s.io/v1beta2/namespaces/{ns
 | File                        | Purpose                                                          |
 | --------------------------- | ---------------------------------------------------------------- |
 | `src/k8s/fetch.ts`         | `K8sRequestInit` type with `pathSuffix` field                    |
-| `src/k8s/k8s-fetch.ts`     | `K8sGetResource` — appends `pathSuffix` to the URL path          |
-| `src/k8s/query/utils.ts`   | `createQueryKeys` — includes `pathSuffix` in the cache key       |
+| `src/k8s/k8s-fetch.ts`     | `K8sGetResource` -- appends `pathSuffix` to the URL path          |
+| `src/k8s/query/utils.ts`   | `createQueryKeys` -- includes `pathSuffix` in the cache key       |
 | `src/kueue/kueue-hooks.ts` | Reference implementation using `pathSuffix`                      |
 
 **When NOT to build custom fetch utilities:** If the API returns standard K8s response shapes (`K8sResourceCommon`-compatible), prefer extending the existing hook infrastructure (`useK8sWatchResource` with `pathSuffix`, custom headers via `K8sRequestInit`, or `queryOptions` for cache/polling control) over building a parallel fetch layer. Custom fetch utilities fragment cache management and bypass the React Query integration that `useK8sWatchResource` provides.
