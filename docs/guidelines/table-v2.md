@@ -194,6 +194,14 @@ Handles:
 - Deriving `SortingState` from `ColumnState`
 - Conditionally enabling sorted/expanded row models
 
+### Sorting controls
+
+1. Give `SortDropdown` and `Table` the same columns and `columnStateKey`.
+   `PipelineRunsPage` uses the saved view's key when one is active.
+2. The dropdown writes the selected column and direction through `useColumnState`.
+   Set `enableSorting` on `Table` so `useTable` applies that state to the rows.
+3. Sorting applies to the rows supplied to the table, not pages that have not been fetched.
+
 ### `useResponsiveColumns(columns)`
 
 Tracks viewport breakpoints via `window.matchMedia` and returns a column visibility map based on each column's `visibleFrom` setting.
