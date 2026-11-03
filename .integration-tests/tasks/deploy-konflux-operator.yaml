@@ -1,0 +1,300 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: deploy-konflux-operator
+  annotations:
+    tekton.dev/displayName: 'Deploy Konflux via Operator'
+    tekton.dev/categories: 'Pipeline'
+    tekton.dev/tags: 'e2e,konflux-ui,deploy,operator'
+    tekton.dev/pipelines.minVersion: '0.44.x'
+spec:
+  description: >-
+    Deploys Konflux onto an already-provisioned Kind cluster by wrapping
+    konflux-ci's scripts/deploy-local.sh (same path as the GitHub
+    konflux-ui-deploy-test action). Maps build-credentials into the env
+    vars that script expects, skips Kind creation, configures the cluster
+    for Cypress, injects the SNAPSHOT UI image into deployment/proxy, then
+    pushes logs to OCI.
+  params:
+    - name: cluster-access-secret
+      type: string
+      description: Secret with kubeconfig for the Kind cluster (kfg-<pipelinerun>).
+    - name: repo-url
+      type: string
+      description: konflux-ci Git repository (provides deploy-local.sh).
+      default: https://github.com/konflux-ci/konflux-ci.git
+    - name: repo-revision
+      type: string
+      description: Git revision to clone for deploy scripts.
+      default: main
+    - name: operator-release
+      type: string
+      description: >-
+        Release tag for install.yaml / samples (e.g. v0.1.13), or "latest".
+        Pin after the first green run.
+      default: latest
+    - name: oci-ref
+      type: string
+      description: Full OCI artifact reference used to store deploy logs.
+    - name: oci-credentials
+      type: string
+      description: Secret with oci-storage-dockerconfigjson for pushing deploy logs.
+    - name: build-credentials
+      type: string
+      description: >-
+        Secret with quay-org-name, quay-org-token, gh-app-id,
+        gh-app-private-key, gh-app-webhook-secret, smee-channel.
+    - name: container-image
+      type: string
+      description: >-
+        Instrumented UI image to inject into deployment/proxy initContainer
+        copy-static-content (e.g. …/operator:instrumented-<sha>). Not the
+        SNAPSHOT primary digest — that is the non-instrumented build.
+    - name: pull-secret
+      type: string
+      description: >-
+        Konflux image pull secret (IPS) that can pull the SNAPSHOT UI image.
+        Copied onto Kind for the proxy SA/deployment.
+  volumes:
+    - name: cluster-credentials
+      secret:
+        secretName: $(params.cluster-access-secret)
+    - name: workdir
+      emptyDir: {}
+    - name: logs
+      emptyDir: {}
+    - name: oci-credentials
+      secret:
+        secretName: $(params.oci-credentials)
+    - name: build-credentials
+      secret:
+        secretName: $(params.build-credentials)
+    - name: pull-secret
+      secret:
+        secretName: $(params.pull-secret)
+  stepTemplate:
+    env:
+      - name: KUBECONFIG
+        value: /cluster-credentials/kubeconfig
+      - name: LOG_FILENAME
+        value: /var/log-dir/deploy-konflux-operator.log
+    volumeMounts:
+      - name: cluster-credentials
+        mountPath: /cluster-credentials
+      - name: workdir
+        mountPath: /var/workdir
+      - name: logs
+        mountPath: /var/log-dir/
+  steps:
+    - name: clone-konflux-ci
+      image: quay.io/openshift-pipeline/pipelines-git-init-rhel9@sha256:7eee14366c516d92cf7480c9bc256cf0e544bf06da5d46ffb5e8bfe3e448326c
+      onError: continue
+      workingDir: /var/workdir
+      securityContext:
+        runAsUser: 0
+      args:
+        - -url=$(params.repo-url)
+        - -revision=$(params.repo-revision)
+        - -path=.
+
+    - name: deploy-local
+      image: quay.io/konflux-ci/tekton-integration-catalog/utils@sha256:79707a56aa34a59f8ebb97db855114b840cbbf60bece4a0edf8ef8c7d7d5acd1
+      onError: continue
+      workingDir: /var/workdir
+      env:
+        - name: OPERATOR_RELEASE
+          value: $(params.operator-release)
+      volumeMounts:
+        - name: build-credentials
+          mountPath: /build-credentials
+      script: |
+        #!/usr/bin/env bash
+        set -euo pipefail
+
+        {
+          echo "=== Deploy Konflux via scripts/deploy-local.sh ==="
+          kubectl cluster-info
+
+          # Map IT build-credentials → deploy-local.sh / deploy-secrets.sh env.
+          export GITHUB_APP_ID=$(< /build-credentials/gh-app-id)
+          export GITHUB_PRIVATE_KEY=$(< /build-credentials/gh-app-private-key)
+          export WEBHOOK_SECRET=$(< /build-credentials/gh-app-webhook-secret)
+          export QUAY_TOKEN=$(< /build-credentials/quay-org-token)
+          export QUAY_ORGANIZATION=$(< /build-credentials/quay-org-name)
+          export SMEE_CHANNEL=$(< /build-credentials/smee-channel)
+
+          # Kind already provisioned by the pipeline (mapt). Same path as
+          # .github/actions/konflux-ui-deploy-test.
+          export DEPLOY_LOCAL_SKIP_KIND=1
+          export OPERATOR_INSTALL_METHOD=release
+          export OPERATOR_RELEASE
+          export SET_SKIP_CHECKS=true
+
+          ./scripts/deploy-local.sh
+        } 2>&1 | tee -a "${LOG_FILENAME}"
+
+    - name: configure-for-e2e
+      image: quay.io/konflux-ci/tekton-integration-catalog/utils@sha256:79707a56aa34a59f8ebb97db855114b840cbbf60bece4a0edf8ef8c7d7d5acd1
+      onError: continue
+      script: |
+        #!/usr/bin/env bash
+        set -euo pipefail
+
+        {
+          echo "=== Configure cluster for Cypress e2e ==="
+
+          # Cypress hits Kind node IP:9443; release samples default to localhost:9443.
+          # Patch ingress.fqdn so OIDC redirects match (CRD field is ingress.fqdn).
+          # Must happen while the operator is still running.
+          KUBE_SERVER=$(kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}')
+          KIND_IP=$(sed -E 's|https?://([^:/]+).*|\1|' <<< "${KUBE_SERVER}")
+          UI_HOST="${KIND_IP}:9443"
+
+          echo "[INFO] Patching Konflux UI ingress.fqdn to ${UI_HOST}"
+          kubectl patch konflux konflux --type=merge \
+            -p "{\"spec\":{\"ui\":{\"spec\":{\"ingress\":{\"fqdn\":\"${UI_HOST}\"}}}}}"
+          kubectl wait --for=condition=Ready=True konflux/konflux --timeout=10m
+          kubectl rollout status deployment/proxy -n konflux-ui --timeout=5m || true
+
+          GET_LINE=$(kubectl get konflux konflux -o wide --no-headers 2>/dev/null || true)
+          echo "[INFO] Konflux after fqdn patch: ${GET_LINE}"
+          if [[ "${GET_LINE}" == *localhost* ]] || [[ "${GET_LINE}" != *"${KIND_IP}"* ]]; then
+            echo "ERROR: UI URL did not switch to Kind IP ${KIND_IP} (got: ${GET_LINE})"
+            kubectl get konflux konflux -o yaml | head -120 || true
+            exit 1
+          fi
+
+          # Enable image-controller in public info (Secrets / quay flows).
+          echo "[INFO] Patching konflux-public-info image_controller.enabled=true"
+          kubectl get configmap konflux-public-info -n konflux-info -o json \
+            | jq '.data["info.json"] = (.data["info.json"] | fromjson | .integrations.image_controller.enabled = true | tojson)' \
+            | kubectl apply -f -
+
+          # Operator creates default-tenant with maintainer for system:authenticated.
+          # Cypress (user2) needs admin for secrets / delete-app
+          echo "[INFO] Binding konflux-admin-user-actions to user2@konflux.dev in default-tenant"
+          kubectl create rolebinding user2-konflux-admin \
+            --clusterrole=konflux-admin-user-actions \
+            --user=user2@konflux.dev \
+            -n default-tenant
+        } 2>&1 | tee -a "${LOG_FILENAME}"
+
+    - name: inject-ui-image
+      image: quay.io/konflux-ci/tekton-integration-catalog/utils@sha256:79707a56aa34a59f8ebb97db855114b840cbbf60bece4a0edf8ef8c7d7d5acd1
+      onError: continue
+      env:
+        - name: CONTAINER_IMAGE
+          value: $(params.container-image)
+      volumeMounts:
+        - name: pull-secret
+          mountPath: /pull-secret
+      script: |
+        #!/usr/bin/env bash
+        set -euo pipefail
+
+        {
+          # Scale operator down first so it cannot reconcile the stock image
+          # back onto deployment/proxy.
+          echo "=== Inject instrumented UI image into deployment/proxy ==="
+          KIND_PULL_SECRET_NAME=snapshot-ui-pull
+
+          if [[ -z "${CONTAINER_IMAGE}" ]]; then
+            echo "ERROR: container-image param is empty; expected instrumented UI image"
+            exit 1
+          fi
+
+          DOCKERCONFIG=/pull-secret/.dockerconfigjson
+          if [[ ! -f "${DOCKERCONFIG}" ]]; then
+            echo "ERROR: pull-secret missing .dockerconfigjson (expected a Konflux IPS)"
+            ls -la /pull-secret || true
+            exit 1
+          fi
+
+          echo "[INFO] Instrumented UI image: ${CONTAINER_IMAGE}"
+
+          echo "[INFO] Scaling down konflux-operator"
+          if kubectl get deployment/konflux-operator-controller-manager -n konflux-operator &>/dev/null; then
+            kubectl scale deployment/konflux-operator-controller-manager \
+              -n konflux-operator --replicas=0
+            kubectl wait --for=delete pod -l control-plane=controller-manager \
+              -n konflux-operator --timeout=2m || true
+          else
+            echo "[WARN] konflux-operator-controller-manager not found; continuing"
+          fi
+
+          echo "[INFO] Creating pull secret ${KIND_PULL_SECRET_NAME} in konflux-ui"
+          kubectl create secret generic "${KIND_PULL_SECRET_NAME}" \
+            --namespace=konflux-ui \
+            --type=kubernetes.io/dockerconfigjson \
+            --from-file=.dockerconfigjson="${DOCKERCONFIG}" \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+          kubectl patch serviceaccount proxy -n konflux-ui --type=merge \
+            -p "{\"imagePullSecrets\":[{\"name\":\"${KIND_PULL_SECRET_NAME}\"}]}"
+
+          IMAGE_JSON=$(printf '%s' "${CONTAINER_IMAGE}" | sed 's/\\/\\\\/g; s/"/\\"/g')
+          kubectl patch deployment proxy -n konflux-ui --type='strategic' -p="{
+            \"spec\": {
+              \"template\": {
+                \"spec\": {
+                  \"imagePullSecrets\": [
+                    {\"name\": \"${KIND_PULL_SECRET_NAME}\"}
+                  ],
+                  \"initContainers\": [
+                    {
+                      \"name\": \"copy-static-content\",
+                      \"image\": \"${IMAGE_JSON}\",
+                      \"imagePullPolicy\": \"Always\"
+                    }
+                  ]
+                }
+              }
+            }
+          }"
+
+          if ! kubectl rollout status deployment/proxy -n konflux-ui --timeout=5m; then
+            echo "ERROR: Proxy deployment rollout failed after UI image patch"
+            kubectl describe deployment proxy -n konflux-ui
+            kubectl get pods -n konflux-ui -l app=proxy -o wide
+            for pod in $(kubectl get pods -n konflux-ui -l app=proxy -o name); do
+              echo "=== ${pod} ==="
+              kubectl describe "${pod}" -n konflux-ui
+              kubectl logs "${pod}" -n konflux-ui --all-containers --previous 2>/dev/null || true
+            done
+            exit 1
+          fi
+
+          echo "[INFO] Proxy initContainers after patch:"
+          kubectl get deployment proxy -n konflux-ui \
+            -o jsonpath='{range .spec.template.spec.initContainers[*]}{.name}={.image}{"\n"}{end}'
+          echo "=== UI image inject complete ==="
+        } 2>&1 | tee -a "${LOG_FILENAME}"
+
+    - name: secure-push-oci
+      ref:
+        resolver: git
+        params:
+          - name: url
+            value: https://github.com/konflux-ci/tekton-integration-catalog.git
+          - name: revision
+            value: main
+          - name: pathInRepo
+            value: stepactions/secure-push-oci/0.1/secure-push-oci.yaml
+      params:
+        - name: workdir-path
+          value: /var/log-dir/
+        - name: oci-ref
+          value: $(params.oci-ref)
+        - name: credentials-volume-name
+          value: oci-credentials
+
+    - name: fail-if-any-step-failed
+      ref:
+        resolver: git
+        params:
+          - name: url
+            value: https://github.com/konflux-ci/tekton-integration-catalog.git
+          - name: revision
+            value: main
+          - name: pathInRepo
+            value: stepactions/fail-if-any-step-failed/0.1/fail-if-any-step-failed.yaml

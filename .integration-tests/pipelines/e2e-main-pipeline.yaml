@@ -66,9 +66,10 @@ spec:
       type: string
     - name: test-image-repository
       description: >-
-        E2E test image repository without tag. Must match e2e-output-image from
-        the konflux-ui build pipeline (e2e-on-pr-<sha> for pull_request, e2e-<sha> for push).
-      default: 'quay.io/redhat-user-workloads/konflux-ui-tenant/konflux-ui/konflux-ui'
+        Image repository without tag for e2e runner and instrumented UI builds.
+        Must match the operator build pipeline outputs
+        (e2e[-on-pr]-<sha>, instrumented[-on-pr]-<sha>).
+      default: 'quay.io/redhat-user-workloads-stage/mtakac-tenant/operator'
       type: string
   tasks:
     - name: test-metadata
@@ -84,6 +85,62 @@ spec:
       params:
         - name: SNAPSHOT
           value: $(params.SNAPSHOT)
+
+    # Resolve parallel build tags. SNAPSHOT.containerImage is the primary
+    # (non-instrumented) digest — e2e needs instrumented-<sha> / e2e-<sha>.
+    - name: format-images
+      runAfter:
+        - test-metadata
+      taskSpec:
+        params:
+          - name: test-image-repository
+            type: string
+          - name: git-revision
+            type: string
+          - name: test-event-type
+            type: string
+        results:
+          - name: test-image
+            type: string
+            description: Cypress runner image (e2e[-on-pr]-<sha>)
+          - name: ui-image
+            type: string
+            description: Instrumented UI image (instrumented[-on-pr]-<sha>)
+        steps:
+          - name: format
+            image: registry.access.redhat.com/ubi9/ubi@sha256:4406835b776f05688a823ff532203587b9238510817645c9f37e0fdac1743b8c
+            computeResources:
+              limits:
+                memory: 128Mi
+              requests:
+                cpu: 10m
+                memory: 64Mi
+            script: |
+              #!/bin/bash
+              set -euo pipefail
+              event_type="$(params.test-event-type)"
+              git_revision="$(params.git-revision)"
+              repository="$(params.test-image-repository)"
+              if [[ "${event_type}" == "pull_request" ]]; then
+                e2e_tag="e2e-on-pr-${git_revision}"
+                ui_tag="instrumented-on-pr-${git_revision}"
+              else
+                e2e_tag="e2e-${git_revision}"
+                ui_tag="instrumented-${git_revision}"
+              fi
+              e2e_ref="${repository}:${e2e_tag}"
+              ui_ref="${repository}:${ui_tag}"
+              echo "E2E runner image: ${e2e_ref}"
+              echo "Instrumented UI image: ${ui_ref}"
+              printf '%s' "${e2e_ref}" > "$(results.test-image.path)"
+              printf '%s' "${ui_ref}" > "$(results.ui-image.path)"
+      params:
+        - name: test-image-repository
+          value: $(params.test-image-repository)
+        - name: git-revision
+          value: $(tasks.test-metadata.results.git-revision)
+        - name: test-event-type
+          value: $(tasks.test-metadata.results.test-event-type)
 
     - name: provision-kind-cluster
       runAfter:
@@ -123,45 +180,13 @@ spec:
         - name: memory
           value: '16'
 
+    # Operator-based install (KFLUXUI-1783). Injects the instrumented UI image
+    # into deployment/proxy (operator has no UI image field; scaled down so it
+    # cannot reconcile the stock image back).
     - name: deploy-konflux
       runAfter:
         - provision-kind-cluster
-      when:
-        - input: '$(params.job-type)'
-          operator: notin
-          values: ['periodic-stage']
-      taskRef:
-        resolver: git
-        params:
-          - name: url
-            value: https://github.com/konflux-ci/tekton-integration-catalog
-          - name: revision
-            value: main
-          - name: pathInRepo
-            value: tasks/konflux-ci/deploy/0.3/deploy-konflux-ci.yaml
-      params:
-        - name: cluster-access-secret
-          value: kfg-$(context.pipelineRun.name)
-        - name: component-name
-          value: ui
-        - name: component-pr-owner
-          value: $(tasks.test-metadata.results.pull-request-author)
-        - name: component-pr-sha
-          value: $(tasks.test-metadata.results.git-revision)
-        - name: component-pr-source-branch
-          value: $(tasks.test-metadata.results.source-repo-branch)
-        - name: oci-ref
-          value: $(params.oci-container-repo):$(context.pipelineRun.name)
-        - name: oci-credentials
-          value: $(params.oci-credentials-secret)
-        - name: build-credentials
-          value: $(params.build-credentials-secret)
-
-    # deploy-konflux-ci cannot reliably override the UI image (ui folder vs
-    # konflux-ui image name, digest pins). Patch proxy to the SNAPSHOT image.
-    - name: patch-konflux-ui-image
-      runAfter:
-        - deploy-konflux
+        - format-images
       when:
         - input: '$(params.job-type)'
           operator: notin
@@ -174,12 +199,18 @@ spec:
           - name: revision
             value: main
           - name: pathInRepo
-            value: .integration-tests/tasks/patch-konflux-ui-image.yaml
+            value: .integration-tests/tasks/deploy-konflux-operator.yaml
       params:
         - name: cluster-access-secret
           value: kfg-$(context.pipelineRun.name)
+        - name: oci-ref
+          value: $(params.oci-container-repo):$(context.pipelineRun.name)
+        - name: oci-credentials
+          value: $(params.oci-credentials-secret)
+        - name: build-credentials
+          value: $(params.build-credentials-secret)
         - name: container-image
-          value: $(tasks.test-metadata.results.container-image)
+          value: $(tasks.format-images.results.ui-image)
         - name: pull-secret
           value: $(params.ui-image-pull-secret)
 
@@ -203,54 +234,9 @@ spec:
         - name: monitoring-duration
           value: '5m'
 
-    - name: format-e2e-test-image
-      runAfter:
-        - patch-konflux-ui-image
-      taskSpec:
-        params:
-          - name: test-image-repository
-            type: string
-          - name: git-revision
-            type: string
-          - name: test-event-type
-            type: string
-        results:
-          - name: test-image
-            type: string
-        steps:
-          - name: format
-            image: registry.access.redhat.com/ubi9/ubi@sha256:4406835b776f05688a823ff532203587b9238510817645c9f37e0fdac1743b8c
-            computeResources:
-              limits:
-                memory: 128Mi
-              requests:
-                cpu: 10m
-                memory: 64Mi
-            script: |
-              #!/bin/bash
-              set -euo pipefail
-              event_type="$(params.test-event-type)"
-              git_revision="$(params.git-revision)"
-              repository="$(params.test-image-repository)"
-              if [[ "${event_type}" == "pull_request" ]]; then
-                tag="e2e-on-pr-${git_revision}"
-              else
-                tag="e2e-${git_revision}"
-              fi
-              image_ref="${repository}:${tag}"
-              echo "Image reference: ${image_ref}"
-              printf '%s' "${image_ref}" > "$(results.test-image.path)"
-      params:
-        - name: test-image-repository
-          value: $(params.test-image-repository)
-        - name: git-revision
-          value: $(tasks.test-metadata.results.git-revision)
-        - name: test-event-type
-          value: $(tasks.test-metadata.results.test-event-type)
-
     - name: run-e2e-konflux-ui
       runAfter:
-        - format-e2e-test-image
+        - deploy-konflux
       taskRef:
         resolver: git
         params:
@@ -269,7 +255,7 @@ spec:
         - name: oci-credentials
           value: $(params.oci-credentials-secret)
         - name: test-image
-          value: $(tasks.format-e2e-test-image.results.test-image)
+          value: $(tasks.format-images.results.test-image)
         - name: spec-file
           value: $(params.spec-file)
         - name: github-credentials-secret
