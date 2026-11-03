@@ -89,13 +89,28 @@ describe('createQueryKeys', () => {
     expect(hasFilterParamEntry).toBe(false);
   });
 
-  it('should put prefix as first element when provided', () => {
+  it('should include prefix as first element when provided', () => {
     const key = createQueryKeys({
       model: minimalModel,
       prefix: 'kubearchive',
     });
 
     expect(key[0]).toBe('kubearchive');
+  });
+
+  it('should include pathSuffix from fetchOptions in the key for sub-resource differentiation', () => {
+    const keyWithSuffix = createQueryKeys({
+      model: minimalModel,
+      queryOptions: { name: 'my-queue', queryParams: {} },
+      fetchOptions: { requestInit: { pathSuffix: 'pendingworkloads' } },
+    });
+    const keyWithoutSuffix = createQueryKeys({
+      model: minimalModel,
+      queryOptions: { name: 'my-queue', queryParams: {} },
+    });
+
+    expect(keyWithSuffix).toContainEqual('pendingworkloads');
+    expect(keyWithoutSuffix).not.toContainEqual('pendingworkloads');
   });
 });
 
