@@ -87,7 +87,7 @@ spec:
         mountPath: /var/log-dir/
   steps:
     - name: clone-konflux-ci
-      image: quay.io/openshift-pipeline/pipelines-git-init-rhel9@sha256:7eee14366c516d92cf7480c9bc256cf0e544bf06da5d46ffb5e8bfe3e448326c
+      image: quay.io/openshift-pipeline/pipelines-git-init-rhel9@sha256:665dae0d8a843f89e5bff8ae7e56f27829b2218242085a09ac0cc1659e2acf85 # 1.21
       onError: continue
       workingDir: /var/workdir
       securityContext:
@@ -98,7 +98,7 @@ spec:
         - -path=.
 
     - name: deploy-local
-      image: quay.io/konflux-ci/tekton-integration-catalog/utils@sha256:79707a56aa34a59f8ebb97db855114b840cbbf60bece4a0edf8ef8c7d7d5acd1
+      image: quay.io/konflux-ci/tekton-integration-catalog/utils@sha256:79707a56aa34a59f8ebb97db855114b840cbbf60bece4a0edf8ef8c7d7d5acd1 # 0bfe406
       onError: continue
       workingDir: /var/workdir
       env:
@@ -141,7 +141,7 @@ spec:
         exit "${deploy_rc}"
 
     - name: configure-for-e2e
-      image: quay.io/konflux-ci/tekton-integration-catalog/utils@sha256:79707a56aa34a59f8ebb97db855114b840cbbf60bece4a0edf8ef8c7d7d5acd1
+      image: quay.io/konflux-ci/tekton-integration-catalog/utils@sha256:79707a56aa34a59f8ebb97db855114b840cbbf60bece4a0edf8ef8c7d7d5acd1 # 0bfe406
       onError: continue
       script: |
         #!/usr/bin/env bash
@@ -187,7 +187,7 @@ spec:
         } 2>&1 | tee -a "${LOG_FILENAME}"
 
     - name: inject-ui-image
-      image: quay.io/konflux-ci/tekton-integration-catalog/utils@sha256:79707a56aa34a59f8ebb97db855114b840cbbf60bece4a0edf8ef8c7d7d5acd1
+      image: quay.io/konflux-ci/tekton-integration-catalog/utils@sha256:79707a56aa34a59f8ebb97db855114b840cbbf60bece4a0edf8ef8c7d7d5acd1 # 0bfe406
       onError: continue
       env:
         - name: CONTAINER_IMAGE
