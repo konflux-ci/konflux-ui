@@ -1,13 +1,14 @@
 import { AnyObject } from '../types/common';
 import { K8sModelCommon, K8sResourceCommon, Patch, QueryOptionsWithSelector } from '../types/k8s';
 import { commonFetchJSON } from './fetch';
+import type { K8sRequestInit } from './fetch';
 import { getK8sResourceURL } from './k8s-utils';
 
 export type K8sResourceBaseOptions<TQueryOptions = Partial<QueryOptionsWithSelector>> = {
   model: K8sModelCommon;
   queryOptions?: TQueryOptions;
   fetchOptions?: Partial<{
-    requestInit: RequestInit & { wsPrefix?: string; pathPrefix?: string };
+    requestInit: K8sRequestInit;
     timeout: number;
   }>;
 };
@@ -49,8 +50,10 @@ export const K8sGetResource = <TResource extends K8sResourceCommon>({
   queryOptions = {},
   fetchOptions = {},
 }: K8sResourceReadOptions): Promise<TResource> => {
+  const pathSuffix = fetchOptions.requestInit?.pathSuffix;
+  const queryOptionsWithPath = pathSuffix ? { ...queryOptions, path: pathSuffix } : queryOptions;
   return commonFetchJSON<TResource>(
-    getK8sResourceURL(model, undefined, queryOptions),
+    getK8sResourceURL(model, undefined, queryOptionsWithPath),
     fetchOptions.requestInit,
     fetchOptions.timeout,
     true,

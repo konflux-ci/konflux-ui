@@ -6,6 +6,7 @@ const CONDITIONS = {
   SYSTEM_NOTIFICATIONS: 'isSystemNotificationsAccessible',
   ANALYTICS: 'isAnalyticsEnabled',
   LIGHTSPEED: 'isLightspeedAvailable',
+  KUEUE: 'isKueueAvailable',
 } as const;
 
 export type ConditionState = Partial<Record<ConditionKey, boolean>>;

@@ -172,6 +172,12 @@ kubearchiveQueryListResourceItems(resourceInit, options?);      // archive list 
 
 ## 5. Error handling patterns
 
+**CVE report logs:** `resolveRoxctlCveReport` falls back to KubeArchive or Tekton
+Results only when the live primary report log returns 404. Other primary-log errors,
+including authorization and server failures, propagate. The optional `rox-image-scan`
+log is best-effort platform enrichment; its failure produces a warning and empty
+platform data rather than failing the report.
+
 **Graceful degradation:**
 ```tsx
 const { 

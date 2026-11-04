@@ -194,6 +194,14 @@ Handles:
 - Deriving `SortingState` from `ColumnState`
 - Conditionally enabling sorted/expanded row models
 
+### Sorting controls
+
+1. Give `SortDropdown` and `Table` the same columns and `columnStateKey`.
+   `PipelineRunsPage` uses the saved view's key when one is active.
+2. The dropdown writes the selected column and direction through `useColumnState`.
+   Set `enableSorting` on `Table` so `useTable` applies that state to the rows.
+3. Sorting applies to the rows supplied to the table, not pages that have not been fetched.
+
 ### `useResponsiveColumns(columns)`
 
 Tracks viewport breakpoints via `window.matchMedia` and returns a column visibility map based on each column's `visibleFrom` setting.
@@ -745,6 +753,7 @@ const MyGroupedTable = ({ groupedData }: { groupedData: MyGroupedData[] }) => {
 | Use `columnState` + `onColumnStateChange` when sharing state                       | Use `columnStateKey` when you need the modal to work                                      |
 | Use `useCallback` for `scrollContainerRef`                                         | Use `useRef` for the virtualizer scroll container (stale ref)                             |
 | Spread column def properties conditionally with `...(value ? { key: value } : {})` | Spread `undefined` into column defs (TanStack treats `undefined` differently from absent) |
+| Memoize virtual-row positioning style objects (via `useMemo` or `React.memo` child)  | Recreate `style={{ position: 'absolute', top: ... }}` on every render in the row loop    |
 
 ## Known Gotchas
 
