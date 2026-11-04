@@ -100,7 +100,7 @@ export const ApplicationDetails: React.FC<React.PropsWithChildren> = () => {
           },
           {
             key: 'add-component',
-            label: 'Add component',
+            label: 'Add componentssssssss',
             component: (
               <Link
                 to={`${IMPORT_PATH.createPath({ workspaceName: namespace })}?application=${applicationName}`}

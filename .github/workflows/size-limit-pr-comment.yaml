@@ -31,7 +31,7 @@ jobs:
               repo: context.repo.repo,
               run_id: runId,
             });
-            const sizeLimitJob = jobs.find((job) => job.name === 'size-limit');
+            const sizeLimitJob = jobs.find((job) => job.name === 'Bundle size comparison');
             core.setOutput(
               'should_comment',
               sizeLimitJob?.conclusion === 'failure' ? 'true' : 'false',
@@ -77,9 +77,9 @@ jobs:
             }
 
             const artifactDir = process.env.SIZE_LIMIT_ARTIFACT_DIR;
-            const resultsPath = path.join(artifactDir, 'size-limit.json');
+            const resultsPath = path.join(artifactDir, 'bundle-size-delta.json');
             if (!fs.existsSync(resultsPath)) {
-              core.setFailed(`Missing size-limit.json in artifact (expected at ${resultsPath})`);
+              core.setFailed(`Missing bundle-size-delta.json in artifact (expected at ${resultsPath})`);
               return;
             }
 

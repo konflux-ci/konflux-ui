@@ -2,13 +2,11 @@
   {
     "name": "main",
     "path": "dist/main.*.js",
-    "limit": "280 kB",
     "gzip": true
   },
   {
     "name": "vendor",
     "path": "dist/vendor.*.js",
-    "limit": "650 kB",
     "gzip": true
   },
   {
@@ -24,25 +22,21 @@
       "dist/kubearchive-logs.*.js",
       "dist/[0-9]*.js"
     ],
-    "limit": "40 kB",
     "gzip": true
   },
   {
     "name": "main-css",
     "path": "dist/main.css",
-    "limit": "8 kB",
     "gzip": true
   },
   {
     "name": "patternfly-css",
     "path": "dist/patternfly.css",
-    "limit": "160 kB",
     "gzip": true
   },
   {
     "name": "monaco-css",
     "path": "dist/monaco.css",
-    "limit": "18 kB",
     "gzip": true
   },
   {
@@ -54,7 +48,6 @@
       "dist/issues-overview.css",
       "dist/[0-9]*.css"
     ],
-    "limit": "6 kB",
     "gzip": true
   }
 ]
