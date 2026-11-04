@@ -83,4 +83,34 @@ describe('AIChatMessageList', () => {
     expect(screen.getByText(KONFLUX_AI_ERROR_TITLE)).toBeInTheDocument();
     expect(screen.getByText('Send failed')).toBeInTheDocument();
   });
+
+  it('renders conversation messages and hides the welcome prompt', () => {
+    mockUseMessages.mockReturnValue([
+      {
+        id: '1',
+        role: 'user',
+        answer: 'What is Konflux?',
+        date: new Date('2026-01-01T00:00:00Z'),
+      },
+      {
+        id: '2',
+        role: 'bot',
+        answer: 'Konflux is a CI/CD platform.',
+        date: new Date('2026-01-01T00:00:01Z'),
+      },
+    ]);
+
+    render(<AIChatMessageList isInitializing={false} />);
+
+    expect(screen.queryByTestId('chatbot-welcome')).not.toBeInTheDocument();
+    expect(screen.getByText('You')).toBeInTheDocument();
+    expect(screen.getByText('What is Konflux?')).toBeInTheDocument();
+    expect(screen.getByText('Konflux is a CI/CD platform.')).toBeInTheDocument();
+  });
+
+  it('does not show the welcome prompt while initializing with no messages', () => {
+    render(<AIChatMessageList isInitializing />);
+
+    expect(screen.queryByTestId('chatbot-welcome')).not.toBeInTheDocument();
+  });
 });
