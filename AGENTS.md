@@ -106,6 +106,7 @@ Detailed guides for AI agents and developers:
 | `docs/conditions.md`            | Feature flag conditions (`allOf`/`anyOf` guards, `registerCondition`)             |
 | `docs/analytics.md`             | Segment analytics (events, config, codegen, obfuscation)                          |
 | `docs/kubearchive.md`           | KubeArchive dual-source data (cluster + archive hooks, deduplication)             |
+| `docs/lightspeed.md`            | Lightspeed / AI chat (client, conditions, `ai-chat` gate, lazy dock)              |
 | `docs/status-registry.md`       | Config-driven status display (registry, components, filters)                      |
 | `docs/e2e-coverage.md`          | E2E coverage via Istanbul + Cypress                                               |
 | `e2e-tests/test-docs/README.md` | E2E test documentation system (test purposes, status markers, doc-first workflow) |
