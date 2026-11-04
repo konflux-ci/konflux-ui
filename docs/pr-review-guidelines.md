@@ -59,6 +59,7 @@ Skip this section if the PR has no UI changes.
 - [ ] **No secrets or credentials** in source files, configs, or test fixtures.
 - [ ] **User input is sanitized** (project uses `sanitize-html`).
 - [ ] **RBAC is respected.** Permission-gated actions use `useAccessReviewForModel`.
+- [ ] **Fork artifacts stay separate from executable code in privileged jobs.** `size-limit-pr-comment.yaml` downloads artifacts under `runner.temp` and passes `size-limit.json` to the formatter from the checkout. Its job has pull-request and issue write permissions.
 
 ## 6. Final Approval
 

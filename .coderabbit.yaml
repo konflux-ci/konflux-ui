@@ -11,53 +11,138 @@ knowledge_base:
   code_guidelines:
     enabled: true
     filePatterns:
-      - "**/.cursor/rules/*"
+      - '**/.cursor/rules/*'
+      - files: 'docs/guidelines/{table-v2,filter-system,saved-views,hooks-and-data-fetching}.md, docs/kubearchive.md'
+        applyTo: 'src/**/*.{ts,tsx}'
+      - files: 'docs/guidelines/patternfly-guidelines.md'
+        applyTo: 'src/**/*.{tsx,scss}'
+      - files: 'docs/guidelines/unit-testing.md'
+        applyTo: 'src/{**/*.spec.{ts,tsx},unit-test-utils/**}'
+      - files: 'docs/pr-review-guidelines.md'
+        applyTo: '**'
 
 reviews:
   profile: assertive
   poem: false
 
   path_instructions:
-    - path: "src/**/*.{ts,tsx}"
+    - path: '**'
       instructions: |
-        ## TypeScript & React guidelines
+        REVIEW PRIORITIES:
+        1. Security: state severity, attack scenario, and a concrete fix.
+           Cite CWE/CVE IDs only when known and applicable.
+        2. Production bugs: logic errors, unsafe null/undefined handling,
+           race conditions, incorrect async behavior, and resource leaks.
+        3. Performance only when measurable — O(n^2) in hot paths, unbounded
+           memory growth, missing pagination.
 
-        ### Complexity
-        - Flag functions longer than ~60 lines; suggest breaking them into smaller helpers.
-        - Flag nesting deeper than 3 levels (if/for/switch); suggest early returns or extraction.
+        For each finding, identify the triggering condition, affected code,
+        and impact. Check relevant callers and existing guards before reporting.
 
-        ### Naming
-        - React components must use PascalCase.
-        - Hooks must start with `use`.
-        - Non-component, non-type exports (variables, functions, hooks) should use camelCase; types, interfaces, classes, and enums should use PascalCase.
+        DO NOT COMMENT ON:
+        - Naming preferences unless the name misrepresents behavior.
+        - Import ordering, formatting, or issues already covered by automated checks.
+        - Alternative patterns without a concrete correctness or maintenance benefit.
+        - Missing documentation unless a public contract is unclear or incorrect.
+        - Small, self-contained duplication solely to suggest extraction.
+          Flag bypassed canonical helpers when a documented contract or behavior is lost.
+        - Explicit type annotations where inference already provides the required type.
+        - Exhaustive switch/if-else handling merely because cases are not listed.
+          Flag a missing case when the default produces incorrect behavior.
+        - Memoization without a demonstrated computation or reference-stability need.
 
-        ### TypeScript
-        - Flag `any` types; suggest a concrete type or `unknown` + narrowing.
-        - Flag missing null checks when a value may be undefined (strict-null style).
-        - Prefer `readonly` for props and data-only interfaces.
-        - Suggest more precise types wherever `string | number` or similar unions can be narrowed.
+    - path: 'src/{components,shared/components,routes}/**/*.{ts,tsx}'
+      instructions: |
+        KONFLUX UI COMPONENTS:
+        1. Use TableV2 for new list views. Extend shared table capabilities when
+           needed; do not build a separate table implementation.
+           See docs/guidelines/table-v2.md.
+        2. Use the shared filter system when adding list filters, and the shared
+           saved-view system when adding saved views. Keep controls, URL state,
+           and displayed results connected; do not require new page features.
+           See docs/guidelines/filter-system.md and docs/guidelines/saved-views.md.
+        3. Prefer PatternFly layouts and existing shared components before
+           introducing custom UI. Do not request migrations of untouched views
+           or replacement of equivalent working layouts.
+           See docs/guidelines/patternfly-guidelines.md.
 
-        ### React
-        - Enforce Rules of Hooks (no conditional hook calls, no hooks in loops).
-        - Prefer function components; flag class components unless there is a clear reason.
-        - Avoid inline style objects that recreate on every render; suggest SCSS classes or `useMemo`.
-        - Flag `useEffect` with missing or over-broad dependency arrays.
-        - Suggest `useMemo`/`useCallback` where a value or callback is expensive and referenced by children.
+    - path: '**/*.scss'
+      instructions: |
+        PATTERNFLY STYLING:
+        1. Avoid custom CSS when PatternFly components, layout props, or utility
+           classes provide the required behavior.
+        2. Do not recreate layouts with custom flex, grid, spacing, alignment,
+           or positioning rules. Use PatternFly layouts such as Flex, Stack,
+           Grid, and Bullseye, including their responsive props.
+        3. Allow custom layout CSS only for a demonstrated gap in PatternFly.
+           Check the consuming component and name the suitable PatternFly
+           replacement when reporting a finding. Leave necessary exceptions
+           and untouched styles alone; do not repeat Stylelint findings.
+           See docs/guidelines/patternfly-guidelines.md.
 
-        ### Architecture & import restrictions
-        - `src/utils/**` may only import from `utils`, `types`, `k8s`, `models`, `consts`,
-          `kubearchive`, `unit-test-utils`, `__data__`, `auth`, `shared`, or `routes`.
-        - `src/types/**` may only import from `types`.
-        - `src/models/**` may only import from `models` or `types`.
-        - `src/k8s/**` may only import from `k8s` or `types/k8s`.
-        - `src/shared/**` may only import from `shared`, `k8s`, or `types/k8s`.
-        - `src/feature-flags/**` may only import from `feature-flags`.
-        - `src/kubearchive/**` may only import from `kubearchive`, `k8s`, or `types/k8s`.
-        - Flag imports that violate these layering rules.
+    - path: 'src/**/*.{ts,tsx}'
+      instructions: |
+        KUBERNETES DATA ACCESS:
+        Apply these checks to resource requests and their consumers.
+        1. Use shared K8s and archive clients for resource hooks. When bypassing
+           them, preserve the namespace scope, updates, and error handling that
+           callers rely on. One-shot requests do not require a watch.
+        2. Check cache identity across consumers. Queries sharing a key must
+           agree on request scope and cached data shape; view-only transforms
+           can run after retrieval. Consistent shared transformations are valid.
+        3. Preserve error information when composing hooks and clients. Empty
+           data alongside an exposed error is valid; hiding a required request's
+           failure as successful empty data is not. Optional enrichment may be
+           best-effort when the contract allows it.
+           See docs/guidelines/hooks-and-data-fetching.md and docs/kubearchive.md.
 
-        ### Performance
-        - Flag unnecessary re-renders caused by object/array literals or inline functions in JSX.
-        - Suggest code-splitting (`React.lazy` / dynamic import) for large leaf components.
+    - path: 'src/{**/*.spec.{ts,tsx},unit-test-utils/**}'
+      instructions: |
+        TESTS AND FIXTURES:
+        Production architecture rules apply to the code under test, not isolated
+        mocks or fixtures. Do not require test doubles to use production clients
+        or UI components.
+        1. Do not reorganize equivalent mocks or assertions, or extract short
+           setup blocks, for preference alone. Isolation failures and mocks
+           that prevent an assertion from testing its intended behavior remain
+           valid findings. See docs/guidelines/unit-testing.md.
+        2. Do not report Secret field names or clearly synthetic fixture values
+           as credential leaks. Confirm fixture provenance; a test filename or
+           base64 encoding alone does not establish that a value is synthetic.
+           Actual credentials remain reportable.
+
+    - path: '.github/{workflows/**/*.{yml,yaml},actions/**/action.{yml,yaml},scripts/**/*.{js,mjs,sh}}'
+      instructions: |
+        GITHUB ACTIONS AND SCRIPTS — SECURITY ONLY:
+        - Flag secret exposure, remote repository actions without full commit SHA pins,
+          overly broad permissions, and untrusted artifacts overwriting code
+          executed with secrets or write access.
+        - Ignore CI pattern alternatives, job naming, permission restructuring,
+          and fail-open (|| true) unless they create a concrete security issue.
+
+    - path: '**/Dockerfile*'
+      instructions: |
+        DOCKERFILES:
+        Apply runtime restrictions to production and instrumented UI images.
+        1. Keep the Node build stage separate from the nginx runtime stage.
+        2. Copy only built assets and required server configuration into runtime;
+           exclude source code, node_modules, and .git.
+        3. Keep equivalent stages aligned with the main Dockerfile's UBI base
+           image versions and digest pins.
+        4. Install JavaScript dependencies in the build stage only. Keep the
+           nginx runtime non-root.
+        5. Development images may include source and build tools; align equivalent
+           base-image versions with the main Dockerfile where applicable.
+
+    - path: '**/webpack{,.*}.config.{ts,js}'
+      instructions: |
+        WEBPACK CONFIG:
+        Do not suggest alternative bundler configurations or plugin replacements.
+        Only flag security issues and broken build logic.
+
+    # Enable after E2E guidelines are documented and validated:
+    # https://redhat.atlassian.net/browse/KFLUXUI-1860
+    # - path: 'e2e-tests/**/*.{ts,js}'
 
   auto_review:
     enabled: true
