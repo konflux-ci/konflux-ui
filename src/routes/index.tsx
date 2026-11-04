@@ -2,6 +2,7 @@ import { createBrowserRouter, type LoaderFunctionArgs } from 'react-router-dom';
 import { wrapCreateBrowserRouter } from '@sentry/react';
 import '~/components/PipelineRunsPage/pipeline-runs.tour';
 import { TourAutoTrigger, TourProvider, TourRenderer } from '~/shared/components/GuidedTours';
+import { ToastProvider } from '~/shared/components/toast';
 import { AppRoot } from '../AppRoot/AppRoot';
 import { GithubRedirect, githubRedirectLoader } from '../components/GithubRedirect';
 import { ModalProvider } from '../components/modal/ModalProvider';
@@ -43,13 +44,15 @@ const routes = [
     errorElement: <RouteErrorBoundry />,
     element: (
       <NamespaceProvider>
-        <ModalProvider>
-          <TourProvider>
-            <AppRoot />
-            <TourRenderer />
-            <TourAutoTrigger />
-          </TourProvider>
-        </ModalProvider>
+        <ToastProvider>
+          <ModalProvider>
+            <TourProvider>
+              <AppRoot />
+              <TourRenderer />
+              <TourAutoTrigger />
+            </TourProvider>
+          </ModalProvider>
+        </ToastProvider>
       </NamespaceProvider>
     ),
     children: [

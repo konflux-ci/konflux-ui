@@ -1,0 +1,13 @@
+.toast-alert-group {
+  max-height: calc(100vh - var(--pf-t--global--spacer--md) * 2);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: var(--pf-t--global--spacer--md);
+  pointer-events: none;
+  width: min(100vw, 36rem);
+}
+
+.toast-alert-group .pf-v6-c-alert {
+  overflow-wrap: anywhere;
+  pointer-events: auto;
+}
