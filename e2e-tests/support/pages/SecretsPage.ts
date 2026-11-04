@@ -1,29 +1,40 @@
 import { secretsPagePO } from '../pageObjects/pages-po';
+import { Common } from '../../utils/Common';
 
 export class SecretsPage {
   static checkValues(secretName: string, secretKey: string, secretValue: string) {
     cy.get(secretsPagePO.rowKebabButton(secretName)).click();
     cy.get(secretsPagePO.editButton).click();
 
-    // Wait for navigation to the edit page and for the form to finish
-    // loading. The EditSecretForm component shows a spinner while
-    // useSecretMetadata is fetching; the cancel button only renders after
-    // the data loads and the Formik form mounts. Use `exist` rather than
-    // `be.visible` because the footer may be below the fold in a scrollable
-    // container, making visibility checks unreliable.
+    // Wait for navigation to the edit page.
     cy.url().should('include', 'edit');
-    cy.get(secretsPagePO.cancelButton).should('exist');
+
+    // Strategy change (iteration 3): previous iterations relied on the
+    // cancel button as a sync guard, but it lives inside the FormFooter
+    // which only renders after Formik mounts. If the K8s API call
+    // (useSecretMetadata) is slow or fails, the form never mounts and the
+    // cancel button never enters the DOM.
+    //
+    // New approach: use the project-standard Common.waitForLoad() to wait
+    // for all loading indicators (spinners, skeletons) to disappear, then
+    // verify the form heading is visible — confirming the API returned data
+    // and the Formik form mounted.
+    Common.waitForLoad();
+    cy.contains('h1', 'Edit secret').should('be.visible');
 
     cy.contains('button', secretsPagePO.showValuesButton).click();
     cy.get(secretsPagePO.keyInputByValue(secretKey)).should('exist');
     cy.get(secretsPagePO.valueInput).scrollIntoView().should('have.value', secretValue);
 
-    cy.get(secretsPagePO.cancelButton).click();
+    // Scroll the cancel button into view before clicking — the footer may
+    // be below the fold in a scrollable container.
+    cy.get(secretsPagePO.cancelButton).scrollIntoView().click();
     cy.url().should('not.include', 'edit');
 
     // Wait for the list to fully re-render after navigating back from the
     // edit page. Without these guards, subsequent commands (e.g. deleteSecret
     // in the after hook) can fire before the secret row is in the DOM.
+    Common.waitForLoad();
     cy.get(secretsPagePO.listNameInput).should('be.visible');
     cy.get(secretsPagePO.secretRow(secretName)).should('exist');
   }
