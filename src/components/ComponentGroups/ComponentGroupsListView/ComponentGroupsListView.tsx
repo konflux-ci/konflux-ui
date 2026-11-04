@@ -1,5 +1,6 @@
 import React from 'react';
 import { PageSection } from '@patternfly/react-core';
+import { ExpandedState } from '@tanstack/react-table';
 import PageLayout from '~/components/PageLayout/PageLayout';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { useComponentGroups } from '~/hooks/useComponentGroups';
@@ -14,7 +15,6 @@ import {
 } from './component-groups-table-config';
 import { ComponentGroupExpandedRow } from './ComponentGroupExpandedRow';
 import ComponentGroupsEmptyState from './ComponentGroupsEmptyState';
-import useComponentGroupTableExpandedContent from './hooks/useComponentGroupTableExpandedContent';
 
 export const ComponentGroupsListView: React.FC = () => {
   const namespace = useNamespace();
@@ -23,7 +23,31 @@ export const ComponentGroupsListView: React.FC = () => {
 
   const { filteredData } = useFilteredData(componentGroupsFilterConfig, groups, clientFilterValues);
 
-  const { expanded, handleExpandedChange } = useComponentGroupTableExpandedContent(groups);
+  const [expandedRows, setExpandedRows] = React.useState<Set<string>>(new Set());
+
+  const expanded = React.useMemo<ExpandedState>(() => {
+    const state: Record<string, boolean> = {};
+    expandedRows.forEach((key) => {
+      state[key] = true;
+    });
+    return state;
+  }, [expandedRows]);
+
+  const handleExpandedChange = React.useCallback(
+    (updaterOrValue: ExpandedState | ((old: ExpandedState) => ExpandedState)) => {
+      const next = typeof updaterOrValue === 'function' ? updaterOrValue(expanded) : updaterOrValue;
+      setExpandedRows(
+        next === true
+          ? new Set(groups.map((group) => group.metadata?.name ?? '-'))
+          : new Set(
+              Object.entries(next)
+                .filter(([, isExpanded]) => isExpanded)
+                .map(([key]) => key),
+            ),
+      );
+    },
+    [expanded, groups],
+  );
 
   if (error) {
     return getErrorState(error, loaded, 'component groups');
