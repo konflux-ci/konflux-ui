@@ -1,5 +1,9 @@
 import dayjs from 'dayjs';
-import { type ComponentConformaResult, type ConformaResultRow } from '~/types/conforma';
+import {
+  CONFORMA_RESULT_STATUS,
+  type ComponentConformaResult,
+  type ConformaResultRow,
+} from '~/types/conforma';
 
 export enum PolicyExceptionKind {
   /** A policy exception waiving the rule is about to lapse. */
@@ -132,14 +136,23 @@ export const POLICY_EXCEPTION_RULE_CODES = [
 const POLICY_CHANGE_RULE_CODE_SET: ReadonlySet<string> = new Set(POLICY_CHANGE_RULE_CODES);
 
 /**
- * Counts the result rows reporting an upcoming or expired policy change.
+ * Counts the warnings reporting an upcoming or expired policy change.
+ *
  * Warnings cover far more than policy changes — any rule Conforma reports
  * non-fatally lands there — so a warning total badly overstates how much of
- * the policy is about to shift.
+ * the policy is about to shift. The status check narrows it from the other
+ * side: a policy change is something Conforma is warning about, so the same
+ * rule code reported as a violation or a success is a different statement and
+ * does not belong in the "Upcoming changes" total.
  */
 export const countPolicyChanges = (results: ConformaResultRow[]): number =>
   results.reduce(
-    (count, row) => (row.code && POLICY_CHANGE_RULE_CODE_SET.has(row.code) ? count + 1 : count),
+    (count, row) =>
+      row.status === CONFORMA_RESULT_STATUS.warnings &&
+      row.code &&
+      POLICY_CHANGE_RULE_CODE_SET.has(row.code)
+        ? count + 1
+        : count,
     0,
   );
 

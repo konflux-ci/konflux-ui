@@ -90,7 +90,7 @@ export const ConformaSummaryBar: React.FC<ConformaSummaryBarProps> = ({
           count: totalWarnings,
           rawCount: totalWarningsRaw,
           label: 'warnings',
-          tooltip: 'Rules with upcoming policy changes',
+          tooltip: 'Rules with warnings',
         },
         {
           icon: <CheckCircleIcon color={successColor.value} />,
