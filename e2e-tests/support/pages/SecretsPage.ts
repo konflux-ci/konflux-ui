@@ -9,18 +9,16 @@ export class SecretsPage {
     // Wait for navigation to the edit page.
     cy.url().should('include', 'edit');
 
-    // Strategy change (iteration 3): previous iterations relied on the
-    // cancel button as a sync guard, but it lives inside the FormFooter
-    // which only renders after Formik mounts. If the K8s API call
-    // (useSecretMetadata) is slow or fails, the form never mounts and the
-    // cancel button never enters the DOM.
+    // Strategy change (iteration 4): waitForLoad() races with component
+    // mount — it checks that spinners don't exist, which passes immediately
+    // if called before the EditSecretForm Spinner mounts. Then the
+    // default-timeout h1 assertion fails because the API call is still in
+    // flight.
     //
-    // New approach: use the project-standard Common.waitForLoad() to wait
-    // for all loading indicators (spinners, skeletons) to disappear, then
-    // verify the form heading is visible — confirming the API returned data
-    // and the Formik form mounted.
-    Common.waitForLoad();
-    cy.contains('h1', 'Edit secret').should('be.visible');
+    // Use the project-standard Common.verifyPageTitle() which retries
+    // finding the h1 for up to 180 s, waiting through any loading states
+    // (spinner → form render) without needing a separate waitForLoad guard.
+    Common.verifyPageTitle('Edit secret');
 
     cy.contains('button', secretsPagePO.showValuesButton).click();
     cy.get(secretsPagePO.keyInputByValue(secretKey)).should('exist');
