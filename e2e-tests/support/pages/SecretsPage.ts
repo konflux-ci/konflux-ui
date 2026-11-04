@@ -8,9 +8,11 @@ export class SecretsPage {
     // Wait for navigation to the edit page and for the form to finish
     // loading. The EditSecretForm component shows a spinner while
     // useSecretMetadata is fetching; the cancel button only renders after
-    // the data loads and the Formik form mounts.
+    // the data loads and the Formik form mounts. Use `exist` rather than
+    // `be.visible` because the footer may be below the fold in a scrollable
+    // container, making visibility checks unreliable.
     cy.url().should('include', 'edit');
-    cy.get(secretsPagePO.cancelButton).should('be.visible');
+    cy.get(secretsPagePO.cancelButton).should('exist');
 
     cy.contains('button', secretsPagePO.showValuesButton).click();
     cy.get(secretsPagePO.keyInputByValue(secretKey)).should('exist');
