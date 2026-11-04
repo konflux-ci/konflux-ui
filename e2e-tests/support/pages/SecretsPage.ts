@@ -4,13 +4,18 @@ export class SecretsPage {
   static checkValues(secretName: string, secretKey: string, secretValue: string) {
     cy.get(secretsPagePO.rowKebabButton(secretName)).click();
     cy.get(secretsPagePO.editButton).click();
+
+    // Wait for navigation to the edit page and for the form to finish
+    // loading. The EditSecretForm component shows a spinner while
+    // useSecretMetadata is fetching; the cancel button only renders after
+    // the data loads and the Formik form mounts.
+    cy.url().should('include', 'edit');
+    cy.get(secretsPagePO.cancelButton).should('be.visible');
+
     cy.contains('button', secretsPagePO.showValuesButton).click();
     cy.get(secretsPagePO.keyInputByValue(secretKey)).should('exist');
     cy.get(secretsPagePO.valueInput).scrollIntoView().should('have.value', secretValue);
 
-    // Sometimes the edit url stays even when the test is already inputting text to the search field in a main page.
-    // This assertion should synchronize page with a test.
-    cy.url().should('include', 'edit');
     cy.get(secretsPagePO.cancelButton).click();
     cy.url().should('not.include', 'edit');
 
