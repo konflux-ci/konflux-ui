@@ -32,6 +32,15 @@ A process checklist for reviewing pull requests. For coding standards and detail
 - [ ] **Dead code removed.** No commented-out code, unused imports, or unreachable branches.
 - [ ] **File length under 500 lines.**
 
+### Performance (virtualized / scroll-heavy components)
+
+Apply these checks when the PR modifies components using `@tanstack/react-virtual`, custom virtualization, or high-frequency re-rendering (log viewers, large tables, infinite scroll).
+
+- [ ] **Style objects in render paths are memoized.** Virtualized rows require inline positioning styles — ensure these style objects are created via `useMemo` or extracted as constants, not recreated on every render.
+- [ ] **Data arrays are not iterated more than once per render.** If the same list (e.g., `virtualItems`) is mapped multiple times, consolidate into a single pass.
+- [ ] **Expensive computations are guarded by their consuming condition.** If a `useMemo` result is only used inside a conditional branch (e.g., `!wrapLines`), guard the computation inside the `useMemo` callback (e.g., `if (wrapLines) return null;` as an early return) and include the condition in its dependency array, so React both skips the expensive work when the result is unused and re-evaluates when the condition changes.
+- [ ] **No visual performance regression.** Scroll vertically and horizontally in the affected component and watch for stuttering, especially with large datasets (1000+ rows).
+
 ## 3. Testing
 
 - [ ] **Tests added for new logic.** New components, hooks, and utilities have `.spec.ts(x)` files.
@@ -81,7 +90,8 @@ Skip this section if the PR has no UI changes.
 | `console.log(...)` | Use `logger` from `~/monitoring/logger` |
 | `useEffect` + `setState` from props | Use `useMemo` |
 | `useMemo(() => obj.name, [obj])` | Remove `useMemo` — trivial expression |
-| `style={{ ... }}` | Use co-located SCSS with BEM |
+| `style={{ ... }}` | Use co-located SCSS with BEM (exception: virtualized row positioning — see below) |
+| `style={{ position: 'absolute', top: ... }}` in a loop | Compute all style objects in a single `useMemo` before the loop, or extract rows to a `React.memo` child component (do not call `useMemo` inside a loop — Rules of Hooks) |
 | `import ... from '../../../'` | Use `~/` absolute import |
 | `localStorage.getItem(...)` | Use `useLocalStorage` hook |
 | `pf-v5-u-*` or `pf-v5-c-*` | Replace prefix with `pf-v6-` |
