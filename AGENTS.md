@@ -96,16 +96,16 @@ Detailed guides for AI agents and developers:
 | `docs/guidelines/single-file-type-check.md`   | Type-check one file (or fall back to project-wide)                                      |
 | `docs/guidelines/guided-tours.md`             | **Guided Tours** — config-driven interactive walkthroughs (step types, registry, merge) |
 
-## Other Documentation (docs/)
+## Other Documentation
 
-| Document                         | Purpose                                                                    |
-| -------------------------------- | -------------------------------------------------------------------------- |
-| `docs/best-practices.md`         | Full coding standards and conventions                                      |
-| `docs/pr-review-guidelines.md`   | PR review checklist                                                        |
-| `docs/feature-flags.md`          | Feature flag system (flags, persistence, URL grammar, lifecycle)           |
-| `docs/conditions.md`             | Feature flag conditions (`allOf`/`anyOf` guards, `registerCondition`)      |
-| `docs/analytics.md`              | Segment analytics (events, config, codegen, obfuscation)                   |
-| `docs/kubearchive.md`            | KubeArchive dual-source data (cluster + archive hooks, deduplication)      |
-| `docs/status-registry.md`        | Config-driven status display (registry, components, filters)               |
-| `docs/e2e-coverage.md`           | E2E coverage via Istanbul + Cypress                                        |
-| `e2e-tests/test-docs/README.md`  | E2E test documentation system (test purposes, status markers, doc-first workflow) |
+| Document                        | Purpose                                                                           |
+| ------------------------------- | --------------------------------------------------------------------------------- |
+| `docs/best-practices.md`        | Full coding standards and conventions                                             |
+| `docs/pr-review-guidelines.md`  | PR review checklist                                                               |
+| `docs/feature-flags.md`         | Feature flag system (flags, persistence, URL grammar, lifecycle)                  |
+| `docs/conditions.md`            | Feature flag conditions (`allOf`/`anyOf` guards, `registerCondition`)             |
+| `docs/analytics.md`             | Segment analytics (events, config, codegen, obfuscation)                          |
+| `docs/kubearchive.md`           | KubeArchive dual-source data (cluster + archive hooks, deduplication)             |
+| `docs/status-registry.md`       | Config-driven status display (registry, components, filters)                      |
+| `docs/e2e-coverage.md`          | E2E coverage via Istanbul + Cypress                                               |
+| `e2e-tests/test-docs/README.md` | E2E test documentation system (test purposes, status markers, doc-first workflow) |
