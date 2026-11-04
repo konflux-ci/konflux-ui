@@ -1,5 +1,5 @@
 import dayjs from 'dayjs';
-import { type ComponentConformaResult } from '~/types/conforma';
+import { type ComponentConformaResult, type ConformaResultRow } from '~/types/conforma';
 
 export enum PolicyExceptionKind {
   /** A policy exception waiving the rule is about to lapse. */
@@ -105,19 +105,43 @@ export const collectPolicyExceptions = (
   );
 
 /**
- * Rules whose warnings describe a policy exception. Conforma namespaces them
- * under `volatile_config` because the exception itself lives in the policy's
- * volatile config. The set is enumerated rather than prefix-matched so that a
- * new `volatile_config.*` rule cannot silently widen what the "Show policy
- * exceptions" filter pulls in.
+ * Rules whose warnings announce a change to what the policy enforces: an
+ * exception waiving a rule that is about to lapse (`expiring_rule`) or already
+ * has (`expired_rule`), and a rule that is not enforced yet (`pending_rule`).
  */
-export const POLICY_EXCEPTION_RULE_CODES = [
+export const POLICY_CHANGE_RULE_CODES = [
   'volatile_config.expiring_rule',
   'volatile_config.expired_rule',
-  'volatile_config.invalid_config',
-  'volatile_config.no_expiration',
   'volatile_config.pending_rule',
 ] as const;
+
+/**
+ * Rules whose warnings describe a policy exception. Conforma namespaces them
+ * under `volatile_config` because the exception itself lives in the policy's
+ * volatile config. Beyond the policy changes above these cover config hygiene
+ * problems, which say nothing about when enforcement changes. The set is
+ * enumerated rather than prefix-matched so that a new `volatile_config.*` rule
+ * cannot silently widen what the "Show policy exceptions" filter pulls in.
+ */
+export const POLICY_EXCEPTION_RULE_CODES = [
+  ...POLICY_CHANGE_RULE_CODES,
+  'volatile_config.invalid_config',
+  'volatile_config.no_expiration',
+] as const;
+
+const POLICY_CHANGE_RULE_CODE_SET: ReadonlySet<string> = new Set(POLICY_CHANGE_RULE_CODES);
+
+/**
+ * Counts the result rows reporting an upcoming or expired policy change.
+ * Warnings cover far more than policy changes — any rule Conforma reports
+ * non-fatally lands there — so a warning total badly overstates how much of
+ * the policy is about to shift.
+ */
+export const countPolicyChanges = (results: ConformaResultRow[]): number =>
+  results.reduce(
+    (count, row) => (row.code && POLICY_CHANGE_RULE_CODE_SET.has(row.code) ? count + 1 : count),
+    0,
+  );
 
 export const countExceptionsByKind = (
   exceptions: PolicyException[],
