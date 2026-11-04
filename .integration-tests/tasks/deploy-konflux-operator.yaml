@@ -26,7 +26,7 @@ spec:
     - name: repo-revision
       type: string
       description: Git revision to clone for deploy scripts.
-      default: main
+      default: v0.2.2
     - name: operator-release
       type: string
       description: >-
@@ -166,7 +166,7 @@ spec:
           GET_LINE=$(kubectl get konflux konflux -o wide --no-headers 2>/dev/null || true)
           echo "=== Konflux after fqdn patch: ${GET_LINE} ==="
           if [[ "${GET_LINE}" == *localhost* ]] || [[ "${GET_LINE}" != *"${KIND_IP}"* ]]; then
-            echo "=== ERROR: UI URL did not switch to Kind IP ${KIND_IP} (got: ${GET_LINE}) ==="
+            echo "ERROR: UI URL did not switch to Kind IP ${KIND_IP} (got: ${GET_LINE})"
             kubectl get konflux konflux -o yaml | head -120 || true
             exit 1
           fi
@@ -206,13 +206,13 @@ spec:
           KIND_PULL_SECRET_NAME=snapshot-ui-pull
 
           if [[ -z "${CONTAINER_IMAGE}" ]]; then
-            echo "=== ERROR: container-image param is empty; expected instrumented UI image ==="
+            echo "ERROR: container-image param is empty; expected instrumented UI image"
             exit 1
           fi
 
           DOCKERCONFIG=/pull-secret/.dockerconfigjson
           if [[ ! -f "${DOCKERCONFIG}" ]]; then
-            echo "=== ERROR: pull-secret missing .dockerconfigjson (expected a Konflux IPS) ==="
+            echo "ERROR: pull-secret missing .dockerconfigjson (expected a Konflux IPS)"
             ls -la /pull-secret || true
             exit 1
           fi
@@ -224,7 +224,7 @@ spec:
             kubectl scale deployment/konflux-operator-controller-manager \
               -n konflux-operator --replicas=0
             kubectl wait --for=delete pod -l control-plane=controller-manager \
-              -n konflux-operator --timeout=2m
+              -n konflux-operator --timeout=2m || true
           else
             echo "=== konflux-operator-controller-manager not found; continuing ==="
           fi
@@ -260,7 +260,7 @@ spec:
           }"
 
           if ! kubectl rollout status deployment/proxy -n konflux-ui --timeout=5m; then
-            echo "=== ERROR: Proxy deployment rollout failed after UI image patch ==="
+            echo "ERROR: Proxy deployment rollout failed after UI image patch"
             kubectl describe deployment proxy -n konflux-ui
             kubectl get pods -n konflux-ui -l app=proxy -o wide
             for pod in $(kubectl get pods -n konflux-ui -l app=proxy -o name); do
