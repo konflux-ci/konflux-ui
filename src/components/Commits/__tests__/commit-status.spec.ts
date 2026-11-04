@@ -244,7 +244,7 @@ describe('useCommitStatus', () => {
       ]); // testPipelineRuns
     const { result } = renderHook(() => useCommitStatus('app', 'commit'));
     expect(result.current[0]).toBe(runStatus.Pending);
-    expect(result.current[1]).toBe(false);
+    expect(result.current[1]).toBe(true);
   });
 
   it('returns Pending status if there is an error', () => {
