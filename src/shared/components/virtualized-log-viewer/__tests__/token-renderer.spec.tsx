@@ -75,6 +75,14 @@ describe('token-renderer', () => {
     it('should return empty string for unknown schemes', () => {
       expect(getTokenHref('custom://something')).toBe('');
     });
+
+    it('should not double-prefix mailto: URIs', () => {
+      expect(getTokenHref('mailto:user@example.com')).toBe('mailto:user@example.com');
+    });
+
+    it('should reject email-like strings with query parameters', () => {
+      expect(getTokenHref('user@example.com?subject=Urgent&body=Click')).toBe('');
+    });
   });
 
   describe('renderTokenString', () => {
@@ -178,8 +186,8 @@ describe('token-renderer', () => {
       expect(anchor?.textContent).toBe('https://example.com');
     });
 
-    it('should render url token with nested Token content as an anchor', () => {
-      const inner = new Prism.Token('punctuation', '://');
+    it('should render url token with nested Token content as an anchor when href is valid', () => {
+      const inner = new Prism.Token('content', 'https://example.com');
       const token = new Prism.Token('url', inner);
       const { container } = render(
         <>{renderTokenRecursive(token, 0, [], null, 0)}</>,
@@ -187,6 +195,19 @@ describe('token-renderer', () => {
       const anchor = container.querySelector('a.token.url');
       expect(anchor).not.toBeNull();
       expect(anchor?.tagName).toBe('A');
+      expect(anchor?.getAttribute('href')).toBe('https://example.com');
+    });
+
+    it('should render url token with nested Token content as a span when href is invalid', () => {
+      const inner = new Prism.Token('punctuation', '://');
+      const token = new Prism.Token('url', inner);
+      const { container } = render(
+        <>{renderTokenRecursive(token, 0, [], null, 0)}</>,
+      );
+      expect(container.querySelector('a')).toBeNull();
+      const span = container.querySelector('span.token.url');
+      expect(span).not.toBeNull();
+      expect(span?.tagName).toBe('SPAN');
     });
 
     it('should not render non-url token as an anchor', () => {
@@ -208,6 +229,18 @@ describe('token-renderer', () => {
       const anchor = container.querySelector('a.token.url');
       expect(anchor).not.toBeNull();
       expect(anchor?.getAttribute('href')).toBe('https://token@github.com/repo.git');
+    });
+
+    it('should render a url token with unsafe scheme as a span, not an anchor', () => {
+      const token = new Prism.Token('url', 'javascript:alert(1)');
+      const { container } = render(
+        <>{renderTokenRecursive(token, 0, [], null, 0)}</>,
+      );
+      expect(container.querySelector('a')).toBeNull();
+      const span = container.querySelector('span.token.url');
+      expect(span).not.toBeNull();
+      expect(span?.tagName).toBe('SPAN');
+      expect(span?.textContent).toBe('javascript:alert(1)');
     });
 
     it('should handle depth limit', () => {
