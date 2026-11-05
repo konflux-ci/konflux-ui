@@ -14,8 +14,7 @@
     "cy:open:studio": "cypress open --env STUDIO_MODE=true",
     "cy:open:coverage": "cypress open --expose coverage=true",
     "coverage:report": "nyc report --reporter=html --reporter=text --reporter=lcov",
-    "coverage:merge": "nyc merge .nyc_output coverage/coverage.json",
-    "cy:run:features": "cypress run -b chrome --spec 'tests/features.spec.ts'"
+    "coverage:merge": "nyc merge .nyc_output coverage/coverage.json"
   },
   "devDependencies": {
     "@cypress/code-coverage": "^4.0.3",
