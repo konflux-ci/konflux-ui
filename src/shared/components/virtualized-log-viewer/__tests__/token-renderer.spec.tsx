@@ -93,9 +93,7 @@ describe('token-renderer', () => {
 
     it('should render highlights for matching ranges', () => {
       const matches = [{ start: 6, end: 11 }];
-      const { container } = render(
-        <>{renderTokenString('hello world', 0, matches, null)}</>,
-      );
+      const { container } = render(<>{renderTokenString('hello world', 0, matches, null)}</>);
       expect(container.textContent).toBe('hello world');
       const mark = container.querySelector('mark');
       expect(mark).not.toBeNull();
@@ -105,17 +103,13 @@ describe('token-renderer', () => {
 
   describe('renderTokenRecursive', () => {
     it('should render a plain string token', () => {
-      const { container } = render(
-        <>{renderTokenRecursive('plain text', 0, [], null, 0)}</>,
-      );
+      const { container } = render(<>{renderTokenRecursive('plain text', 0, [], null, 0)}</>);
       expect(container.textContent).toBe('plain text');
     });
 
     it('should render a non-url token as a span', () => {
       const token = new Prism.Token('keyword', 'ERROR');
-      const { container } = render(
-        <>{renderTokenRecursive(token, 0, [], null, 0)}</>,
-      );
+      const { container } = render(<>{renderTokenRecursive(token, 0, [], null, 0)}</>);
       const span = container.querySelector('span.token.keyword');
       expect(span).not.toBeNull();
       expect(span?.tagName).toBe('SPAN');
@@ -124,9 +118,7 @@ describe('token-renderer', () => {
 
     it('should render a url token as an anchor element', () => {
       const token = new Prism.Token('url', 'https://pipeline.test/build/123');
-      const { container } = render(
-        <>{renderTokenRecursive(token, 0, [], null, 0)}</>,
-      );
+      const { container } = render(<>{renderTokenRecursive(token, 0, [], null, 0)}</>);
       const anchor = container.querySelector('a.token.url');
       expect(anchor).not.toBeNull();
       expect(anchor?.tagName).toBe('A');
@@ -138,9 +130,7 @@ describe('token-renderer', () => {
 
     it('should render an email token with mailto href', () => {
       const token = new Prism.Token('email', 'user@pipeline.test', 'url');
-      const { container } = render(
-        <>{renderTokenRecursive(token, 0, [], null, 0)}</>,
-      );
+      const { container } = render(<>{renderTokenRecursive(token, 0, [], null, 0)}</>);
       const anchor = container.querySelector('a');
       expect(anchor).not.toBeNull();
       expect(anchor?.getAttribute('href')).toBe('mailto:user@pipeline.test');
@@ -151,9 +141,7 @@ describe('token-renderer', () => {
     it('should preserve search highlights within URL anchors', () => {
       const token = new Prism.Token('url', 'https://pipeline.test/build/123');
       const matches = [{ start: 8, end: 16 }];
-      const { container } = render(
-        <>{renderTokenRecursive(token, 0, matches, null, 0)}</>,
-      );
+      const { container } = render(<>{renderTokenRecursive(token, 0, matches, null, 0)}</>);
       const anchor = container.querySelector('a.token.url');
       expect(anchor).not.toBeNull();
       const mark = anchor?.querySelector('mark');
@@ -165,9 +153,7 @@ describe('token-renderer', () => {
       const token = new Prism.Token('url', 'https://pipeline.test/build/123');
       const currentMatch = { start: 8, end: 16 };
       const matches = [currentMatch];
-      const { container } = render(
-        <>{renderTokenRecursive(token, 0, matches, currentMatch, 0)}</>,
-      );
+      const { container } = render(<>{renderTokenRecursive(token, 0, matches, currentMatch, 0)}</>);
       const anchor = container.querySelector('a.token.url');
       const mark = anchor?.querySelector('mark.pf-m-current');
       expect(mark).not.toBeNull();
@@ -176,9 +162,7 @@ describe('token-renderer', () => {
 
     it('should render url token with array content as an anchor', () => {
       const token = new Prism.Token('url', ['https://', 'example.com']);
-      const { container } = render(
-        <>{renderTokenRecursive(token, 0, [], null, 0)}</>,
-      );
+      const { container } = render(<>{renderTokenRecursive(token, 0, [], null, 0)}</>);
       const anchor = container.querySelector('a.token.url');
       expect(anchor).not.toBeNull();
       expect(anchor?.tagName).toBe('A');
@@ -189,9 +173,7 @@ describe('token-renderer', () => {
     it('should render url token with nested Token content as an anchor when href is valid', () => {
       const inner = new Prism.Token('content', 'https://example.com');
       const token = new Prism.Token('url', inner);
-      const { container } = render(
-        <>{renderTokenRecursive(token, 0, [], null, 0)}</>,
-      );
+      const { container } = render(<>{renderTokenRecursive(token, 0, [], null, 0)}</>);
       const anchor = container.querySelector('a.token.url');
       expect(anchor).not.toBeNull();
       expect(anchor?.tagName).toBe('A');
@@ -201,9 +183,7 @@ describe('token-renderer', () => {
     it('should render url token with nested Token content as a span when href is invalid', () => {
       const inner = new Prism.Token('punctuation', '://');
       const token = new Prism.Token('url', inner);
-      const { container } = render(
-        <>{renderTokenRecursive(token, 0, [], null, 0)}</>,
-      );
+      const { container } = render(<>{renderTokenRecursive(token, 0, [], null, 0)}</>);
       expect(container.querySelector('a')).toBeNull();
       const span = container.querySelector('span.token.url');
       expect(span).not.toBeNull();
@@ -212,9 +192,7 @@ describe('token-renderer', () => {
 
     it('should not render non-url token as an anchor', () => {
       const token = new Prism.Token('string', '"some text"');
-      const { container } = render(
-        <>{renderTokenRecursive(token, 0, [], null, 0)}</>,
-      );
+      const { container } = render(<>{renderTokenRecursive(token, 0, [], null, 0)}</>);
       expect(container.querySelector('a')).toBeNull();
       const span = container.querySelector('span.token.string');
       expect(span).not.toBeNull();
@@ -223,9 +201,7 @@ describe('token-renderer', () => {
 
     it('should render a URL with @ as an anchor with the correct href, not mailto', () => {
       const token = new Prism.Token('url', 'https://token@github.com/repo.git');
-      const { container } = render(
-        <>{renderTokenRecursive(token, 0, [], null, 0)}</>,
-      );
+      const { container } = render(<>{renderTokenRecursive(token, 0, [], null, 0)}</>);
       const anchor = container.querySelector('a.token.url');
       expect(anchor).not.toBeNull();
       expect(anchor?.getAttribute('href')).toBe('https://token@github.com/repo.git');
@@ -233,9 +209,7 @@ describe('token-renderer', () => {
 
     it('should render a url token with unsafe scheme as a span, not an anchor', () => {
       const token = new Prism.Token('url', 'javascript:alert(1)');
-      const { container } = render(
-        <>{renderTokenRecursive(token, 0, [], null, 0)}</>,
-      );
+      const { container } = render(<>{renderTokenRecursive(token, 0, [], null, 0)}</>);
       expect(container.querySelector('a')).toBeNull();
       const span = container.querySelector('span.token.url');
       expect(span).not.toBeNull();
@@ -243,11 +217,20 @@ describe('token-renderer', () => {
       expect(span?.textContent).toBe('javascript:alert(1)');
     });
 
+    it('should render a container-image token as a span, not an anchor', () => {
+      const token = new Prism.Token('container-image', 'quay.io/org/image:tag');
+      token.alias = 'constant';
+      const { container } = render(<>{renderTokenRecursive(token, 0, [], null, 0)}</>);
+      expect(container.querySelector('a')).toBeNull();
+      const span = container.querySelector('span.token.container-image');
+      expect(span).not.toBeNull();
+      expect(span?.tagName).toBe('SPAN');
+      expect(span?.textContent).toBe('quay.io/org/image:tag');
+    });
+
     it('should handle depth limit', () => {
       const token = new Prism.Token('url', 'https://example.com');
-      const { container } = render(
-        <>{renderTokenRecursive(token, 0, [], null, 0, 51)}</>,
-      );
+      const { container } = render(<>{renderTokenRecursive(token, 0, [], null, 0, 51)}</>);
       expect(container.textContent).toBe('...');
     });
   });
