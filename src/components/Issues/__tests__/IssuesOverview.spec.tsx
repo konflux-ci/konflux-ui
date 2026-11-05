@@ -1,6 +1,4 @@
-import * as React from 'react';
 import { MemoryRouter } from 'react-router-dom';
-import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { IssueSeverity, IssueState, IssueType } from '~/kite/issue-type';
 import { renderWithQueryClient } from '~/unit-test-utils/mock-react-query';
 import IssuesOverview from '../IssuesOverview';
@@ -48,23 +46,6 @@ jest.mock('~/shared/providers/Namespace', () => ({
   useNamespace: () => 'test-namespace',
 }));
 
-jest.mock('~/feature-flags/hooks', () => ({
-  ...jest.requireActual('~/feature-flags/hooks'),
-  useIsOnFeatureFlag: jest.fn(),
-  IfFeature: ({
-    flag,
-    children,
-    fallback,
-  }: {
-    flag: string;
-    children: React.ReactNode;
-    fallback?: React.ReactNode;
-  }) => {
-    const { useIsOnFeatureFlag: mockFlag } = jest.requireMock('~/feature-flags/hooks');
-    return mockFlag(flag) ? <>{children}</> : <>{fallback ?? null}</>;
-  },
-}));
-
 jest.mock('../useWorkspaceConformaViolations', () => ({
   useWorkspaceConformaViolations: jest.fn(() => ({
     totalViolations: 0,
@@ -77,8 +58,6 @@ jest.mock('../useWorkspaceConformaViolations', () => ({
   })),
 }));
 
-const mockUseIsOnFeatureFlag = jest.mocked(useIsOnFeatureFlag);
-
 describe('IssuesOverview', () => {
   const renderComponent = () => {
     return renderWithQueryClient(
@@ -90,7 +69,6 @@ describe('IssuesOverview', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockUseIsOnFeatureFlag.mockImplementation((flag) => flag === 'conforma-policy');
   });
 
   it('should render without crashing', () => {
@@ -121,25 +99,13 @@ describe('IssuesOverview', () => {
     expect(nestedGridItems).toHaveLength(4);
   });
 
-  it('should render ConformaViolationsCard when conforma-policy feature flag is enabled', () => {
+  it('should render ConformaViolationsCard', () => {
     const { getByTestId } = renderComponent();
     expect(getByTestId('conforma-violations-card')).toBeInTheDocument();
   });
 
-  it('should not render ConformaViolationsCard when conforma-policy feature flag is disabled', () => {
-    mockUseIsOnFeatureFlag.mockImplementation(() => false);
-    const { queryByTestId } = renderComponent();
-    expect(queryByTestId('conforma-violations-card')).not.toBeInTheDocument();
-  });
-
-  it('should render IssuesPolicyExceptionCard when conforma-policy feature flag is enabled', () => {
+  it('should render IssuesPolicyExceptionCard', () => {
     const { getByTestId } = renderComponent();
     expect(getByTestId('issues-policy-exception-card')).toBeInTheDocument();
-  });
-
-  it('should not render IssuesPolicyExceptionCard when conforma-policy feature flag is disabled', () => {
-    mockUseIsOnFeatureFlag.mockImplementation(() => false);
-    const { queryByTestId } = renderComponent();
-    expect(queryByTestId('issues-policy-exception-card')).not.toBeInTheDocument();
   });
 });
