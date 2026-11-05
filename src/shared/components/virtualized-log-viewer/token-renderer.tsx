@@ -4,6 +4,7 @@ import { flattenTokenText, isMatchCurrent } from './log-viewer-utils';
 import type { MatchRange } from './types';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const SAFE_SCHEMES = /^(https?|ftp|mailto):/i;
 
 /** Checks whether a Prism token represents a URL or email link */
 export function isUrlToken(token: Prism.Token): boolean {
@@ -15,9 +16,10 @@ export function isUrlToken(token: Prism.Token): boolean {
   return false;
 }
 
-/** Returns the href for a URL/email token */
+/** Returns the href for a URL/email token, or empty string for unsafe schemes */
 export function getTokenHref(text: string): string {
-  if (EMAIL_REGEX.test(text)) return `mailto:${text}`;
+  if (!text.includes('://') && EMAIL_REGEX.test(text)) return `mailto:${text}`;
+  if (!SAFE_SCHEMES.test(text)) return '';
   return text;
 }
 
