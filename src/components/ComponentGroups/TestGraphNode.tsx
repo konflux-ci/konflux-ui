@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
+import { Flex, Stack } from '@patternfly/react-core';
 import {
   TaskNode,
   Node,
@@ -34,13 +35,17 @@ const TestGraphNode: React.FC<TestGraphNodeProps> = ({ element, ...rest }) => {
 
   const tooltipContent =
     namespace && testName ? (
-      <div className="testgraph-node__tooltip--content">
+      <Stack hasGutter className="testgraph-node__tooltip--content">
         <div className="testgraph-node__tooltip--title">{testName}</div>
         {hasFailFast && (
-          <div className="testgraph-node__tooltip--warning">
+          <Flex
+            alignItems={{ default: 'alignItemsCenter' }}
+            spaceItems={{ default: 'spaceItemsXs' }}
+            className="testgraph-node__tooltip--warning"
+          >
             <WarningIcon aria-hidden="true" />
             Fail-fast enabled
-          </div>
+          </Flex>
         )}
         <Link
           className="testgraph-node__tooltip--link"
@@ -53,7 +58,7 @@ const TestGraphNode: React.FC<TestGraphNodeProps> = ({ element, ...rest }) => {
         >
           View test details
         </Link>
-      </div>
+      </Stack>
     ) : (
       testName
     );

@@ -21,7 +21,9 @@ const calculateStages = (testGraph: Record<string, TestGraphNode[]>): Map<string
     }
 
     inProgress.add(testName);
-    const deps = (testGraph[testName] || []).filter((d) => testGraph[d.name]);
+    const deps = (testGraph[testName] || []).filter((d) =>
+      Object.prototype.hasOwnProperty.call(testGraph, d.name),
+    );
 
     const stage = deps.length === 0 ? 0 : Math.max(...deps.map((d) => getStage(d.name))) + 1;
 
@@ -59,7 +61,7 @@ export const getTestGraphModel = (
     .sort(([a], [b]) => Number(a) - Number(b))
     .forEach(([stage, testNames]) => {
       nodes.push({
-        id: `stage-${stage}`,
+        id: `stage:${stage}`,
         type: TestGraphNodeType.GROUP,
         label: `Stage ${Number(stage) + 1}`,
         group: true,
@@ -70,7 +72,9 @@ export const getTestGraphModel = (
 
   // Create test nodes and edges
   Object.entries(testGraph).forEach(([testName, deps]) => {
-    const validDeps = deps.filter((dep) => testGraph[dep.name]);
+    const validDeps = deps.filter((dep) =>
+      Object.prototype.hasOwnProperty.call(testGraph, dep.name),
+    );
 
     // Test node
     nodes.push({
