@@ -3,6 +3,24 @@ import Prism from 'prismjs';
 import { flattenTokenText, isMatchCurrent } from './log-viewer-utils';
 import type { MatchRange } from './types';
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/** Checks whether a Prism token represents a URL or email link */
+export function isUrlToken(token: Prism.Token): boolean {
+  if (token.type === 'url' || token.type === 'email') return true;
+  if (token.alias) {
+    const aliases = Array.isArray(token.alias) ? token.alias : [token.alias];
+    return aliases.includes('url');
+  }
+  return false;
+}
+
+/** Returns the href for a URL/email token */
+export function getTokenHref(text: string): string {
+  if (EMAIL_REGEX.test(text)) return `mailto:${text}`;
+  return text;
+}
+
 /**
  * Renders a string token with search highlights
  * Splits the token into highlighted and non-highlighted segments
@@ -74,10 +92,20 @@ export function renderTokenRecursive(
     : '';
   const className = `token ${tokenType}${tokenAlias ? ` ${tokenAlias}` : ''}`;
 
+  const isLink = isUrlToken(token);
+  const Tag = isLink ? 'a' : 'span';
+  const linkProps = isLink
+    ? {
+        href: getTokenHref(flattenTokenText(token)),
+        target: '_blank' as const,
+        rel: 'noopener noreferrer',
+      }
+    : {};
+
   if (Array.isArray(token.content)) {
     let childStart = tokenStart;
     return (
-      <span key={key} className={className}>
+      <Tag key={key} className={className} {...linkProps}>
         {token.content.map((t: string | Prism.Token, i: number) => {
           const rendered = renderTokenRecursive(
             t,
@@ -90,23 +118,23 @@ export function renderTokenRecursive(
           childStart += flattenTokenText(t).length;
           return rendered;
         })}
-      </span>
+      </Tag>
     );
   }
 
   // Handle token.content as string
   if (typeof token.content === 'string') {
     return (
-      <span key={key} className={className}>
+      <Tag key={key} className={className} {...linkProps}>
         {renderTokenString(token.content, tokenStart, lineMatches, currentMatch)}
-      </span>
+      </Tag>
     );
   }
 
   // Recursive case: token.content is another Token
   return (
-    <span key={key} className={className}>
+    <Tag key={key} className={className} {...linkProps}>
       {renderTokenRecursive(token.content, tokenStart, lineMatches, currentMatch, 0, depth + 1)}
-    </span>
+    </Tag>
   );
 }
