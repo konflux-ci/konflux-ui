@@ -16,7 +16,7 @@ describe('testgraph-model-utils', () => {
 
       // Stage group
       expect(model.nodes?.[0]).toMatchObject({
-        id: 'stage-0',
+        id: 'stage:0',
         type: TestGraphNodeType.GROUP,
         label: 'Stage 1',
         group: true,
@@ -370,6 +370,23 @@ describe('testgraph-model-utils', () => {
 
       // No edges to nonexistent test
       expect(model.edges).toHaveLength(0);
+    });
+
+    it('should ignore inherited dependency names', () => {
+      const testGraph: Record<string, TestGraphNode[]> = {
+        'test-a': [{ name: 'constructor' }, { name: 'toString' }],
+      };
+
+      const model = getTestGraphModel(testGraph, 'my-group');
+
+      expect(model.edges).toHaveLength(0);
+      expect(model.nodes?.find((node) => node.id === 'test-a')).toBeDefined();
+    });
+
+    it('should keep stage group ids distinct from test names', () => {
+      const model = getTestGraphModel({ 'stage-0': [] }, 'my-group');
+
+      expect(model.nodes?.map((node) => node.id)).toEqual(['stage:0', 'stage-0']);
     });
   });
 });
