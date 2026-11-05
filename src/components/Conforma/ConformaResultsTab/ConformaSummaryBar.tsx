@@ -18,9 +18,15 @@ type ConformaSummaryBarProps = {
   totalViolations: number;
   totalWarnings: number;
   totalSuccesses: number;
+  /**
+   * Rules reporting an upcoming or expired policy change — a strict subset of
+   * the warnings, see `countPolicyChanges`.
+   */
+  totalPolicyChanges: number;
   totalViolationsRaw?: number;
   totalWarningsRaw?: number;
   totalSuccessesRaw?: number;
+  totalPolicyChangesRaw?: number;
 };
 
 export const ConformaSummaryBar: React.FC<ConformaSummaryBarProps> = ({
@@ -29,9 +35,11 @@ export const ConformaSummaryBar: React.FC<ConformaSummaryBarProps> = ({
   totalViolations,
   totalWarnings,
   totalSuccesses,
+  totalPolicyChanges,
   totalWarningsRaw,
   totalSuccessesRaw,
   totalViolationsRaw,
+  totalPolicyChangesRaw,
 }) => {
   const sections: ConformaSummaryBarSectionProps[] = [
     {
@@ -58,9 +66,11 @@ export const ConformaSummaryBar: React.FC<ConformaSummaryBarProps> = ({
       items: [
         {
           icon: <WarningIcon />,
-          count: totalWarnings,
-          label: 'Pending',
-          tooltip: 'Policies that will become active soon',
+          count: totalPolicyChanges,
+          rawCount: totalPolicyChangesRaw,
+          label: 'policy changes',
+          tooltip:
+            'Rules that start being enforced on a future date, plus exceptions that are expiring or have already expired',
         },
       ],
     },
@@ -80,7 +90,7 @@ export const ConformaSummaryBar: React.FC<ConformaSummaryBarProps> = ({
           count: totalWarnings,
           rawCount: totalWarningsRaw,
           label: 'warnings',
-          tooltip: 'Rules with upcoming policy changes',
+          tooltip: 'Rules with warnings',
         },
         {
           icon: <CheckCircleIcon color={successColor.value} />,

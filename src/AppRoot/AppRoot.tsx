@@ -4,9 +4,7 @@ import { Page, PageSection } from '@patternfly/react-core';
 import { NAMESPACE_LIST_PATH, RELEASE_MONITOR_PATH } from '@routes/paths';
 import { useJourneyTracker } from '~/analytics/hooks';
 import { AIChatGate } from '~/components/AIChat/AIChatGate';
-import NotificationCenter from '~/components/KonfluxSystemNotifications/NotificationList';
 import SidePanelHost from '~/components/SidePanel/SidePanelHost';
-import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { usePreventWindowCloseIfTaskRunning } from '~/shared/hooks/usePreventWindowClose';
 import { KonfluxBanner } from '../components/KonfluxBanner/KonfluxBanner';
 import { useActiveRouteChecker } from '../hooks/useActiveRouteChecker';
@@ -28,15 +26,10 @@ export const AppRoot: React.FC = () => {
   const isActive = useActiveRouteChecker();
   usePreventWindowCloseIfTaskRunning();
   useJourneyTracker();
-  const isSystemNotificationsEnabled = useIsOnFeatureFlag('system-notifications');
 
   const showSwitcher = React.useMemo(() => {
     return namespaceSwitcherNotAllowedRoutes.map((r) => isActive(r, { exact: true })).some(Boolean);
   }, [isActive]);
-
-  const [isDrawerExpanded, setIsDrawerExpanded] = React.useState(false);
-  const toggleDrawer = React.useCallback(() => setIsDrawerExpanded((prev) => !prev), []);
-  const closeDrawer = React.useCallback(() => setIsDrawerExpanded(false), []);
 
   return (
     <>
@@ -45,10 +38,8 @@ export const AppRoot: React.FC = () => {
         sidebar={<AppSideBar isOpen={isSideBarOpen} />}
         masthead={
           <AppHeader
-            toggleDrawer={toggleDrawer}
             isSideBarOpen={isSideBarOpen}
             onSideBarOpen={() => setSideBarOpen((s) => !s)}
-            isDrawerExpanded={isDrawerExpanded}
           />
         }
       >
@@ -63,9 +54,6 @@ export const AppRoot: React.FC = () => {
           <Outlet />
         </SidePanelHost>
       </Page>
-      {isSystemNotificationsEnabled && (
-        <NotificationCenter isDrawerExpanded={isDrawerExpanded} closeDrawer={closeDrawer} />
-      )}
       <AIChatGate />
     </>
   );

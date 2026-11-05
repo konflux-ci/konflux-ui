@@ -1,6 +1,5 @@
 export const featureFlagsPO = {
   releaseMonitor: '#release-monitor',
-  systemNotifications: '#system-notifications',
 };
 
 export const featuresPO = {

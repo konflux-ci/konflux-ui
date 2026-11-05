@@ -105,9 +105,6 @@ execute_test() {
     fi
 
     case "${SUITE}" in
-        "features")
-            SPEC_FILE="/e2e/tests/features.spec.ts"
-            ;;
         *)
             SPEC_FILE="/e2e/tests/component-lifecycle.spec.ts,/e2e/tests/environment-config.spec.ts"
             ;;

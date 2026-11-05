@@ -48,17 +48,6 @@ const InternalFLAGS = {
     defaultEnabled: true,
     status: 'ready',
   },
-  'system-notifications': {
-    key: 'system-notifications',
-    description: 'Enable system notifications badge and notification center',
-    defaultEnabled: false,
-    status: 'wip',
-    guard: {
-      allOf: ['isSystemNotificationsAccessible'],
-      failureReason: 'You do not have permission to access system notifications',
-      visibleInFeatureFlagPanel: true,
-    },
-  },
   'kubearchive-logs': {
     key: 'kubearchive-logs',
     description: 'Use KubeArchive to fetch logs instead of Tekton',
@@ -67,17 +56,6 @@ const InternalFLAGS = {
     guard: {
       allOf: ['isKubearchiveEnabled'],
       failureReason: 'KubeArchive is not available on this cluster',
-      visibleInFeatureFlagPanel: true,
-    },
-  },
-  'conforma-policy': {
-    key: 'conforma-policy',
-    description:
-      'Show the Conforma Results tab on application details and the Conforma violations card on the Issues Dashboard',
-    defaultEnabled: false,
-    status: 'wip',
-    guard: {
-      failureReason: 'Conforma policy view is work in progress',
       visibleInFeatureFlagPanel: true,
     },
   },

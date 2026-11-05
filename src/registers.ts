@@ -1,5 +1,4 @@
 import { checkIfAnalyticsIsEnabled } from '~/analytics/conditional-checks';
-import { checkIfSystemNotificationsAccessible } from '~/components/KonfluxSystemNotifications/conditional-checks';
 import { getKonfluxPublicInfo } from '~/hooks/useKonfluxPublicInfo';
 import { checkIfLightspeedIsAvailable } from '~/lightspeed/conditional-checks';
 import { LIGHTSPEED_CONDITION_TTL_MS } from '~/lightspeed/lightspeedConfig';
@@ -14,7 +13,6 @@ import { KUEUE_CONDITION_TTL_MS } from './kueue/const';
 registerCondition('isKubearchiveEnabled', checkIfKubeArchiveIsEnabled);
 registerCondition('isKiteServiceEnabled', checkIfKiteServiceIsEnabled);
 registerCondition('isImageControllerEnabled', checkIfImageControllerIsEnabled);
-registerCondition('isSystemNotificationsAccessible', checkIfSystemNotificationsAccessible);
 registerCondition('isAnalyticsEnabled', checkIfAnalyticsIsEnabled);
 registerCondition('isLightspeedAvailable', checkIfLightspeedIsAvailable, LIGHTSPEED_CONDITION_TTL_MS);
 registerCondition('isKueueAvailable', checkIfKueueIsAvailable, KUEUE_CONDITION_TTL_MS);

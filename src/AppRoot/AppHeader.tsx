@@ -15,15 +15,8 @@ import { Header } from '../components/Header/Header';
 interface AppHeaderPros {
   isSideBarOpen: boolean;
   onSideBarOpen: () => void;
-  isDrawerExpanded: boolean;
-  toggleDrawer: () => void;
 }
-const AppHeaderComponent: React.FC<AppHeaderPros> = ({
-  isSideBarOpen,
-  onSideBarOpen,
-  isDrawerExpanded,
-  toggleDrawer,
-}) => {
+const AppHeaderComponent: React.FC<AppHeaderPros> = ({ isSideBarOpen, onSideBarOpen }) => {
   return (
     <Masthead>
       <MastheadMain>
@@ -46,7 +39,7 @@ const AppHeaderComponent: React.FC<AppHeaderPros> = ({
         </MastheadBrand>
       </MastheadMain>
       <MastheadContent>
-        <Header isDrawerExpanded={isDrawerExpanded} toggleDrawer={toggleDrawer} />
+        <Header />
       </MastheadContent>
     </Masthead>
   );
