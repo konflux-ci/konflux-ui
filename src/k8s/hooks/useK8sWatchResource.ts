@@ -22,6 +22,14 @@ export const useK8sWatchResource = <R extends K8sResourceCommon | K8sResourceCom
   queryOptions?: TQueryOptions<R>,
   options: Partial<WebSocketOptions & K8sRequestInit> = {},
 ): UseQueryResult<R> & { wsError: unknown } => {
+  if (options && 'requestInit' in options) {
+    // eslint-disable-next-line no-console
+    console.warn(
+      'useK8sWatchResource: 4th argument appears double-wrapped. ' +
+        'Pass flat request options (e.g. { headers }) instead of { requestInit: { headers } }.',
+    );
+  }
+
   const k8sQueryOptions = convertToK8sQueryParams(resourceInit);
   const wsError = useK8sQueryWatch(
     resourceInit?.watch ? { model, queryOptions: k8sQueryOptions } : null,

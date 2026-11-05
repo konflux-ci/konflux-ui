@@ -11,7 +11,11 @@ export const SECRET_TABLE_FETCH_OPTIONS = {
   headers: { Accept: K8S_ACCEPT_TABLE },
 } as const;
 
-/** Shape for `useK8sWatchResource` fourth argument / `K8sResourceBaseOptions.fetchOptions`. */
+/**
+ * Pre-wrapped fetch options for `createQueryKeys` / `fetchK8sSecretTableList` contexts
+ * (i.e. `K8sResourceBaseOptions.fetchOptions`). **Not** for `useK8sWatchResource`'s 4th
+ * argument — use `SECRET_TABLE_FETCH_OPTIONS` there instead to avoid double-nesting.
+ */
 export const SECRET_TABLE_K8S_FETCH_OPTIONS = {
   requestInit: SECRET_TABLE_FETCH_OPTIONS,
 } as const;
