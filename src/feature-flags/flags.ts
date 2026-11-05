@@ -92,17 +92,6 @@ const InternalFLAGS = {
       visibleInFeatureFlagPanel: false,
     },
   },
-  'feedback-section': {
-    key: 'feedback-section',
-    description: 'Provide feedback to the Konflux team',
-    defaultEnabled: true,
-    status: 'wip',
-    guard: {
-      allOf: ['isAnalyticsEnabled'],
-      failureReason: 'Analytics is not enabled on this cluster',
-      visibleInFeatureFlagPanel: true,
-    },
-  },
   'ai-chat': {
     key: 'ai-chat',
     description: 'Enable Konflux AI chat bot',

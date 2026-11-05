@@ -261,16 +261,16 @@ Fires on click, before `rerunTestPipeline()` runs. No event-specific properties 
 
 ## Condition System Integration
 
-Analytics registers an `isAnalyticsEnabled` condition for the feature flags system:
+Analytics registers an `isAnalyticsEnabled` condition:
 
 ```ts
 const { isAnalyticsEnabled } = useIsAnalyticsEnabled();
 ```
 
-This can guard features that require analytics:
+Use it to show analytics-dependent UI (for example, the Share feedback card in the feedback modal) without a feature flag:
 
-```ts
-guard: { allOf: ['isAnalyticsEnabled'] }
+```tsx
+{isAnalyticsEnabled && <ShareFeedbackCard />}
 ```
 
 The condition awaits `whenAnalyticsReady()`, so it returns the correct value regardless of initialization timing.

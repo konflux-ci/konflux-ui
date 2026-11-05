@@ -12,7 +12,7 @@ import {
   PanelFooter,
   Button,
 } from '@patternfly/react-core';
-import { IfFeature } from '~/feature-flags/hooks';
+import { useIsAnalyticsEnabled } from '~/analytics/conditional-checks';
 import { FeedbackSections } from '../consts';
 import { SubmitClicked } from './FeedbackForm';
 
@@ -22,6 +22,8 @@ interface BeginningSectionProps {
 }
 
 const BeginningSection: React.FC<BeginningSectionProps> = ({ onSectionChange, onClose }) => {
+  const { isAnalyticsEnabled } = useIsAnalyticsEnabled();
+
   return (
     <>
       <PanelHeader className="feedback-modal__panel-header">
@@ -38,7 +40,7 @@ const BeginningSection: React.FC<BeginningSectionProps> = ({ onSectionChange, on
       </PanelHeader>
       <PanelMain className="feedback-modal__content-main">
         <PanelMainBody className="feedback-modal__cards-list">
-          <IfFeature flag="feedback-section">
+          {isAnalyticsEnabled && (
             <Card
               isCompact
               isClickable
@@ -58,7 +60,7 @@ const BeginningSection: React.FC<BeginningSectionProps> = ({ onSectionChange, on
                 </Content>
               </CardBody>
             </Card>
-          </IfFeature>
+          )}
           <Card
             isCompact
             isClickable
