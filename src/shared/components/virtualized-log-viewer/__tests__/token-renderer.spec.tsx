@@ -1,60 +1,8 @@
 import { render } from '@testing-library/react';
 import Prism from 'prismjs';
-import {
-  renderTokenRecursive,
-  renderTokenString,
-  isUrlToken,
-  getTokenHref,
-} from '../token-renderer';
+import { renderTokenRecursive, renderTokenString, getTokenHref } from '../token-renderer';
 
 describe('token-renderer', () => {
-  describe('isUrlToken', () => {
-    it('should return true for token with URL content regardless of type', () => {
-      const token = new Prism.Token('url', 'https://example.com');
-      expect(isUrlToken(token)).toBe(true);
-    });
-
-    it('should return true for token with email content regardless of type', () => {
-      const token = new Prism.Token('email', 'user@example.com');
-      expect(isUrlToken(token)).toBe(true);
-    });
-
-    it('should return true for string-type token with URL content', () => {
-      const token = new Prism.Token('string', 'https://example.com/path');
-      expect(isUrlToken(token)).toBe(true);
-    });
-
-    it('should return true for string-type token with email content', () => {
-      const token = new Prism.Token('string', 'user@example.com');
-      expect(isUrlToken(token)).toBe(true);
-    });
-
-    it('should return true for token with ftp URL content', () => {
-      const token = new Prism.Token('constant', 'ftp://files.example.com');
-      expect(isUrlToken(token)).toBe(true);
-    });
-
-    it('should return false for token with non-url content', () => {
-      const token = new Prism.Token('keyword', 'function');
-      expect(isUrlToken(token)).toBe(false);
-    });
-
-    it('should return false for token with plain text content', () => {
-      const token = new Prism.Token('string', 'hello', 'constant');
-      expect(isUrlToken(token)).toBe(false);
-    });
-
-    it('should return false for token with unsafe scheme content', () => {
-      const token = new Prism.Token('url', 'javascript:alert(1)');
-      expect(isUrlToken(token)).toBe(false);
-    });
-
-    it('should return false for container-image-like content', () => {
-      const token = new Prism.Token('constant', 'quay.io/org/image:tag');
-      expect(isUrlToken(token)).toBe(false);
-    });
-  });
-
   describe('getTokenHref', () => {
     it('should return the URL as-is for http URLs', () => {
       expect(getTokenHref('https://example.com/path')).toBe('https://example.com/path');
@@ -96,6 +44,16 @@ describe('token-renderer', () => {
 
     it('should reject email-like strings with query parameters', () => {
       expect(getTokenHref('user@example.com?subject=Urgent&body=Click')).toBe('');
+    });
+
+    it('should return empty string for SCP-style git URLs', () => {
+      expect(getTokenHref('git@github.com:org/repo.git')).toBe('');
+    });
+
+    it('should strip query parameters from mailto: URIs', () => {
+      expect(getTokenHref('mailto:user@example.com?subject=Urgent&body=Click')).toBe(
+        'mailto:user@example.com',
+      );
     });
   });
 
@@ -260,6 +218,31 @@ describe('token-renderer', () => {
       expect(span).not.toBeNull();
       expect(span?.tagName).toBe('SPAN');
       expect(span?.textContent).toBe('quay.io/org/image:tag');
+    });
+
+    it('should not produce nested anchor elements', () => {
+      const inner = new Prism.Token('url', 'https://example.com');
+      const token = new Prism.Token('url', inner);
+      const { container } = render(<>{renderTokenRecursive(token, 0, [], null, 0)}</>);
+      const anchor = container.querySelector('a.token.url');
+      expect(anchor).not.toBeNull();
+      expect(anchor?.querySelector('a')).toBeNull();
+    });
+
+    it('should render SCP-style git URL as a span, not an anchor', () => {
+      const token = new Prism.Token('url', 'git@github.com:org/repo.git');
+      const { container } = render(<>{renderTokenRecursive(token, 0, [], null, 0)}</>);
+      expect(container.querySelector('a')).toBeNull();
+      const span = container.querySelector('span.token.url');
+      expect(span).not.toBeNull();
+      expect(span?.tagName).toBe('SPAN');
+    });
+
+    it('should include aria-label with new-tab indication on anchors', () => {
+      const token = new Prism.Token('url', 'https://example.com');
+      const { container } = render(<>{renderTokenRecursive(token, 0, [], null, 0)}</>);
+      const anchor = container.querySelector('a.token.url');
+      expect(anchor?.getAttribute('aria-label')).toBe('https://example.com (opens in new tab)');
     });
 
     it('should handle depth limit', () => {
