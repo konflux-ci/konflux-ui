@@ -18,7 +18,6 @@ import {
   SnapshotsListViewTab,
   snapshotsTabLoader,
 } from '~/components/Snapshots/SnapshotsListView/SnapshotsTab';
-import { ensureFeatureFlagOnLoader } from '~/feature-flags/utils';
 import { TaskRunModel } from '~/models/taskruns';
 import { createLoaderWithAccessCheck } from '~/utils/rbac';
 import { APPLICATION_DETAILS_PATH, APPLICATION_LIST_PATH } from '../paths';
@@ -82,22 +81,12 @@ const applicationRoutes = [
       },
       {
         path: 'conforma-results',
-        loader: createLoaderWithAccessCheck(
-          () => {
-            ensureFeatureFlagOnLoader('conforma-policy');
-            return null;
-          },
-          { model: TaskRunModel, verb: 'list' },
-        ),
+        loader: createLoaderWithAccessCheck(() => null, { model: TaskRunModel, verb: 'list' }),
         errorElement: <RouteErrorBoundry />,
         element: <ConformaResultsTab />,
       },
       {
         path: `dep-updates`,
-        loader: () => {
-          ensureFeatureFlagOnLoader('mintmaker');
-          return null;
-        },
         errorElement: <RouteErrorBoundry />,
         element: <ApplicationDependencyTab />,
       },

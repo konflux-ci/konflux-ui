@@ -86,6 +86,12 @@ const { data, isLoading, error } = useK8sWatchResource<ReleaseKind[]>(
 
 #### Pattern 5: Filter at query level
 
+`filterData` runs inside the query function before caching. Captured values are not
+automatically part of the query key. Keep group-specific filtering outside a shared
+namespace cache unless the key also identifies the group. For example,
+`useIntegrationTestScenariosByComponentGroup` filters deleted resources before caching
+and filters by `spec.componentGroup` after retrieval.
+
 ```ts
 const { data, isLoading, error } = useK8sWatchResource<ApplicationKind[]>(
   { groupVersionKind: ApplicationGroupVersionKind, namespace, isList: true },
@@ -162,6 +168,14 @@ When editing a secret, the user may need to see or modify sensitive fields. The 
 3. Full secret data is held in component state (`fullSecret`) and never written to the query cache, minimizing the window where sensitive data is in memory.
 4. On tab switch (`visibilitychange` event), `clearFullSecretAndSensitiveFields()` automatically drops the full secret from state and clears all sensitive Formik fields (passwords, SSH keys, docker configs).
 5. On navigation away or form reset, `clearSensitiveMemory()` is called to null out the stored secret.
+
+Keep fetched Secret values out of logger arguments, including nested context objects.
+`logger` does not redact context; enabled methods forward it to the console, and
+`logger.error` also forwards the error and context to monitoring. Production enables
+`warn` and `error`; `debug` and `info` are suppressed. Use fixed messages and metadata
+such as the Secret name and namespace.
+Field names and fixed messages alone are not credential exposure; assess the actual
+value and whether its logging or monitoring destination is active in that environment.
 
 ```ts
 // Context value provided by EditSecretSensitiveContextProvider

@@ -238,7 +238,7 @@ On open it snapshots flag state (from `useFeatureFlags()`) and `pagePattern` via
 
 `ConformaViolationsCard.tsx` tracks `conforma_violations_link_clicked` when a user clicks an application link in the **Conforma policy results** card on the Issues Dashboard overview. The link navigates to that application's Conforma Results tab.
 
-Fires on click, before navigation. No event-specific properties beyond `userId` (from auth). Requires the `conforma-policy` feature flag.
+Fires on click, before navigation. No event-specific properties beyond `userId` (from auth).
 
 ---
 

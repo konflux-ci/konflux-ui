@@ -93,20 +93,24 @@ When writing custom CSS:
 - Place styles in a co-located SCSS file (e.g., `MyComponent.scss`) alongside the component.
 - Use BEM naming: `.my-component__section--loading`.
 - Use PF tokens for all values (spacing, color, borders).
-- Never use inline styles (`style={{ ... }}`).
+- Never use inline styles (`style={{ ... }}`). Exception: virtualized row positioning styles (e.g., `position: 'absolute'`, `top`, `height`) are required by virtualizers — memoize the style object with `useMemo` (computed once before the row loop) or extract each row to a `React.memo` child component. Do not call `useMemo` inside a loop (Rules of Hooks).
 
 ---
 
 ## Imports
 
-Use absolute imports via the `~/` alias for all `src/` paths. Relative imports (`../../../`) are not allowed.
+Use `~/` absolute imports for cross-directory paths. Never use deep relative imports (`../../../`). Single-level relative imports (`./types`, `./utils`) are acceptable for same-directory files.
 
 ```tsx
-// GOOD
+// GOOD — cross-directory absolute import
 import { ApplicationKind } from '~/types';
 import { useApplications } from '~/hooks/useApplications';
 
-// BAD
+// GOOD — same-directory relative import
+import { MyComponentTypes } from './types';
+import { helperFn } from './utils';
+
+// BAD — deep relative import
 import { ApplicationKind } from '../../../types';
 ```
 
