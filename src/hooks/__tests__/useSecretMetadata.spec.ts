@@ -3,7 +3,7 @@ import { K8S_QUERY_KEY_SECRET_TABLE } from '~/k8s/consts/k8s-accept';
 import { SecretGroupVersionKind, SecretModel } from '~/models';
 import { createK8sWatchResourceMock } from '~/unit-test-utils';
 import {
-  SECRET_TABLE_K8S_FETCH_OPTIONS,
+  SECRET_TABLE_FETCH_OPTIONS,
   selectSecretMetadata,
   type K8sTable,
 } from '~/utils/secrets/secret-table-utils';
@@ -73,7 +73,7 @@ describe('useSecretMetadata', () => {
         select: expect.any(Function),
         queryKey: expect.arrayContaining([K8S_QUERY_KEY_SECRET_TABLE]),
       }),
-      SECRET_TABLE_K8S_FETCH_OPTIONS,
+      SECRET_TABLE_FETCH_OPTIONS,
     );
   });
 
@@ -84,7 +84,7 @@ describe('useSecretMetadata', () => {
       expect.anything(),
       SecretModel,
       expect.objectContaining({ enabled: false }),
-      SECRET_TABLE_K8S_FETCH_OPTIONS,
+      SECRET_TABLE_FETCH_OPTIONS,
     );
   });
 
@@ -95,7 +95,7 @@ describe('useSecretMetadata', () => {
       expect.anything(),
       SecretModel,
       expect.objectContaining({ enabled: false }),
-      SECRET_TABLE_K8S_FETCH_OPTIONS,
+      SECRET_TABLE_FETCH_OPTIONS,
     );
   });
 
