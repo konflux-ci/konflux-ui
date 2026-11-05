@@ -57,6 +57,24 @@ describe('token-renderer', () => {
     it('should not add mailto: for non-email text', () => {
       expect(getTokenHref('https://example.com')).toBe('https://example.com');
     });
+
+    it('should not add mailto: for URLs containing @ characters', () => {
+      expect(getTokenHref('https://token@github.com/repo.git')).toBe(
+        'https://token@github.com/repo.git',
+      );
+    });
+
+    it('should return empty string for javascript: scheme', () => {
+      expect(getTokenHref('javascript:alert(1)')).toBe('');
+    });
+
+    it('should return empty string for data: scheme', () => {
+      expect(getTokenHref('data:text/html,<h1>hi</h1>')).toBe('');
+    });
+
+    it('should return empty string for unknown schemes', () => {
+      expect(getTokenHref('custom://something')).toBe('');
+    });
   });
 
   describe('renderTokenString', () => {
@@ -180,6 +198,16 @@ describe('token-renderer', () => {
       const span = container.querySelector('span.token.string');
       expect(span).not.toBeNull();
       expect(span?.tagName).toBe('SPAN');
+    });
+
+    it('should render a URL with @ as an anchor with the correct href, not mailto', () => {
+      const token = new Prism.Token('url', 'https://token@github.com/repo.git');
+      const { container } = render(
+        <>{renderTokenRecursive(token, 0, [], null, 0)}</>,
+      );
+      const anchor = container.querySelector('a.token.url');
+      expect(anchor).not.toBeNull();
+      expect(anchor?.getAttribute('href')).toBe('https://token@github.com/repo.git');
     });
 
     it('should handle depth limit', () => {
