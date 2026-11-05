@@ -3,26 +3,22 @@ import Prism from 'prismjs';
 import { flattenTokenText, isMatchCurrent } from './log-viewer-utils';
 import type { MatchRange } from './types';
 
-const EMAIL_REGEX = /^[^\s@?]+@[^\s@?]+\.[^\s@?]+$/;
+const EMAIL_REGEX = /^[^\s@?]+@[^\s@?/:]+\.[^\s@?/:]+$/;
 const SAFE_SCHEMES_REGEX = /^(https?|ftp|mailto):/i;
 
 /**
- * Returns the href for a URL/email token, or empty string for unsafe schemes
+ * Returns the href for a URL/email token, or empty string for unsafe schemes.
+ * Mailto URIs are sanitized to strip query parameters.
  */
 export function getTokenHref(text: string): string {
-  if (SAFE_SCHEMES_REGEX.test(text)) return text;
+  if (SAFE_SCHEMES_REGEX.test(text)) {
+    if (/^mailto:/i.test(text)) {
+      return `mailto:${text.slice(7).split('?')[0]}`;
+    }
+    return text;
+  }
   if (!text.includes('://') && EMAIL_REGEX.test(text)) return `mailto:${text}`;
   return '';
-}
-
-/**
- * Checks whether a Prism token contains a URL or email by applying regex
- * on the token's text content rather than relying on Prism token type/alias.
- * This captures URLs even when Prism classifies the token as a different type.
- */
-export function isUrlToken(token: Prism.Token): boolean {
-  const text = flattenTokenText(token);
-  return getTokenHref(text) !== '';
 }
 
 /**
@@ -72,8 +68,9 @@ export function renderTokenString(
 }
 
 /**
- * Recursively renders Prism tokens with syntax highlighting and search matches
- * Handles nested token structures and accumulates offset for correct match positioning
+ * Recursively renders Prism tokens with syntax highlighting and search matches.
+ * Handles nested token structures and accumulates offset for correct match positioning.
+ * When insideAnchor is true, tokens are always rendered as spans to avoid nested anchors.
  */
 export function renderTokenRecursive(
   token: string | Prism.Token,
@@ -82,6 +79,7 @@ export function renderTokenRecursive(
   currentMatch: MatchRange | null,
   key: number,
   depth = 0,
+  insideAnchor = false,
 ): React.ReactNode {
   if (depth > 50) return <span key={key}>...</span>;
 
@@ -96,7 +94,8 @@ export function renderTokenRecursive(
     : '';
   const className = `token ${tokenType}${tokenAlias ? ` ${tokenAlias}` : ''}`;
 
-  const href = getTokenHref(flattenTokenText(token));
+  const tokenText = flattenTokenText(token);
+  const href = insideAnchor ? '' : getTokenHref(tokenText);
   const isLink = href !== '';
   const Tag = isLink ? 'a' : 'span';
   const linkProps = isLink
@@ -104,8 +103,10 @@ export function renderTokenRecursive(
         href,
         target: '_blank' as const,
         rel: 'noopener noreferrer',
+        'aria-label': `${tokenText} (opens in new tab)`,
       }
     : {};
+  const childInsideAnchor = insideAnchor || isLink;
 
   if (Array.isArray(token.content)) {
     let childStart = tokenStart;
@@ -119,6 +120,7 @@ export function renderTokenRecursive(
             currentMatch,
             i,
             depth + 1,
+            childInsideAnchor,
           );
           childStart += flattenTokenText(t).length;
           return rendered;
@@ -139,7 +141,15 @@ export function renderTokenRecursive(
   // Recursive case: token.content is another Token
   return (
     <Tag key={key} className={className} {...linkProps}>
-      {renderTokenRecursive(token.content, tokenStart, lineMatches, currentMatch, 0, depth + 1)}
+      {renderTokenRecursive(
+        token.content,
+        tokenStart,
+        lineMatches,
+        currentMatch,
+        0,
+        depth + 1,
+        childInsideAnchor,
+      )}
     </Tag>
   );
 }
