@@ -189,6 +189,39 @@ describe('SecurityConformaTab', () => {
     expect(results).toHaveTextContent('1 success');
   });
 
+  it('should count only policy changes in the Upcoming changes section', () => {
+    const warning = (title: string, code: string) => ({
+      title,
+      description: '',
+      status: CONFORMA_RESULT_STATUS.warnings,
+      component: 'devfile-sample-python-basic-aw05',
+      msg: title,
+      collection: ['minimal'],
+      images: [],
+      code,
+    });
+    mockUseConformaResult.mockReturnValue([
+      [
+        ...mockConformaUIData,
+        warning('CVE exception', 'volatile_config.expiring_rule'),
+        warning('SBOM check', 'volatile_config.pending_rule'),
+        warning('Exception without an expiry', 'volatile_config.no_expiration'),
+        warning('Attestation signature check', 'slsa_provenance.attestation_signed'),
+      ],
+      true,
+      undefined,
+    ]);
+
+    routerRenderer(securityConforma('dummy-1'));
+
+    // Four warnings in total, but only two of them announce a policy change —
+    // the config hygiene rule and the unrelated warning do not count.
+    expect(screen.getByTestId('conforma-summary-results')).toHaveTextContent('4 warnings');
+    expect(screen.getByTestId('conforma-summary-upcoming-changes')).toHaveTextContent(
+      '2 policy changes',
+    );
+  });
+
   it('should summarise every result, not just the filtered rows', () => {
     const view = routerRenderer(securityConforma('dummy-1'));
 
