@@ -17,9 +17,22 @@ jest.mock('../testgraph-layout-factory', () => ({
 }));
 
 jest.mock('~/components/topology/factories', () => ({
-  VisualizationFactory: ({ model }: { model: unknown }) => (
-    <div data-test="test-graph-visualization">{model ? 'Graph rendered' : 'No model'}</div>
-  ),
+  VisualizationFactory: ({
+    model,
+  }: {
+    model?: { nodes?: { type?: string; data?: { groupName?: string } }[] } | null;
+  }) => {
+    const testNode = model?.nodes?.find((node) => node.type === 'test-node');
+    return (
+      <div
+        data-test="test-graph-visualization"
+        data-node-count={model?.nodes?.length ?? 0}
+        data-group-name={testNode?.data?.groupName}
+      >
+        {model ? 'Graph rendered' : 'No model'}
+      </div>
+    );
+  },
 }));
 
 const useComponentGroupMock = useComponentGroup as jest.Mock;
@@ -94,13 +107,11 @@ describe('TestGraphVisualization', () => {
     const error = new Error('Failed to load component group');
     useComponentGroupMock.mockReturnValue([null, true, error]);
 
-    const { container } = renderWithQueryClient(
-      <TestGraphVisualization namespace="test-ns" groupName="test-group" />,
-    );
+    renderWithQueryClient(<TestGraphVisualization namespace="test-ns" groupName="test-group" />);
 
     expect(screen.getByText('Execution order')).toBeInTheDocument();
-    // Error state should render something (getErrorState returns a component)
-    expect(container.querySelector('.pf-v6-c-card__body')).toBeInTheDocument();
+    expect(screen.getByText('Unable to load group')).toBeInTheDocument();
+    expect(screen.queryByTestId('test-graph-visualization')).not.toBeInTheDocument();
   });
 
   it('should return null when testGraph is undefined', () => {
@@ -133,7 +144,10 @@ describe('TestGraphVisualization', () => {
 
     renderWithQueryClient(<TestGraphVisualization namespace="test-ns" groupName="test-group" />);
 
-    expect(screen.getByTestId('test-graph-visualization')).toBeInTheDocument();
+    expect(screen.getByTestId('test-graph-visualization')).toHaveAttribute(
+      'data-group-name',
+      'test-group',
+    );
   });
 
   it('should call useComponentGroup with correct params', () => {
@@ -153,14 +167,13 @@ describe('TestGraphVisualization', () => {
       <TestGraphVisualization namespace="test-ns" groupName="test-group" />,
     );
 
-    expect(screen.getByText('Graph rendered')).toBeInTheDocument();
+    expect(screen.getByTestId('test-graph-visualization')).toHaveAttribute('data-node-count', '2');
 
     const group2 = createMockGroup({ 'test-a': [], 'test-b': [] });
     useComponentGroupMock.mockReturnValue([group2, true, undefined]);
 
     rerender(<TestGraphVisualization namespace="test-ns" groupName="test-group" />);
 
-    // Model should be recalculated
-    expect(screen.getByText('Graph rendered')).toBeInTheDocument();
+    expect(screen.getByTestId('test-graph-visualization')).toHaveAttribute('data-node-count', '3');
   });
 });
