@@ -7,24 +7,22 @@ const EMAIL_REGEX = /^[^\s@?]+@[^\s@?]+\.[^\s@?]+$/;
 const SAFE_SCHEMES_REGEX = /^(https?|ftp|mailto):/i;
 
 /**
- * Checks whether a Prism token represents a URL or email link
- */
-export function isUrlToken(token: Prism.Token): boolean {
-  if (token.type === 'url' || token.type === 'email') return true;
-  if (token.alias) {
-    const aliases = Array.isArray(token.alias) ? token.alias : [token.alias];
-    return aliases.includes('url');
-  }
-  return false;
-}
-
-/**
  * Returns the href for a URL/email token, or empty string for unsafe schemes
  */
 export function getTokenHref(text: string): string {
   if (SAFE_SCHEMES_REGEX.test(text)) return text;
   if (!text.includes('://') && EMAIL_REGEX.test(text)) return `mailto:${text}`;
   return '';
+}
+
+/**
+ * Checks whether a Prism token contains a URL or email by applying regex
+ * on the token's text content rather than relying on Prism token type/alias.
+ * This captures URLs even when Prism classifies the token as a different type.
+ */
+export function isUrlToken(token: Prism.Token): boolean {
+  const text = flattenTokenText(token);
+  return getTokenHref(text) !== '';
 }
 
 /**
@@ -98,7 +96,7 @@ export function renderTokenRecursive(
     : '';
   const className = `token ${tokenType}${tokenAlias ? ` ${tokenAlias}` : ''}`;
 
-  const href = isUrlToken(token) ? getTokenHref(flattenTokenText(token)) : '';
+  const href = getTokenHref(flattenTokenText(token));
   const isLink = href !== '';
   const Tag = isLink ? 'a' : 'span';
   const linkProps = isLink

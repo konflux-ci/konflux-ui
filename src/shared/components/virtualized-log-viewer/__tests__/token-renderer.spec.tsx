@@ -9,34 +9,48 @@ import {
 
 describe('token-renderer', () => {
   describe('isUrlToken', () => {
-    it('should return true for token with type "url"', () => {
+    it('should return true for token with URL content regardless of type', () => {
       const token = new Prism.Token('url', 'https://example.com');
       expect(isUrlToken(token)).toBe(true);
     });
 
-    it('should return true for token with type "email"', () => {
+    it('should return true for token with email content regardless of type', () => {
       const token = new Prism.Token('email', 'user@example.com');
       expect(isUrlToken(token)).toBe(true);
     });
 
-    it('should return true for token with alias "url"', () => {
-      const token = new Prism.Token('email', 'user@example.com', 'url');
+    it('should return true for string-type token with URL content', () => {
+      const token = new Prism.Token('string', 'https://example.com/path');
       expect(isUrlToken(token)).toBe(true);
     });
 
-    it('should return true for token with alias array containing "url"', () => {
-      const token = new Prism.Token('custom', 'value');
-      token.alias = ['url', 'other'];
+    it('should return true for string-type token with email content', () => {
+      const token = new Prism.Token('string', 'user@example.com');
       expect(isUrlToken(token)).toBe(true);
     });
 
-    it('should return false for non-url token', () => {
+    it('should return true for token with ftp URL content', () => {
+      const token = new Prism.Token('constant', 'ftp://files.example.com');
+      expect(isUrlToken(token)).toBe(true);
+    });
+
+    it('should return false for token with non-url content', () => {
       const token = new Prism.Token('keyword', 'function');
       expect(isUrlToken(token)).toBe(false);
     });
 
-    it('should return false for token with unrelated alias', () => {
+    it('should return false for token with plain text content', () => {
       const token = new Prism.Token('string', 'hello', 'constant');
+      expect(isUrlToken(token)).toBe(false);
+    });
+
+    it('should return false for token with unsafe scheme content', () => {
+      const token = new Prism.Token('url', 'javascript:alert(1)');
+      expect(isUrlToken(token)).toBe(false);
+    });
+
+    it('should return false for container-image-like content', () => {
+      const token = new Prism.Token('constant', 'quay.io/org/image:tag');
       expect(isUrlToken(token)).toBe(false);
     });
   });
@@ -215,6 +229,26 @@ describe('token-renderer', () => {
       expect(span).not.toBeNull();
       expect(span?.tagName).toBe('SPAN');
       expect(span?.textContent).toBe('javascript:alert(1)');
+    });
+
+    it('should render a string-type token with URL content as an anchor', () => {
+      const token = new Prism.Token('string', 'https://pipeline.test/build/456');
+      const { container } = render(<>{renderTokenRecursive(token, 0, [], null, 0)}</>);
+      const anchor = container.querySelector('a.token.string');
+      expect(anchor).not.toBeNull();
+      expect(anchor?.tagName).toBe('A');
+      expect(anchor?.getAttribute('href')).toBe('https://pipeline.test/build/456');
+      expect(anchor?.getAttribute('target')).toBe('_blank');
+      expect(anchor?.getAttribute('rel')).toBe('noopener noreferrer');
+    });
+
+    it('should render a string-type token with email content as an anchor', () => {
+      const token = new Prism.Token('string', 'admin@pipeline.test');
+      const { container } = render(<>{renderTokenRecursive(token, 0, [], null, 0)}</>);
+      const anchor = container.querySelector('a.token.string');
+      expect(anchor).not.toBeNull();
+      expect(anchor?.tagName).toBe('A');
+      expect(anchor?.getAttribute('href')).toBe('mailto:admin@pipeline.test');
     });
 
     it('should render a container-image token as a span, not an anchor', () => {
