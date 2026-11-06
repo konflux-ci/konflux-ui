@@ -1,49 +1,16 @@
 import * as React from 'react';
-import { Link, useParams } from 'react-router-dom';
-import {
-  Button,
-  CodeBlock,
-  CodeBlockCode,
-  DescriptionList,
-  DescriptionListGroup,
-  DescriptionListTerm,
-  DescriptionListDescription,
-  Flex,
-  FlexItem,
-  Title,
-  Divider,
-  Bullseye,
-  Spinner,
-} from '@patternfly/react-core';
-import { PipelineRunLabel } from '../../../consts/pipelinerun';
-import { useTaskRunV2 } from '../../../hooks/useTaskRunsV2';
-import {
-  APPLICATION_DETAILS_PATH,
-  COMPONENT_DETAILS_PATH,
-  PIPELINERUN_DETAILS_PATH,
-  TASKRUN_LOGS_PATH,
-} from '../../../routes/paths';
-import { RouterParams } from '../../../routes/utils';
-import { SyncMarkdownView } from '../../../shared/components/markdown-view/MarkdownView';
-import { ErrorDetailsWithStaticLog } from '../../../shared/components/pipeline-run-logs/logs/log-snippet-types';
-import { getTRLogSnippet } from '../../../shared/components/pipeline-run-logs/logs/pipelineRunLogSnippet';
-import { Timestamp } from '../../../shared/components/timestamp/Timestamp';
-import { useNamespace } from '../../../shared/providers/Namespace';
-import { TektonResourceLabel } from '../../../types';
-import {
-  calculateDuration,
-  isTaskV1Beta1,
-  taskName,
-  taskRunStatus,
-} from '../../../utils/pipeline-utils';
-import MetadataList from '../../MetadataList';
-import RunParamsList from '../../PipelineRun/PipelineRunDetailsView/tabs/RunParamsList';
-import RunResultsList from '../../PipelineRun/PipelineRunDetailsView/tabs/RunResultsList';
-import ScanDescriptionListGroup from '../../PipelineRun/PipelineRunDetailsView/tabs/ScanDescriptionListGroup';
-import { StatusIconWithText } from '../../topology/StatusIcon';
+import { useParams } from 'react-router-dom';
+import { Bullseye, Flex, FlexItem, Spinner, Title } from '@patternfly/react-core';
+import { useTaskRunV2 } from '~/hooks/useTaskRunsV2';
+import { RouterParams } from '~/routes/utils';
+import { useNamespace } from '~/shared/providers/Namespace';
+import { taskRunStatus } from '~/utils/pipeline-utils';
+import TaskRunDetailsSection from './TaskRunDetailsSection';
+import TaskRunMetadataSection from './TaskRunMetadataSection';
+import TaskRunResultsAndParamsSection from './TaskRunResultsAndParamsSection';
 
 const TaskRunDetailsTab: React.FC = () => {
-  const { taskRunName, applicationName: routeApplicationName } = useParams<RouterParams>();
+  const { taskRunName, applicationName } = useParams<RouterParams>();
   const namespace = useNamespace();
   const [taskRun, loaded, error] = useTaskRunV2(namespace, taskRunName);
 
@@ -55,23 +22,7 @@ const TaskRunDetailsTab: React.FC = () => {
     );
   }
 
-  const taskRunFailed = (getTRLogSnippet(taskRun) || {}) as ErrorDetailsWithStaticLog;
-  const results = isTaskV1Beta1(taskRun) ? taskRun?.status?.taskResults : taskRun?.status?.results;
-  const hasStart = typeof taskRun?.status?.startTime === 'string' && !!taskRun.status.startTime;
-  const hasEnd =
-    typeof taskRun?.status?.completionTime === 'string' && !!taskRun.status.completionTime;
-  const duration = hasStart
-    ? calculateDuration(
-        taskRun.status.startTime,
-        hasEnd ? taskRun.status.completionTime : undefined,
-      )
-    : undefined;
-
-  const applicationName =
-    routeApplicationName || taskRun?.metadata?.labels?.[PipelineRunLabel.APPLICATION];
   const status = !error ? taskRunStatus(taskRun) : null;
-  const plrName = taskRun?.metadata?.labels?.[TektonResourceLabel.pipelinerun];
-  const specParams = taskRun?.spec?.params;
 
   return (
     <>
@@ -82,191 +33,23 @@ const TaskRunDetailsTab: React.FC = () => {
         <Flex>
           <Flex flex={{ default: 'flex_3' }}>
             <FlexItem>
-              <DescriptionList
-                data-test="taskrun-details"
-                columnModifier={{
-                  default: '1Col',
-                }}
-              >
-                <DescriptionListGroup>
-                  <DescriptionListTerm>Name</DescriptionListTerm>
-                  <DescriptionListDescription>
-                    {taskRun.metadata?.name ?? '-'}
-                  </DescriptionListDescription>
-                </DescriptionListGroup>
-                <DescriptionListGroup>
-                  <DescriptionListTerm>Namespace</DescriptionListTerm>
-                  <DescriptionListDescription>
-                    {taskRun.metadata?.namespace ?? '-'}
-                  </DescriptionListDescription>
-                </DescriptionListGroup>
-                <DescriptionListGroup>
-                  <DescriptionListTerm>Labels</DescriptionListTerm>
-                  <DescriptionListDescription>
-                    <MetadataList metadata={taskRun.metadata?.labels} />
-                  </DescriptionListDescription>
-                </DescriptionListGroup>
-                <DescriptionListGroup>
-                  <DescriptionListTerm>Annotations</DescriptionListTerm>
-                  <DescriptionListDescription>
-                    <MetadataList metadata={taskRun.metadata?.annotations} />
-                  </DescriptionListDescription>
-                </DescriptionListGroup>
-                <DescriptionListGroup>
-                  <DescriptionListTerm>Created at</DescriptionListTerm>
-                  <DescriptionListDescription>
-                    <Timestamp timestamp={taskRun.metadata?.creationTimestamp ?? '-'} />
-                  </DescriptionListDescription>
-                </DescriptionListGroup>
-                <DescriptionListGroup>
-                  <DescriptionListTerm>Duration</DescriptionListTerm>
-                  <DescriptionListDescription>{duration ?? '-'}</DescriptionListDescription>
-                </DescriptionListGroup>
-              </DescriptionList>
+              <TaskRunMetadataSection taskRun={taskRun} />
             </FlexItem>
           </Flex>
 
           <Flex flex={{ default: 'flex_3' }}>
             <FlexItem>
-              <DescriptionList
-                data-test="taskrun-details"
-                columnModifier={{
-                  default: '1Col',
-                }}
-              >
-                {taskRun && taskName(taskRun) && (
-                  <DescriptionListGroup>
-                    <DescriptionListTerm>Task</DescriptionListTerm>
-                    <DescriptionListDescription>{taskName(taskRun)}</DescriptionListDescription>
-                  </DescriptionListGroup>
-                )}
-                <DescriptionListGroup>
-                  <DescriptionListTerm>Description</DescriptionListTerm>
-                  <DescriptionListDescription>
-                    <SyncMarkdownView
-                      content={taskRun.status?.taskSpec?.description || '-'}
-                      inline
-                    />
-                  </DescriptionListDescription>
-                </DescriptionListGroup>
-                <DescriptionListGroup>
-                  <DescriptionListTerm>Status</DescriptionListTerm>
-                  <DescriptionListDescription>
-                    <StatusIconWithText
-                      status={status}
-                      dataTestAttribute={'taskrun-details status'}
-                    />
-                  </DescriptionListDescription>
-                </DescriptionListGroup>
-                <ScanDescriptionListGroup taskRuns={[taskRun]} hideIfNotFound />
-                {Object.keys(taskRunFailed).length > 0 && (
-                  <>
-                    <DescriptionListGroup>
-                      <DescriptionListTerm>Message</DescriptionListTerm>
-                      <DescriptionListDescription>
-                        {taskRunFailed.title ?? '-'}
-                      </DescriptionListDescription>
-                    </DescriptionListGroup>
-                    <DescriptionListGroup>
-                      <DescriptionListTerm>Log snippet</DescriptionListTerm>
-                      <DescriptionListDescription>
-                        <CodeBlock>
-                          <CodeBlockCode id="code-content">
-                            {taskRunFailed.staticMessage ?? '-'}
-                          </CodeBlockCode>
-                        </CodeBlock>
-                        <Button
-                          variant="link"
-                          isInline
-                          component={(props) => (
-                            <Link
-                              {...props}
-                              to={TASKRUN_LOGS_PATH.createPath({
-                                taskRunName,
-                                workspaceName: namespace,
-                                applicationName,
-                              })}
-                            />
-                          )}
-                        >
-                          See logs
-                        </Button>
-                      </DescriptionListDescription>
-                    </DescriptionListGroup>
-                  </>
-                )}
-                <DescriptionListGroup>
-                  <DescriptionListTerm>Pipeline run</DescriptionListTerm>
-                  <DescriptionListDescription>
-                    {plrName ? (
-                      <Link
-                        to={PIPELINERUN_DETAILS_PATH.createPath({
-                          applicationName,
-                          workspaceName: namespace,
-                          pipelineRunName: plrName,
-                        })}
-                      >
-                        {plrName}
-                      </Link>
-                    ) : (
-                      '-'
-                    )}
-                  </DescriptionListDescription>
-                </DescriptionListGroup>
-                <DescriptionListGroup>
-                  <DescriptionListTerm>Application</DescriptionListTerm>
-                  <DescriptionListDescription>
-                    {applicationName ? (
-                      <Link
-                        to={APPLICATION_DETAILS_PATH.createPath({
-                          applicationName,
-                          workspaceName: namespace,
-                        })}
-                      >
-                        {applicationName}
-                      </Link>
-                    ) : (
-                      '-'
-                    )}
-                  </DescriptionListDescription>
-                </DescriptionListGroup>
-                <DescriptionListGroup>
-                  <DescriptionListTerm>Component</DescriptionListTerm>
-                  <DescriptionListDescription>
-                    {taskRun.metadata?.labels?.[PipelineRunLabel.COMPONENT] ? (
-                      applicationName ? (
-                        <Link
-                          to={COMPONENT_DETAILS_PATH.createPath({
-                            workspaceName: namespace,
-                            applicationName,
-                            componentName: taskRun.metadata.labels?.[PipelineRunLabel.COMPONENT],
-                          })}
-                        >
-                          {taskRun.metadata.labels?.[PipelineRunLabel.COMPONENT]}
-                        </Link>
-                      ) : (
-                        taskRun.metadata.labels?.[PipelineRunLabel.COMPONENT]
-                      )
-                    ) : (
-                      '-'
-                    )}
-                  </DescriptionListDescription>
-                </DescriptionListGroup>
-              </DescriptionList>
+              <TaskRunDetailsSection
+                taskRun={taskRun}
+                taskRunName={taskRunName}
+                applicationName={applicationName}
+                namespace={namespace}
+                status={status}
+              />
             </FlexItem>
           </Flex>
-          {results ? (
-            <>
-              <Divider style={{ padding: 'var(--pf-t--global--spacer--lg)' }} />
-              <RunResultsList results={results} status={status} />
-            </>
-          ) : null}
 
-          {specParams?.length && (
-            <div style={{ marginTop: 'var(--pf-t--global--spacer--lg)' }}>
-              <RunParamsList params={specParams} />
-            </div>
-          )}
+          <TaskRunResultsAndParamsSection taskRun={taskRun} status={status} />
         </Flex>
       )}
     </>

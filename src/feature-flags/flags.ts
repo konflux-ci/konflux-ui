@@ -48,17 +48,6 @@ const InternalFLAGS = {
     defaultEnabled: true,
     status: 'ready',
   },
-  'system-notifications': {
-    key: 'system-notifications',
-    description: 'Enable system notifications badge and notification center',
-    defaultEnabled: false,
-    status: 'wip',
-    guard: {
-      allOf: ['isSystemNotificationsAccessible'],
-      failureReason: 'You do not have permission to access system notifications',
-      visibleInFeatureFlagPanel: true,
-    },
-  },
   'kubearchive-logs': {
     key: 'kubearchive-logs',
     description: 'Use KubeArchive to fetch logs instead of Tekton',
@@ -67,17 +56,6 @@ const InternalFLAGS = {
     guard: {
       allOf: ['isKubearchiveEnabled'],
       failureReason: 'KubeArchive is not available on this cluster',
-      visibleInFeatureFlagPanel: true,
-    },
-  },
-  'conforma-policy': {
-    key: 'conforma-policy',
-    description:
-      'Show the Conforma Results tab on application details and the Conforma violations card on the Issues Dashboard',
-    defaultEnabled: false,
-    status: 'wip',
-    guard: {
-      failureReason: 'Conforma policy view is work in progress',
       visibleInFeatureFlagPanel: true,
     },
   },
@@ -114,23 +92,6 @@ const InternalFLAGS = {
       visibleInFeatureFlagPanel: false,
     },
   },
-  'feedback-section': {
-    key: 'feedback-section',
-    description: 'Provide feedback to the Konflux team',
-    defaultEnabled: true,
-    status: 'wip',
-    guard: {
-      allOf: ['isAnalyticsEnabled'],
-      failureReason: 'Analytics is not enabled on this cluster',
-      visibleInFeatureFlagPanel: true,
-    },
-  },
-  'edit-secret-page': {
-    key: 'edit-secret-page',
-    description: 'Editing existing secrets',
-    defaultEnabled: true,
-    status: 'wip',
-  },
   'ai-chat': {
     key: 'ai-chat',
     description: 'Enable Konflux AI chat bot',
@@ -142,18 +103,16 @@ const InternalFLAGS = {
       visibleInFeatureFlagPanel: false,
     },
   },
-  'pipeline-runs-page': {
-    key: 'pipeline-runs-page',
-    description:
-      'Cross-application Pipeline Runs page with saved views, advanced filters, and column management',
-    defaultEnabled: true,
+  'kueue-queue-position': {
+    key: 'kueue-queue-position',
+    description: 'Show queue position and priority for pending PipelineRuns',
+    defaultEnabled: false,
     status: 'wip',
-  },
-  mintmaker: {
-    key: 'mintmaker',
-    description: 'Enable MintMaker in the UI',
-    defaultEnabled: true,
-    status: 'wip',
+    guard: {
+      allOf: ['isKueueAvailable'],
+      failureReason: 'Kueue is not available on this cluster',
+      visibleInFeatureFlagPanel: true,
+    },
   },
 } satisfies Record<string, FeatureMeta>;
 

@@ -1,13 +1,11 @@
 import { DEPENDENCY_SCHEDULE_PATH } from '@routes/paths';
 import { RouteErrorBoundry } from '@routes/RouteErrorBoundary';
-import { ensureFeatureFlagOnLoader } from '~/feature-flags/utils';
 
 const dependencyUpdatesScheduleRoutes = [
   {
     path: DEPENDENCY_SCHEDULE_PATH.path,
     errorElement: <RouteErrorBoundry />,
     async lazy() {
-      ensureFeatureFlagOnLoader('mintmaker');
       const { MintMakerSchedulePage: Component } = await import(
         '~/components/MintMaker/Schedule/MintMakerSchedulePage' /* webpackChunkName: "mintmaker-schedule" */
       );

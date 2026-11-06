@@ -1,4 +1,3 @@
-import { ensureFeatureFlagOnLoader } from '~/feature-flags/utils';
 import {
   ComponentActivityTab,
   ComponentDetailsTab,
@@ -32,10 +31,6 @@ const componentRoutes = [
       },
       {
         path: `dep-updates`,
-        loader: () => {
-          ensureFeatureFlagOnLoader('mintmaker');
-          return null;
-        },
         async lazy() {
           const { ComponentDependencyTab } =
             await import('~/components/Components/ComponentDetails/tabs/ComponentDependencyTab');

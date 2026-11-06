@@ -47,10 +47,6 @@ const componentsPageRoutes = [
       },
       {
         path: `dep-updates`,
-        loader: () => {
-          ensureFeatureFlagOnLoader('mintmaker');
-          return null;
-        },
         element: <ComponentDependencyTab />,
       },
     ],

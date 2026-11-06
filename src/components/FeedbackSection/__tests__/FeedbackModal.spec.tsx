@@ -1,16 +1,11 @@
-import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { TrackEvents } from '~/analytics/gen/analytics-types';
 import FeedbackModal from '../FeedbackModal';
 
-jest.mock('~/feature-flags/hooks', () => {
-  const actual = jest.requireActual('~/feature-flags/hooks');
-  return {
-    ...actual,
-    IfFeature: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-  };
-});
+jest.mock('~/analytics/conditional-checks', () => ({
+  useIsAnalyticsEnabled: jest.fn(() => ({ isAnalyticsEnabled: true })),
+}));
 
 jest.mock('~/hooks/useKonfluxPublicInfo', () => ({
   useKonfluxPublicInfo: jest.fn(() => [{ visibility: 'private' }]),

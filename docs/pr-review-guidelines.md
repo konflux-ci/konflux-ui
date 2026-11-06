@@ -19,10 +19,11 @@ A process checklist for reviewing pull requests. For coding standards and detail
 - [ ] **[Best practices](./best-practices.md) are followed.** Verify against the full coding standards document, paying special attention to:
   - No `as` type assertions or `any` types
   - No `useEffect` for derived state (use `useMemo`)
+  - `useMemo` only for non-trivial computations or reference stability (not simple property access or string ops)
   - `useCallback` only where reference stability matters
   - Custom hook outputs are memoized
   - PatternFly components used over raw HTML elements
-  - Absolute imports via `~/` alias
+  - Absolute imports (`~/`) for cross-directory paths; single-level relative imports (`./types`) acceptable for same-directory files
 - [ ] **No `pf-v5-` CSS class prefixes.** All PatternFly CSS classes must use the `pf-v6-` prefix (e.g., `pf-v6-u-ml-sm`). The `pf-v5-` prefix is incompatible with PatternFly v6.
 - [ ] **No `eslint-disable` comments** without a documented justification directly above. Never suppress `exhaustive-deps` or `no-explicit-any`.
 - [ ] **No `console.*` calls.** Use `logger` from `~/monitoring/logger`.
@@ -30,6 +31,15 @@ A process checklist for reviewing pull requests. For coding standards and detail
 - [ ] **Import boundaries respected.** Run `yarn lint:restricted-imports` to verify.
 - [ ] **Dead code removed.** No commented-out code, unused imports, or unreachable branches.
 - [ ] **File length under 500 lines.**
+
+### Performance (virtualized / scroll-heavy components)
+
+Apply these checks when the PR modifies components using `@tanstack/react-virtual`, custom virtualization, or high-frequency re-rendering (log viewers, large tables, infinite scroll).
+
+- [ ] **Style objects in render paths are memoized.** Virtualized rows require inline positioning styles — ensure these style objects are created via `useMemo` or extracted as constants, not recreated on every render.
+- [ ] **Data arrays are not iterated more than once per render.** If the same list (e.g., `virtualItems`) is mapped multiple times, consolidate into a single pass.
+- [ ] **Expensive computations are guarded by their consuming condition.** If a `useMemo` result is only used inside a conditional branch (e.g., `!wrapLines`), guard the computation inside the `useMemo` callback (e.g., `if (wrapLines) return null;` as an early return) and include the condition in its dependency array, so React both skips the expensive work when the result is unused and re-evaluates when the condition changes.
+- [ ] **No visual performance regression.** Scroll vertically and horizontally in the affected component and watch for stuttering, especially with large datasets (1000+ rows).
 
 ## 3. Testing
 
@@ -58,6 +68,7 @@ Skip this section if the PR has no UI changes.
 - [ ] **No secrets or credentials** in source files, configs, or test fixtures.
 - [ ] **User input is sanitized** (project uses `sanitize-html`).
 - [ ] **RBAC is respected.** Permission-gated actions use `useAccessReviewForModel`.
+- [ ] **Fork artifacts stay separate from executable code in privileged jobs.** `size-limit-pr-comment.yaml` downloads artifacts under `runner.temp` and passes `size-limit.json` to the formatter from the checkout. Its job has pull-request and issue write permissions.
 
 ## 6. Final Approval
 
@@ -78,7 +89,9 @@ Skip this section if the PR has no UI changes.
 | `// eslint-disable` | Fix the underlying issue |
 | `console.log(...)` | Use `logger` from `~/monitoring/logger` |
 | `useEffect` + `setState` from props | Use `useMemo` |
-| `style={{ ... }}` | Use co-located SCSS with BEM |
+| `useMemo(() => obj.name, [obj])` | Remove `useMemo` — trivial expression |
+| `style={{ ... }}` | Use co-located SCSS with BEM (exception: virtualized row positioning — see below) |
+| `style={{ position: 'absolute', top: ... }}` in a loop | Compute all style objects in a single `useMemo` before the loop, or extract rows to a `React.memo` child component (do not call `useMemo` inside a loop — Rules of Hooks) |
 | `import ... from '../../../'` | Use `~/` absolute import |
 | `localStorage.getItem(...)` | Use `useLocalStorage` hook |
 | `pf-v5-u-*` or `pf-v5-c-*` | Replace prefix with `pf-v6-` |

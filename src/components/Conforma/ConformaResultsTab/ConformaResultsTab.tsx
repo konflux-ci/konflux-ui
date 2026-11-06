@@ -11,6 +11,11 @@ import {
   Spinner,
   Title,
 } from '@patternfly/react-core';
+import { countPolicyChanges } from '~/components/Conforma/policy-exception-utils';
+import {
+  POLICY_EXCEPTION_FILTER_KEY,
+  usePolicyExceptionFilter,
+} from '~/components/Conforma/usePolicyExceptionFilter';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { RouterParams } from '~/routes/utils';
 import { getErrorState } from '~/shared/utils/error-utils';
@@ -59,6 +64,8 @@ const ConformaResultsTabContent: React.FC = () => {
   const [expandedGroups, setExpandedGroups] = React.useState<Set<string>>(new Set());
   const [showDuplicates, setShowDuplicates] = React.useState(false);
 
+  const policyExceptionFilter = usePolicyExceptionFilter();
+
   const handleGroupByChange = React.useCallback((mode: GroupByMode) => {
     setGroupBy(mode);
     setExpandedGroups(new Set());
@@ -76,9 +83,24 @@ const ConformaResultsTabContent: React.FC = () => {
   const displayCounts = React.useMemo(() => countResultsByStatus(displayResults), [displayResults]);
   const rawCounts = React.useMemo(() => countResultsByStatus(allResults), [allResults]);
 
+  // Only the policy exception rules announce a change to what is enforced, so
+  // the "Upcoming changes" section counts those rather than every warning.
+  const displayPolicyChanges = React.useMemo(
+    () => countPolicyChanges(displayResults),
+    [displayResults],
+  );
+  const rawPolicyChanges = React.useMemo(() => countPolicyChanges(allResults), [allResults]);
+
   const filteredResults = React.useMemo(
-    () => filterResults(displayResults, nameFilter, statusFilter, componentFilter),
-    [displayResults, nameFilter, statusFilter, componentFilter],
+    () =>
+      filterResults(
+        displayResults,
+        nameFilter,
+        statusFilter,
+        componentFilter,
+        policyExceptionFilter.ruleCodes,
+      ),
+    [displayResults, nameFilter, statusFilter, componentFilter, policyExceptionFilter.ruleCodes],
   );
 
   const allComponentNames = React.useMemo(
@@ -149,9 +171,11 @@ const ConformaResultsTabContent: React.FC = () => {
             totalViolations={displayCounts.totalViolations}
             totalWarnings={displayCounts.totalWarnings}
             totalSuccesses={displayCounts.totalSuccesses}
+            totalPolicyChanges={displayPolicyChanges}
             totalViolationsRaw={rawCounts.totalViolations}
             totalWarningsRaw={rawCounts.totalWarnings}
             totalSuccessesRaw={rawCounts.totalSuccesses}
+            totalPolicyChangesRaw={rawPolicyChanges}
           />
           {settling ? (
             <Flex justifyContent={{ default: 'justifyContentCenter' }}>
@@ -170,6 +194,7 @@ const ConformaResultsTabContent: React.FC = () => {
           onToggleExpandAll={handleToggleExpandAll}
           showDuplicates={showDuplicates}
           onShowDuplicatesChange={setShowDuplicates}
+          policyExceptionFilter={policyExceptionFilter}
           refresh={refresh}
         />
 
@@ -220,7 +245,9 @@ const ConformaResultsTabContent: React.FC = () => {
  * same pattern used by CommitsListViewV2 and PipelineRunsListViewV2.
  */
 export const ConformaResultsTab: React.FC = () => (
-  <FilterContextProvider filterParams={['name', 'status', 'component']}>
+  <FilterContextProvider
+    filterParams={['name', 'status', 'component', POLICY_EXCEPTION_FILTER_KEY]}
+  >
     <ConformaResultsTabContent />
   </FilterContextProvider>
 );

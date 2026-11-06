@@ -1,6 +1,5 @@
 import { screen, fireEvent, waitFor } from '@testing-library/react';
 import { mockedValidBannerConfig } from '~/components/KonfluxBanner/__data__/banner-data';
-import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { IssueSeverity } from '~/kite/issue-type';
 import { useCriticalAndMajorIssues } from '~/kite/kite-hooks';
 import { useActiveRouteChecker } from '../../hooks/useActiveRouteChecker';
@@ -70,7 +69,6 @@ jest.mock('../../shared/hooks', () => ({
 }));
 
 const k8sWatchMock = createK8sUtilMock('useK8sWatchResource');
-const mockUseIsOnFeatureFlag = useIsOnFeatureFlag as jest.Mock;
 const mockUseCriticalAndMajorIssues = useCriticalAndMajorIssues as jest.Mock;
 
 // Mock window.matchMedia for PatternFly components to fix:
@@ -93,10 +91,6 @@ describe('AppRoot', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     k8sWatchMock.mockReturnValue({ data: null, isLoading: false, error: null });
-    // Default: enable system-notifications feature flag for tests
-    mockUseIsOnFeatureFlag.mockImplementation((flag: string) => {
-      return flag === 'system-notifications';
-    });
     // Default mock - no issues
     mockUseCriticalAndMajorIssues.mockReturnValue({
       data: [
@@ -193,38 +187,5 @@ describe('AppRoot', () => {
     routerRenderer(<AppRoot />);
 
     expect(screen.queryByTestId('namespace-switcher')).not.toBeInTheDocument();
-  });
-
-  it('should show notification badge when feature flag is enabled', () => {
-    (useActiveRouteChecker as jest.Mock).mockReturnValue(() => false);
-    // Enable system-notifications feature flag
-    mockUseIsOnFeatureFlag.mockImplementation((flag: string) => flag === 'system-notifications');
-
-    routerRenderer(<AppRoot />);
-    expect(screen.getByLabelText('Notifications')).toBeInTheDocument();
-  });
-
-  it('should not show notification badge when feature flag is disabled', () => {
-    (useActiveRouteChecker as jest.Mock).mockReturnValue(() => false);
-    // Disable system-notifications feature flag
-    mockUseIsOnFeatureFlag.mockImplementation(() => false);
-
-    routerRenderer(<AppRoot />);
-    expect(screen.queryByLabelText('Notifications')).not.toBeInTheDocument();
-  });
-
-  it('should show notification drawer when feature flag is enabled and opened', () => {
-    (useActiveRouteChecker as jest.Mock).mockReturnValue(() => false);
-    // Enable system-notifications feature flag
-    mockUseIsOnFeatureFlag.mockImplementation((flag: string) => flag === 'system-notifications');
-
-    routerRenderer(<AppRoot />);
-
-    const notificationButton = screen.getByLabelText('Notifications');
-    fireEvent.click(notificationButton);
-
-    // Check that the notification drawer content is visible
-    expect(screen.getByText('Notifications')).toBeInTheDocument();
-    expect(document.querySelector('.pf-v6-c-notification-drawer__list')).toBeInTheDocument();
   });
 });

@@ -1,4 +1,5 @@
 #!/bin/bash
+if [ -z "${BASH_VERSION:-}" ]; then exec bash "$0" "$@"; fi
 set -euo pipefail
 
 # 1. Auto-format staged files (Prettier, ESLint restricted imports, Stylelint)

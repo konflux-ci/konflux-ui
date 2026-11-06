@@ -1,9 +1,9 @@
 import * as React from 'react';
 import { Grid, GridItem } from '@patternfly/react-core';
-import { IfFeature } from '~/feature-flags/hooks';
 import { ConformaViolationsCard } from './ConformaViolationsCard';
 import { IssueDistributionCard } from './IssueDistributionCard';
 import IssuesByStatusCard from './IssuesByStatusCard';
+import IssuesPolicyExceptionCard from './IssuesPolicyExceptionCard';
 import { LatestIssuesCard } from './LatestIssuesCard';
 
 const IssuesOverview: React.FunctionComponent = () => {
@@ -17,16 +17,17 @@ const IssuesOverview: React.FunctionComponent = () => {
       <GridItem span={8}>
         <Grid hasGutter>
           <GridItem>
+            <IssuesPolicyExceptionCard />
+          </GridItem>
+          <GridItem>
             <IssueDistributionCard />
           </GridItem>
           <GridItem>
             <IssuesByStatusCard />
           </GridItem>
-          <IfFeature flag="conforma-policy">
-            <GridItem>
-              <ConformaViolationsCard />
-            </GridItem>
-          </IfFeature>
+          <GridItem>
+            <ConformaViolationsCard />
+          </GridItem>
         </Grid>
       </GridItem>
       <GridItem span={4}>
