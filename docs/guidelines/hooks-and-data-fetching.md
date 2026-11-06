@@ -13,9 +13,25 @@ useK8sWatchResource<R extends K8sResourceCommon | K8sResourceCommon[]>(
   resourceInit: WatchK8sResource | undefined,
   model: K8sModelCommon,
   queryOptions?: TQueryOptions<R>,
-  options?: object,
+  options?: Partial<WebSocketOptions & K8sRequestInit>,
 ): UseQueryResult<R>
 ```
+
+The 4th `options` parameter merges WebSocket and request configuration. Key fields:
+
+| Field        | Type     | Source           | Purpose                                                                                     |
+| ------------ | -------- | ---------------- | ------------------------------------------------------------------------------------------- |
+| `pathSuffix` | `string` | `K8sRequestInit` | Sub-resource path appended after the resource name (e.g. `'pendingworkloads'`)               |
+| `pathPrefix` | `string` | `K8sRequestInit` | Custom path prefix (overrides the default API path construction)                             |
+| `wsPrefix`   | `string` | `K8sRequestInit` | WebSocket path prefix (type-only -- not consumed in current WebSocket URL construction)      |
+
+`K8sRequestInit` extends the standard `RequestInit` (fetch API) with `pathSuffix`, `pathPrefix`, and `wsPrefix`. `WebSocketOptions` controls WebSocket behavior (reconnect, buffering, timeouts). Both types are defined in `src/k8s/fetch.ts` and `src/k8s/web-socket/types.ts` respectively.
+
+When `pathSuffix` is provided, it is automatically:
+- Appended to the resource URL path (e.g. `/apis/.../localqueues/{name}/pendingworkloads`)
+- Included in the React Query cache key for proper query isolation
+
+> **Note:** `pathSuffix` is applied to single-resource (named) fetches only. List fetches do not append `pathSuffix` to the URL.
 
 ### Data Flow
 
@@ -188,6 +204,21 @@ type SecretEditSensitiveContextValue = {
 ```
 
 Consumers use `useOptionalSecretEditSensitive()` to access the context, and `useAreSecretSensitiveFieldsHidden()` to conditionally render reveal/hide UI.
+
+#### Pattern 8: Sub-resource endpoints via pathSuffix
+
+Use `pathSuffix` in the 4th `options` parameter to fetch K8s sub-resources (e.g. `/localqueues/{name}/pendingworkloads`) without building a custom fetch layer. Model the parent resource, set `watch: false` (sub-resources typically lack WebSocket support), and use `refetchInterval` for polling.
+
+```ts
+const { data } = useK8sWatchResource<KueuePendingWorkloadsSummary>(
+  { groupVersionKind: KueueLocalQueueGroupVersionKind, name: queueName, namespace, watch: false },
+  KueueLocalQueueModel,
+  { enabled: !!queueName, refetchInterval: 60_000, retry: false },
+  { pathSuffix: 'pendingworkloads' },
+);
+```
+
+> **Note:** The real implementation in `src/kueue/kueue-hooks.ts` also gates `enabled` on a feature flag and namespace check. Prefer extending `useK8sWatchResource` over building parallel fetch layers when the API returns `K8sResourceCommon`-compatible shapes.
 
 ### Building Custom Hooks
 
