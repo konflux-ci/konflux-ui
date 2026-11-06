@@ -1,12 +1,16 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useLocalStorage } from '~/shared/hooks/useLocalStorage';
+import { useSessionStorage } from '~/shared/hooks/useSessionStorage';
 import { type ColumnDefinition, type ColumnState } from '../types';
 
 // Only the `id` field is needed — use Pick to avoid variance issues with TData
 type ColumnId = Pick<ColumnDefinition<never>, 'id'>;
 
+type ColumnLayout = Pick<ColumnState, 'visibleColumns' | 'columnOrder'>;
+type SortState = Pick<ColumnState, 'sortColumn' | 'sortDirection'>;
+
 /** Derives the default column state from column definitions (all columns visible, no sort). */
-function deriveDefaultState(columns: ColumnId[]): ColumnState {
+function deriveDefaultState(columns: ColumnId[]): ColumnLayout {
   const ids = columns.map((c) => c.id);
   return { visibleColumns: ids, columnOrder: ids };
 }
@@ -14,11 +18,11 @@ function deriveDefaultState(columns: ColumnId[]): ColumnState {
 /**
  * Migrates a persisted column state against the current column definitions.
  *
- * Handles schema drift: removes IDs for columns that no longer exist,
- * inserts new columns at their definition-relative position,
- * and clears the sort if the sorted column was removed.
+ * Handles schema drift by removing stale IDs and inserting new columns at
+ * their definition-relative position. Sort state is managed separately in
+ * sessionStorage.
  */
-function migrateState(persisted: ColumnState, columns: ColumnId[]): ColumnState {
+function migrateState(persisted: ColumnLayout, columns: ColumnId[]): ColumnLayout {
   const validIds = new Set(columns.map((c) => c.id));
   const definitionIds = columns.map((c) => c.id);
 
@@ -52,33 +56,22 @@ function migrateState(persisted: ColumnState, columns: ColumnId[]): ColumnState 
   // New columns are also visible by default
   const mergedVisible = [...existingVisible, ...newColumns];
 
-  // Clear sort if sorted column was removed
-  const sortColumn =
-    persisted.sortColumn && validIds.has(persisted.sortColumn) ? persisted.sortColumn : undefined;
-  const sortDirection = sortColumn ? persisted.sortDirection : undefined;
-
-  return {
-    visibleColumns: mergedVisible,
-    columnOrder: mergedOrder,
-    sortColumn,
-    sortDirection,
-  };
+  return { visibleColumns: mergedVisible, columnOrder: mergedOrder };
 }
 
 /**
- * Manages column visibility, order, and sort state with optional localStorage
- * persistence.
+ * Manages column visibility, order, and sort state with optional persistence.
  *
- * When `key` is provided, state is persisted to localStorage and automatically
- * migrated when column definitions change (stale columns removed, new columns
- * appended). When `key` is `undefined`, state is held in ephemeral React state
- * and resets on unmount.
+ * When `key` is provided, column visibility and order are persisted to
+ * localStorage, while sorting is persisted to sessionStorage. Layout is
+ * automatically migrated when column definitions change. When `key` is
+ * `undefined`, state is held in ephemeral React state and resets on unmount.
  *
- * Both hooks (`useLocalStorage` and `useState`) are always called to satisfy
- * the Rules of Hooks — only one is active based on whether `key` is provided.
+ * All storage and React state hooks are always called to satisfy the Rules of
+ * Hooks — only the relevant state is active based on whether `key` is provided.
  *
  * @typeParam TData - The row data type
- * @param key - LocalStorage key for persistence. Pass `undefined` for ephemeral mode.
+ * @param key - Shared storage key. Pass `undefined` for ephemeral mode.
  * @param columns - Current column definitions, used to derive defaults and migrate state.
  * @returns An object with the current `columnState` and a `setColumnState` updater.
  *
@@ -99,11 +92,14 @@ export function useColumnState<TData>(
 
   const isPersisted = !!key;
 
-  // Always call both hooks to satisfy Rules of Hooks.
+  // Always call the storage hooks to satisfy Rules of Hooks.
   // localStorage hook — active only when key is provided
-  const [persistedValue, setPersistedValue] = useLocalStorage<ColumnState>(
+  const [persistedLayout, setPersistedLayout] = useLocalStorage<ColumnLayout>(
     key ?? '__ephemeral__',
     defaultState,
+  );
+  const [persistedSort, setPersistedSort, removePersistedSort] = useSessionStorage<SortState>(
+    key ?? '__ephemeral__',
   );
 
   // Ephemeral state — active only when no key is provided
@@ -113,21 +109,38 @@ export function useColumnState<TData>(
     if (!isPersisted) {
       return ephemeralState;
     }
-    if (!persistedValue) {
-      return defaultState;
-    }
-    return migrateState(persistedValue, columns);
-  }, [isPersisted, ephemeralState, persistedValue, columns, defaultState]);
+    const layout = persistedLayout ? migrateState(persistedLayout, columns) : defaultState;
+    const validSortColumn =
+      persistedSort?.sortColumn && columns.some((column) => column.id === persistedSort.sortColumn)
+        ? persistedSort.sortColumn
+        : undefined;
+    return {
+      ...layout,
+      sortColumn: validSortColumn,
+      sortDirection: validSortColumn ? persistedSort?.sortDirection : undefined,
+    };
+  }, [isPersisted, ephemeralState, persistedLayout, persistedSort, columns, defaultState]);
 
   const setColumnState = useCallback(
     (state: ColumnState) => {
       if (isPersisted) {
-        setPersistedValue(state);
+        setPersistedLayout({
+          visibleColumns: state.visibleColumns,
+          columnOrder: state.columnOrder,
+        });
+        if (state.sortColumn) {
+          setPersistedSort({
+            sortColumn: state.sortColumn,
+            sortDirection: state.sortDirection,
+          });
+        } else {
+          removePersistedSort();
+        }
       } else {
         setEphemeralState(state);
       }
     },
-    [isPersisted, setPersistedValue],
+    [isPersisted, setPersistedLayout, setPersistedSort, removePersistedSort],
   );
 
   return { columnState, setColumnState };

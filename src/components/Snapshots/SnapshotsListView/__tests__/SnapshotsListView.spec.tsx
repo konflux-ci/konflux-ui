@@ -69,6 +69,10 @@ describe('SnapshotsListView - Column Headers', () => {
     expect(screen.getByText('Components')).toBeInTheDocument();
     expect(screen.getByText('Commit message')).toBeInTheDocument();
     expect(screen.getByText('Reference')).toBeInTheDocument();
+    expect(screen.getByTestId('sort-dropdown')).toHaveAttribute(
+      'data-tour',
+      'snapshots-list-sort-dropdown',
+    );
   });
 
   it('should filter out archive snapshots when releasable filter is enabled', async () => {

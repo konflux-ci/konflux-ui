@@ -166,7 +166,7 @@
     "*.scss",
     "./src/registers.ts",
     "./src/instrument.ts",
-    "*.tour.ts"
+    "./src/guided-tours.ts"
   ],
   "lint-staged": {
     "*.{ts,tsx,js,mjs,jsx}": [
