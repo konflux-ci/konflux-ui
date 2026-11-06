@@ -1,5 +1,5 @@
 import { mockSecret } from '~/components/Secrets/__data__/mock-secrets';
-import { SecretModel, ServiceAccountModel } from '~/models';
+import { ComponentModelV2, SecretModel, ServiceAccountModel } from '~/models';
 import { SecretKind, SecretType } from '~/types';
 import { SecretForComponentOption } from '~/utils/secrets/secret-utils';
 import {
@@ -54,6 +54,13 @@ const testSecrets = [
 const k8sPatchResourceMock = createK8sUtilMock('K8sQueryPatchResource');
 const k8sGetResourceMock = createK8sUtilMock('K8sGetResource');
 const K8sListResourceItemsMock = createK8sUtilMock('K8sListResourceItems');
+
+// linkSecretToServiceAccounts lists both component models; return components
+// for the legacy model only so the list isn't doubled.
+const mockListComponentItems = (components: unknown[]) =>
+  K8sListResourceItemsMock.mockImplementation(({ model }) =>
+    Promise.resolve(model === ComponentModelV2 ? [] : components),
+  );
 
 describe('isLinkableSecret', () => {
   it('should return true for dockerjson/dockercfg/basicAuth', () => {
@@ -327,7 +334,7 @@ describe('linkSecretToAllServiceAccounts', () => {
   });
 
   it('should call linkSecretToServiceAccounts for each component', async () => {
-    K8sListResourceItemsMock.mockReturnValue(testComponents);
+    mockListComponentItems(testComponents);
     await linkSecretToServiceAccounts(
       imagePullSecretWithNamespace,
       [], // when select all components, we do not need relatedComponents
@@ -338,7 +345,7 @@ describe('linkSecretToAllServiceAccounts', () => {
 
   it('should call linkSecretToServiceAccounts for selected component', async () => {
     const selectedComponentsNames = [testComponent.metadata.name];
-    K8sListResourceItemsMock.mockReturnValue([
+    mockListComponentItems([
       testComponent,
       { ...testComponent, metadata: { ...testComponent.metadata, name: 'test-component-2' } },
     ]);
