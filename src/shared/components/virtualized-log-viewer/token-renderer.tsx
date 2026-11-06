@@ -4,7 +4,7 @@ import { flattenTokenText, isMatchCurrent } from './log-viewer-utils';
 import type { MatchRange } from './types';
 
 const EMAIL_REGEX = /^[^\s@?]+@[^\s@?/:]+\.[^\s@?/:]+$/;
-const SAFE_SCHEMES_REGEX = /^(https?|ftp|mailto):/i;
+const SAFE_SCHEMES_REGEX = /(https?|ftp|mailto):/i;
 
 /**
  * Returns the href for a URL/email token, or empty string for unsafe schemes.
