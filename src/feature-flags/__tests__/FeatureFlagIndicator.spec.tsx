@@ -23,9 +23,9 @@ jest.mock('../flags', () => {
           defaultEnabled: true,
           status: 'ready',
         },
-        'column-management': {
-          key: 'column-management',
-          description: 'Enable the column management',
+        'wip-feature': {
+          key: 'wip-feature',
+          description: 'A work-in-progress feature flag',
           defaultEnabled: false,
           status: 'wip',
         },
@@ -39,7 +39,7 @@ jest.mock('../hooks', () => ({
     {
       'dark-theme': true,
       'stable-feature': true,
-      'column-management': true,
+      'wip-feature': true,
     },
   ]),
 }));
@@ -62,7 +62,7 @@ describe('FeatureFlagIndicator', () => {
       {
         'dark-theme': true,
         'stable-feature': true,
-        'column-management': true,
+        'wip-feature': true,
       },
     ]);
   });
@@ -89,13 +89,11 @@ describe('FeatureFlagIndicator', () => {
   });
 
   it('shows popover with descriptions for all flags on click', async () => {
-    render(
-      <FeatureFlagIndicator flags={['dark-theme', 'column-management'] as unknown as FlagKey[]} />,
-    );
+    render(<FeatureFlagIndicator flags={['dark-theme', 'wip-feature'] as unknown as FlagKey[]} />);
     await userEvent.click(getTriggerButton());
 
     expect(screen.getByText(FLAGS['dark-theme' as FlagKey].description)).toBeInTheDocument();
-    expect(screen.getByText(FLAGS['column-management' as FlagKey].description)).toBeInTheDocument();
+    expect(screen.getByText(FLAGS['wip-feature' as FlagKey].description)).toBeInTheDocument();
   });
 
   it('uses success icon color when all active flags are ready', () => {
@@ -107,20 +105,18 @@ describe('FeatureFlagIndicator', () => {
   });
 
   it('uses warning icon color when any active flag is wip', () => {
-    useFeatureFlagsMock.mockReturnValue([{ 'column-management': true }]);
+    useFeatureFlagsMock.mockReturnValue([{ 'wip-feature': true }]);
 
-    render(<FeatureFlagIndicator flags={['column-management'] as unknown as FlagKey[]} />);
+    render(<FeatureFlagIndicator flags={['wip-feature'] as unknown as FlagKey[]} />);
 
     expect(getTriggerIcon()).toHaveStyle({ color: warningIconColor });
   });
 
   it('uses warning icon color when mixing ready and wip flags', () => {
-    useFeatureFlagsMock.mockReturnValue([{ 'stable-feature': true, 'column-management': true }]);
+    useFeatureFlagsMock.mockReturnValue([{ 'stable-feature': true, 'wip-feature': true }]);
 
     render(
-      <FeatureFlagIndicator
-        flags={['stable-feature', 'column-management'] as unknown as FlagKey[]}
-      />,
+      <FeatureFlagIndicator flags={['stable-feature', 'wip-feature'] as unknown as FlagKey[]} />,
     );
 
     expect(getTriggerIcon()).toHaveStyle({ color: warningIconColor });
