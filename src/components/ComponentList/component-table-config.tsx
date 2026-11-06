@@ -7,6 +7,7 @@ import { defineFilters } from '~/shared/components/Filter';
 import { ColumnDefinition } from '~/shared/components/TableV2';
 import { ComponentKind } from '~/types';
 import { textMatch } from '~/utils/text-filter-utils';
+import ComponentListActionCell from './ComponentListActionCell';
 
 export const componentsFilterConfig = defineFilters<ComponentKind>()([
   {
@@ -79,5 +80,11 @@ export const componentsTableColumns: ColumnDefinition<ComponentKind>[] = [
     size: 4,
     cell: (info) => <LatestPushBuildSection componentName={info.row.original.metadata.name} />,
   },
-  // TODO: add build logs modal + actions
+  // TODO: add build logs modal
+  {
+    id: 'actions',
+    header: ' ',
+    accessorFn: () => null,
+    cell: (info) => <ComponentListActionCell componentName={info.row.original.metadata?.name} />,
+  },
 ];

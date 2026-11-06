@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Flex } from '@patternfly/react-core';
 import { COMPONENT_DETAILS_V2_PATH, COMPONENT_VERSION_DETAILS_PATH } from '@routes/paths';
+import ComponentListActionCell from '~/components/ComponentList/ComponentListActionCell';
 import GitRepoLink from '~/components/GitLink/GitRepoLink';
 import LatestPushBuildSection from '~/components/LatestBuild/LatestPushBuildSection';
 import { defineFilters } from '~/shared/components/Filter';
@@ -89,5 +90,11 @@ export const cgComponentsTableColumns: ColumnDefinition<CgComponentListItem>[] =
       />
     ),
   },
-  // TODO: add build logs modal + actions
+  // TODO: add build logs modal
+  {
+    id: 'actions',
+    header: ' ',
+    accessorFn: () => null,
+    cell: (info) => <ComponentListActionCell componentName={info.row.original.componentName} />,
+  },
 ];
