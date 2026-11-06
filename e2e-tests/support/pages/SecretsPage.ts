@@ -1,5 +1,6 @@
 import { secretsPagePO } from '../pageObjects/pages-po';
 import { Common } from '../../utils/Common';
+import { hacAPIEndpoints } from '../../utils/APIEndpoints';
 
 export class SecretsPage {
   static checkValues(secretName: string, secretKey: string, secretValue: string) {
@@ -74,5 +75,13 @@ export class SecretsPage {
     cy.get(secretsPagePO.deleteResourceButton).click();
     cy.get(secretsPagePO.listNameInput).should('be.visible');
     cy.get(secretsPagePO.secretRow(secretName)).should('not.exist');
+  }
+
+  static deleteSecretViaAPI(secretName: string) {
+    cy.request({
+      method: 'DELETE',
+      url: hacAPIEndpoints.secrets(secretName),
+      failOnStatusCode: false,
+    });
   }
 }
