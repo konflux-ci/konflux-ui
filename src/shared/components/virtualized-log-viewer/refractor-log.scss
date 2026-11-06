@@ -42,8 +42,7 @@
 
   /* ================= URLs and Links ================= */
 
-  .token.url,
-  .token.email {
+  a.token {
     color: var(--pf-t--global--text--color--link--default);
     text-decoration: underline;
     cursor: pointer;
