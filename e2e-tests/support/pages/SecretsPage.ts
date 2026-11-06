@@ -77,7 +77,7 @@ export class SecretsPage {
     cy.get(secretsPagePO.secretRow(secretName)).should('not.exist');
   }
 
-  static deleteSecretViaAPI(secretName: string) {
+  static deleteSecretUsingAPI(secretName: string) {
     cy.request({
       method: 'DELETE',
       url: hacAPIEndpoints.secrets(secretName),

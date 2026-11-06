@@ -197,12 +197,12 @@ describe('Environment Configuration Tests', () => {
     const secretKey = 'mykey';
     const secretValue = 'myvalue';
 
-    before(() => SecretsPage.deleteSecretViaAPI(secretName));
+    before(() => SecretsPage.deleteSecretUsingAPI(secretName));
 
     after(() => {
       // Note: during the deletion, the secret is already filtered in input field
       // no need to search again - re-searching makes a test flaky.
-      SecretsPage.deleteSecretViaAPI(secretName);
+      SecretsPage.deleteSecretUsingAPI(secretName);
     });
 
     it('Add, Verify and Delete a secret', () => {
