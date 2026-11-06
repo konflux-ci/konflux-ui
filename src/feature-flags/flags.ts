@@ -42,12 +42,6 @@ export interface FeatureMeta {
 }
 
 const InternalFLAGS = {
-  'column-management': {
-    key: 'column-management',
-    description: 'Enable the "Manage columns" button for tables with more than six columns',
-    defaultEnabled: true,
-    status: 'ready',
-  },
   'kubearchive-logs': {
     key: 'kubearchive-logs',
     description: 'Use KubeArchive to fetch logs instead of Tekton',
