@@ -24,6 +24,7 @@ export const UnlinkSecret: React.FC<React.PropsWithChildren<UnlinkSecretModalPro
   const isCommonSecret = secret?.metadata?.labels?.[COMMON_SECRETS_LABEL] === 'true';
 
   const handleSubmit = async () => {
+    setSubmitError(undefined);
     setIsSubmitting(true);
     try {
       await unLinkSecretFromBuildServiceAccount(secret, {

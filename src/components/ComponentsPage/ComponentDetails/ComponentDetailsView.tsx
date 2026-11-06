@@ -7,7 +7,7 @@ import {
   Content,
   ContentVariants,
 } from '@patternfly/react-core';
-import { useComponentActions } from '~/components/ComponentList/component-actions';
+import { useComponentV2Actions } from '~/components/ComponentList/component-v2-actions';
 import { useComponentV2 } from '~/hooks/useComponentsV2';
 import { getErrorState } from '~/shared/utils/error-utils';
 import emptyStateImgUrl from '../../../assets/Components.svg';
@@ -30,7 +30,7 @@ const ComponentDetailsView: React.FC = () => {
   const namespace = useNamespace();
   const [component, loaded, componentError] = useComponentV2(namespace, componentName);
 
-  const componentActions = useComponentActions(component?.metadata?.name);
+  const componentActions = useComponentV2Actions(component?.metadata?.name);
   const actions: Action[] = React.useMemo(
     () =>
       componentActions.map((compAction) => ({

@@ -73,7 +73,7 @@ const ComponentSelectorMenu: React.FC<{
   </div>
 );
 
-const LegacyComponentSelector: React.FC<ComponentSelectorProps> = ({ currentComponent }) => {
+const ComponentSelectorV1: React.FC<ComponentSelectorProps> = ({ currentComponent }) => {
   const namespace = useNamespace();
   const [sortedGroupedComponents, loaded, error] = useSortedGroupComponents(namespace);
   const mergedGroupedComponents = useMemo(
@@ -112,6 +112,6 @@ export const ComponentSelector: React.FC<ComponentSelectorProps> = ({ currentCom
   return useNewComponentModel ? (
     <ComponentSelectorV2 currentComponent={currentComponent} />
   ) : (
-    <LegacyComponentSelector currentComponent={currentComponent} />
+    <ComponentSelectorV1 currentComponent={currentComponent} />
   );
 };

@@ -140,7 +140,7 @@ describe('ComponentSelector', () => {
     expect(screen.queryByText('Group1')).not.toBeInTheDocument();
   });
 
-  it('merges the current component into flat options when not already listed', async () => {
+  it('merges the current component into flat options and preselects it', async () => {
     (useIsOnFeatureFlag as jest.Mock).mockReturnValue(true);
     (useAllComponentsV2 as jest.Mock).mockReturnValue([
       [{ metadata: { name: 'ComponentA' } }],
@@ -156,10 +156,13 @@ describe('ComponentSelector', () => {
       </TestWrapper>,
     );
 
-    fireEvent.click(screen.getByText('Select components'));
+    // toggle text switches from 'Select components' once the current component is preselected
+    fireEvent.click(await screen.findByText('Component'));
     await waitFor(() => {
       expect(screen.getByText('ComponentA')).toBeInTheDocument();
       expect(screen.getByText('CurrentComp')).toBeInTheDocument();
     });
+    expect(screen.getByRole('checkbox', { name: /CurrentComp/ })).toBeChecked();
+    expect(screen.getByRole('checkbox', { name: /ComponentA/ })).not.toBeChecked();
   });
 });

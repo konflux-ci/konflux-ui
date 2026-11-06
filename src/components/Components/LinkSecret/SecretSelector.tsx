@@ -47,6 +47,7 @@ export const SecretSelector: React.FC<React.PropsWithChildren<SecretSelectorProp
     const secretsToBeLinked: SecretKind[] = linkedSecretsList?.map((item) => {
       return secrets.find((i) => item === i.metadata.name);
     });
+    setSubmitError(undefined);
     setIsSubmitting(true);
     try {
       await linkSecretsToBuildServiceAccount(secretsToBeLinked, {

@@ -5,7 +5,7 @@ import { Action } from '~/shared/components/action-menu/types';
 import { useNamespace } from '~/shared/providers/Namespace/useNamespaceInfo';
 import { useAccessReviewForModel } from '~/utils/rbac';
 
-export const useComponentActions = (componentName?: string): Action[] => {
+export const useComponentV2Actions = (componentName?: string): Action[] => {
   const namespace = useNamespace();
   const [canManageLinkedSecrets] = useAccessReviewForModel(ServiceAccountModel, 'patch');
 
