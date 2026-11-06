@@ -101,6 +101,7 @@ Detailed guides for AI agents and developers:
 | Document                       | Purpose                                                               |
 | ------------------------------ | --------------------------------------------------------------------- |
 | `docs/best-practices.md`       | Full coding standards and conventions                                 |
+| `docs/project-structure.md`    | Directory layout and file placement conventions                       |
 | `docs/pr-review-guidelines.md` | PR review checklist                                                   |
 | `docs/feature-flags.md`        | Feature flag system (flags, persistence, URL grammar, lifecycle)      |
 | `docs/conditions.md`           | Feature flag conditions (`allOf`/`anyOf` guards, `registerCondition`) |
