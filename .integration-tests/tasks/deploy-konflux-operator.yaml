@@ -131,8 +131,8 @@ spec:
         export SET_SKIP_CHECKS=true
 
         set +e
-        ./scripts/deploy-local.sh
-        deploy_rc=$?
+        ./scripts/deploy-local.sh 2>&1 | tee -a "${LOG_FILENAME}"
+        deploy_rc=${PIPESTATUS[0]}
         set -e
 
         {
