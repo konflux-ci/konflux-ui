@@ -1,9 +1,8 @@
 import * as React from 'react';
 import { useParams } from 'react-router-dom';
-import { Button, Flex, FlexItem, Content, Alert, ModalVariant } from '@patternfly/react-core';
+import { Alert, Button, Flex, FlexItem, Content, ModalVariant } from '@patternfly/react-core';
 import { RouterParams } from '@routes/utils';
 import { COMMON_SECRETS_LABEL } from '~/consts/pipeline';
-import { useComponent } from '~/hooks/useComponents';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { SecretKind } from '~/types';
 import { unLinkSecretFromBuildServiceAccount } from '../../../utils/service-account/service-account-utils';
@@ -19,17 +18,23 @@ export const UnlinkSecret: React.FC<React.PropsWithChildren<UnlinkSecretModalPro
 }) => {
   const namespace = useNamespace();
   const { componentName } = useParams<RouterParams>();
-  const [component, compLoaded, compError] = useComponent(namespace, componentName);
+  const [submitError, setSubmitError] = React.useState<string | undefined>();
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+
   const isCommonSecret = secret?.metadata?.labels?.[COMMON_SECRETS_LABEL] === 'true';
 
-  const handleSubmit = () => {
-    unLinkSecretFromBuildServiceAccount(secret, component)
-      .then()
-      .catch((err) => {
-        // eslint-disable-next-line no-console
-        console.warn(err);
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    try {
+      await unLinkSecretFromBuildServiceAccount(secret, {
+        metadata: { name: componentName, namespace },
       });
-    onClose(null, { submitClicked: false });
+      onClose?.(undefined, { submitClicked: false });
+    } catch (err) {
+      setSubmitError((err as Error)?.message || 'Failed to unlink secret');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -37,7 +42,7 @@ export const UnlinkSecret: React.FC<React.PropsWithChildren<UnlinkSecretModalPro
       <FlexItem>
         <Content component="p">
           <strong>{secret?.metadata?.name}</strong> will be unlinked from{' '}
-          <strong>{component?.metadata?.name}</strong>
+          <strong>{componentName}</strong>
         </Content>
       </FlexItem>
       {isCommonSecret && (
@@ -48,23 +53,26 @@ export const UnlinkSecret: React.FC<React.PropsWithChildren<UnlinkSecretModalPro
           </Content>
         </FlexItem>
       )}
-      {compError && (
+      {submitError && (
         <FlexItem>
-          <Alert variant="danger" title="Unable to load component" isInline />
+          <Alert
+            variant="danger"
+            title="Failed to unlink secret"
+            isInline
+            data-test="unlink-secret-error"
+          >
+            {submitError}
+          </Alert>
         </FlexItem>
       )}
       <Flex gap={{ default: 'gapSm' }}>
         <FlexItem>
-          <Button
-            variant="primary"
-            onClick={handleSubmit}
-            isDisabled={!secret || !compLoaded || !!compError}
-          >
+          <Button variant="primary" onClick={handleSubmit} isDisabled={!secret || isSubmitting}>
             Unlink
           </Button>
         </FlexItem>
         <FlexItem>
-          <Button variant="tertiary" onClick={() => onClose(null, { submitClicked: false })}>
+          <Button variant="tertiary" onClick={() => onClose?.(undefined, { submitClicked: false })}>
             Cancel
           </Button>
         </FlexItem>
