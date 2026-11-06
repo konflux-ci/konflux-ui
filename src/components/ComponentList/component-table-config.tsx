@@ -1,13 +1,13 @@
 import { Link } from 'react-router-dom';
 import { Flex } from '@patternfly/react-core';
 import { COMPONENT_DETAILS_V2_PATH, COMPONENT_VERSIONS_PATH } from '@routes/paths';
+import ComponentActionsCell from '~/components/Components/ComponentActionsCell';
 import GitRepoLink from '~/components/GitLink/GitRepoLink';
 import LatestPushBuildSection from '~/components/LatestBuild/LatestPushBuildSection';
 import { defineFilters } from '~/shared/components/Filter';
 import { ColumnDefinition } from '~/shared/components/TableV2';
 import { ComponentKind } from '~/types';
 import { textMatch } from '~/utils/text-filter-utils';
-import ComponentListActionCell from './ComponentListActionCell';
 
 export const componentsFilterConfig = defineFilters<ComponentKind>()([
   {
@@ -85,6 +85,6 @@ export const componentsTableColumns: ColumnDefinition<ComponentKind>[] = [
     id: 'actions',
     header: ' ',
     accessorFn: () => null,
-    cell: (info) => <ComponentListActionCell componentName={info.row.original.metadata?.name} />,
+    cell: (info) => <ComponentActionsCell componentName={info.row.original.metadata?.name} />,
   },
 ];

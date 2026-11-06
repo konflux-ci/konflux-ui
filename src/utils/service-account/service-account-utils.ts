@@ -1,5 +1,6 @@
 import { COMMON_SECRETS_LABEL, PIPELINE_SERVICE_ACCOUNT_PREFIX } from '~/consts/pipeline';
 import { MAX_ANNOTATION_LENGTH } from '~/consts/secrets';
+import { isFeatureFlagOn } from '~/feature-flags/utils';
 import { K8sQueryPatchResource, K8sGetResource, K8sListResourceItems } from '~/k8s';
 import { ComponentModel, ComponentModelV2 } from '~/models';
 import { SecretModel } from '~/models/secret';
@@ -7,6 +8,7 @@ import { ServiceAccountModel } from '~/models/service-account';
 import { processWithPLimit } from '~/shared/utils/retry-batch-utils';
 import { ComponentKind, LinkableSecretType, SecretKind, ServiceAccountKind } from '~/types';
 import { K8sModelCommon } from '~/types/k8s';
+import { has404Error } from '~/utils/common-utils';
 import {
   isImagePullSecret,
   SecretForComponentOption,
@@ -212,19 +214,32 @@ export const getLinkedServiceAccounts = async (secret: SecretKind) => {
 };
 
 // namespaces can hold both component models during migration, and the SA
-// patch is model-agnostic. List both and concat; a missing CRD yields [] instead of
-// failing the whole flow.
+// patch is model-agnostic. List both and concat; a missing CRD (404) yields []
+// instead of failing the whole flow, other errors propagate.
 const listAllComponentsBothModels = async (namespace: string): Promise<ComponentKind[]> => {
   const listSafely = (model: K8sModelCommon) =>
     K8sListResourceItems<ComponentKind>({ model, queryOptions: { ns: namespace } }).catch(
-      () => [] as ComponentKind[],
+      (err): ComponentKind[] => {
+        if (has404Error(err)) {
+          return [];
+        }
+        throw err;
+      },
     );
 
   const [legacyComponents, v2Components] = await Promise.all([
     listSafely(ComponentModel),
-    listSafely(ComponentModelV2),
+    // Only list V2 when the flag is on: without it, users lacking V2 list RBAC
+    // would get a 403 that breaks legacy secret workflows. A denied V2 list is
+    // never swallowed - only a missing CRD (404) yields [].
+    isFeatureFlagOn('component-model')
+      ? listSafely(ComponentModelV2)
+      : Promise.resolve([] as ComponentKind[]),
   ]);
-  return [...legacyComponents, ...v2Components];
+  // during migration a component can exist in both models; dedupe by name,
+  // with the new model winning (Map keeps the last entry for a key)
+  const byName = new Map([...legacyComponents, ...v2Components].map((c) => [c.metadata?.name, c]));
+  return [...byName.values()];
 };
 
 export const unlinkSecretFromServiceAccounts = async (

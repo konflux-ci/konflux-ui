@@ -2,11 +2,11 @@ import * as React from 'react';
 import { useParams } from 'react-router-dom';
 import { Alert, Button, Flex, FlexItem, Content, ModalVariant } from '@patternfly/react-core';
 import { RouterParams } from '@routes/utils';
+import { ComponentProps, createModalLauncher } from '~/components/modal/createModalLauncher';
 import { COMMON_SECRETS_LABEL } from '~/consts/pipeline';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { SecretKind } from '~/types';
-import { unLinkSecretFromBuildServiceAccount } from '../../../utils/service-account/service-account-utils';
-import { ComponentProps, createModalLauncher } from '../../modal/createModalLauncher';
+import { unLinkSecretFromBuildServiceAccount } from '~/utils/service-account/service-account-utils';
 
 type UnlinkSecretModalProps = ComponentProps & {
   secret: SecretKind;
@@ -24,6 +24,7 @@ export const UnlinkSecret: React.FC<React.PropsWithChildren<UnlinkSecretModalPro
   const isCommonSecret = secret?.metadata?.labels?.[COMMON_SECRETS_LABEL] === 'true';
 
   const handleSubmit = async () => {
+    setSubmitError(undefined);
     setIsSubmitting(true);
     try {
       await unLinkSecretFromBuildServiceAccount(secret, {

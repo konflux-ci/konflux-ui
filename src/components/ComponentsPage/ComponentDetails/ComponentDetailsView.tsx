@@ -7,7 +7,7 @@ import {
   Content,
   ContentVariants,
 } from '@patternfly/react-core';
-import { useComponentActions } from '~/components/ComponentList/component-actions';
+import { useComponentV2Actions } from '~/components/Components/component-v2-actions';
 import { useComponentV2 } from '~/hooks/useComponentsV2';
 import { getErrorState } from '~/shared/utils/error-utils';
 import emptyStateImgUrl from '../../../assets/Components.svg';
@@ -19,7 +19,7 @@ import { RouterParams } from '../../../routes/utils';
 import AppEmptyState from '../../../shared/components/empty-state/AppEmptyState';
 import { useNamespace } from '../../../shared/providers/Namespace/useNamespaceInfo';
 import { DetailsPage } from '../../DetailsPage';
-import { Action } from '../../DetailsPage/types';
+import { createDetailsPageActions } from '../../DetailsPage/utils';
 import GitRepoLink from '../../GitLink/GitRepoLink';
 
 export const COMPONENTS_GS_LOCAL_STORAGE_KEY = 'components-getting-started-modal';
@@ -30,20 +30,9 @@ const ComponentDetailsView: React.FC = () => {
   const namespace = useNamespace();
   const [component, loaded, componentError] = useComponentV2(namespace, componentName);
 
-  const componentActions = useComponentActions(component?.metadata?.name);
-  const actions: Action[] = React.useMemo(
-    () =>
-      componentActions.map((compAction) => ({
-        key: compAction.id,
-        label: compAction.label,
-        isDisabled: compAction.disabled,
-        disabledTooltip: compAction.disabledTooltip,
-        onClick: () => {
-          if (typeof compAction.cta === 'object' && !compAction.cta.external) {
-            navigate(compAction.cta.href);
-          }
-        },
-      })),
+  const componentActions = useComponentV2Actions(component?.metadata?.name);
+  const actions = React.useMemo(
+    () => createDetailsPageActions(componentActions, navigate),
     [componentActions, navigate],
   );
 

@@ -10,12 +10,14 @@ import {
   Button,
 } from '@patternfly/react-core';
 import { SortByDirection } from '@patternfly/react-table';
-import { getErrorState } from '~/shared/utils/error-utils';
-import { filterByText } from '~/utils/text-filter-utils';
-import emptyStateImgUrl from '../../../assets/secret.svg';
-import { useLinkedSecrets } from '../../../hooks/useLinkedSecrets';
-import { useSearchParam } from '../../../hooks/useSearchParam';
-import { useSortedResources } from '../../../hooks/useSortedResources';
+import emptyStateImgUrl from '~/assets/secret.svg';
+import { useApplicationBreadcrumbs } from '~/components/Applications/breadcrumbs/breadcrumb-utils';
+import { createLinkSecretModalLauncher } from '~/components/Components/LinkSecret/LinkSecret';
+import { useModalLauncher } from '~/components/modal/ModalProvider';
+import PageLayout from '~/components/PageLayout/PageLayout';
+import { useLinkedSecrets } from '~/hooks/useLinkedSecrets';
+import { useSearchParam } from '~/hooks/useSearchParam';
+import { useSortedResources } from '~/hooks/useSortedResources';
 import {
   COMPONENT_DETAILS_PATH,
   COMPONENT_DETAILS_V2_PATH,
@@ -23,17 +25,15 @@ import {
   COMPONENT_LINKED_SECRETS_V2_PATH,
   COMPONENT_LIST_PATH,
   COMPONENTS_PATH,
-} from '../../../routes/paths';
-import { RouterParams } from '../../../routes/utils';
-import { Table } from '../../../shared/components';
-import AppEmptyState from '../../../shared/components/empty-state/AppEmptyState';
-import FilteredEmptyState from '../../../shared/components/empty-state/FilteredEmptyState';
-import { useNamespace } from '../../../shared/providers/Namespace';
-import { SecretKind } from '../../../types';
-import { useApplicationBreadcrumbs } from '../../Applications/breadcrumbs/breadcrumb-utils';
-import { useModalLauncher } from '../../modal/ModalProvider';
-import PageLayout from '../../PageLayout/PageLayout';
-import { createLinkSecretModalLauncher } from '../LinkSecret/LinkSecret';
+} from '~/routes/paths';
+import { RouterParams } from '~/routes/utils';
+import { Table } from '~/shared/components';
+import AppEmptyState from '~/shared/components/empty-state/AppEmptyState';
+import FilteredEmptyState from '~/shared/components/empty-state/FilteredEmptyState';
+import { useNamespace } from '~/shared/providers/Namespace';
+import { getErrorState } from '~/shared/utils/error-utils';
+import { SecretKind } from '~/types';
+import { filterByText } from '~/utils/text-filter-utils';
 import getListHeader, { SortableHeaders } from './LinkedSecretsListHeader';
 import { LinkedSecretsListRow } from './LinkedSecretsListRow';
 import { LinkedSecretsToolbar } from './LinkedSecretsToolbar';

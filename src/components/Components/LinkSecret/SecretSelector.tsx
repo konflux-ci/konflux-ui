@@ -44,9 +44,12 @@ export const SecretSelector: React.FC<React.PropsWithChildren<SecretSelectorProp
   }, [secrets, previouslyLinked]);
 
   const handleSubmit = async () => {
-    const secretsToBeLinked: SecretKind[] = linkedSecretsList?.map((item) => {
-      return secrets.find((i) => item === i.metadata.name);
-    });
+    const secretsToBeLinked: SecretKind[] = linkedSecretsList
+      ?.map((item) => secrets.find((i) => item === i.metadata?.name))
+      // a selected secret may no longer exist by submit time; skip it rather
+      // than pass undefined into the linking util
+      .filter((s): s is SecretKind => !!s);
+    setSubmitError(undefined);
     setIsSubmitting(true);
     try {
       await linkSecretsToBuildServiceAccount(secretsToBeLinked, {

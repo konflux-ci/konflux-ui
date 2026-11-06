@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { FormGroup, FormHelperText, HelperText, HelperTextItem } from '@patternfly/react-core';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useSortedGroupComponents } from '~/hooks/useComponents';
 import { useAllComponentsV2 } from '~/hooks/useComponentsV2';
@@ -53,8 +54,7 @@ const ComponentSelectorMenu: React.FC<{
   options: string[] | { [application: string]: string[] };
   currentComponent?: null | CurrentComponentRef;
 }> = ({ options, currentComponent }) => (
-  <div className="labeled-dropdown-field">
-    <div className="title">Components</div>
+  <FormGroup label="Components" fieldId="relatedComponents">
     <div className="component-select-menu" data-test="component-select-menu">
       <ComponentSelectMenu
         defaultToggleText="Select components"
@@ -67,13 +67,15 @@ const ComponentSelectorMenu: React.FC<{
         includeSelectAll
       />
     </div>
-    <div className="help-text">
-      <span>Tell us the components you want to link this secret to</span>
-    </div>
-  </div>
+    <FormHelperText>
+      <HelperText>
+        <HelperTextItem>Tell us the components you want to link this secret to</HelperTextItem>
+      </HelperText>
+    </FormHelperText>
+  </FormGroup>
 );
 
-const LegacyComponentSelector: React.FC<ComponentSelectorProps> = ({ currentComponent }) => {
+const ComponentSelectorV1: React.FC<ComponentSelectorProps> = ({ currentComponent }) => {
   const namespace = useNamespace();
   const [sortedGroupedComponents, loaded, error] = useSortedGroupComponents(namespace);
   const mergedGroupedComponents = useMemo(
@@ -112,6 +114,6 @@ export const ComponentSelector: React.FC<ComponentSelectorProps> = ({ currentCom
   return useNewComponentModel ? (
     <ComponentSelectorV2 currentComponent={currentComponent} />
   ) : (
-    <LegacyComponentSelector currentComponent={currentComponent} />
+    <ComponentSelectorV1 currentComponent={currentComponent} />
   );
 };

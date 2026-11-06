@@ -1,8 +1,10 @@
 import { LoaderFunction } from 'react-router-dom';
 import { RouteErrorBoundry } from '@routes/RouteErrorBoundary';
 import { RouterParams } from '@routes/utils';
-import { linkedSecretsListViewLoader } from '~/components/Components/LinkedSecretsListView';
-import { LinkedSecretsListView } from '~/components/Components/LinkedSecretsListView/LinkedSecretsListView';
+import {
+  linkedSecretsListViewLoader,
+  LinkedSecretsListView,
+} from '~/components/Components/LinkedSecretsListView';
 import { ComponentDependencyTab } from '~/components/ComponentsPage/tabs/ComponentDependencyTab';
 import { ComponentVersionsTab } from '~/components/ComponentsPage/tabs/ComponentVersionsTab';
 import { ensureFeatureFlagOnLoader } from '~/feature-flags/utils';
