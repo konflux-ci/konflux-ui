@@ -55,6 +55,25 @@ describe('token-renderer', () => {
         'mailto:user@example.com',
       );
     });
+
+    it('should extract the absolute URL from quoted token text', () => {
+      expect(getTokenHref('"https://github.com"')).toBe('https://github.com');
+      expect(getTokenHref("'https://github.com'")).toBe('https://github.com');
+    });
+
+    it('should extract the absolute URL from surrounding sentence text', () => {
+      expect(getTokenHref('Visit https://github.com today')).toBe('https://github.com');
+    });
+
+    it('should extract the absolute URL from key=value token text', () => {
+      expect(getTokenHref('url=https://github.com/org/repo')).toBe('https://github.com/org/repo');
+    });
+
+    it('should extract mailto from surrounding text and strip query params', () => {
+      expect(getTokenHref('Contact mailto:user@example.com?subject=Hi')).toBe(
+        'mailto:user@example.com',
+      );
+    });
   });
 
   describe('renderTokenString', () => {

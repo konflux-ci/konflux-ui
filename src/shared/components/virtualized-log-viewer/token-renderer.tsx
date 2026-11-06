@@ -4,19 +4,23 @@ import { flattenTokenText, isMatchCurrent } from './log-viewer-utils';
 import type { MatchRange } from './types';
 
 const EMAIL_REGEX = /^[^\s@?]+@[^\s@?/:]+\.[^\s@?/:]+$/;
-const SAFE_SCHEMES_REGEX = /(https?|ftp|mailto):/i;
+/** Absolute http(s)/ftp URLs; must not include surrounding quotes or other token junk. */
+const ABSOLUTE_URL_REGEX = /\b(?:https?|ftp):\/\/[^\s"'<>\]]+/i;
+const MAILTO_REGEX = /\bmailto:([^\s"'<>\]?]+)/i;
 
 /**
- * Returns the href for a URL/email token, or empty string for unsafe schemes.
+ * Returns a safe absolute href extracted from token text, or empty string.
+ * Extracts the URL/email from surrounding characters (quotes, key=value, etc.)
+ * so the browser never resolves a non-absolute href against the app origin.
  * Mailto URIs are sanitized to strip query parameters.
  */
 export function getTokenHref(text: string): string {
-  if (SAFE_SCHEMES_REGEX.test(text)) {
-    if (/^mailto:/i.test(text)) {
-      return `mailto:${text.slice(7).split('?')[0]}`;
-    }
-    return text;
-  }
+  const urlMatch = text.match(ABSOLUTE_URL_REGEX);
+  if (urlMatch) return urlMatch[0];
+
+  const mailtoMatch = text.match(MAILTO_REGEX);
+  if (mailtoMatch) return `mailto:${mailtoMatch[1]}`;
+
   if (!text.includes('://') && EMAIL_REGEX.test(text)) return `mailto:${text}`;
   return '';
 }
