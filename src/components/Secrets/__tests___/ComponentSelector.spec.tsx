@@ -1,12 +1,16 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { useFormik, FormikProvider } from 'formik';
+import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useSortedGroupComponents } from '~/hooks/useComponents';
+import { useAllComponentsV2 } from '~/hooks/useComponentsV2';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { ComponentSelector } from '../SecretsForm/ComponentSelector';
 
 jest.mock('~/hooks/useComponents');
+jest.mock('~/hooks/useComponentsV2');
 jest.mock('~/shared/providers/Namespace');
+jest.mock('~/feature-flags/hooks');
 
 const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const formikBag = useFormik({
@@ -112,5 +116,53 @@ describe('ComponentSelector', () => {
       const badge = document.querySelector('.pf-v6-c-badge');
       expect(badge).toHaveTextContent('2');
     });
+  });
+
+  it('renders flat new component model options when component-model flag is on', async () => {
+    (useIsOnFeatureFlag as jest.Mock).mockReturnValue(true);
+    (useAllComponentsV2 as jest.Mock).mockReturnValue([
+      [{ metadata: { name: 'ComponentB' } }, { metadata: { name: 'ComponentA' } }],
+      true,
+      null,
+    ]);
+
+    render(
+      <TestWrapper>
+        <ComponentSelector />
+      </TestWrapper>,
+    );
+
+    fireEvent.click(screen.getByText('Select components'));
+    await waitFor(() => {
+      expect(screen.getByText('ComponentA')).toBeInTheDocument();
+      expect(screen.getByText('ComponentB')).toBeInTheDocument();
+    });
+    expect(screen.queryByText('Group1')).not.toBeInTheDocument();
+  });
+
+  it('merges the current component into flat options and preselects it', async () => {
+    (useIsOnFeatureFlag as jest.Mock).mockReturnValue(true);
+    (useAllComponentsV2 as jest.Mock).mockReturnValue([
+      [{ metadata: { name: 'ComponentA' } }],
+      true,
+      null,
+    ]);
+
+    render(
+      <TestWrapper>
+        <ComponentSelector
+          currentComponent={{ componentName: 'CurrentComp', applicationName: null }}
+        />
+      </TestWrapper>,
+    );
+
+    // toggle text switches from 'Select components' once the current component is preselected
+    fireEvent.click(await screen.findByText('Component'));
+    await waitFor(() => {
+      expect(screen.getByText('ComponentA')).toBeInTheDocument();
+      expect(screen.getByText('CurrentComp')).toBeInTheDocument();
+    });
+    expect(screen.getByRole('checkbox', { name: /CurrentComp/ })).toBeChecked();
+    expect(screen.getByRole('checkbox', { name: /ComponentA/ })).not.toBeChecked();
   });
 });

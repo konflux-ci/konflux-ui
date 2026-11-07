@@ -1,4 +1,4 @@
-import { BrowserRouter } from 'react-router-dom';
+import { BrowserRouter, MemoryRouter, Route, Routes } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { mockedSecret } from '../../../../hooks/__data__/mock-data';
@@ -129,5 +129,27 @@ describe('LinkedSecretsListView', () => {
     );
 
     expect(screen.getAllByTestId('linked-secrets-list-item')).toHaveLength(2);
+  });
+
+  it('should render namespace-scoped breadcrumbs when applicationName is absent', () => {
+    render(
+      <QueryClientProvider client={createTestQueryClient()}>
+        <MemoryRouter initialEntries={['/ns/my-namespace/components/my-component/linked-secrets']}>
+          <Routes>
+            <Route
+              path="/ns/:workspaceName/components/:componentName/linked-secrets"
+              element={<LinkedSecretsListView />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    const componentCrumb = screen.getByRole('link', { name: 'my-component' });
+    expect(componentCrumb).toHaveAttribute(
+      'href',
+      expect.stringContaining('/components/my-component'),
+    );
+    expect(componentCrumb.getAttribute('href')).not.toContain('/applications/');
   });
 });

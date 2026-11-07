@@ -42,7 +42,7 @@ jest.mock('~/components/ComponentsPage/ComponentDetails', () => ({
 describe('Components page routes configuration', () => {
   it('should export an array of routes', () => {
     expect(Array.isArray(componentsPageRoutes)).toBe(true);
-    expect(componentsPageRoutes).toHaveLength(2);
+    expect(componentsPageRoutes).toHaveLength(3);
   });
 
   it('should register components list route', () => {
