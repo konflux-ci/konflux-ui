@@ -9,7 +9,10 @@ import { Timestamp } from '~/shared';
 import { defineFilters } from '~/shared/components/Filter';
 import { ColumnDefinition } from '~/shared/components/TableV2';
 import { ComponentGroupKind } from '~/types';
-import { getLatestPromotedBuild } from '~/utils/component-group-utils';
+import {
+  getComponentsAndGroupsCountString,
+  getLatestPromotedBuild,
+} from '~/utils/component-group-utils';
 import { textMatch } from '~/utils/text-filter-utils';
 import ComponentGroupPromotionStatus from '../ComponentGroupPromotionStatus';
 
@@ -49,10 +52,13 @@ export const componentGroupsTableColumns: ColumnDefinition<ComponentGroupKind>[]
   },
   {
     id: 'components',
-    header: 'Components',
-    accessorFn: (row) => row.spec?.components?.length ?? 0,
+    header: 'Components/Groups',
+    accessorFn: (row) => getComponentsAndGroupsCountString(row.spec?.components ?? []),
     nonHidable: true,
-    cell: (info) => <span data-test="component-group-components">{info.getValue() as number}</span>,
+    cell: (info) => {
+      const componentsAndGroupsCountString = info.getValue() as string;
+      return <span data-test="component-group-components">{componentsAndGroupsCountString}</span>;
+    },
   },
   {
     id: 'last-build',
