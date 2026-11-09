@@ -44,6 +44,7 @@ jest.mock('~/shared/components/table/TableComponent', () => {
 
 jest.mock('~/utils/rbac', () => ({
   createLoaderWithAccessCheck: jest.fn(),
+  useAccessReviewForModel: () => [true, true],
 }));
 
 const useComponentMock = useComponentV2 as jest.Mock;

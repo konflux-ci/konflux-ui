@@ -1,7 +1,9 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
+import { useComponentV2Actions } from '~/components/ComponentList/component-v2-actions';
 import { COMPONENT_VERSION_DETAILS_PATH } from '~/routes/paths';
 import { TableData } from '~/shared';
+import ActionMenu from '~/shared/components/action-menu/ActionMenu';
 import ExternalLink from '~/shared/components/links/ExternalLink';
 import { RowFunctionArgs } from '~/shared/components/table/VirtualBody';
 import { useNamespace } from '~/shared/providers/Namespace';
@@ -23,6 +25,7 @@ export const ComponentVersionListRow: React.FC<
   const { repoUrl, defaultPipeline, componentName } = customData;
   const branchUrl = createBranchUrl(repoUrl, obj.revision);
   const pipelineName = getPipelineName(obj['build-pipeline'], defaultPipeline);
+  const actions = useComponentV2Actions(componentName, obj.name);
 
   return (
     <>
@@ -41,6 +44,9 @@ export const ComponentVersionListRow: React.FC<
         {branchUrl ? <ExternalLink href={branchUrl} text={obj.revision} /> : obj.revision || '-'}
       </TableData>
       <TableData className={versionTableColumnClasses.pipeline}>{pipelineName}</TableData>
+      <TableData className={versionTableColumnClasses.kebab}>
+        <ActionMenu actions={actions} />
+      </TableData>
     </>
   );
 };

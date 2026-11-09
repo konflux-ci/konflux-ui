@@ -95,6 +95,11 @@ export const cgComponentsTableColumns: ColumnDefinition<CgComponentListItem>[] =
     id: 'actions',
     header: ' ',
     accessorFn: () => null,
-    cell: (info) => <ComponentActionsCell componentName={info.row.original.componentName} />,
+    cell: (info) => (
+      <ComponentActionsCell
+        componentName={info.row.original.componentName}
+        version={info.row.original.version}
+      />
+    ),
   },
 ];

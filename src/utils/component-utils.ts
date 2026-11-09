@@ -1,12 +1,13 @@
 import * as React from 'react';
-import { K8sQueryPatchResource } from '../k8s';
-import { ComponentModel, ImageRepositoryModel } from '../models';
+import { K8sGetResource, K8sQueryPatchResource } from '../k8s';
+import { ComponentModel, ComponentModelV2, ImageRepositoryModel } from '../models';
 import {
   ComponentBuildPipeline,
   ComponentKind,
   ImageRepositoryKind,
   ImageRepositoryVisibility,
 } from '../types';
+import { ComponentActions } from '../types/component';
 
 // Image registry constants
 export const QUAY_IO_HOST = 'quay.io';
@@ -145,6 +146,38 @@ export const disablePAC = (component: ComponentKind) =>
       },
     ],
   });
+
+// Start builds for the given versions via the new component model's spec.actions.
+// The component is fetched first so existing action keys are preserved in the patch.
+export const startNewBuildV2 = async (
+  namespace: string,
+  componentName: string,
+  versions: string[],
+) => {
+  if (!versions.length) {
+    return;
+  }
+
+  const component = await K8sGetResource<ComponentKind>({
+    model: ComponentModelV2,
+    queryOptions: { name: componentName, ns: namespace },
+  });
+
+  const actions: ComponentActions = { ...(component.spec?.actions ?? {}) };
+  delete actions['trigger-push-build'];
+  delete actions['trigger-push-builds'];
+  if (versions.length === 1) {
+    actions['trigger-push-build'] = versions[0];
+  } else {
+    actions['trigger-push-builds'] = versions;
+  }
+
+  return K8sQueryPatchResource({
+    model: ComponentModelV2,
+    queryOptions: { name: componentName, ns: namespace },
+    patches: [{ op: 'add', path: '/spec/actions', value: actions }],
+  });
+};
 
 export const startNewBuild = (component: ComponentKind) =>
   K8sQueryPatchResource({

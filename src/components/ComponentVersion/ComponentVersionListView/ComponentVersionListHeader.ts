@@ -4,6 +4,7 @@ export const versionTableColumnClasses = {
   name: 'pf-m-width-20',
   revision: 'pf-m-width-20',
   pipeline: 'pf-m-width-20',
+  kebab: 'pf-m-width-10',
 };
 
 export const enum SortableHeaders {
@@ -15,6 +16,7 @@ const versionColumns = [
   { title: 'Version name', className: versionTableColumnClasses.name, sortable: true },
   { title: 'Git branch or tag', className: versionTableColumnClasses.revision, sortable: true },
   { title: 'Pipeline', className: versionTableColumnClasses.pipeline },
+  { title: '', className: versionTableColumnClasses.kebab },
 ];
 
 export default createTableHeaders(versionColumns);

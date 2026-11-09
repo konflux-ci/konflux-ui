@@ -1,5 +1,5 @@
 import React from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
   Bullseye,
   EmptyStateBody,
@@ -8,6 +8,7 @@ import {
   ContentVariants,
 } from '@patternfly/react-core';
 import emptyStateImgUrl from '~/assets/Components.svg';
+import { useComponentV2Actions } from '~/components/ComponentList/component-v2-actions';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { FLAGS } from '~/feature-flags/flags';
 import { IfFeature } from '~/feature-flags/hooks';
@@ -24,11 +25,32 @@ import { useNamespace } from '~/shared/providers/Namespace/useNamespaceInfo';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { getComponentVersion } from '~/utils/version-utils';
 import { DetailsPage } from '../DetailsPage';
+import { Action } from '../DetailsPage/types';
 
 const ComponentVersionDetailsView: React.FC = () => {
   const { componentName, versionRevision } = useParams<RouterParams>();
+  const navigate = useNavigate();
   const namespace = useNamespace();
   const [component, loaded, componentError] = useComponentV2(namespace, componentName);
+
+  const versionActions = useComponentV2Actions(componentName, versionRevision);
+  const actions: Action[] = React.useMemo(
+    () =>
+      versionActions.map((versionAction) => ({
+        key: versionAction.id,
+        label: versionAction.label,
+        isDisabled: versionAction.disabled,
+        disabledTooltip: versionAction.disabledTooltip,
+        onClick: () => {
+          if (typeof versionAction.cta === 'function') {
+            versionAction.cta();
+          } else if (!versionAction.cta.external) {
+            navigate(versionAction.cta.href);
+          }
+        },
+      })),
+    [versionActions, navigate],
+  );
 
   if (!loaded) {
     return (
@@ -61,6 +83,7 @@ const ComponentVersionDetailsView: React.FC = () => {
     >
       <DetailsPage
         data-test="version-details-test-id"
+        actions={actions}
         headTitle={versionRevision}
         title={
           <Content component={ContentVariants.h2}>
