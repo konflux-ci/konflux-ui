@@ -4,13 +4,14 @@ import {
   mockPrivateImageRepository,
   mockPublicImageRepository,
 } from '~/__data__/image-repository-data';
-import { ComponentModel, ImageRepositoryModel } from '~/models';
+import { ComponentModel, ComponentModelV2, ImageRepositoryModel } from '~/models';
 import { ComponentKind, ImageRepositoryVisibility } from '~/types';
 import {
   isPACEnabled,
   useComponentBuildStatus,
   BUILD_STATUS_ANNOTATION,
   startNewBuild,
+  startNewBuildV2,
   BUILD_REQUEST_ANNOTATION,
   BuildRequest,
   getLastestImage,
@@ -23,6 +24,7 @@ import {
 import { createK8sUtilMock } from '../test-utils';
 
 const k8sPatchResourceMock = createK8sUtilMock('K8sQueryPatchResource');
+const k8sGetResourceMock = createK8sUtilMock('K8sGetResource');
 
 describe('component-utils', () => {
   it('should detect pac enabled state', () => {
@@ -464,5 +466,73 @@ describe('getPipelineName', () => {
 
   it('should return "-" when definition has no name fields', () => {
     expect(getPipelineName({ 'pull-and-push': {} }, undefined)).toBe('-');
+  });
+});
+
+describe('startNewBuildV2', () => {
+  it('should trigger a single-version build via trigger-push-build and keep existing actions', async () => {
+    k8sGetResourceMock.mockReturnValue({
+      metadata: { name: 'comp', namespace: 'test-ns' },
+      spec: { actions: { 'create-pipeline-configuration-pr': { 'all-versions': true } } },
+    });
+
+    await startNewBuildV2('test-ns', 'comp', ['v1']);
+
+    expect(k8sPatchResourceMock).toHaveBeenCalledWith({
+      model: ComponentModelV2,
+      queryOptions: { name: 'comp', ns: 'test-ns' },
+      patches: [
+        {
+          op: 'add',
+          path: '/spec/actions',
+          value: {
+            'create-pipeline-configuration-pr': { 'all-versions': true },
+            'trigger-push-build': 'v1',
+          },
+        },
+      ],
+    });
+  });
+
+  it('should trigger a multi-version build via trigger-push-builds', async () => {
+    k8sGetResourceMock.mockReturnValue({
+      metadata: { name: 'comp', namespace: 'test-ns' },
+      spec: {},
+    });
+
+    await startNewBuildV2('test-ns', 'comp', ['v1', 'v2']);
+
+    expect(k8sPatchResourceMock).toHaveBeenCalledWith({
+      model: ComponentModelV2,
+      queryOptions: { name: 'comp', ns: 'test-ns' },
+      patches: [
+        { op: 'add', path: '/spec/actions', value: { 'trigger-push-builds': ['v1', 'v2'] } },
+      ],
+    });
+  });
+
+  it('should replace stale trigger keys from previous build requests', async () => {
+    k8sGetResourceMock.mockReturnValue({
+      metadata: { name: 'comp', namespace: 'test-ns' },
+      spec: { actions: { 'trigger-push-builds': ['old-v1', 'old-v2'] } },
+    });
+
+    await startNewBuildV2('test-ns', 'comp', ['v1']);
+
+    expect(k8sPatchResourceMock).toHaveBeenCalledWith({
+      model: ComponentModelV2,
+      queryOptions: { name: 'comp', ns: 'test-ns' },
+      patches: [{ op: 'add', path: '/spec/actions', value: { 'trigger-push-build': 'v1' } }],
+    });
+  });
+
+  it('should do nothing when no versions are given', async () => {
+    k8sGetResourceMock.mockClear();
+    k8sPatchResourceMock.mockClear();
+
+    await startNewBuildV2('test-ns', 'comp', []);
+
+    expect(k8sGetResourceMock).not.toHaveBeenCalled();
+    expect(k8sPatchResourceMock).not.toHaveBeenCalled();
   });
 });

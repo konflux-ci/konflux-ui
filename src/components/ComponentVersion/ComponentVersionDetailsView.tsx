@@ -1,5 +1,5 @@
 import React from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
   Bullseye,
   EmptyStateBody,
@@ -8,6 +8,7 @@ import {
   ContentVariants,
 } from '@patternfly/react-core';
 import emptyStateImgUrl from '~/assets/Components.svg';
+import { useComponentV2Actions } from '~/components/Components/component-v2-actions';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { FLAGS } from '~/feature-flags/flags';
 import { IfFeature } from '~/feature-flags/hooks';
@@ -24,11 +25,19 @@ import { useNamespace } from '~/shared/providers/Namespace/useNamespaceInfo';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { getComponentVersion } from '~/utils/version-utils';
 import { DetailsPage } from '../DetailsPage';
+import { createDetailsPageActions } from '../DetailsPage/utils';
 
 const ComponentVersionDetailsView: React.FC = () => {
   const { componentName, versionRevision } = useParams<RouterParams>();
+  const navigate = useNavigate();
   const namespace = useNamespace();
   const [component, loaded, componentError] = useComponentV2(namespace, componentName);
+
+  const versionActions = useComponentV2Actions(componentName, versionRevision);
+  const actions = React.useMemo(
+    () => createDetailsPageActions(versionActions, navigate),
+    [versionActions, navigate],
+  );
 
   if (!loaded) {
     return (
@@ -61,6 +70,7 @@ const ComponentVersionDetailsView: React.FC = () => {
     >
       <DetailsPage
         data-test="version-details-test-id"
+        actions={actions}
         headTitle={versionRevision}
         title={
           <Content component={ContentVariants.h2}>

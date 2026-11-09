@@ -66,6 +66,7 @@ const ComponentGroupComponentsList: React.FC = () => {
         gitUrl: isComponentGroup ? undefined : componentsMap.get(ref.name)?.spec.source?.url,
         imageUrl: isComponentGroup ? undefined : latestCandidate?.lastPromotedImage,
         version: isComponentGroup ? undefined : (version ?? latestCandidate?.version),
+        versionName: ref.componentVersion?.name ?? latestCandidate?.version,
       };
     });
   }, [group, namespace, groupLoaded, groupError, compLoaded, componentsMap, allReferences]);

@@ -20,7 +20,10 @@ export type CgComponentListItem = {
   kind?: ComponentReferenceKind;
   gitUrl?: string;
   imageUrl?: string;
+  /** Display version; may be a git revision from the reference or another version's promoted candidate. */
   version?: string;
+  /** Canonical version name, used to start builds. */
+  versionName?: string;
 };
 
 export const cgComponentsFilterConfig = defineFilters<CgComponentListItem>()([
@@ -134,6 +137,11 @@ export const cgComponentsTableColumns: ColumnDefinition<CgComponentListItem>[] =
     id: 'actions',
     header: ' ',
     accessorFn: () => null,
-    cell: (info) => <ComponentActionsCell componentName={info.row.original.componentName} />,
+    cell: (info) => (
+      <ComponentActionsCell
+        componentName={info.row.original.componentName}
+        version={info.row.original.versionName}
+      />
+    ),
   },
 ];
