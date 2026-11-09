@@ -5,7 +5,7 @@ import { pipelineWithCommits } from '~/components/Commits/__data__/pipeline-with
 import { FilterContext, FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { TEXT_SEARCH_TYPES } from '~/consts/constants';
 import { PipelineRunLabel, PipelineRunType, runStatus } from '~/consts/pipelinerun';
-import { useComponent } from '~/hooks/useComponents';
+import { useComponentV2 } from '~/hooks/useComponentsV2';
 import { usePipelineRunsV2 } from '~/hooks/usePipelineRunsV2';
 import * as dateTime from '~/shared/components/timestamp/datetime';
 import { PipelineRunKind } from '~/types';
@@ -80,8 +80,8 @@ jest.mock('~/utils/rbac', () => ({
   useAccessReviewForModel: jest.fn(() => [true, true]),
 }));
 
-jest.mock('~/hooks/useComponents', () => ({
-  useComponent: jest.fn(),
+jest.mock('~/hooks/useComponentsV2', () => ({
+  useComponentV2: jest.fn(),
 }));
 
 jest.mock('~/hooks/usePipelineRunsV2', () => ({
@@ -92,7 +92,7 @@ jest.mock('~/hooks/useScanResults', () => ({
   usePLRVulnerabilities: jest.fn(() => ({})),
 }));
 
-const useComponentMock = useComponent as jest.Mock;
+const useComponentMock = useComponentV2 as jest.Mock;
 const useNamespaceMock = mockUseNamespaceHook('test-ns');
 const usePipelineRunsV2Mock = usePipelineRunsV2 as jest.Mock;
 
@@ -104,6 +104,7 @@ const withBuildLabels = (plr: PipelineRunKind): PipelineRunKind => ({
       ...plr.metadata.labels,
       [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.BUILD,
       [PipelineRunLabel.COMPONENT_VERSION]: 'main',
+      [PipelineRunLabel.V2_COMPONENT_VERSION]: 'main',
     },
   },
 });
@@ -316,26 +317,35 @@ describe('CommitsListViewV2', () => {
       expect.objectContaining({
         selector: expect.objectContaining({
           matchLabels: expect.objectContaining({
-            'appstudio.openshift.io/component': 'sample-component',
+            [PipelineRunLabel.V2_COMPONENT]: 'sample-component',
           }),
         }),
       }),
     );
   });
 
-  it('should include version label in selector when versionName is provided', () => {
+  it('should not include the version in the label selector when versionName is provided', () => {
     renderWithQueryClient(<CommitsListV2 versionName="main" />);
 
     expect(usePipelineRunsV2Mock).toHaveBeenCalledWith(
       'test-ns',
       expect.objectContaining({
         selector: expect.objectContaining({
-          matchLabels: expect.objectContaining({
-            [PipelineRunLabel.COMPONENT_VERSION]: 'main',
-          }),
+          matchLabels: {
+            [PipelineRunLabel.V2_COMPONENT]: 'sample-component',
+          },
         }),
       }),
     );
+  });
+
+  it('should keep runs whose version is set as a label when versionName is provided', async () => {
+    renderWithQueryClient(<CommitsListV2 versionName="main" />);
+
+    await waitFor(() => {
+      expect(screen.getByText('#11 test-title')).toBeInTheDocument();
+      expect(screen.getByText('#12 test-title-3')).toBeInTheDocument();
+    });
   });
 
   it('should render skeleton while data is not loaded', () => {

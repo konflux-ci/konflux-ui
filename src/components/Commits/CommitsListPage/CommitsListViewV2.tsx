@@ -11,7 +11,7 @@ import {
   RUN_STATUS_PRIORITY,
   runStatus,
 } from '~/consts/pipelinerun';
-import { useComponent } from '~/hooks/useComponents';
+import { useComponentV2 } from '~/hooks/useComponentsV2';
 import { usePipelineRunsV2 } from '~/hooks/usePipelineRunsV2';
 import { useSortedResources } from '~/hooks/useSortedResources';
 import { useVisibleColumns } from '~/hooks/useVisibleColumns';
@@ -45,7 +45,7 @@ const CommitsListViewV2: React.FC<React.PropsWithChildren<CommitsListViewPropsV2
   versionName,
 }) => {
   const namespace = useNamespace();
-  const [component, compLoaded, compError] = useComponent(namespace, componentName, true);
+  const [component, compLoaded, compError] = useComponentV2(namespace, componentName, true);
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
 
   const [visibleColumns, setVisibleColumns] = useVisibleColumns(
@@ -82,12 +82,11 @@ const CommitsListViewV2: React.FC<React.PropsWithChildren<CommitsListViewPropsV2
           selector: {
             filterByCreationTimestampAfter: component?.metadata?.creationTimestamp,
             matchLabels: {
-              [PipelineRunLabel.COMPONENT]: componentName,
-              ...(versionName ? { [PipelineRunLabel.COMPONENT_VERSION]: versionName } : {}),
+              [PipelineRunLabel.V2_COMPONENT]: componentName,
             },
           },
         }),
-        [component?.metadata?.creationTimestamp, componentName, versionName],
+        [component?.metadata?.creationTimestamp, componentName],
       ),
     );
 
@@ -95,10 +94,16 @@ const CommitsListViewV2: React.FC<React.PropsWithChildren<CommitsListViewPropsV2
   const buildPipelineRuns = React.useMemo(() => {
     return (
       pipelineRuns?.filter(
-        (plr) => plr.metadata?.labels?.[PipelineRunLabel.PIPELINE_TYPE] === PipelineRunType.BUILD,
+        (plr) =>
+          (plr.metadata?.labels?.[PipelineRunLabel.V2_PIPELINE_TYPE] ??
+            plr.metadata?.labels?.[PipelineRunLabel.PIPELINE_TYPE]) === PipelineRunType.BUILD &&
+          (!versionName ||
+            (plr.metadata?.labels?.[PipelineRunLabel.COMPONENT_VERSION] ??
+              plr.metadata?.labels?.[PipelineRunLabel.V2_COMPONENT_VERSION] ??
+              plr.metadata?.annotations?.[PipelineRunLabel.V2_COMPONENT_VERSION]) === versionName),
       ) || []
     );
-  }, [pipelineRuns]);
+  }, [pipelineRuns, versionName]);
 
   const commits = React.useMemo(
     () => (plrLoaded && buildPipelineRuns && getCommitsFromPLRs(buildPipelineRuns)) || [],
