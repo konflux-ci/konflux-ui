@@ -103,12 +103,17 @@ export function renderTokenRecursive(
   const href = insideAnchor ? '' : getTokenHref(tokenText);
   const isLink = href !== '';
   const Tag = isLink ? 'a' : 'span';
+  const isMailto = href.startsWith('mailto:');
   const linkProps = isLink
     ? {
         href,
-        target: '_blank' as const,
-        rel: 'noopener noreferrer',
-        'aria-label': `${tokenText} (opens in new tab)`,
+        ...(isMailto
+          ? { 'aria-label': tokenText }
+          : {
+              target: '_blank' as const,
+              rel: 'noopener noreferrer',
+              'aria-label': `${tokenText} (opens in new tab)`,
+            }),
       }
     : {};
   const childInsideAnchor = insideAnchor || isLink;
