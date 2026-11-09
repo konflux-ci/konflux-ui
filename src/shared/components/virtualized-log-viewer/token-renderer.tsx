@@ -108,7 +108,7 @@ export function renderTokenRecursive(
     ? {
         href,
         ...(isMailto
-          ? { 'aria-label': tokenText }
+          ? { 'aria-label': `${tokenText} (opens email client)` }
           : {
               target: '_blank' as const,
               rel: 'noopener noreferrer',
