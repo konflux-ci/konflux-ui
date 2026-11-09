@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { useParams } from 'react-router-dom';
 import { screen } from '@testing-library/react';
+import { userEvent } from '@testing-library/user-event';
 import { FLAGS } from '~/feature-flags/flags';
 import { useIsOnFeatureFlag, useFeatureFlags } from '~/feature-flags/hooks';
 import { useComponentV2 } from '~/hooks/useComponentsV2';
@@ -17,6 +18,14 @@ jest.mock('react-router-dom', () => ({
 
 jest.mock('~/hooks/useComponentsV2', () => ({
   useComponentV2: jest.fn(),
+}));
+
+jest.mock('~/utils/rbac', () => ({
+  useAccessReviewForModel: jest.fn(() => [true, true]),
+}));
+
+jest.mock('~/shared/components/modal/ModalProvider', () => ({
+  useModalLauncher: jest.fn(() => jest.fn()),
 }));
 
 jest.mock('~/feature-flags/hooks', () => {
@@ -125,6 +134,16 @@ describe('ComponentVersionDetailsView', () => {
   it('should render the component name as the heading', () => {
     renderWithQueryClientAndRouter(<ComponentVersionDetailsView />);
     expect(screen.getByRole('heading', { name: /my-component/ })).toBeInTheDocument();
+  });
+
+  it('should render the start-new-build and manage-linked-secrets actions', async () => {
+    const user = userEvent.setup();
+    renderWithQueryClientAndRouter(<ComponentVersionDetailsView />);
+
+    await user.click(screen.getByTestId('details__actions'));
+
+    expect(screen.getByText('Start new build')).toBeInTheDocument();
+    expect(screen.getByText('Manage linked secrets')).toBeInTheDocument();
   });
 
   it('should show fallback when feature flag is disabled', () => {

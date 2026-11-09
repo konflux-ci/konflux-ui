@@ -102,7 +102,7 @@ jest.mock('~/hooks/useScanResults', () => ({
   usePLRVulnerabilities: jest.fn(() => ({ vulnerabilities: {}, fetchedPipelineRuns: [] })),
 }));
 
-const useComponentMock = useComponentV2 as jest.Mock;
+const useComponentV2Mock = useComponentV2 as jest.Mock;
 const usePipelineRunsV2Mock = usePipelineRunsV2 as jest.Mock;
 
 const pipelineRuns: PipelineRunKind[] = [
@@ -127,7 +127,6 @@ const pipelineRuns: PipelineRunKind[] = [
       labels: {
         'appstudio.openshift.io/component': 'sample-component',
         [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.TEST as string,
-        [PipelineRunLabel.COMPONENT_VERSION]: 'main',
       },
       annotations: {
         [PipelineRunLabel.COMMIT_PROVIDER_LABEL]: 'github',
@@ -172,7 +171,6 @@ const pipelineRuns: PipelineRunKind[] = [
       },
       annotations: {
         [PipelineRunLabel.COMMIT_PROVIDER_LABEL]: 'github',
-        [PipelineRunLabel.V2_COMPONENT_VERSION]: 'release-2.0',
       },
     },
     spec: {
@@ -190,7 +188,6 @@ const pipelineRuns: PipelineRunKind[] = [
       labels: {
         'appstudio.openshift.io/component': 'sample-component',
         [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.BUILD as string,
-        [PipelineRunLabel.COMPONENT_VERSION]: 'main',
         [PipelineRunLabel.V2_COMPONENT_VERSION]: 'main',
       },
     },
@@ -227,7 +224,7 @@ describe('PipelineRunsListViewV2', () => {
     resetMockSearchParams();
     jest.clearAllMocks();
     useNamespaceMock.mockReturnValue('test-ns');
-    useComponentMock.mockReturnValue([mockComponentData, true, undefined]);
+    useComponentV2Mock.mockReturnValue([mockComponentData, true, undefined]);
     usePipelineRunsV2Mock.mockReturnValue([
       pipelineRuns,
       true,
@@ -279,13 +276,17 @@ describe('PipelineRunsListViewV2', () => {
   });
 
   it('should render error state when component loading fails', () => {
-    useComponentMock.mockReturnValue([undefined, true, new Error('component error')]);
+    useComponentV2Mock.mockReturnValue([undefined, true, new Error('component error')]);
     renderWithQueryClient(<TestedComponentV2 />);
     screen.getByText('Unable to load pipeline runs');
   });
 
   it('should not show pipeline-specific 504 message for component errors', () => {
-    useComponentMock.mockReturnValue([undefined, true, { code: 504, message: 'Gateway Timeout' }]);
+    useComponentV2Mock.mockReturnValue([
+      undefined,
+      true,
+      { code: 504, message: 'Gateway Timeout' },
+    ]);
     renderWithQueryClient(<TestedComponentV2 />);
     expect(screen.getByText('Unable to load pipeline runs')).toBeInTheDocument();
     expect(screen.getByText('Gateway Timeout')).toBeInTheDocument();

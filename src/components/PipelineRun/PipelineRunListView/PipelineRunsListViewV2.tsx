@@ -90,8 +90,8 @@ const PipelineRunsListViewV2: React.FC<React.PropsWithChildren<PipelineRunsListV
     const versionRuns = versionName
       ? pipelineRuns.filter(
           (plr) =>
-            (plr.metadata?.labels?.[PipelineRunLabel.COMPONENT_VERSION] ??
-              plr.metadata?.labels?.[PipelineRunLabel.V2_COMPONENT_VERSION] ??
+            (plr.metadata?.labels?.[PipelineRunLabel.V2_COMPONENT_VERSION] ??
+              plr.metadata?.labels?.[PipelineRunLabel.COMPONENT_VERSION] ??
               plr.metadata?.annotations?.[PipelineRunLabel.V2_COMPONENT_VERSION]) === versionName,
         )
       : pipelineRuns;

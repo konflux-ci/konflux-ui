@@ -3,6 +3,8 @@ import {
   Alert,
   Bullseye,
   Button,
+  EmptyState,
+  EmptyStateBody,
   Flex,
   FlexItem,
   Label,
@@ -12,6 +14,7 @@ import {
   ModalVariant,
   Spinner,
 } from '@patternfly/react-core';
+import { CubesIcon } from '@patternfly/react-icons/dist/esm/icons/cubes-icon';
 import { useComponentV2 } from '~/hooks/useComponentsV2';
 import SelectComponentsDropdown from '~/shared/components/component-select-menu/SelectComponnetsDropdown';
 import { ComponentProps, createModalLauncher } from '~/shared/components/modal/createModalLauncher';
@@ -53,7 +56,7 @@ export const StartNewBuildModal: React.FC<React.PropsWithChildren<StartNewBuildM
       await startNewBuildV2(namespace, componentName, selected);
       onClose?.();
     } catch (err) {
-      setSubmitError((err as Error)?.message || 'Failed to start build');
+      setSubmitError(err instanceof Error ? err.message : 'Failed to start build');
     } finally {
       setIsSubmitting(false);
     }
@@ -72,7 +75,11 @@ export const StartNewBuildModal: React.FC<React.PropsWithChildren<StartNewBuildM
   }
 
   if (versionNames.length === 0) {
-    return <>This component has no versions to build</>;
+    return (
+      <EmptyState headingLevel="h2" icon={CubesIcon} titleText="No versions to build">
+        <EmptyStateBody>This component has no versions to build.</EmptyStateBody>
+      </EmptyState>
+    );
   }
 
   return (
@@ -116,6 +123,7 @@ export const StartNewBuildModal: React.FC<React.PropsWithChildren<StartNewBuildM
             variant="danger"
             title="Failed to start build"
             isInline
+            isLiveRegion
             data-test="start-build-error"
           >
             {submitError}
@@ -128,13 +136,14 @@ export const StartNewBuildModal: React.FC<React.PropsWithChildren<StartNewBuildM
             variant="primary"
             onClick={handleSubmit}
             isDisabled={selected.length === 0 || isSubmitting}
+            isLoading={isSubmitting}
             data-test="start-build-submit"
           >
             Start build
           </Button>
         </FlexItem>
         <FlexItem>
-          <Button variant="tertiary" onClick={() => onClose?.()}>
+          <Button variant="tertiary" onClick={() => onClose?.()} isDisabled={isSubmitting}>
             Cancel
           </Button>
         </FlexItem>

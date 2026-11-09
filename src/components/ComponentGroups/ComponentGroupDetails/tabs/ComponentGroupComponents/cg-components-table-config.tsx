@@ -13,7 +13,10 @@ export type CgComponentListItem = {
   namespace: string;
   gitUrl?: string;
   imageUrl?: string;
+  /** Display version; may be a git revision from the reference or another version's promoted candidate. */
   version?: string;
+  /** Canonical version name, used to start builds. */
+  versionName?: string;
 };
 
 export const cgComponentsFilterConfig = defineFilters<CgComponentListItem>()([
@@ -98,7 +101,7 @@ export const cgComponentsTableColumns: ColumnDefinition<CgComponentListItem>[] =
     cell: (info) => (
       <ComponentActionsCell
         componentName={info.row.original.componentName}
-        version={info.row.original.version}
+        version={info.row.original.versionName}
       />
     ),
   },

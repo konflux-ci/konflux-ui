@@ -1,9 +1,12 @@
 import * as React from 'react';
+import { ModalVariant } from '@patternfly/react-core';
+import ErrorModal from '~/components/modal/ErrorModal';
 import { ComponentModelV2, ServiceAccountModel } from '~/models';
 import { COMPONENT_LINKED_SECRETS_V2_PATH } from '~/routes/paths';
 import { Action } from '~/shared/components/action-menu/types';
+import { createModalLauncher } from '~/shared/components/modal/createModalLauncher';
 import { useModalLauncher } from '~/shared/components/modal/ModalProvider';
-import { useNamespace } from '~/shared/providers/Namespace/useNamespaceInfo';
+import { useNamespace } from '~/shared/providers/Namespace';
 import { startNewBuildV2 } from '~/utils/component-utils';
 import { useAccessReviewForModel } from '~/utils/rbac';
 import { createStartNewBuildModalLauncher } from './StartNewBuildModal';
@@ -22,7 +25,18 @@ export const useComponentV2Actions = (componentName?: string, version?: string):
     // open the modal to pick versions
     const startNewBuild: Action = {
       cta: version
-        ? () => startNewBuildV2(namespace, componentName, [version])
+        ? () =>
+            startNewBuildV2(namespace, componentName, [version]).catch((err) =>
+              showModal(
+                createModalLauncher(ErrorModal, {
+                  'data-test': 'start-build-error-modal',
+                  variant: ModalVariant.small,
+                  title: 'Failed to start build',
+                })({
+                  errorMessage: err instanceof Error ? err.message : 'Failed to start build',
+                }),
+              ),
+            )
         : () => showModal(createStartNewBuildModalLauncher(componentName)),
       id: `start-new-build-${componentName.toLowerCase()}`,
       label: 'Start new build',

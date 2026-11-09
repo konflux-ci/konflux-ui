@@ -1,6 +1,8 @@
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { useComponentV2 } from '~/hooks/useComponentsV2';
 import { ComponentKind } from '~/types';
+import { renderWithQueryClientAndRouter } from '~/unit-test-utils/rendering-utils';
 import { startNewBuildV2 } from '~/utils/component-utils';
 import { StartNewBuildModal } from '../StartNewBuildModal';
 
@@ -16,6 +18,8 @@ jest.mock('~/utils/component-utils', () => ({
   startNewBuildV2: jest.fn(),
 }));
 
+const useComponentV2Mock = useComponentV2 as jest.Mock;
+
 const mockComponent = {
   metadata: { name: 'test-component', namespace: 'test-namespace' },
   spec: {
@@ -30,10 +34,14 @@ const mockComponent = {
 } as unknown as ComponentKind;
 
 describe('StartNewBuildModal', () => {
-  const renderModal = (onClose: () => void) => {
-    const { useComponentV2 } = jest.requireMock('~/hooks/useComponentsV2');
-    useComponentV2.mockReturnValue([mockComponent, true, undefined]);
-    return render(<StartNewBuildModal onClose={onClose} componentName="test-component" />);
+  const renderModal = (
+    onClose: () => void,
+    componentV2Return: unknown[] = [mockComponent, true, undefined],
+  ) => {
+    useComponentV2Mock.mockReturnValue(componentV2Return);
+    return renderWithQueryClientAndRouter(
+      <StartNewBuildModal onClose={onClose} componentName="test-component" />,
+    );
   };
 
   const selectVersions = async (...versions: string[]) => {
@@ -49,6 +57,30 @@ describe('StartNewBuildModal', () => {
     renderModal(() => {});
 
     expect(screen.getByRole('button', { name: 'Start build' })).toBeDisabled();
+  });
+
+  it('should show a spinner while the component is loading', () => {
+    renderModal(() => {}, [undefined, false, undefined]);
+
+    expect(screen.getByTestId('spinner')).toBeInTheDocument();
+  });
+
+  it('should show an error state when the component fails to load', () => {
+    renderModal(() => {}, [undefined, true, new Error('500: Internal server error')]);
+
+    expect(screen.getByText('Unable to load component')).toBeInTheDocument();
+  });
+
+  it('should show an empty state when the component has no versions', () => {
+    const noVersionsComponent = {
+      ...mockComponent,
+      spec: { ...mockComponent.spec, source: { ...mockComponent.spec.source, versions: [] } },
+    } as unknown as ComponentKind;
+    renderModal(() => {}, [noVersionsComponent, true, undefined]);
+
+    expect(screen.getByText('No versions to build')).toBeInTheDocument();
+    expect(screen.getByText('This component has no versions to build.')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Start build' })).not.toBeInTheDocument();
   });
 
   it('should start builds for all selected versions on submit', async () => {

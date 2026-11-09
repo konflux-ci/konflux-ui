@@ -4,7 +4,7 @@ export const versionTableColumnClasses = {
   name: 'pf-m-width-20',
   revision: 'pf-m-width-20',
   pipeline: 'pf-m-width-20',
-  kebab: 'pf-m-width-10',
+  kebab: 'pf-v6-c-table__action',
 };
 
 export const enum SortableHeaders {
