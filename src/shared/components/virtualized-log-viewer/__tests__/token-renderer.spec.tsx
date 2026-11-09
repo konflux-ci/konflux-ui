@@ -16,6 +16,10 @@ describe('token-renderer', () => {
       expect(getTokenHref('user@example.com')).toBe('mailto:user@example.com');
     });
 
+    it('should extract email from surrounding sentence text', () => {
+      expect(getTokenHref('Contact user@example.com')).toBe('mailto:user@example.com');
+    });
+
     it('should not add mailto: for non-email text', () => {
       expect(getTokenHref('https://example.com')).toBe('https://example.com');
     });
@@ -226,6 +230,15 @@ describe('token-renderer', () => {
       expect(anchor).not.toBeNull();
       expect(anchor?.tagName).toBe('A');
       expect(anchor?.getAttribute('href')).toBe('mailto:admin@pipeline.test');
+    });
+
+    it('should extract email href from a string token with surrounding text', () => {
+      const token = new Prism.Token('string', 'Contact admin@pipeline.test');
+      const { container } = render(<>{renderTokenRecursive(token, 0, [], null, 0)}</>);
+      const anchor = container.querySelector('a.token.string');
+      expect(anchor).not.toBeNull();
+      expect(anchor?.getAttribute('href')).toBe('mailto:admin@pipeline.test');
+      expect(anchor?.textContent).toBe('Contact admin@pipeline.test');
     });
 
     it('should render a container-image token as a span, not an anchor', () => {

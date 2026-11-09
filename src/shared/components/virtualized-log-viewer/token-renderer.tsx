@@ -3,7 +3,7 @@ import Prism from 'prismjs';
 import { flattenTokenText, isMatchCurrent } from './log-viewer-utils';
 import type { MatchRange } from './types';
 
-const EMAIL_REGEX = /^[^\s@?]+@[^\s@?/:]+\.[^\s@?/:]+$/;
+const EMAIL_REGEX = /[^\s@?]+@[^\s@?/:]+\.[^\s@?/:]+$/;
 /** Absolute http(s)/ftp URLs; must not include surrounding quotes or other token junk. */
 const ABSOLUTE_URL_REGEX = /\b(?:https?|ftp):\/\/[^\s"'<>\]]+/i;
 const MAILTO_REGEX = /\bmailto:([^\s"'<>\]?]+)/i;
@@ -21,7 +21,8 @@ export function getTokenHref(text: string): string {
   const mailtoMatch = text.match(MAILTO_REGEX);
   if (mailtoMatch) return `mailto:${mailtoMatch[1]}`;
 
-  if (!text.includes('://') && EMAIL_REGEX.test(text)) return `mailto:${text}`;
+  const emailMatch = !text.includes('://') ? text.match(EMAIL_REGEX) : null;
+  if (emailMatch) return `mailto:${emailMatch[0]}`;
   return '';
 }
 
