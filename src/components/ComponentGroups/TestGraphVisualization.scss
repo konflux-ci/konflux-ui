@@ -1,0 +1,11 @@
+.test-graph-visualization {
+  margin-bottom: var(--pf-t--global--spacer--md);
+
+  &__graph {
+    overflow: auto;
+  }
+
+  &__legend {
+    margin-top: var(--pf-t--global--spacer--md);
+  }
+}

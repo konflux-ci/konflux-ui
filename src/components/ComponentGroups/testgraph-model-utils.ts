@@ -4,21 +4,21 @@ import { TestGraphNode } from '~/types';
 import { TestGraphNodeType, TestGraphEdgeType } from './testgraph-visualization-types';
 
 /**
- * Calculate stages via recursive depth.
- * Cycles: break at detection point (stage 0). Missing deps: filtered out.
+ * Calculate each test's stage from its dependencies: a test's stage is one
+ * more than the highest stage of the tests it depends on.
+ * Cycles are broken by treating a test that is already being visited as
+ * stage 0. Dependencies missing from the graph are ignored.
  */
 const calculateStages = (testGraph: Record<string, TestGraphNode[]>): Map<string, number> => {
   const stages = new Map<string, number>();
-  const inProgress = new Set<string>(); // recursion stack for cycle detection
+  const inProgress = new Set<string>(); // tests currently being calculated, used to spot cycles
 
   const getStage = (testName: string): number => {
     if (stages.has(testName)) return stages.get(testName);
 
-    // Cycle detected: lock at stage 0, prevents overwrite when recursion unwinds
-    if (inProgress.has(testName)) {
-      stages.set(testName, 0);
-      return 0;
-    }
+    // Cycle: this test is already being calculated further up the call stack.
+    // Return 0 just to stop the recursion — its real stage is set below.
+    if (inProgress.has(testName)) return 0;
 
     inProgress.add(testName);
     const deps = (testGraph[testName] || []).filter((d) =>
@@ -28,10 +28,8 @@ const calculateStages = (testGraph: Record<string, TestGraphNode[]>): Map<string
     const stage = deps.length === 0 ? 0 : Math.max(...deps.map((d) => getStage(d.name))) + 1;
 
     inProgress.delete(testName);
-    if (!stages.has(testName)) {
-      stages.set(testName, stage);
-    }
-    return stages.get(testName);
+    stages.set(testName, stage);
+    return stage;
   };
 
   Object.keys(testGraph).sort().forEach(getStage);
@@ -41,20 +39,21 @@ const calculateStages = (testGraph: Record<string, TestGraphNode[]>): Map<string
 export const getTestGraphModel = (
   testGraph: Record<string, TestGraphNode[]>,
   groupName: string,
+  namespace: string,
 ): Model => {
   const nodes: NodeModel[] = [];
   const edges: EdgeModel[] = [];
 
   // Calculate stages and group tests by stage
   const testStages = calculateStages(testGraph);
-  const stageGroups = Array.from(testStages.entries()).reduce(
-    (acc, [testName, stage]) => {
-      if (!acc[stage]) acc[stage] = [];
-      acc[stage].push(testName);
-      return acc;
-    },
-    {} as Record<number, string[]>,
-  );
+  // Cycles can leave gaps in the stage numbers (e.g. no stage 0), so renumber
+  // the stages that are in use to 0, 1, 2, ...
+  const usedStages = [...new Set(testStages.values())].sort((a, b) => a - b);
+  const stageGroups: Record<number, string[]> = {};
+  testStages.forEach((stage, testName) => {
+    const stageIndex = usedStages.indexOf(stage);
+    stageGroups[stageIndex] = [...(stageGroups[stageIndex] || []), testName];
+  });
 
   // Create group nodes for each stage
   Object.entries(stageGroups)
@@ -83,7 +82,7 @@ export const getTestGraphModel = (
       label: testName,
       width: 180,
       height: 32,
-      data: { failFast: validDeps.some((d) => d.failFast), groupName },
+      data: { failFast: validDeps.some((d) => d.failFast), groupName, namespace },
     });
 
     // Dependency edges
@@ -101,7 +100,7 @@ export const getTestGraphModel = (
     graph: {
       id: 'test-graph',
       type: ModelKind.graph,
-      layout: PipelineLayout.PIPELINERUN_VISUALIZATION,
+      layout: PipelineLayout.TESTGRAPH_VISUALIZATION,
     },
     nodes,
     edges,
