@@ -92,7 +92,6 @@ export class Login {
 
       console.log('Logging in to stage Konflux...');
       cy.visit(Cypress.expose('KONFLUX_BASE_URL'));
-      cy.get(stageLoginPO.dex).should('be.visible').click();
 
       // Click through IDP selection page if it appears
       cy.get('body').then(($body) => {
@@ -111,9 +110,6 @@ export class Login {
           cy.get(stageLoginPO.approveButton).click();
         }
       });
-
-      // Grant Access is always required
-      cy.contains(stageLoginPO.grantAccessClass, stageLoginPO.grantAccessText).click();
 
       // ----- Workaround -----
       // Sometimes page doesn't go to homepage but shows
