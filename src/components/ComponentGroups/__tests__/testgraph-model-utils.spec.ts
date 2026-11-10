@@ -9,7 +9,7 @@ describe('testgraph-model-utils', () => {
         'smoke-tests': [],
       };
 
-      const model = getTestGraphModel(testGraph, 'my-group');
+      const model = getTestGraphModel(testGraph, 'my-group', 'test-ns');
 
       expect(model.nodes).toHaveLength(2); // 1 group + 1 test
       expect(model.edges).toHaveLength(0);
@@ -28,7 +28,7 @@ describe('testgraph-model-utils', () => {
         id: 'smoke-tests',
         type: TestGraphNodeType.TEST_NODE,
         label: 'smoke-tests',
-        data: { groupName: 'my-group' },
+        data: { groupName: 'my-group', namespace: 'test-ns' },
       });
     });
 
@@ -43,7 +43,7 @@ describe('testgraph-model-utils', () => {
         ],
       };
 
-      const model = getTestGraphModel(testGraph, 'my-group');
+      const model = getTestGraphModel(testGraph, 'my-group', 'test-ns');
 
       // 4 test nodes + 3 stage groups (stages 1, 2, 3)
       const groupNodes = model.nodes?.filter((n) => n.type === TestGraphNodeType.GROUP);
@@ -77,7 +77,7 @@ describe('testgraph-model-utils', () => {
         ],
       };
 
-      const model = getTestGraphModel(testGraph, 'my-group');
+      const model = getTestGraphModel(testGraph, 'my-group', 'test-ns');
 
       expect(model.edges).toHaveLength(3);
 
@@ -109,7 +109,7 @@ describe('testgraph-model-utils', () => {
         'test-b': [{ name: 'test-a', failFast: true }],
       };
 
-      const model = getTestGraphModel(testGraph, 'my-group');
+      const model = getTestGraphModel(testGraph, 'my-group', 'test-ns');
 
       const testB = model.nodes?.find((n) => n.id === 'test-b');
       expect(testB?.data).toMatchObject({
@@ -121,7 +121,7 @@ describe('testgraph-model-utils', () => {
     it('should handle empty test graph', () => {
       const testGraph: Record<string, TestGraphNode[]> = {};
 
-      const model = getTestGraphModel(testGraph, 'my-group');
+      const model = getTestGraphModel(testGraph, 'my-group', 'test-ns');
 
       expect(model.nodes).toHaveLength(0);
       expect(model.edges).toHaveLength(0);
@@ -144,7 +144,7 @@ describe('testgraph-model-utils', () => {
         ],
       };
 
-      const model = getTestGraphModel(testGraph, 'my-group');
+      const model = getTestGraphModel(testGraph, 'my-group', 'test-ns');
 
       const groupNodes = model.nodes?.filter((n) => n.type === TestGraphNodeType.GROUP);
       expect(groupNodes).toHaveLength(3);
@@ -164,21 +164,21 @@ describe('testgraph-model-utils', () => {
         'my-test': [],
       };
 
-      const model = getTestGraphModel(testGraph, 'my-group');
+      const model = getTestGraphModel(testGraph, 'my-group', 'test-ns');
 
       const testNode = model.nodes?.find((n) => n.type === TestGraphNodeType.TEST_NODE);
       expect(testNode?.width).toBe(180);
       expect(testNode?.height).toBe(32);
     });
 
-    it('should set pipelinerun-visualization layout type', () => {
+    it('should set testgraph-visualization layout type', () => {
       const testGraph: Record<string, TestGraphNode[]> = {
         test: [],
       };
 
-      const model = getTestGraphModel(testGraph, 'my-group');
+      const model = getTestGraphModel(testGraph, 'my-group', 'test-ns');
 
-      expect(model.graph?.layout).toBe('pipelinerun-visualization');
+      expect(model.graph?.layout).toBe('testgraph-visualization');
       expect(model.graph?.type).toBe('graph');
     });
 
@@ -192,7 +192,7 @@ describe('testgraph-model-utils', () => {
         ],
       };
 
-      const model = getTestGraphModel(testGraph, 'my-group');
+      const model = getTestGraphModel(testGraph, 'my-group', 'test-ns');
 
       const testC = model.nodes?.find((n) => n.id === 'test-c');
       // Should be true if ANY dependency has failFast enabled
@@ -209,7 +209,7 @@ describe('testgraph-model-utils', () => {
         ],
       };
 
-      const model = getTestGraphModel(testGraph, 'my-group');
+      const model = getTestGraphModel(testGraph, 'my-group', 'test-ns');
 
       const testC = model.nodes?.find((n) => n.id === 'test-c');
       expect(testC?.data?.failFast).toBe(false);
@@ -232,7 +232,7 @@ describe('testgraph-model-utils', () => {
         ],
       };
 
-      const model = getTestGraphModel(testGraph, 'my-group');
+      const model = getTestGraphModel(testGraph, 'my-group', 'test-ns');
 
       const groupNodes = model.nodes?.filter((n) => n.type === TestGraphNodeType.GROUP);
       expect(groupNodes).toHaveLength(2);
@@ -272,7 +272,7 @@ describe('testgraph-model-utils', () => {
         'performance-tests': [{ name: 'e2e-tests', failFast: false }],
       };
 
-      const model = getTestGraphModel(testGraph, 'my-group');
+      const model = getTestGraphModel(testGraph, 'my-group', 'test-ns');
 
       const groupNodes = model.nodes?.filter((n) => n.type === TestGraphNodeType.GROUP);
       expect(groupNodes).toHaveLength(7);
@@ -322,7 +322,7 @@ describe('testgraph-model-utils', () => {
         'test-b': [{ name: 'test-a', failFast: false }],
       };
 
-      const model = getTestGraphModel(testGraph, 'my-group');
+      const model = getTestGraphModel(testGraph, 'my-group', 'test-ns');
 
       const testNodes = model.nodes?.filter((n) => n.type === TestGraphNodeType.TEST_NODE);
       const groupNodes = model.nodes?.filter((n) => n.type === TestGraphNodeType.GROUP);
@@ -348,13 +348,33 @@ describe('testgraph-model-utils', () => {
       ]);
     });
 
+    it('should place cyclic node after its non-cyclic dependencies', () => {
+      const testGraph: Record<string, TestGraphNode[]> = {
+        'test-a': [
+          { name: 'test-b', failFast: false },
+          { name: 'test-c', failFast: false },
+        ],
+        'test-b': [{ name: 'test-a', failFast: false }],
+        'test-c': [],
+      };
+
+      const model = getTestGraphModel(testGraph, 'my-group', 'test-ns');
+
+      const groupNodes = model.nodes?.filter((n) => n.type === TestGraphNodeType.GROUP);
+      // test-c has no deps (stage 1), test-b cycles with test-a (stage 2),
+      // test-a depends on both and must not be locked at stage 0
+      expect(groupNodes?.find((n) => n.label === 'Stage 1')?.children).toEqual(['test-c']);
+      expect(groupNodes?.find((n) => n.label === 'Stage 2')?.children).toEqual(['test-b']);
+      expect(groupNodes?.find((n) => n.label === 'Stage 3')?.children).toEqual(['test-a']);
+    });
+
     it('should handle missing dependency references', () => {
       const testGraph: Record<string, TestGraphNode[]> = {
         'test-a': [{ name: 'nonexistent-test', failFast: false }],
         'test-b': [],
       };
 
-      const model = getTestGraphModel(testGraph, 'my-group');
+      const model = getTestGraphModel(testGraph, 'my-group', 'test-ns');
 
       const testNodes = model.nodes?.filter((n) => n.type === TestGraphNodeType.TEST_NODE);
       const groupNodes = model.nodes?.filter((n) => n.type === TestGraphNodeType.GROUP);
@@ -377,14 +397,14 @@ describe('testgraph-model-utils', () => {
         'test-a': [{ name: 'constructor' }, { name: 'toString' }],
       };
 
-      const model = getTestGraphModel(testGraph, 'my-group');
+      const model = getTestGraphModel(testGraph, 'my-group', 'test-ns');
 
       expect(model.edges).toHaveLength(0);
       expect(model.nodes?.find((node) => node.id === 'test-a')).toBeDefined();
     });
 
     it('should keep stage group ids distinct from test names', () => {
-      const model = getTestGraphModel({ 'stage-0': [] }, 'my-group');
+      const model = getTestGraphModel({ 'stage-0': [] }, 'my-group', 'test-ns');
 
       expect(model.nodes?.map((node) => node.id)).toEqual(['stage:0', 'stage-0']);
     });

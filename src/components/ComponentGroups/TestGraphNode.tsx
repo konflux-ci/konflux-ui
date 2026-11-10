@@ -12,13 +12,13 @@ import {
 import { observer } from 'mobx-react';
 import { GROUP_INTEGRATION_TEST_DETAILS_PATH } from '~/routes/paths';
 import { WarningIcon } from '~/shared';
-import { useNamespace } from '~/shared/providers/Namespace';
 
 import './TestGraphNode.scss';
 
 type TestGraphNodeData = {
   failFast?: boolean;
   groupName: string;
+  namespace: string;
 };
 
 type TestGraphNodeProps = {
@@ -29,9 +29,9 @@ type TestGraphNodeProps = {
 const TestGraphNode: React.FC<TestGraphNodeProps> = ({ element, ...rest }) => {
   const data = element.getData();
   const hasFailFast = data?.failFast;
-  const namespace = useNamespace();
   const testName = element.getLabel();
   const groupName = data?.groupName;
+  const namespace = data?.namespace;
 
   const tooltipContent =
     namespace && testName ? (

@@ -16,6 +16,8 @@ import { testGraphComponentFactory } from './testgraph-component-factory';
 import { testGraphLayoutFactory } from './testgraph-layout-factory';
 import { getTestGraphModel } from './testgraph-model-utils';
 
+import './TestGraphVisualization.scss';
+
 type TestGraphVisualizationProps = {
   namespace: string;
   groupName: string;
@@ -32,8 +34,8 @@ const TestGraphVisualization: React.FC<TestGraphVisualizationProps> = ({
     if (!testGraph || Object.keys(testGraph).length === 0) {
       return null;
     }
-    return getTestGraphModel(testGraph, group?.metadata?.name ?? '');
-  }, [group?.metadata?.name, testGraph]);
+    return getTestGraphModel(testGraph, group?.metadata?.name ?? '', namespace);
+  }, [group?.metadata?.name, namespace, testGraph]);
 
   const hasAnyFailFast = React.useMemo(() => {
     if (!model?.nodes) return false;
@@ -42,7 +44,7 @@ const TestGraphVisualization: React.FC<TestGraphVisualizationProps> = ({
 
   if (error) {
     return (
-      <Card isCompact style={{ marginBottom: 'var(--pf-t--global--spacer--md)' }}>
+      <Card isCompact className="test-graph-visualization">
         <CardTitle>Execution order</CardTitle>
         <CardBody>{getErrorState(error, loaded, 'group')}</CardBody>
       </Card>
@@ -51,7 +53,7 @@ const TestGraphVisualization: React.FC<TestGraphVisualizationProps> = ({
 
   if (!loaded) {
     return (
-      <Card isCompact style={{ marginBottom: 'var(--pf-t--global--spacer--md)' }}>
+      <Card isCompact className="test-graph-visualization">
         <CardTitle>Execution order</CardTitle>
         <CardBody>
           <Spinner size="md" aria-label="Loading execution order" />
@@ -65,13 +67,13 @@ const TestGraphVisualization: React.FC<TestGraphVisualizationProps> = ({
   }
 
   return (
-    <Card isCompact style={{ marginBottom: 'var(--pf-t--global--spacer--md)' }}>
+    <Card isCompact className="test-graph-visualization">
       <CardTitle>Execution order</CardTitle>
       <CardBody>
         <div
           role="region"
           aria-label="Integration test execution order graph"
-          style={{ overflow: 'auto' }}
+          className="test-graph-visualization__graph"
         >
           <VisualizationFactory
             componentFactory={testGraphComponentFactory}
@@ -82,20 +84,14 @@ const TestGraphVisualization: React.FC<TestGraphVisualizationProps> = ({
             <Flex
               direction={{ default: 'row' }}
               spaceItems={{ default: 'spaceItemsSm' }}
-              style={{ marginTop: 'var(--pf-t--global--spacer--md)' }}
+              className="test-graph-visualization__legend"
             >
               <FlexItem>
                 <WarningIcon aria-hidden="true" />
               </FlexItem>
               <FlexItem>
-                <Content component="p" className="pf-v6-u-font-weight-bold">
-                  Fail-fast
-                </Content>
-              </FlexItem>
-              <FlexItem>
                 <Content component="p">
-                  {' '}
-                  - if this test fails, subsequent stages will not run
+                  <strong>Fail-fast</strong> — if this test fails, subsequent stages will not run
                 </Content>
               </FlexItem>
             </Flex>

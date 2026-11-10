@@ -8,7 +8,7 @@ import {
 import { TestGraphNodeType } from './testgraph-visualization-types';
 import TestGraphNode from './TestGraphNode';
 
-export const testGraphComponentFactory: ComponentFactory = (kind, type) => {
+export const testGraphComponentFactory: ComponentFactory = (kind: ModelKind, type: string) => {
   if (kind === ModelKind.graph) {
     return GraphComponent;
   }

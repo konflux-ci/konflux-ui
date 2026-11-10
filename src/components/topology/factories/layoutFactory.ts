@@ -19,6 +19,7 @@ export enum PipelineLayout {
   PIPELINERUN_VISUALIZATION = 'pipelinerun-visualization',
   PIPELINERUN_VISUALIZATION_SPACED = 'pipelinerun-visualization-with-when-expression',
   COMMIT_VISUALIZATION = 'commit-visualization',
+  TESTGRAPH_VISUALIZATION = 'testgraph-visualization',
 }
 
 const DAGRE_SHARED_PROPS: dagre.GraphLabel = {

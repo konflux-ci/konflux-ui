@@ -77,10 +77,10 @@ describe('TestGraphVisualization', () => {
 
     renderWithQueryClient(<TestGraphVisualization namespace="test-ns" groupName="test-group" />);
 
-    expect(screen.getByText('Fail-fast')).toBeInTheDocument();
-    expect(
-      screen.getByText('- if this test fails, subsequent stages will not run'),
-    ).toBeInTheDocument();
+    // Legend renders as a single paragraph: bold label + explanation
+    expect(screen.getByText('Fail-fast').closest('p')).toHaveTextContent(
+      'Fail-fast — if this test fails, subsequent stages will not run',
+    );
   });
 
   it('should not render fail-fast legend when no test has failFast', () => {
