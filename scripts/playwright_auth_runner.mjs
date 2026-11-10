@@ -1,13 +1,14 @@
 #!/usr/bin/env node
-// Opens a headed browser for SSO login, then closes automatically once
-// the user is redirected back to the application.  Cookies are persisted
-// in the Chrome profile directory so subsequent headless runs skip login.
+// Opens the UI in a headed browser and waits for the running dev server's
+// CLI authentication session. Kubelogin may open the default browser for login.
+// Authentication lasts until logout or dev-server shutdown, not in this profile.
 //
 // Expected env vars (set by playwright_auth.sh):
 //   CHROME_PATH  – absolute path to Chrome / Chromium executable
 //   PROFILE_DIR  – path to the shared persistent profile directory
 
 import { chromium } from 'playwright-core';
+import { LOCAL_ORIGIN } from '#dev-auth/constants.mjs';
 
 const { CHROME_PATH, PROFILE_DIR } = process.env;
 
@@ -24,16 +25,24 @@ const context = await chromium.launchPersistentContext(PROFILE_DIR, {
 
 const page = context.pages()[0] || (await context.newPage());
 
-await page.goto('https://localhost:8080/oauth2/sign_in');
-
-// Wait for the user to complete SSO login and land back on the app.
-await page.waitForURL(
-  (url) => {
-    const u = new URL(url);
-    return u.hostname === 'localhost' && u.port === '8080' && !u.pathname.startsWith('/oauth2/');
-  },
-  { timeout: 300_000 },
-);
-
-await context.close();
-process.stdout.write('Authentication successful — cookies saved to profile.\n');
+try {
+  // Register before navigation. React initiates sign-in from the UI so the
+  // request has the same-origin provenance required by the local auth proxy.
+  await Promise.all([
+    page.waitForResponse(
+      (response) => {
+        const url = new URL(response.url());
+        return (
+          url.origin === LOCAL_ORIGIN &&
+          url.pathname === '/oauth2/userinfo' &&
+          response.status() === 200
+        );
+      },
+      { timeout: 300_000 },
+    ),
+    page.goto(LOCAL_ORIGIN),
+  ]);
+} finally {
+  await context.close();
+}
+process.stdout.write('Authentication successful for the running development server.\n');

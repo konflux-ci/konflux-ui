@@ -7,17 +7,24 @@
   "engines": {
     "node": ">=24.0.0"
   },
+  "imports": {
+    "#dev-auth/*": "./scripts/dev-auth/*",
+    "#webpack-dev-config": "./webpack.dev.config.js"
+  },
   "scripts": {
     "setup": "./setup.sh",
     "build": "webpack -c ./webpack.prod.config.js",
     "build:instrumented": "webpack -c ./webpack.instrumented.config.js",
-    "start": "dotenvx run -- webpack server --open -c ./webpack.dev.config.js",
+    "start": "dotenvx run -- node scripts/dev-auth/start.mjs",
     "test": "jest",
+    "test:dev-auth": "node --test scripts/dev-auth/__tests__/*.test.mjs",
     "coverage": "jest --coverage --runInBand --detectOpenHandles --forceExit --testPathIgnorePatterns=/pact-tests",
     "lint": "yarn lint:ts && yarn lint:sass",
     "lint:ts": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "lint:restricted-imports": "eslint . --ext ts,tsx --config .eslintrc.restrict-imports.cjs --no-eslintrc --max-warnings 0",
     "lint:sass": "stylelint 'src/**/*.scss' --config .stylelintrc.json",
+    "lint:dev-auth": "eslint scripts/dev-auth scripts/playwright_auth_runner.mjs webpack.dev.config.js --ext .mjs,.cjs,.js --no-eslintrc --no-ignore --config scripts/dev-auth/.eslintrc.cjs --max-warnings 0",
+    "format:dev-auth": "prettier --check 'scripts/dev-auth/**/*.mjs' scripts/dev-auth/.eslintrc.cjs scripts/playwright_auth_runner.mjs webpack.dev.config.js",
     "audit": "yarn npm audit --all --recursive --severity critical",
     "type-checks": "tsc --noEmit",
     "prepare": "husky",
@@ -127,6 +134,7 @@
     "eslint-plugin-react-refresh": "^0.4.7",
     "fork-ts-checker-webpack-plugin": "^9.0.2",
     "html-webpack-plugin": "^5.6.0",
+    "http-proxy": "^1.18.1",
     "husky": "^9.0.11",
     "identity-obj-proxy": "^3.0.0",
     "jest": "^29.7.0",
@@ -142,6 +150,7 @@
     "react-refresh": "^0.18.0",
     "sass": "^1.77.8",
     "sass-loader": "^14.2.1",
+    "selfsigned": "^5.5.0",
     "size-limit": "^13.0.3",
     "source-map-explorer": "^2.5.3",
     "storybook": "10.6.5",
@@ -160,7 +169,8 @@
     "webpack-cli": "^5.1.4",
     "webpack-dev-server": "^5.0.4",
     "webpack-merge": "^6.0.1",
-    "whatwg-fetch": "^3.6.20"
+    "whatwg-fetch": "^3.6.20",
+    "ws": "^8.18.0"
   },
   "sideEffects": [
     "*.css",

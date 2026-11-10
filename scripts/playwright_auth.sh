@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Opens a headed browser for SSO login so that authentication cookies are
-# saved to the shared Playwright profile.  Run this when the headless
-# screenshot flow detects that the user is not authenticated.
+# Opens the UI in a headed browser to authenticate the running dev server.
+# Kubelogin may open the default browser for login. Run this when the headless
+# screenshot flow detects that the current dev-server session is unauthenticated.
 
 set -euo pipefail
 

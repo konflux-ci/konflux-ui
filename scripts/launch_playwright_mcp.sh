@@ -3,9 +3,10 @@
 # Used by .cursor/mcp.json and .mcp.json so the MCP server finds
 # the browser regardless of where it is installed on this system.
 #
-# The browser runs headless with a persistent profile so authentication
-# cookies survive across sessions. See scripts/playwright_auth.sh for
-# the headed login flow that populates the profile on first use.
+# The browser runs headless with a persistent profile for browser state.
+# CLI authentication lives in the running dev server until logout or shutdown.
+# See scripts/playwright_auth.sh to authenticate that session with a headed UI;
+# kubelogin may open the default browser for login.
 
 set -euo pipefail
 
