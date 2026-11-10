@@ -115,7 +115,7 @@ export class Login {
       // Sometimes page doesn't go to homepage but shows
       // "Something went wrong - Invalid token" message.
       cy.get('body', { timeout: 10000 }).then(($body) => {
-        if ($body.text().includes('You have successfully logged into Red Hat Internal SSO')) {
+        if ($body.text().includes('Invalid token')) {
           cy.wait(2000);
           cy.visit(Cypress.expose('KONFLUX_BASE_URL'));
         }
