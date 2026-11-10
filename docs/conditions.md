@@ -41,7 +41,7 @@ See [When to use 503](#when-to-use-503-service-unavailable) for how this differs
 'isKubearchiveEnabled'; // → true if KubeArchive service is available
 'isKiteServiceEnabled'; // → true if Kite plugin health check passes
 'isStagingCluster'; // → true if running in staging environment
-'isLightspeedAvailable'; // → true if Lightspeed health check passes (see docs/lightspeed.md)
+'isLightspeedAvailable'; // → true if Lightspeed health check passes
 'isKueueAvailable'; // → true if the Kueue visibility API is available on the cluster
 ```
 

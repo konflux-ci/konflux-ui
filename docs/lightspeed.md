@@ -18,7 +18,8 @@ src/registers.ts
 src/lightspeed/
   ├── lightspeedConfig.ts                # API base path, timeouts, absolute URL helper
   ├── lightspeedClient.ts                # Singleton LightspeedClient
-  └── conditional-checks.ts              # Health check → condition + hooks
+  ├── conditional-checks.ts              # Health check → condition + non-React helper
+  └── useIsLightspeedAvailable.ts        # React hook (no client import)
 ```
 
 ### Key files
@@ -27,7 +28,8 @@ src/lightspeed/
 |------|---------|
 | `src/lightspeed/lightspeedConfig.ts` | `LIGHTSPEED_API_BASE` (`/api/plugins/lightspeed`), health-check timeout (10s), condition TTL (30s), `resolveLightspeedClientBaseUrl()` |
 | `src/lightspeed/lightspeedClient.ts` | Lazy singleton wrapping `@redhat-cloud-services/lightspeed-client` |
-| `src/lightspeed/conditional-checks.ts` | `checkIfLightspeedIsAvailable`, `useIsLightspeedAvailable`, `isLightspeedAvailable` |
+| `src/lightspeed/conditional-checks.ts` | `checkIfLightspeedIsAvailable`, `isLightspeedAvailable` |
+| `src/lightspeed/useIsLightspeedAvailable.ts` | `useIsLightspeedAvailable` React hook via `createConditionsHook` |
 | `src/registers.ts` | Registers `isLightspeedAvailable` with TTL |
 | `src/feature-flags/flags.ts` | `ai-chat` flag definition and guards |
 | `src/feature-flags/conditions.ts` | `LIGHTSPEED: 'isLightspeedAvailable'` condition key |
@@ -77,8 +79,8 @@ Any thrown error or abort → `false`. Re-evaluation is driven by the condition 
 
 Hooks / helpers:
 
-- `useIsLightspeedAvailable()` — React hook via `createConditionsHook`
-- `isLightspeedAvailable` — non-React `ensureConditionIsOn(['isLightspeedAvailable'])`
+- `useIsLightspeedAvailable()` — React hook in `useIsLightspeedAvailable.ts` via `createConditionsHook`
+- `isLightspeedAvailable` — non-React helper in `conditional-checks.ts` via `ensureConditionIsOn(['isLightspeedAvailable'])`
 
 See [conditions.md](./conditions.md) for the evaluation engine.
 
@@ -184,8 +186,8 @@ Browser
 
 - `AIChatGate` uses `lazyLoad()` with `webpackChunkName: "ai-chat-dock"`.
 - `@patternfly/chatbot` JS/CSS are imported only inside `AIChatDock.tsx`, so they load with that async chunk — not with `main` / `vendor` unless the gate opens the import.
-- Fallback while loading is an empty fragment (`fallback={<></>}`) so a spinner does not flash in the chrome.
-- Production sizes are enforced by [bundle-size-budgets.md](./bundle-size-budgets.md) / `.size-limit.json`. Prefer keeping chatbot and any future Lightspeed send helpers inside the lazy chunk; avoid importing `@patternfly/chatbot` or heavy client usage from always-mounted modules (`AppRoot`, flag panel, etc.).
+- While the chunk loads, `lazyLoad` uses its default fallback (`Bullseye` + `Spinner`); `AIChatGate` does not pass a custom `fallback`.
+- Main / vendor / route budgets are enforced by [bundle-size-budgets.md](./bundle-size-budgets.md) / `.size-limit.json`. The `ai-chat-dock` chunk is not listed there yet — still prefer keeping chatbot and Lightspeed send helpers inside that lazy chunk so they stay out of always-mounted modules (`AppRoot`, flag panel, etc.).
 
 ---
 
@@ -203,7 +205,9 @@ On non-staging clusters, or when Lightspeed is down, the flag stays unavailable 
 
 ### Run Lightspeed locally
 
-To run the Konflux AI agent backend locally (instead of proxying to a remote staging host), use [konflux-ci/konflux-lightspeed](https://github.com/konflux-ci/konflux-lightspeed). That repo provides Kustomize manifests and a `local/` podman-compose setup for lightspeed-stack. Follow its Local Development docs, then point `LIGHTSPEED_URL` at the local service when starting konflux-ui.
+To run the Konflux AI agent backend locally (instead of proxying to a remote staging host), use [konflux-ci/konflux-lightspeed](https://github.com/konflux-ci/konflux-lightspeed). That repo provides Kustomize manifests and a `local/` podman-compose setup for lightspeed-stack.
+
+konflux-ui’s webpack dev server already binds host port `8080`, so do not publish lightspeed-stack on `8080` at the same time. Before starting the compose stack, change its host mapping from `127.0.0.1:8080:8080` to `127.0.0.1:8081:8080`, then use port `8081` for health checks (`/liveness`, `/readiness`) and for `LIGHTSPEED_URL`.
 
 ### Enable & test locally
 
@@ -211,8 +215,8 @@ To run the Konflux AI agent backend locally (instead of proxying to a remote sta
 
    ```bash
    LIGHTSPEED_URL=https://<staging-or-lightspeed-host>/
-   # or a local konflux-lightspeed stack, e.g.:
-   # LIGHTSPEED_URL=http://localhost:<port>/
+   # or a local konflux-lightspeed stack (host 8081 → container 8080):
+   # LIGHTSPEED_URL=http://localhost:8081/
    ```
 
    `webpack.dev.config.js` proxies `/api/plugins/lightspeed` to that target and strips the `/api/plugins/lightspeed` prefix.
