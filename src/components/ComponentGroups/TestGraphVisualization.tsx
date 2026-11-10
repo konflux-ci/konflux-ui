@@ -7,6 +7,7 @@ import {
   Flex,
   FlexItem,
   Spinner,
+  Stack,
 } from '@patternfly/react-core';
 import { VisualizationFactory } from '~/components/topology/factories';
 import { useComponentGroup } from '~/hooks/useComponentGroups';
@@ -75,27 +76,25 @@ const TestGraphVisualization: React.FC<TestGraphVisualizationProps> = ({
           aria-label="Integration test execution order graph"
           className="test-graph-visualization__graph"
         >
-          <VisualizationFactory
-            componentFactory={testGraphComponentFactory}
-            layoutFactory={testGraphLayoutFactory}
-            model={model}
-          />
-          {hasAnyFailFast && (
-            <Flex
-              direction={{ default: 'row' }}
-              spaceItems={{ default: 'spaceItemsSm' }}
-              className="test-graph-visualization__legend"
-            >
-              <FlexItem>
-                <WarningIcon aria-hidden="true" />
-              </FlexItem>
-              <FlexItem>
-                <Content component="p">
-                  <strong>Fail-fast</strong> — if this test fails, subsequent stages will not run
-                </Content>
-              </FlexItem>
-            </Flex>
-          )}
+          <Stack hasGutter>
+            <VisualizationFactory
+              componentFactory={testGraphComponentFactory}
+              layoutFactory={testGraphLayoutFactory}
+              model={model}
+            />
+            {hasAnyFailFast && (
+              <Flex direction={{ default: 'row' }} spaceItems={{ default: 'spaceItemsSm' }}>
+                <FlexItem>
+                  <WarningIcon aria-hidden="true" />
+                </FlexItem>
+                <FlexItem>
+                  <Content component="p">
+                    <strong>Fail-fast</strong> — if this test fails, subsequent stages will not run
+                  </Content>
+                </FlexItem>
+              </Flex>
+            )}
+          </Stack>
         </div>
       </CardBody>
     </Card>
