@@ -5,7 +5,6 @@ import {
   TaskNode,
   Node,
   NodeModel,
-  WithContextMenuProps,
   WithSelectionProps,
   withSelection,
 } from '@patternfly/react-topology';
@@ -23,8 +22,7 @@ type TestGraphNodeData = {
 
 type TestGraphNodeProps = {
   element: Node<NodeModel, TestGraphNodeData>;
-} & WithContextMenuProps &
-  WithSelectionProps;
+} & WithSelectionProps;
 
 const TestGraphNode: React.FC<TestGraphNodeProps> = ({ element, ...rest }) => {
   const data = element.getData();

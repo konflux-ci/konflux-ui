@@ -1,11 +1,14 @@
 import { Model, NodeModel, EdgeModel, ModelKind } from '@patternfly/react-topology';
-import { PipelineLayout } from '~/components/topology/factories/layoutFactory';
 import { TestGraphNode } from '~/types';
 import { TestGraphNodeType, TestGraphEdgeType } from './testgraph-visualization-types';
+
+// Layout type for the test graph, handled by testgraph-layout-factory.
+const TESTGRAPH_LAYOUT = 'testgraph-visualization';
 
 /**
  * Calculate each test's stage from its dependencies: a test's stage is one
  * more than the highest stage of the tests it depends on.
+ * Tests are processed in name order so cycle-breaking stays deterministic.
  * Cycles are broken by treating a test that is already being visited as
  * stage 0. Dependencies missing from the graph are ignored.
  */
@@ -109,7 +112,7 @@ export const getTestGraphModel = (
     graph: {
       id: 'test-graph',
       type: ModelKind.graph,
-      layout: PipelineLayout.TESTGRAPH_VISUALIZATION,
+      layout: TESTGRAPH_LAYOUT,
     },
     nodes,
     edges,

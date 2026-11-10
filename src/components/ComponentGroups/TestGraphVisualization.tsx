@@ -43,21 +43,16 @@ const TestGraphVisualization: React.FC<TestGraphVisualizationProps> = ({
     return model.nodes.some((node) => node.data?.failFast === true);
   }, [model]);
 
-  if (error) {
+  if (error || !loaded) {
     return (
-      <Card isCompact className="test-graph-visualization">
+      <Card isCompact className="testgraph-visualization">
         <CardTitle>Execution order</CardTitle>
-        <CardBody>{getErrorState(error, loaded, 'group')}</CardBody>
-      </Card>
-    );
-  }
-
-  if (!loaded) {
-    return (
-      <Card isCompact className="test-graph-visualization">
-        <CardTitle>Execution order</CardTitle>
-        <CardBody>
-          <Spinner size="md" aria-label="Loading execution order" />
+        <CardBody aria-live="polite">
+          {error ? (
+            getErrorState(error, loaded, 'group')
+          ) : (
+            <Spinner size="md" aria-label="Loading execution order" />
+          )}
         </CardBody>
       </Card>
     );
@@ -68,13 +63,13 @@ const TestGraphVisualization: React.FC<TestGraphVisualizationProps> = ({
   }
 
   return (
-    <Card isCompact className="test-graph-visualization">
+    <Card isCompact className="testgraph-visualization">
       <CardTitle>Execution order</CardTitle>
-      <CardBody>
+      <CardBody aria-live="polite">
         <div
           role="region"
           aria-label="Integration test execution order graph"
-          className="test-graph-visualization__graph"
+          className="testgraph-visualization__graph"
         >
           <Stack hasGutter>
             <VisualizationFactory

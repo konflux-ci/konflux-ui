@@ -1,6 +1,4 @@
 .testgraph-node {
-  cursor: pointer;
-
   &__tooltip {
     &.pf-v6-c-tooltip {
       max-width: 350px;
@@ -24,7 +22,8 @@
       text-decoration: underline;
       font-size: var(--pf-t--global--font--size--body--sm);
 
-      &:hover {
+      &:hover,
+      &:focus-visible {
         color: var(--pf-t--global--text--color--on-brand--default);
         text-decoration: none;
       }
