@@ -352,10 +352,18 @@ describe('testgraph-model-utils', () => {
 
       // Should have edges for both dependencies
       expect(model.edges).toHaveLength(2);
-      expect(model.edges?.map((e) => e.type)).toEqual([
-        TestGraphEdgeType.TEST_EDGE,
-        TestGraphEdgeType.TEST_EDGE,
-      ]);
+      expect(model.edges).toContainEqual({
+        id: 'test-a-to-test-b',
+        source: 'test-a',
+        target: 'test-b',
+        type: TestGraphEdgeType.TEST_EDGE,
+      });
+      expect(model.edges).toContainEqual({
+        id: 'test-b-to-test-a',
+        source: 'test-b',
+        target: 'test-a',
+        type: TestGraphEdgeType.TEST_EDGE,
+      });
     });
 
     it('should place cyclic node after its non-cyclic dependencies', () => {
