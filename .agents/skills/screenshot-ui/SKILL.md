@@ -25,7 +25,7 @@ Capture screenshots of UI components changed in the current branch using Playwri
 
 ## Prerequisites
 
-1. **Playwright MCP available** — configured in `.mcp.json` via `scripts/launch_playwright_mcp.sh`; Cursor also reads `.cursor/mcp.json`. The browser runs **headless** with a persistent profile (`.playwright-mcp/profile`), so authentication cookies survive across sessions. Verify by calling `browser_snapshot`; if it errors, stop. Cursor users may also need to enable it in Cursor Settings.
+1. **Playwright MCP available** — configured in `.mcp.json` via `scripts/launch_playwright_mcp.sh`; Cursor also reads `.cursor/mcp.json`. The browser runs **headless** with a persistent profile (`.playwright-mcp/profile`) for browser state. CLI authentication lives in the running dev server until logout or shutdown. Verify by calling `browser_snapshot`; if it errors, stop. Cursor users may also need to enable it in Cursor Settings.
 2. **Dev server running** on `https://localhost:8080` (`yarn start`). Check:
 
    ```bash
@@ -93,7 +93,7 @@ Combine both. This shows exactly what lines changed.
 
 ## Step 3 — Authenticate (if needed)
 
-The browser runs headless. Authentication cookies persist in `.playwright-mcp/profile` between runs, so most invocations skip this step entirely.
+The browser runs headless. CLI authentication is shared by browsers using the same running dev server and lasts until logout or server shutdown. The persistent profile retains browser state; it does not preserve the dev-server session across restarts.
 
 ```bash
 browser_navigate { "url": "https://localhost:8080/ns" }
@@ -109,9 +109,9 @@ browser_snapshot
      bash scripts/playwright_auth.sh
      ```
 
-     This opens a **headed** Chrome window using the same profile directory. The user completes SSO login; the window closes automatically once the redirect back to `localhost:8080` succeeds (up to 5 minutes).
+     This opens the UI in a **headed** Chrome window using the same profile directory. React initiates CLI sign-in, and kubelogin may open the default browser for login. The user completes login there; the headed UI window closes once `/oauth2/userinfo` succeeds for the running dev-server session (up to 5 minutes).
 
-  3. After the script exits, call `browser_navigate { "url": "https://localhost:8080/ns" }` again — the MCP server opens a new headless browser that picks up the cookies saved by the auth script.
+  3. After the script exits, call `browser_navigate { "url": "https://localhost:8080/ns" }` again — the MCP server opens a new headless browser using the authenticated session in the still-running dev server.
   4. `browser_snapshot` to verify authentication succeeded.
   5. If still on a login page after this, stop with an error — do **not** retry the auth script.
 

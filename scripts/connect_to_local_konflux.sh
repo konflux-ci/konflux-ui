@@ -1,20 +1,15 @@
-# Change configs to connect the UI with locally running Konflux
-# Mainly for the PR check but can be used locally too  
-echo "Patching .env and webpack.dev.config.js"
-cat > .env << EOL 
-AUTH_URL=https://127.0.0.1:9443/
-REGISTRATION_URL=https://127.0.0.1:9443/
-PROXY_URL=https://127.0.0.1:9443/
-PROXY_WEBSOCKET_URL=wss://127.0.0.1:9443
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Configure the UI to connect to a locally running Konflux deployment.
+echo "Configuring .env for locally running Konflux"
+cat > .env << EOL
+AUTH_URL=https://localhost:9443/
+REGISTRATION_URL=https://localhost:9443/
+PROXY_URL=https://localhost:9443/
+PROXY_WEBSOCKET_URL=wss://localhost:9443
 EOL
 
-# regex cheatsheet
-# [^ ].* - take everything before the text but leave spaces
-#  0, - replace just the first occurrence
-sed -i "s%[^ ].*\/oauth2\/.*%context: (path) => path.includes('/oauth2/') || path.includes('/idp/'),%g" webpack.dev.config.js 
-sed -i '0,/autoRewrite: false,/s//autoRewrite: true,/' webpack.dev.config.js 
-sed -i "s/[^ ].*stone-stg-rh01.*/'localhost:9443',/" webpack.dev.config.js
-sed -i "s/[^ ].*stone-stg-rh01.*/'localhost:9443',/" webpack.dev.config.js
-sed -i "s/[^ ].*DEV_SERVER_PORT}\/oauth2\`,/\`localhost:\${DEV_SERVER_PORT}\`,/" webpack.dev.config.js
-
-echo "Patching done, UI is connected to locally running Konflux."
+echo "Trust your local deployment CA in the system/browser trust stores and set NODE_EXTRA_CA_CERTS for Node if needed."
+echo "Ensure AUTH_URL matches your deployment's Dex issuer hostname and use the same hostname for all four targets."
+echo "Run yarn start, open https://localhost:8080, and sign in through the UI."

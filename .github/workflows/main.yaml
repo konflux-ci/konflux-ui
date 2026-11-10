@@ -47,6 +47,11 @@ jobs:
       - name: Lint ✅
         run: yarn lint
 
+      - name: Lint and format local CLI authentication helpers
+        run: |
+          yarn lint:dev-auth
+          yarn format:dev-auth
+
       - name: Lint Restricted Imports ✅
         run: yarn lint:restricted-imports
 
@@ -122,6 +127,10 @@ jobs:
         run: yarn test --maxWorkers=2 --coverage --silent --ci --verbose=false --shard=${{ matrix.shard }}/2
         env:
           CI: true
+
+      - name: Test local CLI authentication helpers
+        if: matrix.shard == 1
+        run: yarn test:dev-auth
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
