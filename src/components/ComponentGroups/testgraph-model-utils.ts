@@ -44,6 +44,15 @@ export const getTestGraphModel = (
   const nodes: NodeModel[] = [];
   const edges: EdgeModel[] = [];
 
+  // A test is fail-fast when any dependent lists it as a dependency with
+  // failFast: true — i.e. if this test fails, its dependent tests are skipped
+  const failFastTests = new Set<string>();
+  Object.values(testGraph).forEach((deps) =>
+    deps.forEach((d) => {
+      if (d.failFast) failFastTests.add(d.name);
+    }),
+  );
+
   // Calculate stages and group tests by stage
   const testStages = calculateStages(testGraph);
   // Cycles can leave gaps in the stage numbers (e.g. no stage 0), so renumber
@@ -82,7 +91,7 @@ export const getTestGraphModel = (
       label: testName,
       width: 180,
       height: 32,
-      data: { failFast: validDeps.some((d) => d.failFast), groupName, namespace },
+      data: { failFast: failFastTests.has(testName), groupName, namespace },
     });
 
     // Dependency edges

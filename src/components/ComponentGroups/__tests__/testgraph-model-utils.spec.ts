@@ -111,11 +111,15 @@ describe('testgraph-model-utils', () => {
 
       const model = getTestGraphModel(testGraph, 'my-group', 'test-ns');
 
-      const testB = model.nodes?.find((n) => n.id === 'test-b');
-      expect(testB?.data).toMatchObject({
+      // failFast on a dependency entry describes the named test (test-a):
+      // if test-a fails, its dependents are skipped
+      const testA = model.nodes?.find((n) => n.id === 'test-a');
+      expect(testA?.data).toMatchObject({
         failFast: true,
         groupName: 'my-group',
       });
+      const testB = model.nodes?.find((n) => n.id === 'test-b');
+      expect(testB?.data?.failFast).toBe(false);
     });
 
     it('should handle empty test graph', () => {
@@ -194,9 +198,11 @@ describe('testgraph-model-utils', () => {
 
       const model = getTestGraphModel(testGraph, 'my-group', 'test-ns');
 
+      const testA = model.nodes?.find((n) => n.id === 'test-a');
+      // test-c lists test-a with failFast: true — the flag belongs to test-a
+      expect(testA?.data?.failFast).toBe(true);
       const testC = model.nodes?.find((n) => n.id === 'test-c');
-      // Should be true if ANY dependency has failFast enabled
-      expect(testC?.data?.failFast).toBe(true);
+      expect(testC?.data?.failFast).toBe(false);
     });
 
     it('should set failFast to false when no dependencies have it enabled', () => {
@@ -255,9 +261,12 @@ describe('testgraph-model-utils', () => {
       const gateEdges = model.edges?.filter((e) => e.target === 'deployment-gate');
       expect(gateEdges).toHaveLength(5);
 
-      // Gate should have failFast=true (any dependency has it)
+      // The fail-fast tests are the ones the gate lists with failFast: true
+      // (unit-tests, security-scan), not the gate itself
+      expect(model.nodes?.find((n) => n.id === 'unit-tests')?.data?.failFast).toBe(true);
+      expect(model.nodes?.find((n) => n.id === 'security-scan')?.data?.failFast).toBe(true);
       const gate = model.nodes?.find((n) => n.id === 'deployment-gate');
-      expect(gate?.data?.failFast).toBe(true);
+      expect(gate?.data?.failFast).toBe(false);
     });
 
     it('should handle deep chain pattern (6+ sequential stages)', () => {
