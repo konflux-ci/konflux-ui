@@ -343,11 +343,12 @@ describe('testgraph-model-utils', () => {
       // Both nodes should be present
       expect(testNodes?.map((n) => n.id).sort()).toEqual(['test-a', 'test-b']);
 
-      // Verify stage assignments (cycle-breaking locks first node at stage 0)
+      // Verify stage assignments: the second cycle member lands one stage
+      // after the first (test-a is processed first, test-b breaks the cycle)
       const stage1 = groupNodes?.find((n) => n.label === 'Stage 1');
       const stage2 = groupNodes?.find((n) => n.label === 'Stage 2');
-      expect(stage1?.children?.length).toBe(1);
-      expect(stage2?.children?.length).toBe(1);
+      expect(stage1?.children).toEqual(['test-b']);
+      expect(stage2?.children).toEqual(['test-a']);
 
       // Should have edges for both dependencies
       expect(model.edges).toHaveLength(2);
