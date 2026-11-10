@@ -201,12 +201,18 @@ Browser
 
 On non-staging clusters, or when Lightspeed is down, the flag stays unavailable and the dock never mounts.
 
+### Run Lightspeed locally
+
+To run the Konflux AI agent backend locally (instead of proxying to a remote staging host), use [konflux-ci/konflux-lightspeed](https://github.com/konflux-ci/konflux-lightspeed). That repo provides Kustomize manifests and a `local/` podman-compose setup for lightspeed-stack. Follow its Local Development docs, then point `LIGHTSPEED_URL` at the local service when starting konflux-ui.
+
 ### Enable & test locally
 
 1. **Proxy Lightspeed** — set in `.env` (loaded by webpack via dotenvx):
 
    ```bash
    LIGHTSPEED_URL=https://<staging-or-lightspeed-host>/
+   # or a local konflux-lightspeed stack, e.g.:
+   # LIGHTSPEED_URL=http://localhost:<port>/
    ```
 
    `webpack.dev.config.js` proxies `/api/plugins/lightspeed` to that target and strips the `/api/plugins/lightspeed` prefix.
@@ -244,3 +250,4 @@ On non-staging clusters, or when Lightspeed is down, the flag stays unavailable 
 - [conditions.md](./conditions.md) — condition registration, TTL, hooks
 - [feature-flags.md](./feature-flags.md) — flag persistence and URL grammar
 - [bundle-size-budgets.md](./bundle-size-budgets.md) — size-limit budgets for async chunks
+- [konflux-ci/konflux-lightspeed](https://github.com/konflux-ci/konflux-lightspeed) — local / cluster Lightspeed backend deployment
