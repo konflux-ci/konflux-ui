@@ -16,7 +16,7 @@ import {
   KONFLUX_AI_RENAME_CONVERSATION_TITLE_ID,
 } from '~/components/AIChat/const';
 
-export type AIChatRenameConversationModalProps = {
+type AIChatRenameConversationModalProps = {
   appendTo: () => HTMLElement;
   currentName: string;
   isOpen: boolean;
