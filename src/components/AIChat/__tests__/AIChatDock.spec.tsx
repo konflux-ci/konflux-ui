@@ -297,6 +297,26 @@ describe('AIChatDock', () => {
     expect(screen.getAllByText(KONFLUX_AI_ERROR_UNAVAILABLE)).toHaveLength(2);
   });
 
+  it('toggles between the floating panel and fullscreen while the chat stays open', async () => {
+    const user = userEvent.setup();
+    render(<AIChatDock />);
+
+    await user.click(screen.getByRole('button', { name: 'Toggle chat' }));
+
+    expect(getChatbot()).toHaveClass('pf-chatbot--default');
+    expect(getChatbot()).toHaveClass('pf-chatbot--visible');
+
+    await user.click(screen.getByRole('button', { name: 'Maximize' }));
+
+    expect(getChatbot()).toHaveClass('pf-chatbot--fullscreen');
+    expect(getChatbot()).toHaveClass('pf-chatbot--visible');
+
+    await user.click(screen.getByRole('button', { name: 'Maximize' }));
+
+    expect(getChatbot()).toHaveClass('pf-chatbot--default');
+    expect(getChatbot()).toHaveClass('pf-chatbot--visible');
+  });
+
   it('returns to the floating panel after the toggle hides a maximized chat', async () => {
     const user = userEvent.setup();
     render(<AIChatDock />);

@@ -2,6 +2,10 @@ import * as React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { AIChatHeader } from '~/components/AIChat/components/AIChatHeader';
+import {
+  KONFLUX_AI_MAXIMIZE_ARIA_LABEL,
+  KONFLUX_AI_MINIMIZE_ARIA_LABEL,
+} from '~/components/AIChat/const';
 
 jest.mock('@patternfly/chatbot/dist/dynamic/ChatbotHeader', () => ({
   __esModule: true,
@@ -45,6 +49,9 @@ describe('AIChatHeader', () => {
     await user.click(screen.getByRole('button', { name: 'Close' }));
     expect(onClose).toHaveBeenCalledTimes(1);
     expect(screen.queryByRole('button', { name: 'History' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: KONFLUX_AI_MAXIMIZE_ARIA_LABEL }),
+    ).not.toBeInTheDocument();
   });
 
   it('opens conversation history from the header menu', async () => {
@@ -57,5 +64,18 @@ describe('AIChatHeader', () => {
     expect(historyButton).toHaveAttribute('aria-expanded', 'true');
     await user.click(historyButton);
     expect(onToggleDrawer).toHaveBeenCalledTimes(1);
+  });
+
+  it('toggles display mode from the header', async () => {
+    const user = userEvent.setup();
+    const onToggleDisplayMode = jest.fn();
+
+    render(
+      <AIChatHeader isMaximized onClose={jest.fn()} onToggleDisplayMode={onToggleDisplayMode} />,
+    );
+
+    await user.click(screen.getByRole('button', { name: KONFLUX_AI_MINIMIZE_ARIA_LABEL }));
+
+    expect(onToggleDisplayMode).toHaveBeenCalledTimes(1);
   });
 });
