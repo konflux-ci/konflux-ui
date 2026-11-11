@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { EventEmitter } from 'node:events';
-import { access, mkdtemp, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
+import fs, { access, mkdtemp, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises';
+import { syncBuiltinESMExports } from 'node:module';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { PassThrough } from 'node:stream';
@@ -25,6 +27,9 @@ const credential = (token = tokenSecret, expirationTimestamp = '2030-01-01T00:05
     status: { token, expirationTimestamp },
   });
 const fixture = fileURLToPath(new URL('./fixtures/token-kubectl.mjs', import.meta.url));
+const descendantFixture = fileURLToPath(
+  new URL('./fixtures/token-kubectl-descendant.mjs', import.meta.url),
+);
 
 async function waitFor(check) {
   const end = Date.now() + 3000;
@@ -39,6 +44,22 @@ async function exists(path) {
     () => false,
   );
 }
+
+function failCacheRemovals(t) {
+  const failures = new Set();
+  const realRm = fs.rm;
+  const removal = t.mock.method(fs, 'rm', async (path, options) => {
+    if (failures.has(path)) throw new Error('simulated private cache removal failure');
+    return realRm(path, options);
+  });
+  syncBuiltinESMExports();
+  t.after(() => {
+    removal.mock.restore();
+    syncBuiltinESMExports();
+  });
+  return failures;
+}
+
 async function setup(t, configs = [{}], options = {}) {
   const root = await mkdtemp(join(tmpdir(), 'token-manager-test-'));
   const calls = [];
@@ -52,7 +73,7 @@ async function setup(t, configs = [{}], options = {}) {
       recordPath: join(root, `record-${index}.json`),
       readyPath: join(root, `ready-${index}`),
     };
-    const child = spawn(process.execPath, [fixture, ...args], {
+    const child = spawn(process.execPath, [config.fixturePath ?? fixture, ...args], {
       ...spawnOptions,
       env: { ...process.env, TOKEN_FIXTURE_CONFIG: JSON.stringify(config) },
     });
@@ -289,6 +310,51 @@ for (const operation of ['login', 'refresh']) {
   });
 }
 
+// Break caught: browser descendants inheriting stderr keeping cancellation and cache cleanup pending.
+for (const cancellation of ['sign-out', 'timeout']) {
+  for (const exitAfterSpawn of [false, true]) {
+    test(`${cancellation} releases descendant-held stderr after ${exitAfterSpawn ? 'normal' : 'cancelled'} child exit`, async (t) => {
+      const { manager, root, calls } = await setup(
+        t,
+        [{ fixturePath: descendantFixture, exitAfterSpawn }],
+        {
+          timeoutMs: cancellation === 'timeout' ? 1000 : 10_000,
+          killGraceMs: 20,
+        },
+      );
+      const rejected = assert.rejects(manager.signIn(), AuthenticationRequiredError);
+      await waitFor(() => calls.length > 0);
+      const child = calls[0].child;
+      const cache = calls[0].args.find((arg) => arg.startsWith('--token-cache-dir=')).split('=')[1];
+      const cacheAtExit =
+        child.exitCode !== null
+          ? Promise.resolve(existsSync(cache))
+          : new Promise((resolve) => child.once('exit', () => resolve(existsSync(cache))));
+      await waitFor(() => exists(join(root, 'ready-0')));
+      const descendantPid = Number(await readFile(join(root, 'ready-0'), 'utf8'));
+      if (exitAfterSpawn) await waitFor(() => child.exitCode === 0);
+      const completed = cancellation === 'sign-out' ? manager.signOut() : rejected;
+      try {
+        assert.equal(
+          await Promise.race([completed.then(() => true), delay(1500).then(() => false)]),
+          true,
+          'cancellation waited for a descendant-owned pipe after the owned child exited',
+        );
+        assert.equal(await cacheAtExit, true, 'cache was removed before the owned child exited');
+        assert.equal(child.signalCode, exitAfterSpawn ? null : 'SIGKILL');
+        assert.doesNotThrow(() => process.kill(descendantPid, 0));
+        await manager.signOut();
+        assert.equal(await exists(cache), false);
+        await rejected;
+      } finally {
+        process.kill(descendantPid, 'SIGKILL');
+        await completed;
+        await rejected;
+      }
+    });
+  }
+}
+
 test('discards a successful child result delivered while cancellation is racing', async (t) => {
   let child;
   const { manager } = await setup(t, [], {
@@ -298,6 +364,7 @@ test('discards a successful child result delivered while cancellation is racing'
       child.stderr = new PassThrough();
       child.kill = () => {
         child.stdout.end(credential());
+        child.emit('exit', 0, null);
         child.emit('close', 0, null);
         return true;
       };
@@ -310,6 +377,28 @@ test('discards a successful child result delivered while cancellation is racing'
   await manager.signOut();
   await rejected;
   await assert.rejects(manager.getCredential(), AuthenticationRequiredError);
+});
+
+test('successful child output drains after exit before credentials are accepted', async (t) => {
+  let child;
+  const { manager } = await setup(t, [], {
+    spawnProcess: () => {
+      child = new EventEmitter();
+      child.stdout = new PassThrough();
+      child.stderr = new PassThrough();
+      child.kill = () => true;
+      return child;
+    },
+  });
+  const login = manager.signIn();
+  await waitFor(() => child !== undefined);
+  const output = credential();
+  child.stdout.write(output.slice(0, 30));
+  child.emit('exit', 0, null);
+  child.stdout.end(output.slice(30));
+  child.stderr.end();
+  child.emit('close', 0, null);
+  assert.equal((await login).token, tokenSecret);
 });
 
 // Break caught: caches shared between instances, global-cache deletion, or reuse after sign-out.
@@ -358,6 +447,44 @@ test('explicit sign-in after sign-out uses a new cache and generation', async (t
   assert.notEqual(calls[0].args.at(-1), calls[1].args.at(-1));
   assert.notEqual(first.generation, second.generation);
   assert.equal(manager.isCurrent(first.generation), false);
+});
+
+// Break caught: one failed rm permanently poisoning all later sign-out and close attempts.
+test('failed sign-out reports the error and can retry a transient cache removal failure', async (t) => {
+  const failures = failCacheRemovals(t);
+  const { manager, calls } = await setup(t);
+  const first = await manager.signIn();
+  const cache = calls[0].args.at(-1).slice('--token-cache-dir='.length);
+  failures.add(cache);
+  await assert.rejects(manager.signOut(), /Unable to remove the private authentication cache/);
+  assert.equal(manager.isCurrent(first.generation), false);
+  await assert.rejects(manager.getCredential(), AuthenticationRequiredError);
+  assert.equal(await exists(cache), true);
+
+  failures.delete(cache);
+  await manager.signOut();
+  assert.equal(await exists(cache), false);
+});
+
+// Break caught: failed deletion reusing old credentials or skipping newer caches during cleanup.
+test('failed old cache removal permits a fresh sign-in and still removes every other cache', async (t) => {
+  const failures = failCacheRemovals(t);
+  const { manager, calls } = await setup(t);
+  await manager.signIn();
+  const oldCache = calls[0].args.at(-1).slice('--token-cache-dir='.length);
+  failures.add(oldCache);
+  await assert.rejects(manager.signOut(), /Unable to remove the private authentication cache/);
+
+  assert.equal((await manager.signIn()).token, tokenSecret);
+  const newCache = calls[1].args.at(-1).slice('--token-cache-dir='.length);
+  assert.notEqual(newCache, oldCache);
+  await assert.rejects(manager.signOut(), /Unable to remove the private authentication cache/);
+  assert.equal(await exists(oldCache), true);
+  assert.equal(await exists(newCache), false, 'a failed old cache prevented newer cache removal');
+
+  failures.delete(oldCache);
+  await manager.close();
+  assert.equal(await exists(oldCache), false);
 });
 
 test('sign-in during sign-out waits for old child cleanup before creating a new cache', async (t) => {

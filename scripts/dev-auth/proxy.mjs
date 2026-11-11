@@ -4,8 +4,6 @@ import https from 'node:https';
 import httpProxy from 'http-proxy';
 import { LOCAL_ORIGIN } from './constants.mjs';
 
-export { LOCAL_ORIGIN };
-
 const MAX_RETURN_PATH_DECODE_DEPTH = 8;
 const SIGN_IN_PROBE_TIMEOUT_MS = 5_000;
 
@@ -226,6 +224,9 @@ export function createDevAuthProxy({
     if (!userinfo) return;
     res.writeHead(constants.HTTP_STATUS_OK, {
       'content-type': upstream.headers['content-type'] ?? 'application/json',
+      ...(upstream.headers['content-encoding']
+        ? { 'content-encoding': upstream.headers['content-encoding'] }
+        : {}),
       'cache-control': 'no-store',
       'x-content-type-options': 'nosniff',
     });
