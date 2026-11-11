@@ -9,8 +9,10 @@ import {
 import {
   getUserFacingErrorMessage,
   stateMessagesToMessageProps,
+  toHistoryConversations,
 } from '~/components/AIChat/message-utils';
 import { LIGHTSPEED_ASSISTANT_NAME } from '~/lightspeed/const';
+import type { LightspeedConversationDetails } from '~/lightspeed/types';
 
 const createMessage = (overrides: Partial<Message> & Pick<Message, 'id' | 'role'>): Message => ({
   answer: '',
@@ -111,5 +113,33 @@ describe('stateMessagesToMessageProps', () => {
     const [botMessage] = stateMessagesToMessageProps(messages, false);
 
     expect(botMessage).not.toHaveProperty('isLoading');
+  });
+});
+
+describe('toHistoryConversations', () => {
+  const conversation = (
+    id: string,
+    createdAt: string,
+    topicSummary?: string,
+  ): LightspeedConversationDetails => ({
+    conversationId: id,
+    createdAt,
+    lastMessageAt: createdAt,
+    messageCount: 1,
+    ...(topicSummary ? { topicSummary } : {}),
+  });
+
+  it('sorts newest first and distinguishes untitled conversations by creation time', () => {
+    const result = toHistoryConversations([
+      conversation('older-blank', '2026-01-01T00:00:00.000Z', '   '),
+      conversation('named', '2026-01-15T00:00:00.000Z', '  Pipeline failure  '),
+      conversation('newer-blank', '2026-02-01T00:00:00.000Z'),
+    ]);
+
+    expect(result).toEqual([
+      { id: 'newer-blank', text: 'Untitled conversation, Feb 1, 2026, 12:00 AM' },
+      { id: 'named', text: 'Pipeline failure' },
+      { id: 'older-blank', text: 'Untitled conversation, Jan 1, 2026, 12:00 AM' },
+    ]);
   });
 });
