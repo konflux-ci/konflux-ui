@@ -5,6 +5,7 @@ import { UIhelperPO } from '../pageObjects/global-po';
 import { buildLogModalContentPO } from '../pageObjects/createApplication-po';
 import {
   activityTabPO,
+  compActivityCommitsTabPO,
   compActivityPipelinerunsTabPO,
   componentDetailsPO,
 } from '../pageObjects/pages-po';
@@ -12,6 +13,12 @@ import {
 export class ComponentDetailsPage {
   static openTab(tab: ComponentPageTabs) {
     UIhelper.clickTab(tab);
+  }
+
+  static goToCommitsTab() {
+    cy.get(activityTabPO.clickTab, { timeout: 30000 }).click();
+    cy.get(compActivityCommitsTabPO.clickTab, { timeout: 30000 }).click();
+    Common.waitForLoad();
   }
 
   static verifyPipelineRunIsVisible(plrName: string) {
