@@ -310,13 +310,41 @@ for (const operation of ['login', 'refresh']) {
   });
 }
 
-// Break caught: browser descendants inheriting stderr keeping cancellation and cache cleanup pending.
+// Break caught: a successful sign-in waiting for a browser descendant to close inherited stderr.
+test('successful sign-in completes while a descendant still holds stderr', async (t) => {
+  const { manager, root, calls } = await setup(
+    t,
+    [{ fixturePath: descendantFixture, exitAfterSpawn: true }],
+    { timeoutMs: 10_000 },
+  );
+  const login = manager.signIn();
+  let descendantPid;
+  try {
+    await waitFor(() => exists(join(root, 'ready-0')));
+    descendantPid = Number(await readFile(join(root, 'ready-0'), 'utf8'));
+    const result = await Promise.race([
+      login,
+      delay(1500).then(() => {
+        throw new Error('successful sign-in waited for descendant-owned stderr');
+      }),
+    ]);
+    assert.equal(result.token, tokenSecret);
+    assert.equal(manager.isCurrent(result.generation), true);
+    assert.equal(calls[0].child.exitCode, 0);
+    assert.doesNotThrow(() => process.kill(descendantPid, 0));
+  } finally {
+    if (descendantPid) process.kill(descendantPid, 'SIGKILL');
+    await login.catch(() => {});
+  }
+});
+
+// Break caught: browser descendants inheriting pipes keeping cancellation and cache cleanup pending.
 for (const cancellation of ['sign-out', 'timeout']) {
   for (const exitAfterSpawn of [false, true]) {
-    test(`${cancellation} releases descendant-held stderr after ${exitAfterSpawn ? 'normal' : 'cancelled'} child exit`, async (t) => {
+    test(`${cancellation} releases descendant-held pipes after ${exitAfterSpawn ? 'normal' : 'cancelled'} child exit`, async (t) => {
       const { manager, root, calls } = await setup(
         t,
-        [{ fixturePath: descendantFixture, exitAfterSpawn }],
+        [{ fixturePath: descendantFixture, exitAfterSpawn, holdStdout: exitAfterSpawn }],
         {
           timeoutMs: cancellation === 'timeout' ? 1000 : 10_000,
           killGraceMs: 20,

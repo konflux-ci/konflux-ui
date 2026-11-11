@@ -47,10 +47,13 @@ DevContainer users also need `kubectl` and kubelogin 1.36.4 or newer inside the
 container; install them if absent. The launcher reports missing local prerequisites
 before starting webpack-dev-server.
 
-Forward container port 8080 to **host port 8080**, and callback ports 8000 and
-18000 to the **same host port numbers** using the editor's Ports panel. The UI's
-canonical origin and Dex loopback callbacks do not support remapped host ports;
-free conflicting host ports instead of accepting an automatically substituted port.
+For a DevContainer, free host ports 8080, 8000, and 18000, then forward each
+container port to the **same host port number** using the editor's Ports panel.
+Kubelogin tries callback port 8000 first and falls back to 18000 only if it cannot
+bind port 8000 inside the container. A host port conflict does not cause fallback;
+forwarding only host port 18000 fails when kubelogin selects container port 8000.
+The UI's canonical origin and Dex loopback callbacks do not support remapped host
+ports; free conflicting host ports instead of accepting an automatically substituted port.
 Keep these forwards local to your host. If kubelogin cannot launch a browser inside
 the container, open the login URL printed in its terminal instructions in your host
 browser. See the [DevContainer guide](../.devcontainer/README.md#port-forwarding).

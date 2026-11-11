@@ -29,18 +29,19 @@ Certain environment variables will need to be set up. The most convenient way is
 
 Find the supported variables in the table below:
 
-| Variable name        | Description                                                                                     | Required                      | Default Value            |
-| -------------------- | ----------------------------------------------------------------------------------------------- | ----------------------------- | ------------------------ |
-| `KONFLUX_BASE_URL`   | The URL to the main page of Konflux                                                             | Yes                           | 'https://localhost:8080' |
-| `USERNAME`           | Username used to derive the test namespace and for deployed login forms                         | Yes                           | 'user2@konflux.dev'      |
-| `PASSWORD`           | Password for deployed login forms                                                               | Only for automated form login | 'password'               |
-| `LOCAL_CLUSTER`      | Use the local backend's namespace defaults; selects Dex form login unless LOGIN_PROVIDER is set | No                            | false                    |
-| `LOGIN_PROVIDER`     | Use `cli` for a signed-in local dev server, or `openshift` for a deployed OpenShift login form  | No                            | ''                       |
-| `REMOVE_APP_ON_FAIL` | Clean up applications from the cluster even if tests fail                                       | No                            | false                    |
-| `GH_TOKEN`           | GitHub token for network requests                                                               | Yes                           | ''                       |
-| `GH_REPO_OWNER`      | GitHub username where testing repo will be pushed. GH_TOKEN must have rights there.             | Yes                           | `redhat-hac-qe`          |
+| Variable name        | Description                                                                                      | Required                          | Default Value                                                                              |
+| -------------------- | ------------------------------------------------------------------------------------------------ | --------------------------------- | ------------------------------------------------------------------------------------------ |
+| `KONFLUX_BASE_URL`   | The URL to the main page of Konflux                                                              | Yes                               | 'https://localhost:8080'                                                                   |
+| `USERNAME`           | Signed-in account identity, also used for deployed login forms and the namespace fallback        | Yes                               | 'user2@konflux.dev'                                                                        |
+| `HAC_NAMESPACE`      | An existing Kubernetes namespace accessible to the signed-in account; set explicitly for staging | Yes, unless the fallback is valid | `default-tenant` with `LOCAL_CLUSTER=true`; otherwise lowercased `USERNAME` plus `-tenant` |
+| `PASSWORD`           | Password for deployed login forms                                                                | Only for automated form login     | 'password'                                                                                 |
+| `LOCAL_CLUSTER`      | Use the local backend's namespace defaults; selects Dex form login unless LOGIN_PROVIDER is set  | No                                | false                                                                                      |
+| `LOGIN_PROVIDER`     | Use `cli` for a signed-in local dev server, or `openshift` for a deployed OpenShift login form   | No                                | ''                                                                                         |
+| `REMOVE_APP_ON_FAIL` | Clean up applications from the cluster even if tests fail                                        | No                                | false                                                                                      |
+| `GH_TOKEN`           | GitHub token for network requests                                                                | Yes                               | ''                                                                                         |
+| `GH_REPO_OWNER`      | GitHub username where testing repo will be pushed. GH_TOKEN must have rights there.              | Yes                               | `redhat-hac-qe`                                                                            |
 
-With `LOGIN_PROVIDER=cli`, Cypress uses the authenticated session held by the local development server. Authentication, including any required 2FA, is completed in your browser before running the tests. Cypress does not read a login password or receive tokens. Set `USERNAME` to match the signed-in account so the derived test namespace is correct, or set `HAC_NAMESPACE` explicitly.
+With `LOGIN_PROVIDER=cli`, Cypress uses the authenticated session held by the local development server. Authentication, including any required 2FA, is completed in your browser before running the tests. Cypress does not read a login password or receive tokens. Set `USERNAME` to match the signed-in account and set `HAC_NAMESPACE` to a real namespace that account can access. The namespace fallback appends `-tenant` to the lowercased username; an email identity such as `user@example.com` would produce an invalid Kubernetes namespace. With `LOCAL_CLUSTER=true` and no `HAC_NAMESPACE` override, the default remains `default-tenant`.
 
 ### Running test from source against local Konflux UI and staging Konflux backend
 
@@ -54,6 +55,7 @@ Once you are signed in, head to the e2e-tests folder. Run `yarn install`, set th
 export CYPRESS_KONFLUX_BASE_URL=https://localhost:8080
 export CYPRESS_LOGIN_PROVIDER=cli
 export CYPRESS_USERNAME=your-signed-in-username
+export CYPRESS_HAC_NAMESPACE=your-accessible-namespace
 ```
 
 Use one of the following commands to run Cypress.
@@ -87,6 +89,7 @@ First configure the local development server's upstream targets and certificate 
 Select the CLI session provider and set `LOCAL_CLUSTER=true` so the tests use the local backend's namespace defaults:
 
 ```
+unset CYPRESS_HAC_NAMESPACE
 export CYPRESS_LOCAL_CLUSTER=true
 export CYPRESS_LOGIN_PROVIDER=cli
 export CYPRESS_KONFLUX_BASE_URL=https://localhost:8080
@@ -103,6 +106,8 @@ The provider regression tests execute the real login hook and page helpers with 
 ```bash
 yarn test --roots e2e-tests --setupFilesAfterEnv --testEnvironment=node --runInBand --runTestsByPath e2e-tests/support/commands/__tests__/hooks.spec.ts
 ```
+
+The unit-test CI workflow runs this command once on shard 1, without installing Cypress or connecting to a cluster.
 
 ### Running tests using the container image
 
