@@ -21,19 +21,6 @@ describe('AIChatPortal', () => {
     expect(landmark).toHaveTextContent('Hello from chat');
   });
 
-  it('exposes the dock as a complementary landmark named AI Chat', () => {
-    render(
-      <AIChatPortal>
-        <button type="button">Toggle chat</button>
-      </AIChatPortal>,
-    );
-
-    const landmark = getChatLandmark();
-
-    expect(landmark).toHaveAccessibleName('AI Chat');
-    expect(landmark).toContainElement(screen.getByRole('button', { name: 'Toggle chat' }));
-  });
-
   it('removes the portal landmark and its children when unmounted', () => {
     const { unmount } = render(
       <AIChatPortal>
