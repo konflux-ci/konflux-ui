@@ -72,11 +72,11 @@ export class WebSocketFactory {
   }
 
   private reconnect(): void {
-    if (this.connectionAttempt || this.state === WebSocketState.DESTROYED) {
+    if (this.connectionAttempt !== -1 || this.state === WebSocketState.DESTROYED) {
       return;
     }
 
-    let duration = 0;
+    let duration = 1000;
 
     const attempt = () => {
       if (!this.options.reconnect || this.state === WebSocketState.OPENED) {
@@ -118,7 +118,7 @@ export class WebSocketFactory {
       console.info(`websocket open: ${this.id}`);
       this.state = WebSocketState.OPENED;
       this.triggerEvent('open', undefined);
-      if (this.connectionAttempt) {
+      if (this.connectionAttempt !== -1) {
         window.clearTimeout(this.connectionAttempt);
         this.connectionAttempt = -1;
       }
