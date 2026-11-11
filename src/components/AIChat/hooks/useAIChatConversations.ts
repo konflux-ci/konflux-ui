@@ -14,6 +14,7 @@ import {
 import type { ConversationDetails, LightspeedClient } from '@redhat-cloud-services/lightspeed-client';
 import { withConversationMenuActions } from '~/components/AIChat/conversationActions';
 import { getUserFacingErrorMessage, toHistoryConversations } from '~/components/AIChat/message-utils';
+import { updateListedConversationTopicSummary } from '~/lightspeed/lightspeedClient';
 import type { LightspeedConversationDetails } from '~/lightspeed/types';
 import { logger } from '~/monitoring/logger';
 import { filterByText } from '~/utils/text-filter-utils';
@@ -89,8 +90,9 @@ type UseAIChatConversationsResult = {
   activeConversationId: string | null;
   conversations: Conversation[];
   conversationError?: string;
+  deleteConversationTarget: RenameConversationTarget | null;
   hasNoSearchResults: boolean;
-  historyMenuKey: number;
+  isDeletingConversation: boolean;
   isLoadingConversations: boolean;
   isRenamingConversation: boolean;
   renameConversationTarget: RenameConversationTarget | null;
@@ -99,7 +101,9 @@ type UseAIChatConversationsResult = {
   selectConversation: (conversationId: string) => Promise<void>;
   filterConversations: (searchValue: string) => void;
   clearConversationError: () => void;
+  closeDeleteConversation: () => void;
   closeRenameConversation: () => void;
+  confirmDeleteConversation: () => Promise<void>;
   confirmRenameConversation: (newName: string) => Promise<void>;
 };
 
@@ -111,11 +115,13 @@ export const useAIChatConversations = (): UseAIChatConversationsResult => {
   const [conversations, setConversations] = React.useState<Conversation[]>([]);
   const [conversationSearch, setConversationSearch] = React.useState('');
   const [conversationError, setConversationError] = React.useState<string>();
+  const [isDeletingConversation, setIsDeletingConversation] = React.useState(false);
   const [isLoadingConversations, setIsLoadingConversations] = React.useState(false);
   const [isRenamingConversation, setIsRenamingConversation] = React.useState(false);
+  const [deleteConversationTarget, setDeleteConversationTarget] =
+    React.useState<RenameConversationTarget | null>(null);
   const [renameConversationTarget, setRenameConversationTarget] =
     React.useState<RenameConversationTarget | null>(null);
-  const [historyMenuKey, setHistoryMenuKey] = React.useState(0);
   const conversationSearchRef = React.useRef(conversationSearch);
   conversationSearchRef.current = conversationSearch;
 
@@ -192,6 +198,7 @@ export const useAIChatConversations = (): UseAIChatConversationsResult => {
   const deleteConversationById = React.useCallback(
     async (conversationId: string) => {
       try {
+        setConversationError(undefined);
         await client.deleteConversation(conversationId);
 
         if (activeConversationId === conversationId) {
@@ -199,6 +206,9 @@ export const useAIChatConversations = (): UseAIChatConversationsResult => {
         }
 
         await refreshConversations();
+        setDeleteConversationTarget((current) =>
+          current?.conversationId === conversationId ? null : current,
+        );
       } catch (error) {
         const message = getErrorMessage(error);
         setConversationError(message);
@@ -208,13 +218,37 @@ export const useAIChatConversations = (): UseAIChatConversationsResult => {
     [activeConversationId, client, refreshConversations, startNewChat],
   );
 
-  const renameConversationById = React.useCallback(
+  const requestDeleteConversation = React.useCallback(
     (conversationId: string, currentName: string) => {
-      setHistoryMenuKey((key) => key + 1);
-      setRenameConversationTarget({ conversationId, currentName });
+      setRenameConversationTarget(null);
+      setDeleteConversationTarget({ conversationId, currentName });
     },
     [],
   );
+
+  const closeDeleteConversation = React.useCallback(() => {
+    setDeleteConversationTarget(null);
+  }, []);
+
+  const confirmDeleteConversation = React.useCallback(async () => {
+    if (!deleteConversationTarget || isDeletingConversation) {
+      return;
+    }
+
+    const { conversationId } = deleteConversationTarget;
+    setIsDeletingConversation(true);
+
+    try {
+      await deleteConversationById(conversationId);
+    } finally {
+      setIsDeletingConversation(false);
+    }
+  }, [deleteConversationById, deleteConversationTarget, isDeletingConversation]);
+
+  const renameConversationById = React.useCallback((conversationId: string, currentName: string) => {
+    setDeleteConversationTarget(null);
+    setRenameConversationTarget({ conversationId, currentName });
+  }, []);
 
   const closeRenameConversation = React.useCallback(() => {
     setRenameConversationTarget(null);
@@ -232,8 +266,11 @@ export const useAIChatConversations = (): UseAIChatConversationsResult => {
 
       try {
         await client.updateConversation(conversationId, newName);
+        await updateListedConversationTopicSummary(conversationId, newName);
         await refreshConversations();
-        setRenameConversationTarget(null);
+        setRenameConversationTarget((current) =>
+          current?.conversationId === conversationId ? null : current,
+        );
       } catch (error) {
         const message = getErrorMessage(error);
         setConversationError(message);
@@ -248,20 +285,19 @@ export const useAIChatConversations = (): UseAIChatConversationsResult => {
   const conversationsWithMenuActions = React.useMemo(
     () =>
       withConversationMenuActions(conversations, {
-        onDeleteConversation: (conversationId) => {
-          void deleteConversationById(conversationId);
-        },
+        onDeleteConversation: requestDeleteConversation,
         onRenameConversation: renameConversationById,
       }),
-    [conversations, deleteConversationById, renameConversationById],
+    [conversations, renameConversationById, requestDeleteConversation],
   );
 
   return {
     activeConversationId,
     conversations: conversationsWithMenuActions,
     conversationError,
+    deleteConversationTarget,
     hasNoSearchResults: Boolean(conversationSearch.trim()) && conversations.length === 0,
-    historyMenuKey,
+    isDeletingConversation,
     isLoadingConversations,
     isRenamingConversation,
     renameConversationTarget,
@@ -270,7 +306,9 @@ export const useAIChatConversations = (): UseAIChatConversationsResult => {
     selectConversation,
     filterConversations,
     clearConversationError,
+    closeDeleteConversation,
     closeRenameConversation,
+    confirmDeleteConversation,
     confirmRenameConversation,
   };
 };

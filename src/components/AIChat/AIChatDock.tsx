@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { AIStateProvider, useInProgress } from '@redhat-cloud-services/ai-react-state';
+import { AIChatDeleteConversationModal } from '~/components/AIChat/components/AIChatDeleteConversationModal';
 import { AIChatFooter } from '~/components/AIChat/components/AIChatFooter';
 import { AIChatHistoryNav } from '~/components/AIChat/components/AIChatHistoryNav';
 import { AIChatMessageList } from '~/components/AIChat/components/AIChatMessageList';
@@ -25,8 +26,9 @@ const AIChatDockContent: React.FC = () => {
     activeConversationId,
     conversations,
     conversationError,
+    deleteConversationTarget,
     hasNoSearchResults,
-    historyMenuKey,
+    isDeletingConversation,
     isLoadingConversations,
     isRenamingConversation,
     renameConversationTarget,
@@ -35,7 +37,9 @@ const AIChatDockContent: React.FC = () => {
     selectConversation,
     filterConversations,
     clearConversationError,
+    closeDeleteConversation,
     closeRenameConversation,
+    confirmDeleteConversation,
     confirmRenameConversation,
   } = useAIChatConversations();
   const isInProgress = useInProgress();
@@ -65,7 +69,6 @@ const AIChatDockContent: React.FC = () => {
             conversations={conversations}
             conversationError={conversationError}
             hasNoSearchResults={hasNoSearchResults}
-            historyMenuKey={historyMenuKey}
             isLoadingConversations={isLoadingConversations}
             refreshConversations={refreshConversations}
             startNewChat={startNewChat}
@@ -82,6 +85,16 @@ const AIChatDockContent: React.FC = () => {
             />
           </AIChatHistoryNav>
         </AIChatPanel>
+        <AIChatDeleteConversationModal
+          appendTo={getAIChatPortalContainer}
+          currentName={deleteConversationTarget?.currentName ?? ''}
+          isOpen={deleteConversationTarget !== null}
+          isSubmitting={isDeletingConversation}
+          onClose={closeDeleteConversation}
+          onDelete={() => {
+            void confirmDeleteConversation();
+          }}
+        />
         <AIChatRenameConversationModal
           appendTo={getAIChatPortalContainer}
           currentName={renameConversationTarget?.currentName ?? ''}

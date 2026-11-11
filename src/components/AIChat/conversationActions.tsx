@@ -4,7 +4,7 @@ import { PencilAltIcon } from '@patternfly/react-icons/dist/esm/icons/pencil-alt
 import { TrashIcon } from '@patternfly/react-icons/dist/esm/icons/trash-icon';
 
 type ConversationActionHandlers = {
-  onDeleteConversation: (conversationId: string) => void;
+  onDeleteConversation: (conversationId: string, currentName: string) => void;
   onRenameConversation: (conversationId: string, currentName: string) => void;
 };
 
@@ -24,7 +24,7 @@ const createConversationMenuItems = (
     <DropdownItem
       icon={<TrashIcon aria-hidden />}
       onClick={() => {
-        handlers.onDeleteConversation(conversation.id);
+        handlers.onDeleteConversation(conversation.id, conversation.text);
       }}
     >
       Delete

@@ -48,9 +48,4 @@
   .pf-v6-c-modal-box {
     --pf-v6-c-modal-box--ZIndex: var(--pf-t--global--z-index--2xl);
   }
-
-  // Hide any open conversation action menus while the rename modal is open.
-  &:has([data-test='ai-chat-rename-conversation-modal']) .pf-chatbot__selections {
-    display: none !important;
-  }
 }

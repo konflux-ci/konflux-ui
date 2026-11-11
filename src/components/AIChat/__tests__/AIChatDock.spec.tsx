@@ -28,6 +28,10 @@ jest.mock('~/components/AIChat/hooks/useAIChatConversations', () => ({
   useAIChatConversations: () => mockUseAIChatConversations(),
 }));
 
+jest.mock('~/components/AIChat/components/AIChatDeleteConversationModal', () => ({
+  AIChatDeleteConversationModal: () => null,
+}));
+
 jest.mock('~/components/AIChat/components/AIChatRenameConversationModal', () => ({
   AIChatRenameConversationModal: () => null,
 }));
@@ -76,10 +80,13 @@ describe('AIChatDock', () => {
       conversations: [],
       conversationError: undefined,
       hasNoSearchResults: false,
-      historyMenuKey: 0,
+      deleteConversationTarget: null,
+      isDeletingConversation: false,
       isLoadingConversations: false,
       isRenamingConversation: false,
       renameConversationTarget: null,
+      closeDeleteConversation: jest.fn(),
+      confirmDeleteConversation: jest.fn(),
       clearConversationError: jest.fn(),
       closeRenameConversation: jest.fn(),
       confirmRenameConversation: jest.fn(),
@@ -196,10 +203,13 @@ describe('AIChatDock', () => {
       conversations: [],
       conversationError: KONFLUX_AI_ERROR_UNAVAILABLE,
       hasNoSearchResults: false,
-      historyMenuKey: 0,
+      deleteConversationTarget: null,
+      isDeletingConversation: false,
       isLoadingConversations: false,
       isRenamingConversation: false,
       renameConversationTarget: null,
+      closeDeleteConversation: jest.fn(),
+      confirmDeleteConversation: jest.fn(),
       clearConversationError: jest.fn(),
       closeRenameConversation: jest.fn(),
       confirmRenameConversation: jest.fn(),

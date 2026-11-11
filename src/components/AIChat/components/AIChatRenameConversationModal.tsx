@@ -43,7 +43,7 @@ export const AIChatRenameConversationModal: React.FC<AIChatRenameConversationMod
 
   const handleRename = () => {
     const trimmedName = name.trim();
-    if (!trimmedName) {
+    if (isSubmitting || !trimmedName) {
       return;
     }
 
@@ -52,10 +52,6 @@ export const AIChatRenameConversationModal: React.FC<AIChatRenameConversationMod
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (isSubmitting || !name.trim()) {
-      return;
-    }
-
     handleRename();
   };
 

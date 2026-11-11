@@ -40,3 +40,5 @@ export const KONFLUX_AI_HISTORY_NO_RESULTS_BODY = 'Try a different search term.'
 export const KONFLUX_AI_MAX_TOPIC_SUMMARY_LENGTH = 1000;
 
 export const KONFLUX_AI_RENAME_CONVERSATION_TITLE_ID = 'ai-chat-rename-conversation-title';
+
+export const KONFLUX_AI_DELETE_CONVERSATION_TITLE_ID = 'ai-chat-delete-conversation-title';
