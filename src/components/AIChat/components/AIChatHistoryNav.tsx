@@ -4,6 +4,7 @@ import type { Conversation } from '@patternfly/chatbot/dist/dynamic/ChatbotConve
 import ChatbotConversationHistoryNav from '@patternfly/chatbot/dist/dynamic/ChatbotConversationHistoryNav';
 import { AIChatHeader } from '~/components/AIChat/components/AIChatHeader';
 import {
+  KONFLUX_AI_ERROR_TITLE,
   KONFLUX_AI_HISTORY_NO_RESULTS_BODY,
   KONFLUX_AI_HISTORY_NO_RESULTS_TITLE,
   KONFLUX_AI_HISTORY_SEARCH_PLACEHOLDER,
@@ -13,7 +14,9 @@ type AIChatHistoryNavProps = {
   displayMode: ChatbotDisplayMode;
   activeConversationId: string | null;
   conversations: Conversation[];
+  conversationError?: string;
   hasNoSearchResults: boolean;
+  isLoadingConversations: boolean;
   refreshConversations: () => Promise<void>;
   startNewChat: () => Promise<void>;
   selectConversation: (conversationId: string) => Promise<void>;
@@ -22,11 +25,14 @@ type AIChatHistoryNavProps = {
   children: React.ReactNode;
 };
 
+/** History drawer for searching, selecting, and starting conversations. */
 export const AIChatHistoryNav: React.FC<AIChatHistoryNavProps> = ({
   displayMode,
   activeConversationId,
   conversations,
+  conversationError,
   hasNoSearchResults,
+  isLoadingConversations,
   refreshConversations,
   startNewChat,
   selectConversation,
@@ -68,6 +74,12 @@ export const AIChatHistoryNav: React.FC<AIChatHistoryNavProps> = ({
       activeItemId={activeConversationId ?? undefined}
       onSelectActiveItem={handleSelectConversation}
       conversations={conversations}
+      isLoading={isLoadingConversations}
+      errorState={
+        conversationError
+          ? { titleText: KONFLUX_AI_ERROR_TITLE, bodyText: conversationError }
+          : undefined
+      }
       onNewChat={handleNewChat}
       handleTextInputChange={filterConversations}
       searchInputPlaceholder={KONFLUX_AI_HISTORY_SEARCH_PLACEHOLDER}

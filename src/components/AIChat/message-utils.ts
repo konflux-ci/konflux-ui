@@ -52,11 +52,26 @@ export const stateMessagesToMessageProps = (
     };
   });
 
+const untitledConversationText = (createdAt: string): string => {
+  const created = new Date(createdAt);
+  if (Number.isNaN(created.getTime())) {
+    return 'Untitled conversation';
+  }
+
+  const createdLabel = new Intl.DateTimeFormat('en-US', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+    timeZone: 'UTC',
+  }).format(created);
+
+  return `Untitled conversation, ${createdLabel}`;
+};
+
 /** Map Lightspeed conversations to PatternFly history items (newest first). */
 export const toHistoryConversations = (
   conversations: LightspeedConversationDetails[],
 ): Conversation[] =>
   orderBy(conversations, ['lastMessageAt'], ['desc']).map((conversation) => ({
     id: conversation.conversationId,
-    text: conversation.topicSummary?.trim() || 'Untitled conversation',
+    text: conversation.topicSummary?.trim() || untitledConversationText(conversation.createdAt),
   }));

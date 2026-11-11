@@ -23,7 +23,9 @@ const AIChatDockContent: React.FC = () => {
   const {
     activeConversationId,
     conversations,
+    conversationError,
     hasNoSearchResults,
+    isLoadingConversations,
     refreshConversations,
     startNewChat,
     selectConversation,
@@ -41,7 +43,7 @@ const AIChatDockContent: React.FC = () => {
     toggle();
   }, [clearSendError, initError, isVisible, retryInit, toggle]);
 
-  const chatError = sendError ?? initError;
+  const chatError = sendError ?? initError ?? conversationError;
   const isSendDisabled = isInProgress || !!initError || isInitializing;
 
   return (
@@ -53,7 +55,9 @@ const AIChatDockContent: React.FC = () => {
             displayMode={KONFLUX_AI_DISPLAY_MODE}
             activeConversationId={activeConversationId}
             conversations={conversations}
+            conversationError={conversationError}
             hasNoSearchResults={hasNoSearchResults}
+            isLoadingConversations={isLoadingConversations}
             refreshConversations={refreshConversations}
             startNewChat={startNewChat}
             selectConversation={selectConversation}

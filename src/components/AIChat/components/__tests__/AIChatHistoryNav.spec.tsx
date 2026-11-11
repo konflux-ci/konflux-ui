@@ -5,6 +5,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { AIChatHistoryNav } from '~/components/AIChat/components/AIChatHistoryNav';
 import {
+  KONFLUX_AI_ERROR_TITLE,
   KONFLUX_AI_HISTORY_NO_RESULTS_BODY,
   KONFLUX_AI_HISTORY_NO_RESULTS_TITLE,
   KONFLUX_AI_HISTORY_SEARCH_PLACEHOLDER,
@@ -15,8 +16,10 @@ jest.mock('@patternfly/chatbot/dist/dynamic/ChatbotConversationHistoryNav', () =
   default: ({
     conversations,
     drawerContent,
+    errorState,
     handleTextInputChange,
     isDrawerOpen,
+    isLoading,
     noResultsState,
     onDrawerToggle,
     onNewChat,
@@ -25,8 +28,10 @@ jest.mock('@patternfly/chatbot/dist/dynamic/ChatbotConversationHistoryNav', () =
   }: {
     conversations: Conversation[];
     drawerContent: React.ReactNode;
+    errorState?: { titleText: string; bodyText: string };
     handleTextInputChange: (value: string) => void;
     isDrawerOpen: boolean;
+    isLoading?: boolean;
     noResultsState?: { titleText: string; bodyText: string };
     onDrawerToggle: () => void;
     onNewChat: () => void;
@@ -53,6 +58,13 @@ jest.mock('@patternfly/chatbot/dist/dynamic/ChatbotConversationHistoryNav', () =
         aria-label={searchInputPlaceholder}
         onChange={(event) => handleTextInputChange(event.target.value)}
       />
+      {isLoading ? <p>Loading conversations</p> : null}
+      {errorState ? (
+        <div>
+          <p>{errorState.titleText}</p>
+          <p>{errorState.bodyText}</p>
+        </div>
+      ) : null}
       {noResultsState ? (
         <div>
           <p>{noResultsState.titleText}</p>
@@ -93,6 +105,7 @@ const renderHistoryNav = (
     activeConversationId: null,
     conversations,
     hasNoSearchResults: false,
+    isLoadingConversations: false,
     refreshConversations: jest.fn().mockResolvedValue(undefined),
     startNewChat: jest.fn().mockResolvedValue(undefined),
     selectConversation: jest.fn().mockResolvedValue(undefined),
@@ -182,6 +195,19 @@ describe('AIChatHistoryNav', () => {
     await user.type(screen.getByRole('textbox', { name: KONFLUX_AI_HISTORY_SEARCH_PLACEHOLDER }), 'pipe');
 
     expect(props.filterConversations).toHaveBeenLastCalledWith('pipe');
+  });
+
+  it('shows a loading state while conversations are refreshing', () => {
+    renderHistoryNav({ isLoadingConversations: true });
+
+    expect(screen.getByText('Loading conversations')).toBeInTheDocument();
+  });
+
+  it('shows a conversation error in the history drawer', () => {
+    renderHistoryNav({ conversationError: 'Konflux AI is temporarily unavailable.' });
+
+    expect(screen.getByText(KONFLUX_AI_ERROR_TITLE)).toBeInTheDocument();
+    expect(screen.getByText('Konflux AI is temporarily unavailable.')).toBeInTheDocument();
   });
 
   it('shows the empty search state and renders the chat inside the drawer', () => {
