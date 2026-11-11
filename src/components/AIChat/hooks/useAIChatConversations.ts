@@ -20,7 +20,11 @@ import type { LightspeedConversationDetails } from '~/lightspeed/types';
 import { logger } from '~/monitoring/logger';
 import { filterByText } from '~/utils/text-filter-utils';
 
-/** State-manager temp id (ai-client-state) — distinct from Lightspeed client temp id. */
+/**
+ * Unexported `TEMP_CONVERSATION_ID` in
+ * `@redhat-cloud-services/ai-client-state` `src/lib/state-manager.js`.
+ * Distinct from Lightspeed's exported temp conversation id.
+ */
 const STATE_TEMP_CONVERSATION_ID = '__temp_conversation__';
 
 const isTemporaryConversationId = (conversationId?: string): boolean =>
