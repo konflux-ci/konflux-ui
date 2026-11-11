@@ -378,6 +378,7 @@ describe('conversation rename and delete', () => {
 
     await user.click(screen.getByRole('menuitem', { name: 'Rename' }));
 
+    expect(result.current.conversations[0]?.label).toBe('Pipeline failure options');
     expect(result.current.renameConversationTarget).toEqual({
       conversationId: 'conv-1',
       currentName: 'Pipeline failure',
@@ -387,10 +388,14 @@ describe('conversation rename and delete', () => {
       await result.current.confirmRenameConversation('Renamed chat');
     });
 
-    expect(updateConversation).toHaveBeenCalledWith('conv-1', 'Renamed chat');
+    expect(result.current.conversations[0]?.label).toBe('Renamed chat options');
     expect(mockUpdateListedConversationTopicSummary).toHaveBeenCalledWith(
       'conv-1',
       'Renamed chat',
+    );
+    expect(updateConversation).toHaveBeenCalledWith('conv-1', 'Renamed chat');
+    expect(mockUpdateListedConversationTopicSummary.mock.invocationCallOrder[0]).toBeLessThan(
+      updateConversation.mock.invocationCallOrder[0],
     );
     expect(getConversations).toHaveBeenCalledTimes(2);
     expect(result.current.conversations[0]).toEqual(
@@ -419,7 +424,10 @@ describe('conversation rename and delete', () => {
       currentName: 'Pipeline failure',
     });
     expect(getConversations).toHaveBeenCalledTimes(1);
-    expect(mockUpdateListedConversationTopicSummary).not.toHaveBeenCalled();
+    expect(mockUpdateListedConversationTopicSummary).toHaveBeenCalledWith(
+      'conv-1',
+      'Renamed chat',
+    );
     expect(mockLoggerWarn).toHaveBeenCalledWith(
       'Failed to rename Lightspeed conversation',
       expect.objectContaining({ conversationId: 'conv-1' }),
@@ -439,7 +447,7 @@ describe('conversation rename and delete', () => {
       await result.current.confirmRenameConversation('Renamed chat');
     });
 
-    expect(updateConversation).toHaveBeenCalledWith('conv-1', 'Renamed chat');
+    expect(updateConversation).not.toHaveBeenCalled();
     expect(result.current.conversationError).toBe(KONFLUX_AI_ERROR_UNAVAILABLE);
     expect(result.current.conversationError).not.toContain('database');
     expect(result.current.renameConversationTarget).toEqual({
@@ -543,6 +551,8 @@ describe('conversation rename and delete', () => {
   it('asks for confirmation before deleting a conversation', async () => {
     const user = userEvent.setup();
     const result = await renderLoadedHistory();
+
+    expect(screen.getByRole('menuitem', { name: 'Delete' }).closest('li')).toHaveClass('pf-m-danger');
 
     await user.click(screen.getByRole('menuitem', { name: 'Delete' }));
 

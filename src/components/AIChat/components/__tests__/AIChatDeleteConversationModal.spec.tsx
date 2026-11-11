@@ -63,4 +63,19 @@ describe('AIChatDeleteConversationModal', () => {
     expect(screen.getByRole('button', { name: /Delete/ })).toBeDisabled();
     expect(onDelete).not.toHaveBeenCalled();
   });
+
+  it('shows a delete failure inside the dialog', () => {
+    render(
+      <AIChatDeleteConversationModal
+        appendTo={appendTo}
+        currentName="Pipeline failure"
+        errorMessage="You do not have permission to use Konflux AI."
+        isOpen
+        onClose={onClose}
+        onDelete={onDelete}
+      />,
+    );
+
+    expect(screen.getByText('You do not have permission to use Konflux AI.')).toBeInTheDocument();
+  });
 });

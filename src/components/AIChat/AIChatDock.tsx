@@ -88,6 +88,7 @@ const AIChatDockContent: React.FC = () => {
         <AIChatDeleteConversationModal
           appendTo={getAIChatPortalContainer}
           currentName={deleteConversationTarget?.currentName ?? ''}
+          errorMessage={deleteConversationTarget ? conversationError : undefined}
           isOpen={deleteConversationTarget !== null}
           isSubmitting={isDeletingConversation}
           onClose={closeDeleteConversation}
@@ -98,6 +99,7 @@ const AIChatDockContent: React.FC = () => {
         <AIChatRenameConversationModal
           appendTo={getAIChatPortalContainer}
           currentName={renameConversationTarget?.currentName ?? ''}
+          errorMessage={renameConversationTarget ? conversationError : undefined}
           isOpen={renameConversationTarget !== null}
           isSubmitting={isRenamingConversation}
           onClose={closeRenameConversation}

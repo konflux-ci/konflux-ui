@@ -46,4 +46,19 @@ describe('AIChatRenameConversationModal', () => {
     expect(screen.getByRole('button', { name: /Rename/ })).toBeDisabled();
     expect(onRename).not.toHaveBeenCalled();
   });
+
+  it('shows a rename failure inside the dialog', () => {
+    render(
+      <AIChatRenameConversationModal
+        appendTo={appendTo}
+        currentName="Pipeline failure"
+        errorMessage="Konflux AI is temporarily unavailable."
+        isOpen
+        onClose={onClose}
+        onRename={onRename}
+      />,
+    );
+
+    expect(screen.getByText('Konflux AI is temporarily unavailable.')).toBeInTheDocument();
+  });
 });

@@ -29,11 +29,23 @@ jest.mock('~/components/AIChat/hooks/useAIChatConversations', () => ({
 }));
 
 jest.mock('~/components/AIChat/components/AIChatDeleteConversationModal', () => ({
-  AIChatDeleteConversationModal: () => null,
+  AIChatDeleteConversationModal: ({
+    errorMessage,
+    isOpen,
+  }: {
+    errorMessage?: string;
+    isOpen: boolean;
+  }) => (isOpen && errorMessage ? <p>{errorMessage}</p> : null),
 }));
 
 jest.mock('~/components/AIChat/components/AIChatRenameConversationModal', () => ({
-  AIChatRenameConversationModal: () => null,
+  AIChatRenameConversationModal: ({
+    errorMessage,
+    isOpen,
+  }: {
+    errorMessage?: string;
+    isOpen: boolean;
+  }) => (isOpen && errorMessage ? <p>{errorMessage}</p> : null),
 }));
 
 jest.mock('~/components/AIChat/components/AIChatHistoryNav', () => ({
@@ -222,5 +234,37 @@ describe('AIChatDock', () => {
     render(<AIChatDock />);
 
     expect(screen.getByText(KONFLUX_AI_ERROR_UNAVAILABLE)).toBeInTheDocument();
+  });
+
+  it('shows a rename failure inside the open rename dialog', () => {
+    mockUseAIChatInit.mockReturnValue({
+      initError: undefined,
+      isInitializing: false,
+      retryInit,
+    });
+    mockUseAIChatConversations.mockReturnValue({
+      activeConversationId: null,
+      conversations: [],
+      conversationError: KONFLUX_AI_ERROR_UNAVAILABLE,
+      hasNoSearchResults: false,
+      deleteConversationTarget: null,
+      isDeletingConversation: false,
+      isLoadingConversations: false,
+      isRenamingConversation: false,
+      renameConversationTarget: { conversationId: 'conv-1', currentName: 'Pipeline failure' },
+      closeDeleteConversation: jest.fn(),
+      confirmDeleteConversation: jest.fn(),
+      clearConversationError: jest.fn(),
+      closeRenameConversation: jest.fn(),
+      confirmRenameConversation: jest.fn(),
+      refreshConversations: mockRefreshConversations,
+      startNewChat: jest.fn(),
+      selectConversation: jest.fn(),
+      filterConversations: jest.fn(),
+    });
+
+    render(<AIChatDock />);
+
+    expect(screen.getAllByText(KONFLUX_AI_ERROR_UNAVAILABLE)).toHaveLength(2);
   });
 });

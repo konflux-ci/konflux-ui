@@ -23,6 +23,7 @@ const createConversationMenuItems = (
     </DropdownItem>
     <DropdownItem
       icon={<TrashIcon aria-hidden />}
+      isDanger
       onClick={() => {
         handlers.onDeleteConversation(conversation.id, conversation.text);
       }}
@@ -37,7 +38,7 @@ const withConversationActions = (
   handlers: ConversationActionHandlers,
 ): Conversation => ({
   ...conversation,
-  label: 'Conversation options',
+  label: `${conversation.text} options`,
   menuItems: createConversationMenuItems(conversation, handlers),
 });
 

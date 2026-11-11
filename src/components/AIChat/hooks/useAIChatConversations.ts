@@ -35,7 +35,7 @@ const isTemporaryConversationId = (conversationId?: string): boolean =>
  * List items are `ConversationDetails` from `@redhat-cloud-services/lightspeed-client`,
  * including `topic_summary` (https://github.com/RedHatInsights/ai-web-clients/pull/5).
  */
-export type RenameConversationTarget = {
+export type ConversationActionTarget = {
   conversationId: string;
   currentName: string;
 };
@@ -90,12 +90,12 @@ type UseAIChatConversationsResult = {
   activeConversationId: string | null;
   conversations: Conversation[];
   conversationError?: string;
-  deleteConversationTarget: RenameConversationTarget | null;
+  deleteConversationTarget: ConversationActionTarget | null;
   hasNoSearchResults: boolean;
   isDeletingConversation: boolean;
   isLoadingConversations: boolean;
   isRenamingConversation: boolean;
-  renameConversationTarget: RenameConversationTarget | null;
+  renameConversationTarget: ConversationActionTarget | null;
   refreshConversations: () => Promise<void>;
   startNewChat: () => Promise<void>;
   selectConversation: (conversationId: string) => Promise<void>;
@@ -119,9 +119,9 @@ export const useAIChatConversations = (): UseAIChatConversationsResult => {
   const [isLoadingConversations, setIsLoadingConversations] = React.useState(false);
   const [isRenamingConversation, setIsRenamingConversation] = React.useState(false);
   const [deleteConversationTarget, setDeleteConversationTarget] =
-    React.useState<RenameConversationTarget | null>(null);
+    React.useState<ConversationActionTarget | null>(null);
   const [renameConversationTarget, setRenameConversationTarget] =
-    React.useState<RenameConversationTarget | null>(null);
+    React.useState<ConversationActionTarget | null>(null);
   const conversationSearchRef = React.useRef(conversationSearch);
   conversationSearchRef.current = conversationSearch;
 
@@ -265,8 +265,10 @@ export const useAIChatConversations = (): UseAIChatConversationsResult => {
       setConversationError(undefined);
 
       try {
-        await client.updateConversation(conversationId, newName);
+        // The history list reads the v1 database. Write that first so a failed v2
+        // cache update leaves the visible title correct.
         await updateListedConversationTopicSummary(conversationId, newName);
+        await client.updateConversation(conversationId, newName);
         await refreshConversations();
         setRenameConversationTarget((current) =>
           current?.conversationId === conversationId ? null : current,

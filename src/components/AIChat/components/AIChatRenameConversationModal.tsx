@@ -1,5 +1,7 @@
 import * as React from 'react';
 import {
+  Alert,
+  AlertVariant,
   Button,
   ButtonVariant,
   Form,
@@ -19,6 +21,7 @@ import {
 type AIChatRenameConversationModalProps = {
   appendTo: () => HTMLElement;
   currentName: string;
+  errorMessage?: string;
   isOpen: boolean;
   isSubmitting?: boolean;
   onClose: () => void;
@@ -28,6 +31,7 @@ type AIChatRenameConversationModalProps = {
 export const AIChatRenameConversationModal: React.FC<AIChatRenameConversationModalProps> = ({
   appendTo,
   currentName,
+  errorMessage,
   isOpen,
   isSubmitting = false,
   onClose,
@@ -66,6 +70,14 @@ export const AIChatRenameConversationModal: React.FC<AIChatRenameConversationMod
     >
       <ModalHeader labelId={KONFLUX_AI_RENAME_CONVERSATION_TITLE_ID} title="Rename conversation" />
       <ModalBody>
+        {errorMessage ? (
+          <Alert
+            className="pf-v6-u-mb-md"
+            isInline
+            title={errorMessage}
+            variant={AlertVariant.danger}
+          />
+        ) : null}
         <Form onSubmit={handleSubmit}>
           <FormGroup fieldId="ai-chat-conversation-name" isRequired label="Name">
             <TextInput

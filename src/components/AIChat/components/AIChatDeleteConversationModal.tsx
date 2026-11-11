@@ -1,5 +1,7 @@
 import * as React from 'react';
 import {
+  Alert,
+  AlertVariant,
   Button,
   ButtonVariant,
   Content,
@@ -14,6 +16,7 @@ import { KONFLUX_AI_DELETE_CONVERSATION_TITLE_ID } from '~/components/AIChat/con
 type AIChatDeleteConversationModalProps = {
   appendTo: () => HTMLElement;
   currentName: string;
+  errorMessage?: string;
   isOpen: boolean;
   isSubmitting?: boolean;
   onClose: () => void;
@@ -23,6 +26,7 @@ type AIChatDeleteConversationModalProps = {
 export const AIChatDeleteConversationModal: React.FC<AIChatDeleteConversationModalProps> = ({
   appendTo,
   currentName,
+  errorMessage,
   isOpen,
   isSubmitting = false,
   onClose,
@@ -47,6 +51,14 @@ export const AIChatDeleteConversationModal: React.FC<AIChatDeleteConversationMod
     >
       <ModalHeader labelId={KONFLUX_AI_DELETE_CONVERSATION_TITLE_ID} title="Delete conversation" />
       <ModalBody>
+        {errorMessage ? (
+          <Alert
+            className="pf-v6-u-mb-md"
+            isInline
+            title={errorMessage}
+            variant={AlertVariant.danger}
+          />
+        ) : null}
         <Content>
           Are you sure you want to delete <strong>{currentName}</strong>? This action cannot be
           undone.
