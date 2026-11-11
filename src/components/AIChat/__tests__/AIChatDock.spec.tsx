@@ -49,7 +49,25 @@ jest.mock('~/components/AIChat/components/AIChatRenameConversationModal', () => 
 }));
 
 jest.mock('~/components/AIChat/components/AIChatHistoryNav', () => ({
-  AIChatHistoryNav: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  AIChatHistoryNav: ({
+    children,
+    onToggleDisplayMode,
+    onCloseChat,
+  }: {
+    children: React.ReactNode;
+    onToggleDisplayMode: () => void;
+    onCloseChat: () => void;
+  }) => (
+    <>
+      <button type="button" onClick={onToggleDisplayMode}>
+        Maximize
+      </button>
+      <button type="button" onClick={onCloseChat}>
+        Close chat
+      </button>
+      {children}
+    </>
+  ),
 }));
 
 jest.mock('~/components/AIChat/components/AIChatToggle', () => ({
@@ -61,7 +79,21 @@ jest.mock('~/components/AIChat/components/AIChatToggle', () => ({
 }));
 
 jest.mock('~/components/AIChat/components/AIChatPanel', () => ({
-  AIChatPanel: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  AIChatPanel: ({
+    children,
+    displayMode,
+    isVisible,
+  }: {
+    children: React.ReactNode;
+    displayMode: string;
+    isVisible: boolean;
+  }) => (
+    <div
+      className={`pf-chatbot pf-chatbot--${displayMode}${isVisible ? ' pf-chatbot--visible' : ' pf-chatbot--hidden'}`}
+    >
+      {children}
+    </div>
+  ),
 }));
 
 jest.mock('~/components/AIChat/components/AIChatHeader', () => ({
@@ -80,6 +112,8 @@ jest.mock('~/components/AIChat/components/AIChatFooter', () => ({
   },
 }));
 
+const getChatbot = () => document.querySelector('.pf-chatbot');
+
 describe('AIChatDock', () => {
   const clearSendError = jest.fn();
   const retryInit = jest.fn();
@@ -87,6 +121,11 @@ describe('AIChatDock', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockUseInProgress.mockReturnValue(false);
+    mockUseAIChatInit.mockReturnValue({
+      initError: undefined,
+      isInitializing: false,
+      retryInit,
+    });
     mockUseAIChatConversations.mockReturnValue({
       activeConversationId: null,
       conversations: [],
@@ -131,11 +170,6 @@ describe('AIChatDock', () => {
 
   it('does not retry initialization when opening a healthy chat panel', async () => {
     const user = userEvent.setup();
-    mockUseAIChatInit.mockReturnValue({
-      initError: undefined,
-      isInitializing: false,
-      retryInit,
-    });
 
     render(<AIChatDock />);
     await user.click(screen.getByRole('button', { name: 'Toggle chat' }));
@@ -159,11 +193,6 @@ describe('AIChatDock', () => {
   });
 
   it('allows sending after a send error when initialization is healthy', () => {
-    mockUseAIChatInit.mockReturnValue({
-      initError: undefined,
-      isInitializing: false,
-      retryInit,
-    });
     mockUseAIChatSend.mockReturnValue({
       sendError: 'Sending failed',
       clearSendError,
@@ -266,5 +295,32 @@ describe('AIChatDock', () => {
     render(<AIChatDock />);
 
     expect(screen.getAllByText(KONFLUX_AI_ERROR_UNAVAILABLE)).toHaveLength(2);
+  });
+
+  it('returns to the floating panel after the toggle hides a maximized chat', async () => {
+    const user = userEvent.setup();
+    render(<AIChatDock />);
+
+    await user.click(screen.getByRole('button', { name: 'Toggle chat' }));
+    await user.click(screen.getByRole('button', { name: 'Maximize' }));
+
+    expect(getChatbot()).toHaveClass('pf-chatbot--fullscreen');
+
+    await user.click(screen.getByRole('button', { name: 'Toggle chat' }));
+
+    expect(getChatbot()).toHaveClass('pf-chatbot--default');
+    expect(getChatbot()).toHaveClass('pf-chatbot--hidden');
+  });
+
+  it('returns to the floating panel after the header close button hides a maximized chat', async () => {
+    const user = userEvent.setup();
+    render(<AIChatDock />);
+
+    await user.click(screen.getByRole('button', { name: 'Toggle chat' }));
+    await user.click(screen.getByRole('button', { name: 'Maximize' }));
+    await user.click(screen.getByRole('button', { name: 'Close chat' }));
+
+    expect(getChatbot()).toHaveClass('pf-chatbot--default');
+    expect(getChatbot()).toHaveClass('pf-chatbot--hidden');
   });
 });

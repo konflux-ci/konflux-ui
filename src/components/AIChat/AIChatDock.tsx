@@ -47,16 +47,25 @@ const AIChatDockContent: React.FC = () => {
   } = useAIChatConversations();
   const isInProgress = useInProgress();
 
+  const hideChat = React.useCallback(() => {
+    setDisplayMode(KONFLUX_AI_DEFAULT_DISPLAY_MODE);
+    if (isVisible) {
+      toggle();
+    }
+  }, [isVisible, toggle]);
+
   const handleToggle = React.useCallback(() => {
-    if (!isVisible) {
-      clearSendError();
-      clearConversationError();
-      if (initError) {
-        retryInit();
-      }
+    if (isVisible) {
+      hideChat();
+      return;
+    }
+    clearSendError();
+    clearConversationError();
+    if (initError) {
+      retryInit();
     }
     toggle();
-  }, [clearConversationError, clearSendError, initError, isVisible, retryInit, toggle]);
+  }, [clearConversationError, clearSendError, hideChat, initError, isVisible, retryInit, toggle]);
 
   const handleToggleDisplayMode = React.useCallback(() => {
     setDisplayMode((mode) =>
@@ -65,11 +74,6 @@ const AIChatDockContent: React.FC = () => {
         : ChatbotDisplayMode.fullscreen,
     );
   }, []);
-
-  const handleCloseChat = React.useCallback(() => {
-    setDisplayMode(KONFLUX_AI_DEFAULT_DISPLAY_MODE);
-    toggle();
-  }, [toggle]);
 
   const chatError = sendError ?? initError ?? conversationError;
   const isSendDisabled = isInProgress || !!initError || isInitializing;
@@ -92,7 +96,7 @@ const AIChatDockContent: React.FC = () => {
             selectConversation={selectConversation}
             filterConversations={filterConversations}
             onToggleDisplayMode={handleToggleDisplayMode}
-            onCloseChat={handleCloseChat}
+            onCloseChat={hideChat}
           >
             <AIChatMessageList isInitializing={isInitializing} chatError={chatError} />
             <AIChatFooter
