@@ -1,8 +1,17 @@
-import { act, renderHook } from '@testing-library/react';
+import * as React from 'react';
+import { act, render, renderHook, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { AIClientError } from '@redhat-cloud-services/ai-client-common';
 import type { ConversationDetails } from '@redhat-cloud-services/lightspeed-client';
-import { TEMP_CONVERSATION_ID as LIGHTSPEED_TEMP_CONVERSATION_ID } from '@redhat-cloud-services/lightspeed-client';
-import { KONFLUX_AI_ERROR_NOT_FOUND, KONFLUX_AI_ERROR_UNAVAILABLE } from '~/components/AIChat/const';
+import {
+  LightspeedClientError,
+  TEMP_CONVERSATION_ID as LIGHTSPEED_TEMP_CONVERSATION_ID,
+} from '@redhat-cloud-services/lightspeed-client';
+import {
+  KONFLUX_AI_ERROR_NOT_FOUND,
+  KONFLUX_AI_ERROR_PERMISSION,
+  KONFLUX_AI_ERROR_UNAVAILABLE,
+} from '~/components/AIChat/const';
 import { useAIChatConversations } from '~/components/AIChat/hooks/useAIChatConversations';
 
 const mockUseClient = jest.fn();
@@ -10,6 +19,7 @@ const mockUseActiveConversation = jest.fn();
 const mockUseCreateNewConversation = jest.fn();
 const mockUseSetActiveConversation = jest.fn();
 const mockLoggerError = jest.fn();
+const mockLoggerWarn = jest.fn();
 
 jest.mock('@redhat-cloud-services/ai-react-state', () => ({
   useClient: () => mockUseClient(),
@@ -21,6 +31,7 @@ jest.mock('@redhat-cloud-services/ai-react-state', () => ({
 jest.mock('~/monitoring/logger', () => ({
   logger: {
     error: (...args: unknown[]) => mockLoggerError(...args),
+    warn: (...args: unknown[]) => mockLoggerWarn(...args),
   },
 }));
 
@@ -273,6 +284,184 @@ describe('useAIChatConversations', () => {
       'Failed to load Lightspeed conversation',
       expect.any(Error),
       { conversationId: 'older' },
+    );
+  });
+});
+
+describe('conversation rename and delete', () => {
+  const getConversations = jest.fn();
+  const updateConversation = jest.fn();
+  const deleteConversation = jest.fn();
+  const createNewConversation = jest.fn();
+  const setActiveConversation = jest.fn();
+
+  const namedConversation = (): ConversationDetails => {
+    const conversation: Record<string, unknown> = {};
+    conversation[wireField.id] = 'conv-1';
+    conversation[wireField.createdAt] = '2026-02-01T00:00:00.000Z';
+    conversation[wireField.lastMessageAt] = '2026-02-01T00:00:00.000Z';
+    conversation[wireField.messageCount] = 2;
+    conversation[wireField.topicSummary] = 'Pipeline failure';
+    return conversation as unknown as ConversationDetails;
+  };
+
+  const renderLoadedHistory = async () => {
+    const { result } = renderHook(() => useAIChatConversations());
+
+    await act(async () => {
+      await result.current.refreshConversations();
+    });
+
+    const menuItems = result.current.conversations[0]?.menuItems;
+    if (!React.isValidElement(menuItems)) {
+      throw new Error('Expected conversation menu items');
+    }
+    render(menuItems);
+
+    return result;
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    getConversations.mockResolvedValue({ conversations: [namedConversation()] });
+    updateConversation.mockResolvedValue(undefined);
+    deleteConversation.mockResolvedValue(undefined);
+    createNewConversation.mockResolvedValue({ id: 'fresh-chat' });
+    setActiveConversation.mockResolvedValue(undefined);
+    mockUseClient.mockReturnValue({ getConversations, updateConversation, deleteConversation });
+    mockUseActiveConversation.mockReturnValue(undefined);
+    mockUseCreateNewConversation.mockReturnValue(createNewConversation);
+    mockUseSetActiveConversation.mockReturnValue(setActiveConversation);
+  });
+
+  it('renames through LightspeedClient.updateConversation and reloads history', async () => {
+    const user = userEvent.setup();
+    const result = await renderLoadedHistory();
+
+    await user.click(screen.getByRole('menuitem', { name: 'Rename' }));
+
+    expect(result.current.renameConversationTarget).toEqual({
+      conversationId: 'conv-1',
+      currentName: 'Pipeline failure',
+    });
+    expect(result.current.historyMenuKey).toBe(1);
+
+    await act(async () => {
+      await result.current.confirmRenameConversation('Renamed chat');
+    });
+
+    expect(updateConversation).toHaveBeenCalledWith('conv-1', 'Renamed chat');
+    expect(getConversations).toHaveBeenCalledTimes(2);
+    expect(result.current.renameConversationTarget).toBeNull();
+    expect(result.current.isRenamingConversation).toBe(false);
+    expect(result.current.conversationError).toBeUndefined();
+  });
+
+  it('keeps the rename dialog open when updateConversation fails', async () => {
+    updateConversation.mockRejectedValue(new LightspeedClientError(404, 'Not Found', 'missing'));
+    const user = userEvent.setup();
+    const result = await renderLoadedHistory();
+
+    await user.click(screen.getByRole('menuitem', { name: 'Rename' }));
+
+    await act(async () => {
+      await result.current.confirmRenameConversation('Renamed chat');
+    });
+
+    expect(result.current.conversationError).toBe(KONFLUX_AI_ERROR_NOT_FOUND);
+    expect(result.current.conversationError).not.toContain('missing');
+    expect(result.current.renameConversationTarget).toEqual({
+      conversationId: 'conv-1',
+      currentName: 'Pipeline failure',
+    });
+    expect(getConversations).toHaveBeenCalledTimes(1);
+    expect(mockLoggerWarn).toHaveBeenCalledWith(
+      'Failed to rename Lightspeed conversation',
+      expect.objectContaining({ conversationId: 'conv-1' }),
+    );
+  });
+
+  it('hides raw rename failures behind the unavailable message', async () => {
+    updateConversation.mockRejectedValue(new Error('https://internal.example/secret'));
+    const user = userEvent.setup();
+    const result = await renderLoadedHistory();
+
+    await user.click(screen.getByRole('menuitem', { name: 'Rename' }));
+
+    await act(async () => {
+      await result.current.confirmRenameConversation('Renamed chat');
+    });
+
+    expect(result.current.conversationError).toBe(KONFLUX_AI_ERROR_UNAVAILABLE);
+    expect(result.current.conversationError).not.toContain('internal.example');
+  });
+
+  it('does not call updateConversation when no rename is open', async () => {
+    const { result } = renderHook(() => useAIChatConversations());
+
+    await act(async () => {
+      await result.current.confirmRenameConversation('Renamed chat');
+    });
+
+    expect(updateConversation).not.toHaveBeenCalled();
+  });
+
+  it('closes the rename dialog without calling the client', async () => {
+    const user = userEvent.setup();
+    const result = await renderLoadedHistory();
+
+    await user.click(screen.getByRole('menuitem', { name: 'Rename' }));
+    act(() => {
+      result.current.closeRenameConversation();
+    });
+
+    expect(result.current.renameConversationTarget).toBeNull();
+    expect(updateConversation).not.toHaveBeenCalled();
+  });
+
+  it('deletes through LightspeedClient.deleteConversation and reloads history', async () => {
+    const user = userEvent.setup();
+    await renderLoadedHistory();
+
+    await user.click(screen.getByRole('menuitem', { name: 'Delete' }));
+
+    await waitFor(() => {
+      expect(deleteConversation).toHaveBeenCalledWith('conv-1');
+    });
+    expect(getConversations).toHaveBeenCalledTimes(2);
+    expect(createNewConversation).not.toHaveBeenCalled();
+  });
+
+  it('starts a new chat when the active conversation is deleted', async () => {
+    mockUseActiveConversation.mockReturnValue({ id: 'conv-1' });
+    const user = userEvent.setup();
+    await renderLoadedHistory();
+
+    await user.click(screen.getByRole('menuitem', { name: 'Delete' }));
+
+    await waitFor(() => {
+      expect(deleteConversation).toHaveBeenCalledWith('conv-1');
+    });
+    expect(createNewConversation).toHaveBeenCalledTimes(1);
+    expect(setActiveConversation).toHaveBeenCalledWith('fresh-chat');
+  });
+
+  it('maps delete failures and leaves the current chat in place', async () => {
+    mockUseActiveConversation.mockReturnValue({ id: 'conv-1' });
+    deleteConversation.mockRejectedValue(new AIClientError(403, 'Forbidden', 'denied'));
+    const user = userEvent.setup();
+    const result = await renderLoadedHistory();
+
+    await user.click(screen.getByRole('menuitem', { name: 'Delete' }));
+
+    await waitFor(() => {
+      expect(result.current.conversationError).toBe(KONFLUX_AI_ERROR_PERMISSION);
+    });
+    expect(result.current.conversationError).not.toContain('denied');
+    expect(createNewConversation).not.toHaveBeenCalled();
+    expect(mockLoggerWarn).toHaveBeenCalledWith(
+      'Failed to delete Lightspeed conversation',
+      expect.objectContaining({ conversationId: 'conv-1' }),
     );
   });
 });

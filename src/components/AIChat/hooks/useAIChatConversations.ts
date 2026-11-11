@@ -11,10 +11,9 @@ import {
   LightspeedClientError,
   TEMP_CONVERSATION_ID as LIGHTSPEED_TEMP_CONVERSATION_ID,
 } from '@redhat-cloud-services/lightspeed-client';
-import type { ConversationDetails } from '@redhat-cloud-services/lightspeed-client';
+import type { ConversationDetails, LightspeedClient } from '@redhat-cloud-services/lightspeed-client';
 import { withConversationMenuActions } from '~/components/AIChat/conversationActions';
 import { getUserFacingErrorMessage, toHistoryConversations } from '~/components/AIChat/message-utils';
-import type { KonfluxLightspeedClient } from '~/lightspeed/konfluxLightspeedClient';
 import type { LightspeedConversationDetails } from '~/lightspeed/types';
 import { logger } from '~/monitoring/logger';
 import { filterByText } from '~/utils/text-filter-utils';
@@ -120,7 +119,7 @@ export const useAIChatConversations = (): UseAIChatConversationsResult => {
   const conversationSearchRef = React.useRef(conversationSearch);
   conversationSearchRef.current = conversationSearch;
 
-  const client = useClient<KonfluxLightspeedClient>();
+  const client = useClient<LightspeedClient>();
   const activeConversation = useActiveConversation();
   const createNewConversation = useCreateNewConversation();
   const setActiveConversation = useSetActiveConversation();
@@ -232,7 +231,7 @@ export const useAIChatConversations = (): UseAIChatConversationsResult => {
       setConversationError(undefined);
 
       try {
-        await client.updateConversationTopicSummary(conversationId, newName);
+        await client.updateConversation(conversationId, newName);
         await refreshConversations();
         setRenameConversationTarget(null);
       } catch (error) {
