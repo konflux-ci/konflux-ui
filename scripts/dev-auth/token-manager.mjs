@@ -50,6 +50,8 @@ function runKubectl(
     let bytes = 0;
     let failed = false;
     let exited = false;
+    let successfulExit = false;
+    let stdoutEnded = false;
     let settled = false;
     let stopping = false;
     let killTimer;
@@ -67,6 +69,12 @@ function runKubectl(
         resolve(Buffer.concat(chunks).toString('utf8'));
       }
       chunks = [];
+    }
+    function finishSuccessful() {
+      if (!successfulExit || !stdoutEnded || failed || settled) return;
+      // A browser can retain stderr after kubectl has returned its complete credential.
+      child.stderr.destroy();
+      settle(0);
     }
     function finishStopped() {
       // Browser descendants can inherit these pipes. Only the owned process must exit first.
@@ -98,6 +106,10 @@ function runKubectl(
       if (bytes > maxOutputBytes) stop();
       else chunks.push(buffer);
     });
+    child.stdout.once('end', () => {
+      stdoutEnded = true;
+      finishSuccessful();
+    });
     child.stderr.on('data', (chunk) => {
       if (failed) return;
       try {
@@ -113,10 +125,15 @@ function runKubectl(
         failed = true;
         chunks = [];
         finishStopped();
+      } else {
+        successfulExit = true;
+        finishSuccessful();
       }
     });
-    // Successful stdout must drain completely; close also handles unsuccessful process spawning.
-    child.once('close', settle);
+    // Failed process spawning may emit close without exit.
+    child.once('close', (code) => {
+      if (failed || code !== 0 || !exited) settle();
+    });
     signal?.addEventListener('abort', stop, { once: true });
     if (signal?.aborted) stop();
   });

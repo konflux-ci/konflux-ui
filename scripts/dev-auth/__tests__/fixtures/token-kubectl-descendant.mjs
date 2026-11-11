@@ -13,7 +13,7 @@ if (process.argv[2] === '--descendant') {
   );
   process.on('SIGTERM', () => {});
   const descendant = spawn(process.execPath, [fileURLToPath(import.meta.url), '--descendant'], {
-    stdio: ['ignore', 'ignore', 'inherit'],
+    stdio: ['ignore', config.holdStdout ? 'inherit' : 'ignore', 'inherit'],
     detached: true,
   });
   descendant.unref();

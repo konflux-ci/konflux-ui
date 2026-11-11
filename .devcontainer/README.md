@@ -103,7 +103,9 @@ yarn analyze
 
 ## Port Forwarding
 
-The development UI uses **`https://localhost:8080`**. In the editor's **Ports** panel, forward container port **8080** to host port **8080**, and forward callback ports **8000** and **18000** to the same host port numbers. Kubelogin uses one of these loopback callback ports during browser login.
+The development UI uses **`https://localhost:8080`**. Free host ports **8080**, **8000**, and **18000**, then use the editor's **Ports** panel to forward each container port to the same host port number.
+
+Kubelogin tries callback port **8000** first and uses **18000** only if it cannot bind port 8000 inside the container. A host port conflict does not cause this fallback: forwarding only host port 18000 will not work when kubelogin selects container port 8000. Forward both callback ports so the host browser can reach whichever port kubelogin selects.
 
 The current DevContainer configuration forwards 3000 and 9000; add the UI and callback forwards manually. Port 9000 is for Webpack Bundle Analyzer; port 3000 is not used by `yarn start`.
 
@@ -253,7 +255,7 @@ After making changes to the pipeline selection feature:
 
 - **Build fails with `corepack: command not found`**: This devcontainer does not use Corepack; Yarn comes from `.yarn/releases/`. Rebuild after pulling `.devcontainer` changes.
 - **Dependencies not installing**: Try rebuilding the container (`F1` → "Dev Containers: Rebuild Container")
-- **Port conflicts**: Free host port 8080 and at least one callback port (8000 or 18000), then confirm the editor forwards them without changing host port numbers. Port 9000 must also be free when using Webpack Bundle Analyzer.
+- **Port conflicts**: Free host ports 8080, 8000, and 18000, then confirm the editor forwards each to the same container port number. Kubelogin selects its callback port based on availability inside the container, so freeing only host port 18000 is insufficient when container port 8000 is available. Port 9000 must also be free when using Webpack Bundle Analyzer.
 
 ### Docker-Specific Issues
 
