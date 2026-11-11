@@ -22,7 +22,6 @@ import './AIChat.scss';
 const AIChatDockContent: React.FC = () => {
   const [isVisible, toggle] = useToggle();
   const [displayMode, setDisplayMode] = React.useState(KONFLUX_AI_DEFAULT_DISPLAY_MODE);
-  const isMaximized = displayMode === ChatbotDisplayMode.fullscreen;
   const { initError, isInitializing, retryInit } = useAIChatInit();
   const { sendError, clearSendError, sendMessage } = useAIChatSend();
   const {
@@ -85,7 +84,6 @@ const AIChatDockContent: React.FC = () => {
         <AIChatPanel isVisible={isVisible} displayMode={displayMode}>
           <AIChatHistoryNav
             displayMode={displayMode}
-            isMaximized={isMaximized}
             activeConversationId={activeConversationId}
             conversations={conversations}
             conversationError={conversationError}

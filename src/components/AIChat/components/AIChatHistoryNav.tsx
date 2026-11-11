@@ -1,5 +1,5 @@
 import * as React from 'react';
-import type { ChatbotDisplayMode } from '@patternfly/chatbot/dist/dynamic/Chatbot';
+import { ChatbotDisplayMode } from '@patternfly/chatbot/dist/dynamic/Chatbot';
 import type { Conversation } from '@patternfly/chatbot/dist/dynamic/ChatbotConversationHistoryNav';
 import ChatbotConversationHistoryNav from '@patternfly/chatbot/dist/dynamic/ChatbotConversationHistoryNav';
 import { AIChatHeader } from '~/components/AIChat/components/AIChatHeader';
@@ -12,7 +12,6 @@ import {
 
 type AIChatHistoryNavProps = {
   displayMode: ChatbotDisplayMode;
-  isMaximized: boolean;
   activeConversationId: string | null;
   conversations: Conversation[];
   conversationError?: string;
@@ -30,7 +29,6 @@ type AIChatHistoryNavProps = {
 /** History drawer for searching, selecting, and starting conversations. */
 export const AIChatHistoryNav: React.FC<AIChatHistoryNavProps> = ({
   displayMode,
-  isMaximized,
   activeConversationId,
   conversations,
   conversationError,
@@ -68,6 +66,8 @@ export const AIChatHistoryNav: React.FC<AIChatHistoryNavProps> = ({
     },
     [selectConversation, setIsDrawerOpen],
   );
+
+  const isMaximized = displayMode === ChatbotDisplayMode.fullscreen;
 
   return (
     <ChatbotConversationHistoryNav
