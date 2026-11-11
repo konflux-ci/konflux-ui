@@ -110,6 +110,9 @@ const conversations: ConversationDetails[] = [
   }),
 ];
 
+const listedConversations = (items: { id?: string; text?: string }[]) =>
+  items.map(({ id, text }) => ({ id, text }));
+
 describe('useAIChatConversations', () => {
   const getConversations = jest.fn();
   const createNewConversation = jest.fn();
@@ -154,7 +157,7 @@ describe('useAIChatConversations', () => {
       await result.current.refreshConversations();
     });
 
-    expect(result.current.conversations).toEqual([
+    expect(listedConversations(result.current.conversations)).toEqual([
       { id: 'newer', text: untitledNewer },
       { id: 'older', text: 'Pipeline failure' },
     ]);
@@ -172,7 +175,9 @@ describe('useAIChatConversations', () => {
       result.current.filterConversations('pipeline');
     });
 
-    expect(result.current.conversations).toEqual([{ id: 'older', text: 'Pipeline failure' }]);
+    expect(listedConversations(result.current.conversations)).toEqual([
+      { id: 'older', text: 'Pipeline failure' },
+    ]);
     expect(result.current.hasNoSearchResults).toBe(false);
 
     act(() => {
@@ -198,7 +203,9 @@ describe('useAIChatConversations', () => {
       await result.current.refreshConversations();
     });
 
-    expect(result.current.conversations).toEqual([{ id: 'older', text: 'Pipeline failure' }]);
+    expect(listedConversations(result.current.conversations)).toEqual([
+      { id: 'older', text: 'Pipeline failure' },
+    ]);
   });
 
   it('keeps the previous list when loading conversations fails', async () => {
@@ -214,7 +221,7 @@ describe('useAIChatConversations', () => {
       await result.current.refreshConversations();
     });
 
-    expect(result.current.conversations).toEqual([
+    expect(listedConversations(result.current.conversations)).toEqual([
       { id: 'newer', text: untitledNewer },
       { id: 'older', text: 'Pipeline failure' },
     ]);
@@ -255,7 +262,9 @@ describe('useAIChatConversations', () => {
     });
 
     expect(result.current.isLoadingConversations).toBe(false);
-    expect(result.current.conversations).toEqual([{ id: 'older', text: 'Pipeline failure' }]);
+    expect(listedConversations(result.current.conversations)).toEqual([
+      { id: 'older', text: 'Pipeline failure' },
+    ]);
   });
 
   it('starts a new chat on the created conversation', async () => {
