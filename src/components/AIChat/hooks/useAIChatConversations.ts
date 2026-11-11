@@ -1,6 +1,6 @@
 import * as React from 'react';
 import type { Conversation } from '@patternfly/chatbot/dist/dynamic/ChatbotConversationHistoryNav';
-import orderBy from 'lodash-es/orderBy';
+import { orderBy } from 'lodash-es';
 import type { IConversation } from '@redhat-cloud-services/ai-client-common';
 import {
   useActiveConversation,
@@ -25,13 +25,13 @@ const isTemporaryConversationId = (conversationId?: string): boolean =>
   conversationId === STATE_TEMP_CONVERSATION_ID ||
   conversationId === LIGHTSPEED_TEMP_CONVERSATION_ID;
 
-type LightspeedConversationWire = ConversationDetails & {
-  topic_summary?: string;
-};
-
+/**
+ * List items are `ConversationDetails` from `@redhat-cloud-services/lightspeed-client`,
+ * including `topic_summary` (https://github.com/RedHatInsights/ai-web-clients/pull/5).
+ */
 const hasHistoryTimestamp = (
-  conversation: LightspeedConversationWire,
-): conversation is LightspeedConversationWire & {
+  conversation: ConversationDetails,
+): conversation is ConversationDetails & {
   conversation_id: string;
   last_message_at: string;
 } => Boolean(conversation.conversation_id && conversation.last_message_at);
@@ -39,9 +39,7 @@ const hasHistoryTimestamp = (
 const mapConversationDetails = (
   conversations: ConversationDetails[],
 ): LightspeedConversationDetails[] =>
-  (conversations as LightspeedConversationWire[])
-    .filter(hasHistoryTimestamp)
-    .map(
+  conversations.filter(hasHistoryTimestamp).map(
       ({
         conversation_id: conversationId,
         created_at: createdAt,
@@ -70,9 +68,7 @@ const toHistoryConversations = (conversations: LightspeedConversationDetails[]):
 type UseAIChatConversationsResult = {
   activeConversationId: string | null;
   conversations: Conversation[];
-  isDrawerOpen: boolean;
   hasNoSearchResults: boolean;
-  setIsDrawerOpen: React.Dispatch<React.SetStateAction<boolean>>;
   refreshConversations: () => Promise<void>;
   startNewChat: () => Promise<void>;
   selectConversation: (conversationId: string) => Promise<void>;
@@ -83,7 +79,6 @@ type UseAIChatConversationsResult = {
  * Conversation list, search, selection, and new-chat actions for the history drawer.
  */
 export const useAIChatConversations = (): UseAIChatConversationsResult => {
-  const [isDrawerOpen, setIsDrawerOpen] = React.useState(false);
   const [allConversations, setAllConversations] = React.useState<Conversation[]>([]);
   const [conversations, setConversations] = React.useState<Conversation[]>([]);
   const [conversationSearch, setConversationSearch] = React.useState('');
@@ -148,9 +143,7 @@ export const useAIChatConversations = (): UseAIChatConversationsResult => {
   return {
     activeConversationId,
     conversations,
-    isDrawerOpen,
     hasNoSearchResults: Boolean(conversationSearch.trim()) && conversations.length === 0,
-    setIsDrawerOpen,
     refreshConversations,
     startNewChat,
     selectConversation,

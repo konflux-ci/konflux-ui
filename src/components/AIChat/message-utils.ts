@@ -1,6 +1,6 @@
 import type { Conversation } from '@patternfly/chatbot/dist/dynamic/ChatbotConversationHistoryNav';
 import type { MessageProps } from '@patternfly/chatbot/dist/dynamic/Message';
-import orderBy from 'lodash-es/orderBy';
+import { orderBy } from 'lodash-es';
 import type { Message } from '@redhat-cloud-services/ai-client-state';
 import {
   KONFLUX_AI_ERROR_MESSAGE_TOO_LONG,

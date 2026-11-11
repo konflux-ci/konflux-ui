@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import AIChatDock from '~/components/AIChat/AIChatDock';
 
@@ -7,6 +7,7 @@ const mockUseAIChatInit = jest.fn();
 const mockUseAIChatSend = jest.fn();
 const mockUseInProgress = jest.fn();
 const mockAIChatFooter = jest.fn();
+const mockRefreshConversations = jest.fn();
 
 jest.mock('@redhat-cloud-services/ai-react-state', () => ({
   AIStateProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
@@ -25,10 +26,8 @@ jest.mock('~/components/AIChat/hooks/useAIChatConversations', () => ({
   useAIChatConversations: () => ({
     activeConversationId: null,
     conversations: [],
-    isDrawerOpen: false,
     hasNoSearchResults: false,
-    setIsDrawerOpen: jest.fn(),
-    refreshConversations: jest.fn(),
+    refreshConversations: mockRefreshConversations,
     startNewChat: jest.fn(),
     selectConversation: jest.fn(),
     filterConversations: jest.fn(),
@@ -141,5 +140,32 @@ describe('AIChatDock', () => {
     expect(mockAIChatFooter).toHaveBeenLastCalledWith(
       expect.objectContaining({ isSendDisabled: false }),
     );
+  });
+
+  it('refreshes conversation history after a message is sent', async () => {
+    const sendMessage = jest.fn().mockResolvedValue(undefined);
+    mockUseAIChatInit.mockReturnValue({
+      initError: undefined,
+      isInitializing: false,
+      retryInit,
+    });
+    mockUseAIChatSend.mockReturnValue({
+      sendError: undefined,
+      clearSendError,
+      sendMessage,
+    });
+
+    render(<AIChatDock />);
+
+    const { onSend } = mockAIChatFooter.mock.lastCall?.[0] as {
+      onSend: (message: string) => Promise<void>;
+    };
+
+    await act(async () => {
+      await onSend('hello');
+    });
+
+    expect(sendMessage).toHaveBeenCalledWith('hello');
+    expect(mockRefreshConversations).toHaveBeenCalledTimes(1);
   });
 });

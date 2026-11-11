@@ -23,9 +23,7 @@ const AIChatDockContent: React.FC = () => {
   const {
     activeConversationId,
     conversations,
-    isDrawerOpen,
     hasNoSearchResults,
-    setIsDrawerOpen,
     refreshConversations,
     startNewChat,
     selectConversation,
@@ -55,9 +53,7 @@ const AIChatDockContent: React.FC = () => {
             displayMode={KONFLUX_AI_DISPLAY_MODE}
             activeConversationId={activeConversationId}
             conversations={conversations}
-            isDrawerOpen={isDrawerOpen}
             hasNoSearchResults={hasNoSearchResults}
-            setIsDrawerOpen={setIsDrawerOpen}
             refreshConversations={refreshConversations}
             startNewChat={startNewChat}
             selectConversation={selectConversation}
