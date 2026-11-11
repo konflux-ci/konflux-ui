@@ -110,6 +110,7 @@ const renderHistoryNav = (
     startNewChat: jest.fn().mockResolvedValue(undefined),
     selectConversation: jest.fn().mockResolvedValue(undefined),
     filterConversations: jest.fn(),
+    onToggleDisplayMode: jest.fn(),
     onCloseChat: jest.fn(),
     ...overrides,
   };
