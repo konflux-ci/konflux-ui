@@ -1,12 +1,15 @@
 import * as React from 'react';
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import AIChatDock from '~/components/AIChat/AIChatDock';
+import { KONFLUX_AI_ERROR_UNAVAILABLE } from '~/components/AIChat/const';
 
 const mockUseAIChatInit = jest.fn();
 const mockUseAIChatSend = jest.fn();
 const mockUseInProgress = jest.fn();
 const mockAIChatFooter = jest.fn();
+const mockRefreshConversations = jest.fn();
+const mockUseAIChatConversations = jest.fn();
 
 jest.mock('@redhat-cloud-services/ai-react-state', () => ({
   AIStateProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
@@ -19,6 +22,14 @@ jest.mock('~/components/AIChat/hooks/useAIChatInit', () => ({
 
 jest.mock('~/components/AIChat/hooks/useAIChatSend', () => ({
   useAIChatSend: () => mockUseAIChatSend(),
+}));
+
+jest.mock('~/components/AIChat/hooks/useAIChatConversations', () => ({
+  useAIChatConversations: () => mockUseAIChatConversations(),
+}));
+
+jest.mock('~/components/AIChat/components/AIChatHistoryNav', () => ({
+  AIChatHistoryNav: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
 jest.mock('~/components/AIChat/components/AIChatToggle', () => ({
@@ -38,7 +49,8 @@ jest.mock('~/components/AIChat/components/AIChatHeader', () => ({
 }));
 
 jest.mock('~/components/AIChat/components/AIChatMessageList', () => ({
-  AIChatMessageList: () => null,
+  AIChatMessageList: ({ chatError }: { chatError?: string }) =>
+    chatError ? <p>{chatError}</p> : null,
 }));
 
 jest.mock('~/components/AIChat/components/AIChatFooter', () => ({
@@ -55,6 +67,17 @@ describe('AIChatDock', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockUseInProgress.mockReturnValue(false);
+    mockUseAIChatConversations.mockReturnValue({
+      activeConversationId: null,
+      conversations: [],
+      conversationError: undefined,
+      hasNoSearchResults: false,
+      isLoadingConversations: false,
+      refreshConversations: mockRefreshConversations,
+      startNewChat: jest.fn(),
+      selectConversation: jest.fn(),
+      filterConversations: jest.fn(),
+    });
     mockUseAIChatSend.mockReturnValue({
       sendError: undefined,
       clearSendError,
@@ -123,5 +146,55 @@ describe('AIChatDock', () => {
     expect(mockAIChatFooter).toHaveBeenLastCalledWith(
       expect.objectContaining({ isSendDisabled: false }),
     );
+  });
+
+  it('refreshes conversation history after a message is sent', async () => {
+    const sendMessage = jest.fn().mockResolvedValue(undefined);
+    mockUseAIChatInit.mockReturnValue({
+      initError: undefined,
+      isInitializing: false,
+      retryInit,
+    });
+    mockUseAIChatSend.mockReturnValue({
+      sendError: undefined,
+      clearSendError,
+      sendMessage,
+    });
+
+    render(<AIChatDock />);
+
+    const { onSend } = mockAIChatFooter.mock.lastCall?.[0] as {
+      onSend: (message: string) => Promise<void>;
+    };
+
+    await act(async () => {
+      await onSend('hello');
+    });
+
+    expect(sendMessage).toHaveBeenCalledWith('hello');
+    expect(mockRefreshConversations).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows a conversation error in the chat panel', () => {
+    mockUseAIChatInit.mockReturnValue({
+      initError: undefined,
+      isInitializing: false,
+      retryInit,
+    });
+    mockUseAIChatConversations.mockReturnValue({
+      activeConversationId: null,
+      conversations: [],
+      conversationError: KONFLUX_AI_ERROR_UNAVAILABLE,
+      hasNoSearchResults: false,
+      isLoadingConversations: false,
+      refreshConversations: mockRefreshConversations,
+      startNewChat: jest.fn(),
+      selectConversation: jest.fn(),
+      filterConversations: jest.fn(),
+    });
+
+    render(<AIChatDock />);
+
+    expect(screen.getByText(KONFLUX_AI_ERROR_UNAVAILABLE)).toBeInTheDocument();
   });
 });

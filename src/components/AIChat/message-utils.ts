@@ -1,4 +1,6 @@
+import type { Conversation } from '@patternfly/chatbot/dist/dynamic/ChatbotConversationHistoryNav';
 import type { MessageProps } from '@patternfly/chatbot/dist/dynamic/Message';
+import { orderBy } from 'lodash-es';
 import type { Message } from '@redhat-cloud-services/ai-client-state';
 import {
   KONFLUX_AI_ERROR_MESSAGE_TOO_LONG,
@@ -8,6 +10,7 @@ import {
   KONFLUX_AI_ERROR_UNAVAILABLE,
 } from '~/components/AIChat/const';
 import { LIGHTSPEED_ASSISTANT_NAME } from '~/lightspeed/const';
+import type { LightspeedConversationDetails } from '~/lightspeed/types';
 
 export const getUserFacingErrorMessage = (status: number): string => {
   switch (status) {
@@ -48,3 +51,27 @@ export const stateMessagesToMessageProps = (
       ...(isLoading ? { isLoading: true } : {}),
     };
   });
+
+const untitledConversationText = (createdAt: string): string => {
+  const created = new Date(createdAt);
+  if (Number.isNaN(created.getTime())) {
+    return 'Untitled conversation';
+  }
+
+  const createdLabel = new Intl.DateTimeFormat('en-US', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+    timeZone: 'UTC',
+  }).format(created);
+
+  return `Untitled conversation, ${createdLabel}`;
+};
+
+/** Map Lightspeed conversations to PatternFly history items (newest first). */
+export const toHistoryConversations = (
+  conversations: LightspeedConversationDetails[],
+): Conversation[] =>
+  orderBy(conversations, ['lastMessageAt'], ['desc']).map((conversation) => ({
+    id: conversation.conversationId,
+    text: conversation.topicSummary?.trim() || untitledConversationText(conversation.createdAt),
+  }));
