@@ -131,6 +131,8 @@ export class APIHelper {
       body,
     ).then((result) => {
       expect(result.body.merged).to.be.true;
+      cy.log(`${commitTitle}_SHA : ${result.body.sha}`);
+      Cypress.expose(`${commitTitle}_SHA`, result.body.sha);
     });
   }
 }

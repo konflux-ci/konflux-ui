@@ -1,10 +1,10 @@
-import { githubAPIEndpoints } from '../../../utils/APIEndpoints';
 import { APIHelper } from '../../../utils/APIHelper';
 import { UIhelper } from '../../../utils/UIhelper';
 
 type commitsRow = {
   name: string;
   component: string;
+  status?: string | RegExp;
 };
 
 // Latest Commits List view page
@@ -37,12 +37,14 @@ export class LatestCommitsTabPage {
     UIhelper.clickRowCellInTable('Commit List', commit, commit);
   }
 
-  verifyCommitsPageTitleAndStatus(commitTitle: string) {
-    cy.contains('h2', commitTitle).contains('Succeeded');
+  verifyCommitsPageTitleAndStatus(commitTitle: string, status: string | RegExp = 'Succeeded') {
+    cy.contains('h2', commitTitle).contains(status);
   }
 
   verifyCommitID(sha: string, repoLink: string) {
-    UIhelper.verifyLabelAndValue('Commit', sha.slice(0, 7)).should(
+    const shortSha = sha.slice(0, 7);
+    UIhelper.verifyLabelAndValue('Commit', shortSha);
+    cy.get(`[data-test="commit-label-${shortSha}"]`).should(
       'have.attr',
       'href',
       `${repoLink}/commit/${sha}`,
@@ -61,8 +63,14 @@ export class LatestCommitsTabPage {
         'main',
         commitsRow.component,
         Cypress.expose('GH_USERNAME'),
-        'Succeeded',
+        commitsRow.status ?? 'Succeeded',
       ]);
     });
+  }
+
+  waitForCommitInList(commitName: string, timeout: number = 180000) {
+    cy.contains('[aria-label="Commit List"] tr', commitName, { timeout })
+      .scrollIntoView()
+      .should('be.visible');
   }
 }

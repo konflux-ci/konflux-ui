@@ -28,6 +28,10 @@ export const latestCommitsTabPO = {
   clickTab: '[data-test="activity__tabItem latest-commits"]',
 };
 
+export const compActivityCommitsTabPO = {
+  clickTab: '[data-test="comp__activity__tabItem commits"]',
+};
+
 export const compActivityPipelinerunsTabPO = {
   clickTab: '[data-test="comp__activity__tabItem pipelineruns"]',
 };
