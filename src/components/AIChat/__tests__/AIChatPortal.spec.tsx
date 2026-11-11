@@ -15,6 +15,8 @@ describe('AIChatPortal', () => {
 
     const landmark = getChatLandmark();
 
+    expect(landmark.tagName).toBe('ASIDE');
+    expect(landmark).not.toHaveAttribute('role');
     expect(landmark.parentElement).toBe(document.body);
     expect(screen.getByTestId('app-root')).not.toContainElement(landmark);
     expect(container).not.toContainElement(landmark);

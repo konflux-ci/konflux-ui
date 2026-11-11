@@ -1,11 +1,12 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 
-/** Renders the chat on document.body so it escapes the app stacking context. */
+/**
+ * Portals the chat onto document.body as an aside labeled "AI Chat".
+ * The aside is the complementary landmark and sits outside the app stacking context.
+ */
 export const AIChatPortal: React.FC<React.PropsWithChildren> = ({ children }) =>
   ReactDOM.createPortal(
-    <div role="complementary" aria-label="AI Chat">
-      {children}
-    </div>,
+    <aside aria-label="AI Chat">{children}</aside>,
     document.body,
   );

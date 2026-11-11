@@ -1,6 +1,5 @@
 import * as React from 'react';
 import { AIStateProvider, useInProgress } from '@redhat-cloud-services/ai-react-state';
-import { AIChatPortal } from '~/components/AIChat/AIChatPortal';
 import { AIChatFooter } from '~/components/AIChat/components/AIChatFooter';
 import { AIChatHeader } from '~/components/AIChat/components/AIChatHeader';
 import { AIChatMessageList } from '~/components/AIChat/components/AIChatMessageList';
@@ -10,6 +9,7 @@ import { useAIChatInit } from '~/components/AIChat/hooks/useAIChatInit';
 import { useAIChatSend } from '~/components/AIChat/hooks/useAIChatSend';
 import { getLightspeedClient } from '~/lightspeed/lightspeedClient';
 import { useToggle } from '~/shared/hooks/useToggle';
+import { AIChatPortal } from './AIChatPortal';
 
 import '@patternfly/chatbot/dist/css/main.css';
 import './AIChat.scss';
