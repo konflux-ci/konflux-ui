@@ -13,9 +13,7 @@ type AIChatHistoryNavProps = {
   displayMode: ChatbotDisplayMode;
   activeConversationId: string | null;
   conversations: Conversation[];
-  isDrawerOpen: boolean;
   hasNoSearchResults: boolean;
-  setIsDrawerOpen: React.Dispatch<React.SetStateAction<boolean>>;
   refreshConversations: () => Promise<void>;
   startNewChat: () => Promise<void>;
   selectConversation: (conversationId: string) => Promise<void>;
@@ -28,9 +26,7 @@ export const AIChatHistoryNav: React.FC<AIChatHistoryNavProps> = ({
   displayMode,
   activeConversationId,
   conversations,
-  isDrawerOpen,
   hasNoSearchResults,
-  setIsDrawerOpen,
   refreshConversations,
   startNewChat,
   selectConversation,
@@ -38,20 +34,19 @@ export const AIChatHistoryNav: React.FC<AIChatHistoryNavProps> = ({
   onCloseChat,
   children,
 }) => {
+  const [isDrawerOpen, setIsDrawerOpen] = React.useState(false);
+
   const handleToggleDrawer = React.useCallback(() => {
     if (!isDrawerOpen) {
       void refreshConversations();
     }
     setIsDrawerOpen((open) => !open);
-  }, [isDrawerOpen, refreshConversations, setIsDrawerOpen]);
+  }, [isDrawerOpen, refreshConversations]);
 
   const handleNewChat = React.useCallback(() => {
     setIsDrawerOpen(false);
-    void (async () => {
-      await startNewChat();
-      await refreshConversations();
-    })();
-  }, [refreshConversations, setIsDrawerOpen, startNewChat]);
+    void startNewChat().then(() => refreshConversations());
+  }, [refreshConversations, startNewChat]);
 
   const handleSelectConversation = React.useCallback(
     (_event: React.MouseEvent | undefined, conversationId?: string | number) => {
