@@ -14,10 +14,6 @@ import { useToggle } from '~/shared/hooks/useToggle';
 import '@patternfly/chatbot/dist/css/main.css';
 import './AIChat.scss';
 
-/**
- * PatternFly chatbot dock backed by Lightspeed.
- * Rendered via portal onto document.body for stacking context.
- */
 const AIChatDockContent: React.FC = () => {
   const [isVisible, toggle] = useToggle();
   const { initError, isInitializing, retryInit } = useAIChatInit();
