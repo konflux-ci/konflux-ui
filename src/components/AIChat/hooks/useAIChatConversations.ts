@@ -11,11 +11,10 @@ import {
   LightspeedClientError,
   TEMP_CONVERSATION_ID as LIGHTSPEED_TEMP_CONVERSATION_ID,
 } from '@redhat-cloud-services/lightspeed-client';
-import type {
-  ConversationDetails,
-  LightspeedClient,
-} from '@redhat-cloud-services/lightspeed-client';
+import type { ConversationDetails, LightspeedClient } from '@redhat-cloud-services/lightspeed-client';
+import { withConversationMenuActions } from '~/components/AIChat/conversationActions';
 import { getUserFacingErrorMessage, toHistoryConversations } from '~/components/AIChat/message-utils';
+import { updateListedConversationTopicSummary } from '~/lightspeed/lightspeedClient';
 import type { LightspeedConversationDetails } from '~/lightspeed/types';
 import { logger } from '~/monitoring/logger';
 import { filterByText } from '~/utils/text-filter-utils';
@@ -36,6 +35,11 @@ const isTemporaryConversationId = (conversationId?: string): boolean =>
  * List items are `ConversationDetails` from `@redhat-cloud-services/lightspeed-client`,
  * including `topic_summary` (https://github.com/RedHatInsights/ai-web-clients/pull/5).
  */
+export type ConversationActionTarget = {
+  conversationId: string;
+  currentName: string;
+};
+
 const hasHistoryTimestamp = (
   conversation: ConversationDetails,
 ): conversation is ConversationDetails & {
@@ -86,23 +90,38 @@ type UseAIChatConversationsResult = {
   activeConversationId: string | null;
   conversations: Conversation[];
   conversationError?: string;
+  deleteConversationTarget: ConversationActionTarget | null;
   hasNoSearchResults: boolean;
+  isDeletingConversation: boolean;
   isLoadingConversations: boolean;
+  isRenamingConversation: boolean;
+  renameConversationTarget: ConversationActionTarget | null;
   refreshConversations: () => Promise<void>;
   startNewChat: () => Promise<void>;
   selectConversation: (conversationId: string) => Promise<void>;
   filterConversations: (searchValue: string) => void;
+  clearConversationError: () => void;
+  closeDeleteConversation: () => void;
+  closeRenameConversation: () => void;
+  confirmDeleteConversation: () => Promise<void>;
+  confirmRenameConversation: (newName: string) => Promise<void>;
 };
 
 /**
- * Conversation list, search, selection, and new-chat actions for the history drawer.
+ * Conversation list, search, selection, rename, and delete for the history drawer.
  */
 export const useAIChatConversations = (): UseAIChatConversationsResult => {
   const [allConversations, setAllConversations] = React.useState<Conversation[]>([]);
   const [conversations, setConversations] = React.useState<Conversation[]>([]);
   const [conversationSearch, setConversationSearch] = React.useState('');
   const [conversationError, setConversationError] = React.useState<string>();
+  const [isDeletingConversation, setIsDeletingConversation] = React.useState(false);
   const [isLoadingConversations, setIsLoadingConversations] = React.useState(false);
+  const [isRenamingConversation, setIsRenamingConversation] = React.useState(false);
+  const [deleteConversationTarget, setDeleteConversationTarget] =
+    React.useState<ConversationActionTarget | null>(null);
+  const [renameConversationTarget, setRenameConversationTarget] =
+    React.useState<ConversationActionTarget | null>(null);
   const conversationSearchRef = React.useRef(conversationSearch);
   conversationSearchRef.current = conversationSearch;
 
@@ -114,6 +133,10 @@ export const useAIChatConversations = (): UseAIChatConversationsResult => {
   const activeConversationId = isTemporaryConversationId(activeConversation?.id)
     ? null
     : (activeConversation?.id ?? null);
+
+  const clearConversationError = React.useCallback(() => {
+    setConversationError(undefined);
+  }, []);
 
   const refreshConversations = React.useCallback(async () => {
     setIsLoadingConversations(true);
@@ -172,15 +195,122 @@ export const useAIChatConversations = (): UseAIChatConversationsResult => {
     [setActiveConversation],
   );
 
+  const deleteConversationById = React.useCallback(
+    async (conversationId: string) => {
+      try {
+        setConversationError(undefined);
+        await client.deleteConversation(conversationId);
+
+        if (activeConversationId === conversationId) {
+          await startNewChat();
+        }
+
+        await refreshConversations();
+        setDeleteConversationTarget((current) =>
+          current?.conversationId === conversationId ? null : current,
+        );
+      } catch (error) {
+        const message = getErrorMessage(error);
+        setConversationError(message);
+        logger.warn('Failed to delete Lightspeed conversation', { conversationId, error: message });
+      }
+    },
+    [activeConversationId, client, refreshConversations, startNewChat],
+  );
+
+  const requestDeleteConversation = React.useCallback(
+    (conversationId: string, currentName: string) => {
+      setRenameConversationTarget(null);
+      setDeleteConversationTarget({ conversationId, currentName });
+    },
+    [],
+  );
+
+  const closeDeleteConversation = React.useCallback(() => {
+    setDeleteConversationTarget(null);
+  }, []);
+
+  const confirmDeleteConversation = React.useCallback(async () => {
+    if (!deleteConversationTarget || isDeletingConversation) {
+      return;
+    }
+
+    const { conversationId } = deleteConversationTarget;
+    setIsDeletingConversation(true);
+
+    try {
+      await deleteConversationById(conversationId);
+    } finally {
+      setIsDeletingConversation(false);
+    }
+  }, [deleteConversationById, deleteConversationTarget, isDeletingConversation]);
+
+  const renameConversationById = React.useCallback((conversationId: string, currentName: string) => {
+    setDeleteConversationTarget(null);
+    setRenameConversationTarget({ conversationId, currentName });
+  }, []);
+
+  const closeRenameConversation = React.useCallback(() => {
+    setRenameConversationTarget(null);
+  }, []);
+
+  const confirmRenameConversation = React.useCallback(
+    async (newName: string) => {
+      if (!renameConversationTarget) {
+        return;
+      }
+
+      const { conversationId } = renameConversationTarget;
+      setIsRenamingConversation(true);
+      setConversationError(undefined);
+
+      try {
+        // The history list reads the v1 database. Write that first so a failed v2
+        // cache update leaves the visible title correct.
+        await updateListedConversationTopicSummary(conversationId, newName);
+        await client.updateConversation(conversationId, newName);
+        await refreshConversations();
+        setRenameConversationTarget((current) =>
+          current?.conversationId === conversationId ? null : current,
+        );
+      } catch (error) {
+        const message = getErrorMessage(error);
+        setConversationError(message);
+        logger.warn('Failed to rename Lightspeed conversation', { conversationId, error: message });
+      } finally {
+        setIsRenamingConversation(false);
+      }
+    },
+    [client, refreshConversations, renameConversationTarget],
+  );
+
+  const conversationsWithMenuActions = React.useMemo(
+    () =>
+      withConversationMenuActions(conversations, {
+        onDeleteConversation: requestDeleteConversation,
+        onRenameConversation: renameConversationById,
+      }),
+    [conversations, renameConversationById, requestDeleteConversation],
+  );
+
   return {
     activeConversationId,
-    conversations,
+    conversations: conversationsWithMenuActions,
     conversationError,
+    deleteConversationTarget,
     hasNoSearchResults: Boolean(conversationSearch.trim()) && conversations.length === 0,
+    isDeletingConversation,
     isLoadingConversations,
+    isRenamingConversation,
+    renameConversationTarget,
     refreshConversations,
     startNewChat,
     selectConversation,
     filterConversations,
+    clearConversationError,
+    closeDeleteConversation,
+    closeRenameConversation,
+    confirmDeleteConversation,
+    confirmRenameConversation,
   };
 };
