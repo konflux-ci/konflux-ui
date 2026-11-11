@@ -1,7 +1,16 @@
 import assert from 'node:assert/strict';
+import http from 'node:http';
 import test from 'node:test';
+import { brotliCompressSync, brotliDecompressSync, gunzipSync, gzipSync } from 'node:zlib';
 import { createDevAuthProxy, resolveTargets } from '#dev-auth/proxy.mjs';
-import { credentials, deferred, localProxy, request, upstream } from './proxy-test-utils.mjs';
+import {
+  canonicalHeaders,
+  credentials,
+  deferred,
+  localProxy,
+  request,
+  upstream,
+} from './proxy-test-utils.mjs';
 
 const env = {
   AUTH_URL: 'https://cluster.example',
@@ -199,6 +208,50 @@ test('maps non-success userinfo to 401 and never follows an upstream redirect', 
   assert.equal((await request(port, '/api/k8s')).status, 302);
   assert.equal(remote.requests.length, 2);
 });
+
+for (const [encoding, compress, decompress] of [
+  [undefined, (body) => body, (body) => body],
+  ['gzip', gzipSync, gunzipSync],
+  ['br', brotliCompressSync, brotliDecompressSync],
+]) {
+  test(`decodes ${encoding ?? 'plain'} userinfo while retaining local response protections`, async (t) => {
+    const userinfo = { sub: 'developer', name: 'Gal' };
+    const remote = await upstream(t, (_req, res) => {
+      res.writeHead(200, {
+        'content-type': 'application/json; charset=utf-8',
+        'cache-control': 'public, max-age=3600',
+        'access-control-allow-origin': '*',
+        'access-control-allow-credentials': 'true',
+        ...(encoding ? { 'content-encoding': encoding } : {}),
+      });
+      res.end(compress(Buffer.from(JSON.stringify(userinfo))));
+    });
+    const { port } = await localProxy(t, createDevAuthProxy, { remote });
+    const response = await new Promise((resolve, reject) => {
+      http
+        .get(
+          {
+            hostname: '127.0.0.1',
+            port,
+            path: '/oauth2/userinfo',
+            headers: { ...canonicalHeaders, 'accept-encoding': encoding ?? 'identity' },
+          },
+          resolve,
+        )
+        .on('error', reject);
+    });
+    const chunks = [];
+    for await (const chunk of response) chunks.push(chunk);
+    assert.equal(response.statusCode, 200);
+    assert.equal(response.headers['content-encoding'], encoding);
+    assert.equal(response.headers['content-type'], 'application/json; charset=utf-8');
+    assert.equal(response.headers['cache-control'], 'no-store');
+    assert.equal(response.headers['x-content-type-options'], 'nosniff');
+    assert.equal(response.headers['access-control-allow-origin'], undefined);
+    assert.equal(response.headers['access-control-allow-credentials'], undefined);
+    assert.deepEqual(JSON.parse(decompress(Buffer.concat(chunks)).toString()), userinfo);
+  });
+}
 
 test('rejects untrusted upstream TLS with safe gateway/auth errors', async (t) => {
   const { port, remote } = await localProxy(t, createDevAuthProxy, { ca: undefined });

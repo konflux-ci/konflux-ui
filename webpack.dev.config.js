@@ -17,6 +17,8 @@ config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Start with `yarn start`: the launcher supplies authProxy. Webpack CLI's
+// (env, argv) factory arguments do not provide the authentication middleware.
 export default function createDevConfig(authProxy) {
   return merge(commonConfig, {
     mode: 'development',

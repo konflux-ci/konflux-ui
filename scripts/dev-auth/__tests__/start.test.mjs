@@ -133,6 +133,27 @@ test('a startup failure cleans authentication and compiler resources without exp
   assert.equal(signalSource.listenerCount('SIGTERM'), 0);
 });
 
+for (const phase of ['loadConfig', 'createCompiler', 'createServer']) {
+  test(`reports ${phase} failures as configuration errors and cleans acquired resources`, async () => {
+    const { calls, options, signalSource } = fixture();
+    options[phase] = () => {
+      throw new Error('Invalid webpack fixture setting.');
+    };
+
+    await assert.rejects(startCli(options), (error) => {
+      assert.match(error.message, /configuration/i);
+      assert.match(error.message, /Invalid webpack fixture setting/);
+      assert.doesNotMatch(error.message, /port 8080|certificate configuration/);
+      return true;
+    });
+    assert.ok(calls.includes('proxy closed'));
+    assert.ok(calls.includes('credentials closed'));
+    assert.equal(calls.includes('compiler closed'), phase === 'createServer');
+    assert.ok(!calls.includes('server started'));
+    assert.equal(signalSource.listenerCount('SIGTERM'), 0);
+  });
+}
+
 test('cleanup continues through a failing resource and reports only a safe message', async () => {
   const { calls, options, tokenManager } = fixture();
   tokenManager.close = async () => {

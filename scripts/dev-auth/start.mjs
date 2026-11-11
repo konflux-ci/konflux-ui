@@ -25,6 +25,7 @@ export async function startCli({
   let compiler;
   let server;
   let stopping;
+  let configuring = false;
 
   const onSignal = () => {
     void stop().catch(() => {
@@ -77,18 +78,26 @@ export async function startCli({
     }
     tokenManager = tokenManagerFactory({ issuerUrl: `${targets.auth.origin}/idp/`, logger });
     authProxy = proxyFactory({ targets, tokenManager });
+    configuring = true;
     const { devServer, ...compilerOptions } = await loadConfig(authProxy);
     compiler = createCompiler(compilerOptions);
     const serverOptions = { ...devServer };
     if (localHttps) serverOptions.server = localHttps;
     server = createServer(serverOptions, compiler);
+    configuring = false;
     await server.start();
     signalSource.on('SIGINT', onSignal);
     signalSource.on('SIGTERM', onSignal);
     logger(`CLI authentication enabled at ${LOCAL_ORIGIN}. Sign in from the UI.\n`);
     return { stop, server };
-  } catch {
+  } catch (error) {
     await stop().catch(() => {});
+    if (configuring) {
+      const detail = error instanceof Error ? `${error.name}: ${error.message}` : 'Unknown error.';
+      throw new Error(
+        `Unable to configure the local CLI development server. Configuration error: ${detail}`,
+      );
+    }
     throw new Error(
       'Unable to start the local CLI development server. Check port 8080 and the local HTTPS certificate configuration.',
     );

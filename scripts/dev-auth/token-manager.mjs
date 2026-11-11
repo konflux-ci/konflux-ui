@@ -49,22 +49,47 @@ function runKubectl(
     let chunks = [];
     let bytes = 0;
     let failed = false;
-    let closed = false;
+    let exited = false;
+    let settled = false;
     let stopping = false;
     let killTimer;
+    const timeout = setTimeout(stop, timeoutMs);
 
-    const stop = () => {
+    function settle(code) {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timeout);
+      clearTimeout(killTimer);
+      signal?.removeEventListener('abort', stop);
+      if (failed || code !== 0 || signal?.aborted) {
+        reject(new AuthenticationRequiredError());
+      } else {
+        resolve(Buffer.concat(chunks).toString('utf8'));
+      }
+      chunks = [];
+    }
+    function finishStopped() {
+      // Browser descendants can inherit these pipes. Only the owned process must exit first.
+      child.stdout.destroy();
+      child.stderr.destroy();
+      settle();
+    }
+    function stop() {
+      if (settled) return;
       failed = true;
       chunks = [];
-      if (closed || stopping) return;
+      if (exited) {
+        finishStopped();
+        return;
+      }
+      if (stopping) return;
       stopping = true;
       child.kill('SIGTERM');
       // A process can exit synchronously in response to cancellation.
-      if (!closed) {
+      if (!settled && !exited) {
         killTimer = setTimeout(() => child.kill('SIGKILL'), killGraceMs);
       }
-    };
-    const timeout = setTimeout(stop, timeoutMs);
+    }
     child.once('error', stop);
     child.stdout.on('data', (chunk) => {
       if (failed) return;
@@ -81,19 +106,17 @@ function runKubectl(
         stop();
       }
     });
-    child.once('close', (code) => {
-      closed = true;
-      clearTimeout(timeout);
+    child.once('exit', (code) => {
+      exited = true;
       clearTimeout(killTimer);
-      signal?.removeEventListener('abort', stop);
       if (failed || code !== 0 || signal?.aborted) {
+        failed = true;
         chunks = [];
-        reject(new AuthenticationRequiredError());
-      } else {
-        resolve(Buffer.concat(chunks).toString('utf8'));
-        chunks = [];
+        finishStopped();
       }
     });
+    // Successful stdout must drain completely; close also handles unsuccessful process spawning.
+    child.once('close', settle);
     signal?.addEventListener('abort', stop, { once: true });
     if (signal?.aborted) stop();
   });
@@ -243,21 +266,25 @@ export function createTokenManager({
     operation = undefined;
     previousOperation?.controller.abort();
     const previousCleanup = cleanup;
-    cleanup = (async () => {
+    const result = (async () => {
       await previousCleanup;
       await previousOperation?.promise.catch(() => {});
       // New operations wait for this cleanup, including when mkdir was still pending at sign-out.
+      cacheDirectory = undefined;
+      let failed = false;
       for (const path of ownedCaches) {
         try {
           await rm(path, { recursive: true, force: true });
+          ownedCaches.delete(path);
         } catch {
-          throw new Error('Unable to remove the private authentication cache.');
+          failed = true;
         }
-        ownedCaches.delete(path);
       }
-      cacheDirectory = undefined;
+      if (failed) throw new Error('Unable to remove the private authentication cache.');
     })();
-    return cleanup;
+    // Keep failures visible to this caller without blocking later sign-in or deletion retries.
+    cleanup = result.catch(() => {});
+    return result;
   }
 
   return {

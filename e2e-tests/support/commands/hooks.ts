@@ -38,7 +38,10 @@ before(() => {
     return;
   }
 
-  if (Cypress.expose('LOGIN_PROVIDER') === 'openshift') {
+  if (Cypress.expose('LOGIN_PROVIDER') === 'cli') {
+    // The local dev server already holds the authenticated CLI session.
+    Login.login();
+  } else if (Cypress.expose('LOGIN_PROVIDER') === 'openshift') {
     Login.openshiftLogin();
   } else if (Cypress.expose('LOCAL_CLUSTER')) {
     Login.localKonfluxLogin();

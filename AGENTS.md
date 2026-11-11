@@ -13,12 +13,17 @@
 | Import boundaries | `yarn lint:restricted-imports`       |
 | Type check        | `yarn type-checks`                   |
 | Start dev server  | `yarn start`                         |
+| Dev auth lint     | `yarn lint:dev-auth`                 |
+| Dev auth format   | `yarn format:dev-auth`               |
+| Dev auth tests    | `yarn test:dev-auth`                 |
 
-CI runs three parallel jobs on Node 24: **lint** (`yarn lint` -> `yarn lint:restricted-imports` -> `yarn type-checks`), **size-limit** (`yarn build` -> `yarn size-limit`), and **test** (`yarn test`).
+CI runs three parallel jobs on Node 24: **lint** (`yarn lint`, `yarn lint:dev-auth`, `yarn format:dev-auth`, `yarn lint:restricted-imports`, and `yarn type-checks`), **size-limit** (`yarn build` -> `yarn size-limit`), and **test** (`yarn test` and `yarn test:dev-auth`).
 
 ## Setup
 
 One-command setup: `yarn setup` or `./setup.sh` (checks Node.js >= 24, enables Corepack, installs dependencies, starts dev server)
+
+Before starting the dev server, install `kubectl` and the [kubelogin oidc-login plugin](https://github.com/int128/kubelogin) version 1.36.4 or newer on `PATH`, including inside a DevContainer. See [local CLI authentication](docs/local-cli-auth.md) for upstream configuration, certificate trust, and port forwarding requirements.
 
 ## Key Conventions
 
