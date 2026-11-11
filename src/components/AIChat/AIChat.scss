@@ -30,13 +30,11 @@
   .pf-chatbot--fullscreen {
     z-index: var(--pf-t--global--z-index--xl);
 
-    // PF defaults to 60rem; use more horizontal space in fullscreen.
-    @media screen and (min-width: 64rem) {
-      .pf-chatbot__messagebox,
-      .pf-chatbot__footer-container {
-        width: 90%;
-        max-width: min(90rem, 90vw);
-      }
+    // Wider than the 60rem column, with a margin so it does not run to the edges.
+    .pf-chatbot__messagebox,
+    .pf-chatbot__footer-container {
+      width: 85%;
+      max-width: 110rem;
     }
   }
 
