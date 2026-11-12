@@ -53,8 +53,10 @@ export const createGetQueryOptions = <TResource extends K8sResourceCommon>(
 ): UseQueryOptions<TResource> => {
   const { queryKey, queryFn, ...rest } = options;
   return {
-    queryKey: queryKey ?? createQueryKeys({ ...args, prefix: args.fetchOptions?.requestInit?.pathPrefix }),
-    queryFn: queryFn ??
+    queryKey:
+      queryKey ?? createQueryKeys({ ...args, prefix: args.fetchOptions?.requestInit?.pathPrefix }),
+    queryFn:
+      queryFn ??
       (() => {
         return K8sGetResource(args);
       }),
@@ -62,9 +64,12 @@ export const createGetQueryOptions = <TResource extends K8sResourceCommon>(
       const name = args.queryOptions?.name;
       return name
         ? queryClient
-            .getQueryData<
-              TResource[]
-            >(createQueryKeys({ model: args.model, queryOptions: { queryParams: args.queryOptions?.queryParams } }))
+            .getQueryData<TResource[]>(
+              createQueryKeys({
+                model: args.model,
+                queryOptions: { queryParams: args.queryOptions?.queryParams },
+              }),
+            )
             ?.find((res) => res.metadata.name === name)
         : null;
     },
@@ -72,13 +77,27 @@ export const createGetQueryOptions = <TResource extends K8sResourceCommon>(
   };
 };
 
+/**
+ * Build query options for a K8s list resource fetch.
+ *
+ * **Note:** when a custom `queryFn` is supplied it takes full ownership of
+ * the data pipeline, so `filterData` is not applied.  Callers that need
+ * both should compose `filterData` inside their own `queryFn`.
+ */
 export const createListqueryOptions = <TResource extends K8sResourceCommon[]>(
   args: K8sResourceListOptions,
-  { filterData = (a: TResource) => a, queryKey, queryFn, ...options }: TQueryOptions<TResource> = {},
+  {
+    filterData = (a: TResource) => a,
+    queryKey,
+    queryFn,
+    ...options
+  }: TQueryOptions<TResource> = {},
 ): UseQueryOptions<TResource> => {
   return {
-    queryKey: queryKey ?? createQueryKeys({ ...args, prefix: args.fetchOptions?.requestInit?.pathPrefix }),
-    queryFn: queryFn ??
+    queryKey:
+      queryKey ?? createQueryKeys({ ...args, prefix: args.fetchOptions?.requestInit?.pathPrefix }),
+    queryFn:
+      queryFn ??
       (() => {
         return K8sListResourceItems(args).then(filterData);
       }),
