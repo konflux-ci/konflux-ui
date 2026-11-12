@@ -127,7 +127,7 @@ export class Applications {
   }
 
   static checkComponentStatus(componentName: string, componentStatus: string | RegExp) {
-    cy.get(componentsTabPO.componentListItem(componentName)).contains(componentStatus, {
+    cy.contains(componentsTabPO.componentListItem(componentName), componentStatus, {
       timeout: 80000,
     });
   }
