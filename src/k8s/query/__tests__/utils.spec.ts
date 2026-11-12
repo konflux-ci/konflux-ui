@@ -219,13 +219,15 @@ describe('createListqueryOptions', () => {
     expect(result.queryKey).toEqual(customKey);
   });
 
-  it('should use custom queryFn when provided', () => {
+  it('should use custom queryFn when provided', async () => {
     const customFn = jest.fn(() => Promise.resolve([] as K8sResourceCommon[]));
     const result = createListqueryOptions<K8sResourceCommon[]>(minimalArgs, {
       queryFn: customFn,
     });
 
-    expect(result.queryFn).toBe(customFn);
+    const data = await (result.queryFn as () => Promise<K8sResourceCommon[]>)();
+    expect(customFn).toHaveBeenCalled();
+    expect(data).toEqual([]);
   });
 
   it('should pass through additional options', () => {
@@ -254,10 +256,15 @@ describe('createListqueryOptions', () => {
     expect(data).toEqual([{ metadata: { name: 'item-1' } }]);
   });
 
-  it('should not apply filterData when a custom queryFn is provided', async () => {
-    const filterData = jest.fn((items: K8sResourceCommon[]) => items);
+  it('should apply filterData when a custom queryFn is provided', async () => {
+    const filterData = jest.fn((items: K8sResourceCommon[]) =>
+      items.filter((item) => item.metadata.name === 'keep'),
+    );
     const customFn = jest.fn(() =>
-      Promise.resolve([{ metadata: { name: 'custom' } }] as K8sResourceCommon[]),
+      Promise.resolve([
+        { metadata: { name: 'keep' } },
+        { metadata: { name: 'drop' } },
+      ] as K8sResourceCommon[]),
     );
     const result = createListqueryOptions<K8sResourceCommon[]>(minimalArgs, {
       filterData,
@@ -266,7 +273,10 @@ describe('createListqueryOptions', () => {
 
     const data = await (result.queryFn as () => Promise<K8sResourceCommon[]>)();
     expect(customFn).toHaveBeenCalled();
-    expect(filterData).not.toHaveBeenCalled();
-    expect(data).toEqual([{ metadata: { name: 'custom' } }]);
+    expect(filterData).toHaveBeenCalledWith([
+      { metadata: { name: 'keep' } },
+      { metadata: { name: 'drop' } },
+    ]);
+    expect(data).toEqual([{ metadata: { name: 'keep' } }]);
   });
 });

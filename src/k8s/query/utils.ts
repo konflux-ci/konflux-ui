@@ -80,9 +80,8 @@ export const createGetQueryOptions = <TResource extends K8sResourceCommon>(
 /**
  * Build query options for a K8s list resource fetch.
  *
- * **Note:** when a custom `queryFn` is supplied it takes full ownership of
- * the data pipeline, so `filterData` is not applied.  Callers that need
- * both should compose `filterData` inside their own `queryFn`.
+ * When `filterData` is provided it is always applied to the result — both
+ * for the built-in default `queryFn` and for a caller-supplied custom one.
  */
 export const createListqueryOptions = <TResource extends K8sResourceCommon[]>(
   args: K8sResourceListOptions,
@@ -97,10 +96,10 @@ export const createListqueryOptions = <TResource extends K8sResourceCommon[]>(
     queryKey:
       queryKey ?? createQueryKeys({ ...args, prefix: args.fetchOptions?.requestInit?.pathPrefix }),
     queryFn:
-      queryFn ??
-      (() => {
-        return K8sListResourceItems(args).then(filterData);
-      }),
+      typeof queryFn === 'function'
+        ? (ctx: Parameters<typeof queryFn>[0]) =>
+            Promise.resolve(queryFn(ctx)).then(filterData)
+        : () => K8sListResourceItems(args).then(filterData),
     ...options,
   };
 };
