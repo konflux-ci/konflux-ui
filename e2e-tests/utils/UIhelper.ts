@@ -105,13 +105,7 @@ export class UIhelper {
     uniqueRowText: string | RegExp,
     cellTextToClick: string | RegExp,
   ) {
-    const rowSelector = UIhelperPO.tableRow(tableAriaLabel);
-    // Status updates replace the row. Re-query and click immediately so the
-    // actionability wait does not lose the cell when the row is recreated.
-    cy.contains(rowSelector, uniqueRowText, { timeout: 60000 }).scrollIntoView();
-    cy.contains(rowSelector, uniqueRowText, { timeout: 60000 })
-      .contains(cellTextToClick)
-      .click({ force: true });
+    UIhelper.getTableRow(tableAriaLabel, uniqueRowText).contains(cellTextToClick).click();
   }
 
   static verifyGraphNodes(nodeText: string, success = true) {
