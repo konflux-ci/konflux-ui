@@ -1,10 +1,5 @@
 import React from 'react';
-import {
-  hashKey,
-  useQuery,
-  UseQueryOptions,
-  UseQueryResult,
-} from '@tanstack/react-query';
+import { hashKey, useQuery, UseQueryOptions, UseQueryResult } from '@tanstack/react-query';
 import type { K8sModelCommon, K8sResourceCommon, WatchK8sResource } from '../../types/k8s';
 import type { K8sRequestInit } from '../fetch';
 import { convertToK8sQueryParams } from '../k8s-utils';
@@ -46,13 +41,13 @@ export const useK8sWatchResource = <
     };
     return (
       resourceInit?.isList
-        ? createListqueryOptions(
+        ? createListqueryOptions<K8sResourceCommon[], TQueryFnData>(
             { model, queryOptions: k8sQueryOptions, fetchOptions },
-            baseQueryOptions as TQueryOptions<K8sResourceCommon[]>,
+            baseQueryOptions as TQueryOptions<K8sResourceCommon[], TQueryFnData>,
           )
-        : createGetQueryOptions(
+        : createGetQueryOptions<K8sResourceCommon, TQueryFnData>(
             { model, queryOptions: k8sQueryOptions, fetchOptions },
-            baseQueryOptions as Omit<TQueryOptions<K8sResourceCommon>, 'filterData'>,
+            baseQueryOptions as Omit<TQueryOptions<K8sResourceCommon, TQueryFnData>, 'filterData'>,
           )
     ) as UseQueryOptions<R>;
   };

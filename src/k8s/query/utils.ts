@@ -47,9 +47,15 @@ export const createQueryKeys = ({
   ];
 };
 
-export const createGetQueryOptions = <TResource extends K8sResourceCommon>(
+export const createGetQueryOptions = <
+  TResource extends K8sResourceCommon,
+  TQueryFnData = TResource,
+>(
   args: K8sResourceBaseOptions,
-  options: Omit<TQueryOptions<TResource>, 'filterData'> = {},
+  options: Omit<TQueryOptions<TResource, TQueryFnData>, 'filterData'> = {} as Omit<
+    TQueryOptions<TResource, TQueryFnData>,
+    'filterData'
+  >,
 ): UseQueryOptions<TResource> => {
   const { queryKey, queryFn, ...rest } = options;
   return {
@@ -74,34 +80,41 @@ export const createGetQueryOptions = <TResource extends K8sResourceCommon>(
         : null;
     },
     ...rest,
-  };
+    // The intermediate object may include `select: (data: TQueryFnData) => TResource`
+    // from the caller's options.  When `TQueryFnData ≠ TResource` this is narrower
+    // than `UseQueryOptions<TResource>` requires; the cast is sound because `useQuery`
+    // receives both `queryFn` and `select` from the same typed source.
+  } as unknown as UseQueryOptions<TResource>;
 };
 
 /**
  * Build query options for a K8s list resource fetch.
  *
- * When `filterData` is provided it is always applied to the result — both
- * for the built-in default `queryFn` and for a caller-supplied custom one.
+ * `filterData` is applied only to the built-in default `queryFn`.  When a
+ * caller supplies a custom `queryFn`, it is used as-is — `filterData` is
+ * not composed around it.  This avoids a type-safety gap when
+ * `TQueryFnData` differs from `TResource` (e.g. a K8s Table response that
+ * is later transformed via `select`).
  */
-export const createListqueryOptions = <TResource extends K8sResourceCommon[]>(
+export const createListqueryOptions = <
+  TResource extends K8sResourceCommon[],
+  TQueryFnData = TResource,
+>(
   args: K8sResourceListOptions,
   {
-    filterData = (a: TResource) => a,
+    filterData,
     queryKey,
     queryFn,
     ...options
-  }: TQueryOptions<TResource> = {},
+  }: TQueryOptions<TResource, TQueryFnData> = {} as TQueryOptions<TResource, TQueryFnData>,
 ): UseQueryOptions<TResource> => {
   return {
     queryKey:
       queryKey ?? createQueryKeys({ ...args, prefix: args.fetchOptions?.requestInit?.pathPrefix }),
     queryFn:
-      typeof queryFn === 'function'
-        ? (ctx: Parameters<typeof queryFn>[0]) =>
-            Promise.resolve(queryFn(ctx)).then(filterData)
-        : () => K8sListResourceItems(args).then(filterData),
+      queryFn ?? (() => K8sListResourceItems(args).then(filterData ?? ((a: TResource) => a))),
     ...options,
-  };
+  } as unknown as UseQueryOptions<TResource>;
 };
 
 export const hashQueryKeys = (key: ReadonlyArray<unknown>): string => {

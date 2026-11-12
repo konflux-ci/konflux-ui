@@ -256,7 +256,7 @@ describe('createListqueryOptions', () => {
     expect(data).toEqual([{ metadata: { name: 'item-1' } }]);
   });
 
-  it('should apply filterData when a custom queryFn is provided', async () => {
+  it('should not apply filterData to a custom queryFn result', async () => {
     const filterData = jest.fn((items: K8sResourceCommon[]) =>
       items.filter((item) => item.metadata.name === 'keep'),
     );
@@ -273,10 +273,7 @@ describe('createListqueryOptions', () => {
 
     const data = await (result.queryFn as () => Promise<K8sResourceCommon[]>)();
     expect(customFn).toHaveBeenCalled();
-    expect(filterData).toHaveBeenCalledWith([
-      { metadata: { name: 'keep' } },
-      { metadata: { name: 'drop' } },
-    ]);
-    expect(data).toEqual([{ metadata: { name: 'keep' } }]);
+    expect(filterData).not.toHaveBeenCalled();
+    expect(data).toEqual([{ metadata: { name: 'keep' } }, { metadata: { name: 'drop' } }]);
   });
 });
