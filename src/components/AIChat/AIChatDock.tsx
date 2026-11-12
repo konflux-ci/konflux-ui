@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { ChatbotDisplayMode } from '@patternfly/chatbot/dist/dynamic/Chatbot';
 import { AIStateProvider, useInProgress } from '@redhat-cloud-services/ai-react-state';
 import { AIChatDeleteConversationModal } from '~/components/AIChat/components/AIChatDeleteConversationModal';
 import { AIChatFooter } from '~/components/AIChat/components/AIChatFooter';
@@ -7,7 +8,11 @@ import { AIChatMessageList } from '~/components/AIChat/components/AIChatMessageL
 import { AIChatPanel } from '~/components/AIChat/components/AIChatPanel';
 import { AIChatRenameConversationModal } from '~/components/AIChat/components/AIChatRenameConversationModal';
 import { AIChatToggle } from '~/components/AIChat/components/AIChatToggle';
-import { KONFLUX_AI_DISPLAY_MODE } from '~/components/AIChat/const';
+import {
+  KONFLUX_AI_DEFAULT_DISPLAY_MODE,
+  KONFLUX_AI_MAXIMIZED_ANNOUNCEMENT,
+  KONFLUX_AI_MINIMIZED_ANNOUNCEMENT,
+} from '~/components/AIChat/const';
 import { useAIChatConversations } from '~/components/AIChat/hooks/useAIChatConversations';
 import { useAIChatInit } from '~/components/AIChat/hooks/useAIChatInit';
 import { useAIChatSend } from '~/components/AIChat/hooks/useAIChatSend';
@@ -20,6 +25,9 @@ import './AIChat.scss';
 
 const AIChatDockContent: React.FC = () => {
   const [isVisible, toggle] = useToggle();
+  const [displayMode, setDisplayMode] = React.useState(KONFLUX_AI_DEFAULT_DISPLAY_MODE);
+  const [displayModeAnnouncement, setDisplayModeAnnouncement] = React.useState('');
+  const previousDisplayMode = React.useRef(displayMode);
   const { initError, isInitializing, retryInit } = useAIChatInit();
   const { sendError, clearSendError, sendMessage } = useAIChatSend();
   const {
@@ -44,16 +52,45 @@ const AIChatDockContent: React.FC = () => {
   } = useAIChatConversations();
   const isInProgress = useInProgress();
 
+  const hideChat = React.useCallback(() => {
+    setDisplayMode(KONFLUX_AI_DEFAULT_DISPLAY_MODE);
+    if (isVisible) {
+      toggle();
+    }
+  }, [isVisible, toggle]);
+
   const handleToggle = React.useCallback(() => {
-    if (!isVisible) {
-      clearSendError();
-      clearConversationError();
-      if (initError) {
-        retryInit();
-      }
+    if (isVisible) {
+      hideChat();
+      return;
+    }
+    clearSendError();
+    clearConversationError();
+    if (initError) {
+      retryInit();
     }
     toggle();
-  }, [clearConversationError, clearSendError, initError, isVisible, retryInit, toggle]);
+  }, [clearConversationError, clearSendError, hideChat, initError, isVisible, retryInit, toggle]);
+
+  React.useEffect(() => {
+    if (previousDisplayMode.current === displayMode) {
+      return;
+    }
+    previousDisplayMode.current = displayMode;
+    setDisplayModeAnnouncement(
+      displayMode === ChatbotDisplayMode.fullscreen
+        ? KONFLUX_AI_MAXIMIZED_ANNOUNCEMENT
+        : KONFLUX_AI_MINIMIZED_ANNOUNCEMENT,
+    );
+  }, [displayMode]);
+
+  const handleToggleDisplayMode = React.useCallback(() => {
+    setDisplayMode((mode) =>
+      mode === ChatbotDisplayMode.fullscreen
+        ? ChatbotDisplayMode.default
+        : ChatbotDisplayMode.fullscreen,
+    );
+  }, []);
 
   const chatError = sendError ?? initError ?? conversationError;
   const isSendDisabled = isInProgress || !!initError || isInitializing;
@@ -62,9 +99,12 @@ const AIChatDockContent: React.FC = () => {
     <AIChatPortal>
       <div className="ai-chat" data-test="ai-chat-dock">
         <AIChatToggle isVisible={isVisible} onToggle={handleToggle} />
-        <AIChatPanel isVisible={isVisible}>
+        <div className="pf-v6-u-screen-reader" role="status">
+          {displayModeAnnouncement}
+        </div>
+        <AIChatPanel isVisible={isVisible} displayMode={displayMode}>
           <AIChatHistoryNav
-            displayMode={KONFLUX_AI_DISPLAY_MODE}
+            displayMode={displayMode}
             activeConversationId={activeConversationId}
             conversations={conversations}
             conversationError={conversationError}
@@ -74,7 +114,8 @@ const AIChatDockContent: React.FC = () => {
             startNewChat={startNewChat}
             selectConversation={selectConversation}
             filterConversations={filterConversations}
-            onCloseChat={toggle}
+            onToggleDisplayMode={handleToggleDisplayMode}
+            onCloseChat={hideChat}
           >
             <AIChatMessageList isInitializing={isInitializing} chatError={chatError} />
             <AIChatFooter

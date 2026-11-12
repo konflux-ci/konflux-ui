@@ -1,5 +1,5 @@
 import * as React from 'react';
-import type { ChatbotDisplayMode } from '@patternfly/chatbot/dist/dynamic/Chatbot';
+import { ChatbotDisplayMode } from '@patternfly/chatbot/dist/dynamic/Chatbot';
 import type { Conversation } from '@patternfly/chatbot/dist/dynamic/ChatbotConversationHistoryNav';
 import ChatbotConversationHistoryNav from '@patternfly/chatbot/dist/dynamic/ChatbotConversationHistoryNav';
 import { AIChatHeader } from '~/components/AIChat/components/AIChatHeader';
@@ -21,6 +21,7 @@ type AIChatHistoryNavProps = {
   startNewChat: () => Promise<void>;
   selectConversation: (conversationId: string) => Promise<void>;
   filterConversations: (searchValue: string) => void;
+  onToggleDisplayMode: () => void;
   onCloseChat: () => void;
   children: React.ReactNode;
 };
@@ -37,6 +38,7 @@ export const AIChatHistoryNav: React.FC<AIChatHistoryNavProps> = ({
   startNewChat,
   selectConversation,
   filterConversations,
+  onToggleDisplayMode,
   onCloseChat,
   children,
 }) => {
@@ -64,6 +66,8 @@ export const AIChatHistoryNav: React.FC<AIChatHistoryNavProps> = ({
     },
     [selectConversation, setIsDrawerOpen],
   );
+
+  const isMaximized = displayMode === ChatbotDisplayMode.fullscreen;
 
   return (
     <ChatbotConversationHistoryNav
@@ -95,7 +99,9 @@ export const AIChatHistoryNav: React.FC<AIChatHistoryNavProps> = ({
         <>
           <AIChatHeader
             isDrawerOpen={isDrawerOpen}
+            isMaximized={isMaximized}
             onToggleDrawer={handleToggleDrawer}
+            onToggleDisplayMode={onToggleDisplayMode}
             onClose={onCloseChat}
           />
           {children}

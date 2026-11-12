@@ -1,6 +1,6 @@
 import { ChatbotDisplayMode } from '@patternfly/chatbot/dist/dynamic/Chatbot';
 
-export const KONFLUX_AI_DISPLAY_MODE = ChatbotDisplayMode.default;
+export const KONFLUX_AI_DEFAULT_DISPLAY_MODE = ChatbotDisplayMode.default;
 
 export const KONFLUX_AI_FOOTNOTE = 'Always review AI-generated content before use.';
 
@@ -29,6 +29,13 @@ export const KONFLUX_AI_ERROR_QUOTA =
 
 export const KONFLUX_AI_ERROR_UNAVAILABLE =
   'Konflux AI is temporarily unavailable. Please try again later.';
+
+export const KONFLUX_AI_MAXIMIZE_TOOLTIP = 'Maximize chat';
+export const KONFLUX_AI_MINIMIZE_TOOLTIP = 'Minimize chat';
+export const KONFLUX_AI_MAXIMIZE_ARIA_LABEL = 'Maximize chat';
+export const KONFLUX_AI_MINIMIZE_ARIA_LABEL = 'Minimize chat';
+export const KONFLUX_AI_MAXIMIZED_ANNOUNCEMENT = 'Chat maximized';
+export const KONFLUX_AI_MINIMIZED_ANNOUNCEMENT = 'Chat minimized';
 
 export const KONFLUX_AI_HISTORY_SEARCH_PLACEHOLDER = 'Search conversations';
 
