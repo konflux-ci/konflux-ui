@@ -102,6 +102,8 @@ type RegistryStatusIconWithTextProps<TStatus extends string, TResource, TContext
   text?: string;
   tooltip?: string;
   dataTestAttribute?: string;
+  /** Optional second line shown under the status word. A per-instance string, not a registry field. */
+  secondaryText?: string;
 };
 
 export function RegistryStatusIconWithText<TStatus extends string, TResource, TContext>({
@@ -110,10 +112,29 @@ export function RegistryStatusIconWithText<TStatus extends string, TResource, TC
   text,
   tooltip,
   dataTestAttribute,
+  secondaryText,
 }: RegistryStatusIconWithTextProps<TStatus, TResource, TContext>): React.ReactElement {
   const pfRunStatus = registry.getRunStatus(status);
   const label = text ?? registry.getLabel(status);
   const isActive = registry.hasTag(status, 'active');
+
+  const labelNode = (
+    <span
+      data-test={dataTestAttribute}
+      className={tooltip ? 'registry-status-icon-with-text__help-text' : undefined}
+    >
+      {label}
+    </span>
+  );
+
+  const textCell = secondaryText ? (
+    <span className="registry-status-icon-with-text__lines">
+      {labelNode}
+      <span className="registry-status-icon-with-text__secondary">{secondaryText}</span>
+    </span>
+  ) : (
+    labelNode
+  );
 
   const content = (
     <span className="registry-status-icon-with-text">
@@ -127,12 +148,7 @@ export function RegistryStatusIconWithText<TStatus extends string, TResource, TC
       >
         <RegistryStatusIcon registry={registry} status={status} />
       </span>
-      <span
-        data-test={dataTestAttribute}
-        className={tooltip ? 'registry-status-icon-with-text__help-text' : undefined}
-      >
-        {label}
-      </span>
+      {textCell}
     </span>
   );
 
@@ -197,6 +213,7 @@ type BoundStatusIconWithTextProps<TStatus extends string> = {
   text?: string;
   tooltip?: string;
   dataTestAttribute?: string;
+  secondaryText?: string;
 };
 
 type BoundStatusIconWithTextLabelProps<TStatus extends string> = {

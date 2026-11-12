@@ -153,6 +153,81 @@ describe('RegistryStatusIconWithText', () => {
     await user.hover(statusElement);
     expect(await screen.findByText('Waiting for resources')).toBeInTheDocument();
   });
+
+  describe('secondaryText', () => {
+    it('stacks the label and the second line inside the lines column, beside the icon', () => {
+      const { container } = renderWithQueryClientAndRouter(
+        <RegistryStatusIconWithText
+          registry={testRegistry}
+          status="Active"
+          dataTestAttribute="test-status"
+          secondaryText="position#2"
+        />,
+      );
+      const lines = container.querySelector('.registry-status-icon-with-text__lines');
+      expect(lines).toBeInTheDocument();
+      expect(lines).toContainElement(screen.getByTestId('test-status'));
+      expect(lines).toContainElement(screen.getByText('position#2'));
+
+      const icon = container.querySelector('.status-icon');
+      expect(icon).toBeInTheDocument();
+      expect(lines).not.toContainElement(icon as HTMLElement);
+      expect(icon?.parentElement).toBe(lines?.parentElement);
+    });
+
+    it('keeps the single label span when secondaryText is absent', () => {
+      const { container } = renderWithQueryClientAndRouter(
+        <RegistryStatusIconWithText
+          registry={testRegistry}
+          status="Active"
+          dataTestAttribute="test-status"
+        />,
+      );
+      expect(container.querySelector('.registry-status-icon-with-text__lines')).toBeNull();
+      expect(container.querySelector('.registry-status-icon-with-text__secondary')).toBeNull();
+      expect(screen.getByTestId('test-status').parentElement).toHaveClass(
+        'registry-status-icon-with-text',
+      );
+    });
+
+    it('puts the tooltip help-text class on the label span only', () => {
+      renderWithQueryClientAndRouter(
+        <RegistryStatusIconWithText
+          registry={testRegistry}
+          status="Active"
+          tooltip="Waiting for resources"
+          secondaryText="position#2"
+        />,
+      );
+      expect(screen.getByText('Active')).toHaveClass('registry-status-icon-with-text__help-text');
+      expect(screen.getByText('position#2')).not.toHaveClass(
+        'registry-status-icon-with-text__help-text',
+      );
+    });
+
+    it('shows the tooltip when hovering the label of a two-line cell', async () => {
+      const user = userEvent.setup();
+      renderWithQueryClientAndRouter(
+        <RegistryStatusIconWithText
+          registry={testRegistry}
+          status="Active"
+          tooltip="Waiting for resources"
+          secondaryText="position#2"
+        />,
+      );
+      await user.hover(screen.getByText('Active'));
+      expect(await screen.findByText('Waiting for resources')).toBeInTheDocument();
+    });
+
+    it('passes secondaryText through the bound namespace component', () => {
+      const Bound = createStatusComponents(testRegistry);
+      renderWithQueryClientAndRouter(
+        <Bound.StatusIconWithText status="Done" secondaryText="extra" />,
+      );
+      expect(screen.getByText('Completed')).toBeInTheDocument();
+      expect(screen.getByText('extra')).toBeInTheDocument();
+    });
+  });
 });
 
 // ---------------------------------------------------------------------------
