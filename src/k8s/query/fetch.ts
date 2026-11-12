@@ -32,8 +32,9 @@ export const K8sQueryListResource = <TResource extends K8sResourceCommon>(
   resourceInit: K8sResourceListOptions,
   options?: TQueryOptions<K8sResourceListResult<TResource>>,
 ): Promise<K8sResourceListResult<TResource>> => {
+  // Exclude filterData, queryKey, queryFn from the ensureQueryData spread
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { queryKey, queryFn, filterData, ...rest } = options ?? {};
+  const { queryKey, queryFn, filterData: _filterData, ...rest } = options ?? {};
   return queryClient.ensureQueryData<K8sResourceListResult<TResource>>({
     queryKey: queryKey ?? createQueryKeys(resourceInit),
     queryFn: queryFn ?? (() => k8sListResource<TResource>(resourceInit)),
@@ -58,7 +59,9 @@ export const K8sQueryUpdateResource = <TResource extends K8sResourceCommon>(
 export const K8sQueryPatchResource = <
   TResource extends K8sResourceCommon,
   TPatchedResource extends TResource = TResource,
->(requestInit: K8sResourcePatchOptions): Promise<TPatchedResource> => {
+>(
+  requestInit: K8sResourcePatchOptions,
+): Promise<TPatchedResource> => {
   return k8sPatchResource<TResource, TPatchedResource>(requestInit).finally(() => {
     !requestInit.queryOptions?.queryParams?.dryRun &&
       void queryClient.invalidateQueries({
