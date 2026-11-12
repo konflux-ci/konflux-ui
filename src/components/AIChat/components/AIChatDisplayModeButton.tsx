@@ -14,12 +14,20 @@ type AIChatDisplayModeButtonProps = {
   onToggle: () => void;
 };
 
+/**
+ * Matches the header action chrome from `ChatbotHeaderCloseButton` in
+ * `@patternfly/chatbot` ^6.6.0 (`package.json`). That package has no public
+ * display-mode action, and its close and menu buttons hardcode their icons,
+ * so these internal classes are copied here. Revisit them when chatbot is upgraded.
+ */
 export const AIChatDisplayModeButton: React.FC<AIChatDisplayModeButtonProps> = ({
   isMaximized,
   onToggle,
 }) => {
   const tooltipContent = isMaximized ? KONFLUX_AI_MINIMIZE_TOOLTIP : KONFLUX_AI_MAXIMIZE_TOOLTIP;
-  const menuAriaLabel = isMaximized ? KONFLUX_AI_MINIMIZE_ARIA_LABEL : KONFLUX_AI_MAXIMIZE_ARIA_LABEL;
+  const buttonAriaLabel = isMaximized
+    ? KONFLUX_AI_MINIMIZE_ARIA_LABEL
+    : KONFLUX_AI_MAXIMIZE_ARIA_LABEL;
 
   return (
     <div className="pf-chatbot__menu">
@@ -28,7 +36,7 @@ export const AIChatDisplayModeButton: React.FC<AIChatDisplayModeButtonProps> = (
           className="pf-chatbot__button--toggle-menu"
           variant="plain"
           onClick={onToggle}
-          aria-label={menuAriaLabel}
+          aria-label={buttonAriaLabel}
           data-test="ai-chat-display-mode-toggle"
           icon={
             <Icon size="xl" isInline>

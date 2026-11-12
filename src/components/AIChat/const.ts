@@ -34,6 +34,8 @@ export const KONFLUX_AI_MAXIMIZE_TOOLTIP = 'Maximize chat';
 export const KONFLUX_AI_MINIMIZE_TOOLTIP = 'Minimize chat';
 export const KONFLUX_AI_MAXIMIZE_ARIA_LABEL = 'Maximize chat';
 export const KONFLUX_AI_MINIMIZE_ARIA_LABEL = 'Minimize chat';
+export const KONFLUX_AI_MAXIMIZED_ANNOUNCEMENT = 'Chat maximized';
+export const KONFLUX_AI_MINIMIZED_ANNOUNCEMENT = 'Chat minimized';
 
 export const KONFLUX_AI_HISTORY_SEARCH_PLACEHOLDER = 'Search conversations';
 

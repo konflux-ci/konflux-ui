@@ -8,7 +8,11 @@ import { AIChatMessageList } from '~/components/AIChat/components/AIChatMessageL
 import { AIChatPanel } from '~/components/AIChat/components/AIChatPanel';
 import { AIChatRenameConversationModal } from '~/components/AIChat/components/AIChatRenameConversationModal';
 import { AIChatToggle } from '~/components/AIChat/components/AIChatToggle';
-import { KONFLUX_AI_DEFAULT_DISPLAY_MODE } from '~/components/AIChat/const';
+import {
+  KONFLUX_AI_DEFAULT_DISPLAY_MODE,
+  KONFLUX_AI_MAXIMIZED_ANNOUNCEMENT,
+  KONFLUX_AI_MINIMIZED_ANNOUNCEMENT,
+} from '~/components/AIChat/const';
 import { useAIChatConversations } from '~/components/AIChat/hooks/useAIChatConversations';
 import { useAIChatInit } from '~/components/AIChat/hooks/useAIChatInit';
 import { useAIChatSend } from '~/components/AIChat/hooks/useAIChatSend';
@@ -22,6 +26,8 @@ import './AIChat.scss';
 const AIChatDockContent: React.FC = () => {
   const [isVisible, toggle] = useToggle();
   const [displayMode, setDisplayMode] = React.useState(KONFLUX_AI_DEFAULT_DISPLAY_MODE);
+  const [displayModeAnnouncement, setDisplayModeAnnouncement] = React.useState('');
+  const previousDisplayMode = React.useRef(displayMode);
   const { initError, isInitializing, retryInit } = useAIChatInit();
   const { sendError, clearSendError, sendMessage } = useAIChatSend();
   const {
@@ -66,6 +72,18 @@ const AIChatDockContent: React.FC = () => {
     toggle();
   }, [clearConversationError, clearSendError, hideChat, initError, isVisible, retryInit, toggle]);
 
+  React.useEffect(() => {
+    if (previousDisplayMode.current === displayMode) {
+      return;
+    }
+    previousDisplayMode.current = displayMode;
+    setDisplayModeAnnouncement(
+      displayMode === ChatbotDisplayMode.fullscreen
+        ? KONFLUX_AI_MAXIMIZED_ANNOUNCEMENT
+        : KONFLUX_AI_MINIMIZED_ANNOUNCEMENT,
+    );
+  }, [displayMode]);
+
   const handleToggleDisplayMode = React.useCallback(() => {
     setDisplayMode((mode) =>
       mode === ChatbotDisplayMode.fullscreen
@@ -81,6 +99,9 @@ const AIChatDockContent: React.FC = () => {
     <AIChatPortal>
       <div className="ai-chat" data-test="ai-chat-dock">
         <AIChatToggle isVisible={isVisible} onToggle={handleToggle} />
+        <div className="pf-v6-u-screen-reader" role="status">
+          {displayModeAnnouncement}
+        </div>
         <AIChatPanel isVisible={isVisible} displayMode={displayMode}>
           <AIChatHistoryNav
             displayMode={displayMode}

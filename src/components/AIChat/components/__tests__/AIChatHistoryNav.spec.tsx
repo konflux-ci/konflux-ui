@@ -1,5 +1,5 @@
 import * as React from 'react';
-import type { ChatbotDisplayMode } from '@patternfly/chatbot/dist/dynamic/Chatbot';
+import { ChatbotDisplayMode } from '@patternfly/chatbot/dist/dynamic/Chatbot';
 import type { Conversation } from '@patternfly/chatbot/dist/dynamic/ChatbotConversationHistoryNav';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -78,15 +78,22 @@ jest.mock('@patternfly/chatbot/dist/dynamic/ChatbotConversationHistoryNav', () =
 
 jest.mock('~/components/AIChat/components/AIChatHeader', () => ({
   AIChatHeader: ({
+    isMaximized,
     onClose,
+    onToggleDisplayMode,
     onToggleDrawer,
   }: {
+    isMaximized?: boolean;
     onClose: () => void;
+    onToggleDisplayMode?: () => void;
     onToggleDrawer?: () => void;
   }) => (
     <>
       <button type="button" onClick={onToggleDrawer}>
         Header history
+      </button>
+      <button type="button" aria-pressed={isMaximized} onClick={onToggleDisplayMode}>
+        Display mode
       </button>
       <button type="button" onClick={onClose}>
         Close chat
@@ -101,7 +108,7 @@ const renderHistoryNav = (
   overrides: Partial<React.ComponentProps<typeof AIChatHistoryNav>> = {},
 ) => {
   const props = {
-    displayMode: 'default' as ChatbotDisplayMode,
+    displayMode: ChatbotDisplayMode.default,
     activeConversationId: null,
     conversations,
     hasNoSearchResults: false,
@@ -218,6 +225,27 @@ describe('AIChatHistoryNav', () => {
     expect(screen.getByText(KONFLUX_AI_HISTORY_NO_RESULTS_TITLE)).toBeInTheDocument();
     expect(screen.getByText(KONFLUX_AI_HISTORY_NO_RESULTS_BODY)).toBeInTheDocument();
     expect(screen.getByText('Chat messages')).toBeInTheDocument();
+  });
+
+  it('forwards a minimized display mode from the default panel', () => {
+    renderHistoryNav();
+
+    expect(screen.getByRole('button', { name: 'Display mode' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
+  });
+
+  it('forwards a maximized display mode and the toggle from fullscreen', async () => {
+    const user = userEvent.setup();
+    const props = renderHistoryNav({ displayMode: ChatbotDisplayMode.fullscreen });
+
+    const displayModeButton = screen.getByRole('button', { name: 'Display mode' });
+    expect(displayModeButton).toHaveAttribute('aria-pressed', 'true');
+
+    await user.click(displayModeButton);
+
+    expect(props.onToggleDisplayMode).toHaveBeenCalledTimes(1);
   });
 
   it('closes the chat from the header', async () => {

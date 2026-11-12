@@ -2,7 +2,11 @@ import * as React from 'react';
 import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import AIChatDock from '~/components/AIChat/AIChatDock';
-import { KONFLUX_AI_ERROR_UNAVAILABLE } from '~/components/AIChat/const';
+import {
+  KONFLUX_AI_ERROR_UNAVAILABLE,
+  KONFLUX_AI_MAXIMIZED_ANNOUNCEMENT,
+  KONFLUX_AI_MINIMIZED_ANNOUNCEMENT,
+} from '~/components/AIChat/const';
 
 const mockUseAIChatInit = jest.fn();
 const mockUseAIChatSend = jest.fn();
@@ -305,16 +309,19 @@ describe('AIChatDock', () => {
 
     expect(getChatbot()).toHaveClass('pf-chatbot--default');
     expect(getChatbot()).toHaveClass('pf-chatbot--visible');
+    expect(screen.getByRole('status')).toBeEmptyDOMElement();
 
     await user.click(screen.getByRole('button', { name: 'Maximize' }));
 
     expect(getChatbot()).toHaveClass('pf-chatbot--fullscreen');
     expect(getChatbot()).toHaveClass('pf-chatbot--visible');
+    expect(screen.getByRole('status')).toHaveTextContent(KONFLUX_AI_MAXIMIZED_ANNOUNCEMENT);
 
     await user.click(screen.getByRole('button', { name: 'Maximize' }));
 
     expect(getChatbot()).toHaveClass('pf-chatbot--default');
     expect(getChatbot()).toHaveClass('pf-chatbot--visible');
+    expect(screen.getByRole('status')).toHaveTextContent(KONFLUX_AI_MINIMIZED_ANNOUNCEMENT);
   });
 
   it('returns to the floating panel after the toggle hides a maximized chat', async () => {
@@ -330,6 +337,7 @@ describe('AIChatDock', () => {
 
     expect(getChatbot()).toHaveClass('pf-chatbot--default');
     expect(getChatbot()).toHaveClass('pf-chatbot--hidden');
+    expect(screen.getByRole('status')).toHaveTextContent(KONFLUX_AI_MINIMIZED_ANNOUNCEMENT);
   });
 
   it('returns to the floating panel after the header close button hides a maximized chat', async () => {
@@ -342,5 +350,6 @@ describe('AIChatDock', () => {
 
     expect(getChatbot()).toHaveClass('pf-chatbot--default');
     expect(getChatbot()).toHaveClass('pf-chatbot--hidden');
+    expect(screen.getByRole('status')).toHaveTextContent(KONFLUX_AI_MINIMIZED_ANNOUNCEMENT);
   });
 });
