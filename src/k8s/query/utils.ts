@@ -52,12 +52,9 @@ export const createGetQueryOptions = <
   TQueryFnData = TResource,
 >(
   args: K8sResourceBaseOptions,
-  options: Omit<TQueryOptions<TResource, TQueryFnData>, 'filterData'> = {} as Omit<
-    TQueryOptions<TResource, TQueryFnData>,
-    'filterData'
-  >,
+  options?: Omit<TQueryOptions<TResource, TQueryFnData>, 'filterData'>,
 ): UseQueryOptions<TResource> => {
-  const { queryKey, queryFn, ...rest } = options;
+  const { queryKey, queryFn, ...rest } = options ?? {};
   return {
     queryKey:
       queryKey ?? createQueryKeys({ ...args, prefix: args.fetchOptions?.requestInit?.pathPrefix }),
@@ -101,19 +98,15 @@ export const createListqueryOptions = <
   TQueryFnData = TResource,
 >(
   args: K8sResourceListOptions,
-  {
-    filterData,
-    queryKey,
-    queryFn,
-    ...options
-  }: TQueryOptions<TResource, TQueryFnData> = {} as TQueryOptions<TResource, TQueryFnData>,
+  options?: TQueryOptions<TResource, TQueryFnData>,
 ): UseQueryOptions<TResource> => {
+  const { filterData, queryKey, queryFn, ...rest } = options ?? {};
   return {
     queryKey:
       queryKey ?? createQueryKeys({ ...args, prefix: args.fetchOptions?.requestInit?.pathPrefix }),
     queryFn:
       queryFn ?? (() => K8sListResourceItems(args).then(filterData ?? ((a: TResource) => a))),
-    ...options,
+    ...rest,
   } as unknown as UseQueryOptions<TResource>;
 };
 
