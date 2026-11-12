@@ -17,10 +17,15 @@ jest.mock('~/feature-flags/hooks', () => ({
 const mockUseIsOnFeatureFlag = useIsOnFeatureFlag as jest.Mock;
 const mockUseK8sWatchResource = createK8sWatchResourceMock();
 
-const createPipelineRun = (name: string, queueName?: string): PipelineRunKind =>
+const createPipelineRun = (
+  name: string,
+  queueName?: string,
+  specStatus: string | null = 'PipelineRunPending',
+): PipelineRunKind =>
   ({
     apiVersion: 'tekton.dev/v1',
     kind: 'PipelineRun',
+    spec: specStatus ? { status: specStatus } : {},
     metadata: {
       name,
       namespace: 'test-ns',
@@ -75,8 +80,31 @@ describe('useKueueQueuePositionForPipelineRun', () => {
 
     expect(result.current.queuePosition).toBeUndefined();
     expect(result.current.isLoading).toBe(false);
+    expect(result.current.hasPayload).toBe(false);
     expectRequestConfig('pipelines-queue', 'test-ns', false);
   });
+
+  it.each([
+    ['Running (no spec.status)', null],
+    ['StoppedRunFinally', 'StoppedRunFinally'],
+    ['CancelledRunFinally', 'CancelledRunFinally'],
+  ])(
+    'should not subscribe when the run has the queue label but spec.status is %s',
+    (_label, specStatus) => {
+      mockUseIsOnFeatureFlag.mockReturnValue(true);
+      mockUseK8sWatchResource.mockReturnValue({ data: undefined, isLoading: false, error: null });
+      const plr = createPipelineRun('plr-1', 'pipelines-queue', specStatus);
+
+      const { result } = renderHookWithQueryClient(() =>
+        useKueueQueuePositionForPipelineRun('test-ns', plr),
+      );
+
+      expect(result.current.queuePosition).toBeUndefined();
+      expect(result.current.isLoading).toBe(false);
+      expect(result.current.hasPayload).toBe(false);
+      expectRequestConfig('pipelines-queue', 'test-ns', false);
+    },
+  );
 
   it('should disable the request when the PipelineRun has no queue label', () => {
     mockUseIsOnFeatureFlag.mockReturnValue(true);
@@ -127,6 +155,7 @@ describe('useKueueQueuePositionForPipelineRun', () => {
       priority: 700,
     });
     expect(result.current.error).toBeNull();
+    expect(result.current.hasPayload).toBe(true);
     expectRequestConfig('pipelines-queue', 'test-ns', true);
   });
 
@@ -162,9 +191,10 @@ describe('useKueueQueuePositionForPipelineRun', () => {
     );
 
     expect(result.current.queuePosition).toBeUndefined();
+    expect(result.current.hasPayload).toBe(true);
   });
 
-  it('should expose the error when the request fails and suppress position', () => {
+  it('should expose the error with no position and no payload when the request fails', () => {
     mockUseIsOnFeatureFlag.mockReturnValue(true);
     const error = new Error('Forbidden');
     mockUseK8sWatchResource.mockReturnValue({ data: undefined, isLoading: false, error });
@@ -176,9 +206,10 @@ describe('useKueueQueuePositionForPipelineRun', () => {
 
     expect(result.current.queuePosition).toBeUndefined();
     expect(result.current.error).toBe(error);
+    expect(result.current.hasPayload).toBe(false);
   });
 
-  it('should suppress cached position when the request has errored', () => {
+  it('should keep the cached position when a later poll has errored', () => {
     mockUseIsOnFeatureFlag.mockReturnValue(true);
     const error = new Error('NetworkError');
     mockUseK8sWatchResource.mockReturnValue({
@@ -206,8 +237,46 @@ describe('useKueueQueuePositionForPipelineRun', () => {
       useKueueQueuePositionForPipelineRun('test-ns', plr),
     );
 
+    expect(result.current.queuePosition).toEqual({
+      positionInClusterQueue: 3,
+      positionInLocalQueue: 1,
+      localQueueName: 'pipelines-queue',
+      priority: 700,
+    });
+    expect(result.current.error).toBe(error);
+    expect(result.current.hasPayload).toBe(true);
+  });
+
+  it('should keep hasPayload with no position when a later poll errored and the payload omits this run', () => {
+    mockUseIsOnFeatureFlag.mockReturnValue(true);
+    const error = new Error('NetworkError');
+    mockUseK8sWatchResource.mockReturnValue({
+      data: createSummary([
+        {
+          metadata: {
+            name: 'workload-other',
+            ownerReferences: [
+              { apiVersion: 'tekton.dev/v1', kind: 'PipelineRun', name: 'plr-x', uid: 'uid-x' },
+            ],
+          },
+          priority: 500,
+          localQueueName: 'pipelines-queue',
+          positionInClusterQueue: 0,
+          positionInLocalQueue: 0,
+        },
+      ]),
+      isLoading: false,
+      error,
+    });
+
+    const plr = createPipelineRun('plr-1', 'pipelines-queue');
+    const { result } = renderHookWithQueryClient(() =>
+      useKueueQueuePositionForPipelineRun('test-ns', plr),
+    );
+
     expect(result.current.queuePosition).toBeUndefined();
     expect(result.current.error).toBe(error);
+    expect(result.current.hasPayload).toBe(true);
   });
 
   it('should suppress cached position when the feature flag is off', () => {
@@ -238,6 +307,7 @@ describe('useKueueQueuePositionForPipelineRun', () => {
     );
 
     expect(result.current.queuePosition).toBeUndefined();
+    expect(result.current.hasPayload).toBe(false);
   });
 
   it('should report isLoading true while the request is in flight', () => {
@@ -251,11 +321,16 @@ describe('useKueueQueuePositionForPipelineRun', () => {
 
     expect(result.current.isLoading).toBe(true);
     expect(result.current.queuePosition).toBeUndefined();
+    expect(result.current.hasPayload).toBe(false);
   });
 
   it('should configure polling at the default interval', () => {
     mockUseIsOnFeatureFlag.mockReturnValue(true);
-    mockUseK8sWatchResource.mockReturnValue({ data: createSummary(), isLoading: false, error: null });
+    mockUseK8sWatchResource.mockReturnValue({
+      data: createSummary(),
+      isLoading: false,
+      error: null,
+    });
 
     const plr = createPipelineRun('plr-1', 'pipelines-queue');
     renderHookWithQueryClient(() => useKueueQueuePositionForPipelineRun('test-ns', plr));
@@ -265,12 +340,14 @@ describe('useKueueQueuePositionForPipelineRun', () => {
 
   it('should configure polling at a custom interval', () => {
     mockUseIsOnFeatureFlag.mockReturnValue(true);
-    mockUseK8sWatchResource.mockReturnValue({ data: createSummary(), isLoading: false, error: null });
+    mockUseK8sWatchResource.mockReturnValue({
+      data: createSummary(),
+      isLoading: false,
+      error: null,
+    });
 
     const plr = createPipelineRun('plr-1', 'pipelines-queue');
-    renderHookWithQueryClient(() =>
-      useKueueQueuePositionForPipelineRun('test-ns', plr, 5_000),
-    );
+    renderHookWithQueryClient(() => useKueueQueuePositionForPipelineRun('test-ns', plr, 5_000));
 
     expectRequestConfig('pipelines-queue', 'test-ns', true, 5_000);
   });
@@ -287,7 +364,11 @@ describe('useKueueQueuePositionForPipelineRun', () => {
 
   it('should build the same K8s request for PipelineRuns sharing a queue', () => {
     mockUseIsOnFeatureFlag.mockReturnValue(true);
-    mockUseK8sWatchResource.mockReturnValue({ data: createSummary(), isLoading: false, error: null });
+    mockUseK8sWatchResource.mockReturnValue({
+      data: createSummary(),
+      isLoading: false,
+      error: null,
+    });
 
     const plrA = createPipelineRun('plr-a', 'pipelines-queue');
     const plrB = createPipelineRun('plr-b', 'pipelines-queue');
