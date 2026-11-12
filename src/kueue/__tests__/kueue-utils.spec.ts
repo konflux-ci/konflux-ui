@@ -3,7 +3,12 @@ import type { PipelineRunKind } from '~/types';
 import { OwnerReference } from '~/types/k8s';
 import type { KueuePendingWorkloadKind } from '~/types/kueue';
 import { KUEUE_QUEUE_NAME_LABEL } from '../const';
-import { getKueueQueuePositionForPipelineRun, isKueueQueueWaitVisible } from '../kueue-utils';
+import {
+  getKueueQueuePositionForPipelineRun,
+  getKueueQueuePositionLabel,
+  getKueueQueueWaitTooltip,
+  isKueueQueueWaitVisible,
+} from '../kueue-utils';
 
 const createWorkload = (
   pipelineRunName: string | undefined,
@@ -151,5 +156,38 @@ describe('isKueueQueueWaitVisible', () => {
 
   it('should be false for a run with another spec.status', () => {
     expect(isKueueQueueWaitVisible(createRun('CancelledRunFinally', queueLabel), true)).toBe(false);
+  });
+});
+
+describe('getKueueQueuePositionLabel', () => {
+  const position = (positionInClusterQueue: number) => ({
+    positionInClusterQueue,
+    positionInLocalQueue: positionInClusterQueue,
+    localQueueName: 'pipelines-queue',
+    priority: 500,
+  });
+
+  it('should convert the 0-based cluster position to a position#N label', () => {
+    expect(getKueueQueuePositionLabel(position(0))).toBe('position#1');
+    expect(getKueueQueuePositionLabel(position(2))).toBe('position#3');
+  });
+
+  it('should return undefined when there is no position', () => {
+    expect(getKueueQueuePositionLabel(undefined)).toBeUndefined();
+  });
+});
+
+describe('getKueueQueueWaitTooltip', () => {
+  const createdAt = '2022-11-28T12:08:22Z';
+  const sixHoursTwelveMinutesLater = Date.parse(createdAt) + (6 * 60 + 12) * 60 * 1000;
+
+  it('should describe how long the run has been waiting', () => {
+    expect(getKueueQueueWaitTooltip(createdAt, sixHoursTwelveMinutesLater)).toBe(
+      'Waiting for: 6 hours 12 minutes',
+    );
+  });
+
+  it('should return undefined without a creation timestamp', () => {
+    expect(getKueueQueueWaitTooltip(undefined, sixHoursTwelveMinutesLater)).toBeUndefined();
   });
 });
