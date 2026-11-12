@@ -5,6 +5,7 @@ import { ComponentDetailsPage } from '../support/pages/ComponentDetailsPage';
 import { ComponentPage } from '../support/pages/ComponentsPage';
 import { ComponentsTabPage } from '../support/pages/tabs/ComponentsTabPage';
 import { IntegrationTestsTabPage } from '../support/pages/tabs/IntegrationTestsTabPage';
+import { LatestCommitsTabPage } from '../support/pages/tabs/LatestCommitsTabPage';
 import { DetailsTab, PipelinerunsTabPage } from '../support/pages/tabs/PipelinerunsTabPage';
 import { APIHelper } from '../utils/APIHelper';
 import { Applications } from '../utils/Applications';
@@ -17,6 +18,7 @@ describe('Component Lifecycle Tests', () => {
   const applicationDetailPage = new ApplicationDetailPage();
   const integrationTestsTab = new IntegrationTestsTabPage();
   const componentPage = new ComponentPage();
+  const latestCommitsTabPage = new LatestCommitsTabPage();
 
   const sourceOwner = Cypress.expose('SOURCE_REPO_OWNER');
   const sourceRepo = Cypress.expose('SOURCE_REPO_NAME');
@@ -230,6 +232,39 @@ describe('Component Lifecycle Tests', () => {
 
       cy.log('Verifying vulnerability scan details for on-push pipeline run');
       PipelinerunsTabPage.verifyVulnerabilityScanDetails(`${componentName}-on-push`);
+    });
+  });
+
+  describe('Explore Commits Tab', () => {
+    after(() => {
+      Applications.clickBreadcrumbLink(applicationName);
+    });
+
+    it('Verify commits from Activity tabs', () => {
+      const commitTitle = 'firstCommit';
+      const commitSha = Cypress.expose(`${commitTitle}_SHA`) as string;
+
+      cy.log('Verify commit from application Activity → Latest commits');
+      Applications.goToLatestCommitsTab();
+      latestCommitsTabPage.waitForCommitInList(commitTitle);
+      latestCommitsTabPage.verifyLatestCommits([{ name: commitTitle, component: componentName }]);
+      latestCommitsTabPage.clickOnCommit(commitTitle);
+      latestCommitsTabPage.verifyCommitsPageTitleAndStatus(commitTitle);
+      latestCommitsTabPage.verifyCommitID(commitSha, publicRepo);
+      UIhelper.verifyLabelAndValue('Branch', 'main');
+      UIhelper.verifyLabelAndValue('Component', componentName);
+      latestCommitsTabPage.verifyNodesOnCommitOverview(['commit', `${componentName}-build`]);
+
+      cy.log('Verify commit from component Activity → Commits');
+      Applications.clickBreadcrumbLink(applicationName);
+      Applications.goToComponentsTab();
+      ComponentsTabPage.openComponent(componentName);
+      ComponentDetailsPage.goToCommitsTab();
+      latestCommitsTabPage.waitForCommitInList(commitTitle);
+      latestCommitsTabPage.verifyLatestCommits([{ name: commitTitle, component: componentName }]);
+      latestCommitsTabPage.clickOnCommit(commitTitle);
+      latestCommitsTabPage.verifyCommitsPageTitleAndStatus(commitTitle);
+      latestCommitsTabPage.verifyCommitID(commitSha, publicRepo);
     });
   });
 
