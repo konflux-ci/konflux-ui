@@ -6,7 +6,7 @@ import { SecretGroupVersionKind, SecretModel } from '~/models';
 import { createK8sWatchResourceMock } from '~/unit-test-utils';
 import { createSecretListTableQueryOptions } from '~/utils/secrets/secret-table-query';
 import {
-  SECRET_TABLE_K8S_FETCH_OPTIONS,
+  SECRET_TABLE_FETCH_OPTIONS,
   selectSecretList,
   type K8sTable,
 } from '~/utils/secrets/secret-table-utils';
@@ -123,7 +123,7 @@ describe('useSecrets', () => {
           select: expect.any(Function),
           queryFn: expect.any(Function),
         }),
-        SECRET_TABLE_K8S_FETCH_OPTIONS,
+        SECRET_TABLE_FETCH_OPTIONS,
       );
     });
 

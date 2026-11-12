@@ -8,6 +8,7 @@ import { SecretGroupVersionKind, SecretModel } from '~/models';
 import { SecretKind } from '~/types';
 import {
   fetchK8sSecretTableList,
+  SECRET_TABLE_FETCH_OPTIONS,
   SECRET_TABLE_K8S_FETCH_OPTIONS,
   selectSecretList,
 } from '~/utils/secrets/secret-table-utils';
@@ -73,7 +74,7 @@ export const useSecrets = (
           queryFn: () => fetchK8sSecretTableList(listArgs),
         } as unknown as UseQueryOptions<SecretKind[]>)
       : undefined,
-    (metadataOnly ? SECRET_TABLE_K8S_FETCH_OPTIONS : {}) as Parameters<
+    (metadataOnly ? SECRET_TABLE_FETCH_OPTIONS : {}) as Parameters<
       typeof useK8sWatchResource
     >[3],
   );
