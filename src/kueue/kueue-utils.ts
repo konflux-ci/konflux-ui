@@ -1,5 +1,8 @@
+import { SucceedConditionReason } from '~/consts/pipelinerun';
 import { PipelineRunModel } from '~/models/pipelineruns';
+import type { PipelineRunKind } from '~/types';
 import type { KueuePendingWorkloadKind, KueueQueuePosition } from '~/types/kueue';
+import { KUEUE_QUEUE_NAME_LABEL } from './const';
 
 /**
  * Finds the PipelineRun owner reference for a pending workload, matching by
@@ -37,3 +40,18 @@ export const getKueueQueuePositionForPipelineRun = (
     priority: workload.priority,
   };
 };
+
+/**
+ * Whether the Kueue queue wait info (position, priority, time waiting) should be
+ * shown for a PipelineRun. Shared by the list tooltip and the details rows so the
+ * two surfaces agree.
+ *
+ * Requires the `kueue-queue-position` flag, a `PipelineRunPending` spec status, and the
+ * `kueue.x-k8s.io/queue-name` label. The label alone is not enough: it stays on the
+ * PipelineRun after admission. A PAC-only queued run (no Kueue label) is not covered.
+ * Does not require a loaded queue position, so loading and failed fetches still show the wait.
+ */
+export const isKueueQueueWaitVisible = (pipelineRun: PipelineRunKind, isFlagOn: boolean): boolean =>
+  isFlagOn &&
+  pipelineRun.spec?.status === SucceedConditionReason.PipelineRunPending &&
+  pipelineRun.metadata?.labels?.[KUEUE_QUEUE_NAME_LABEL] !== undefined;
