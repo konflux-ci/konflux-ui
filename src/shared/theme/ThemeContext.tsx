@@ -26,8 +26,11 @@ export type ThemeContextValue = {
   setContrastPreference: (newPreference: ContrastPreference) => void;
 };
 
-const themeStorage = createKeyedJSONStorage<ThemePreference>('konflux-theme-preference');
-const contrastStorage = createKeyedJSONStorage<ContrastPreference>('konflux-contrast-preference');
+const THEME_STORAGE_KEY = 'konflux-theme-preference';
+const CONTRAST_STORAGE_KEY = 'konflux-contrast-preference';
+
+const themeStorage = createKeyedJSONStorage<ThemePreference>(THEME_STORAGE_KEY);
+const contrastStorage = createKeyedJSONStorage<ContrastPreference>(CONTRAST_STORAGE_KEY);
 
 export const ThemeContext = React.createContext<ThemeContextValue>({
   preference: 'system',
@@ -55,16 +58,41 @@ const getSystemContrastPreference = (): boolean => {
 
 const getStoredPreference = (): ThemePreference => {
   const stored = themeStorage.get();
-  if (stored && THEME_PREFERENCES.includes(stored)) {
+  if (stored && (THEME_PREFERENCES as readonly string[]).includes(stored)) {
     return stored;
+  }
+  // Migration: handle bare-string values from pre-PF v6 localStorage format.
+  // Old code stored raw strings (e.g. 'dark') that fail JSON.parse, causing
+  // themeStorage.get() to return undefined. Read localStorage directly,
+  // validate, and re-store in JSON format for a one-time migration.
+  try {
+    const raw = window.localStorage.getItem(THEME_STORAGE_KEY);
+    if (raw && (THEME_PREFERENCES as readonly string[]).includes(raw)) {
+      const preference = raw as ThemePreference;
+      themeStorage.set(preference);
+      return preference;
+    }
+  } catch {
+    // Storage unavailable; fall through to default
   }
   return THEME_SYSTEM;
 };
 
 const getStoredContrastPreference = (): ContrastPreference => {
   const stored = contrastStorage.get();
-  if (stored && CONTRAST_PREFERENCES.includes(stored)) {
+  if (stored && (CONTRAST_PREFERENCES as readonly string[]).includes(stored)) {
     return stored;
+  }
+  // Migration: handle bare-string values from pre-PF v6 localStorage format.
+  try {
+    const raw = window.localStorage.getItem(CONTRAST_STORAGE_KEY);
+    if (raw && (CONTRAST_PREFERENCES as readonly string[]).includes(raw)) {
+      const preference = raw as ContrastPreference;
+      contrastStorage.set(preference);
+      return preference;
+    }
+  } catch {
+    // Storage unavailable; fall through to default
   }
   return CONTRAST_SYSTEM;
 };
