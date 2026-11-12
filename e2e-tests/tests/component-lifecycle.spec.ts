@@ -203,11 +203,12 @@ describe('Component Lifecycle Tests', () => {
       cy.log('Verify Enterprise contract Test pipeline run Details');
       UIhelper.clickRowCellInTable('Pipeline run List', 'Test', `${applicationName}-`);
       // We encountered problems with EC checks on a local deployment,
-      // so we only check for Succeeded status on the stage job
+      // so we only check for Succeeded status on the stage job.
+      // Kind/mapt EC runs are slower than stage — use the same 20m wait as on-push.
       if (Cypress.expose('PERIODIC_RUN_STAGE') === 'true') {
-        DetailsTab.waitForPLRAndDownloadAllLogs(300000, false, 'Succeeded');
+        DetailsTab.waitForPLRAndDownloadAllLogs(1200000, false, 'Succeeded');
       } else {
-        DetailsTab.waitForPLRAndDownloadAllLogs(300000, false, '(Succeeded|Failed)');
+        DetailsTab.waitForPLRAndDownloadAllLogs(1200000, false, '(Succeeded|Failed)');
       }
     });
 
