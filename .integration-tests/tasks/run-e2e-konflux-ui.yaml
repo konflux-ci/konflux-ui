@@ -316,7 +316,7 @@ spec:
           echo '<testsuites>' >> /artifacts/e2e-report.xml
           for f in "${JUNIT_FILES[@]}"; do
             echo "Merging JUnit report: $f"
-            sed -n '/<testsuite/,/<\/testsuite>/p' "$f" >> /artifacts/e2e-report.xml
+            sed -n '/<testsuite /,/<\/testsuite>/p' "$f" >> /artifacts/e2e-report.xml
           done
           echo '</testsuites>' >> /artifacts/e2e-report.xml
           echo "Merged ${#JUNIT_FILES[@]} JUnit report(s) into /artifacts/e2e-report.xml"
