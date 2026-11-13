@@ -87,8 +87,7 @@ jobs:
           cp .size-limit.json "${RUNNER_TEMP}/size-limit.pr.json"
           rm -rf dist
           yarn build
-          cp "${RUNNER_TEMP}/size-limit.pr.json" .size-limit.ci.json
-          yarn size-limit --config .size-limit.ci.json --json > "${RUNNER_TEMP}/pr-size-limit.json"
+          yarn size-limit --json > "${RUNNER_TEMP}/pr-size-limit.json"
 
       - name: Build and measure base branch bundle
         if: env.BASE_SHA != ''
