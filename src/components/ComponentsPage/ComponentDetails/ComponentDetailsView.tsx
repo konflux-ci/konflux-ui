@@ -1,5 +1,5 @@
 import React from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
   Bullseye,
   EmptyStateBody,
@@ -7,6 +7,7 @@ import {
   Content,
   ContentVariants,
 } from '@patternfly/react-core';
+import { useComponentV2Actions } from '~/components/Components/component-v2-actions';
 import { useComponentV2 } from '~/hooks/useComponentsV2';
 import { getErrorState } from '~/shared/utils/error-utils';
 import emptyStateImgUrl from '../../../assets/Components.svg';
@@ -18,14 +19,22 @@ import { RouterParams } from '../../../routes/utils';
 import AppEmptyState from '../../../shared/components/empty-state/AppEmptyState';
 import { useNamespace } from '../../../shared/providers/Namespace/useNamespaceInfo';
 import { DetailsPage } from '../../DetailsPage';
+import { createDetailsPageActions } from '../../DetailsPage/utils';
 import GitRepoLink from '../../GitLink/GitRepoLink';
 
 export const COMPONENTS_GS_LOCAL_STORAGE_KEY = 'components-getting-started-modal';
 
 const ComponentDetailsView: React.FC = () => {
   const { componentName } = useParams<RouterParams>();
+  const navigate = useNavigate();
   const namespace = useNamespace();
   const [component, loaded, componentError] = useComponentV2(namespace, componentName);
+
+  const componentActions = useComponentV2Actions(component?.metadata?.name);
+  const actions = React.useMemo(
+    () => createDetailsPageActions(componentActions, navigate),
+    [componentActions, navigate],
+  );
 
   if (!loaded) {
     return (
@@ -52,6 +61,7 @@ const ComponentDetailsView: React.FC = () => {
     >
       <DetailsPage
         data-test="component-details-test-id"
+        actions={actions}
         headTitle={component.metadata.name}
         title={
           <Content component={ContentVariants.h2}>

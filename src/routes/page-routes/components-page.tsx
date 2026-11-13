@@ -1,5 +1,10 @@
+import { LoaderFunction } from 'react-router-dom';
 import { RouteErrorBoundry } from '@routes/RouteErrorBoundary';
 import { RouterParams } from '@routes/utils';
+import {
+  linkedSecretsListViewLoader,
+  LinkedSecretsListView,
+} from '~/components/Components/LinkedSecretsListView';
 import { ComponentDependencyTab } from '~/components/ComponentsPage/tabs/ComponentDependencyTab';
 import { ComponentVersionsTab } from '~/components/ComponentsPage/tabs/ComponentVersionsTab';
 import { ensureFeatureFlagOnLoader } from '~/feature-flags/utils';
@@ -9,7 +14,16 @@ import {
   ComponentDetailsViewLayout,
   componentDetailsViewLoader,
 } from '../../components/ComponentsPage/ComponentDetails';
-import { COMPONENT_DETAILS_V2_PATH, COMPONENTS_PATH } from '../paths';
+import {
+  COMPONENT_DETAILS_V2_PATH,
+  COMPONENT_LINKED_SECRETS_V2_PATH,
+  COMPONENTS_PATH,
+} from '../paths';
+
+const linkedSecretsV2ViewLoader: LoaderFunction = (args) => {
+  ensureFeatureFlagOnLoader('component-model');
+  return linkedSecretsListViewLoader(args);
+};
 
 const componentsPageRoutes = [
   {
@@ -50,6 +64,12 @@ const componentsPageRoutes = [
         element: <ComponentDependencyTab />,
       },
     ],
+  },
+  {
+    path: COMPONENT_LINKED_SECRETS_V2_PATH.path,
+    element: <LinkedSecretsListView />,
+    loader: linkedSecretsV2ViewLoader,
+    errorElement: <RouteErrorBoundry />,
   },
 ];
 

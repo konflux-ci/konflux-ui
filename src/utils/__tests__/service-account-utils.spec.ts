@@ -1,5 +1,8 @@
 import { mockSecret } from '~/components/Secrets/__data__/mock-secrets';
-import { SecretModel, ServiceAccountModel } from '~/models';
+import { PIPELINE_SERVICE_ACCOUNT_PREFIX } from '~/consts/pipeline';
+import { isFeatureFlagOn } from '~/feature-flags/utils';
+import { HttpError } from '~/k8s/error';
+import { ComponentModel, ComponentModelV2, SecretModel, ServiceAccountModel } from '~/models';
 import { SecretKind, SecretType } from '~/types';
 import { SecretForComponentOption } from '~/utils/secrets/secret-utils';
 import {
@@ -7,10 +10,15 @@ import {
   linkSecretToServiceAccounts,
   linkSecretToBuildServiceAccount,
   unLinkSecretFromBuildServiceAccount,
+  unlinkSecretFromServiceAccounts,
   isLinkableSecret,
   updateAnnotateForSecret,
 } from '~/utils/service-account/service-account-utils';
 import { createK8sUtilMock } from '~/utils/test-utils';
+
+jest.mock('~/feature-flags/utils', () => ({
+  isFeatureFlagOn: jest.fn(),
+}));
 
 const imagePullSecret = {
   apiVersion: 'v1',
@@ -54,6 +62,14 @@ const testSecrets = [
 const k8sPatchResourceMock = createK8sUtilMock('K8sQueryPatchResource');
 const k8sGetResourceMock = createK8sUtilMock('K8sGetResource');
 const K8sListResourceItemsMock = createK8sUtilMock('K8sListResourceItems');
+const isFeatureFlagOnMock = isFeatureFlagOn as jest.Mock;
+
+// linkSecretToServiceAccounts lists both component models; return components
+// for the legacy model only so the list isn't doubled.
+const mockListComponentItems = (components: unknown[]) =>
+  K8sListResourceItemsMock.mockImplementation(({ model }) =>
+    Promise.resolve(model === ComponentModelV2 ? [] : components),
+  );
 
 describe('isLinkableSecret', () => {
   it('should return true for dockerjson/dockercfg/basicAuth', () => {
@@ -327,7 +343,7 @@ describe('linkSecretToAllServiceAccounts', () => {
   });
 
   it('should call linkSecretToServiceAccounts for each component', async () => {
-    K8sListResourceItemsMock.mockReturnValue(testComponents);
+    mockListComponentItems(testComponents);
     await linkSecretToServiceAccounts(
       imagePullSecretWithNamespace,
       [], // when select all components, we do not need relatedComponents
@@ -338,7 +354,7 @@ describe('linkSecretToAllServiceAccounts', () => {
 
   it('should call linkSecretToServiceAccounts for selected component', async () => {
     const selectedComponentsNames = [testComponent.metadata.name];
-    K8sListResourceItemsMock.mockReturnValue([
+    mockListComponentItems([
       testComponent,
       { ...testComponent, metadata: { ...testComponent.metadata, name: 'test-component-2' } },
     ]);
@@ -372,6 +388,156 @@ describe('linkSecretToAllServiceAccounts', () => {
       SecretForComponentOption.partial,
     );
     expect(k8sPatchResourceMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('listAllComponentsBothModels (via linkSecretToServiceAccounts)', () => {
+  const v2OnlyComponent = {
+    ...testComponent,
+    metadata: { ...testComponent.metadata, name: 'test-component-v2-only' },
+  };
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('should not list V2 components when the component-model flag is off', async () => {
+    isFeatureFlagOnMock.mockReturnValue(false);
+    mockListComponentItems(testComponents);
+    await linkSecretToServiceAccounts(
+      imagePullSecretWithNamespace,
+      [],
+      SecretForComponentOption.all,
+    );
+    expect(K8sListResourceItemsMock).toHaveBeenCalledTimes(1);
+    expect(K8sListResourceItemsMock).toHaveBeenCalledWith(
+      expect.objectContaining({ model: ComponentModel }),
+    );
+    expect(k8sPatchResourceMock).toHaveBeenCalledTimes(testComponents.length);
+  });
+
+  it('should list both models and dedupe by name when the flag is on', async () => {
+    isFeatureFlagOnMock.mockReturnValue(true);
+    K8sListResourceItemsMock.mockImplementation(({ model }) =>
+      Promise.resolve(
+        model === ComponentModelV2 ? [...testComponents, v2OnlyComponent] : testComponents,
+      ),
+    );
+    await linkSecretToServiceAccounts(
+      imagePullSecretWithNamespace,
+      [],
+      SecretForComponentOption.all,
+    );
+    expect(K8sListResourceItemsMock).toHaveBeenCalledTimes(2);
+    // shared components exist in both models but are linked only once
+    expect(k8sPatchResourceMock).toHaveBeenCalledTimes(testComponents.length + 1);
+  });
+
+  it('should treat a 404 (missing CRD) from the V2 list as empty', async () => {
+    isFeatureFlagOnMock.mockReturnValue(true);
+    K8sListResourceItemsMock.mockImplementation(({ model }) =>
+      model === ComponentModelV2
+        ? Promise.reject(HttpError.fromCode(404))
+        : Promise.resolve(testComponents),
+    );
+    await linkSecretToServiceAccounts(
+      imagePullSecretWithNamespace,
+      [],
+      SecretForComponentOption.all,
+    );
+    expect(k8sPatchResourceMock).toHaveBeenCalledTimes(testComponents.length);
+  });
+
+  it('should propagate a denied (403) V2 list instead of treating it as empty', async () => {
+    isFeatureFlagOnMock.mockReturnValue(true);
+    K8sListResourceItemsMock.mockImplementation(({ model }) =>
+      model === ComponentModelV2
+        ? Promise.reject(HttpError.fromCode(403))
+        : Promise.resolve(testComponents),
+    );
+    await expect(
+      linkSecretToServiceAccounts(imagePullSecretWithNamespace, [], SecretForComponentOption.all),
+    ).rejects.toThrow();
+    expect(k8sPatchResourceMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('unlinkSecretFromServiceAccounts', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('should unlink from SA-derived components without listing V2 when the flag is off', async () => {
+    isFeatureFlagOnMock.mockReturnValue(false);
+    K8sListResourceItemsMock.mockImplementation(({ model }) => {
+      if (model === ServiceAccountModel) {
+        return Promise.resolve([
+          {
+            metadata: { name: `${PIPELINE_SERVICE_ACCOUNT_PREFIX}${testComponent.metadata.name}` },
+            secrets: [{ name: 'test-secret' }],
+          },
+        ]);
+      }
+      return Promise.resolve(model === ComponentModelV2 ? [] : testComponents);
+    });
+    await unlinkSecretFromServiceAccounts(imagePullSecretWithNamespace);
+    expect(K8sListResourceItemsMock).toHaveBeenCalledWith(
+      expect.objectContaining({ model: ComponentModel }),
+    );
+    expect(K8sListResourceItemsMock).not.toHaveBeenCalledWith(
+      expect.objectContaining({ model: ComponentModelV2 }),
+    );
+    expect(k8sPatchResourceMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('should list both models and dedupe by name when the flag is on', async () => {
+    const v2OnlyComponent = {
+      ...testComponent,
+      metadata: { ...testComponent.metadata, name: 'test-component-v2-only' },
+    };
+    isFeatureFlagOnMock.mockReturnValue(true);
+    K8sListResourceItemsMock.mockImplementation(({ model }) => {
+      if (model === ServiceAccountModel) {
+        return Promise.resolve([
+          {
+            metadata: { name: `${PIPELINE_SERVICE_ACCOUNT_PREFIX}${testComponent.metadata.name}` },
+            secrets: [{ name: 'test-secret' }],
+          },
+        ]);
+      }
+      return Promise.resolve(
+        model === ComponentModelV2 ? [...testComponents, v2OnlyComponent] : testComponents,
+      );
+    });
+    await unlinkSecretFromServiceAccounts(imagePullSecretWithNamespace);
+    expect(K8sListResourceItemsMock).toHaveBeenCalledWith(
+      expect.objectContaining({ model: ComponentModelV2 }),
+    );
+    // shared component exists in both models but is unlinked only once
+    expect(k8sPatchResourceMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('should unlink only the given components when a list is provided', async () => {
+    isFeatureFlagOnMock.mockReturnValue(false);
+    mockListComponentItems(testComponents);
+    await unlinkSecretFromServiceAccounts(imagePullSecretWithNamespace, 'test-ns', [
+      testComponent.metadata.name,
+    ]);
+
+    // the SA auto-discovery list is skipped when components are given
+    expect(K8sListResourceItemsMock).not.toHaveBeenCalledWith(
+      expect.objectContaining({ model: ServiceAccountModel }),
+    );
+    expect(k8sGetResourceMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        model: ServiceAccountModel,
+        queryOptions: {
+          name: `${PIPELINE_SERVICE_ACCOUNT_PREFIX}${testComponent.metadata.name}`,
+          ns: 'test-ns',
+        },
+      }),
+    );
+    expect(k8sPatchResourceMock).toHaveBeenCalledTimes(1);
   });
 });
 

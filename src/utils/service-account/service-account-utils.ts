@@ -1,11 +1,14 @@
 import { COMMON_SECRETS_LABEL, PIPELINE_SERVICE_ACCOUNT_PREFIX } from '~/consts/pipeline';
 import { MAX_ANNOTATION_LENGTH } from '~/consts/secrets';
+import { isFeatureFlagOn } from '~/feature-flags/utils';
 import { K8sQueryPatchResource, K8sGetResource, K8sListResourceItems } from '~/k8s';
-import { ComponentModel } from '~/models';
+import { ComponentModel, ComponentModelV2 } from '~/models';
 import { SecretModel } from '~/models/secret';
 import { ServiceAccountModel } from '~/models/service-account';
 import { processWithPLimit } from '~/shared/utils/retry-batch-utils';
 import { ComponentKind, LinkableSecretType, SecretKind, ServiceAccountKind } from '~/types';
+import { K8sModelCommon } from '~/types/k8s';
+import { has404Error } from '~/utils/common-utils';
 import {
   isImagePullSecret,
   SecretForComponentOption,
@@ -16,7 +19,7 @@ type SecretEntry = { name: string };
 
 export const linkSecretToBuildServiceAccount = async (
   secret: SecretKind,
-  component: ComponentKind,
+  component: Pick<ComponentKind, 'metadata'>,
 ) => {
   // When there is no secret/component or they are not in the same namespace, return
   if (!secret || !component || !(secret.metadata?.namespace === component?.metadata?.namespace)) {
@@ -90,7 +93,7 @@ export const isLinkableSecret = (secret: SecretKind): boolean => {
 
 export const linkSecretsToBuildServiceAccount = async (
   secrets: SecretKind[],
-  component: ComponentKind,
+  component: Pick<ComponentKind, 'metadata'>,
 ) => {
   // When there is no secret/component or they are not in the same namespace, return
   if (
@@ -110,7 +113,7 @@ export const linkSecretsToBuildServiceAccount = async (
 
 export const unLinkSecretFromBuildServiceAccount = async (
   secret: SecretKind,
-  component: ComponentKind,
+  component: Pick<ComponentKind, 'metadata'>,
 ) => {
   if (!secret || !component || !(secret.metadata?.namespace === component?.metadata?.namespace)) {
     return;
@@ -210,6 +213,35 @@ export const getLinkedServiceAccounts = async (secret: SecretKind) => {
   return filterLinkedServiceAccounts(secret.metadata.name, allServiceAccounts);
 };
 
+// namespaces can hold both component models during migration, and the SA
+// patch is model-agnostic. List both and concat; a missing CRD (404) yields []
+// instead of failing the whole flow, other errors propagate.
+const listAllComponentsBothModels = async (namespace: string): Promise<ComponentKind[]> => {
+  const listSafely = (model: K8sModelCommon) =>
+    K8sListResourceItems<ComponentKind>({ model, queryOptions: { ns: namespace } }).catch(
+      (err): ComponentKind[] => {
+        if (has404Error(err)) {
+          return [];
+        }
+        throw err;
+      },
+    );
+
+  const [legacyComponents, v2Components] = await Promise.all([
+    listSafely(ComponentModel),
+    // Only list V2 when the flag is on: without it, users lacking V2 list RBAC
+    // would get a 403 that breaks legacy secret workflows. A denied V2 list is
+    // never swallowed - only a missing CRD (404) yields [].
+    isFeatureFlagOn('component-model')
+      ? listSafely(ComponentModelV2)
+      : Promise.resolve([] as ComponentKind[]),
+  ]);
+  // during migration a component can exist in both models; dedupe by name,
+  // with the new model winning (Map keeps the last entry for a key)
+  const byName = new Map([...legacyComponents, ...v2Components].map((c) => [c.metadata?.name, c]));
+  return [...byName.values()];
+};
+
 export const unlinkSecretFromServiceAccounts = async (
   secret: SecretKind,
   namespace?: string,
@@ -219,12 +251,7 @@ export const unlinkSecretFromServiceAccounts = async (
 
   const targetNamespace = namespace || secret.metadata.namespace;
 
-  const allComponents = await K8sListResourceItems<ComponentKind>({
-    model: ComponentModel,
-    queryOptions: {
-      ns: targetNamespace,
-    },
-  });
+  const allComponents = await listAllComponentsBothModels(targetNamespace);
 
   const componentMap = new Map(allComponents.map((c) => [c.metadata.name, c]));
   const unlinkSecretForComponent = async (componentName: string, sec: SecretKind) => {
@@ -252,12 +279,7 @@ export const linkSecretToServiceAccounts = async (
 ) => {
   if (!secret || !components || !secret.metadata?.namespace) return;
 
-  const allComponents = await K8sListResourceItems<ComponentKind>({
-    model: ComponentModel,
-    queryOptions: {
-      ns: secret.metadata.namespace,
-    },
-  });
+  const allComponents = await listAllComponentsBothModels(secret.metadata.namespace);
 
   const selectedComponents =
     allOrPartial === SecretForComponentOption.all
