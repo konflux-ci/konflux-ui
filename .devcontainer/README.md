@@ -69,6 +69,8 @@ While this documentation highlights the installation process for VS Code and oth
 - **VS Code Extensions**: Pre-configured with useful extensions for React/TypeScript development
 - **Development Tools**: ESLint, Prettier, Stylelint, and more
 
+Before running `yarn start`, install `kubectl` and the [kubelogin oidc-login plugin](https://github.com/int128/kubelogin) version 1.36.4 or newer **inside the container**, with both available on `PATH`. They are not included in the container image. With Krew, install the plugin using `kubectl krew install oidc-login`, then check `kubectl oidc-login --version`. See [local CLI authentication](../docs/local-cli-auth.md) for the full prerequisites and certificate trust setup.
+
 ## Available Commands
 
 Once the container is running and dependencies are installed, you can run:
@@ -101,10 +103,15 @@ yarn analyze
 
 ## Port Forwarding
 
-The devcontainer automatically forwards these ports:
+The development UI uses **`https://localhost:8080`**. Free host ports **8080**, **8000**, and **18000**, then use the editor's **Ports** panel to forward each container port to the same host port number.
 
-- **Port 3000**: Development server (automatically opens when running `yarn start`)
-- **Port 9000**: Webpack Bundle Analyzer
+Kubelogin tries callback port **8000** first and uses **18000** only if it cannot bind port 8000 inside the container. A host port conflict does not cause this fallback: forwarding only host port 18000 will not work when kubelogin selects container port 8000. Forward both callback ports so the host browser can reach whichever port kubelogin selects.
+
+The current DevContainer configuration forwards 3000 and 9000; add the UI and callback forwards manually. Port 9000 is for Webpack Bundle Analyzer; port 3000 is not used by `yarn start`.
+
+Keep the UI and callback host port numbers unchanged. If the editor substitutes another port because one is busy, free the original host port and restore the same-numbered forward. The UI origin and Dex callback URLs require these port numbers. Keep the forwarded ports local to your host.
+
+If kubelogin cannot open a browser inside the container, open the login URL printed in its terminal instructions in your **host browser**. The callback reaches kubelogin through the forwarded port. See [local CLI authentication](../docs/local-cli-auth.md#configure-targets-and-certificates) for HTTPS trust in the host browser and container.
 
 ## Features
 
@@ -248,7 +255,7 @@ After making changes to the pipeline selection feature:
 
 - **Build fails with `corepack: command not found`**: This devcontainer does not use Corepack; Yarn comes from `.yarn/releases/`. Rebuild after pulling `.devcontainer` changes.
 - **Dependencies not installing**: Try rebuilding the container (`F1` → "Dev Containers: Rebuild Container")
-- **Port conflicts**: Check that ports 3000 and 9000 aren't already in use on your host machine
+- **Port conflicts**: Free host ports 8080, 8000, and 18000, then confirm the editor forwards each to the same container port number. Kubelogin selects its callback port based on availability inside the container, so freeing only host port 18000 is insufficient when container port 8000 is available. Port 9000 must also be free when using Webpack Bundle Analyzer.
 
 ### Docker-Specific Issues
 
