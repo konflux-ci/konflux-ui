@@ -198,9 +198,17 @@ describe('Environment Configuration Tests', () => {
     const secretValue = 'myvalue';
 
     after(() => {
+      // navigate to secrets page before deleting the secret, in case the test
+      // failed before reaching the secrets page
+      cy.location('pathname').then((pathname) => {
+        if (!pathname.replace(/\/$/, '').endsWith('/secrets')) {
+          Common.navigateTo(NavItem.secrets);
+        }
+      });
+      Common.waitForLoad();
+      SecretsPage.deleteSecret(secretName);
       // Note: during the deletion, the secret is already filtered in input field
       // no need to search again - re-searching makes a test flaky.
-      SecretsPage.deleteSecret(secretName);
     });
 
     it('Add, Verify and Delete a secret', () => {
