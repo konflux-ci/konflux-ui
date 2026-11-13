@@ -126,8 +126,10 @@ export interface ColumnDefinition<TData, TValue = unknown> {
 /**
  * Serializable column state used for persistence and state management.
  *
- * Stored in `localStorage` when a {@link TableProps.columnStateKey} is
- * provided, or held in React state otherwise. Managed by `useColumnState`.
+ * Visibility and order are stored in `localStorage`, while sort selection is
+ * stored in `sessionStorage` when a {@link TableProps.columnStateKey} is
+ * provided. Without a key, state is held in React state. Managed by
+ * `useColumnState`.
  */
 export interface ColumnState {
   /** Set of visible column IDs. */
@@ -232,9 +234,9 @@ export interface TableProps<TData> {
   fetchNextPage?: () => void;
 
   /**
-   * LocalStorage key for persisting column state (visibility, order, sort).
-   * When omitted, column state is held in ephemeral React state and resets
-   * on unmount.
+   * Shared key for persisting column visibility and order in localStorage and
+   * sort selection in sessionStorage. When omitted, column state is held in
+   * ephemeral React state and resets on unmount.
    */
   columnStateKey?: string;
 

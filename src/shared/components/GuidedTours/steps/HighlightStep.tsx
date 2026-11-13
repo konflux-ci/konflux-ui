@@ -72,6 +72,7 @@ export const HighlightStep: React.FC<HighlightStepProps> = ({
       headerContent={title}
       bodyContent={content}
       appendTo={() => document.querySelector('#hacDev-modal-container') ?? document.body}
+      hideOnOutsideClick={false}
       data-test="tour-highlight-step"
     />
   );

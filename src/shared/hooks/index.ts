@@ -13,3 +13,4 @@ export * from './useCurrentTime';
 export * from './useSearchShortcut';
 export * from './useScrollToBottom';
 export * from './useToggle';
+export * from './useSessionStorage';
