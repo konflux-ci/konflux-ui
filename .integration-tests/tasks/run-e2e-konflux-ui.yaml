@@ -308,15 +308,21 @@ spec:
           cp -r "${E2E_DIR}/cypress/screenshots" /artifacts/ || true
         fi
 
-        # Copy test reports
-        # PR comment task expects e2e-report.xml; Cypress writes junit-[hash].xml
-        for f in "${E2E_DIR}"/cypress/junit-*.xml; do
-          if [ -f "$f" ]; then
-            echo "Copying JUnit report: $f -> /artifacts/e2e-report.xml"
-            cp "$f" /artifacts/e2e-report.xml || true
-            break
-          fi
-        done
+        # Merge all JUnit reports into a single file
+        # PR comment task expects e2e-report.xml; Cypress writes one junit-[hash].xml per spec
+        JUNIT_FILES=("${E2E_DIR}"/cypress/junit-*.xml)
+        if [ -f "${JUNIT_FILES[0]}" ]; then
+          echo '<?xml version="1.0"?>' > /artifacts/e2e-report.xml
+          echo '<testsuites>' >> /artifacts/e2e-report.xml
+          for f in "${JUNIT_FILES[@]}"; do
+            echo "Merging JUnit report: $f"
+            sed -n '/<testsuite/,/<\/testsuite>/p' "$f" >> /artifacts/e2e-report.xml
+          done
+          echo '</testsuites>' >> /artifacts/e2e-report.xml
+          echo "Merged ${#JUNIT_FILES[@]} JUnit report(s) into /artifacts/e2e-report.xml"
+        else
+          echo "No JUnit report files found"
+        fi
 
         # Copy Istanbul coverage output for Codecov / OCI artifacts
         if [ -d "${E2E_DIR}/.nyc_output" ]; then
