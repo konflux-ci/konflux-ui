@@ -35,7 +35,7 @@ spec:
       description: 'Konflux UI base URL for pipeline run links'
   steps:
     - name: send-notification
-      image: registry.access.redhat.com/ubi9/ubi@sha256:e43cb585942232ae19e9f351f01fa543038f289a4479ab4e3166eff7fc3ad0d8
+      image: registry.access.redhat.com/ubi9/ubi@sha256:3c3fa194551e503333f03a017bf418fc1f658545db1e2df1e58ccc67e203c324
       env:
         - name: PIPELINE_STATUS
           value: $(params.pipeline-aggregate-status)
