@@ -5,7 +5,7 @@ import userEvent from '@testing-library/user-event';
 import { FilterContext, FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { TEXT_SEARCH_TYPES } from '~/consts/constants';
 import { PipelineRunLabel, PipelineRunType } from '~/consts/pipelinerun';
-import { useComponent } from '~/hooks/useComponents';
+import { useComponentV2 } from '~/hooks/useComponentsV2';
 import { usePipelineRunsV2 } from '~/hooks/usePipelineRunsV2';
 import { PipelineRunKind, PipelineRunStatus } from '~/types';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
@@ -79,8 +79,8 @@ jest.mock('~/utils/rbac', () => ({
   useAccessReviewForModel: jest.fn(() => [true, true]),
 }));
 
-jest.mock('~/hooks/useComponents', () => ({
-  useComponent: jest.fn(),
+jest.mock('~/hooks/useComponentsV2', () => ({
+  useComponentV2: jest.fn(),
 }));
 
 jest.mock('~/hooks/usePipelineRunsV2', () => ({
@@ -102,7 +102,7 @@ jest.mock('~/hooks/useScanResults', () => ({
   usePLRVulnerabilities: jest.fn(() => ({ vulnerabilities: {}, fetchedPipelineRuns: [] })),
 }));
 
-const useComponentMock = useComponent as jest.Mock;
+const useComponentV2Mock = useComponentV2 as jest.Mock;
 const usePipelineRunsV2Mock = usePipelineRunsV2 as jest.Mock;
 
 const pipelineRuns: PipelineRunKind[] = [
@@ -127,10 +127,10 @@ const pipelineRuns: PipelineRunKind[] = [
       labels: {
         'appstudio.openshift.io/component': 'sample-component',
         [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.TEST as string,
-        [PipelineRunLabel.COMPONENT_VERSION]: 'main',
       },
       annotations: {
         [PipelineRunLabel.COMMIT_PROVIDER_LABEL]: 'github',
+        [PipelineRunLabel.V2_COMPONENT_VERSION]: 'main',
       },
     },
     spec: {
@@ -188,7 +188,7 @@ const pipelineRuns: PipelineRunKind[] = [
       labels: {
         'appstudio.openshift.io/component': 'sample-component',
         [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.BUILD as string,
-        [PipelineRunLabel.COMPONENT_VERSION]: 'main',
+        [PipelineRunLabel.V2_COMPONENT_VERSION]: 'main',
       },
     },
     spec: {},
@@ -224,7 +224,7 @@ describe('PipelineRunsListViewV2', () => {
     resetMockSearchParams();
     jest.clearAllMocks();
     useNamespaceMock.mockReturnValue('test-ns');
-    useComponentMock.mockReturnValue([mockComponentData, true, undefined]);
+    useComponentV2Mock.mockReturnValue([mockComponentData, true, undefined]);
     usePipelineRunsV2Mock.mockReturnValue([
       pipelineRuns,
       true,
@@ -257,9 +257,7 @@ describe('PipelineRunsListViewV2', () => {
     renderWithQueryClient(<TestedComponentV2 />);
     expect(screen.getByText('Unable to load pipeline runs')).toBeInTheDocument();
     expect(
-      screen.getByText(
-        /Couldn't load pipeline history \(request timed out\)/,
-      ),
+      screen.getByText(/Couldn't load pipeline history \(request timed out\)/),
     ).toBeInTheDocument();
     expect(screen.queryByText('Gateway Timeout')).not.toBeInTheDocument();
   });
@@ -278,19 +276,21 @@ describe('PipelineRunsListViewV2', () => {
   });
 
   it('should render error state when component loading fails', () => {
-    useComponentMock.mockReturnValue([undefined, true, new Error('component error')]);
+    useComponentV2Mock.mockReturnValue([undefined, true, new Error('component error')]);
     renderWithQueryClient(<TestedComponentV2 />);
     screen.getByText('Unable to load pipeline runs');
   });
 
   it('should not show pipeline-specific 504 message for component errors', () => {
-    useComponentMock.mockReturnValue([undefined, true, { code: 504, message: 'Gateway Timeout' }]);
+    useComponentV2Mock.mockReturnValue([
+      undefined,
+      true,
+      { code: 504, message: 'Gateway Timeout' },
+    ]);
     renderWithQueryClient(<TestedComponentV2 />);
     expect(screen.getByText('Unable to load pipeline runs')).toBeInTheDocument();
     expect(screen.getByText('Gateway Timeout')).toBeInTheDocument();
-    expect(
-      screen.queryByText(/Couldn't load pipeline history/),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText(/Couldn't load pipeline history/)).not.toBeInTheDocument();
   });
 
   it('should render empty state if no pipeline runs are present', () => {
@@ -364,25 +364,36 @@ describe('PipelineRunsListViewV2', () => {
       expect.objectContaining({
         selector: expect.objectContaining({
           matchLabels: expect.objectContaining({
-            'appstudio.openshift.io/component': 'sample-component',
+            [PipelineRunLabel.V2_COMPONENT]: 'sample-component',
           }),
         }),
       }),
     );
   });
 
-  it('should include component version label in selector when versionName is provided', () => {
+  it('should not include the version in the label selector when versionName is provided', () => {
     renderWithQueryClient(<TestedComponentV2 versionName="main" />);
     expect(usePipelineRunsV2Mock).toHaveBeenCalledWith(
       'test-ns',
       expect.objectContaining({
         selector: expect.objectContaining({
-          matchLabels: expect.objectContaining({
-            [PipelineRunLabel.COMPONENT_VERSION]: 'main',
-          }),
+          matchLabels: {
+            [PipelineRunLabel.V2_COMPONENT]: 'sample-component',
+          },
         }),
       }),
     );
+  });
+
+  it('should filter runs to the given version via annotation or label when versionName is provided', async () => {
+    renderWithQueryClient(<TestedComponentV2 versionName="main" />);
+    await waitFor(() => {
+      // version set as an annotation
+      expect(screen.queryByText('basic-node-js-first')).toBeInTheDocument();
+      // version set as a label
+      expect(screen.queryByText('basic-node-js-third')).toBeInTheDocument();
+      expect(screen.queryByText('basic-node-js-second')).not.toBeInTheDocument();
+    });
   });
 
   it('should render skeleton while data is not loaded', () => {
@@ -509,7 +520,7 @@ describe('PipelineRunsListViewV2', () => {
     await user.click(screen.getByRole('menuitem', { name: TEXT_SEARCH_TYPES.VERSION }));
 
     const versionInput = screen.getByPlaceholderText<HTMLInputElement>('Filter by version...');
-    await user.type(versionInput, 'release');
+    await user.type(versionInput, 'ma');
 
     act(() => {
       jest.advanceTimersByTime(700);
@@ -518,8 +529,8 @@ describe('PipelineRunsListViewV2', () => {
     view.rerender(<TestedComponentV2 versionName="main" />);
 
     await waitFor(() => {
-      expect(screen.queryByText('basic-node-js-second')).toBeInTheDocument();
-      expect(screen.queryByText('basic-node-js-first')).not.toBeInTheDocument();
+      expect(screen.queryByText('basic-node-js-first')).toBeInTheDocument();
+      expect(screen.queryByText('basic-node-js-second')).not.toBeInTheDocument();
     });
   });
 });

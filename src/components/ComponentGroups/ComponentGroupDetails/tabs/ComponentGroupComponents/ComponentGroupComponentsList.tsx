@@ -63,6 +63,7 @@ const ComponentGroupComponentsList: React.FC = () => {
                 gitUrl: componentsMap.get(c.name)?.spec.source?.url,
                 imageUrl: latestCandidate?.lastPromotedImage,
                 version: version ?? latestCandidate?.version,
+                versionName: c.componentVersion?.name ?? latestCandidate?.version,
               };
             })
         : [],

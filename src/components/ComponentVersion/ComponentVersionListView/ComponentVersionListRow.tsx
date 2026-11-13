@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
+import ComponentActionsCell from '~/components/Components/ComponentActionsCell';
 import { COMPONENT_VERSION_DETAILS_PATH } from '~/routes/paths';
 import { TableData } from '~/shared';
 import ExternalLink from '~/shared/components/links/ExternalLink';
@@ -41,6 +42,13 @@ export const ComponentVersionListRow: React.FC<
         {branchUrl ? <ExternalLink href={branchUrl} text={obj.revision} /> : obj.revision || '-'}
       </TableData>
       <TableData className={versionTableColumnClasses.pipeline}>{pipelineName}</TableData>
+      <TableData className={versionTableColumnClasses.kebab}>
+        <ComponentActionsCell
+          componentName={componentName}
+          version={obj.name}
+          label={`Actions for ${obj.name}`}
+        />
+      </TableData>
     </>
   );
 };

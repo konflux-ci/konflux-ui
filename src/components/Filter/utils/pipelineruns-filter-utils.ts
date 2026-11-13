@@ -20,14 +20,27 @@ export const filterPipelineRuns = (
 
   return pipelineRuns
     .filter((plr) => {
-      const runType = plr?.metadata.labels[PipelineRunLabel.PIPELINE_TYPE];
+      // prefer the new component model's label; a PLR carries either model's labels
+      const runType =
+        plr?.metadata?.labels?.[PipelineRunLabel.V2_PIPELINE_TYPE] ??
+        plr?.metadata?.labels?.[PipelineRunLabel.PIPELINE_TYPE];
       return (
-        textMatch(plr.metadata.name, name) &&
+        textMatch(plr.metadata?.name, name) &&
         (!componentName ||
-          textMatch(plr.metadata.labels?.[PipelineRunLabel.COMPONENT], componentName)) &&
+          textMatch(
+            plr.metadata?.labels?.[PipelineRunLabel.V2_COMPONENT] ??
+              plr.metadata?.labels?.[PipelineRunLabel.COMPONENT],
+            componentName,
+          )) &&
         (!status?.length || status.includes(pipelineRunStatus(plr))) &&
         (!type?.length || type.includes(runType)) &&
-        (!version || textMatch(plr?.metadata.labels[PipelineRunLabel.COMPONENT_VERSION], version))
+        (!version ||
+          textMatch(
+            plr?.metadata?.labels?.[PipelineRunLabel.V2_COMPONENT_VERSION] ??
+              plr?.metadata?.labels?.[PipelineRunLabel.COMPONENT_VERSION] ??
+              plr?.metadata?.annotations?.[PipelineRunLabel.V2_COMPONENT_VERSION],
+            version,
+          ))
       );
     })
     .filter((plr) => !customFilter || customFilter(plr));

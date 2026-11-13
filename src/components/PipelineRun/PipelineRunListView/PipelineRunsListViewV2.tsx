@@ -8,7 +8,7 @@ import {
   PipelineRunsFilterState,
 } from '~/components/Filter/utils/pipelineruns-filter-utils';
 import { SESSION_STORAGE_KEYS, TEXT_SEARCH_TYPES } from '~/consts/constants';
-import { useComponent } from '~/hooks/useComponents';
+import { useComponentV2 } from '~/hooks/useComponentsV2';
 import { useVisibleColumns } from '~/hooks/useVisibleColumns';
 import { getErrorState } from '~/shared/utils/error-utils';
 import {
@@ -63,7 +63,7 @@ const PipelineRunsListViewV2: React.FC<React.PropsWithChildren<PipelineRunsListV
   );
   const [isColumnManagementOpen, setIsColumnManagementOpen] = React.useState(false);
 
-  const [component, compLoaded, compError] = useComponent(namespace, componentName, true);
+  const [component, compLoaded, compError] = useComponentV2(namespace, componentName, true);
 
   const [pipelineRuns, plrLoaded, plrError, getNextPage, { isFetchingNextPage, hasNextPage }] =
     usePipelineRunsV2(
@@ -74,24 +74,32 @@ const PipelineRunsListViewV2: React.FC<React.PropsWithChildren<PipelineRunsListV
             filterByCreationTimestampAfter: component?.metadata?.creationTimestamp,
             filterByName: nameFilter || undefined,
             matchLabels: {
-              [PipelineRunLabel.COMPONENT]: componentName,
-              ...(versionName && {
-                [PipelineRunLabel.COMPONENT_VERSION]: versionName,
-              }),
+              [PipelineRunLabel.V2_COMPONENT]: componentName,
             },
           },
         }),
-        [component?.metadata?.creationTimestamp, componentName, nameFilter, versionName],
+        [component?.metadata?.creationTimestamp, componentName, nameFilter],
       ),
     );
 
   const sortedPipelineRuns = React.useMemo((): PipelineRunKind[] => {
     if (!pipelineRuns) return [];
 
-    return [...pipelineRuns].sort((a, b) =>
+    // a PLR's version may be a "legacy" label, a new-model label, or a new-model
+    // annotation — it can't be relied on in the label selector, filtered here instead
+    const versionRuns = versionName
+      ? pipelineRuns.filter(
+          (plr) =>
+            (plr.metadata?.labels?.[PipelineRunLabel.V2_COMPONENT_VERSION] ??
+              plr.metadata?.labels?.[PipelineRunLabel.COMPONENT_VERSION] ??
+              plr.metadata?.annotations?.[PipelineRunLabel.V2_COMPONENT_VERSION]) === versionName,
+        )
+      : pipelineRuns;
+
+    return [...versionRuns].sort((a, b) =>
       String(b.status?.startTime || '').localeCompare(String(a.status?.startTime || '')),
     );
-  }, [pipelineRuns]);
+  }, [pipelineRuns, versionName]);
 
   const statusFilterObj = React.useMemo(
     () => createFilterObj(sortedPipelineRuns, (plr) => pipelineRunStatus(plr), statuses),
@@ -102,7 +110,9 @@ const PipelineRunsListViewV2: React.FC<React.PropsWithChildren<PipelineRunsListV
     () =>
       createFilterObj(
         sortedPipelineRuns,
-        (plr) => plr?.metadata.labels[PipelineRunLabel.PIPELINE_TYPE],
+        (plr) =>
+          plr?.metadata?.labels?.[PipelineRunLabel.V2_PIPELINE_TYPE] ??
+          plr?.metadata?.labels?.[PipelineRunLabel.PIPELINE_TYPE],
         pipelineRunTypes,
         pipelineRunTypes.reduce(
           (acc, type) => {
