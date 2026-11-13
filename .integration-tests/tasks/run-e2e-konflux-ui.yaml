@@ -247,7 +247,9 @@ spec:
           REPO_PATH="${TARGET_REPO_URL#https://github.com/}"
           REPO_PATH="${REPO_PATH%.git}"
           COMMIT_INFO_MESSAGE=$(
-            curl -sS -H "Accept: application/vnd.github+json" \
+            curl -sS --connect-timeout 5 --max-time 15 \
+              -H "Accept: application/vnd.github+json" \
+              -H "Authorization: Bearer ${CYPRESS_GH_TOKEN}" \
               "https://api.github.com/repos/${REPO_PATH}/pulls/${PULL_REQUEST_NUMBER}" \
               | jq -r '.title // empty' 2>/dev/null || true
           )
