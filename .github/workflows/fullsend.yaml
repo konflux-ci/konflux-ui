@@ -32,17 +32,39 @@ on:
 permissions: {}
 
 jobs:
-  dispatch:
+  authorize_command:
     if: >-
-      (github.event_name != 'pull_request_target' && github.event_name != 'pull_request_review'
+      github.event_name == 'issue_comment'
+      && startsWith(github.event.comment.body, '/fs-')
+      && github.event.comment.user.type != 'Bot'
+    runs-on: ubuntu-24.04
+    outputs:
+      allowed: ${{ steps.check.outputs.allowed }}
+    steps:
+      - name: Normalize and authorize Fullsend command
+        id: check
+        env:
+          COMMENT_BODY: ${{ github.event.comment.body }}
+          AUTHOR_ASSOCIATION: ${{ github.event.comment.author_association }}
+        run: |
+          set -euo pipefail
+          command="$(printf '%s\n' "${COMMENT_BODY}" | head -1 | tr -d '\r' | awk '{print $1}' | sed 's/[.,;:!?]*$//')"
+          if [[ "${command}" == '/fs-review' || "${command}" == '/fs-triage' ]]; then
+            if [[ "${AUTHOR_ASSOCIATION}" != 'MEMBER' && "${AUTHOR_ASSOCIATION}" != 'OWNER' ]]; then
+              echo 'allowed=false' >> "${GITHUB_OUTPUT}"
+              exit 0
+            fi
+          fi
+          echo 'allowed=true' >> "${GITHUB_OUTPUT}"
+
+  dispatch:
+    needs: authorize_command
+    if: >-
+      always()
+      && (github.event_name != 'pull_request_target' && github.event_name != 'pull_request_review'
        || github.event.pull_request.head.ref != 'fullsend/scaffold-install')
       && (github.event_name != 'issue_comment'
-       || (startsWith(github.event.comment.body, '/fs-')
-           && github.event.comment.user.type != 'Bot'
-           && (!(startsWith(github.event.comment.body, '/fs-review')
-                || startsWith(github.event.comment.body, '/fs-triage'))
-               || github.event.comment.author_association == 'MEMBER'
-               || github.event.comment.author_association == 'OWNER')))
+       || needs.authorize_command.outputs.allowed == 'true')
     permissions:
       actions: write
       id-token: write
