@@ -47,8 +47,6 @@ spec:
       value: Containerfile
     - name: e2e-path-context
       value: e2e-tests
-    - name: e2e-prefetch-input
-      value: '{"type": "yarn", "path": "e2e-tests"}'
     - name: instrumented-output-image
       value: quay.io/redhat-user-workloads/konflux-ui-tenant/konflux-ui/konflux-ui:instrumented-on-pr-{{revision}}
     - name: instrumented-dockerfile
@@ -142,9 +140,6 @@ spec:
         type: string
       - default: e2e-tests
         name: e2e-path-context
-        type: string
-      - default: ''
-        name: e2e-prefetch-input
         type: string
       - description: Fully qualified output image for the instrumented UI (e2e coverage)
         name: instrumented-output-image
@@ -243,34 +238,7 @@ spec:
             workspace: git-auth
           - name: netrc
             workspace: netrc
-      - name: prefetch-e2e-dependencies
-        params:
-          - name: input
-            value: $(params.e2e-prefetch-input)
-          - name: enable-package-registry-proxy
-            value: 'true'
-          - name: SOURCE_ARTIFACT
-            value: $(tasks.clone-repository.results.SOURCE_ARTIFACT)
-          - name: ociStorage
-            value: $(params.e2e-output-image).prefetch
-          - name: ociArtifactExpiresAfter
-            value: $(params.image-expires-after)
-        runAfter:
-          - clone-repository
-        taskRef:
-          params:
-            - name: name
-              value: prefetch-dependencies-oci-ta
-            - name: bundle
-              value: quay.io/konflux-ci/tekton-catalog/task-prefetch-dependencies-oci-ta:0.10.3@sha256:0c386f2c26b46b978280c5c54caac26bcd524975f8f7cc06bb080ba00eae3ad4
-            - name: kind
-              value: task
-          resolver: bundles
-        workspaces:
-          - name: git-basic-auth
-            workspace: git-auth
-          - name: netrc
-            workspace: netrc
+      # E2E image is non-hermetic (apt/curl/cypress need network); skip Cachi2 prefetch.
       - name: build-e2e-container
         params:
           - name: IMAGE
@@ -282,7 +250,7 @@ spec:
           - name: HERMETIC
             value: 'false'
           - name: PREFETCH_INPUT
-            value: $(params.e2e-prefetch-input)
+            value: ''
           - name: IMAGE_EXPIRES_AFTER
             value: $(params.image-expires-after)
           - name: COMMIT_SHA
@@ -307,11 +275,11 @@ spec:
           - name: OMIT_HISTORY
             value: $(params.omit-history)
           - name: SOURCE_ARTIFACT
-            value: $(tasks.prefetch-e2e-dependencies.results.SOURCE_ARTIFACT)
+            value: $(tasks.clone-repository.results.SOURCE_ARTIFACT)
           - name: CACHI2_ARTIFACT
-            value: $(tasks.prefetch-e2e-dependencies.results.CACHI2_ARTIFACT)
+            value: ''
         runAfter:
-          - prefetch-e2e-dependencies
+          - clone-repository
         taskRef:
           params:
             - name: name
