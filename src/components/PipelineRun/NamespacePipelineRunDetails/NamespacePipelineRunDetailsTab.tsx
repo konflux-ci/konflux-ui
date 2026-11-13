@@ -38,13 +38,14 @@ import {
   GROUP_INTEGRATION_TEST_DETAILS_PATH,
 } from '~/routes/paths';
 import { Timestamp } from '~/shared';
+import { Duration } from '~/shared/components/duration';
 import ExternalLink from '~/shared/components/links/ExternalLink';
 import { getPLRLogSnippet } from '~/shared/components/pipeline-run-logs/logs/pipelineRunLogSnippet';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { getCommitSha, getCommitShortName } from '~/utils/commits-utils';
 import { getPipelineRunDetailsPath } from '~/utils/pipeline-run-routes';
-import { calculateDuration, pipelineRunStatus } from '~/utils/pipeline-utils';
+import { pipelineRunStatus } from '~/utils/pipeline-utils';
 import { getSourceUrl } from '~/utils/pipelinerun-utils';
 
 const NamespacePipelineRunDetailsTab = () => {
@@ -124,10 +125,7 @@ const NamespacePipelineRunDetailsTab = () => {
             <DescriptionListGroup>
               <DescriptionListTerm>Duration</DescriptionListTerm>
               <DescriptionListDescription>
-                {calculateDuration(
-                  typeof run.status?.startTime === 'string' ? run.status.startTime : '',
-                  typeof run.status?.completionTime === 'string' ? run.status.completionTime : '',
-                ) || '-'}
+                <Duration startTime={run.status?.startTime} endTime={run.status?.completionTime} />
               </DescriptionListDescription>
             </DescriptionListGroup>
             <SnapshotCreationStatus pipelineRun={run} />
