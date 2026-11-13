@@ -15,6 +15,13 @@ export const KUEUE_PENDING_WORKLOADS_PATH_SUFFIX = 'pendingworkloads';
 export const KUEUE_QUEUE_NAME_LABEL = 'kueue.x-k8s.io/queue-name';
 
 /**
+ * Label naming the Kueue WorkloadPriorityClass a PipelineRun was admitted with
+ * (e.g. `konflux-pre-merge-test`). Used to show the class name next to the
+ * numeric priority from the visibility API.
+ */
+export const KUEUE_PRIORITY_CLASS_LABEL = 'kueue.x-k8s.io/priority-class';
+
+/**
  * Default polling interval (ms) for the Kueue visibility API. The API does not
  * support watch, so the UI must poll for updated queue positions. 60s balances
  * freshness against load on the API server.
