@@ -9,13 +9,18 @@ The primary hook for fetching Kubernetes resources. Located in `src/k8s/hooks/us
 ### Signature
 
 ```ts
-useK8sWatchResource<R extends K8sResourceCommon | K8sResourceCommon[]>(
+useK8sWatchResource<
+  R extends K8sResourceCommon | K8sResourceCommon[],
+  TQueryFnData = R,
+>(
   resourceInit: WatchK8sResource | undefined,
   model: K8sModelCommon,
-  queryOptions?: TQueryOptions<R>,
+  queryOptions?: TQueryOptions<R, TQueryFnData>,
   options?: object,
 ): UseQueryResult<R>
 ```
+
+- `TQueryFnData` (optional, defaults to `R`) — the raw data type returned by `queryFn`. When the query function fetches a different shape (e.g. a K8s Table response) that is later transformed via `select`, set this to the raw response type so both `queryFn` and `select` are correctly typed.
 
 ### Data Flow
 

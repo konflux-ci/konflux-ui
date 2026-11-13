@@ -1,4 +1,4 @@
-import { QueryOptions as ReactQueryOptions, UseQueryOptions } from '@tanstack/react-query';
+import { UseQueryOptions } from '@tanstack/react-query';
 import { isPlainObject } from 'lodash-es';
 import { K8sModelCommon, K8sResourceCommon, QueryOptionsWithSelector } from '../../types/k8s';
 import {
@@ -47,40 +47,67 @@ export const createQueryKeys = ({
   ];
 };
 
-export const createGetQueryOptions = <TResource extends K8sResourceCommon>(
+export const createGetQueryOptions = <
+  TResource extends K8sResourceCommon,
+  TQueryFnData = TResource,
+>(
   args: K8sResourceBaseOptions,
-  options: Omit<ReactQueryOptions<TResource>, 'queryKey' | 'queryFn'> = {},
+  options?: Omit<TQueryOptions<TResource, TQueryFnData>, 'filterData'>,
 ): UseQueryOptions<TResource> => {
+  const { queryKey, queryFn, ...rest } = options ?? {};
   return {
-    queryKey: createQueryKeys({ ...args, prefix: args.fetchOptions?.requestInit?.pathPrefix }),
-    queryFn: () => {
-      return K8sGetResource(args);
-    },
+    queryKey:
+      queryKey ?? createQueryKeys({ ...args, prefix: args.fetchOptions?.requestInit?.pathPrefix }),
+    queryFn:
+      queryFn ??
+      (() => {
+        return K8sGetResource(args);
+      }),
     initialData: () => {
       const name = args.queryOptions?.name;
       return name
         ? queryClient
-            .getQueryData<
-              TResource[]
-            >(createQueryKeys({ model: args.model, queryOptions: { queryParams: args.queryOptions?.queryParams } }))
+            .getQueryData<TResource[]>(
+              createQueryKeys({
+                model: args.model,
+                queryOptions: { queryParams: args.queryOptions?.queryParams },
+              }),
+            )
             ?.find((res) => res.metadata.name === name)
         : null;
     },
-    ...options,
-  };
+    ...rest,
+    // The intermediate object may include `select: (data: TQueryFnData) => TResource`
+    // from the caller's options.  When `TQueryFnData ≠ TResource` this is narrower
+    // than `UseQueryOptions<TResource>` requires; the cast is sound because `useQuery`
+    // receives both `queryFn` and `select` from the same typed source.
+  } as unknown as UseQueryOptions<TResource>;
 };
 
-export const createListqueryOptions = <TResource extends K8sResourceCommon[]>(
+/**
+ * Build query options for a K8s list resource fetch.
+ *
+ * `filterData` is applied only to the built-in default `queryFn`.  When a
+ * caller supplies a custom `queryFn`, it is used as-is — `filterData` is
+ * not composed around it.  This avoids a type-safety gap when
+ * `TQueryFnData` differs from `TResource` (e.g. a K8s Table response that
+ * is later transformed via `select`).
+ */
+export const createListqueryOptions = <
+  TResource extends K8sResourceCommon[],
+  TQueryFnData = TResource,
+>(
   args: K8sResourceListOptions,
-  { filterData = (a: TResource) => a, ...options }: TQueryOptions<TResource> = {},
+  options?: TQueryOptions<TResource, TQueryFnData>,
 ): UseQueryOptions<TResource> => {
+  const { filterData, queryKey, queryFn, ...rest } = options ?? {};
   return {
-    queryKey: createQueryKeys({ ...args, prefix: args.fetchOptions?.requestInit?.pathPrefix }),
-    queryFn: () => {
-      return K8sListResourceItems(args).then(filterData);
-    },
-    ...options,
-  };
+    queryKey:
+      queryKey ?? createQueryKeys({ ...args, prefix: args.fetchOptions?.requestInit?.pathPrefix }),
+    queryFn:
+      queryFn ?? (() => K8sListResourceItems(args).then(filterData ?? ((a: TResource) => a))),
+    ...rest,
+  } as unknown as UseQueryOptions<TResource>;
 };
 
 export const hashQueryKeys = (key: ReadonlyArray<unknown>): string => {

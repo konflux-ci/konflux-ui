@@ -1,4 +1,17 @@
-import { createQueryKeys, hashQueryKeys } from '../utils';
+import { K8sResourceCommon } from '../../../types/k8s';
+import {
+  createGetQueryOptions,
+  createListqueryOptions,
+  createQueryKeys,
+  hashQueryKeys,
+} from '../utils';
+
+jest.mock('../../k8s-fetch', () => ({
+  K8sGetResource: jest.fn(() => Promise.resolve({ metadata: { name: 'mock-resource' } })),
+  K8sListResourceItems: jest.fn(() =>
+    Promise.resolve([{ metadata: { name: 'item-1' } }, { metadata: { name: 'item-2' } }]),
+  ),
+}));
 
 const minimalModel = {
   apiGroup: 'tekton.dev',
@@ -139,5 +152,128 @@ describe('hashQueryKeys', () => {
     });
 
     expect(hashQueryKeys(keyA)).toBe(hashQueryKeys(keyB));
+  });
+});
+
+const minimalArgs = {
+  model: minimalModel,
+  queryOptions: { ns: 'test-ns', queryParams: {} },
+};
+
+describe('createGetQueryOptions', () => {
+  it('should use default queryKey and queryFn when none are provided', () => {
+    const result = createGetQueryOptions<K8sResourceCommon>(minimalArgs);
+
+    expect(result.queryKey).toBeDefined();
+    expect(result.queryFn).toBeDefined();
+    // Default queryKey should match createQueryKeys output
+    expect(result.queryKey).toEqual(createQueryKeys({ ...minimalArgs, prefix: undefined }));
+  });
+
+  it('should use custom queryKey when provided', () => {
+    const customKey = ['custom', 'key'];
+    const result = createGetQueryOptions<K8sResourceCommon>(minimalArgs, {
+      queryKey: customKey,
+    });
+
+    expect(result.queryKey).toEqual(customKey);
+  });
+
+  it('should use custom queryFn when provided', () => {
+    const customFn = jest.fn(() =>
+      Promise.resolve({ metadata: { name: 'custom' } } as K8sResourceCommon),
+    );
+    const result = createGetQueryOptions<K8sResourceCommon>(minimalArgs, {
+      queryFn: customFn,
+    });
+
+    expect(result.queryFn).toBe(customFn);
+  });
+
+  it('should pass through additional options', () => {
+    const result = createGetQueryOptions<K8sResourceCommon>(minimalArgs, {
+      enabled: false,
+      staleTime: 5000,
+    });
+
+    expect(result.enabled).toBe(false);
+    expect(result.staleTime).toBe(5000);
+  });
+});
+
+describe('createListqueryOptions', () => {
+  it('should use default queryKey and queryFn when none are provided', () => {
+    const result = createListqueryOptions<K8sResourceCommon[]>(minimalArgs);
+
+    expect(result.queryKey).toBeDefined();
+    expect(result.queryFn).toBeDefined();
+    expect(result.queryKey).toEqual(createQueryKeys({ ...minimalArgs, prefix: undefined }));
+  });
+
+  it('should use custom queryKey when provided', () => {
+    const customKey = ['custom', 'list', 'key'];
+    const result = createListqueryOptions<K8sResourceCommon[]>(minimalArgs, {
+      queryKey: customKey,
+    });
+
+    expect(result.queryKey).toEqual(customKey);
+  });
+
+  it('should use custom queryFn when provided', async () => {
+    const customFn = jest.fn(() => Promise.resolve([] as K8sResourceCommon[]));
+    const result = createListqueryOptions<K8sResourceCommon[]>(minimalArgs, {
+      queryFn: customFn,
+    });
+
+    const data = await (result.queryFn as () => Promise<K8sResourceCommon[]>)();
+    expect(customFn).toHaveBeenCalled();
+    expect(data).toEqual([]);
+  });
+
+  it('should pass through additional options', () => {
+    const result = createListqueryOptions<K8sResourceCommon[]>(minimalArgs, {
+      enabled: false,
+      refetchInterval: 3000,
+    });
+
+    expect(result.enabled).toBe(false);
+    expect(result.refetchInterval).toBe(3000);
+  });
+
+  it('should apply filterData to the default queryFn result', async () => {
+    const filterData = jest.fn((items: K8sResourceCommon[]) =>
+      items.filter((item) => item.metadata.name === 'item-1'),
+    );
+    const result = createListqueryOptions<K8sResourceCommon[]>(minimalArgs, {
+      filterData,
+    });
+
+    const data = await (result.queryFn as () => Promise<K8sResourceCommon[]>)();
+    expect(filterData).toHaveBeenCalledWith([
+      { metadata: { name: 'item-1' } },
+      { metadata: { name: 'item-2' } },
+    ]);
+    expect(data).toEqual([{ metadata: { name: 'item-1' } }]);
+  });
+
+  it('should not apply filterData to a custom queryFn result', async () => {
+    const filterData = jest.fn((items: K8sResourceCommon[]) =>
+      items.filter((item) => item.metadata.name === 'keep'),
+    );
+    const customFn = jest.fn(() =>
+      Promise.resolve([
+        { metadata: { name: 'keep' } },
+        { metadata: { name: 'drop' } },
+      ] as K8sResourceCommon[]),
+    );
+    const result = createListqueryOptions<K8sResourceCommon[]>(minimalArgs, {
+      filterData,
+      queryFn: customFn,
+    });
+
+    const data = await (result.queryFn as () => Promise<K8sResourceCommon[]>)();
+    expect(customFn).toHaveBeenCalled();
+    expect(filterData).not.toHaveBeenCalled();
+    expect(data).toEqual([{ metadata: { name: 'keep' } }, { metadata: { name: 'drop' } }]);
   });
 });
