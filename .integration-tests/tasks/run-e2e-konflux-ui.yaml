@@ -60,6 +60,10 @@ spec:
       type: string
       default: ''
       description: 'Source branch for Cypress Cloud (COMMIT_INFO_BRANCH), from test-metadata'
+    - name: pull-request-number
+      type: string
+      default: '0'
+      description: 'PR number from test-metadata (0 for push/periodic)'
     - name: commit-info-author
       type: string
       default: ''
@@ -205,6 +209,10 @@ spec:
           value: $(params.commit-info-branch)
         - name: COMMIT_INFO_AUTHOR
           value: $(params.commit-info-author)
+        - name: PULL_REQUEST_NUMBER
+          value: $(params.pull-request-number)
+        - name: TARGET_REPO_URL
+          value: $(params.target-repo-url)
       script: |
         #!/usr/bin/env bash
         # Note: NOT using 'set -e' so script continues after test failure
@@ -226,6 +234,26 @@ spec:
         fi
         echo "Konflux base URL: ${CYPRESS_KONFLUX_BASE_URL}"
 
+        # Cypress Cloud commit info (e2e image has no .git)
+        COMMIT_INFO_BRANCH="${COMMIT_INFO_BRANCH#refs/heads/}"
+        export COMMIT_INFO_BRANCH
+        [ "${COMMIT_INFO_AUTHOR:-}" = "null" ] && COMMIT_INFO_AUTHOR=""
+        export COMMIT_INFO_AUTHOR
+
+        JOB_TYPE="$(params.job-type)"
+        if [ "${JOB_TYPE}" = "periodic-local" ] || [ "${JOB_TYPE}" = "periodic-stage" ]; then
+          COMMIT_INFO_MESSAGE="${JOB_TYPE} $(date -u +%Y-%m-%d)"
+        elif [ -n "${PULL_REQUEST_NUMBER}" ] && [ "${PULL_REQUEST_NUMBER}" != "0" ]; then
+          REPO_PATH="${TARGET_REPO_URL#https://github.com/}"
+          REPO_PATH="${REPO_PATH%.git}"
+          COMMIT_INFO_MESSAGE=$(
+            curl -sS -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/${REPO_PATH}/pulls/${PULL_REQUEST_NUMBER}" \
+              | jq -r '.title // empty' 2>/dev/null || true
+          )
+        fi
+        export COMMIT_INFO_MESSAGE="${COMMIT_INFO_MESSAGE:-${COMMIT_INFO_BRANCH}}"
+
         E2E_DIR=/tmp/e2e
         cd "${E2E_DIR}"
         SPEC_FILE="$(params.spec-file)"
@@ -244,9 +272,6 @@ spec:
         if [ -n "${CYPRESS_PROJECT_ID:-}" ] && [ -n "${CYPRESS_RECORD_KEY:-}" ]; then
           RECORD_ARGS+=(--record --tag "$(params.job-type)")
           echo "Cypress Cloud recording enabled (tag=$(params.job-type))"
-          echo "COMMIT_INFO_SHA=${COMMIT_INFO_SHA:-<unset>}"
-          echo "COMMIT_INFO_BRANCH=${COMMIT_INFO_BRANCH:-<unset>}"
-          echo "COMMIT_INFO_AUTHOR=${COMMIT_INFO_AUTHOR:-<unset>}"
         else
           echo "Cypress Cloud recording disabled (missing PROJECT_ID or RECORD_KEY)"
         fi
