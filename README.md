@@ -140,7 +140,7 @@ Example field to merge into the current `info.json`:
 In the project directory, you can run:
 
 - `yarn build`: Builds the app for production using webpack with the production configuration file.
-- `yarn size-limit`: Checks production bundle sizes against the gzip budgets in `.size-limit.json`. Run `yarn build` first. See [docs/bundle-size-budgets.md](docs/bundle-size-budgets.md).
+- `yarn size-limit`: Reports gzip sizes for production chunks (see `.size-limit.json`). CI compares total gzip vs the PR base branch (max +2 kB across all chunks). Run `yarn build` first. See [docs/bundle-size-budgets.md](docs/bundle-size-budgets.md).
 - `yarn start`: Runs the app in development mode. Opens the app in your default browser.
 - `yarn test`: Runs unit tests using jest.
 - `yarn coverage`: Runs the test suite with coverage report.
