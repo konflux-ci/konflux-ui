@@ -155,6 +155,16 @@ const optionsMap = {
 | `statusFilterFn(item, values)` | Function | Filter predicate for `defineFilters` |
 | `registry` | `StatusRegistry` | Direct access to the underlying registry |
 
+### Second line under the status word (`secondaryText`)
+
+`StatusIconWithText` accepts an optional `secondaryText` string. It renders a second line under the status word, inside the text cell next to the icon, so the icon is centered on the pair and both lines share the left edge:
+
+```tsx
+<PLRStatus.StatusIconWithText status={status} tooltip={tooltip} secondaryText="position#2" />
+```
+
+`secondaryText` is a per-instance prop, not a registry field. The registry knows what a status word means; it does not know details of one resource, such as a queue position. The tooltip, if any, stays on the status word only. Omitting `secondaryText` keeps the single-label DOM, so existing callers look the same. It is not available on `StatusIconWithTextLabel`.
+
 ---
 
 ## 4. Adding a new PipelineRun status
