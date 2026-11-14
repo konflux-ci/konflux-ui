@@ -23,16 +23,16 @@ const ComponentGroupComponentsList: React.FC = () => {
   const { clientFilterValues, clearAll, isFiltered } = useFilterState(cgComponentsFilterConfig);
 
   const [group, groupLoaded, groupError] = useComponentGroup(namespace, groupName, true);
-  const componentReferences = React.useMemo(
-    () =>
-      groupLoaded && !groupError && group
-        ? group.spec.components.filter((c) => !c.kind || c.kind.toLowerCase() === 'component')
-        : [],
+  const allReferences = React.useMemo(
+    () => (groupLoaded && !groupError && group ? group.spec.components : []),
     [group, groupError, groupLoaded],
   );
   const componentNames = React.useMemo(
-    () => componentReferences.map((c) => c.name),
-    [componentReferences],
+    () =>
+      allReferences
+        .filter((c) => !c.kind || c.kind.toLowerCase() === 'component')
+        .map((c) => c.name),
+    [allReferences],
   );
 
   const [components, compLoaded, compError] = useComponentsByNameV2(
@@ -45,49 +45,39 @@ const ComponentGroupComponentsList: React.FC = () => {
     [components],
   );
 
-  const componentListItems: CgComponentListItem[] = React.useMemo(
-    () =>
-      group && groupLoaded && !groupError && compLoaded && !compError
-        ? componentReferences
-            .filter((c) => componentsMap.has(c.name))
-            .map((c) => {
-              const version = c.componentVersion?.version;
-              const latestCandidate = getLatestPromotedBuild(
-                group.status?.globalCandidateList ?? [],
-                c.name,
-                version,
-              );
-              return {
-                componentName: c.name,
-                namespace,
-                gitUrl: componentsMap.get(c.name)?.spec.source?.url,
-                imageUrl: latestCandidate?.lastPromotedImage,
-                version: version ?? latestCandidate?.version,
-              };
-            })
-        : [],
-    [
-      group,
-      namespace,
-      groupLoaded,
-      groupError,
-      compLoaded,
-      compError,
-      componentsMap,
-      componentReferences,
-    ],
-  );
+  const listItems: CgComponentListItem[] = React.useMemo(() => {
+    if (!group || !groupLoaded || groupError || !compLoaded) {
+      return [];
+    }
 
-  const { filteredData } = useFilteredData(
-    cgComponentsFilterConfig,
-    componentListItems,
-    clientFilterValues,
-  );
+    return allReferences.map((ref) => {
+      const isComponentGroup = ref.kind?.toLowerCase() === 'componentgroup';
+      const version = ref.componentVersion?.version;
+      const latestCandidate = getLatestPromotedBuild(
+        group.status?.globalCandidateList ?? [],
+        ref.name,
+        version,
+      );
 
-  const error = groupError ?? compError;
+      return {
+        componentName: ref.name,
+        namespace,
+        kind: ref.kind,
+        gitUrl: isComponentGroup ? undefined : componentsMap.get(ref.name)?.spec.source?.url,
+        imageUrl: isComponentGroup ? undefined : latestCandidate?.lastPromotedImage,
+        version: isComponentGroup ? undefined : (version ?? latestCandidate?.version),
+      };
+    });
+  }, [group, namespace, groupLoaded, groupError, compLoaded, componentsMap, allReferences]);
+
+  const { filteredData } = useFilteredData(cgComponentsFilterConfig, listItems, clientFilterValues);
+
   const loaded = groupLoaded && compLoaded;
-  if (error) {
-    return getErrorState(error, loaded, 'group components');
+  if (groupError) {
+    return getErrorState(groupError, groupLoaded, 'group components');
+  }
+  if (!!componentNames?.length && compError) {
+    return getErrorState(compError, compLoaded, 'group components');
   }
 
   return (
@@ -98,12 +88,12 @@ const ComponentGroupComponentsList: React.FC = () => {
       <PageSection>
         <TableContainer
           data={filteredData}
-          unfilteredData={componentListItems}
+          unfilteredData={listItems}
           loaded={loaded}
           emptyState={<FilteredEmptyState onClearFilters={clearAll} />}
           noDataState={<ComponentGroupComponentsEmptyState />}
           toolbar={
-            isFiltered || componentListItems.length > 0 ? (
+            isFiltered || listItems.length > 0 ? (
               <FilterToolbar configs={cgComponentsFilterConfig} />
             ) : undefined
           }
