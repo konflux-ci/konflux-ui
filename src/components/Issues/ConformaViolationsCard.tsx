@@ -14,10 +14,6 @@ import {
   ListItem,
   Spinner,
 } from '@patternfly/react-core';
-import { CheckCircleIcon } from '@patternfly/react-icons/dist/esm/icons/check-circle-icon';
-import { ExclamationCircleIcon } from '@patternfly/react-icons/dist/esm/icons/exclamation-circle-icon';
-import { t_global_icon_color_status_danger_default as dangerColor } from '@patternfly/react-tokens/dist/js/t_global_icon_color_status_danger_default';
-import { t_global_icon_color_status_success_default as successColor } from '@patternfly/react-tokens/dist/js/t_global_icon_color_status_success_default';
 import { TrackEvents } from '~/analytics';
 import { useTrackAnalyticsEvent } from '~/analytics/hooks';
 import {
@@ -26,7 +22,7 @@ import {
 } from '~/components/Issues/useWorkspaceConformaViolations';
 import { APPLICATION_CONFORMA_RESULTS_PATH } from '~/routes/paths';
 import { LoadingSkeleton } from '~/shared';
-import { WarningIcon } from '~/shared/components/status/icons';
+import { ErrorIcon, SuccessIcon, WarningIcon } from '~/shared/components/status/icons';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
 
@@ -102,7 +98,7 @@ export const ConformaViolationsCard: React.FC = () => {
         ) : allPassed ? (
           <Flex alignItems={{ default: 'alignItemsCenter' }}>
             <FlexItem>
-              <CheckCircleIcon color={successColor.value} />
+              <SuccessIcon />
             </FlexItem>
             <FlexItem>
               <Content component={ContentVariants.p}>All applications passed</Content>
@@ -114,7 +110,7 @@ export const ConformaViolationsCard: React.FC = () => {
               {hasViolations ? (
                 <>
                   <FlexItem>
-                    <ExclamationCircleIcon color={dangerColor.value} />
+                    <ErrorIcon />
                   </FlexItem>
                   <FlexItem>
                     <Content component={ContentVariants.p}>
