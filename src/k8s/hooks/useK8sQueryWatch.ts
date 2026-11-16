@@ -67,10 +67,6 @@ export const useK8sQueryWatch = (
           WEBSOCKET_RETRY_DELAY * Math.pow(2, retryCountRef.current),
         ); // Exponential backoff
       } else {
-        // eslint-disable-next-line no-console
-        console.error(
-          `Failed to reconnect WebSocket for ${hashedKey} after ${WEBSOCKET_RETRY_COUNT} attempts`,
-        );
         setWsError({
           code: event.code,
           message: 'WebSocket connection failed after multiple attempts',
@@ -80,8 +76,6 @@ export const useK8sQueryWatch = (
     });
 
     websocket.onError((error) => {
-      // eslint-disable-next-line no-console
-      console.error(`WebSocket error for ${hashedKey}:`, error);
       setWsError({
         code: (error as unknown as { code: number }).code || 0,
         message: (error as unknown as { message: string }).message || 'Unknown WebSocket error',
