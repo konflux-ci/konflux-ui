@@ -69,6 +69,7 @@ function mapColumns<TData>(columns: ColumnDefinition<TData>[]): ColumnDef<TData>
     header: typeof col.header === 'string' ? col.header : () => col.header,
     ...(col.accessorFn ? { accessorFn: col.accessorFn } : {}),
     ...(col.cell ? { cell: col.cell } : {}),
+    meta: { expandedContent: col.expandedContent },
     size: col.size,
     enableSorting: col.sortable ?? false,
     ...(col.sortFn ? { sortingFn: col.sortFn } : {}),

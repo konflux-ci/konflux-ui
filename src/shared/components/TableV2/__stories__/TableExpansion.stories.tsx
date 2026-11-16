@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, userEvent } from 'storybook/test';
-import { Table } from '~/shared/components/TableV2';
+import { Table, type ColumnDefinition } from '~/shared/components/TableV2';
 import { type PipelineRun, generateMockData, columns, getRowId } from './storyData';
 
 const expandedContent = (row: PipelineRun) => (
@@ -10,6 +10,24 @@ const expandedContent = (row: PipelineRun) => (
     {row.duration}
   </div>
 );
+
+const compoundColumns: ColumnDefinition<PipelineRun>[] = [
+  columns[0],
+  {
+    ...columns[1],
+    expandedContent: (row) => (
+      <div data-test="status-expanded-detail">Status details for {row.name}</div>
+    ),
+  },
+  {
+    ...columns[2],
+    expandedContent: (row) => (
+      <div data-test="component-expanded-detail">Component details for {row.name}</div>
+    ),
+  },
+  columns[3],
+  columns[4],
+];
 
 const meta: Meta<typeof Table<PipelineRun>> = {
   title: 'TableV2/Expansion',
@@ -89,5 +107,34 @@ export const ToggleExpansion: Story = {
     // Expanded content should disappear
     const expandedAfterCollapse = canvasElement.querySelectorAll('[data-test="expanded-detail"]');
     await expect(expandedAfterCollapse.length).toBe(0);
+  },
+};
+
+export const CompoundExpansion: Story = {
+  args: {
+    data: generateMockData(5),
+    columns: compoundColumns,
+    getRowId,
+    'aria-label': 'Compound expansion',
+  },
+  play: async ({ canvasElement }) => {
+    const rows = canvasElement.querySelectorAll('[data-test="table-row"]');
+    await expect(rows.length).toBeGreaterThan(0);
+
+    const compoundButtons = canvasElement.querySelectorAll(
+      'button[aria-expanded="false"]',
+    ) as NodeListOf<HTMLButtonElement>;
+    await expect(compoundButtons.length).toBe(2);
+
+    await userEvent.click(compoundButtons[0]);
+    await expect(
+      canvasElement.querySelector('[data-test="status-expanded-detail"]'),
+    ).not.toBeNull();
+
+    await userEvent.click(compoundButtons[1]);
+    await expect(canvasElement.querySelector('[data-test="status-expanded-detail"]')).toBeNull();
+    await expect(
+      canvasElement.querySelector('[data-test="component-expanded-detail"]'),
+    ).not.toBeNull();
   },
 };
