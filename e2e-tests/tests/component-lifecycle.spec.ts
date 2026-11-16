@@ -237,8 +237,20 @@ describe('Component Lifecycle Tests', () => {
   });
 
   describe('Explore Commits Tab', () => {
+    // Commit status rolls up all related PLRs (on-push, cancelled on-pull, EC).
+    // On local/PR runs EC may Fail and on-pull is Cancelled, so Succeeded is not guaranteed.
+    const commitStatus = /(Succeeded|Failed|Cancelled)/;
+
     after(() => {
-      Applications.clickBreadcrumbLink(applicationName);
+      cy.get('body').then(($body) => {
+        if ($body.find('nav[data-ouia-component-type="PF6/Breadcrumb"]').length > 0) {
+          Applications.clickBreadcrumbLink(applicationName);
+        } else {
+          Common.navigateTo(NavItem.applications);
+          Applications.filterApplication(applicationName);
+          UIhelper.clickRowCellInTable('Application List', applicationName, applicationName);
+        }
+      });
     });
 
     it('Verify commits from Activity tabs', () => {
@@ -248,9 +260,11 @@ describe('Component Lifecycle Tests', () => {
       cy.log('Verify commit from application Activity → Latest commits');
       Applications.goToLatestCommitsTab();
       latestCommitsTabPage.waitForCommitInList(commitTitle);
-      latestCommitsTabPage.verifyLatestCommits([{ name: commitTitle, component: componentName }]);
+      latestCommitsTabPage.verifyLatestCommits([
+        { name: commitTitle, component: componentName, status: commitStatus },
+      ]);
       latestCommitsTabPage.clickOnCommit(commitTitle);
-      latestCommitsTabPage.verifyCommitsPageTitleAndStatus(commitTitle);
+      latestCommitsTabPage.verifyCommitsPageTitleAndStatus(commitTitle, commitStatus);
       latestCommitsTabPage.verifyCommitID(commitSha, publicRepo);
       UIhelper.verifyLabelAndValue('Branch', 'main');
       UIhelper.verifyLabelAndValue('Component', componentName);
@@ -262,9 +276,11 @@ describe('Component Lifecycle Tests', () => {
       ComponentsTabPage.openComponent(componentName);
       ComponentDetailsPage.goToCommitsTab();
       latestCommitsTabPage.waitForCommitInList(commitTitle);
-      latestCommitsTabPage.verifyLatestCommits([{ name: commitTitle, component: componentName }]);
+      latestCommitsTabPage.verifyLatestCommits([
+        { name: commitTitle, component: componentName, status: commitStatus },
+      ]);
       latestCommitsTabPage.clickOnCommit(commitTitle);
-      latestCommitsTabPage.verifyCommitsPageTitleAndStatus(commitTitle);
+      latestCommitsTabPage.verifyCommitsPageTitleAndStatus(commitTitle, commitStatus);
       latestCommitsTabPage.verifyCommitID(commitSha, publicRepo);
     });
   });
