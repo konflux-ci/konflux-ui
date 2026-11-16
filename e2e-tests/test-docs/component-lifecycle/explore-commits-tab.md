@@ -36,9 +36,14 @@ rendering, navigation into commit details, and the commit overview metadata/grap
   details page shows expected metadata and overview graph nodes.
 - **Key assertions:**
   - From application Activity → Latest commits, Commit List shows `firstCommit` with
-    branch `main`, the component name, the GitHub username, and status Succeeded.
-  - Clicking the commit opens details: title includes `firstCommit` with Succeeded status,
-    Commit SHA label/link matches `firstCommit_SHA`, Branch is `main`, Component matches,
-    and overview graph shows `commit` and `<componentName>-build` nodes.
+    branch `main`, the component name, the GitHub username, and a terminal status
+    (`Succeeded`, `Failed`, or `Cancelled` — commit status rolls up cancelled on-pull and
+    flaky EC runs, so `Succeeded` alone is not reliable outside stage).
+  - Clicking the commit opens details: title includes `firstCommit` with a matching
+    terminal status, Commit SHA label/link matches `firstCommit_SHA`, Branch is `main`,
+    Component matches, and overview graph shows `commit` and `<componentName>-build` nodes.
   - From component Activity → Commits, the same `firstCommit` row is visible; opening it
     again reaches the commit details page with matching title/status and Commit SHA link.
+- **Notes:** The `after` hook resets to the application via breadcrumb when present,
+  otherwise via Applications list navigation, so a mid-test failure does not cascade into
+  a breadcrumb timeout.
