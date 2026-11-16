@@ -4,6 +4,7 @@ import type { K8sRequestInit } from '../fetch';
 import type { K8sResourceBaseOptions } from '../k8s-fetch';
 import { watchListResource, watchObjectResource } from '../watch-utils';
 import type { WebSocketOptions } from '../web-socket/types';
+import { WebSocketState } from '../web-socket/WebSocketFactory';
 
 export const useDeepCompareMemoize = <T = unknown>(value: T, strinfigy?: boolean): T => {
   const ref = React.useRef<T>();
@@ -47,33 +48,37 @@ export const useK8sQueryWatch = (
       : watchObjectResource(deepResourceInit, deepOptions);
 
     websocket.onClose((event) => {
-      if (event.code === 1006) {
+      // eslint-disable-next-line no-console
+      console.warn(`WebSocket closed for ${hashedKey} (code: ${event.code}). Attempting reconnect...`);
+
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
+      }
+
+      if (retryCountRef.current < WEBSOCKET_RETRY_COUNT) {
+        retryTimeoutRef.current = setTimeout(
+          () => {
+            // Skip restart if WebSocketFactory already reconnected
+            const currentWs = WS.get(hashedKey);
+            if (currentWs && currentWs.getState() === WebSocketState.OPENED) {
+              retryCountRef.current = 0;
+              return;
+            }
+            retryCountRef.current += 1;
+            startWatch();
+          },
+          WEBSOCKET_RETRY_DELAY * Math.pow(2, retryCountRef.current),
+        ); // Exponential backoff
+      } else {
         // eslint-disable-next-line no-console
-        console.warn(`WebSocket closed unexpectedly for ${hashedKey}. Attempting reconnect...`);
-
-        if (retryTimeoutRef.current) {
-          clearTimeout(retryTimeoutRef.current);
-        }
-
-        if (retryCountRef.current < WEBSOCKET_RETRY_COUNT) {
-          retryTimeoutRef.current = setTimeout(
-            () => {
-              retryCountRef.current += 1;
-              startWatch();
-            },
-            WEBSOCKET_RETRY_DELAY * Math.pow(2, retryCountRef.current),
-          ); // Exponential backoff
-        } else {
-          // eslint-disable-next-line no-console
-          console.error(
-            `Failed to reconnect WebSocket for ${hashedKey} after ${WEBSOCKET_RETRY_COUNT} attempts`,
-          );
-          setWsError({
-            code: event.code,
-            message: 'WebSocket connection failed after multiple attempts',
-          });
-          retryCountRef.current = 0;
-        }
+        console.error(
+          `Failed to reconnect WebSocket for ${hashedKey} after ${WEBSOCKET_RETRY_COUNT} attempts`,
+        );
+        setWsError({
+          code: event.code,
+          message: 'WebSocket connection failed after multiple attempts',
+        });
+        retryCountRef.current = 0;
       }
     });
 
@@ -88,6 +93,28 @@ export const useK8sQueryWatch = (
 
     WS.set(hashedKey, websocket);
   }, [deepResourceInit, deepOptions, hashedKey, isList]);
+
+  // Restart watch when the tab becomes visible after being hidden.
+  // visibilitychange fires on document (not window), so useEventListener
+  // cannot be used here — document is not in its target type union.
+  const handleVisibilityChange = React.useCallback(() => {
+    if (document.visibilityState !== 'visible' || !deepResourceInit) {
+      return;
+    }
+    const currentWs = WS.get(hashedKey);
+    if (!currentWs || currentWs.getState() !== WebSocketState.OPENED) {
+      retryCountRef.current = 0;
+      setWsError(null);
+      startWatch();
+    }
+  }, [deepResourceInit, hashedKey, startWatch]);
+
+  React.useEffect(() => {
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [handleVisibilityChange]);
 
   React.useEffect(() => {
     startWatch();

@@ -1,6 +1,7 @@
 import { renderHook, act } from '@testing-library/react-hooks';
 import { K8sModelCommon } from '../../../types/k8s';
 import { watchListResource, watchObjectResource } from '../../watch-utils';
+import { WebSocketState } from '../../web-socket/WebSocketFactory';
 import { useK8sQueryWatch } from '../useK8sQueryWatch';
 
 jest.mock('../../watch-utils', () => ({
@@ -23,11 +24,14 @@ describe('useK8sQueryWatch', () => {
     jest.useRealTimers();
   });
 
-  const mockWebSocket = {
+  const createMockWebSocket = (state = WebSocketState.OPENED) => ({
     destroy: jest.fn(),
     onClose: jest.fn(),
     onError: jest.fn(),
-  };
+    getState: jest.fn().mockReturnValue(state),
+  });
+
+  const mockWebSocket = createMockWebSocket();
 
   const mockResourceInit = {
     model: { kind: 'Test', apiGroup: 'test.group', apiVersion: 'v1' } as K8sModelCommon,
@@ -86,6 +90,8 @@ describe('useK8sQueryWatch', () => {
 
     renderHook(() => useK8sQueryWatch(mockResourceInit, true, mockHashedKey, mockOptions));
 
+    mockWebSocket.getState.mockReturnValue(WebSocketState.CLOSED);
+
     // Simulate websocket close with code 1006
     act(() => {
       closeHandler({ code: 1006 });
@@ -97,6 +103,62 @@ describe('useK8sQueryWatch', () => {
     });
 
     expect(watchListResource).toHaveBeenCalledTimes(2);
+  });
+
+  it('should handle websocket close with code 1000 and attempt reconnection', () => {
+    jest.useFakeTimers();
+    let closeHandler: (event: { code: number }) => void;
+
+    mockWebSocket.onClose.mockImplementation((handler) => {
+      closeHandler = handler;
+    });
+
+    (watchListResource as jest.Mock).mockReturnValue(mockWebSocket);
+
+    renderHook(() => useK8sQueryWatch(mockResourceInit, true, mockHashedKey, mockOptions));
+
+    mockWebSocket.getState.mockReturnValue(WebSocketState.CLOSED);
+
+    // Simulate websocket close with code 1000 (normal closure from server)
+    act(() => {
+      closeHandler({ code: 1000 });
+    });
+
+    // First retry
+    act(() => {
+      jest.advanceTimersByTime(WEBSOCKET_RETRY_DELAY);
+    });
+
+    expect(watchListResource).toHaveBeenCalledTimes(2);
+  });
+
+  it('should skip reconnection if WebSocketFactory already reconnected', () => {
+    jest.useFakeTimers();
+    let closeHandler: (event: { code: number }) => void;
+
+    mockWebSocket.onClose.mockImplementation((handler) => {
+      closeHandler = handler;
+    });
+
+    (watchListResource as jest.Mock).mockReturnValue(mockWebSocket);
+
+    renderHook(() => useK8sQueryWatch(mockResourceInit, true, mockHashedKey, mockOptions));
+
+    // WebSocket reports as OPENED (factory reconnected on its own)
+    mockWebSocket.getState.mockReturnValue(WebSocketState.OPENED);
+
+    // Simulate websocket close
+    act(() => {
+      closeHandler({ code: 1006 });
+    });
+
+    // Advance past retry delay — factory already reconnected
+    act(() => {
+      jest.advanceTimersByTime(WEBSOCKET_RETRY_DELAY);
+    });
+
+    // startWatch should NOT have been called again since factory reconnected
+    expect(watchListResource).toHaveBeenCalledTimes(1);
   });
 
   it('should set error state after max retry attempts', () => {
@@ -112,6 +174,8 @@ describe('useK8sQueryWatch', () => {
     const { result } = renderHook(() =>
       useK8sQueryWatch(mockResourceInit, true, mockHashedKey, mockOptions),
     );
+
+    mockWebSocket.getState.mockReturnValue(WebSocketState.CLOSED);
 
     // Simulate multiple websocket closes
     for (let i = 0; i <= WEBSOCKET_RETRY_COUNT; i++) {
@@ -174,5 +238,127 @@ describe('useK8sQueryWatch', () => {
     });
 
     expect(result.current).toBeNull();
+  });
+
+  describe('visibilitychange handler', () => {
+    it('should restart watch when tab becomes visible and websocket is not connected', () => {
+      const closedMockWs = createMockWebSocket(WebSocketState.CLOSED);
+      (watchListResource as jest.Mock).mockReturnValue(closedMockWs);
+
+      renderHook(() => useK8sQueryWatch(mockResourceInit, true, mockHashedKey, mockOptions));
+
+      expect(watchListResource).toHaveBeenCalledTimes(1);
+
+      closedMockWs.getState.mockReturnValue(WebSocketState.CLOSED);
+
+      // Simulate tab becoming visible
+      act(() => {
+        Object.defineProperty(document, 'visibilityState', {
+          value: 'visible',
+          writable: true,
+          configurable: true,
+        });
+        document.dispatchEvent(new Event('visibilitychange'));
+      });
+
+      expect(watchListResource).toHaveBeenCalledTimes(2);
+    });
+
+    it('should not restart watch when tab becomes visible and websocket is still open', () => {
+      const openMockWs = createMockWebSocket(WebSocketState.OPENED);
+      (watchListResource as jest.Mock).mockReturnValue(openMockWs);
+
+      renderHook(() => useK8sQueryWatch(mockResourceInit, true, mockHashedKey, mockOptions));
+
+      expect(watchListResource).toHaveBeenCalledTimes(1);
+
+      // Simulate tab becoming visible while websocket is still open
+      act(() => {
+        Object.defineProperty(document, 'visibilityState', {
+          value: 'visible',
+          writable: true,
+          configurable: true,
+        });
+        document.dispatchEvent(new Event('visibilitychange'));
+      });
+
+      // Should not restart since connection is still open
+      expect(watchListResource).toHaveBeenCalledTimes(1);
+    });
+
+    it('should not restart watch when tab becomes hidden', () => {
+      const openMockWs = createMockWebSocket(WebSocketState.OPENED);
+      (watchListResource as jest.Mock).mockReturnValue(openMockWs);
+
+      renderHook(() => useK8sQueryWatch(mockResourceInit, true, mockHashedKey, mockOptions));
+
+      expect(watchListResource).toHaveBeenCalledTimes(1);
+
+      // Simulate tab becoming hidden
+      act(() => {
+        Object.defineProperty(document, 'visibilityState', {
+          value: 'hidden',
+          writable: true,
+          configurable: true,
+        });
+        document.dispatchEvent(new Event('visibilitychange'));
+      });
+
+      expect(watchListResource).toHaveBeenCalledTimes(1);
+    });
+
+    it('should clear wsError when restarting watch on visibility change', () => {
+      const closedMockWs = createMockWebSocket(WebSocketState.OPENED);
+      let errorHandler: (error: { code: number; message: string }) => void;
+
+      closedMockWs.onError.mockImplementation((handler) => {
+        errorHandler = handler;
+      });
+
+      (watchListResource as jest.Mock).mockReturnValue(closedMockWs);
+
+      const { result } = renderHook(() =>
+        useK8sQueryWatch(mockResourceInit, true, mockHashedKey, mockOptions),
+      );
+
+      // Set error state
+      act(() => {
+        errorHandler({ code: 1006, message: 'Connection lost' });
+      });
+
+      expect(result.current).toBeTruthy();
+
+      closedMockWs.getState.mockReturnValue(WebSocketState.CLOSED);
+
+      // Simulate tab becoming visible
+      act(() => {
+        Object.defineProperty(document, 'visibilityState', {
+          value: 'visible',
+          writable: true,
+          configurable: true,
+        });
+        document.dispatchEvent(new Event('visibilitychange'));
+      });
+
+      expect(result.current).toBeNull();
+    });
+
+    it('should not restart watch on visibility change when resourceInit is null', () => {
+      (watchListResource as jest.Mock).mockReturnValue(mockWebSocket);
+
+      renderHook(() => useK8sQueryWatch(null, true, mockHashedKey, mockOptions));
+
+      // Simulate tab becoming visible
+      act(() => {
+        Object.defineProperty(document, 'visibilityState', {
+          value: 'visible',
+          writable: true,
+          configurable: true,
+        });
+        document.dispatchEvent(new Event('visibilitychange'));
+      });
+
+      expect(watchListResource).not.toHaveBeenCalled();
+    });
   });
 });
