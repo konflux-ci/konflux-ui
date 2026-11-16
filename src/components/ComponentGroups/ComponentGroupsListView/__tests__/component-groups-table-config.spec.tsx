@@ -5,9 +5,10 @@ import { componentGroupsTableColumns } from '../component-groups-table-config';
 
 describe('componentGroupsTableColumns', () => {
   describe('Promotion status column', () => {
-    const promotionStatusColumn = componentGroupsTableColumns.find(
-      (col) => col.id === 'promotion-status',
-    );
+    const promotionStatusColumn = componentGroupsTableColumns({
+      namespace: 'test-ns',
+      allGroups: [],
+    }).find((col) => col.id === 'promotion-status');
 
     const createMockGroup = (
       globalCandidateList?: Array<{ name: string; lastPromotedImage?: string }>,

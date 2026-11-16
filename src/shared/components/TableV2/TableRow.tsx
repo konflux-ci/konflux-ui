@@ -1,3 +1,4 @@
+import { type ReactNode } from 'react';
 import { Tr, Td } from '@patternfly/react-table';
 import { flexRender, type Row } from '@tanstack/react-table';
 
@@ -15,6 +16,12 @@ interface TableRowProps<TData> {
   isContentExpanded?: boolean;
   /** Whether to render a row selection checkbox cell. */
   enableRowSelection?: boolean;
+  /** Column ID of the currently expanded compound cell, if any. */
+  compoundExpandedColumnId?: string;
+  /** Toggles the compound expansion for a column in this row. */
+  onCompoundExpandedChange?: (columnId: string) => void;
+  /** Stable ID prefix for PatternFly compound expansion controls. */
+  compoundExpandId?: string;
 }
 
 /**
@@ -33,14 +40,14 @@ export const TableRow = <TData,>({
   enableExpansion,
   isContentExpanded,
   enableRowSelection,
+  compoundExpandedColumnId,
+  onCompoundExpandedChange,
+  compoundExpandId,
 }: TableRowProps<TData>) => {
+  const leadingCellCount = Number(Boolean(enableExpansion)) + Number(Boolean(enableRowSelection));
+
   return (
-    <Tr
-      role="row"
-      data-test="table-row"
-      data-id={rowId}
-      isContentExpanded={isContentExpanded}
-    >
+    <Tr role="row" data-test="table-row" data-id={rowId} isContentExpanded={isContentExpanded}>
       {enableRowSelection && (
         <Td
           select={{
@@ -61,18 +68,35 @@ export const TableRow = <TData,>({
           }}
         />
       )}
-      {row.getVisibleCells().map((cell) => (
-        <Td
-          key={cell.id}
-          dataLabel={
-            typeof cell.column.columnDef.header === 'string'
-              ? cell.column.columnDef.header
-              : undefined
-          }
-        >
-          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-        </Td>
-      ))}
+      {row.getVisibleCells().map((cell, cellIndex) => {
+        const expandedContent = (
+          cell.column.columnDef.meta as { expandedContent?: (row: TData) => ReactNode } | undefined
+        )?.expandedContent;
+
+        return (
+          <Td
+            key={cell.id}
+            dataLabel={
+              typeof cell.column.columnDef.header === 'string'
+                ? cell.column.columnDef.header
+                : undefined
+            }
+            compoundExpand={
+              expandedContent
+                ? {
+                    isExpanded: compoundExpandedColumnId === cell.column.id,
+                    onToggle: () => onCompoundExpandedChange?.(cell.column.id),
+                    expandId: compoundExpandId,
+                    rowIndex: virtualIndex,
+                    columnIndex: leadingCellCount + cellIndex,
+                  }
+                : undefined
+            }
+          >
+            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+          </Td>
+        );
+      })}
     </Tr>
   );
 };

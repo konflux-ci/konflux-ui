@@ -29,6 +29,12 @@ interface TableBodyProps<TData> {
   isFetchingNextPage?: boolean;
   /** Scroll margin from the virtualizer, subtracted from spacer calculations. */
   scrollMargin?: number;
+  /** Maps row IDs to the currently expanded compound column ID. */
+  compoundExpanded?: Record<string, string>;
+  /** Toggles compound expansion for a row and column. */
+  onCompoundExpandedChange?: (rowId: string, columnId: string) => void;
+  /** Stable ID prefix for PatternFly compound expansion controls. */
+  compoundExpandId?: string;
 }
 
 /**
@@ -54,6 +60,9 @@ export const TableBody = <TData,>({
   visibleColumnCount,
   isFetchingNextPage,
   scrollMargin = 0,
+  compoundExpanded,
+  onCompoundExpandedChange,
+  compoundExpandId,
 }: TableBodyProps<TData>) => {
   const lastVirtualRow = virtualRows[virtualRows.length - 1];
   const bottomSpacerHeight = lastVirtualRow
@@ -78,7 +87,17 @@ export const TableBody = <TData,>({
         const row = rows[virtualRow.index];
         if (!row) return null;
         const rowId = getRowId(row.original);
-        const isExpanded = Boolean(enableExpansion && row.getIsExpanded() && expandedContent);
+        const isRowExpanded = Boolean(enableExpansion && row.getIsExpanded() && expandedContent);
+        const compoundColumnId = compoundExpanded?.[rowId];
+        const compoundCell = row
+          .getVisibleCells()
+          .find((cell) => cell.column.id === compoundColumnId);
+        const compoundExpandedContent = (
+          compoundCell?.column.columnDef.meta as
+            { expandedContent?: (row: TData) => ReactNode } | undefined
+        )?.expandedContent;
+        const isCompoundExpanded = Boolean(compoundExpandedContent);
+        const isExpanded = isRowExpanded || isCompoundExpanded;
 
         return (
           // No explicit role needed: <Tbody> renders a native <tbody> whose implicit
@@ -98,13 +117,38 @@ export const TableBody = <TData,>({
               enableExpansion={enableExpansion}
               isContentExpanded={isExpanded}
               enableRowSelection={enableRowSelection}
+              compoundExpandedColumnId={compoundColumnId}
+              onCompoundExpandedChange={
+                onCompoundExpandedChange
+                  ? (columnId) => onCompoundExpandedChange(rowId, columnId)
+                  : undefined
+              }
+              compoundExpandId={compoundExpandId}
             />
-            {isExpanded && (
+            {isRowExpanded && (
               <Tr isExpanded>
                 {enableRowSelection && <Td />}
                 {enableExpansion && <Td />}
                 <Td colSpan={expandedContentColumnCount}>
                   <ExpandableRowContent>{expandedContent(row.original)}</ExpandableRowContent>
+                </Td>
+              </Tr>
+            )}
+            {isCompoundExpanded && compoundExpandedContent && (
+              <Tr isExpanded>
+                {enableRowSelection && <Td />}
+                {enableExpansion && <Td />}
+                <Td
+                  colSpan={expandedContentColumnCount}
+                  dataLabel={
+                    typeof compoundCell?.column.columnDef.header === 'string'
+                      ? compoundCell.column.columnDef.header
+                      : undefined
+                  }
+                >
+                  <ExpandableRowContent>
+                    {compoundExpandedContent(row.original)}
+                  </ExpandableRowContent>
                 </Td>
               </Tr>
             )}

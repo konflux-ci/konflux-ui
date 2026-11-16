@@ -1,6 +1,5 @@
 import React from 'react';
 import { PageSection } from '@patternfly/react-core';
-import { ExpandedState } from '@tanstack/react-table';
 import PageLayout from '~/components/PageLayout/PageLayout';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { useComponentGroups } from '~/hooks/useComponentGroups';
@@ -13,7 +12,6 @@ import {
   componentGroupsFilterConfig,
   componentGroupsTableColumns,
 } from './component-groups-table-config';
-import { ComponentGroupExpandedRow } from './ComponentGroupExpandedRow';
 import ComponentGroupsEmptyState from './ComponentGroupsEmptyState';
 
 export const ComponentGroupsListView: React.FC = () => {
@@ -23,30 +21,9 @@ export const ComponentGroupsListView: React.FC = () => {
 
   const { filteredData } = useFilteredData(componentGroupsFilterConfig, groups, clientFilterValues);
 
-  const [expandedRows, setExpandedRows] = React.useState<Set<string>>(new Set());
-
-  const expanded = React.useMemo<ExpandedState>(() => {
-    const state: Record<string, boolean> = {};
-    expandedRows.forEach((key) => {
-      state[key] = true;
-    });
-    return state;
-  }, [expandedRows]);
-
-  const handleExpandedChange = React.useCallback(
-    (updaterOrValue: ExpandedState | ((old: ExpandedState) => ExpandedState)) => {
-      const next = typeof updaterOrValue === 'function' ? updaterOrValue(expanded) : updaterOrValue;
-      setExpandedRows(
-        next === true
-          ? new Set(groups.map((group) => group.metadata?.name ?? '-'))
-          : new Set(
-              Object.entries(next)
-                .filter(([, isExpanded]) => isExpanded)
-                .map(([key]) => key),
-            ),
-      );
-    },
-    [expanded, groups],
+  const columns = React.useMemo(
+    () => componentGroupsTableColumns({ namespace, allGroups: groups }),
+    [namespace, groups],
   );
 
   if (error) {
@@ -78,21 +55,10 @@ export const ComponentGroupsListView: React.FC = () => {
         >
           <Table
             data={filteredData}
-            columns={componentGroupsTableColumns}
+            columns={columns}
             getRowId={(row) => row.metadata?.name ?? '-'}
             aria-label="Component groups list"
             enableSorting
-            enableExpansion
-            expanded={expanded}
-            onExpandedChange={handleExpandedChange}
-            expandedContent={(row) => (
-              <ComponentGroupExpandedRow
-                groupName={row.metadata?.name ?? ''}
-                components={row.spec.components}
-                namespace={namespace}
-                allGroups={groups}
-              />
-            )}
           />
         </TableContainer>
       </PageSection>
