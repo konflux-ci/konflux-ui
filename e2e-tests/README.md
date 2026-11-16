@@ -11,6 +11,7 @@ The important bits are as follows:
 | `cypress.config.ts` | cypress configuration file, contains all the environment and plugin setup                           |
 | `support`           | contains helper files for cypress, like hooks, custom commands, page objects, or plugin integration |
 | `tests`             | the actual spec files reside here                                                                   |
+| `test-docs`         | high-level, human-readable docs of what each spec/describe/it covers — see `test-docs/README.md`    |
 | `utils`             | utilities for easier test development, from UI interaction tasks to network requests                |
 | `cypress`           | test results, including screenshots, video recordings, HTML reports, xunit files, etc.              |
 
@@ -116,7 +117,7 @@ Since the image already contains all the test code, in case you'd like to run th
 $ podman run -v <path to your e2e-tests>:/e2e:Z -e CYPRESS_KONFLUX_BASE_URL=https://<HOSTNAME>/hac/application-pipeline -e CYPRESS_USERNAME="user1" -e CYPRESS_PASSWORD="user1" quay.io/konflux_ui_qe/konflux-ui-tests:latest
 ```
 
-The container entrypoint checks for a mounted `/e2e` directory and runs tests from there when present; otherwise it uses the image-baked sources at `/tmp/e2e`. This detection applies to manual container runs only — see [Tests on CI](#tests-on-ci) for how Konflux integration pipelines populate `/e2e` automatically.
+The container entrypoint checks for a mounted `/e2e` directory and runs tests from there when present; otherwise it uses the image-baked sources at `/tmp/e2e`. This detection applies to manual container runs only — Konflux integration pipelines always use the image-baked sources.
 
 #### Passing arguments to Cypress
 
@@ -199,12 +200,9 @@ The test step executes `pr_check.sh` file which does the tests setup and runs te
 
 #### Konflux integration pipeline
 
-Konflux also runs E2E tests via the integration pipeline (`.integration-tests/pipelines/e2e-main-pipeline.yaml`) using the `run-e2e-konflux-ui` Tekton task. After `deploy-konflux`, the pipeline runs **`patch-konflux-ui-image`**, which replaces the stock UI image on Kind (`deployment/proxy` initContainer `copy-static-content`) with the SNAPSHOT image under test and attaches a pull secret so Kind can pull it. That step is required because `deploy-konflux-ci` cannot reliably override the UI image. Next, `format-e2e-test-image` resolves the test runner image built in parallel with the UI by the `konflux-ui` component build pipeline (`e2e-on-pr-<sha>` for pull requests, `e2e-<sha>` for push). For `pr-check` jobs on **fork → upstream** PRs only, the task may overlay PR `e2e-tests/` sources:
+Konflux also runs E2E tests via the integration pipeline (`.integration-tests/pipelines/e2e-main-pipeline.yaml`) using the `run-e2e-konflux-ui` Tekton task. `format-images` resolves the parallel build tags (`instrumented[-on-pr]-<sha>` for the UI under test, `e2e[-on-pr]-<sha>` for the Cypress runner) — SNAPSHOT's primary `containerImage` is the non-instrumented digest and is not used for deploy. `deploy-konflux` installs Konflux via the operator and injects that instrumented UI image into `deployment/proxy` (initContainer `copy-static-content`), with a pull secret so Kind can pull it. The Cypress runner image (test image) is built from the PR revision's `e2e-tests/` tree, so `run-e2e-test` always executes the image-baked sources at `/tmp/e2e`. When Cypress Cloud credentials are present, runs are recorded with `--record` and tagged by `job-type`.
 
-1. **`prepare-e2e-sources` step** — Skipped for same-repo PRs (uses image-baked tests, like `pr_check.sh` on upstream). For fork → upstream PRs, fetches the PR commit from the fork and compares `e2e-tests/` against upstream `main`; stages changed files into `/e2e` when needed.
-2. **`run-e2e-test` step** — If `/e2e` contains staged sources, installs dependencies and runs Cypress from `/e2e`. Otherwise uses image-baked sources at `/tmp/e2e`.
-
-The container entrypoint performs a similar `/e2e` vs `/tmp/e2e` check for manual runs only.
+The container entrypoint's `/e2e` vs `/tmp/e2e` check remains for manual local runs only.
 
 ### Periodic tests
 

@@ -8,21 +8,14 @@ import {
   Tooltip,
 } from '@patternfly/react-core';
 import { FlaskIcon } from '@patternfly/react-icons/dist/esm/icons/flask-icon';
-import { IfFeature } from '~/feature-flags/hooks';
 import { createFeatureFlagPanelModal } from '~/feature-flags/Panel';
 import { ThemeDropdown } from '~/shared/theme';
-import { NotificationBadgeWrapper } from '../KonfluxSystemNotifications/NotificationBadgeWrapper';
 import { useModalLauncher } from '../modal/ModalProvider';
 import { HelpDropdown } from './HelpDropdown';
 import { useCopyLoginCommandAnalytics } from './useCopyLoginCommandAnalytics';
 import { UserDropdown } from './UserDropdown';
 
-interface HeaderProps {
-  isDrawerExpanded: boolean;
-  toggleDrawer: () => void;
-}
-
-export const Header: React.FC<HeaderProps> = ({ isDrawerExpanded, toggleDrawer }) => {
+export const Header: React.FC = () => {
   const showModal = useModalLauncher();
   const { onUserMenuOpen, onCopyLoginCommandClick } = useCopyLoginCommandAnalytics();
   return (
@@ -40,12 +33,6 @@ export const Header: React.FC<HeaderProps> = ({ isDrawerExpanded, toggleDrawer }
               />
             </Tooltip>
           </ToolbarItem>
-          <IfFeature flag="system-notifications">
-            <NotificationBadgeWrapper
-              isDrawerExpanded={isDrawerExpanded}
-              toggleDrawer={toggleDrawer}
-            />
-          </IfFeature>
           <ToolbarItem>
             <ThemeDropdown />
           </ToolbarItem>

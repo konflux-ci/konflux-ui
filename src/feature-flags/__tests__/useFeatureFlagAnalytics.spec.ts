@@ -35,7 +35,7 @@ const mockPagePattern = (pattern: string) =>
 
 const state = (overrides: Partial<Record<FlagKey, boolean>>) =>
   ({
-    'column-management': true,
+    'taskruns-kubearchive': true,
     'kubearchive-logs': true,
     ...overrides,
   }) as Record<FlagKey, boolean>;
@@ -59,11 +59,11 @@ describe('computeFeatureFlagChanges', () => {
   });
 
   it('reports multiple flag changes, each with its new value', () => {
-    const before = state({ 'kubearchive-logs': true, 'column-management': false });
-    const after = state({ 'kubearchive-logs': false, 'column-management': true });
+    const before = state({ 'kubearchive-logs': true, 'taskruns-kubearchive': false });
+    const after = state({ 'kubearchive-logs': false, 'taskruns-kubearchive': true });
 
     expect(computeFeatureFlagChanges(before, after)).toEqual({
-      changes: { 'kubearchive-logs': false, 'column-management': true },
+      changes: { 'kubearchive-logs': false, 'taskruns-kubearchive': true },
       changesCount: 2,
     });
   });
@@ -81,21 +81,21 @@ describe('computeFeatureFlagChanges', () => {
   });
 
   it('does not include unrelated unchanged flags in the changes object', () => {
-    const before = state({ 'column-management': true, 'kubearchive-logs': true });
-    const after = state({ 'column-management': true, 'kubearchive-logs': false });
+    const before = state({ 'taskruns-kubearchive': true, 'kubearchive-logs': true });
+    const after = state({ 'taskruns-kubearchive': true, 'kubearchive-logs': false });
 
     const { changes } = computeFeatureFlagChanges(before, after);
 
-    expect(changes).not.toHaveProperty('column-management');
+    expect(changes).not.toHaveProperty('taskruns-kubearchive');
     expect(Object.keys(changes)).toEqual(['kubearchive-logs']);
   });
 
   it('reports every flag as changed when resetting to defaults changes multiple flags', () => {
-    const before = state({ 'kubearchive-logs': false, 'column-management': true });
-    const after = state({ 'kubearchive-logs': true, 'column-management': false });
+    const before = state({ 'kubearchive-logs': false, 'taskruns-kubearchive': true });
+    const after = state({ 'kubearchive-logs': true, 'taskruns-kubearchive': false });
 
     expect(computeFeatureFlagChanges(before, after)).toEqual({
-      changes: { 'kubearchive-logs': true, 'column-management': false },
+      changes: { 'kubearchive-logs': true, 'taskruns-kubearchive': false },
       changesCount: 2,
     });
   });

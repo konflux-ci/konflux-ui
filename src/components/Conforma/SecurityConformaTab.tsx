@@ -13,6 +13,7 @@ import { createFilterObj } from '../Filter/utils/filter-utils';
 import { countResultsByStatus, filterResults } from './ConformaResultsTab/conforma-grouping-utils';
 import { ConformaSummaryBar } from './ConformaResultsTab/ConformaSummaryBar';
 import { ConformaTable } from './ConformaTable/ConformaTable';
+import { countPolicyChanges } from './policy-exception-utils';
 import SecurityTabEmptyState from './SecurityTabEmptyState';
 import { ShowPolicyExceptionsToggle } from './ShowPolicyExceptionsToggle';
 import { useConformaResult } from './useConformaResult';
@@ -110,6 +111,13 @@ export const SecurityConformaTab: React.FC<
     [conformaResult],
   );
 
+  // Only the policy exception rules announce a change to what is enforced, so
+  // the "Upcoming changes" section counts those rather than every warning.
+  const policyChanges = React.useMemo(
+    () => countPolicyChanges(conformaResult ?? []),
+    [conformaResult],
+  );
+
   const toolbar = (
     <BaseTextFilterToolbar
       text={ruleFilter}
@@ -198,6 +206,7 @@ export const SecurityConformaTab: React.FC<
           totalViolations={resultCounts.totalViolations}
           totalWarnings={resultCounts.totalWarnings}
           totalSuccesses={resultCounts.totalSuccesses}
+          totalPolicyChanges={policyChanges}
         />
       </div>
       <Content style={{ marginTop: 'var(--pf-t--global--spacer--xl)' }}>
