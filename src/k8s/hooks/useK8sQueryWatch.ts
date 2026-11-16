@@ -48,9 +48,6 @@ export const useK8sQueryWatch = (
       : watchObjectResource(deepResourceInit, deepOptions);
 
     websocket.onClose((event) => {
-      // eslint-disable-next-line no-console
-      console.warn(`WebSocket closed for ${hashedKey} (code: ${event.code}). Attempting reconnect...`);
-
       if (retryTimeoutRef.current) {
         clearTimeout(retryTimeoutRef.current);
       }
