@@ -1,12 +1,12 @@
 import * as React from 'react';
 import { useParams } from 'react-router-dom';
 import ColumnManagement from '~/components/ColumnManagement/ColumnManagement';
-import TestGraphVisualization from '~/components/ComponentGroups/TestGraphVisualization';
 import {
   BASE_INTEGRATION_TESTS_COLUMNS,
   INTEGRATION_TESTS_LIST_FILTERS,
 } from '~/components/IntegrationTests/IntegrationTestsListView/integration-tests-table-config';
 import IntegrationTestsEmptyState from '~/components/IntegrationTests/IntegrationTestsListView/IntegrationTestsEmptyState';
+import TestGraphVisualization from '~/components/IntegrationTests/topology/TestGraphVisualization';
 import { IfFeature } from '~/feature-flags/hooks';
 import { useIntegrationTestScenariosByComponentGroup } from '~/hooks/useIntegrationTestScenarios';
 import { RouterParams } from '~/routes/utils';

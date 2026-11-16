@@ -33,7 +33,7 @@ jest.mock('~/feature-flags/hooks', () => ({
   IfFeature: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
-jest.mock('~/components/ComponentGroups/TestGraphVisualization', () => ({
+jest.mock('~/components/IntegrationTests/topology/TestGraphVisualization', () => ({
   __esModule: true,
   default: ({ namespace, groupName }: { namespace: string; groupName: string }) => (
     <div data-test="test-graph-visualization">
