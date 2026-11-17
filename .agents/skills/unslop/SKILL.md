@@ -24,7 +24,7 @@ Always inspect the full changed files, not only the diff hunks.
 
 ## Required context
 
-Use the repository's guide index to read only the sections relevant to the changed files before editing them.
+Read `docs/BOOKMARKS.md`, then open only the documents and sections relevant to the changed files before editing them.
 
 ## Cleanup checklist
 
@@ -53,7 +53,7 @@ Apply only to code you are currently changing.
 
 ### Prefer PatternFly and shared components
 
-Before keeping custom SCSS or inline styles, verify that no PatternFly component, prop, utility class, token, or shared component can produce the same result.
+Before keeping custom SCSS or inline styles, follow the styling decision order in `docs/guidelines/patternfly-guidelines.md`. Check relevant PatternFly v6 documentation and existing shared components for an equivalent.
 
 Name the exact replacement before changing custom styling. If there is no equivalent, keep the style. Follow the repository's co-located SCSS, BEM, and token conventions when editing it.
 

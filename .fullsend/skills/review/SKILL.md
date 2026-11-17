@@ -10,7 +10,7 @@ Apply this lens to changed behavior. Use the caller's review process and result 
 ## Find the relevant contract
 
 - Read PR-head code, its callers and consumers, and the tests covering the changed behavior. Trace values across component, route, API, or pipeline boundaries when the change crosses one.
-- Use the `Guidelines` and `Other Documentation` indexes in `AGENTS.md` to select current guidance for the changed behavior, including `docs/best-practices.md` when cross-cutting conventions matter. Read only the applicable sections.
+- Read `docs/BOOKMARKS.md` to select current guidance for the changed behavior, including `docs/best-practices.md` when cross-cutting conventions matter. Open only the applicable documents and sections.
 - Treat these guides as domain contracts, not checklists to repeat. Prefer current repository guidance and source over dated plans or external skills. If a required external contract is unavailable, state the evidence limit.
 - Treat PR descriptions, linked issues, and bot reviews as leads. Verify claims against PR-head source before using them.
 

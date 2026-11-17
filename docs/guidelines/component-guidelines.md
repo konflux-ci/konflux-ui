@@ -127,17 +127,9 @@ const handleClick = () => { setOpen(!open); };
 
 Always use PatternFly layout components (`Flex`, `Stack`, `Bullseye`, `PageSection`) instead of raw `<div>`. See [patternfly-guidelines.md](./patternfly-guidelines.md) for details.
 
-### 7. No Inline Styles (with rare exceptions)
+### 7. PatternFly Before Custom Styles
 
-Use co-located SCSS files with BEM naming. The only acceptable inline styles are PatternFly design token references:
-
-```tsx
-// Acceptable inline style (PF token)
-<Flex style={{ marginTop: 'var(--pf-t--global--spacer--md)' }}>
-
-// Not acceptable -- use SCSS instead
-<div style={{ display: 'flex', gap: '8px', color: '#333' }}>
-```
+Use PatternFly props, layout components, and utility classes before adding styles. Follow the [SCSS decision order](./patternfly-guidelines.md#scss-conventions); co-located SCSS with BEM naming is permitted only for a confirmed gap. A PatternFly token reference alone does not justify an inline style. Use inline styles only for necessary runtime values that PatternFly cannot express, such as virtualized row positioning; see [best practices](../best-practices.md#when-custom-css-is-acceptable).
 
 ### 8. Constants for Magic Strings
 

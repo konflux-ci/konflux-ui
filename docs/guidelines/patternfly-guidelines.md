@@ -4,7 +4,7 @@ This document defines how PatternFly (PF) components, layout primitives, design 
 
 ## Core Principle
 
-**Always use PatternFly components instead of raw HTML.** Never write `<div style={{ display: 'flex' }}>` when `<Flex>` exists. Never use `<button>` when `<Button>` exists.
+**Always use PatternFly components instead of raw HTML.** Never write `<div style={{ display: 'flex' }}>` when `<Flex>` exists. Never use `<button>` when `<Button>` exists. Treat custom SCSS and inline styles as a last resort; follow the [SCSS decision order](#scss-conventions) first.
 
 ## CSS Class Prefix: `pf-v6-`
 
@@ -452,12 +452,7 @@ font-family: var(--pf-t--global--font--family--mono);
 
 ### Inline Style Tokens (TSX)
 
-Only acceptable inline styles are PF token references:
-
-```tsx
-<Flex style={{ marginTop: 'var(--pf-t--global--spacer--md)' }}>
-<Stack style={{ marginTop: 'var(--pf-t--global--spacer--lg)' }} hasGutter>
-```
+A PatternFly token value alone does not justify an inline style. Use component props, layout components, or utility classes first. Inline styles are reserved for necessary runtime values that those options cannot express, such as virtualized row positioning; see [best practices](../best-practices.md#when-custom-css-is-acceptable).
 
 ## Icon Imports
 
@@ -487,31 +482,23 @@ import { css } from '@patternfly/react-styles';
 
 ## SCSS Conventions
 
+**Never add custom SCSS unless it is necessary.** For each proposed rule, check this order:
+
+1. Existing Konflux UI shared components and PatternFly component props or variants.
+2. PatternFly layout components and their responsive props.
+3. PatternFly v6 utility classes.
+4. Documented PatternFly component or theme variables.
+5. Co-located custom SCSS only if the earlier options cannot provide the required behavior.
+
+Before choosing step 5, explore all relevant PatternFly v6 documentation for the component, layout, utilities, tokens, and theming involved. Check the consuming component in the repository, then name the specific gap and alternatives checked in the PR description. Do not add SCSS merely because the equivalent PatternFly option is unfamiliar.
+
+When custom SCSS is necessary:
+
 - Use BEM naming: `.my-component`, `.my-component__element`, `.my-component--modifier`
 - Always use PF design tokens for spacing, colors, typography
 - Co-locate SCSS files with their component: `MyComponent.scss` next to `MyComponent.tsx`
 - Never use `!important` -- fix specificity issues properly
-- Scope overrides to component classes:
-
-```scss
-.my-component {
-  // Custom styles using PF tokens
-  padding: var(--pf-t--global--spacer--md);
-
-  &__header {
-    margin-bottom: var(--pf-t--global--spacer--sm);
-  }
-
-  &--compact {
-    padding: var(--pf-t--global--spacer--sm);
-  }
-
-  // Override PF component token within this component scope
-  .pf-v6-c-description-list {
-    --pf-v6-c-description-list--GridTemplateColumns: repeat(3, 1fr);
-  }
-}
-```
+- Scope component variable overrides to the consuming component.
 
 ## Deprecated PF APIs to Avoid
 
