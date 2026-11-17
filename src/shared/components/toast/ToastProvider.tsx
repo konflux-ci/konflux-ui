@@ -135,11 +135,11 @@ export const ToastProvider: React.FC<React.PropsWithChildren> = ({ children }) =
     <ToastContext.Provider value={value}>
       {children}
       <AlertGroup aria-label="Notifications" className="toast-alert-group" isLiveRegion isToast>
-        <React.Suspense fallback={null}>
-          {[...toasts].reverse().map((toast) => (
-            <ToastItem key={toast.id} onRemove={removeToast} toast={toast} />
-          ))}
-        </React.Suspense>
+        {[...toasts].reverse().map((toast) => (
+          <React.Suspense fallback={null} key={toast.id}>
+            <ToastItem onRemove={removeToast} toast={toast} />
+          </React.Suspense>
+        ))}
       </AlertGroup>
     </ToastContext.Provider>
   );

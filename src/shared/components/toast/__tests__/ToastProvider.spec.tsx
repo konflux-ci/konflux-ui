@@ -736,10 +736,12 @@ describe('ToastProvider operation reporting', () => {
 
     const alertGroup = screen.getByRole('list', { name: 'Notifications' });
     const alerts = alertGroup.querySelectorAll('[data-test="toast-alert"]');
+    const alertItems = alertGroup.querySelectorAll('.pf-v6-c-alert-group__item');
     expect(alertGroup).toHaveAttribute('aria-live', 'polite');
     expect(alertGroup).toHaveAttribute('aria-atomic', 'false');
     expect(alertGroup).toHaveClass('toast-alert-group');
     expect(alerts).toHaveLength(30);
+    expect(alertItems).toHaveLength(30);
     expect(alerts[0]).toHaveAttribute('tabindex', '0');
     expect(alerts[29]).toHaveAttribute('tabindex', '0');
     expect(alerts[0]).not.toHaveAttribute('aria-live');
