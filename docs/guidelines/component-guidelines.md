@@ -57,6 +57,8 @@ import { sortBy } from 'lodash';
 
 Each component should do one thing. If a component handles data fetching, filtering, sorting, AND rendering, break it down.
 
+Define child components at module scope. A component function declared inside another component gets a new identity on every render, so React remounts its subtree and can reset local state or focus. Render simple JSX inline or extract a module-scope component.
+
 For detail-view tabs, separate the tab container (data fetching, loading/error states) from the tab content (presentation with guaranteed non-null props); see [Tab data-fetching responsibilities](./layout-and-pages.md#tab-data-fetching-responsibilities).
 
 ### 2. No `as` Type Assertions

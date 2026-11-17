@@ -11,6 +11,10 @@ Every page in the application follows one of four patterns:
 3. **Form Page** -- Create/edit form with validation and submission
 4. **Modal Workflow** -- Dialog-based operations (delete, confirm)
 
+## Navigation
+
+For a user-activated route change, render a link when the control supports one. A React Router `<Link>` preserves browser link behavior, including opening in a new tab. PatternFly buttons can use `component={(props) => <Link {...props} to={path} />}`. Use `navigate()` for redirects after an action or when a shared control exposes only a callback.
+
 ## Layout Components
 
 ### `PageLayout` -- List and Form Pages
