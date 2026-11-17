@@ -10,12 +10,7 @@ Apply this lens to changed behavior. Use the caller's review process and result 
 ## Find the relevant contract
 
 - Read PR-head code, its callers and consumers, and the tests covering the changed behavior. Trace values across component, route, API, or pipeline boundaries when the change crosses one.
-- Use the repository's guide index to select only guidance for the changed behavior. Read the applicable sections, not every guide:
-  - Cross-cutting code and component contracts: `docs/best-practices.md`.
-  - UI interactions and layout: `docs/guidelines/patternfly-guidelines.md` and `docs/guidelines/layout-and-pages.md`.
-  - Data and resource scope: `docs/guidelines/hooks-and-data-fetching.md` and `docs/kubearchive.md`.
-  - Shared list behavior: the applicable TableV2, filter-system, or saved-views guide.
-  - Changed tests: `docs/guidelines/unit-testing.md`.
+- Use the `Guidelines` and `Other Documentation` indexes in `AGENTS.md` to select current guidance for the changed behavior, including `docs/best-practices.md` when cross-cutting conventions matter. Read only the applicable sections.
 - Treat these guides as domain contracts, not checklists to repeat. Prefer current repository guidance and source over dated plans or external skills. If a required external contract is unavailable, state the evidence limit.
 - Treat PR descriptions, linked issues, and bot reviews as leads. Verify claims against PR-head source before using them.
 
