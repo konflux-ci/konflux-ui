@@ -13,7 +13,7 @@ Every page in the application follows one of four patterns:
 
 ## Navigation
 
-For a user-activated route change, render a link when the control supports one. A React Router `<Link>` preserves browser link behavior, including opening in a new tab. PatternFly buttons can use `component={(props) => <Link {...props} to={path} />}`. Use `navigate()` for redirects after an action or when a shared control exposes only a callback.
+For a user-activated route change, render a link when the control supports one. A React Router `<Link>` preserves browser link behavior, including opening in a new tab. PatternFly buttons can render links through their `component` prop; pass a stable link component, memoized by destination when needed. An inline `component={(props) => <Link {...props} to={path} />}` creates a new component type on each render and can remount the link, losing focus. Use `navigate()` for redirects after an action or when a shared control exposes only a callback.
 
 ## Layout Components
 
