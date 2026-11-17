@@ -29,6 +29,11 @@ export const HelpDropdown: React.FC<HelpDropdownProps> = ({ onCliLoginClick }) =
   const showModal = useModalLauncher();
   const { startTour, currentRoute } = useTour();
   const [parsedData] = useKonfluxPublicInfo();
+  const configuredHelpPortalUrl = parsedData?.helpPortalUrl;
+  const helpPortalUrl =
+    typeof configuredHelpPortalUrl === 'string'
+      ? configuredHelpPortalUrl.trim()
+      : undefined;
   const isInternal = parsedData?.visibility === 'private';
   const documentationLink = isInternal
     ? INTERNAL_DOCUMENTATION_BASE_URL
@@ -106,8 +111,13 @@ export const HelpDropdown: React.FC<HelpDropdownProps> = ({ onCliLoginClick }) =
               Copy login command
             </DropdownItem>
             <DropdownItem key="documentation" data-test="help-dropdown-documentation">
-              <ExternalLink href={documentationLink} text={'Documentation'} />
+              <ExternalLink href={documentationLink} text="Documentation" />
             </DropdownItem>
+            {helpPortalUrl && (
+              <DropdownItem key="get-help" data-test="help-dropdown-get-help">
+                <ExternalLink href={helpPortalUrl} text="Get help" />
+              </DropdownItem>
+            )}
             <DropdownItem
               key="share-feedback"
               onClick={handleFeedbackClick}

@@ -2,12 +2,12 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
+import { HelpDropdown } from '~/components/Header/HelpDropdown';
+import { ModalProvider } from '~/components/modal/ModalProvider';
 import {
   EXTERNAL_DOCUMENTATION_BASE_URL,
   INTERNAL_DOCUMENTATION_BASE_URL,
 } from '~/consts/documentation';
-import { ModalProvider } from '../../modal/ModalProvider';
-import { HelpDropdown } from '../HelpDropdown';
 
 const mockStartTour = jest.fn();
 const mockGetToursByRoute = jest.fn().mockReturnValue([]);
@@ -184,16 +184,20 @@ describe('HelpDropdown Component', () => {
 
   describe('Copy login command', () => {
     it('shows Copy login command as the second menu item', async () => {
+      mockUseKonfluxPublicInfo.mockReturnValue([
+        { visibility: 'public', helpPortalUrl: 'https://help.example.com/portal' },
+      ]);
       renderWithModalProvider(<HelpDropdown />);
 
       fireEvent.click(screen.getByLabelText('Help menu toggle'));
 
       const items = await screen.findAllByRole('menuitem');
-      expect(items).toHaveLength(4);
+      expect(items).toHaveLength(5);
       expect(items[0]).toHaveTextContent('About Konflux');
       expect(items[1]).toHaveTextContent('Copy login command');
       expect(items[2]).toHaveTextContent('Documentation');
-      expect(items[3]).toHaveTextContent('Share feedback');
+      expect(items[3]).toHaveTextContent('Get help');
+      expect(items[4]).toHaveTextContent('Share feedback');
       expect(screen.queryByRole('link', { name: /Copy login command/i })).not.toBeInTheDocument();
     });
 
@@ -330,6 +334,43 @@ describe('HelpDropdown Component', () => {
         expect(docLink).toHaveAttribute('rel', 'noopener noreferrer');
       });
     });
+  });
+
+  describe('Help portal link', () => {
+    it('renders Get help as an external link and closes the menu when clicked', async () => {
+      const user = userEvent.setup();
+      mockUseKonfluxPublicInfo.mockReturnValue([
+        { helpPortalUrl: 'https://help.example.com/portal' },
+        true,
+        null,
+      ]);
+      renderWithModalProvider(<HelpDropdown />);
+
+      await user.click(screen.getByRole('button', { name: 'Help menu toggle' }));
+
+      const helpLink = screen.getByRole('link', { name: /Get help/i });
+      expect(helpLink).toHaveAttribute('href', 'https://help.example.com/portal');
+      expect(helpLink).toHaveAttribute('target', '_blank');
+      expect(helpLink).toHaveAttribute('rel', 'noopener noreferrer');
+      expect(helpLink.querySelector('.external-link__icon')).toBeInTheDocument();
+
+      await user.click(helpLink);
+
+      await waitFor(() => expect(screen.queryByRole('menu')).not.toBeInTheDocument());
+    });
+
+    it.each([undefined, '', '   ', 42, { url: 'https://help.example.com/portal' }])(
+      'does not render Get help when the configured URL is %p',
+      async (helpPortalUrl) => {
+        const user = userEvent.setup();
+        mockUseKonfluxPublicInfo.mockReturnValue([{ helpPortalUrl }, true, null]);
+        renderWithModalProvider(<HelpDropdown />);
+
+        await user.click(screen.getByRole('button', { name: 'Help menu toggle' }));
+
+        expect(screen.queryByRole('link', { name: /Get help/i })).not.toBeInTheDocument();
+      },
+    );
   });
 
   describe('Accessibility', () => {
