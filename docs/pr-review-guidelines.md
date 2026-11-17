@@ -25,7 +25,7 @@ A process checklist for reviewing pull requests. For coding standards and detail
   - PatternFly components used over raw HTML elements
   - Absolute imports (`~/`) for cross-directory paths; single-level relative imports (`./types`) acceptable for same-directory files
 - [ ] **No `pf-v5-` CSS class prefixes.** All PatternFly CSS classes must use the `pf-v6-` prefix (e.g., `pf-v6-u-ml-sm`). The `pf-v5-` prefix is incompatible with PatternFly v6.
-- [ ] **Custom SCSS is necessary.** For a new rule, check the relevant PatternFly v6 component, layout, utility, token, and theming documentation plus existing shared components. If a PatternFly option can provide the behavior, name that exact option rather than raising a generic style preference. See the [styling decision order](./guidelines/patternfly-guidelines.md#scss-conventions).
+- [ ] **No unnecessary custom SCSS.** For a new rule, check the relevant PatternFly v6 component, layout, utility, token, and theming documentation plus existing shared components. If a PatternFly option can provide the behavior, name that exact option rather than raising a generic style preference. See the [styling decision order](./guidelines/patternfly-guidelines.md#scss-conventions).
 - [ ] **No `eslint-disable` comments** without a documented justification directly above. Never suppress `exhaustive-deps` or `no-explicit-any`.
 - [ ] **No `console.*` calls.** Use `logger` from `~/monitoring/logger`.
 - [ ] **No magic strings or numbers.** Use constants from `src/consts/` or local named constants.
