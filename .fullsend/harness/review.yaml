@@ -1,0 +1,4 @@
+base: https://raw.githubusercontent.com/fullsend-ai/agents/27399d0707897bb705e544588df8ecccfc8f9b43/harness/review.yaml#sha256=3992c18ce6efa2a9590afccb61b90ec4c3bb5428727254bafe0cde262c53bfcb # v0.50.0
+
+skills:
+  - skills/review
