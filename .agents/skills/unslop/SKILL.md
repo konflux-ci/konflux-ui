@@ -1,15 +1,15 @@
 ---
 name: unslop
-description: Explore Konflux UI code and the relevant guides indexed by AGENTS.md before authoring a change, then simplify the code being written. Use when planning, writing, or editing a feature, fix, refactor, or test to avoid speculative abstractions, duplicate logic, verbose comments, and unnecessary custom styling.
+description: Cleans generated or verbose Konflux UI code while authoring changes. Removes comments that restate code, impossible defensive checks, one-caller helpers, vague names, speculative abstractions, duplicate logic, and custom styles replaceable by PatternFly or shared components. Use while writing or editing code.
 ---
 
 # Konflux UI Unslop
 
-Explore existing code and guidance, choose a small approach, then clean up newly written or modified Konflux UI code before requesting review. Preserve behavior and project conventions. This is an authoring-time skill, not a PR review dimension.
+Clean up newly written or modified Konflux UI code before requesting review. Preserve behavior and project conventions. This is an authoring-time skill, not a PR review dimension.
 
 ## When to use
 
-- Before generating or editing Konflux UI code.
+- While generating or editing Konflux UI code.
 - After finishing a feature, bug fix, refactor, or test change.
 - Before asking for review or opening a PR.
 
@@ -17,10 +17,14 @@ Do not use this skill to review someone else’s PR.
 
 ## Inputs
 
-- Default: the requested change and, when present, the current working diff.
-- Optional: one or more files or directories to inspect or clean.
+- Default: the current working diff.
+- Optional: one or more files or directories to clean.
 
-When a diff exists, inspect the full changed files, not only the diff hunks.
+Always inspect the full changed files, not only the diff hunks.
+
+## Required context
+
+Use the repository's guide index to read only the sections relevant to the changed files before editing them.
 
 ## Cleanup checklist
 
@@ -55,21 +59,19 @@ Name the exact replacement before changing custom styling. If there is no equiva
 
 ## Workflow
 
-1. Before editing, define the intended behavior and inspect nearby code, callers, and existing shared utilities or components.
-2. Use the `Guidelines` and `Other Documentation` bookmarks in `AGENTS.md` to read only the sections relevant to the change. Verify dated guidance against current source.
-3. Brainstorm the smallest plausible approaches. Choose one that fits existing contracts; surface a real tradeoff before adding an abstraction or custom style.
-4. Inspect the current diff and full changed files when they exist. Identify concrete cleanup candidates and exclude unrelated code.
-5. Apply only behavior-preserving cleanups. If a candidate changes behavior or a public contract, leave it for a separate task.
-6. Re-read the full diff and changed files.
-7. Run checks relevant to the touched files. Use `docs/guidelines/single-file-verification.md` for file-scoped lint and type checks, and run targeted tests when a related test exists.
-8. If rendered UI behavior could have changed, inspect the affected component or route.
+1. Inspect the current diff and full changed files.
+2. Read the required and targeted guidelines.
+3. Identify concrete cleanup candidates and exclude unrelated code.
+4. Apply only behavior-preserving cleanups. If a candidate changes behavior or a public contract, leave it for a separate task.
+5. Re-read the full diff and changed files.
+6. Run checks relevant to the touched files. Use `docs/guidelines/single-file-verification.md` for file-scoped lint and type checks, and run targeted tests when a related test exists.
+7. If rendered UI behavior could have changed, inspect the affected component or route.
 
 ## Output
 
 Report:
 
 - files cleaned,
-- the approach and relevant guidance used when starting before code exists,
 - categories of cleanup applied,
 - evidence that behavior was preserved, or the remaining uncertainty,
 - verification commands run and their results.
