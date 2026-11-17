@@ -11,6 +11,7 @@ Apply this lens to changed behavior. Use the caller's review process and result 
 
 - Read PR-head code, its callers and consumers, and the tests covering the changed behavior. Trace values across component, route, API, or pipeline boundaries when the change crosses one.
 - Use the repository's guide index to select only guidance for the changed behavior. Read the applicable sections, not every guide:
+  - Cross-cutting code and component contracts: `docs/best-practices.md`.
   - UI interactions and layout: `docs/guidelines/patternfly-guidelines.md` and `docs/guidelines/layout-and-pages.md`.
   - Data and resource scope: `docs/guidelines/hooks-and-data-fetching.md` and `docs/kubearchive.md`.
   - Shared list behavior: the applicable TableV2, filter-system, or saved-views guide.
