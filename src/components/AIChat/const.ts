@@ -2,8 +2,7 @@ import { ChatbotDisplayMode } from '@patternfly/chatbot/dist/dynamic/Chatbot';
 
 export const KONFLUX_AI_DISPLAY_MODE = ChatbotDisplayMode.default;
 
-export const KONFLUX_AI_FOOTNOTE =
-  'Always review AI-generated content before use.';
+export const KONFLUX_AI_FOOTNOTE = 'Always review AI-generated content before use.';
 
 export const KONFLUX_AI_WELCOME_TITLE = 'Hello';
 
@@ -18,8 +17,7 @@ export const KONFLUX_AI_TOGGLE_TOOLTIP = 'Konflux AI assistant';
 
 export const KONFLUX_AI_TOGGLE_BUTTON_LABEL = 'Open Konflux AI assistant';
 
-export const KONFLUX_AI_ERROR_PERMISSION =
-  'You do not have permission to use Konflux AI.';
+export const KONFLUX_AI_ERROR_PERMISSION = 'You do not have permission to use Konflux AI.';
 
 export const KONFLUX_AI_ERROR_NOT_FOUND = 'The requested conversation was not found.';
 
@@ -31,3 +29,9 @@ export const KONFLUX_AI_ERROR_QUOTA =
 
 export const KONFLUX_AI_ERROR_UNAVAILABLE =
   'Konflux AI is temporarily unavailable. Please try again later.';
+
+export const KONFLUX_AI_HISTORY_SEARCH_PLACEHOLDER = 'Search conversations';
+
+export const KONFLUX_AI_HISTORY_NO_RESULTS_TITLE = 'No results found';
+
+export const KONFLUX_AI_HISTORY_NO_RESULTS_BODY = 'Try a different search term.';

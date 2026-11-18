@@ -14,6 +14,17 @@ jest.mock('@patternfly/chatbot/dist/dynamic/ChatbotHeader', () => ({
       Close
     </button>
   ),
+  ChatbotHeaderMenu: ({
+    onMenuToggle,
+    'aria-expanded': ariaExpanded,
+  }: {
+    onMenuToggle: () => void;
+    'aria-expanded'?: boolean;
+  }) => (
+    <button type="button" aria-expanded={ariaExpanded} onClick={onMenuToggle}>
+      History
+    </button>
+  ),
 }));
 
 jest.mock('~/assets/konflux-logo.svg', () => ({
@@ -33,5 +44,18 @@ describe('AIChatHeader', () => {
     expect(screen.getByLabelText('Konflux')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Close' }));
     expect(onClose).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole('button', { name: 'History' })).not.toBeInTheDocument();
+  });
+
+  it('opens conversation history from the header menu', async () => {
+    const user = userEvent.setup();
+    const onToggleDrawer = jest.fn();
+
+    render(<AIChatHeader isDrawerOpen onClose={jest.fn()} onToggleDrawer={onToggleDrawer} />);
+
+    const historyButton = screen.getByRole('button', { name: 'History' });
+    expect(historyButton).toHaveAttribute('aria-expanded', 'true');
+    await user.click(historyButton);
+    expect(onToggleDrawer).toHaveBeenCalledTimes(1);
   });
 });
