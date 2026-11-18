@@ -225,10 +225,12 @@ describe('useAIChatConversations', () => {
   it('starts a new chat on the created conversation', async () => {
     const { result } = renderHook(() => useAIChatConversations());
 
+    let started = false;
     await act(async () => {
-      await result.current.startNewChat();
+      started = await result.current.startNewChat();
     });
 
+    expect(started).toBe(true);
     expect(createNewConversation).toHaveBeenCalledTimes(1);
     expect(setActiveConversation).toHaveBeenCalledWith('fresh-chat');
   });
@@ -237,10 +239,12 @@ describe('useAIChatConversations', () => {
     createNewConversation.mockRejectedValue(new AIClientError(404, 'Not Found', 'missing'));
     const { result } = renderHook(() => useAIChatConversations());
 
+    let started = true;
     await act(async () => {
-      await result.current.startNewChat();
+      started = await result.current.startNewChat();
     });
 
+    expect(started).toBe(false);
     expect(setActiveConversation).not.toHaveBeenCalled();
     expect(result.current.conversationError).toBe(KONFLUX_AI_ERROR_NOT_FOUND);
     expect(mockLoggerError).toHaveBeenCalledWith(
