@@ -18,7 +18,7 @@ type AIChatHistoryNavProps = {
   hasNoSearchResults: boolean;
   isLoadingConversations: boolean;
   refreshConversations: () => Promise<void>;
-  startNewChat: () => Promise<void>;
+  startNewChat: () => Promise<boolean>;
   selectConversation: (conversationId: string) => Promise<void>;
   filterConversations: (searchValue: string) => void;
   onCloseChat: () => void;
@@ -51,7 +51,11 @@ export const AIChatHistoryNav: React.FC<AIChatHistoryNavProps> = ({
 
   const handleNewChat = React.useCallback(() => {
     setIsDrawerOpen(false);
-    void startNewChat().then(() => refreshConversations());
+    void startNewChat().then((started) => {
+      if (started) {
+        void refreshConversations();
+      }
+    });
   }, [refreshConversations, startNewChat]);
 
   const handleSelectConversation = React.useCallback(

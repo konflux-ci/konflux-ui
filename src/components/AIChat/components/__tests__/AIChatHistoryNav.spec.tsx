@@ -107,7 +107,7 @@ const renderHistoryNav = (
     hasNoSearchResults: false,
     isLoadingConversations: false,
     refreshConversations: jest.fn().mockResolvedValue(undefined),
-    startNewChat: jest.fn().mockResolvedValue(undefined),
+    startNewChat: jest.fn().mockResolvedValue(true),
     selectConversation: jest.fn().mockResolvedValue(undefined),
     filterConversations: jest.fn(),
     onCloseChat: jest.fn(),
@@ -160,6 +160,20 @@ describe('AIChatHistoryNav', () => {
       expect(props.startNewChat).toHaveBeenCalledTimes(1);
       expect(props.refreshConversations).toHaveBeenCalledTimes(2);
     });
+  });
+
+  it('keeps the new-chat error when starting a chat fails', async () => {
+    const user = userEvent.setup();
+    const props = renderHistoryNav({ startNewChat: jest.fn().mockResolvedValue(false) });
+    const historyButton = screen.getByRole('button', { name: 'History' });
+
+    await user.click(historyButton);
+    await user.click(screen.getByRole('button', { name: 'New chat' }));
+
+    await waitFor(() => {
+      expect(props.startNewChat).toHaveBeenCalledTimes(1);
+    });
+    expect(props.refreshConversations).toHaveBeenCalledTimes(1);
   });
 
   it('selects a conversation and closes the drawer', async () => {

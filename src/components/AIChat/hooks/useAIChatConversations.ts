@@ -89,7 +89,7 @@ type UseAIChatConversationsResult = {
   hasNoSearchResults: boolean;
   isLoadingConversations: boolean;
   refreshConversations: () => Promise<void>;
-  startNewChat: () => Promise<void>;
+  startNewChat: () => Promise<boolean>;
   selectConversation: (conversationId: string) => Promise<void>;
   filterConversations: (searchValue: string) => void;
 };
@@ -144,15 +144,17 @@ export const useAIChatConversations = (): UseAIChatConversationsResult => {
     [allConversations],
   );
 
-  const startNewChat = React.useCallback(async () => {
+  const startNewChat = React.useCallback(async (): Promise<boolean> => {
     setConversationError(undefined);
 
     try {
       const conversation: IConversation = await createNewConversation();
       await setActiveConversation(conversation.id);
+      return true;
     } catch (error) {
       reportConversationError('Failed to start new Lightspeed chat', error);
       setConversationError(getErrorMessage(error));
+      return false;
     }
   }, [createNewConversation, setActiveConversation]);
 
