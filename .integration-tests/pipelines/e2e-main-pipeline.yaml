@@ -56,6 +56,7 @@ spec:
       type: string
       default: components-namespace-pull
     - name: spec-file
+      # change
       description: 'Cypress test spec file(s) to run (comma-separated; override for a single test)'
       default: 'tests/component-lifecycle.spec.ts,tests/environment-config.spec.ts'
       type: string
