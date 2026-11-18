@@ -28,6 +28,26 @@ jest.mock('~/components/AIChat/hooks/useAIChatConversations', () => ({
   useAIChatConversations: () => mockUseAIChatConversations(),
 }));
 
+jest.mock('~/components/AIChat/components/AIChatDeleteConversationModal', () => ({
+  AIChatDeleteConversationModal: ({
+    errorMessage,
+    isOpen,
+  }: {
+    errorMessage?: string;
+    isOpen: boolean;
+  }) => (isOpen && errorMessage ? <p>{errorMessage}</p> : null),
+}));
+
+jest.mock('~/components/AIChat/components/AIChatRenameConversationModal', () => ({
+  AIChatRenameConversationModal: ({
+    errorMessage,
+    isOpen,
+  }: {
+    errorMessage?: string;
+    isOpen: boolean;
+  }) => (isOpen && errorMessage ? <p>{errorMessage}</p> : null),
+}));
+
 jest.mock('~/components/AIChat/components/AIChatHistoryNav', () => ({
   AIChatHistoryNav: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
@@ -72,7 +92,16 @@ describe('AIChatDock', () => {
       conversations: [],
       conversationError: undefined,
       hasNoSearchResults: false,
+      deleteConversationTarget: null,
+      isDeletingConversation: false,
       isLoadingConversations: false,
+      isRenamingConversation: false,
+      renameConversationTarget: null,
+      closeDeleteConversation: jest.fn(),
+      confirmDeleteConversation: jest.fn(),
+      clearConversationError: jest.fn(),
+      closeRenameConversation: jest.fn(),
+      confirmRenameConversation: jest.fn(),
       refreshConversations: mockRefreshConversations,
       startNewChat: jest.fn(),
       selectConversation: jest.fn(),
@@ -186,7 +215,16 @@ describe('AIChatDock', () => {
       conversations: [],
       conversationError: KONFLUX_AI_ERROR_UNAVAILABLE,
       hasNoSearchResults: false,
+      deleteConversationTarget: null,
+      isDeletingConversation: false,
       isLoadingConversations: false,
+      isRenamingConversation: false,
+      renameConversationTarget: null,
+      closeDeleteConversation: jest.fn(),
+      confirmDeleteConversation: jest.fn(),
+      clearConversationError: jest.fn(),
+      closeRenameConversation: jest.fn(),
+      confirmRenameConversation: jest.fn(),
       refreshConversations: mockRefreshConversations,
       startNewChat: jest.fn(),
       selectConversation: jest.fn(),
@@ -196,5 +234,37 @@ describe('AIChatDock', () => {
     render(<AIChatDock />);
 
     expect(screen.getByText(KONFLUX_AI_ERROR_UNAVAILABLE)).toBeInTheDocument();
+  });
+
+  it('shows a rename failure inside the open rename dialog', () => {
+    mockUseAIChatInit.mockReturnValue({
+      initError: undefined,
+      isInitializing: false,
+      retryInit,
+    });
+    mockUseAIChatConversations.mockReturnValue({
+      activeConversationId: null,
+      conversations: [],
+      conversationError: KONFLUX_AI_ERROR_UNAVAILABLE,
+      hasNoSearchResults: false,
+      deleteConversationTarget: null,
+      isDeletingConversation: false,
+      isLoadingConversations: false,
+      isRenamingConversation: false,
+      renameConversationTarget: { conversationId: 'conv-1', currentName: 'Pipeline failure' },
+      closeDeleteConversation: jest.fn(),
+      confirmDeleteConversation: jest.fn(),
+      clearConversationError: jest.fn(),
+      closeRenameConversation: jest.fn(),
+      confirmRenameConversation: jest.fn(),
+      refreshConversations: mockRefreshConversations,
+      startNewChat: jest.fn(),
+      selectConversation: jest.fn(),
+      filterConversations: jest.fn(),
+    });
+
+    render(<AIChatDock />);
+
+    expect(screen.getAllByText(KONFLUX_AI_ERROR_UNAVAILABLE)).toHaveLength(2);
   });
 });
