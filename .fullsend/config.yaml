@@ -23,6 +23,7 @@ agents:
   - name: code
     source: harness/code.yaml
   - name: review
+    source: harness/review.yaml
     trigger: >-
       event.transition.kind == "comment_added"
       && has(event.entity.linked_change_proposal)
