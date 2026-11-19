@@ -6,6 +6,5 @@
     "baseUrl": "https://localhost:8080",
     "sourceMap": true
   },
-  "include": ["./**/*.ts"],
-  "exclude": ["**/__tests__/**"]
+  "include": ["./**/*.ts"]
 }
