@@ -147,7 +147,7 @@ export const PipelineRunDetailsView: React.FC = () => {
           key: 'cancel',
           label: 'Cancel',
           tooltipProps: {
-            content: 'Cancel this pipeline run',
+            content: 'Interrupt any executing non finally tasks, then execute finally tasks',
           },
           isDisabled: !isCancellableStatus(plrStatus) || !canPatchPipeline,
           disabledTooltip: !canPatchPipeline
