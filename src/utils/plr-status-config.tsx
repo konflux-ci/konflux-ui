@@ -178,7 +178,6 @@ export const ACTIVE_PLR_STATUSES = PLRStatus.registry.getStatusesByTag('active')
 
 export const CANCELLABLE_PLR_STATUSES = PLRStatus.registry.getStatusesByTag('cancellable');
 
-const CANCELLABLE_SET = new Set(CANCELLABLE_PLR_STATUSES);
-
-export const isCancellableStatus = (status: runStatus | null | undefined): boolean =>
-  !!status && CANCELLABLE_SET.has(status);
+export const isCancellableStatus = (pipelineRun: PipelineRunKind | null | undefined): boolean =>
+  !!pipelineRun &&
+  CANCELLABLE_PLR_STATUSES.includes(PIPELINE_RUN_STATUS_REGISTRY.deriveStatus(pipelineRun));

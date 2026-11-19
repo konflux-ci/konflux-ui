@@ -92,7 +92,7 @@ const NamespacePipelineRunDetailsView = () => {
         {
           key: 'cancel',
           label: 'Cancel',
-          isDisabled: !isCancellableStatus(status) || !canPatch,
+          isDisabled: !isCancellableStatus(run) || !canPatch,
           disabledTooltip: !canPatch ? "You don't have access to cancel a build" : undefined,
           onClick: () => pipelineRunCancel(run),
         },

@@ -149,7 +149,7 @@ export const PipelineRunDetailsView: React.FC = () => {
           tooltipProps: {
             content: 'Cancel this pipeline run',
           },
-          isDisabled: !isCancellableStatus(plrStatus) || !canPatchPipeline,
+          isDisabled: !isCancellableStatus(pipelineRun) || !canPatchPipeline,
           disabledTooltip: !canPatchPipeline
             ? "You don't have access to cancel a build"
             : undefined,

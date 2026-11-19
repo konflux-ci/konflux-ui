@@ -238,7 +238,7 @@ export const usePipelinerunActions = (pipelineRun: PipelineRunKind): Action[] =>
       id: 'pipelinerun-cancel',
       label: 'Cancel',
       tooltip: 'Cancel this pipeline run',
-      disabled: !isCancellableStatus(pipelineRunStatus(pipelineRun)) || !canPatchPipelineRun,
+      disabled: !isCancellableStatus(pipelineRun) || !canPatchPipelineRun,
       disabledTooltip: !canPatchPipelineRun
         ? "You don't have access to cancel this pipeline"
         : undefined,
@@ -433,8 +433,6 @@ export const useStopCancelActionsLazy = (
       const canPatch = canPatchPipelineRun;
       const status = pipelineRunStatus(pipelineRun);
       const isRunning = status === runStatus.Running;
-      const isCancellable = isCancellableStatus(status);
-
       return [
         {
           cta: () => pipelineRunStop(pipelineRun),
@@ -449,7 +447,7 @@ export const useStopCancelActionsLazy = (
           id: 'pipelinerun-cancel',
           label: 'Cancel',
           tooltip: 'Cancel this pipeline run',
-          disabled: !isCancellable || !canPatch,
+          disabled: !isCancellableStatus(pipelineRun) || !canPatch,
           disabledTooltip: !canPatch ? "You don't have access to cancel this pipeline" : undefined,
         },
       ];
