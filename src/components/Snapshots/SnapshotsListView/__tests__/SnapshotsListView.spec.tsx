@@ -1,13 +1,13 @@
 import '@testing-library/jest-dom';
 import { screen, act, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { mockSnapshot, mockSnapshots } from '~/__data__/mock-snapshots';
 import { PipelineRunEventType, PipelineRunLabel } from '~/consts/pipelinerun';
 import { useK8sAndKarchResources } from '~/hooks/useK8sAndKarchResources';
 import { ResourceSource } from '~/types/k8s';
 import { setupVirtualizerMock } from '~/unit-test-utils';
-import { mockSnapshot, mockSnapshots } from '../../../../__data__/mock-snapshots';
-import { mockUseNamespaceHook } from '../../../../unit-test-utils/mock-namespace';
-import { createUseParamsMock, renderWithQueryClientAndRouter } from '../../../../utils/test-utils';
+import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
+import { createUseParamsMock, renderWithQueryClientAndRouter } from '~/utils/test-utils';
 import SnapshotsListView from '../SnapshotsListView';
 
 jest.useFakeTimers();
@@ -24,7 +24,7 @@ jest.mock('react-i18next', () => ({
   useTranslation: jest.fn(() => ({ t: (x) => x })),
 }));
 
-jest.mock('../../../../hooks/useK8sAndKarchResources', () => ({
+jest.mock('~/hooks/useK8sAndKarchResources', () => ({
   useK8sAndKarchResources: jest.fn(),
 }));
 
