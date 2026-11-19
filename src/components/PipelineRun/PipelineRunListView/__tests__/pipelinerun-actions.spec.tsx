@@ -264,6 +264,36 @@ describe('usePipelinerunActions', () => {
     );
   });
 
+  it('should enable Cancel but disable Stop for Pending PipelineRuns', () => {
+    const pendingPipelineRun = testPipelineRuns[DataState.PIPELINE_RUN_PENDING];
+    const { result } = renderHook(() =>
+      usePipelinerunActions({
+        metadata: {
+          labels: {
+            'pipelines.appstudio.openshift.io/type': 'build',
+            [PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL]: PipelineRunEventType.PUSH,
+          },
+        },
+        spec: pendingPipelineRun.spec,
+        status: pendingPipelineRun.status,
+      } as unknown as PipelineRunKind),
+    );
+    const actions = result.current;
+
+    expect(actions[1]).toEqual(
+      expect.objectContaining({
+        label: 'Stop',
+        disabled: true,
+      }),
+    );
+    expect(actions[2]).toEqual(
+      expect.objectContaining({
+        label: 'Cancel',
+        disabled: false,
+      }),
+    );
+  });
+
   it('should contain enabled rerun actions when PAC enabled', () => {
     useAccessReviewForModelMock.mockReturnValueOnce([true, true]);
     const { result } = renderHook(() =>

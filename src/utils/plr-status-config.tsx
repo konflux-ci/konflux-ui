@@ -96,7 +96,7 @@ export const PIPELINE_RUN_STATUS_REGISTRY = createStatusRegistry<
           plr.metadata?.labels?.['kueue.x-k8s.io/queue-name'] !== undefined),
       category: 'neutral',
       weight: 18,
-      tags: ['unfinished'],
+      tags: ['unfinished', 'cancellable'],
     },
     {
       status: runStatus.Pending,
@@ -104,7 +104,7 @@ export const PIPELINE_RUN_STATUS_REGISTRY = createStatusRegistry<
         ctx.succeededStatus === 'None' || PENDING_REASONS.has(ctx.succeededCond?.reason ?? ''),
       category: 'neutral',
       weight: 20,
-      tags: ['unfinished'],
+      tags: ['unfinished', 'cancellable'],
       reason: (_plr, ctx) => ctx.succeededCond?.message,
     },
     {
@@ -135,7 +135,7 @@ export const PIPELINE_RUN_STATUS_REGISTRY = createStatusRegistry<
       },
       category: 'info',
       weight: 10,
-      tags: ['unfinished', 'active'],
+      tags: ['unfinished', 'active', 'cancellable'],
     },
     {
       status: runStatus.Failed,
@@ -175,3 +175,10 @@ export type PLRStatusRegistry = typeof PIPELINE_RUN_STATUS_REGISTRY;
 export const PLRStatus = createStatusComponents(PIPELINE_RUN_STATUS_REGISTRY);
 
 export const ACTIVE_PLR_STATUSES = PLRStatus.registry.getStatusesByTag('active');
+
+export const CANCELLABLE_PLR_STATUSES = PLRStatus.registry.getStatusesByTag('cancellable');
+
+const cancellableSet = new Set(CANCELLABLE_PLR_STATUSES);
+
+export const isCancellableStatus = (status: runStatus | null | undefined): boolean =>
+  !!status && cancellableSet.has(status);

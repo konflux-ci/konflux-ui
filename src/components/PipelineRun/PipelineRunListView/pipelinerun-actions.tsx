@@ -23,6 +23,7 @@ import { Snapshot } from '../../../types/coreBuildService';
 import { startNewBuild } from '../../../utils/component-utils';
 import { pipelineRunCancel, pipelineRunStop } from '../../../utils/pipeline-actions';
 import { pipelineRunStatus } from '../../../utils/pipeline-utils';
+import { isCancellableStatus } from '../../../utils/plr-status-config';
 import { useAccessReviewForModel } from '../../../utils/rbac';
 
 export const BUILD_REQUEST_LABEL = 'test.appstudio.openshift.io/run';
@@ -237,7 +238,7 @@ export const usePipelinerunActions = (pipelineRun: PipelineRunKind): Action[] =>
       id: 'pipelinerun-cancel',
       label: 'Cancel',
       tooltip: 'Interrupt any executing non "finally" tasks, then execute "finally" tasks',
-      disabled: !(pipelineRunStatus(pipelineRun) === runStatus.Running) || !canPatchPipelineRun,
+      disabled: !isCancellableStatus(pipelineRunStatus(pipelineRun)) || !canPatchPipelineRun,
       disabledTooltip: !canPatchPipelineRun
         ? "You don't have access to cancel this pipeline"
         : undefined,
@@ -432,6 +433,7 @@ export const useStopCancelActionsLazy = (
       const canPatch = canPatchPipelineRun;
       const status = pipelineRunStatus(pipelineRun);
       const isRunning = status === runStatus.Running;
+      const isCancellable = isCancellableStatus(status);
 
       return [
         {
@@ -447,7 +449,7 @@ export const useStopCancelActionsLazy = (
           id: 'pipelinerun-cancel',
           label: 'Cancel',
           tooltip: 'Interrupt any executing non "finally" tasks, then execute "finally" tasks',
-          disabled: !isRunning || !canPatch,
+          disabled: !isCancellable || !canPatch,
           disabledTooltip: !canPatch ? "You don't have access to cancel this pipeline" : undefined,
         },
       ];

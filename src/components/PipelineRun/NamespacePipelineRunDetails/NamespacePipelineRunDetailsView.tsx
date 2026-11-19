@@ -16,6 +16,7 @@ import { isResourceEnterpriseContract } from '~/utils/conforma-utils';
 import { pipelineRunCancel, pipelineRunStop } from '~/utils/pipeline-actions';
 import { getPipelineRunBreadcrumbs, getPipelineRunDetailsPath } from '~/utils/pipeline-run-routes';
 import { isTaskRunInPipelineRun, pipelineRunStatus } from '~/utils/pipeline-utils';
+import { isCancellableStatus } from '~/utils/plr-status-config';
 import { useAccessReviewForModel } from '~/utils/rbac';
 
 const NamespacePipelineRunDetailsView = () => {
@@ -91,7 +92,7 @@ const NamespacePipelineRunDetailsView = () => {
         {
           key: 'cancel',
           label: 'Cancel',
-          isDisabled: status !== runStatus.Running || !canPatch,
+          isDisabled: !isCancellableStatus(status) || !canPatch,
           disabledTooltip: !canPatch ? "You don't have access to cancel a build" : undefined,
           onClick: () => pipelineRunCancel(run),
         },
