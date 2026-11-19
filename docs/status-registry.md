@@ -81,7 +81,15 @@ Tags replace boolean flags for flexible grouping:
 ```ts
 registry.hasTag(runStatus.Running, 'unfinished')  // true
 registry.getStatusesByTag('terminal')              // [Failed, Cancelled, Skipped, Succeeded]
+registry.getStatusesByTag('cancellable')           // [Running, Queued, Pending]
 ```
+
+| Tag | Meaning | Statuses |
+| --- | ------- | -------- |
+| `unfinished` | Not yet reached a terminal state | Running, Cancelling, Queued, Pending |
+| `terminal` | Final state, no further transitions | Failed, Cancelled, Skipped, Succeeded |
+| `active` | Actively executing tasks | Running |
+| `cancellable` | Can be cancelled by the user | Running, Queued, Pending |
 
 ### Context optimization
 
@@ -155,6 +163,16 @@ const optionsMap = {
 | `statusFilterFn(item, values)` | Function | Filter predicate for `defineFilters` |
 | `registry` | `StatusRegistry` | Direct access to the underlying registry |
 
+### Tag-derived helpers
+
+These module-level exports from `plr-status-config.tsx` provide convenient access to tag-grouped statuses:
+
+| Export | Type | Description |
+| ------ | ---- | ----------- |
+| `ACTIVE_PLR_STATUSES` | `runStatus[]` | Statuses tagged `'active'` (currently Running) |
+| `CANCELLABLE_PLR_STATUSES` | `runStatus[]` | Statuses tagged `'cancellable'` (Running, Queued, Pending) |
+| `isCancellableStatus(status)` | `(runStatus \| null \| undefined) => boolean` | Returns `true` if the status is cancellable; `null`/`undefined`-safe |
+
 ---
 
 ## 4. Adding a new PipelineRun status
@@ -178,7 +196,7 @@ export enum runStatus {
   match: (_plr, ctx) => ctx.succeededCond?.reason === 'Queued',
   category: 'neutral',
   weight: 18,
-  tags: ['unfinished'],
+  tags: ['unfinished', 'cancellable'],
 },
 ```
 

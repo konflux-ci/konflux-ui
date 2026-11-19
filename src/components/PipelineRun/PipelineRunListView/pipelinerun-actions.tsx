@@ -237,7 +237,7 @@ export const usePipelinerunActions = (pipelineRun: PipelineRunKind): Action[] =>
       cta: () => pipelineRunCancel(pipelineRun),
       id: 'pipelinerun-cancel',
       label: 'Cancel',
-      tooltip: 'Interrupt any executing non "finally" tasks, then execute "finally" tasks',
+      tooltip: 'Cancel this pipeline run',
       disabled: !isCancellableStatus(pipelineRunStatus(pipelineRun)) || !canPatchPipelineRun,
       disabledTooltip: !canPatchPipelineRun
         ? "You don't have access to cancel this pipeline"
@@ -448,7 +448,7 @@ export const useStopCancelActionsLazy = (
           cta: () => pipelineRunCancel(pipelineRun),
           id: 'pipelinerun-cancel',
           label: 'Cancel',
-          tooltip: 'Interrupt any executing non "finally" tasks, then execute "finally" tasks',
+          tooltip: 'Cancel this pipeline run',
           disabled: !isCancellable || !canPatch,
           disabledTooltip: !canPatch ? "You don't have access to cancel this pipeline" : undefined,
         },

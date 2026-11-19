@@ -178,7 +178,7 @@ export const ACTIVE_PLR_STATUSES = PLRStatus.registry.getStatusesByTag('active')
 
 export const CANCELLABLE_PLR_STATUSES = PLRStatus.registry.getStatusesByTag('cancellable');
 
-const cancellableSet = new Set(CANCELLABLE_PLR_STATUSES);
+const CANCELLABLE_SET = new Set(CANCELLABLE_PLR_STATUSES);
 
 export const isCancellableStatus = (status: runStatus | null | undefined): boolean =>
-  !!status && cancellableSet.has(status);
+  !!status && CANCELLABLE_SET.has(status);
