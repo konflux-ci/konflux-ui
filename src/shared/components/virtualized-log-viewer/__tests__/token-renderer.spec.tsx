@@ -123,14 +123,14 @@ describe('token-renderer', () => {
       expect(anchor?.textContent).toBe('https://pipeline.test/build/123');
     });
 
-    it('should render an email token with mailto href', () => {
+    it('should render an email token with mailto href and no target=_blank', () => {
       const token = new Prism.Token('email', 'user@pipeline.test', 'url');
       const { container } = render(<>{renderTokenRecursive(token, 0, [], null, 0)}</>);
       const anchor = container.querySelector('a');
       expect(anchor).not.toBeNull();
       expect(anchor?.getAttribute('href')).toBe('mailto:user@pipeline.test');
-      expect(anchor?.getAttribute('target')).toBe('_blank');
-      expect(anchor?.getAttribute('rel')).toBe('noopener noreferrer');
+      expect(anchor?.getAttribute('target')).toBeNull();
+      expect(anchor?.getAttribute('rel')).toBeNull();
     });
 
     it('should preserve search highlights within URL anchors', () => {
@@ -270,11 +270,31 @@ describe('token-renderer', () => {
       expect(span?.tagName).toBe('SPAN');
     });
 
-    it('should include aria-label with new-tab indication on anchors', () => {
+    it('should include aria-label with new-tab indication on http anchors', () => {
       const token = new Prism.Token('url', 'https://example.com');
       const { container } = render(<>{renderTokenRecursive(token, 0, [], null, 0)}</>);
       const anchor = container.querySelector('a.token.url');
       expect(anchor?.getAttribute('aria-label')).toBe('https://example.com (opens in new tab)');
+    });
+
+    it('should include opens email client in aria-label for mailto anchors', () => {
+      const token = new Prism.Token('email', 'user@example.com', 'url');
+      const { container } = render(<>{renderTokenRecursive(token, 0, [], null, 0)}</>);
+      const anchor = container.querySelector('a');
+      expect(anchor).not.toBeNull();
+      expect(anchor?.getAttribute('aria-label')).toBe('user@example.com (opens email client)');
+      expect(anchor?.getAttribute('aria-label')).not.toContain('opens in new tab');
+    });
+
+    it('should omit target=_blank and rel from mailto anchors', () => {
+      const token = new Prism.Token('string', 'admin@pipeline.test');
+      const { container } = render(<>{renderTokenRecursive(token, 0, [], null, 0)}</>);
+      const anchor = container.querySelector('a.token.string');
+      expect(anchor).not.toBeNull();
+      expect(anchor?.getAttribute('href')).toBe('mailto:admin@pipeline.test');
+      expect(anchor?.getAttribute('target')).toBeNull();
+      expect(anchor?.getAttribute('rel')).toBeNull();
+      expect(anchor?.getAttribute('aria-label')).toBe('admin@pipeline.test (opens email client)');
     });
 
     it('should handle depth limit', () => {

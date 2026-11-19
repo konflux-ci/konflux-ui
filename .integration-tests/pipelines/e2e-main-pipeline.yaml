@@ -7,8 +7,11 @@ metadata:
 spec:
   params:
     - name: SNAPSHOT
-      description: 'The JSON string representing the snapshot of the application under test.'
-      # Should there be test image or UI builded image? Or are there both? Where to find out?
+      description: >-
+        Snapshot JSON for the application under test. Primary containerImage is
+        the non-instrumented UI digest; format-images resolves the parallel
+        e2e[-on-pr]-<sha> and instrumented[-on-pr]-<sha> tags for the runner
+        and UI under test.
       default: '{"components": [{"name":"konflux-ui", "containerImage": "quay.io/konflux_ui_qe/konflux-ui-tests:latest"}]}'
       type: string
     - name: konflux-test-infra-secret
@@ -186,10 +189,6 @@ spec:
           value: $(params.oci-container-repo):$(context.pipelineRun.name)
         - name: oci-credentials
           value: $(params.oci-credentials-secret)
-        - name: cpus
-          value: '4'
-        - name: memory
-          value: '16'
 
     # Operator-based install (KFLUXUI-1783). Injects the instrumented UI image
     # into deployment/proxy (operator has no UI image field; scaled down so it
@@ -283,8 +282,12 @@ spec:
           value: $(tasks.test-metadata.results.source-repo-url)
         - name: git-revision
           value: $(tasks.test-metadata.results.git-revision)
-        - name: target-branch
-          value: $(tasks.test-metadata.results.target-repo-branch)
+        - name: commit-info-branch
+          value: $(tasks.test-metadata.results.source-repo-branch)
+        - name: commit-info-author
+          value: $(tasks.test-metadata.results.pull-request-author)
+        - name: pull-request-number
+          value: $(tasks.test-metadata.results.pull-request-number)
         - name: target-repo-url
           value: https://github.com/$(tasks.test-metadata.results.git-org)/$(tasks.test-metadata.results.git-repo)
         - name: pipeline-run-name
@@ -353,6 +356,9 @@ spec:
         - input: '$(params.skip-slack-notification)'
           operator: notin
           values: ['true']
+        - input: '$(params.job-type)'
+          operator: notin
+          values: ['pr-check']
       taskRef:
         resolver: git
         params:

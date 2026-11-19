@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { AIClientError } from '@redhat-cloud-services/ai-client-common';
 import { useInProgress, useSendStreamMessage } from '@redhat-cloud-services/ai-react-state';
+import { LightspeedClientError } from '@redhat-cloud-services/lightspeed-client';
 import { getUserFacingErrorMessage } from '~/components/AIChat/message-utils';
 import { logger } from '~/monitoring/logger';
 
@@ -11,7 +12,7 @@ type UseAIChatSendResult = {
 };
 
 const getErrorMessage = (error: unknown): string => {
-  if (error instanceof AIClientError) {
+  if (error instanceof AIClientError || error instanceof LightspeedClientError) {
     return getUserFacingErrorMessage(error.status);
   }
   // Never expose raw Error.message — network/fetch details may include internal URLs.

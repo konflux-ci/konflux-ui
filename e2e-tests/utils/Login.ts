@@ -91,8 +91,10 @@ export class Login {
       const pass = password ?? PASSWORD;
 
       console.log('Logging in to stage Konflux...');
+      // Capture the unauthenticated userinfo call from the first visit and the
+      // successful one after SSO. The alias has to exist before cy.visit.
+      cy.intercept('GET', '**/oauth2/userinfo').as('userinfo');
       cy.visit(Cypress.expose('KONFLUX_BASE_URL'));
-      cy.get(stageLoginPO.dex).should('be.visible').click();
 
       // Click through IDP selection page if it appears
       cy.get('body').then(($body) => {
@@ -112,21 +114,22 @@ export class Login {
         }
       });
 
-      // Grant Access is always required
-      cy.contains(stageLoginPO.grantAccessClass, stageLoginPO.grantAccessText).click();
-
-      // ----- Workaround -----
-      // Sometimes page doesn't go to homepage but shows
-      // "Something went wrong - Invalid token" message.
-      cy.get('body', { timeout: 10000 }).then(($body) => {
-        if ($body.text().includes('You have successfully logged into Red Hat Internal SSO')) {
-          cy.wait(2000);
-          cy.visit(Cypress.expose('KONFLUX_BASE_URL'));
-        }
-      });
-      // ----- end of workaround -----
+      // The first load requests Kubernetes before the SSO session is usable and
+      // stays on the Invalid token page. Reload once userinfo succeeds.
+      this.waitForUserinfo(4);
+      cy.visit(Cypress.expose('KONFLUX_BASE_URL'));
 
       this.waitForApps();
+    });
+  }
+
+  private static waitForUserinfo(attemptsLeft: number) {
+    cy.wait('@userinfo', { timeout: 60000 }).then((interception) => {
+      if (interception.response?.statusCode === 200) {
+        return;
+      }
+      expect(attemptsLeft, 'authenticated /oauth2/userinfo response').to.be.greaterThan(1);
+      Login.waitForUserinfo(attemptsLeft - 1);
     });
   }
 
