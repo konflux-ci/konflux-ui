@@ -62,6 +62,21 @@ describe('AIChatDock', () => {
     });
   });
 
+  it('renders the toggle inside the AI Chat landmark', () => {
+    mockUseAIChatInit.mockReturnValue({
+      initError: undefined,
+      isInitializing: false,
+      retryInit,
+    });
+
+    render(<AIChatDock />);
+
+    const landmark = screen.getByRole('complementary', { name: 'AI Chat' });
+
+    expect(landmark.parentElement).toBe(document.body);
+    expect(landmark).toContainElement(screen.getByRole('button', { name: 'Toggle chat' }));
+  });
+
   it('does not retry initialization when opening a healthy chat panel', async () => {
     const user = userEvent.setup();
     mockUseAIChatInit.mockReturnValue({
