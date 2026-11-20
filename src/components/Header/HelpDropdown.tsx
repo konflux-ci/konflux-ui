@@ -13,6 +13,7 @@ import { createFeedbackModal } from '~/components/FeedbackSection/FeedbackModal'
 import { useModalLauncher } from '~/components/modal/ModalProvider';
 import {
   EXTERNAL_DOCUMENTATION_BASE_URL,
+  HELP_PORTAL_URL,
   INTERNAL_DOCUMENTATION_BASE_URL,
 } from '~/consts/documentation';
 import { useKonfluxPublicInfo } from '~/hooks/useKonfluxPublicInfo';
@@ -29,6 +30,11 @@ export const HelpDropdown: React.FC<HelpDropdownProps> = ({ onCliLoginClick }) =
   const showModal = useModalLauncher();
   const { startTour, currentRoute } = useTour();
   const [parsedData] = useKonfluxPublicInfo();
+  const configuredHelpPortalUrl = parsedData?.helpPortalUrl;
+  const helpPortalUrl =
+    typeof configuredHelpPortalUrl === 'string'
+      ? configuredHelpPortalUrl.trim() || HELP_PORTAL_URL
+      : HELP_PORTAL_URL;
   const isInternal = parsedData?.visibility === 'private';
   const documentationLink = isInternal
     ? INTERNAL_DOCUMENTATION_BASE_URL
@@ -106,7 +112,10 @@ export const HelpDropdown: React.FC<HelpDropdownProps> = ({ onCliLoginClick }) =
               Copy login command
             </DropdownItem>
             <DropdownItem key="documentation" data-test="help-dropdown-documentation">
-              <ExternalLink href={documentationLink} text={'Documentation'} />
+              <ExternalLink href={documentationLink} text="Documentation" />
+            </DropdownItem>
+            <DropdownItem key="get-help" data-test="help-dropdown-get-help">
+              <ExternalLink href={helpPortalUrl} text="Get help" onClick={() => setIsOpen(false)} />
             </DropdownItem>
             <DropdownItem
               key="share-feedback"

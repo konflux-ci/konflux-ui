@@ -75,6 +75,7 @@ export type KonfluxPublicInfo = {
   imageProxy?: ImageProxy;
   environment?: KonfluxInstanceEnvironmentType;
   statusPageUrl?: string;
+  helpPortalUrl?: string;
   integrations?: KonfluxPublicInfoIntegrations;
   rbac: KonfluxRbacItem[];
   visibility?: KonfluxInstanceVisibilityType;
