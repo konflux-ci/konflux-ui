@@ -5,7 +5,7 @@ import { pipelineWithCommits } from '~/components/Commits/__data__/pipeline-with
 import { FilterContext, FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { TEXT_SEARCH_TYPES } from '~/consts/constants';
 import { PipelineRunLabel, PipelineRunType, runStatus } from '~/consts/pipelinerun';
-import { useComponent } from '~/hooks/useComponents';
+import { useComponentV2 } from '~/hooks/useComponentsV2';
 import { usePipelineRunsV2 } from '~/hooks/usePipelineRunsV2';
 import * as dateTime from '~/shared/components/timestamp/datetime';
 import { PipelineRunKind } from '~/types';
@@ -80,8 +80,8 @@ jest.mock('~/utils/rbac', () => ({
   useAccessReviewForModel: jest.fn(() => [true, true]),
 }));
 
-jest.mock('~/hooks/useComponents', () => ({
-  useComponent: jest.fn(),
+jest.mock('~/hooks/useComponentsV2', () => ({
+  useComponentV2: jest.fn(),
 }));
 
 jest.mock('~/hooks/usePipelineRunsV2', () => ({
@@ -92,7 +92,7 @@ jest.mock('~/hooks/useScanResults', () => ({
   usePLRVulnerabilities: jest.fn(() => ({})),
 }));
 
-const useComponentMock = useComponent as jest.Mock;
+const useComponentV2Mock = useComponentV2 as jest.Mock;
 const useNamespaceMock = mockUseNamespaceHook('test-ns');
 const usePipelineRunsV2Mock = usePipelineRunsV2 as jest.Mock;
 
@@ -102,8 +102,8 @@ const withBuildLabels = (plr: PipelineRunKind): PipelineRunKind => ({
     ...plr.metadata,
     labels: {
       ...plr.metadata.labels,
-      [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.BUILD,
-      [PipelineRunLabel.COMPONENT_VERSION]: 'main',
+      [PipelineRunLabel.V2_PIPELINE_TYPE]: PipelineRunType.BUILD,
+      [PipelineRunLabel.V2_COMPONENT_VERSION]: 'main',
     },
   },
 });
@@ -137,7 +137,7 @@ describe('CommitsListViewV2', () => {
       jest.fn(),
       { isFetchingNextPage: false, hasNextPage: false },
     ]);
-    useComponentMock.mockReturnValue([mockComponentWithVersions, true, undefined]);
+    useComponentV2Mock.mockReturnValue([mockComponentWithVersions, true, undefined]);
     useNamespaceMock.mockReturnValue('test-ns');
   });
 
@@ -154,7 +154,7 @@ describe('CommitsListViewV2', () => {
   });
 
   it('should render error state when component loading fails', () => {
-    useComponentMock.mockReturnValue([undefined, true, new Error('component error')]);
+    useComponentV2Mock.mockReturnValue([undefined, true, new Error('component error')]);
     renderWithQueryClient(<CommitsListV2 />);
     screen.getByText('Unable to load commits');
   });
@@ -316,26 +316,137 @@ describe('CommitsListViewV2', () => {
       expect.objectContaining({
         selector: expect.objectContaining({
           matchLabels: expect.objectContaining({
-            'appstudio.openshift.io/component': 'sample-component',
+            [PipelineRunLabel.V2_COMPONENT]: 'sample-component',
           }),
         }),
       }),
     );
   });
 
-  it('should include version label in selector when versionName is provided', () => {
+  it('should not include the version in the label selector when versionName is provided', () => {
     renderWithQueryClient(<CommitsListV2 versionName="main" />);
 
     expect(usePipelineRunsV2Mock).toHaveBeenCalledWith(
       'test-ns',
       expect.objectContaining({
         selector: expect.objectContaining({
-          matchLabels: expect.objectContaining({
-            [PipelineRunLabel.COMPONENT_VERSION]: 'main',
-          }),
+          matchLabels: {
+            [PipelineRunLabel.V2_COMPONENT]: 'sample-component',
+          },
         }),
       }),
     );
+  });
+
+  it('should keep runs whose version is set as a label when versionName is provided', async () => {
+    renderWithQueryClient(<CommitsListV2 versionName="main" />);
+
+    await waitFor(() => {
+      expect(screen.getByText('#11 test-title')).toBeInTheDocument();
+      expect(screen.getByText('#12 test-title-3')).toBeInTheDocument();
+    });
+  });
+
+  it('should filter out runs of other versions when versionName is provided', async () => {
+    const otherVersionRun = {
+      ...withBuildLabels(pipelineWithCommits[1]),
+      metadata: {
+        ...withBuildLabels(pipelineWithCommits[1]).metadata,
+        labels: {
+          ...withBuildLabels(pipelineWithCommits[1]).metadata?.labels,
+          // distinct SHA so this run can't be hidden by commit grouping if the
+          // version filter wrongly admits it (it shares 'commit14rt' otherwise)
+          [PipelineRunLabel.COMMIT_LABEL]: 'other-version-commit',
+          [PipelineRunLabel.V2_COMPONENT_VERSION]: 'release-9.0',
+        },
+      },
+    } as PipelineRunKind;
+
+    usePipelineRunsV2Mock.mockReturnValue([
+      [...buildPipelineRuns, otherVersionRun],
+      true,
+      undefined,
+      jest.fn(),
+      { isFetchingNextPage: false, hasNextPage: false },
+    ]);
+    renderWithQueryClient(<CommitsListV2 versionName="main" />);
+
+    await waitFor(() => {
+      expect(screen.getByText('#11 test-title')).toBeInTheDocument();
+    });
+    expect(screen.queryByText('#11 test-title-2')).not.toBeInTheDocument();
+  });
+
+  it('should keep runs whose version is set only as an annotation when versionName is provided', async () => {
+    const base = withBuildLabels(pipelineWithCommits[1]);
+    const labels = { ...base.metadata?.labels };
+    delete labels[PipelineRunLabel.V2_COMPONENT_VERSION];
+    const annotationOnlyRun = {
+      ...base,
+      metadata: {
+        ...base.metadata,
+        labels,
+        annotations: {
+          ...base.metadata?.annotations,
+          [PipelineRunLabel.V2_COMPONENT_VERSION]: 'main',
+        },
+      },
+    } as PipelineRunKind;
+
+    usePipelineRunsV2Mock.mockReturnValue([
+      [annotationOnlyRun],
+      true,
+      undefined,
+      jest.fn(),
+      { isFetchingNextPage: false, hasNextPage: false },
+    ]);
+    renderWithQueryClient(<CommitsListV2 versionName="main" />);
+
+    await waitFor(() => {
+      expect(screen.getByText('#11 test-title-2')).toBeInTheDocument();
+    });
+  });
+
+  it('should keep runs whose version is set only as the legacy label when versionName is provided', async () => {
+    const base = withBuildLabels(pipelineWithCommits[1]);
+    const labels = { ...base.metadata?.labels };
+    delete labels[PipelineRunLabel.V2_COMPONENT_VERSION];
+    labels[PipelineRunLabel.COMPONENT_VERSION] = 'main';
+    const legacyLabelRun = { ...base, metadata: { ...base.metadata, labels } } as PipelineRunKind;
+
+    usePipelineRunsV2Mock.mockReturnValue([
+      [legacyLabelRun],
+      true,
+      undefined,
+      jest.fn(),
+      { isFetchingNextPage: false, hasNextPage: false },
+    ]);
+    renderWithQueryClient(<CommitsListV2 versionName="main" />);
+
+    await waitFor(() => {
+      expect(screen.getByText('#11 test-title-2')).toBeInTheDocument();
+    });
+  });
+
+  it('should exclude runs with no version label or annotation when versionName is provided', async () => {
+    const base = withBuildLabels(pipelineWithCommits[1]);
+    const labels = { ...base.metadata?.labels };
+    delete labels[PipelineRunLabel.V2_COMPONENT_VERSION];
+    const noVersionRun = { ...base, metadata: { ...base.metadata, labels } } as PipelineRunKind;
+
+    usePipelineRunsV2Mock.mockReturnValue([
+      [noVersionRun],
+      true,
+      undefined,
+      jest.fn(),
+      { isFetchingNextPage: false, hasNextPage: false },
+    ]);
+    renderWithQueryClient(<CommitsListV2 versionName="main" />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Monitor your CI/CD activity in one place')).toBeInTheDocument();
+    });
+    expect(screen.queryByText('#11 test-title-2')).not.toBeInTheDocument();
   });
 
   it('should render skeleton while data is not loaded', () => {
@@ -358,7 +469,7 @@ describe('CommitsListViewV2', () => {
         ...plr.metadata,
         labels: {
           ...plr.metadata.labels,
-          [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.TEST,
+          [PipelineRunLabel.V2_PIPELINE_TYPE]: PipelineRunType.TEST,
         },
       },
     })) as PipelineRunKind[];
@@ -466,6 +577,26 @@ describe('CommitsListViewV2', () => {
     expect(screen.getByText('Monitor your CI/CD activity in one place')).toBeVisible();
   });
 
+  it('should keep runs typed only via the legacy pipeline type label', () => {
+    const base = withBuildLabels(pipelineWithCommits[0]);
+    const labels = { ...base.metadata?.labels };
+    delete labels[PipelineRunLabel.V2_PIPELINE_TYPE];
+    labels[PipelineRunLabel.PIPELINE_TYPE] = PipelineRunType.BUILD;
+    const legacyTypeRun = { ...base, metadata: { ...base.metadata, labels } } as PipelineRunKind;
+
+    usePipelineRunsV2Mock.mockReturnValue([
+      [legacyTypeRun],
+      true,
+      undefined,
+      jest.fn(),
+      { isFetchingNextPage: false, hasNextPage: false },
+    ]);
+
+    renderWithQueryClient(<CommitsListV2 />);
+
+    expect(screen.getByText('#11 test-title')).toBeInTheDocument();
+  });
+
   it('should exclude non-build pipeline runs from commit list', () => {
     const mixedRuns = [
       ...buildPipelineRuns,
@@ -476,7 +607,7 @@ describe('CommitsListViewV2', () => {
           name: 'non-build-run',
           labels: {
             ...buildPipelineRuns[0].metadata.labels,
-            [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.TEST,
+            [PipelineRunLabel.V2_PIPELINE_TYPE]: PipelineRunType.TEST,
           },
         },
       },

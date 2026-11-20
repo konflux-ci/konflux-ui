@@ -216,5 +216,77 @@ describe('pipelineruns-filter-utils', () => {
       const result = filterPipelineRuns(pipelineRuns, filters);
       expect(result).toHaveLength(3);
     });
+
+    const makeRun = (
+      labels: Record<string, string>,
+      annotations?: Record<string, string>,
+    ): PipelineRunKind =>
+      ({
+        ...pipelineRuns[0],
+        metadata: {
+          ...pipelineRuns[0].metadata,
+          labels,
+          ...(annotations ? { annotations } : {}),
+        },
+      }) as PipelineRunKind;
+
+    describe('version sources (V2 label, legacy label, V2 annotation)', () => {
+      const versionFilters = (version: string) => ({
+        name: '',
+        status: [],
+        type: [],
+        version,
+      });
+
+      it('should match a run whose version is only set as the V2 label', () => {
+        const run = makeRun({ [PipelineRunLabel.V2_COMPONENT_VERSION]: 'v9.0' });
+        expect(filterPipelineRuns([run], versionFilters('v9.0'))).toHaveLength(1);
+      });
+
+      it('should match a run whose version is only set as the legacy label', () => {
+        const run = makeRun({ [PipelineRunLabel.COMPONENT_VERSION]: 'v9.0' });
+        expect(filterPipelineRuns([run], versionFilters('v9.0'))).toHaveLength(1);
+      });
+
+      it('should match a run whose version is only set as the V2 annotation', () => {
+        const run = makeRun({}, { [PipelineRunLabel.V2_COMPONENT_VERSION]: 'v9.0' });
+        expect(filterPipelineRuns([run], versionFilters('v9.0'))).toHaveLength(1);
+      });
+
+      it('should prefer the V2 label over the legacy label', () => {
+        const run = makeRun({
+          [PipelineRunLabel.V2_COMPONENT_VERSION]: 'v2-label',
+          [PipelineRunLabel.COMPONENT_VERSION]: 'legacy-label',
+        });
+        expect(filterPipelineRuns([run], versionFilters('v2-label'))).toHaveLength(1);
+        expect(filterPipelineRuns([run], versionFilters('legacy-label'))).toHaveLength(0);
+      });
+
+      it('should exclude a run with no version source when filtering by version', () => {
+        const run = makeRun({});
+        expect(filterPipelineRuns([run], versionFilters('v9.0'))).toHaveLength(0);
+      });
+    });
+
+    describe('type and component sources (V2 vs legacy labels)', () => {
+      it('should match a run whose type is only set as the V2 label', () => {
+        const run = makeRun({ [PipelineRunLabel.V2_PIPELINE_TYPE]: PipelineRunType.BUILD });
+        expect(filterPipelineRuns([run], { name: '', status: [], type: ['build'] })).toHaveLength(
+          1,
+        );
+      });
+
+      it('should match a run whose component is only set as the V2 label', () => {
+        const run = makeRun({ [PipelineRunLabel.V2_COMPONENT]: 'sample-component' });
+        expect(
+          filterPipelineRuns(
+            [run],
+            { name: '', status: [], type: [] },
+            undefined,
+            'sample-component',
+          ),
+        ).toHaveLength(1);
+      });
+    });
   });
 });

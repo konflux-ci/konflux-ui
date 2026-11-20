@@ -49,6 +49,12 @@ export enum PipelineRunLabel {
   MINTMAKER_COMPONENT_LABEL = 'mintmaker.appstudio.redhat.com/component',
   MINTMAKER_NAMESPACE_LABEL = 'mintmaker.appstudio.redhat.com/namespace',
   MINTMAKER_APPLICATION_LABEL = 'mintmaker.appstudio.redhat.com/application',
+
+  // New component model (konflux-ci.dev) build PipelineRun labels.
+  // Note: V2_COMPONENT_VERSION is usually set as an annotation; on some PLRs also as a label.
+  V2_COMPONENT = 'build.konflux-ci.dev/component',
+  V2_COMPONENT_VERSION = 'build.konflux-ci.dev/version',
+  V2_PIPELINE_TYPE = 'pipelines.konflux-ci.dev/type',
 }
 
 export enum PipelineRunType {
