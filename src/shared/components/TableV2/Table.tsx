@@ -16,7 +16,7 @@ import { type TableProps } from './types';
  * Main TableV2 component — the primary orchestrator for rendering data tables.
  *
  * Composes several hooks and sub-components into a full-featured table:
- * - **Column state** (`useColumnState`) — persisted visibility, order, and sort
+ * - **Column state** (`useColumnState`) — visibility and order in localStorage, sort in sessionStorage
  * - **Responsive columns** (`useResponsiveColumns`) — hides columns at breakpoints
  * - **Core table** (`useTable`) — TanStack Table instance with sorting and expansion
  * - **Scroll margin** (`useScrollMargin`) — offset for content above the table in the scroll container
