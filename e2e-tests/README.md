@@ -77,10 +77,11 @@ It's possible to run the backend locally using the same scripts as are used for 
 
 First configure the local development server's upstream targets and certificate trust using [Running with Konflux-ci](../README.md#running-with-konflux-ci). Start it with `yarn start` and finish signing in at `https://localhost:8080` in your browser, as above.
 
-For this setup, set also `LOCAL_CLUSTER` variable to `true` so the tests use the local backend's namespace defaults.
+For this setup, leave `LOCAL_CLUSTER` unset (it selects the Dex form login, which the signed-in development server does not show) and set the local backend's namespace explicitly:
 
 ```
-export CYPRESS_LOCAL_CLUSTER=true
+unset CYPRESS_LOCAL_CLUSTER
+export CYPRESS_HAC_NAMESPACE=default-tenant
 ```
 
 Run tests by using the command `$ yarn run cy:open` or pick some other way described in a previous chapter.
