@@ -183,6 +183,9 @@ describe('SecurityConformaTab', () => {
     expect(components).toHaveTextContent('1 total');
     expect(components).toHaveTextContent('1 failed');
 
+    const upcoming = screen.getByTestId('conforma-summary-upcoming-changes');
+    expect(upcoming).toHaveTextContent('0 policy changes');
+
     const results = screen.getByTestId('conforma-summary-results');
     expect(results).toHaveTextContent('1 violations');
     expect(results).toHaveTextContent('0 warnings');
