@@ -8,13 +8,14 @@ import {
   mockNamespaces,
 } from '~/components/ReleaseMonitor/__data__/mock-release-data';
 import ReleaseMonitorListView from '~/components/ReleaseMonitor/ReleaseMonitorListView';
-import ReleasePlanAdmissionsInNamespace from '~/components/ReleaseMonitor/ReleasePlanAdmissionsInNamespace';
-import ReleasePlansInNamespace from '~/components/ReleaseMonitor/ReleasePlansInNamespace';
-import ReleasesInNamespace from '~/components/ReleaseMonitor/ReleasesInNamespace';
+import {
+  MonitoredReleasesResult,
+  useMonitoredReleases,
+} from '~/components/ReleaseMonitor/useMonitoredReleases';
 import { useNamespaceInfo } from '~/shared/providers/Namespace';
 import { getLastUsedNamespace } from '~/shared/providers/Namespace/utils';
-import { ReleaseKind, ReleaseCondition } from '~/types';
-import { ReleasePlanKind } from '~/types/coreBuildService';
+import { MonitoredReleaseKind, ReleaseKind, ReleaseCondition } from '~/types';
+import { ReleasePlanKind, ReleasePlanLabel } from '~/types/coreBuildService';
 import { ReleasePlanAdmissionKind } from '~/types/release-plan-admission';
 
 // Mock dependencies
@@ -29,11 +30,9 @@ jest.mock('~/shared/providers/Namespace/utils', () => ({
   setLastUsedNamespace: jest.fn(),
 }));
 
-jest.mock('~/components/ReleaseMonitor/ReleasesInNamespace', () => jest.fn(() => null));
-jest.mock('~/components/ReleaseMonitor/ReleasePlansInNamespace', () => jest.fn(() => null));
-jest.mock('~/components/ReleaseMonitor/ReleasePlanAdmissionsInNamespace', () =>
-  jest.fn(() => null),
-);
+jest.mock('~/components/ReleaseMonitor/useMonitoredReleases', () => ({
+  useMonitoredReleases: jest.fn(),
+}));
 
 jest.mock('~/shared/components/table/TableComponent', () => {
   type MockColumn = { title: React.ReactNode; props: ThProps };
@@ -120,9 +119,17 @@ jest.mock('react-i18next', () => ({
 
 const mockUseNamespaceInfo = useNamespaceInfo as jest.Mock;
 const mockGetLastUsedNamespace = getLastUsedNamespace as jest.Mock;
-const mockReleasesInNamespace = ReleasesInNamespace as jest.Mock;
-const mockReleasePlansInNamespace = ReleasePlansInNamespace as jest.Mock;
-const mockReleasePlanAdmissionsInNamespace = ReleasePlanAdmissionsInNamespace as jest.Mock;
+const mockUseMonitoredReleases = useMonitoredReleases as jest.Mock;
+
+/** Namespaces the view asked `useMonitoredReleases` to fetch, across all renders. */
+const fetchedNamespaces = (): string[] =>
+  (mockUseMonitoredReleases.mock.calls as [string[]][]).flatMap(([namespaces]) => namespaces);
+
+/** Namespaces the view asked `useMonitoredReleases` to fetch on its latest render. */
+const lastFetchedNamespaces = (): string[] => {
+  const calls = mockUseMonitoredReleases.mock.calls as [string[]][];
+  return calls.length > 0 ? calls[calls.length - 1][0] : [];
+};
 
 const renderWithProviders = (ui: React.ReactElement) =>
   render(
@@ -296,84 +303,45 @@ describe('ReleaseMonitorListView', () => {
       },
     ] as ReleasePlanAdmissionKind[];
 
-    const triggerReleasesLoaded = (
-      namespace: string,
-      onReleasesLoaded: (namespace: string, releases: ReleaseKind[]) => void,
-    ) => {
-      const namespaceReleases = releases.filter(
-        (release) => release.metadata.namespace === namespace,
-      );
-      setTimeout(() => onReleasesLoaded(namespace, namespaceReleases), 0);
-    };
+    // Mirrors what the real hook does: resolve each release's ReleasePlan, then the
+    // ReleasePlanAdmission it points at, and copy its product data onto the release.
+    const enrichReleasesOf = (namespacesToFetch: string[]): MonitoredReleaseKind[] =>
+      releases
+        .filter((release) => namespacesToFetch.includes(release.metadata.namespace))
+        .map((release) => {
+          const releasePlan = releasePlans.find(
+            (plan) =>
+              plan.metadata.namespace === release.metadata.namespace &&
+              plan.metadata.name === release.spec.releasePlan,
+          );
+          const rpaName =
+            releasePlan?.metadata.labels?.[ReleasePlanLabel.RELEASE_PLAN_ADMISSION] || '';
+          const rpa = releasePlanAdmissions.find(
+            (admission) =>
+              admission.metadata.namespace === releasePlan?.spec?.target &&
+              admission.metadata.name === rpaName,
+          );
+          return {
+            ...release,
+            product: rpa?.spec?.data?.releaseNotes?.product_name,
+            productVersion: rpa?.spec?.data?.releaseNotes?.product_version,
+            rpa: rpaName,
+          };
+        });
 
-    const triggerReleasePlansLoaded = (
-      namespace: string,
-      onReleasePlansLoaded: (namespace: string, plans: ReleasePlanKind[]) => void,
-    ) => {
-      const namespacePlans = releasePlans.filter((plan) => plan.metadata.namespace === namespace);
-      setTimeout(() => onReleasePlansLoaded(namespace, namespacePlans), 0);
-    };
-
-    const triggerReleasePlanAdmissionsLoaded = (
-      namespace: string,
-      onReleasePlanAdmissionsLoaded: (
-        namespace: string,
-        admissions: ReleasePlanAdmissionKind[],
-      ) => void,
-    ) => {
-      const namespaceAdmissions = releasePlanAdmissions.filter(
-        (admission) => admission.metadata.namespace === namespace,
-      );
-      setTimeout(() => onReleasePlanAdmissionsLoaded(namespace, namespaceAdmissions), 0);
-    };
-
-    mockReleasesInNamespace.mockImplementation(
-      ({
-        namespace,
-        onReleasesLoaded,
-      }: {
-        namespace: string;
-        onReleasesLoaded: (namespace: string, releases: ReleaseKind[]) => void;
-      }) => {
-        React.useEffect(() => {
-          triggerReleasesLoaded(namespace, onReleasesLoaded);
-        }, [namespace, onReleasesLoaded]);
-        return null;
-      },
-    );
-
-    mockReleasePlansInNamespace.mockImplementation(
-      ({
-        namespace,
-        onReleasePlansLoaded,
-      }: {
-        namespace: string;
-        onReleasePlansLoaded: (namespace: string, plans: ReleasePlanKind[]) => void;
-      }) => {
-        React.useEffect(() => {
-          triggerReleasePlansLoaded(namespace, onReleasePlansLoaded);
-        }, [namespace, onReleasePlansLoaded]);
-        return null;
-      },
-    );
-
-    mockReleasePlanAdmissionsInNamespace.mockImplementation(
-      ({
-        namespace,
-        onReleasePlanAdmissionsLoaded,
-      }: {
-        namespace: string;
-        onReleasePlanAdmissionsLoaded: (
-          namespace: string,
-          admissions: ReleasePlanAdmissionKind[],
-        ) => void;
-      }) => {
-        React.useEffect(() => {
-          triggerReleasePlanAdmissionsLoaded(namespace, onReleasePlanAdmissionsLoaded);
-        }, [namespace, onReleasePlanAdmissionsLoaded]);
-        return null;
-      },
-    );
+    // Cached per namespace list so re-renders keep returning the same array reference.
+    const resultsByNamespaces = new Map<string, MonitoredReleasesResult>();
+    mockUseMonitoredReleases.mockImplementation((namespacesToFetch: string[]) => {
+      const key = namespacesToFetch.join(',');
+      if (!resultsByNamespaces.has(key)) {
+        resultsByNamespaces.set(key, {
+          releases: enrichReleasesOf(namespacesToFetch),
+          isLoading: false,
+          error: undefined,
+        });
+      }
+      return resultsByNamespaces.get(key);
+    });
   });
 
   afterEach(() => {
@@ -388,18 +356,11 @@ describe('ReleaseMonitorListView', () => {
     });
   };
 
-  it('renders ReleasesInNamespace for each namespace', () => {
+  it('fetches releases for each namespace', () => {
     renderWithProviders(<ReleaseMonitorListView />);
-    // In strict mode, components render twice, so we check it's called at least once per namespace
-    expect(mockReleasesInNamespace.mock.calls.length).toBeGreaterThanOrEqual(mockNamespaces.length);
-    expect(mockReleasePlansInNamespace.mock.calls.length).toBeGreaterThanOrEqual(
-      mockNamespaces.length,
-    );
 
-    // Verify each namespace was rendered
-    const renderedNamespaces = mockReleasesInNamespace.mock.calls.map((call) => call[0].namespace);
     mockNamespaces.forEach((ns) => {
-      expect(renderedNamespaces).toContain(ns.metadata.name);
+      expect(fetchedNamespaces()).toContain(ns.metadata.name);
     });
   });
 
@@ -797,7 +758,7 @@ describe('ReleaseMonitorListView', () => {
 
       await waitFor(() => {
         // Verify all namespaces are being fetched
-        const namespaceCalls = mockReleasesInNamespace.mock.calls.map((call) => call[0].namespace);
+        const namespaceCalls = fetchedNamespaces();
         tenNamespaces.forEach((ns) => {
           expect(namespaceCalls).toContain(ns.metadata.name);
         });
@@ -820,7 +781,7 @@ describe('ReleaseMonitorListView', () => {
 
       await waitFor(() => {
         // Should only fetch the last used namespace initially
-        const namespaceCalls = mockReleasesInNamespace.mock.calls.map((call) => call[0].namespace);
+        const namespaceCalls = fetchedNamespaces();
         expect(namespaceCalls).toContain('namespace-5');
       });
 
@@ -849,7 +810,7 @@ describe('ReleaseMonitorListView', () => {
 
       await waitFor(() => {
         // Should fetch the first namespace as fallback
-        const namespaceCalls = mockReleasesInNamespace.mock.calls.map((call) => call[0].namespace);
+        const namespaceCalls = fetchedNamespaces();
         expect(namespaceCalls).toContain('namespace-1');
       });
 
@@ -879,7 +840,7 @@ describe('ReleaseMonitorListView', () => {
 
       // Wait for initial load and verify namespace-1 is being fetched
       await waitFor(() => {
-        const namespaceCalls = mockReleasesInNamespace.mock.calls.map((call) => call[0].namespace);
+        const namespaceCalls = fetchedNamespaces();
         expect(namespaceCalls).toContain('namespace-1');
       });
 
@@ -927,11 +888,9 @@ describe('ReleaseMonitorListView', () => {
       );
 
       await waitFor(() => {
-        const namespaceCalls = mockReleasesInNamespace.mock.calls.map((call) => call[0].namespace);
+        const namespaceCalls = fetchedNamespaces();
         expect(namespaceCalls).toContain('namespace-1');
       });
-
-      const initialCallCount = mockReleasesInNamespace.mock.calls.length;
 
       // Trigger another render
       rerender(
@@ -954,10 +913,9 @@ describe('ReleaseMonitorListView', () => {
         </MemoryRouter>,
       );
 
-      // Should not re-initialize (call count should not significantly increase)
-      // Note: In React strict mode, there might be some double-renders
-      const finalCallCount = mockReleasesInNamespace.mock.calls.length;
-      expect(finalCallCount).toBeLessThanOrEqual(initialCallCount + 5);
+      // Should not re-initialize: the fetch list still holds the namespaces resolved on the
+      // first load, not the last used one that the above-threshold branch would have picked.
+      expect(lastFetchedNamespaces()).toEqual(['namespace-1', 'namespace-2']);
     });
   });
 
@@ -977,24 +935,19 @@ describe('ReleaseMonitorListView', () => {
 
       // Wait for initial namespace to be fetched
       await waitFor(() => {
-        const namespaceCalls = mockReleasesInNamespace.mock.calls.map((call) => call[0].namespace);
+        const namespaceCalls = fetchedNamespaces();
         expect(namespaceCalls).toContain('namespace-1');
       });
-
-      const initialCallCount = mockReleasesInNamespace.mock.calls.length;
 
       // Select an additional namespace
       const option = await toggleFilter(/namespace filter menu/i, /namespace-5/i);
 
       await waitFor(() => {
         // Should now be fetching both namespaces
-        const namespaceCalls = mockReleasesInNamespace.mock.calls.map((call) => call[0].namespace);
+        const namespaceCalls = lastFetchedNamespaces();
         expect(namespaceCalls).toContain('namespace-1');
         expect(namespaceCalls).toContain('namespace-5');
       });
-
-      // Verify additional namespace was added (call count increased)
-      expect(mockReleasesInNamespace.mock.calls.length).toBeGreaterThan(initialCallCount);
 
       fireEvent.click(option);
     });
@@ -1015,7 +968,7 @@ describe('ReleaseMonitorListView', () => {
 
       // Wait for initial namespace to be fetched
       await waitFor(() => {
-        const namespaceCalls = mockReleasesInNamespace.mock.calls.map((call) => call[0].namespace);
+        const namespaceCalls = fetchedNamespaces();
         expect(namespaceCalls).toContain('namespace-1');
       });
 
@@ -1024,9 +977,7 @@ describe('ReleaseMonitorListView', () => {
       // This ensures that already-fetched namespaces are not added again.
       // We've verified that namespace-1 is in the fetch list, so it won't be duplicated
       // even if the filter changes include it.
-      const uniqueNamespaces = new Set(
-        mockReleasesInNamespace.mock.calls.map((call) => call[0].namespace),
-      );
+      const uniqueNamespaces = new Set(fetchedNamespaces());
 
       // Each namespace should only appear once in the calls
       expect(uniqueNamespaces.has('namespace-1')).toBe(true);
@@ -1048,7 +999,7 @@ describe('ReleaseMonitorListView', () => {
 
       // Wait for initial namespace to be fetched
       await waitFor(() => {
-        const namespaceCalls = mockReleasesInNamespace.mock.calls.map((call) => call[0].namespace);
+        const namespaceCalls = fetchedNamespaces();
         expect(namespaceCalls).toContain('namespace-1');
       });
 
@@ -1057,7 +1008,7 @@ describe('ReleaseMonitorListView', () => {
 
       // Verify both namespaces are now being fetched
       await waitFor(() => {
-        const namespaceCalls = mockReleasesInNamespace.mock.calls.map((call) => call[0].namespace);
+        const namespaceCalls = fetchedNamespaces();
         expect(namespaceCalls).toContain('namespace-1');
         expect(namespaceCalls).toContain('namespace-3');
       });
@@ -1065,9 +1016,7 @@ describe('ReleaseMonitorListView', () => {
       // The component supports adding multiple namespaces through the filter
       // The useEffect watches the namespace filter and adds any new selections
       // to the namespacesToFetch array
-      const uniqueNamespaces = new Set(
-        mockReleasesInNamespace.mock.calls.map((call) => call[0].namespace),
-      );
+      const uniqueNamespaces = new Set(fetchedNamespaces());
       expect(uniqueNamespaces.size).toBeGreaterThanOrEqual(2);
     });
 
@@ -1091,9 +1040,7 @@ describe('ReleaseMonitorListView', () => {
       // Verify all 10 namespaces are being fetched
       await waitFor(
         () => {
-          const namespaceCalls = mockReleasesInNamespace.mock.calls.map(
-            (call) => call[0].namespace,
-          );
+          const namespaceCalls = fetchedNamespaces();
           // Should have calls for all 10 namespaces
           expect(namespaceCalls.length).toBeGreaterThanOrEqual(10);
           tenNamespaces.forEach((ns) => {
@@ -1105,9 +1052,7 @@ describe('ReleaseMonitorListView', () => {
 
       // The second useEffect should not run because namespaces.length <= NAMESPACE_THRESHOLD
       // So changing filters should not trigger additional namespace fetches
-      const uniqueNamespaces = new Set(
-        mockReleasesInNamespace.mock.calls.map((call) => call[0].namespace),
-      );
+      const uniqueNamespaces = new Set(fetchedNamespaces());
       expect(uniqueNamespaces.size).toBe(10);
     });
   });
