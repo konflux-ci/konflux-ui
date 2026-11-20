@@ -67,7 +67,7 @@ jira_create_issue(
     description="<filled template as markdown>",
     # components="<if configured>",
     additional_fields='{"priority": {"name": "<priority>"}}'
-    # With parent: '{"priority": {"name": "<priority>"}, "parent": "<PARENT_KEY>"}'
+    # With parent: '{"priority": {"name": "<priority>"}, "parent": {"key": "<PARENT_KEY>"}}'
     # With labels: '{"priority": {"name": "<priority>"}, "labels": ["<label1>"]}'
 )
 ```
@@ -152,7 +152,7 @@ jira_create_issue(
 - Use limit/offset query parameters against the existing API
 - Update table footer with page controls (previous, next, page numbers)
 - Preserve current sort and filter state across page changes""",
-    additional_fields='{"priority": {"name": "Normal"}, "parent": "KFLUXUI-1200"}'
+    additional_fields='{"priority": {"name": "Normal"}, "parent": {"key": "KFLUXUI-1200"}}'
 )
 ```
 
@@ -207,6 +207,6 @@ jira_create_issue(
 - Mockup: https://figma.com/file/abc123
 - Statuses to support: Succeeded, Failed, Running, Pending
 - Filter should integrate with existing table toolbar alongside search""",
-    additional_fields='{"priority": {"name": "Normal"}, "parent": "KFLUXUI-1200"}'
+    additional_fields='{"priority": {"name": "Normal"}, "parent": {"key": "KFLUXUI-1200"}}'
 )
 ```
