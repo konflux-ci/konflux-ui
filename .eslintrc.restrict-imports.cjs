@@ -5,24 +5,38 @@ module.exports = {
       'error',
       {
         zones: [
-          // Zone 1: Files in `./src/utils` (excluding test files) may only import from:
+          // Zone 1: Files in `./src/utils` (excluding test files and the `service-account` dir,
+          // which has its own Zone 1c) may only import from:
           // `./src/utils`, `./src/types`, `./src/k8s`, `./src/models`, `./src/consts`, `./src/unit-test-utils`, `./src/__data__`, `./src/kubearchive`, `./src/auth`, `./src/shared` or `./src/routes`.
           {
-            target: './src/utils/!(__tests__)/**/*',
+            target: './src/utils/!(__tests__|service-account)/**/*',
             from: [
               './src/!(utils|types|k8s|models|consts|kubearchive|unit-test-utils|__data__|auth|shared|routes)/**/*',
             ],
             message:
-              'Files in `./src/utils` may only import from `./src/utils`, `./src/types`, `./src/k8s`, `./src/models`, `./src/consts`, `./src/unit-test-utils`, `./src/__data__`, `./src/kubearchive`, `./src/auth`, `./src/shared` or `./src/routes`',
+              'Files in `./src/utils` may only import from `./src/utils`, `./src/types`, `./src/k8s`, `./src/models`, `./src/consts`, `./src/unit-test-utils`, `./src/__data__`, `./src/kubearchive`, `./src/auth`, `./src/shared` or `./src/routes`.',
           },
-          // Zone 1b: Non-test files directly in `./src/utils` (like `./src/utils/*.ts` or `./src/utils/*.tsx`) have the same restrictions.
+          // Zone 1b: Non-test files directly in `./src/utils` (like `./src/utils/*.ts` or `./src/utils/*.tsx`) have the same restrictions as Zone 1.
           {
             target: './src/utils/*.ts?(x)',
             from: [
               './src/!(utils|types|k8s|models|consts|kubearchive|unit-test-utils|__data__|auth|shared|routes)/**/*',
             ],
             message:
-              'Files in `./src/utils` may only import from `./src/utils`, `./src/types`, `./src/k8s`, `./src/models`, `./src/consts`, `./src/unit-test-utils`, `./src/__data__`, `./src/kubearchive`, `./src/auth`, `./src/shared` or `./src/routes`',
+              'Files in `./src/utils` may only import from `./src/utils`, `./src/types`, `./src/k8s`, `./src/models`, `./src/consts`, `./src/unit-test-utils`, `./src/__data__`, `./src/kubearchive`, `./src/auth`, `./src/shared` or `./src/routes`.',
+          },
+          // Zone 1c: Only the dual-model migration utilities in `./src/utils/service-account`
+          // may additionally import from `./src/feature-flags` (listAllComponentsBothModels
+          // gates the V2 list on the component-model flag). New flag reads anywhere else in
+          // `./src/utils` should instead be threaded from the component layer.
+          // TODO: remove this zone (and the flag read in service-account-utils) once the dual-model migration completes.
+          {
+            target: './src/utils/service-account/**/*',
+            from: [
+              './src/!(utils|types|k8s|models|consts|kubearchive|unit-test-utils|__data__|auth|shared|routes|feature-flags)/**/*',
+            ],
+            message:
+              'Files in `./src/utils/service-account` may only import from the usual `./src/utils` allowlist plus `./src/feature-flags` (dual-model migration utilities only).',
           },
           // Zone 2: Files in `./src/types` may only import from `./src/types`.
           {
