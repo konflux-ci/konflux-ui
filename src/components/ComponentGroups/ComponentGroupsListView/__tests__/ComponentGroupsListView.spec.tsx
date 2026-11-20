@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { NuqsTestingAdapter } from 'nuqs/adapters/testing';
 import { MOCK_COMPONENT_GROUPS } from '~/components/ComponentGroups/ComponentGroupsListView/__data__/mockComponentGroups';
 import { ComponentGroupsListView } from '~/components/ComponentGroups/ComponentGroupsListView/ComponentGroupsListView';
@@ -109,6 +110,19 @@ describe('ComponentGroupsListView', () => {
     expect(latestBuild).toHaveTextContent('on v1.2.0');
 
     expect(screen.getByTestId('component-group-no-build')).toHaveTextContent('No Builds yet');
+  });
+
+  it('should expand a group from its components column', async () => {
+    const user = userEvent.setup();
+    renderWithQueryClient(<TestedComponent />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('table-v2')).toBeInTheDocument();
+    });
+
+    await user.click(screen.getAllByRole('button', { name: '3 Components' })[0]);
+
+    expect(screen.getByTestId('group-detail-table-rows')).toBeInTheDocument();
   });
 
   it('should call useComponentGroups with the current namespace', () => {

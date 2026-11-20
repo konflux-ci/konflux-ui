@@ -1,15 +1,22 @@
 import { Link } from 'react-router-dom';
 import { Flex } from '@patternfly/react-core';
-import { COMPONENT_DETAILS_V2_PATH, COMPONENT_VERSION_DETAILS_PATH } from '@routes/paths';
+import {
+  COMPONENT_DETAILS_V2_PATH,
+  COMPONENT_VERSION_DETAILS_PATH,
+  GROUP_DETAILS_PATH,
+} from '@routes/paths';
+import SpecComponentTypeLabel from '~/components/ComponentGroups/SpecComponentTypeLabel';
 import GitRepoLink from '~/components/GitLink/GitRepoLink';
 import LatestPushBuildSection from '~/components/LatestBuild/LatestPushBuildSection';
 import { defineFilters } from '~/shared/components/Filter';
 import { ColumnDefinition } from '~/shared/components/TableV2';
+import { ComponentReferenceKind } from '~/types';
 import { textMatch } from '~/utils/text-filter-utils';
 
 export type CgComponentListItem = {
   componentName: string;
   namespace: string;
+  kind?: ComponentReferenceKind;
   gitUrl?: string;
   imageUrl?: string;
   version?: string;
@@ -27,23 +34,31 @@ export const cgComponentsFilterConfig = defineFilters<CgComponentListItem>()([
 
 export const cgComponentsTableColumns: ColumnDefinition<CgComponentListItem>[] = [
   {
-    id: 'component',
-    header: 'Component',
+    id: 'name',
+    header: 'Name',
     accessorFn: (row) => row.componentName,
     sortable: true,
     size: 2,
     nonHidable: true,
     cell: (info) => {
       const item = info.row.original;
+      const isComponentGroup = item.kind?.toLowerCase() === 'componentgroup';
 
       return (
         <Flex direction={{ default: 'column' }}>
           <Link
             data-test="component-name"
-            to={COMPONENT_DETAILS_V2_PATH.createPath({
-              workspaceName: item.namespace,
-              componentName: item.componentName,
-            })}
+            to={
+              isComponentGroup
+                ? GROUP_DETAILS_PATH.createPath({
+                    workspaceName: item.namespace,
+                    groupName: item.componentName,
+                  })
+                : COMPONENT_DETAILS_V2_PATH.createPath({
+                    workspaceName: item.namespace,
+                    componentName: item.componentName,
+                  })
+            }
           >
             <b>{item.componentName}</b>
           </Link>
@@ -61,6 +76,11 @@ export const cgComponentsTableColumns: ColumnDefinition<CgComponentListItem>[] =
     nonHidable: true,
     cell: (info) => {
       const item = info.row.original;
+      const isComponentGroup = item.kind?.toLowerCase() === 'componentgroup';
+
+      if (isComponentGroup) {
+        return '-';
+      }
 
       return item.version ? (
         <Link
@@ -78,16 +98,35 @@ export const cgComponentsTableColumns: ColumnDefinition<CgComponentListItem>[] =
     },
   },
   {
+    id: 'type',
+    header: 'Type',
+    accessorFn: (row) => row.kind,
+    sortable: true,
+    cell: (info) => {
+      const item = info.row.original;
+      return <SpecComponentTypeLabel component={item} />;
+    },
+  },
+  {
     id: 'latest-build',
     header: 'Latest build',
     sortable: false,
     size: 4,
-    cell: (info) => (
-      <LatestPushBuildSection
-        componentName={info.row.original.componentName}
-        version={info.row.original.version}
-      />
-    ),
+    cell: (info) => {
+      const item = info.row.original;
+      const isComponentGroup = item.kind?.toLowerCase() === 'componentgroup';
+
+      if (isComponentGroup) {
+        return '-';
+      }
+
+      return (
+        <LatestPushBuildSection
+          componentName={info.row.original.componentName}
+          version={info.row.original.version}
+        />
+      );
+    },
   },
   // TODO: add build logs modal + actions
 ];

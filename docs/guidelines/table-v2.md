@@ -294,6 +294,7 @@ const columns: ColumnDefinition<MyItem>[] = [
 | `header`         | `string \| ReactNode`                     | Yes      | Column header label                                           |
 | `accessorFn`     | `(row: TData) => unknown`                 | Yes      | Extracts the cell value from a row                            |
 | `cell`           | `(info: CellContext<TData>) => ReactNode` | No       | Custom cell renderer                                          |
+| `expandedContent`| `(row: TData) => ReactNode`               | No       | Renders compound expanded content when the cell is clicked    |
 | `size`           | `number`                                  | No       | Flex proportion for column width (default: `1`)               |
 | `width`          | `string`                                  | No       | Fixed CSS width (e.g. `'120px'`, `'8rem'`). Overrides `size`. |
 | `sortable`       | `boolean`                                 | No       | Whether the column supports sorting (default: `false`)        |
@@ -719,6 +720,30 @@ const MyGroupedTable = ({ groupedData }: { groupedData: MyGroupedData[] }) => {
 - Use `onExpandedChange` to receive expansion state updates from the table
 - Use `expandedContent` to render custom content when a row is expanded (e.g., nested tables, detail panels)
 - Use `data-test` to provide custom test identifiers for table instances
+
+### 5. Compound Expansion
+
+Use `expandedContent` on a column when that column's cell should expand the row. TableV2 tracks the active row/column pair internally and allows one expanded column per row:
+
+```tsx
+const columns: ColumnDefinition<MyItem>[] = [
+  {
+    id: 'items',
+    header: 'Items',
+    accessorFn: (row) => row.items.length,
+    expandedContent: (row) => <ItemDetails item={row} />,
+  },
+];
+
+<Table
+  data={items}
+  columns={columns}
+  getRowId={(row) => row.id}
+  aria-label="Items"
+/>
+```
+
+Do not wrap the cell contents in a link or button. PatternFly's compound expansion renders the accessible toggle around the cell contents.
 
 ## Migration from Legacy Table
 

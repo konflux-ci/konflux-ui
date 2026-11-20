@@ -11,6 +11,9 @@ import { useVirtualization } from './hooks/useVirtualization';
 import { TableBody } from './TableBody';
 import { TableHeader } from './TableHeader';
 import { type TableProps } from './types';
+import './TableV2.scss';
+
+type CompoundExpandedState = Record<string, string>;
 
 /**
  * Main TableV2 component — the primary orchestrator for rendering data tables.
@@ -78,6 +81,17 @@ export const Table = <TData,>({
   scrollElement: scrollElementProp,
 }: TableProps<TData>) => {
   const [tableNode, setTableNode] = useState<HTMLDivElement | null>(null);
+  const [compoundExpanded, setCompoundExpanded] = useState<CompoundExpandedState>({});
+  const handleCompoundExpandedChange = useCallback((rowId: string, columnId: string) => {
+    setCompoundExpanded((previous) => {
+      if (previous[rowId] === columnId) {
+        const rest = { ...previous };
+        delete rest[rowId];
+        return rest;
+      }
+      return { ...previous, [rowId]: columnId };
+    });
+  }, []);
   const tableRef = useCallback((node: HTMLDivElement | null) => {
     setTableNode(node);
   }, []);
@@ -133,13 +147,22 @@ export const Table = <TData,>({
   });
 
   const columnWidths = computeColumnWidths(columns, columnState.visibleColumns);
+  const hasCompoundExpansion = columns.some((column) => column.expandedContent);
   let visibleColumnCount = table.getVisibleLeafColumns().length;
   if (enableExpansion) visibleColumnCount += 1;
   if (enableRowSelection) visibleColumnCount += 1;
 
   return (
-    <div data-test={dataTest} ref={tableRef}>
-      <PfTable aria-label={ariaLabel} variant="compact" isExpandable={enableExpansion}>
+    <div
+      data-test={dataTest}
+      ref={tableRef}
+      className={hasCompoundExpansion ? 'table-v2--compound-expansion' : undefined}
+    >
+      <PfTable
+        aria-label={ariaLabel}
+        variant="compact"
+        isExpandable={enableExpansion || hasCompoundExpansion}
+      >
         <TableHeader
           table={table}
           columnWidths={columnWidths}
@@ -158,6 +181,9 @@ export const Table = <TData,>({
           visibleColumnCount={visibleColumnCount}
           isFetchingNextPage={isFetchingNextPage}
           scrollMargin={scrollMargin}
+          compoundExpanded={compoundExpanded}
+          onCompoundExpandedChange={handleCompoundExpandedChange}
+          compoundExpandId={dataTest}
         />
       </PfTable>
     </div>
