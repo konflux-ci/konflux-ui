@@ -321,7 +321,7 @@ spec:
                 secretName: quay-repo
           steps:
             - name: skopeo-copy
-              image: registry.access.redhat.com/ubi9/skopeo@sha256:24e66022e612648bb214488acdbd4abe7c8d203f8d7d45a5d6915052818cb66d
+              image: registry.access.redhat.com/ubi9/skopeo@sha256:b73ec96d3dfde4146ee0ea890b3554b78d0a5da18d8d5fe842fd702524f5a2ec
               env:
                 - name: SOURCE_IMAGE_URL
                   value: $(params.SOURCE_IMAGE_URL)
