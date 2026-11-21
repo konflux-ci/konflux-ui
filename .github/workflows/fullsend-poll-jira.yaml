@@ -21,7 +21,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Install fullsend
-        uses: fullsend-ai/fullsend/.github/actions/install-fullsend-cli@5163a55332d09571fa9c33d78a66155eb70fc6ea # v0.50.0
+        uses: fullsend-ai/fullsend/.github/actions/install-fullsend-cli@b2945ba14789828dae7a6b99a192c83f00b90981 # v0.56.0
         with:
           mode: upstream
           workflow_repository: fullsend-ai/fullsend
@@ -82,7 +82,7 @@ jobs:
       issues: write
       packages: read
       pull-requests: write
-    uses: fullsend-ai/fullsend/.github/workflows/reusable-dispatch.yml@5163a55332d09571fa9c33d78a66155eb70fc6ea # v0.50.0
+    uses: fullsend-ai/fullsend/.github/workflows/reusable-dispatch.yml@b2945ba14789828dae7a6b99a192c83f00b90981 # v0.56.0
     with:
       matrix: ${{ needs.poll.outputs.matrix }}
       mint_url: ${{ vars.FULLSEND_MINT_URL }}
