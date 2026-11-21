@@ -46,6 +46,7 @@ import { getSourceUrl } from '~/utils/pipelinerun-utils';
 import RelatedPipelineRuns from '../RelatedPipelineRuns';
 import { getSBOMsFromTaskRuns } from '../utils/pipelinerun-utils';
 import PipelineRunVisualization from '../visualization/PipelineRunVisualization';
+import { PipelineRunQueueDetails } from './PipelineRunQueueDetails';
 import { createPipelineRunSBOMsModal } from './PipelineRunSBOMsModal';
 import RunParamsList from './RunParamsList';
 import RunResultsList from './RunResultsList';
@@ -191,6 +192,7 @@ const PipelineRunDetailsTab: React.FC = () => {
                     />
                   </DescriptionListDescription>
                 </DescriptionListGroup>
+                <PipelineRunQueueDetails pipelineRun={pipelineRun} />
                 {Object.keys(pipelineRunFailed).length > 0 && (
                   <>
                     <DescriptionListGroup>
