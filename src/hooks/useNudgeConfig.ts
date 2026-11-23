@@ -10,7 +10,8 @@ const NUDGE_CONFIG_NAME = 'nudge-config';
  * A namespace with no nudge relationships simply has none. A 404 is therefore treated
  * as "no NudgeConfig", not an error.
  *
- * NudgeConfig is the CRD-based store for nudge relationships (see ADR 0067),
+ * NudgeConfig is the CRD-based store for nudge relationships (see ADR 0067:
+ * https://github.com/konflux-ci/architecture/blob/main/ADR/0067-nudging-relationship-singleton-crd.md),
  * replacing the per-component `build-nudges-ref` spec entries still read by
  * the Component view's useNudgeData.
  */
