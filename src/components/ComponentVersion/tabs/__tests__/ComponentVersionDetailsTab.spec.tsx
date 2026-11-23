@@ -3,17 +3,21 @@ import ComponentVersionDetailsTab from '~/components/ComponentVersion/tabs/Compo
 import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { useComponentV2 } from '~/hooks/useComponentsV2';
 import { useLatestSuccessfulBuildPipelineRunForComponentV2 } from '~/hooks/useLatestPushBuildPipeline';
-import { ComponentKind, PipelineRunKind } from '~/types';
+import { useNudgeConfig } from '~/hooks/useNudgeConfig';
+import { ComponentKind, NudgeConfigKind, PipelineRunKind } from '~/types';
 import {
   createUseParamsMock,
   mockUseNamespaceHook,
   renderWithQueryClientAndRouter,
 } from '~/unit-test-utils';
+import { setupVirtualizerMock } from '~/unit-test-utils/mock-virtualizer';
 
 jest.mock('~/hooks/useComponentsV2', () => ({ useComponentV2: jest.fn() }));
 jest.mock('~/hooks/useLatestPushBuildPipeline', () => ({
   useLatestSuccessfulBuildPipelineRunForComponentV2: jest.fn(),
 }));
+jest.mock('~/hooks/useNudgeConfig', () => ({ useNudgeConfig: jest.fn() }));
+jest.mock('@tanstack/react-virtual', () => ({ useVirtualizer: jest.fn() }));
 jest.mock('~/hooks/useTaskRunsV2', () => ({
   useTaskRunsForPipelineRuns: () => [[], true, undefined],
 }));
@@ -58,6 +62,7 @@ const run = {
 
 describe('ComponentVersionDetailsTab', () => {
   mockUseNamespaceHook('test-ns');
+  setupVirtualizerMock();
   const params = createUseParamsMock({ componentName: 'frontend', versionRevision: 'stable' });
   beforeEach(() => {
     jest.clearAllMocks();
@@ -66,6 +71,7 @@ describe('ComponentVersionDetailsTab', () => {
     jest
       .mocked(useLatestSuccessfulBuildPipelineRunForComponentV2)
       .mockReturnValue([run, true, undefined]);
+    jest.mocked(useNudgeConfig).mockReturnValue([null, true, undefined]);
   });
 
   it('shows version source and settings, and scopes builds by version name rather than Git revision', () => {
@@ -85,7 +91,27 @@ describe('ComponentVersionDetailsTab', () => {
       'stable',
     );
     expect(screen.getByText('Registry Login Information')).toBeInTheDocument();
-    expect(screen.queryByText(/Nudg/i)).not.toBeInTheDocument();
+  });
+
+  it('renders both the Nudging and NudgedBy sections', () => {
+    const nudgeConfig = {
+      apiVersion: 'appstudio.redhat.com/v1beta2',
+      kind: 'NudgeConfig',
+      spec: {
+        nudges: [
+          { from: 'frontend', to: 'backend' },
+          { from: 'upstream', to: 'frontend' },
+        ],
+      },
+    } as NudgeConfigKind;
+    jest.mocked(useNudgeConfig).mockReturnValue([nudgeConfig, true, undefined]);
+    renderWithQueryClientAndRouter(<ComponentVersionDetailsTab />);
+
+    expect(screen.getByText('Nudging relationships')).toBeInTheDocument();
+    expect(screen.getByTestId('nudges-section')).toBeInTheDocument();
+    expect(screen.getByText('backend')).toBeInTheDocument();
+    expect(screen.getByTestId('nudged-by-section')).toBeInTheDocument();
+    expect(screen.getByText('upstream')).toBeInTheDocument();
   });
 
   it('clears previous build data when navigating to a version without successful builds', () => {

@@ -21,3 +21,4 @@ export * from './workspace';
 export * from './image-repository';
 export * from './conforma';
 export * from './namespace';
+export * from './nudge-config';
