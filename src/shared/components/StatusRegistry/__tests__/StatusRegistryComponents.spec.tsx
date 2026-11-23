@@ -153,6 +153,60 @@ describe('RegistryStatusIconWithText', () => {
     await user.hover(statusElement);
     expect(await screen.findByText('Waiting for resources')).toBeInTheDocument();
   });
+
+  it('accepts a React node as text', () => {
+    renderWithQueryClientAndRouter(
+      <RegistryStatusIconWithText
+        registry={testRegistry}
+        status="Active"
+        text={
+          <span>
+            <span>Active</span>
+            <span>position#2</span>
+          </span>
+        }
+      />,
+    );
+    expect(screen.getByText('Active')).toBeInTheDocument();
+    expect(screen.getByText('position#2')).toBeInTheDocument();
+  });
+
+  it('applies the tooltip help-text class to the whole text cell for node text', () => {
+    const { container } = renderWithQueryClientAndRouter(
+      <RegistryStatusIconWithText
+        registry={testRegistry}
+        status="Active"
+        tooltip="Waiting for resources"
+        text={
+          <span>
+            <span>Active</span>
+            <span>position#2</span>
+          </span>
+        }
+      />,
+    );
+    const helpText = container.querySelector('.registry-status-icon-with-text__help-text');
+    expect(helpText).toBeInTheDocument();
+    expect(helpText).toContainElement(screen.getByText('Active'));
+    expect(helpText).toContainElement(screen.getByText('position#2'));
+  });
+
+  it('passes a React node through the bound namespace component', () => {
+    const Bound = createStatusComponents(testRegistry);
+    renderWithQueryClientAndRouter(
+      <Bound.StatusIconWithText
+        status="Done"
+        text={
+          <span>
+            <span>Completed</span>
+            <span>extra</span>
+          </span>
+        }
+      />,
+    );
+    expect(screen.getByText('Completed')).toBeInTheDocument();
+    expect(screen.getByText('extra')).toBeInTheDocument();
+  });
 });
 
 // ---------------------------------------------------------------------------

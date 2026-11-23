@@ -6,6 +6,7 @@ import {
   INTEGRATION_TESTS_LIST_FILTERS,
 } from '~/components/IntegrationTests/IntegrationTestsListView/integration-tests-table-config';
 import IntegrationTestsEmptyState from '~/components/IntegrationTests/IntegrationTestsListView/IntegrationTestsEmptyState';
+import TestGraphVisualization from '~/components/IntegrationTests/topology/TestGraphVisualization';
 import { IfFeature } from '~/feature-flags/hooks';
 import { useIntegrationTestScenariosByComponentGroup } from '~/hooks/useIntegrationTestScenarios';
 import { RouterParams } from '~/routes/utils';
@@ -44,6 +45,7 @@ export const ComponentGroupIntegrationTestsTab: React.FC = () => {
         title="Integration tests"
         description="Add an integration test to test all your components after you commit code."
       >
+        <TestGraphVisualization namespace={namespace} groupName={groupName || ''} />
         <TableContainer
           data={filteredData}
           unfilteredData={integrationTests ?? []}
