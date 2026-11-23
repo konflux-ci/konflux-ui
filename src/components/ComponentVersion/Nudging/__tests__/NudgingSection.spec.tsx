@@ -102,6 +102,7 @@ describe('NudgingSection (outgoing)', () => {
     useNudgeConfigMock.mockReturnValue([null, true, { code: 403 }]);
     renderWithQueryClientAndRouter(<NudgingSection component={component} direction="outgoing" />);
 
+    expect(screen.getByText('Unable to load nudges')).toBeInTheDocument();
     expect(screen.queryByTestId('nudging-table')).not.toBeInTheDocument();
   });
 

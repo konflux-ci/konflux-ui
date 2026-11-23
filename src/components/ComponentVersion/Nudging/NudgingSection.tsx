@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { ExpandableSection, EmptyState, EmptyStateBody } from '@patternfly/react-core';
+import { ExpandableSection, EmptyState } from '@patternfly/react-core';
 import { useNudgeConfig } from '~/hooks/useNudgeConfig';
 import { TableContainer, Table } from '~/shared/components/TableV2';
 import { useNamespace } from '~/shared/providers/Namespace';
@@ -60,9 +60,11 @@ const NudgingSection: React.FC<NudgingSectionProps> = ({ component, direction })
             unfilteredData={nudges}
             loaded={loaded}
             noDataState={
-              <EmptyState titleText={copy.empty} headingLevel="h4" data-test="nudging-empty-state">
-                <EmptyStateBody>{copy.empty}</EmptyStateBody>
-              </EmptyState>
+              <EmptyState
+                titleText={copy.empty}
+                headingLevel="h4"
+                data-test="nudging-empty-state"
+              />
             }
           >
             <Table
