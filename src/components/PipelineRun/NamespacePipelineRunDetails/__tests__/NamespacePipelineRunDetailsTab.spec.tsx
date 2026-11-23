@@ -7,6 +7,7 @@ import { useImageRepository } from '~/hooks/useImageRepository';
 import { usePipelineRunsV2, usePipelineRunV2 } from '~/hooks/usePipelineRunsV2';
 import { useTaskRunsForPipelineRuns } from '~/hooks/useTaskRunsV2';
 import { useIsImageControllerEnabled } from '~/image-controller/conditional-checks';
+import type { PipelineRunKind } from '~/types';
 import {
   createUseParamsMock,
   mockUseNamespaceHook,
@@ -207,6 +208,39 @@ describe('NamespacePipelineRunDetailsTab', () => {
     renderWithQueryClientAndRouter(<NamespacePipelineRunDetailsTab />);
     expect(screen.getByText('build-1')).toBeInTheDocument();
     expect(screen.getByText('Unable to load task runs')).toBeInTheDocument();
+  });
+
+  it('shows a dash for duration when the run has not started', () => {
+    jest.mocked(usePipelineRunV2).mockReturnValue([
+      {
+        ...run,
+        spec: { ...run.spec, status: 'PipelineRunPending' },
+        status: { ...run.status, startTime: undefined, completionTime: undefined },
+      } as unknown as PipelineRunKind,
+      true,
+      undefined,
+    ]);
+    renderWithQueryClientAndRouter(<NamespacePipelineRunDetailsTab />);
+    const durationTerm = screen.getByText('Duration');
+    expect(durationTerm.closest('div')).toHaveTextContent('-');
+    expect(screen.queryByText('less than a second')).not.toBeInTheDocument();
+  });
+
+  it('calculates duration when the run has started', () => {
+    jest.mocked(usePipelineRunV2).mockReturnValue([
+      {
+        ...run,
+        status: {
+          ...run.status,
+          startTime: '2024-01-01T00:00:00Z',
+          completionTime: '2024-01-01T00:05:00Z',
+        },
+      },
+      true,
+      undefined,
+    ]);
+    renderWithQueryClientAndRouter(<NamespacePipelineRunDetailsTab />);
+    expect(screen.getByText('5 minutes')).toBeInTheDocument();
   });
 
   it('includes related pipeline runs in the details metadata', () => {
