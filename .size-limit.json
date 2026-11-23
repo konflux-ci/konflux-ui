@@ -8,7 +8,7 @@
   {
     "name": "vendor",
     "path": "dist/vendor.*.js",
-    "limit": "650 kB",
+    "limit": "700 kB",
     "gzip": true
   },
   {

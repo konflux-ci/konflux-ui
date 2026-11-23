@@ -753,6 +753,7 @@ const MyGroupedTable = ({ groupedData }: { groupedData: MyGroupedData[] }) => {
 | Use `columnState` + `onColumnStateChange` when sharing state                       | Use `columnStateKey` when you need the modal to work                                      |
 | Use `useCallback` for `scrollContainerRef`                                         | Use `useRef` for the virtualizer scroll container (stale ref)                             |
 | Spread column def properties conditionally with `...(value ? { key: value } : {})` | Spread `undefined` into column defs (TanStack treats `undefined` differently from absent) |
+| Memoize virtual-row positioning style objects (via `useMemo` or `React.memo` child)  | Recreate `style={{ position: 'absolute', top: ... }}` on every render in the row loop    |
 
 ## Known Gotchas
 

@@ -25,12 +25,22 @@ A process checklist for reviewing pull requests. For coding standards and detail
   - PatternFly components used over raw HTML elements
   - Absolute imports (`~/`) for cross-directory paths; single-level relative imports (`./types`) acceptable for same-directory files
 - [ ] **No `pf-v5-` CSS class prefixes.** All PatternFly CSS classes must use the `pf-v6-` prefix (e.g., `pf-v6-u-ml-sm`). The `pf-v5-` prefix is incompatible with PatternFly v6.
+- [ ] **No unnecessary custom SCSS.** For a new rule, check the relevant PatternFly v6 component, layout, utility, token, and theming documentation plus existing shared components. If a PatternFly option can provide the behavior, name that exact option rather than raising a generic style preference. See the [styling decision order](./guidelines/patternfly-guidelines.md#scss-conventions).
 - [ ] **No `eslint-disable` comments** without a documented justification directly above. Never suppress `exhaustive-deps` or `no-explicit-any`.
 - [ ] **No `console.*` calls.** Use `logger` from `~/monitoring/logger`.
 - [ ] **No magic strings or numbers.** Use constants from `src/consts/` or local named constants.
 - [ ] **Import boundaries respected.** Run `yarn lint:restricted-imports` to verify.
 - [ ] **Dead code removed.** No commented-out code, unused imports, or unreachable branches.
 - [ ] **File length under 500 lines.**
+
+### Performance (virtualized / scroll-heavy components)
+
+Apply these checks when the PR modifies components using `@tanstack/react-virtual`, custom virtualization, or high-frequency re-rendering (log viewers, large tables, infinite scroll).
+
+- [ ] **Style objects in render paths are memoized.** Virtualized rows require inline positioning styles — ensure these style objects are created via `useMemo` or extracted as constants, not recreated on every render.
+- [ ] **Data arrays are not iterated more than once per render.** If the same list (e.g., `virtualItems`) is mapped multiple times, consolidate into a single pass.
+- [ ] **Expensive computations are guarded by their consuming condition.** If a `useMemo` result is only used inside a conditional branch (e.g., `!wrapLines`), guard the computation inside the `useMemo` callback (e.g., `if (wrapLines) return null;` as an early return) and include the condition in its dependency array, so React both skips the expensive work when the result is unused and re-evaluates when the condition changes.
+- [ ] **No visual performance regression.** Scroll vertically and horizontally in the affected component and watch for stuttering, especially with large datasets (1000+ rows).
 
 ## 3. Testing
 
@@ -81,7 +91,8 @@ Skip this section if the PR has no UI changes.
 | `console.log(...)` | Use `logger` from `~/monitoring/logger` |
 | `useEffect` + `setState` from props | Use `useMemo` |
 | `useMemo(() => obj.name, [obj])` | Remove `useMemo` — trivial expression |
-| `style={{ ... }}` | Use co-located SCSS with BEM |
+| `style={{ ... }}` | Check PatternFly props, layouts, and utilities first; use co-located SCSS only for a confirmed gap (exception: necessary runtime styles such as virtualized row positioning) |
+| `style={{ position: 'absolute', top: ... }}` in a loop | Compute all style objects in a single `useMemo` before the loop, or extract rows to a `React.memo` child component (do not call `useMemo` inside a loop — Rules of Hooks) |
 | `import ... from '../../../'` | Use `~/` absolute import |
 | `localStorage.getItem(...)` | Use `useLocalStorage` hook |
 | `pf-v5-u-*` or `pf-v5-c-*` | Replace prefix with `pf-v6-` |

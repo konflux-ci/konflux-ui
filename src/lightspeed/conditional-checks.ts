@@ -1,5 +1,4 @@
 import type { HealthCheck } from '@redhat-cloud-services/lightspeed-client';
-import { createConditionsHook } from '~/feature-flags/hooks';
 import { ensureConditionIsOn } from '~/feature-flags/utils';
 import { getLightspeedClient } from '~/lightspeed/lightspeedClient';
 import { LIGHTSPEED_HEALTH_CHECK_TIMEOUT_MS } from '~/lightspeed/lightspeedConfig';
@@ -25,7 +24,5 @@ export const checkIfLightspeedIsAvailable = async (): Promise<boolean> => {
     clearTimeout(timeoutId);
   }
 };
-
-export const useIsLightspeedAvailable = createConditionsHook(['isLightspeedAvailable']);
 
 export const isLightspeedAvailable = ensureConditionIsOn(['isLightspeedAvailable']);

@@ -182,7 +182,7 @@ export const AppSideBar: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
 
             <NavItem isActive={isActive(DEPENDENCY_SCHEDULE_PATH.path)}>
               <NavLink to={DEPENDENCY_SCHEDULE_PATH.createPath({} as never)}>
-                Dependency updates schedule
+                Dependency Updates Schedule
               </NavLink>
             </NavItem>
           </NavList>

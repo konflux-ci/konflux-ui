@@ -14,7 +14,6 @@ import {
   ToolbarItem,
 } from '@patternfly/react-core';
 import { FilterIcon } from '@patternfly/react-icons/dist/esm/icons/filter-icon';
-import { IfFeature } from '~/feature-flags/hooks';
 import ColumnManagementButton from '../components/ColumnManagementButton';
 
 type Props = {
@@ -87,11 +86,9 @@ export const ReleasesFilterToolbar: React.FC<Props> = ({
               </InputGroupItem>
             </InputGroup>
           </ToolbarItem>
-          <IfFeature flag="column-management">
-            <ToolbarItem>
-              <ColumnManagementButton onClick={openColumnManagement} totalColumns={totalColumns} />
-            </ToolbarItem>
-          </IfFeature>
+          <ToolbarItem>
+            <ColumnManagementButton onClick={openColumnManagement} totalColumns={totalColumns} />
+          </ToolbarItem>
         </ToolbarGroup>
       </ToolbarContent>
     </Toolbar>

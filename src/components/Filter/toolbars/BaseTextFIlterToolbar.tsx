@@ -12,7 +12,6 @@ import {
   ToolbarContent,
   ToolbarItem,
 } from '@patternfly/react-core';
-import { IfFeature } from '~/feature-flags/hooks';
 import { SEARCH_SHORTCUT_KEY, useSearchShortcut } from '~/shared/hooks/useSearchShortcut';
 import { useDebounceCallback } from '../../../shared/hooks/useDebounceCallback';
 import ColumnManagementButton from '../components/ColumnManagementButton';
@@ -116,11 +115,9 @@ export const BaseTextFilterToolbar: React.FC<BaseTextFilterToolbarProps> = ({
             {child}
           </ToolbarItem>
         ))}
-        <IfFeature flag="column-management">
-          <ToolbarItem>
-            <ColumnManagementButton onClick={openColumnManagement} totalColumns={totalColumns} />
-          </ToolbarItem>
-        </IfFeature>
+        <ToolbarItem>
+          <ColumnManagementButton onClick={openColumnManagement} totalColumns={totalColumns} />
+        </ToolbarItem>
       </ToolbarContent>
     </Toolbar>
   );

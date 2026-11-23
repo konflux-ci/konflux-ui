@@ -7,7 +7,7 @@ import { createQueryKeys } from '~/k8s/query/utils';
 import { SecretGroupVersionKind, SecretModel } from '~/models';
 import { SecretKind } from '~/types';
 import {
-  SECRET_TABLE_K8S_FETCH_OPTIONS,
+  SECRET_TABLE_FETCH_OPTIONS,
   selectSecretMetadata,
 } from '~/utils/secrets/secret-table-utils';
 
@@ -56,7 +56,7 @@ export const useSecretMetadata = (
       enabled: !!namespace && !!name,
       select: selectSecret,
     } as unknown as UseQueryOptions<SecretKind>,
-    SECRET_TABLE_K8S_FETCH_OPTIONS as Parameters<typeof useK8sWatchResource>[3],
+    SECRET_TABLE_FETCH_OPTIONS as Parameters<typeof useK8sWatchResource>[3],
   );
 
   return [secret, !isLoading, error];

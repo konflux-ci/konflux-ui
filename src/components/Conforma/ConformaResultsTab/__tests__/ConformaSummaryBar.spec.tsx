@@ -10,6 +10,7 @@ describe('ConformaSummaryBar', () => {
     totalViolations: 7,
     totalWarnings: 4,
     totalSuccesses: 20,
+    totalPolicyChanges: 2,
   };
 
   it('renders three summary sections', () => {
@@ -30,12 +31,22 @@ describe('ConformaSummaryBar', () => {
     expect(section).toHaveTextContent('failed');
   });
 
-  it('renders warning count as pending in the Upcoming changes section', () => {
+  it('counts only policy changes in the Upcoming changes section, not every warning', () => {
     const { container } = routerRenderer(<ConformaSummaryBar {...defaultProps} />);
 
     const section = container.querySelector('[data-test="conforma-summary-upcoming-changes"]');
-    expect(section).toHaveTextContent('4');
-    expect(section).toHaveTextContent('Pending');
+    expect(section).toHaveTextContent('2 policy changes');
+    expect(section).not.toHaveTextContent('4');
+  });
+
+  it('shows the uncollapsed policy change count alongside the display count', () => {
+    const { container } = routerRenderer(
+      <ConformaSummaryBar {...defaultProps} totalPolicyChangesRaw={5} />,
+    );
+
+    const section = container.querySelector('[data-test="conforma-summary-upcoming-changes"]');
+    expect(section).toHaveTextContent('2 policy changes');
+    expect(section).toHaveTextContent('(5 incl. multi-arch)');
   });
 
   it('renders violations, warnings, and success with separators in the Results summary section', () => {
@@ -58,6 +69,7 @@ describe('ConformaSummaryBar', () => {
         totalViolations={0}
         totalWarnings={0}
         totalSuccesses={0}
+        totalPolicyChanges={0}
       />,
     );
 
