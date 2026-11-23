@@ -99,7 +99,11 @@ export function RegistryStatusIcon<TStatus extends string, TResource, TContext>(
 type RegistryStatusIconWithTextProps<TStatus extends string, TResource, TContext> = {
   registry: StatusRegistry<TStatus, TResource, TContext>;
   status: TStatus;
-  text?: string;
+  /**
+   * Text next to the icon. Defaults to the registry label. Accepts a node so callers can build
+   * richer text layouts, e.g. a second line under the status word.
+   */
+  text?: string | React.ReactNode;
   tooltip?: string;
   dataTestAttribute?: string;
 };
@@ -194,7 +198,7 @@ type BoundStatusIconProps<TStatus extends string> = {
 
 type BoundStatusIconWithTextProps<TStatus extends string> = {
   status: TStatus;
-  text?: string;
+  text?: string | React.ReactNode;
   tooltip?: string;
   dataTestAttribute?: string;
 };

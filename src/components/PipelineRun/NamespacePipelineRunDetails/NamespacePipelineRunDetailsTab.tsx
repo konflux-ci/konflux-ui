@@ -18,6 +18,7 @@ import GitRepoLink from '~/components/GitLink/GitRepoLink';
 import MetadataList from '~/components/MetadataList';
 import { useModalLauncher } from '~/components/modal/ModalProvider';
 import RelatedNamespacePipelineRuns from '~/components/PipelineRun/NamespacePipelineRunDetails/RelatedNamespacePipelineRuns';
+import { PipelineRunQueueDetails } from '~/components/PipelineRun/PipelineRunDetailsView/tabs/PipelineRunQueueDetails';
 import { createPipelineRunSBOMsModal } from '~/components/PipelineRun/PipelineRunDetailsView/tabs/PipelineRunSBOMsModal';
 import RunParamsList from '~/components/PipelineRun/PipelineRunDetailsView/tabs/RunParamsList';
 import RunResultsList from '~/components/PipelineRun/PipelineRunDetailsView/tabs/RunResultsList';
@@ -141,6 +142,7 @@ const NamespacePipelineRunDetailsTab = () => {
                 <StatusIconWithText status={status} />
               </DescriptionListDescription>
             </DescriptionListGroup>
+            <PipelineRunQueueDetails pipelineRun={run} />
             {snippet && (
               <>
                 <DescriptionListGroup>

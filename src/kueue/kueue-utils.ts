@@ -1,5 +1,10 @@
+import { runStatus } from '~/consts/pipelinerun';
 import { PipelineRunModel } from '~/models/pipelineruns';
+import type { PipelineRunKind } from '~/types';
 import type { KueuePendingWorkloadKind, KueueQueuePosition } from '~/types/kueue';
+import { calculateDuration } from '~/utils/pipeline-utils';
+import { PLRStatus } from '~/utils/plr-status-config';
+import { KUEUE_QUEUE_NAME_LABEL } from './const';
 
 /**
  * Finds the PipelineRun owner reference for a pending workload, matching by
@@ -37,3 +42,33 @@ export const getKueueQueuePositionForPipelineRun = (
     priority: workload.priority,
   };
 };
+
+/**
+ * Whether the Kueue queue wait info (position, priority, time waiting) should be shown for
+ * a PipelineRun. Requires the flag, the Kueue queue-name label, and a derived `Queued`
+ * status; the label check excludes PAC-only queued runs.
+ */
+export const isKueueQueueWaitVisible = (pipelineRun: PipelineRunKind, isFlagOn: boolean): boolean =>
+  isFlagOn &&
+  pipelineRun.metadata?.labels?.[KUEUE_QUEUE_NAME_LABEL] !== undefined &&
+  PLRStatus.registry.deriveStatus(pipelineRun) === runStatus.Queued;
+
+/**
+ * Formats the queue position shown under the `Queued` status word, e.g. `position#3`.
+ * `positionInClusterQueue` is 0-based, so the head of the queue is `position#1`.
+ * Visibility is gated by `isKueueQueueWaitVisible`.
+ */
+export const getKueueQueuePositionLabel = (
+  queuePosition: KueueQueuePosition | undefined,
+): string | undefined =>
+  queuePosition ? `position#${queuePosition.positionInClusterQueue + 1}` : undefined;
+
+/**
+ * Formats how long a PipelineRun has been waiting in the queue, e.g. `Waiting for: 6 hours 12 minutes`.
+ * Visibility is gated by `isKueueQueueWaitVisible`.
+ */
+export const getKueueQueueWaitTooltip = (
+  createdAt: string | undefined,
+  now: number,
+): string | undefined =>
+  createdAt ? `Waiting for: ${calculateDuration(createdAt, now)}` : undefined;
