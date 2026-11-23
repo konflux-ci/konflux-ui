@@ -10,27 +10,30 @@ import {
   Button,
 } from '@patternfly/react-core';
 import { SortByDirection } from '@patternfly/react-table';
-import { getErrorState } from '~/shared/utils/error-utils';
-import { filterByText } from '~/utils/text-filter-utils';
-import emptyStateImgUrl from '../../../assets/secret.svg';
-import { useLinkedSecrets } from '../../../hooks/useLinkedSecrets';
-import { useSearchParam } from '../../../hooks/useSearchParam';
-import { useSortedResources } from '../../../hooks/useSortedResources';
+import emptyStateImgUrl from '~/assets/secret.svg';
+import { useApplicationBreadcrumbs } from '~/components/Applications/breadcrumbs/breadcrumb-utils';
+import { createLinkSecretModalLauncher } from '~/components/Components/LinkSecret/LinkSecret';
+import { useModalLauncher } from '~/components/modal/ModalProvider';
+import PageLayout from '~/components/PageLayout/PageLayout';
+import { useLinkedSecrets } from '~/hooks/useLinkedSecrets';
+import { useSearchParam } from '~/hooks/useSearchParam';
+import { useSortedResources } from '~/hooks/useSortedResources';
 import {
   COMPONENT_DETAILS_PATH,
-  COMPONENT_LIST_PATH,
+  COMPONENT_DETAILS_V2_PATH,
   COMPONENT_LINKED_SECRETS_PATH,
-} from '../../../routes/paths';
-import { RouterParams } from '../../../routes/utils';
-import { Table } from '../../../shared/components';
-import AppEmptyState from '../../../shared/components/empty-state/AppEmptyState';
-import FilteredEmptyState from '../../../shared/components/empty-state/FilteredEmptyState';
-import { useNamespace } from '../../../shared/providers/Namespace';
-import { SecretKind } from '../../../types';
-import { useApplicationBreadcrumbs } from '../../Applications/breadcrumbs/breadcrumb-utils';
-import { useModalLauncher } from '../../modal/ModalProvider';
-import PageLayout from '../../PageLayout/PageLayout';
-import { createLinkSecretModalLauncher } from '../LinkSecret/LinkSecret';
+  COMPONENT_LINKED_SECRETS_V2_PATH,
+  COMPONENT_LIST_PATH,
+  COMPONENTS_PATH,
+} from '~/routes/paths';
+import { RouterParams } from '~/routes/utils';
+import { Table } from '~/shared/components';
+import AppEmptyState from '~/shared/components/empty-state/AppEmptyState';
+import FilteredEmptyState from '~/shared/components/empty-state/FilteredEmptyState';
+import { useNamespace } from '~/shared/providers/Namespace';
+import { getErrorState } from '~/shared/utils/error-utils';
+import { SecretKind } from '~/types';
+import { filterByText } from '~/utils/text-filter-utils';
 import getListHeader, { SortableHeaders } from './LinkedSecretsListHeader';
 import { LinkedSecretsListRow } from './LinkedSecretsListRow';
 import { LinkedSecretsToolbar } from './LinkedSecretsToolbar';
@@ -44,6 +47,56 @@ export const LinkedSecretsListView: React.FC = () => {
   const { componentName, applicationName } = useParams<RouterParams>();
   const namespace = useNamespace();
   const applicationBreadcrumbs = useApplicationBreadcrumbs();
+
+  const breadcrumbs = React.useMemo(
+    () =>
+      applicationName
+        ? [
+            ...applicationBreadcrumbs,
+            {
+              path: COMPONENT_LIST_PATH.createPath({ workspaceName: namespace, applicationName }),
+              name: 'components',
+            },
+            {
+              path: COMPONENT_DETAILS_PATH.createPath({
+                workspaceName: namespace,
+                applicationName,
+                componentName,
+              }),
+              name: componentName,
+            },
+            {
+              path: COMPONENT_LINKED_SECRETS_PATH.createPath({
+                workspaceName: namespace,
+                applicationName,
+                componentName,
+              }),
+              name: 'Manage linked secrets',
+            },
+          ]
+        : [
+            {
+              path: COMPONENTS_PATH.createPath({ workspaceName: namespace }),
+              name: 'Components',
+            },
+            {
+              path: COMPONENT_DETAILS_V2_PATH.createPath({
+                workspaceName: namespace,
+                componentName,
+              }),
+              name: componentName,
+            },
+            {
+              path: COMPONENT_LINKED_SECRETS_V2_PATH.createPath({
+                workspaceName: namespace,
+                componentName,
+              }),
+              name: 'Manage linked secrets',
+            },
+          ],
+    [applicationBreadcrumbs, applicationName, namespace, componentName],
+  );
+
   const [activeSortIndex, setActiveSortIndex] = React.useState<number>(SortableHeaders.secretName);
   const [activeSortDirection, setActiveSortDirection] = React.useState<SortByDirection>(
     SortByDirection.asc,
@@ -125,32 +178,7 @@ export const LinkedSecretsListView: React.FC = () => {
       <PageLayout
         title="Manage linked secrets"
         description={<>You can add new secrets to this component or unlink existing secrets.</>}
-        breadcrumbs={[
-          ...applicationBreadcrumbs,
-          {
-            path: COMPONENT_LIST_PATH.createPath({
-              workspaceName: namespace,
-              applicationName,
-            }),
-            name: 'components',
-          },
-          {
-            path: COMPONENT_DETAILS_PATH.createPath({
-              workspaceName: namespace,
-              applicationName,
-              componentName,
-            }),
-            name: componentName,
-          },
-          {
-            path: COMPONENT_LINKED_SECRETS_PATH.createPath({
-              workspaceName: namespace,
-              applicationName,
-              componentName,
-            }),
-            name: 'Manage linked secrets',
-          },
-        ]}
+        breadcrumbs={breadcrumbs}
       >
         <PageSection hasBodyWrapper={false} isFilled>
           <Content>

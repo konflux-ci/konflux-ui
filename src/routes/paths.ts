@@ -40,6 +40,8 @@ export const COMPONENT_DETAILS_V2_PATH = COMPONENTS_PATH.extend(`:${RouterParams
 
 export const COMPONENT_ACTIVITY_V2_PATH = COMPONENT_DETAILS_V2_PATH.extend('activity');
 
+export const COMPONENT_LINKED_SECRETS_V2_PATH = COMPONENT_DETAILS_V2_PATH.extend('linked-secrets');
+
 export const COMPONENT_VERSIONS_PATH = COMPONENT_DETAILS_V2_PATH.extend('versions');
 
 export const COMPONENT_VERSION_DETAILS_PATH = COMPONENT_VERSIONS_PATH.extend(
