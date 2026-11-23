@@ -48,7 +48,7 @@ const NudgingSection: React.FC<NudgingSectionProps> = ({ component, direction })
     <div className="pf-v6-u-mt-md" data-test={copy.testId}>
       <ExpandableSection
         isExpanded={expanded}
-        toggleContent={`${copy.title} (${nudges.length})`}
+        toggleContent={loaded ? `${copy.title} (${nudges.length})` : copy.title}
         data-test={`${copy.testId}-toggle`}
         onToggle={() => setExpanded((x) => !x)}
       >

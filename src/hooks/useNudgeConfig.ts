@@ -1,7 +1,7 @@
 import * as React from 'react';
-import { useK8sWatchResource } from '../k8s';
-import { NudgeConfigGroupVersionKind, NudgeConfigModel } from '../models';
-import { NudgeConfigKind } from '../types';
+import { useK8sWatchResource } from '~/k8s';
+import { NudgeConfigGroupVersionKind, NudgeConfigModel } from '~/models';
+import { NudgeConfigKind } from '~/types';
 
 const NUDGE_CONFIG_NAME = 'nudge-config';
 
@@ -9,6 +9,10 @@ const NUDGE_CONFIG_NAME = 'nudge-config';
  * Fetches the namespace's singleton NudgeConfig resource (named "nudge-config").
  * A namespace with no nudge relationships simply has none. A 404 is therefore treated
  * as "no NudgeConfig", not an error.
+ *
+ * NudgeConfig is the CRD-based store for nudge relationships (see ADR 0067),
+ * replacing the per-component `build-nudges-ref` spec entries still read by
+ * the Component view's useNudgeData.
  */
 export const useNudgeConfig = (
   namespace: string,

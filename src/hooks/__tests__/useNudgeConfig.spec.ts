@@ -63,7 +63,8 @@ describe('useNudgeConfig', () => {
 
   it('does not fetch without a namespace', () => {
     watchMock.mockReturnValue({ data: undefined, isLoading: false, error: undefined });
-    renderHook(() => useNudgeConfig(''));
+    const { result } = renderHook(() => useNudgeConfig(''));
     expect(watchMock).toHaveBeenCalledWith(undefined, NudgeConfigModel);
+    expect(result.current).toEqual([null, true, undefined]);
   });
 });
