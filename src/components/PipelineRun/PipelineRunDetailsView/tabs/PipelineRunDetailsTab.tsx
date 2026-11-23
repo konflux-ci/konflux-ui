@@ -35,13 +35,14 @@ import {
 } from '~/routes/paths';
 import { RouterParams } from '~/routes/utils';
 import { Timestamp } from '~/shared';
+import { Duration } from '~/shared/components/duration';
 import ExternalLink from '~/shared/components/links/ExternalLink';
 import { ErrorDetailsWithStaticLog } from '~/shared/components/pipeline-run-logs/logs/log-snippet-types';
 import { getPLRLogSnippet } from '~/shared/components/pipeline-run-logs/logs/pipelineRunLogSnippet';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { getCommitSha, getCommitShortName } from '~/utils/commits-utils';
-import { calculateDuration, pipelineRunStatus } from '~/utils/pipeline-utils';
+import { pipelineRunStatus } from '~/utils/pipeline-utils';
 import { getSourceUrl } from '~/utils/pipelinerun-utils';
 import RelatedPipelineRuns from '../RelatedPipelineRuns';
 import { getSBOMsFromTaskRuns } from '../utils/pipelinerun-utils';
@@ -89,12 +90,6 @@ const PipelineRunDetailsTab: React.FC = () => {
 
   const pipelineRunFailed = (getPLRLogSnippet(pipelineRun, taskRuns) ||
     {}) as ErrorDetailsWithStaticLog;
-  const duration = calculateDuration(
-    typeof pipelineRun.status?.startTime === 'string' ? pipelineRun.status?.startTime : '',
-    typeof pipelineRun.status?.completionTime === 'string'
-      ? pipelineRun.status?.completionTime
-      : '',
-  );
   const sha = getCommitSha(pipelineRun);
   const applicationName = pipelineRun.metadata?.labels[PipelineRunLabel.APPLICATION];
 
@@ -170,7 +165,12 @@ const PipelineRunDetailsTab: React.FC = () => {
                 </DescriptionListGroup>
                 <DescriptionListGroup>
                   <DescriptionListTerm>Duration</DescriptionListTerm>
-                  <DescriptionListDescription>{duration ?? '-'}</DescriptionListDescription>
+                  <DescriptionListDescription>
+                    <Duration
+                      startTime={pipelineRun.status?.startTime}
+                      endTime={pipelineRun.status?.completionTime}
+                    />
+                  </DescriptionListDescription>
                 </DescriptionListGroup>
                 <SnapshotCreationStatus pipelineRun={pipelineRun} />
               </DescriptionList>

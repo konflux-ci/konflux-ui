@@ -247,6 +247,39 @@ describe('PipelineRunDetailsTab', () => {
     expect(screen.getByText('5 minutes')).toBeInTheDocument();
   });
 
+  it('should display a dash for duration when the pipeline run has not started', () => {
+    const notStartedRun = {
+      ...mockPipelineRun,
+      spec: { ...mockPipelineRun.spec, status: 'PipelineRunPending' },
+      status: { ...mockPipelineRun.status, startTime: undefined, completionTime: undefined },
+    } as unknown as PipelineRunKind;
+    mockUsePipelineRunV2.mockReturnValue(mockPipelineRunStates.loaded(notStartedRun));
+    mockUseTaskRunsForPipelineRuns.mockReturnValue(mockTaskRunsStates.loaded(mockTaskRuns));
+
+    renderWithQueryClientAndRouter(<PipelineRunDetailsTab />);
+
+    const durationTerm = screen.getByText('Duration');
+    expect(durationTerm.closest('div')).toHaveTextContent('-');
+    expect(screen.queryByText('less than a second')).not.toBeInTheDocument();
+  });
+
+  it('should still show "less than a second" when a started run finished instantly', () => {
+    const instantRun = {
+      ...mockPipelineRun,
+      status: {
+        ...mockPipelineRun.status,
+        startTime: '2024-01-01T00:00:00Z',
+        completionTime: '2024-01-01T00:00:00Z',
+      },
+    } as unknown as PipelineRunKind;
+    mockUsePipelineRunV2.mockReturnValue(mockPipelineRunStates.loaded(instantRun));
+    mockUseTaskRunsForPipelineRuns.mockReturnValue(mockTaskRunsStates.loaded(mockTaskRuns));
+
+    renderWithQueryClientAndRouter(<PipelineRunDetailsTab />);
+
+    expect(screen.getByText('less than a second')).toBeInTheDocument();
+  });
+
   it('should display code block in message field when pipeline run failed', () => {
     mockUsePipelineRunV2.mockReturnValue(mockPipelineRunStates.loaded(failedPipelineRun));
     mockUseTaskRunsForPipelineRuns.mockReturnValue(mockTaskRunsStates.loaded(mockTaskRuns));
