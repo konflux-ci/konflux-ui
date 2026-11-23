@@ -1,9 +1,16 @@
 import dayjs from 'dayjs';
-import { type ComponentConformaResult, type ConformaRule } from '~/types/conforma';
+import {
+  CONFORMA_RESULT_STATUS,
+  type ComponentConformaResult,
+  type ConformaResultRow,
+  type ConformaRule,
+} from '~/types/conforma';
 import {
   collectPolicyExceptions,
   countExceptionsByKind,
+  countPolicyChanges,
   formatDaysRemaining,
+  POLICY_EXCEPTION_RULE_CODES,
   PolicyExceptionKind,
 } from '../policy-exception-utils';
 
@@ -175,6 +182,65 @@ describe('countExceptionsByKind', () => {
 
     expect(countExceptionsByKind(exceptions, PolicyExceptionKind.UPCOMING)).toBe(2);
     expect(countExceptionsByKind(exceptions, PolicyExceptionKind.EXPIRING)).toBe(1);
+  });
+});
+
+describe('countPolicyChanges', () => {
+  const makeRow = (code: string | undefined, status = CONFORMA_RESULT_STATUS.warnings) =>
+    ({
+      title: code ?? 'no code',
+      description: '',
+      status,
+      component: 'comp',
+      images: [],
+      code,
+    }) as ConformaResultRow;
+
+  it('counts rows announcing an upcoming or expired policy change', () => {
+    const rows = [
+      makeRow('volatile_config.pending_rule'),
+      makeRow('volatile_config.expiring_rule'),
+      makeRow('volatile_config.expired_rule'),
+    ];
+
+    expect(countPolicyChanges(rows)).toBe(3);
+  });
+
+  it('ignores warnings that are not policy changes', () => {
+    const rows = [
+      makeRow('tasks.deprecated_api'),
+      makeRow(undefined),
+      makeRow('volatile_config.invalid_config'),
+      makeRow('volatile_config.no_expiration'),
+      makeRow('volatile_config.pending_rule'),
+    ];
+
+    expect(countPolicyChanges(rows)).toBe(1);
+  });
+
+  it('counts every row for a rule, since each is a component the change affects', () => {
+    const rows = [
+      makeRow('volatile_config.expiring_rule'),
+      makeRow('volatile_config.expiring_rule'),
+    ];
+
+    expect(countPolicyChanges(rows)).toBe(2);
+  });
+
+  it('returns zero for an empty result set', () => {
+    expect(countPolicyChanges([])).toBe(0);
+  });
+});
+
+describe('POLICY_EXCEPTION_RULE_CODES', () => {
+  it('covers the policy changes plus the config hygiene rules', () => {
+    expect([...POLICY_EXCEPTION_RULE_CODES].sort()).toEqual([
+      'volatile_config.expired_rule',
+      'volatile_config.expiring_rule',
+      'volatile_config.invalid_config',
+      'volatile_config.no_expiration',
+      'volatile_config.pending_rule',
+    ]);
   });
 });
 

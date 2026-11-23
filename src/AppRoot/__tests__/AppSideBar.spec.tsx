@@ -249,7 +249,7 @@ describe('AppSideBar', () => {
 
     routerRenderer(<AppSideBar isOpen={true} />);
 
-    expect(screen.getByRole('link', { name: /Dependency updates schedule/ })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /Dependency Updates Schedule/ })).toHaveAttribute(
       'href',
       '/dep-updates-schedule',
     );

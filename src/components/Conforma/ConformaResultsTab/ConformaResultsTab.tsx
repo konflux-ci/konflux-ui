@@ -11,6 +11,7 @@ import {
   Spinner,
   Title,
 } from '@patternfly/react-core';
+import { countPolicyChanges } from '~/components/Conforma/policy-exception-utils';
 import {
   POLICY_EXCEPTION_FILTER_KEY,
   usePolicyExceptionFilter,
@@ -81,6 +82,14 @@ const ConformaResultsTabContent: React.FC = () => {
   // successes that were merged away for display purposes.
   const displayCounts = React.useMemo(() => countResultsByStatus(displayResults), [displayResults]);
   const rawCounts = React.useMemo(() => countResultsByStatus(allResults), [allResults]);
+
+  // Only the policy exception rules announce a change to what is enforced, so
+  // the "Upcoming changes" section counts those rather than every warning.
+  const displayPolicyChanges = React.useMemo(
+    () => countPolicyChanges(displayResults),
+    [displayResults],
+  );
+  const rawPolicyChanges = React.useMemo(() => countPolicyChanges(allResults), [allResults]);
 
   const filteredResults = React.useMemo(
     () =>
@@ -162,9 +171,11 @@ const ConformaResultsTabContent: React.FC = () => {
             totalViolations={displayCounts.totalViolations}
             totalWarnings={displayCounts.totalWarnings}
             totalSuccesses={displayCounts.totalSuccesses}
+            totalPolicyChanges={displayPolicyChanges}
             totalViolationsRaw={rawCounts.totalViolations}
             totalWarningsRaw={rawCounts.totalWarnings}
             totalSuccessesRaw={rawCounts.totalSuccesses}
+            totalPolicyChangesRaw={rawPolicyChanges}
           />
           {settling ? (
             <Flex justifyContent={{ default: 'justifyContentCenter' }}>

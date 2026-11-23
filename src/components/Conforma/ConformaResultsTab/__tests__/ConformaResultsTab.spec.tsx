@@ -694,5 +694,17 @@ describe('ConformaResultsTab', () => {
       expect(resultsSection).toHaveTextContent('1 violations');
       expect(resultsSection).toHaveTextContent('2 warnings');
     });
+
+    it('counts only the policy exception rules in the Upcoming changes section', () => {
+      const { container } = routerRenderer(<ConformaResultsTab />);
+
+      // Two warnings in total, but only one of them is a policy change.
+      expect(container.querySelector('[data-test="conforma-summary-results"]')).toHaveTextContent(
+        '2 warnings',
+      );
+      expect(
+        container.querySelector('[data-test="conforma-summary-upcoming-changes"]'),
+      ).toHaveTextContent('1 policy changes');
+    });
   });
 });

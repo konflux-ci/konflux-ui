@@ -15,7 +15,7 @@ Limits include ~10–15% headroom above current sizes so routine changes do not 
 | Chunk            | Gzip limit | What it covers                                              |
 | ---------------- | ---------- | ----------------------------------------------------------- |
 | main             | 275 kB     | Application entry chunk (`dist/main.*.js`)                  |
-| vendor           | 650 kB     | Shared `node_modules` chunk (`dist/vendor.*.js`)            |
+| vendor           | 700 kB     | Shared `node_modules` chunk (`dist/vendor.*.js`)            |
 | route-chunks     | 40 kB      | Combined gzip size of all lazy-loaded per-route async chunks |
 | main-css         | 8 kB       | Application styles (`dist/main.css`)                        |
 | patternfly-css   | 160 kB     | PatternFly styles (`dist/patternfly.css`)                   |

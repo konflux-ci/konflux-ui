@@ -1323,8 +1323,8 @@ __metadata:
   linkType: hard
 
 "cypress@npm:^15.20.0":
-  version: 15.21.1
-  resolution: "cypress@npm:15.21.1"
+  version: 15.21.2
+  resolution: "cypress@npm:15.21.2"
   dependencies:
     "@cypress/request": "npm:^4.0.0"
     "@cypress/xvfb": "npm:^1.2.4"
@@ -1367,7 +1367,7 @@ __metadata:
     yauzl: "npm:^3.3.1"
   bin:
     cypress: bin/cypress
-  checksum: 10/71b14a52c989484608e2d70bd9c442432f32a811df83ce4193283a506493f547e8340770db79e20cb5889c60c0ec9ef7288a862b290c59219c7d8db27e987661
+  checksum: 10/56cec3797a8ea75fc0e01346d11c6fe7b7ff14e424994e0bd63568ff3b94406fa4d369e399df557927d488bc5806fb5fb5ec7aa9c88b225ce103a4795ac67bc0
   languageName: node
   linkType: hard
 
@@ -3596,11 +3596,11 @@ __metadata:
   linkType: hard
 
 "prettier@npm:^3.4.2":
-  version: 3.9.9
-  resolution: "prettier@npm:3.9.9"
+  version: 3.9.10
+  resolution: "prettier@npm:3.9.10"
   bin:
     prettier: bin/prettier.cjs
-  checksum: 10/3d11a8095a7db50f0fbc8086ad96be676401154b63a2e9023e1274893457dccab19a9c211f4fb2cae7244e800bea2d5185d9bb6fc510f48a53017815e47d4e6d
+  checksum: 10/5d0118add4b44eb9d50c114f5c525451cc92be9da300ad0552787472535a3f23884baed3223d9b577bb7d1152eb58aeccfcc2b4541c0cf2274c0b4d328e36834
   languageName: node
   linkType: hard
 

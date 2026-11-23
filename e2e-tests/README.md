@@ -11,6 +11,7 @@ The important bits are as follows:
 | `cypress.config.ts` | cypress configuration file, contains all the environment and plugin setup                           |
 | `support`           | contains helper files for cypress, like hooks, custom commands, page objects, or plugin integration |
 | `tests`             | the actual spec files reside here                                                                   |
+| `test-docs`         | high-level, human-readable docs of what each spec/describe/it covers — see `test-docs/README.md`    |
 | `utils`             | utilities for easier test development, from UI interaction tasks to network requests                |
 | `cypress`           | test results, including screenshots, video recordings, HTML reports, xunit files, etc.              |
 
@@ -18,7 +19,7 @@ The important bits are as follows:
 
 Prerequisites:
 
-- Nodejs (20+ version)
+- Node.js 24 or newer
 - Locally installed Konflux or access to the staging Konflux
 
 > [!NOTE]
@@ -28,25 +29,27 @@ Certain environment variables will need to be set up. The most convenient way is
 
 Find the supported variables in the table below:
 
-| Variable name        | Description                                                                           | Required                     | Default Value            |
-| -------------------- | ------------------------------------------------------------------------------------- | ---------------------------- | ------------------------ |
-| `KONFLUX_BASE_URL`   | The URL to the main page of Konflux                                                   | Yes                          | 'https://localhost:8080' |
-| `USERNAME`           | Username for local Konflux                                                            | Yes                          | 'user2@konflux.dev'      |
-| `PASSWORD`           | Password for local Konflux                                                            | Only with LOCAL_CLUSTER=true | 'password'               |
-| `LOCAL_CLUSTER`      | Assume the test should be running against a local cluster, using flow for local login | No                           | ''                       |
-| `REMOVE_APP_ON_FAIL` | Clean up applications from the cluster even if tests fail                             | No                           | false                    |
-| `GH_TOKEN`           | GitHub token for network requests                                                     | Yes                          | ''                       |
-| `GH_REPO_OWNER`      | GitHub username where testing repo will be pushed. GH_TOKEN must have rights there.   | Yes                          | `redhat-hac-qe`          |
+| Variable name        | Description                                                                                      | Required                          | Default Value                                                                              |
+| -------------------- | ------------------------------------------------------------------------------------------------ | --------------------------------- | ------------------------------------------------------------------------------------------ |
+| `KONFLUX_BASE_URL`   | The URL to the main page of Konflux                                                              | Yes                               | 'https://localhost:8080'                                                                   |
+| `USERNAME`           | Signed-in account identity, also used for deployed login forms and the namespace fallback        | Yes                               | 'user2@konflux.dev'                                                                        |
+| `HAC_NAMESPACE`      | An existing Kubernetes namespace accessible to the signed-in account; set explicitly for staging | Yes, unless the fallback is valid | `default-tenant` with `LOCAL_CLUSTER=true`; otherwise lowercased `USERNAME` plus `-tenant` |
+| `PASSWORD`           | Password for deployed login forms                                                                | Only for automated form login     | 'password'                                                                                 |
+| `LOCAL_CLUSTER`      | Use the local backend's namespace defaults; selects Dex form login unless LOGIN_PROVIDER is set  | No                                | false                                                                                      |
+| `LOGIN_PROVIDER`     | Use `openshift` for a deployed OpenShift login form                                              | No                                | ''                                                                                         |
+| `REMOVE_APP_ON_FAIL` | Clean up applications from the cluster even if tests fail                                        | No                                | false                                                                                      |
+| `GH_TOKEN`           | GitHub token for network requests                                                                | Yes                               | ''                                                                                         |
+| `GH_REPO_OWNER`      | GitHub username where testing repo will be pushed. GH_TOKEN must have rights there.              | Yes                               | `redhat-hac-qe`                                                                            |
 
-Please note, that `USERNAME` and `PASSWORD` are used only when the login process s automated. Currently, the login is automated just for the Konflux backend running locally. When running against a stage backend, the 2FA is required and is not supported by tests.
+Set `HAC_NAMESPACE` to a real namespace the signed-in account can access. The namespace fallback appends `-tenant` to the lowercased username; an email identity such as `user@example.com` would produce an invalid Kubernetes namespace. With `LOCAL_CLUSTER=true` and no `HAC_NAMESPACE` override, the default remains `default-tenant`.
 
 ### Running test from source against local Konflux UI and staging Konflux backend
 
 This is the recommended way when either developing tests or a headed test runner is preferred.
 
-Go to the parent directory and run `yarn install` and `yarn start` to start a local Konflux UI. Please notice that the UI is connected to the backend running on a staging environment, so you would need access to the staging Konflux. You may check by logging in here https://konflux-ui.apps.stone-stg-rh01.l2vh.p1.openshiftapps.com.
+Go to the parent directory and run `yarn install` and `yarn start` to start a local Konflux UI. The default `.env` targets staging, so you need access to staging Konflux. Follow the [local CLI authentication setup](../docs/local-cli-auth.md) for kubelogin and certificate prerequisites, then open `https://localhost:8080` in your browser and finish signing in. Keep that development server running while Cypress runs.
 
-Once Konflux UI is running locally, head to the e2e-tests folder. After running `yarn install` and setting the appropriate environment variables, use one of the following commands to run Cypress.
+Once you are signed in, head to the e2e-tests folder. After running `yarn install` and setting the appropriate environment variables, use one of the following commands to run Cypress.
 
 For the headed test runner:
 
@@ -55,9 +58,6 @@ $ yarn run cy:open
 ```
 
 Select E2E testing and the browser of your choice (Chrome is recommended though), then launch any spec by clicking it in the list and watch as it runs.
-
-> [!IMPORTANT]
-> Once the test runs, it will require you to login manually as it requires 2FA flow for your personal account.
 
 For headless execution:
 
@@ -75,13 +75,18 @@ $ yarn run cy:run -b chrome -s 'tests/component-lifecycle.spec.ts,tests/environm
 
 It's possible to run the backend locally using the same scripts as are used for PR check automation. The process of Konflux backend installation and requirements is described here https://github.com/konflux-ci/konflux-ci?tab=readme-ov-file#trying-out-konflux.
 
-For this setup, set also `LOCAL_CLUSTER` variable to `true` to enable automated login.
+First configure the local development server's upstream targets and certificate trust using [Running with Konflux-ci](../README.md#running-with-konflux-ci). Start it with `yarn start` and finish signing in at `https://localhost:8080` in your browser, as above.
+
+For this setup, leave `LOCAL_CLUSTER` unset (it selects the Dex form login, which the signed-in development server does not show) and set the local backend's namespace explicitly:
 
 ```
-export CYPRESS_LOCAL_CLUSTER=true
+unset CYPRESS_LOCAL_CLUSTER
+export CYPRESS_HAC_NAMESPACE=default-tenant
 ```
 
-Run tests by using the command `$ yarn run cy:open` or pick some other way described in a previous chapter. Once tests are run, no manual interaction is needed.
+Run tests by using the command `$ yarn run cy:open` or pick some other way described in a previous chapter.
+
+When testing a deployed UI, `LOCAL_CLUSTER=true` uses the local Dex form login, or select `LOGIN_PROVIDER=openshift` for an OpenShift login form.
 
 ### Running tests using the container image
 
@@ -116,7 +121,7 @@ Since the image already contains all the test code, in case you'd like to run th
 $ podman run -v <path to your e2e-tests>:/e2e:Z -e CYPRESS_KONFLUX_BASE_URL=https://<HOSTNAME>/hac/application-pipeline -e CYPRESS_USERNAME="user1" -e CYPRESS_PASSWORD="user1" quay.io/konflux_ui_qe/konflux-ui-tests:latest
 ```
 
-The container entrypoint checks for a mounted `/e2e` directory and runs tests from there when present; otherwise it uses the image-baked sources at `/tmp/e2e`. This detection applies to manual container runs only — see [Tests on CI](#tests-on-ci) for how Konflux integration pipelines populate `/e2e` automatically.
+The container entrypoint checks for a mounted `/e2e` directory and runs tests from there when present; otherwise it uses the image-baked sources at `/tmp/e2e`. This detection applies to manual container runs only — Konflux integration pipelines always use the image-baked sources.
 
 #### Passing arguments to Cypress
 
@@ -199,12 +204,9 @@ The test step executes `pr_check.sh` file which does the tests setup and runs te
 
 #### Konflux integration pipeline
 
-Konflux also runs E2E tests via the integration pipeline (`.integration-tests/pipelines/e2e-main-pipeline.yaml`) using the `run-e2e-konflux-ui` Tekton task. After `deploy-konflux`, the pipeline runs **`patch-konflux-ui-image`**, which replaces the stock UI image on Kind (`deployment/proxy` initContainer `copy-static-content`) with the SNAPSHOT image under test and attaches a pull secret so Kind can pull it. That step is required because `deploy-konflux-ci` cannot reliably override the UI image. Next, `format-e2e-test-image` resolves the test runner image built in parallel with the UI by the `konflux-ui` component build pipeline (`e2e-on-pr-<sha>` for pull requests, `e2e-<sha>` for push). For `pr-check` jobs on **fork → upstream** PRs only, the task may overlay PR `e2e-tests/` sources:
+Konflux also runs E2E tests via the integration pipeline (`.integration-tests/pipelines/e2e-main-pipeline.yaml`) using the `run-e2e-konflux-ui` Tekton task. `format-images` resolves the parallel build tags (`instrumented[-on-pr]-<sha>` for the UI under test, `e2e[-on-pr]-<sha>` for the Cypress runner) — SNAPSHOT's primary `containerImage` is the non-instrumented digest and is not used for deploy. `deploy-konflux` installs Konflux via the operator and injects that instrumented UI image into `deployment/proxy` (initContainer `copy-static-content`), with a pull secret so Kind can pull it. The Cypress runner image (test image) is built from the PR revision's `e2e-tests/` tree, so `run-e2e-test` always executes the image-baked sources at `/tmp/e2e`. When Cypress Cloud credentials are present, runs are recorded with `--record` and tagged by `job-type`.
 
-1. **`prepare-e2e-sources` step** — Skipped for same-repo PRs (uses image-baked tests, like `pr_check.sh` on upstream). For fork → upstream PRs, fetches the PR commit from the fork and compares `e2e-tests/` against upstream `main`; stages changed files into `/e2e` when needed.
-2. **`run-e2e-test` step** — If `/e2e` contains staged sources, installs dependencies and runs Cypress from `/e2e`. Otherwise uses image-baked sources at `/tmp/e2e`.
-
-The container entrypoint performs a similar `/e2e` vs `/tmp/e2e` check for manual runs only.
+The container entrypoint's `/e2e` vs `/tmp/e2e` check remains for manual local runs only.
 
 ### Periodic tests
 
