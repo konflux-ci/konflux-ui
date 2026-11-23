@@ -26,7 +26,7 @@ For the PR review checklist companion, see [pr-review-guidelines.md](./pr-review
 
 ## Styling: PatternFly-First Approach
 
-Always use PatternFly components and layout primitives. Do not reach for raw HTML elements (`<div>`, `<section>`, `<header>`) or custom CSS for layout.
+Always use PatternFly components and layout primitives. Do not reach for raw HTML elements (`<div>`, `<section>`, `<header>`) or custom SCSS for layout. Custom SCSS is a last resort after the [PatternFly styling decision order](./guidelines/patternfly-guidelines.md#scss-conventions).
 
 ```tsx
 // GOOD -- PatternFly layout
@@ -64,36 +64,24 @@ Use PatternFly layout components for their intended purpose:
 | `Bullseye`                | Centering content            |
 | `Level` / `LevelItem`     | Horizontal alignment         |
 
-Use PatternFly design tokens (CSS custom properties) for spacing, color, and borders -- never hardcode values:
-
-```scss
-// GOOD
-.my-component {
-  padding: var(--pf-global--spacer--md);
-  color: var(--pf-global--primary-color--100);
-}
-
-// BAD
-.my-component {
-  padding: 16px;
-  color: #0066cc;
-}
-```
+When a custom SCSS rule is necessary, use PatternFly v6 semantic tokens for spacing, color, and borders. Never hardcode values; see the [token reference](./guidelines/patternfly-guidelines.md#design-tokens).
 
 ### When Custom CSS Is Acceptable
 
-Custom CSS is acceptable only when:
+Never add custom SCSS until you have checked the existing Konflux UI components and all relevant PatternFly v6 documentation for the UI need: component APIs and variants, layout components, utility classes, design tokens, and theme or component variables. A missing familiar prop is not proof that custom SCSS is necessary. Name the specific unsupported behavior and the alternatives checked in the PR description.
 
-1. **PatternFly does not provide a component or utility** for the exact need (e.g., a specialized layout for pipeline topology).
-2. **Fixing a PatternFly bug** -- document the bug with a comment linking the PF issue.
-3. **Animation or transition** that PF does not support.
+Custom SCSS is acceptable only when:
 
-When writing custom CSS:
+1. **No existing shared component or documented PatternFly option** can provide the required behavior (e.g., specialized pipeline topology rendering).
+2. **Working around a PatternFly bug** -- document the bug with a comment linking the PF issue.
+3. **An animation or transition** is required and PatternFly does not support it.
+
+When writing custom SCSS:
 
 - Place styles in a co-located SCSS file (e.g., `MyComponent.scss`) alongside the component.
 - Use BEM naming: `.my-component__section--loading`.
 - Use PF tokens for all values (spacing, color, borders).
-- Never use inline styles (`style={{ ... }}`). Exception: virtualized row positioning styles (e.g., `position: 'absolute'`, `top`, `height`) are required by virtualizers — memoize the style object with `useMemo` (computed once before the row loop) or extract each row to a `React.memo` child component. Do not call `useMemo` inside a loop (Rules of Hooks).
+- Use inline styles (`style={{ ... }}`) only for necessary runtime values that PatternFly cannot express, such as virtualized row positioning (`position: 'absolute'`, `top`, `height`). For virtualized rows, memoize the style object with `useMemo` (computed once before the row loop) or extract each row to a `React.memo` child component. Do not call `useMemo` inside a loop (Rules of Hooks).
 
 ---
 
