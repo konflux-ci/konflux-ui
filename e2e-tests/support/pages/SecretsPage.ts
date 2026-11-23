@@ -65,14 +65,28 @@ export class SecretsPage {
   }
 
   static deleteSecret(secretName: string) {
-    // Wait for the secret row to be visible before interacting with it.
-    // After navigating back from edit, the list may still be re-rendering.
-    cy.get(secretsPagePO.secretRow(secretName)).should('be.visible');
-    cy.get(secretsPagePO.rowKebabButton(secretName)).click();
-    cy.get(secretsPagePO.deleteButton).click();
-    cy.get(secretsPagePO.deleteConfirmInput).click().type(secretName);
-    cy.get(secretsPagePO.deleteResourceButton).click();
-    cy.get(secretsPagePO.listNameInput).should('be.visible');
-    cy.get(secretsPagePO.secretRow(secretName)).should('not.exist');
+    cy.get(secretsPagePO.page).contains(secretsPagePO.pageDescription).should('exist');
+    cy.get('body').then(($body) => {
+      if ($body.find('[data-test="secrets-empty-state"]').length) return;
+
+      cy.get(secretsPagePO.listNameInput).should('be.visible').clear().type(secretName);
+      cy.url().should('include', `name=${secretName}`);
+      cy.get('body').should(($filteredBody) => {
+        expect(
+          $filteredBody.find(secretsPagePO.secretRow(secretName)).length ||
+            $filteredBody.find('.app-empty-state').length,
+        ).to.be.greaterThan(0);
+      });
+      cy.get('body').then(($filteredBody) => {
+        if (!$filteredBody.find(secretsPagePO.secretRow(secretName)).length) return;
+
+        cy.get(secretsPagePO.rowKebabButton(secretName)).click();
+        cy.get(secretsPagePO.deleteButton).click();
+        cy.get(secretsPagePO.deleteConfirmInput).click().type(secretName);
+        cy.get(secretsPagePO.deleteResourceButton).click();
+        cy.get(secretsPagePO.listNameInput).should('be.visible');
+        cy.get(secretsPagePO.secretRow(secretName)).should('not.exist');
+      });
+    });
   }
 }

@@ -115,9 +115,7 @@ export const ComponentSelectMenu: React.FC<ComponentSelectMenuProps> = ({
   }, [isGrouped, options, searchQuery]);
 
   const toggleText = React.useMemo(() => {
-    const hasSelection = isMulti
-      ? Array.isArray(value) && value.length > 0
-      : Boolean(value);
+    const hasSelection = isMulti ? Array.isArray(value) && value.length > 0 : Boolean(value);
 
     if (typeof selectedToggleText === 'function') {
       return hasSelection ? selectedToggleText(value) : defaultToggleText;
@@ -128,8 +126,9 @@ export const ComponentSelectMenu: React.FC<ComponentSelectMenuProps> = ({
   useEffect(() => {
     if (!defaultSelected || defaultSelected.length === 0) return;
 
+    // flat options (new component model) have no application name
     const filterDefaultSelected = defaultSelected.filter(
-      (c) => c?.componentName && c?.applicationName,
+      (c) => c?.componentName && (!isGrouped || c?.applicationName),
     );
 
     if (filterDefaultSelected.length === 0) return;
@@ -146,7 +145,7 @@ export const ComponentSelectMenu: React.FC<ComponentSelectMenuProps> = ({
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [defaultSelected, setValue, isMulti]);
+  }, [defaultSelected, setValue, isMulti, isGrouped]);
 
   return (
     <>
