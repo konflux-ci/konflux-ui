@@ -39,6 +39,7 @@ const TestGraphNode: React.FC<TestGraphNodeProps> = ({ element, ...rest }) => {
           <Flex
             alignItems={{ default: 'alignItemsCenter' }}
             spaceItems={{ default: 'spaceItemsXs' }}
+            gap={{ default: 'gapSm' }}
             className="testgraph-node__tooltip--warning"
           >
             <WarningIcon aria-hidden="true" />
