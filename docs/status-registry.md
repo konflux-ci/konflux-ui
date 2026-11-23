@@ -155,6 +155,31 @@ const optionsMap = {
 | `statusFilterFn(item, values)` | Function | Filter predicate for `defineFilters` |
 | `registry` | `StatusRegistry` | Direct access to the underlying registry |
 
+### Custom text layouts (`text` accepts a node)
+
+`StatusIconWithText`'s `text` prop accepts any `React.ReactNode`, not only a string. Omit it to render the registry label; pass a node when the text cell needs a richer layout, such as a second line under the status word:
+
+```tsx
+const { status, label } = PLRStatus.useStatusDisplay(plr);
+
+<PLRStatus.StatusIconWithText
+  status={status}
+  tooltip={tooltip}
+  text={
+    <Flex
+      component="span"
+      direction={{ default: 'column' }}
+      alignItems={{ default: 'alignItemsFlexStart' }}
+    >
+      <span>{label}</span>
+      <span>position#2</span>
+    </Flex>
+  }
+/>;
+```
+
+Build the layout with PatternFly layout components (`Flex`, `Stack`) rather than custom flex/grid CSS. When `tooltip` is set, the help-text styling (dashed underline, pointer cursor) is applied to the whole text cell, so it covers the entire custom layout as one hover target. The registry knows what a status word means; it does not know per-resource detail such as a queue position, so that composition belongs to the caller.
+
 ---
 
 ## 4. Adding a new PipelineRun status
