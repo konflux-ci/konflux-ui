@@ -1,7 +1,7 @@
 import { Label } from '@patternfly/react-core';
 import { ComponentLink } from '~/shared/components/component-link/ComponentLink';
 import { type ColumnDefinition } from '~/shared/components/TableV2';
-import { NudgeMode, NudgeRelationship } from '~/types';
+import { type NudgeMode, type NudgeRelationship } from '~/types';
 import { getNudgeMode } from './nudging-utils';
 
 export const getNudgingTableColumns = (

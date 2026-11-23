@@ -18,11 +18,13 @@ const SECTION_COPY = {
     title: 'Nudges',
     testId: 'nudges-section',
     empty: 'No outgoing nudge relationships.',
+    errorLabel: 'outgoing nudges',
   },
   incoming: {
     title: 'Nudged by',
     testId: 'nudged-by-section',
     empty: 'No incoming nudge relationships.',
+    errorLabel: 'incoming nudges',
   },
 } as const;
 
@@ -53,7 +55,7 @@ const NudgingSection: React.FC<NudgingSectionProps> = ({ component, direction })
         onToggle={() => setExpanded((x) => !x)}
       >
         {error ? (
-          getErrorState(error, loaded, copy.title.toLowerCase(), true)
+          getErrorState(error, loaded, copy.errorLabel, true)
         ) : (
           <TableContainer
             data={nudges}
@@ -70,7 +72,7 @@ const NudgingSection: React.FC<NudgingSectionProps> = ({ component, direction })
             <Table
               data={nudges}
               columns={columns}
-              getRowId={(row) => `${row.from}/${row.to}`}
+              getRowId={(row) => `${row.from}/${row.to}/${row.mode ?? ''}`}
               aria-label={copy.title}
               data-test="nudging-table"
             />
