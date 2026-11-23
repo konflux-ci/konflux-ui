@@ -206,9 +206,9 @@ describe('Environment Configuration Tests', () => {
         }
       });
       Common.waitForLoad();
+      // deleteSecret handles filtering internally (clears the name input
+      // and types the secret name before locating the row).
       SecretsPage.deleteSecret(secretName);
-      // Note: during the deletion, the secret is already filtered in input field
-      // no need to search again - re-searching makes a test flaky.
     });
 
     it('Add, Verify and Delete a secret', () => {
