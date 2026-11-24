@@ -73,6 +73,8 @@ describe('AIChatDock', () => {
 
     const landmark = screen.getByRole('complementary', { name: 'AI Chat' });
 
+    expect(landmark.tagName).toBe('ASIDE');
+    expect(landmark).not.toHaveAttribute('role');
     expect(landmark.parentElement).toBe(document.body);
     expect(landmark).toContainElement(screen.getByRole('button', { name: 'Toggle chat' }));
   });
