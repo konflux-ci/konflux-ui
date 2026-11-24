@@ -103,6 +103,7 @@ describe('NudgingSection (outgoing)', () => {
     renderWithQueryClientAndRouter(<NudgingSection component={component} direction="outgoing" />);
 
     expect(screen.getByText('Unable to load outgoing nudges')).toBeInTheDocument();
+    expect(screen.getByText('Nudges')).toBeInTheDocument();
     expect(screen.queryByTestId('nudging-table')).not.toBeInTheDocument();
   });
 
