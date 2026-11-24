@@ -6,7 +6,6 @@ type UseAIChatHistoryDrawerOptions = {
   selectConversation: (conversationId: string) => Promise<void>;
 };
 
-/** Local drawer open state and history actions for the chat history nav. */
 export const useAIChatHistoryDrawer = ({
   refreshConversations,
   startNewChat,

@@ -26,7 +26,6 @@ type AIChatHistoryNavProps = {
   children: React.ReactNode;
 };
 
-/** History drawer for searching, selecting, and starting conversations. */
 export const AIChatHistoryNav: React.FC<AIChatHistoryNavProps> = ({
   displayMode,
   activeConversationId,

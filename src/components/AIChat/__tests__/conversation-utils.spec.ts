@@ -1,5 +1,7 @@
-import type { ConversationDetails } from '@redhat-cloud-services/lightspeed-client';
-import { TEMP_CONVERSATION_ID as LIGHTSPEED_TEMP_CONVERSATION_ID } from '@redhat-cloud-services/lightspeed-client';
+import {
+  TEMP_CONVERSATION_ID as LIGHTSPEED_TEMP_CONVERSATION_ID,
+  type ConversationDetails,
+} from '@redhat-cloud-services/lightspeed-client';
 import {
   isTemporaryConversationId,
   mapConversationDetails,

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import type { ChatbotDisplayMode } from '@patternfly/chatbot/dist/dynamic/Chatbot';
 import type { Conversation } from '@patternfly/chatbot/dist/dynamic/ChatbotConversationHistoryNav';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { AIChatHistoryNav } from '~/components/AIChat/components/AIChatHistoryNav';
 import {
@@ -14,7 +14,6 @@ import {
 jest.mock('@patternfly/chatbot/dist/dynamic/ChatbotConversationHistoryNav', () => ({
   __esModule: true,
   default: ({
-    conversations,
     drawerContent,
     errorState,
     handleTextInputChange,
@@ -22,11 +21,8 @@ jest.mock('@patternfly/chatbot/dist/dynamic/ChatbotConversationHistoryNav', () =
     isLoading,
     noResultsState,
     onDrawerToggle,
-    onNewChat,
-    onSelectActiveItem,
     searchInputPlaceholder,
   }: {
-    conversations: Conversation[];
     drawerContent: React.ReactNode;
     errorState?: { titleText: string; bodyText: string };
     handleTextInputChange: (value: string) => void;
@@ -34,25 +30,11 @@ jest.mock('@patternfly/chatbot/dist/dynamic/ChatbotConversationHistoryNav', () =
     isLoading?: boolean;
     noResultsState?: { titleText: string; bodyText: string };
     onDrawerToggle: () => void;
-    onNewChat: () => void;
-    onSelectActiveItem: (
-      event: React.MouseEvent | undefined,
-      conversationId?: string | number,
-    ) => void;
     searchInputPlaceholder: string;
   }) => (
     <div>
       <button type="button" aria-expanded={isDrawerOpen} onClick={onDrawerToggle}>
         History
-      </button>
-      <button type="button" onClick={onNewChat}>
-        New chat
-      </button>
-      <button type="button" onClick={() => onSelectActiveItem(undefined, conversations[0]?.id)}>
-        Select conversation
-      </button>
-      <button type="button" onClick={() => onSelectActiveItem(undefined, undefined)}>
-        Select nothing
       </button>
       <input
         aria-label={searchInputPlaceholder}
@@ -106,9 +88,9 @@ const renderHistoryNav = (
     conversations,
     hasNoSearchResults: false,
     isLoadingConversations: false,
-    refreshConversations: jest.fn().mockResolvedValue(undefined),
-    startNewChat: jest.fn().mockResolvedValue(true),
-    selectConversation: jest.fn().mockResolvedValue(undefined),
+    refreshConversations: jest.fn(),
+    startNewChat: jest.fn(),
+    selectConversation: jest.fn(),
     filterConversations: jest.fn(),
     onCloseChat: jest.fn(),
     ...overrides,
@@ -124,81 +106,15 @@ const renderHistoryNav = (
 };
 
 describe('AIChatHistoryNav', () => {
-  it('refreshes conversations when the history drawer opens', async () => {
+  it('wires the header history toggle into the drawer', async () => {
     const user = userEvent.setup();
-    const props = renderHistoryNav();
+    renderHistoryNav();
 
     const historyButton = screen.getByRole('button', { name: 'History' });
-    await user.click(historyButton);
-
-    expect(props.refreshConversations).toHaveBeenCalledTimes(1);
-    expect(historyButton).toHaveAttribute('aria-expanded', 'true');
-  });
-
-  it('does not refresh conversations when the history drawer closes', async () => {
-    const user = userEvent.setup();
-    const props = renderHistoryNav();
-    const historyButton = screen.getByRole('button', { name: 'History' });
-
-    await user.click(historyButton);
-    await user.click(historyButton);
-
-    expect(props.refreshConversations).toHaveBeenCalledTimes(1);
     expect(historyButton).toHaveAttribute('aria-expanded', 'false');
-  });
 
-  it('starts a new chat and closes the drawer', async () => {
-    const user = userEvent.setup();
-    const props = renderHistoryNav();
-    const historyButton = screen.getByRole('button', { name: 'History' });
+    await user.click(screen.getByRole('button', { name: 'Header history' }));
 
-    await user.click(historyButton);
-    await user.click(screen.getByRole('button', { name: 'New chat' }));
-
-    expect(historyButton).toHaveAttribute('aria-expanded', 'false');
-    await waitFor(() => {
-      expect(props.startNewChat).toHaveBeenCalledTimes(1);
-      expect(props.refreshConversations).toHaveBeenCalledTimes(2);
-    });
-  });
-
-  it('keeps the new-chat error when starting a chat fails', async () => {
-    const user = userEvent.setup();
-    const props = renderHistoryNav({ startNewChat: jest.fn().mockResolvedValue(false) });
-    const historyButton = screen.getByRole('button', { name: 'History' });
-
-    await user.click(historyButton);
-    await user.click(screen.getByRole('button', { name: 'New chat' }));
-
-    await waitFor(() => {
-      expect(props.startNewChat).toHaveBeenCalledTimes(1);
-    });
-    expect(props.refreshConversations).toHaveBeenCalledTimes(1);
-  });
-
-  it('selects a conversation and closes the drawer', async () => {
-    const user = userEvent.setup();
-    const props = renderHistoryNav();
-    const historyButton = screen.getByRole('button', { name: 'History' });
-
-    await user.click(historyButton);
-    await user.click(screen.getByRole('button', { name: 'Select conversation' }));
-
-    await waitFor(() => {
-      expect(props.selectConversation).toHaveBeenCalledWith('older');
-    });
-    expect(historyButton).toHaveAttribute('aria-expanded', 'false');
-  });
-
-  it('ignores a selection that has no conversation id', async () => {
-    const user = userEvent.setup();
-    const props = renderHistoryNav({ conversations: [] });
-    const historyButton = screen.getByRole('button', { name: 'History' });
-
-    await user.click(historyButton);
-    await user.click(screen.getByRole('button', { name: 'Select nothing' }));
-
-    expect(props.selectConversation).not.toHaveBeenCalled();
     expect(historyButton).toHaveAttribute('aria-expanded', 'true');
   });
 
@@ -206,7 +122,10 @@ describe('AIChatHistoryNav', () => {
     const user = userEvent.setup();
     const props = renderHistoryNav();
 
-    await user.type(screen.getByRole('textbox', { name: KONFLUX_AI_HISTORY_SEARCH_PLACEHOLDER }), 'pipe');
+    await user.type(
+      screen.getByRole('textbox', { name: KONFLUX_AI_HISTORY_SEARCH_PLACEHOLDER }),
+      'pipe',
+    );
 
     expect(props.filterConversations).toHaveBeenLastCalledWith('pipe');
   });
@@ -225,8 +144,7 @@ describe('AIChatHistoryNav', () => {
   });
 
   it('shows the empty search state and renders the chat inside the drawer', () => {
-    const onCloseChat = jest.fn();
-    renderHistoryNav({ hasNoSearchResults: true, onCloseChat });
+    renderHistoryNav({ hasNoSearchResults: true });
 
     expect(screen.getByText(KONFLUX_AI_HISTORY_NO_RESULTS_TITLE)).toBeInTheDocument();
     expect(screen.getByText(KONFLUX_AI_HISTORY_NO_RESULTS_BODY)).toBeInTheDocument();

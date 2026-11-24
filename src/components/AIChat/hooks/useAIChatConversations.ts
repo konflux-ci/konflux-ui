@@ -31,7 +31,6 @@ type UseAIChatConversationsResult = {
   filterConversations: (searchValue: string) => void;
 };
 
-/** Conversation list, search, selection, and new-chat actions for the history drawer. */
 export const useAIChatConversations = (): UseAIChatConversationsResult => {
   const [allConversations, setAllConversations] = React.useState<Conversation[]>([]);
   const [conversations, setConversations] = React.useState<Conversation[]>([]);

@@ -1,5 +1,7 @@
-import type { ConversationDetails } from '@redhat-cloud-services/lightspeed-client';
-import { TEMP_CONVERSATION_ID as LIGHTSPEED_TEMP_CONVERSATION_ID } from '@redhat-cloud-services/lightspeed-client';
+import {
+  TEMP_CONVERSATION_ID as LIGHTSPEED_TEMP_CONVERSATION_ID,
+  type ConversationDetails,
+} from '@redhat-cloud-services/lightspeed-client';
 import type { LightspeedConversationDetails } from '~/lightspeed/types';
 
 /**
@@ -25,7 +27,6 @@ const hasHistoryTimestamp = (
   last_message_at: string;
 } => Boolean(conversation.conversation_id && conversation.last_message_at);
 
-/** Map Lightspeed list responses into camelCase history details. */
 export const mapConversationDetails = (
   conversations: ConversationDetails[],
 ): LightspeedConversationDetails[] =>

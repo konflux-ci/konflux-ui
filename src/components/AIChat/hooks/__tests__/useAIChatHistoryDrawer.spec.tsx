@@ -67,7 +67,7 @@ describe('useAIChatHistoryDrawer', () => {
     expect(refreshConversations).toHaveBeenCalledTimes(1);
   });
 
-  it('keeps a failed new chat error on screen by skipping refresh', async () => {
+  it('does not refresh after a failed new chat', async () => {
     startNewChat.mockResolvedValue(false);
     const { result } = renderDrawer();
 
