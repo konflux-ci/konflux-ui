@@ -72,11 +72,13 @@ const TestGraphVisualization: React.FC<TestGraphVisualizationProps> = ({
           className="testgraph-visualization__graph"
         >
           <Stack hasGutter>
-            <VisualizationFactory
-              componentFactory={testGraphComponentFactory}
-              layoutFactory={testGraphLayoutFactory}
-              model={model}
-            />
+            <div className="testgraph-visualization__graph-container">
+              <VisualizationFactory
+                componentFactory={testGraphComponentFactory}
+                layoutFactory={testGraphLayoutFactory}
+                model={model}
+              />
+            </div>
             {hasAnyFailFast && (
               <Flex direction={{ default: 'row' }} spaceItems={{ default: 'spaceItemsSm' }}>
                 <FlexItem>
