@@ -9,6 +9,7 @@ import {
   KONFLUX_AI_HISTORY_NO_RESULTS_TITLE,
   KONFLUX_AI_HISTORY_SEARCH_PLACEHOLDER,
 } from '~/components/AIChat/const';
+import { useAIChatHistoryDrawer } from '~/components/AIChat/hooks/useAIChatHistoryDrawer';
 
 type AIChatHistoryNavProps = {
   displayMode: ChatbotDisplayMode;
@@ -40,34 +41,17 @@ export const AIChatHistoryNav: React.FC<AIChatHistoryNavProps> = ({
   onCloseChat,
   children,
 }) => {
-  const [isDrawerOpen, setIsDrawerOpen] = React.useState(false);
-
-  const handleToggleDrawer = React.useCallback(() => {
-    if (!isDrawerOpen) {
-      void refreshConversations();
-    }
-    setIsDrawerOpen((open) => !open);
-  }, [isDrawerOpen, refreshConversations]);
-
-  const handleNewChat = React.useCallback(() => {
-    setIsDrawerOpen(false);
-    void startNewChat().then((started) => {
-      if (started) {
-        void refreshConversations();
-      }
-    });
-  }, [refreshConversations, startNewChat]);
-
-  const handleSelectConversation = React.useCallback(
-    (_event: React.MouseEvent | undefined, conversationId?: string | number) => {
-      if (conversationId === undefined) {
-        return;
-      }
-      void selectConversation(String(conversationId));
-      setIsDrawerOpen(false);
-    },
-    [selectConversation, setIsDrawerOpen],
-  );
+  const {
+    isDrawerOpen,
+    setIsDrawerOpen,
+    handleToggleDrawer,
+    handleNewChat,
+    handleSelectConversation,
+  } = useAIChatHistoryDrawer({
+    refreshConversations,
+    startNewChat,
+    selectConversation,
+  });
 
   return (
     <ChatbotConversationHistoryNav

@@ -1,86 +1,23 @@
 import * as React from 'react';
 import type { Conversation } from '@patternfly/chatbot/dist/dynamic/ChatbotConversationHistoryNav';
-import { AIClientError, type IConversation } from '@redhat-cloud-services/ai-client-common';
+import type { IConversation } from '@redhat-cloud-services/ai-client-common';
 import {
   useActiveConversation,
   useClient,
   useCreateNewConversation,
   useSetActiveConversation,
 } from '@redhat-cloud-services/ai-react-state';
+import type { LightspeedClient } from '@redhat-cloud-services/lightspeed-client';
 import {
-  LightspeedClientError,
-  TEMP_CONVERSATION_ID as LIGHTSPEED_TEMP_CONVERSATION_ID,
-} from '@redhat-cloud-services/lightspeed-client';
-import type {
-  ConversationDetails,
-  LightspeedClient,
-} from '@redhat-cloud-services/lightspeed-client';
-import { getUserFacingErrorMessage, toHistoryConversations } from '~/components/AIChat/message-utils';
-import type { LightspeedConversationDetails } from '~/lightspeed/types';
-import { logger } from '~/monitoring/logger';
+  getConversationErrorMessage,
+  reportConversationError,
+} from '~/components/AIChat/conversation-errors';
+import {
+  isTemporaryConversationId,
+  mapConversationDetails,
+} from '~/components/AIChat/conversation-utils';
+import { toHistoryConversations } from '~/components/AIChat/message-utils';
 import { filterByText } from '~/utils/text-filter-utils';
-
-/**
- * Unexported `TEMP_CONVERSATION_ID` in
- * `@redhat-cloud-services/ai-client-state` `src/lib/state-manager.js`.
- * Distinct from Lightspeed's exported temp conversation id.
- */
-const STATE_TEMP_CONVERSATION_ID = '__temp_conversation__';
-
-const isTemporaryConversationId = (conversationId?: string): boolean =>
-  !conversationId ||
-  conversationId === STATE_TEMP_CONVERSATION_ID ||
-  conversationId === LIGHTSPEED_TEMP_CONVERSATION_ID;
-
-/**
- * List items are `ConversationDetails` from `@redhat-cloud-services/lightspeed-client`,
- * including `topic_summary` (https://github.com/RedHatInsights/ai-web-clients/pull/5).
- */
-const hasHistoryTimestamp = (
-  conversation: ConversationDetails,
-): conversation is ConversationDetails & {
-  conversation_id: string;
-  last_message_at: string;
-} => Boolean(conversation.conversation_id && conversation.last_message_at);
-
-const mapConversationDetails = (
-  conversations: ConversationDetails[],
-): LightspeedConversationDetails[] =>
-  conversations.filter(hasHistoryTimestamp).map(
-      ({
-        conversation_id: conversationId,
-        created_at: createdAt,
-        last_message_at: lastMessageAt,
-        message_count: messageCount,
-        last_used_model: lastUsedModel,
-        last_used_provider: lastUsedProvider,
-        topic_summary: topicSummary,
-      }) => ({
-        conversationId,
-        createdAt: createdAt ?? lastMessageAt,
-        lastMessageAt,
-        messageCount: messageCount ?? 0,
-        ...(lastUsedModel ? { lastUsedModel } : {}),
-        ...(lastUsedProvider ? { lastUsedProvider } : {}),
-        ...(topicSummary ? { topicSummary } : {}),
-      }),
-    );
-
-const getErrorMessage = (error: unknown): string => {
-  if (error instanceof AIClientError || error instanceof LightspeedClientError) {
-    return getUserFacingErrorMessage(error.status);
-  }
-  // Never expose raw Error.message — network details may include internal URLs.
-  return getUserFacingErrorMessage(0);
-};
-
-const reportConversationError = (
-  message: string,
-  error: unknown,
-  context?: Record<string, unknown>,
-) => {
-  logger.error(message, error instanceof Error ? error : new Error(String(error)), context);
-};
 
 type UseAIChatConversationsResult = {
   activeConversationId: string | null;
@@ -94,9 +31,7 @@ type UseAIChatConversationsResult = {
   filterConversations: (searchValue: string) => void;
 };
 
-/**
- * Conversation list, search, selection, and new-chat actions for the history drawer.
- */
+/** Conversation list, search, selection, and new-chat actions for the history drawer. */
 export const useAIChatConversations = (): UseAIChatConversationsResult => {
   const [allConversations, setAllConversations] = React.useState<Conversation[]>([]);
   const [conversations, setConversations] = React.useState<Conversation[]>([]);
@@ -130,7 +65,7 @@ export const useAIChatConversations = (): UseAIChatConversationsResult => {
       );
     } catch (error) {
       reportConversationError('Failed to load Lightspeed conversations', error);
-      setConversationError(getErrorMessage(error));
+      setConversationError(getConversationErrorMessage(error));
     } finally {
       setIsLoadingConversations(false);
     }
@@ -153,7 +88,7 @@ export const useAIChatConversations = (): UseAIChatConversationsResult => {
       return true;
     } catch (error) {
       reportConversationError('Failed to start new Lightspeed chat', error);
-      setConversationError(getErrorMessage(error));
+      setConversationError(getConversationErrorMessage(error));
       return false;
     }
   }, [createNewConversation, setActiveConversation]);
@@ -168,7 +103,7 @@ export const useAIChatConversations = (): UseAIChatConversationsResult => {
         reportConversationError('Failed to load Lightspeed conversation', error, {
           conversationId,
         });
-        setConversationError(getErrorMessage(error));
+        setConversationError(getConversationErrorMessage(error));
       }
     },
     [setActiveConversation],
