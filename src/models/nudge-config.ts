@@ -1,4 +1,4 @@
-import { K8sGroupVersionKind, K8sModelCommon } from '../types/k8s';
+import { K8sGroupVersionKind, K8sModelCommon } from '~/types/k8s';
 
 export const NudgeConfigModel: K8sModelCommon = {
   apiGroup: 'appstudio.redhat.com',

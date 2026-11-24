@@ -65,7 +65,7 @@ const NudgingSection: React.FC<NudgingSectionProps> = ({ component, direction })
               <EmptyState
                 titleText={copy.empty}
                 headingLevel="h4"
-                data-test="nudging-empty-state"
+                data-test={`${copy.testId}-empty-state`}
               />
             }
           >

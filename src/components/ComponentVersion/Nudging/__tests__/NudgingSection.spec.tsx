@@ -78,14 +78,14 @@ describe('NudgingSection (outgoing)', () => {
       <NudgingSection component={otherComponent} direction="outgoing" />,
     );
 
-    expect(screen.getByTestId('nudging-empty-state')).toBeInTheDocument();
+    expect(screen.getByTestId('nudges-section-empty-state')).toBeInTheDocument();
   });
 
   it('renders the placeholder empty state when NudgeConfig is entirely absent', () => {
     useNudgeConfigMock.mockReturnValue([null, true, undefined]);
     renderWithQueryClientAndRouter(<NudgingSection component={component} direction="outgoing" />);
 
-    expect(screen.getByTestId('nudging-empty-state')).toBeInTheDocument();
+    expect(screen.getByTestId('nudges-section-empty-state')).toBeInTheDocument();
   });
 
   it('handles a component without a metadata name', () => {
@@ -95,7 +95,7 @@ describe('NudgingSection (outgoing)', () => {
     );
 
     expect(screen.getByText('Nudges (0)')).toBeInTheDocument();
-    expect(screen.getByTestId('nudging-empty-state')).toBeInTheDocument();
+    expect(screen.getByTestId('nudges-section-empty-state')).toBeInTheDocument();
   });
 
   it('surfaces a non-404 error instead of the table', () => {
