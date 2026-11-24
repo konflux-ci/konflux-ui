@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import {
+  Alert,
   Bullseye,
   Button,
   ButtonVariant,
@@ -10,14 +11,13 @@ import {
   StackItem,
 } from '@patternfly/react-core';
 import { RouterParams } from '@routes/utils';
-import { useComponent } from '~/hooks/useComponents';
 import { useLinkedSecrets } from '~/hooks/useLinkedSecrets';
 import { useSecrets } from '~/hooks/useSecrets';
 import { ComponentSelectMenu } from '~/shared/components/component-select-menu/ComponentSelectMenu';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { SecretKind } from '~/types';
-import { linkSecretsToComponent } from './link-secret-utils';
+import { linkSecretsToBuildServiceAccount } from '~/utils/service-account/service-account-utils';
 
 type SecretSelectorProps = {
   onClose: () => void;
@@ -31,8 +31,9 @@ export const SecretSelector: React.FC<React.PropsWithChildren<SecretSelectorProp
     metadataOnly: true,
   });
   const [linkedSecretsList, setLinkedSecretsList] = useState<string[]>([]);
+  const [submitError, setSubmitError] = useState<string | undefined>();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { componentName } = useParams<RouterParams>();
-  const [component, compLoaded, compError] = useComponent(namespace, componentName);
   const [previouslyLinked] = useLinkedSecrets(namespace, componentName);
 
   const filterUnlinkSecrets = React.useMemo(() => {
@@ -42,24 +43,32 @@ export const SecretSelector: React.FC<React.PropsWithChildren<SecretSelectorProp
     return unlinkedSecrets?.map((item) => item?.metadata?.name);
   }, [secrets, previouslyLinked]);
 
-  const handleSubmit = () => {
-    const secretsToBeLinked: SecretKind[] = linkedSecretsList?.map((item) => {
-      return secrets.find((i) => item === i.metadata.name);
-    });
-    linkSecretsToComponent(secretsToBeLinked, component);
-    onClose();
+  const handleSubmit = async () => {
+    const secretsToBeLinked: SecretKind[] = linkedSecretsList
+      ?.map((item) => secrets.find((i) => item === i.metadata?.name))
+      // a selected secret may no longer exist by submit time; skip it rather
+      // than pass undefined into the linking util
+      .filter((s): s is SecretKind => !!s);
+    setSubmitError(undefined);
+    setIsSubmitting(true);
+    try {
+      await linkSecretsToBuildServiceAccount(secretsToBeLinked, {
+        metadata: { name: componentName, namespace },
+      });
+      onClose();
+    } catch (err) {
+      setSubmitError((err as Error)?.message || 'Failed to link secrets');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  if (!compLoaded || !secretsLoaded) {
+  if (!secretsLoaded) {
     return (
       <Bullseye>
         <Spinner />
       </Bullseye>
     );
-  }
-
-  if (compError) {
-    return getErrorState(compError, compLoaded, 'component');
   }
 
   if (secretsError) {
@@ -88,9 +97,24 @@ export const SecretSelector: React.FC<React.PropsWithChildren<SecretSelectorProp
             />
           </div>
         </StackItem>
+        {submitError && (
+          <StackItem>
+            <Alert
+              variant="danger"
+              title="Failed to link secrets"
+              isInline
+              data-test="link-secrets-error"
+            >
+              {submitError}
+            </Alert>
+          </StackItem>
+        )}
         <StackItem>
           <Flex>
-            <Button onClick={handleSubmit} isDisabled={linkedSecretsList.length === 0}>
+            <Button
+              onClick={handleSubmit}
+              isDisabled={linkedSecretsList.length === 0 || isSubmitting}
+            >
               Link Secrets
             </Button>
             <Button variant={ButtonVariant.link} onClick={onClose}>

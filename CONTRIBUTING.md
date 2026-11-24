@@ -28,8 +28,8 @@ We welcome contributions of all kinds! Follow these steps to get started:
 
 3. Make sure your code builds and passes all checks:
 
-   - Lint (`yarn lint`)
-   - Type check (`yarn tsc`)
+   - Lint (`yarn lint` and `yarn lint:restricted-imports`)
+   - Type check (`yarn type-checks`)
    - Tests (`yarn test`)
 
 > Tip: By default, ESLint errors from `.eslintrc.restrict-imports.cjs` won’t show up in the VSCode UI. To see them in the editor, you can add the following to your local .vscode/settings.json:
@@ -130,7 +130,7 @@ Do not use `--no-verify`; that skips lint-staged and other pre-commit checks too
 
 This project uses **Yarn Berry (v4.x)** as the package manager. Key points:
 
-- ✅ Use `yarn` commands (e.g., `yarn lint`, `yarn test`, `yarn tsc`)
+- ✅ Use `yarn` commands (e.g., `yarn lint`, `yarn test`, `yarn type-checks`)
 - ❌ Don't use `npm` commands
 - The correct Yarn version is specified in `package.json` via the `packageManager` field
 - [Corepack](https://nodejs.org/api/corepack.html) (included with Node.js 20+) automatically manages the Yarn version
@@ -151,6 +151,8 @@ This project uses **Yarn Berry (v4.x)** as the package manager. Key points:
 
 To keep the codebase maintainable and consistent, please follow the conventions below when contributing.
 
+Use [documentation bookmarks](./docs/BOOKMARKS.md) to find the coding guidelines and technical guides relevant to your change.
+
 ### File Structure Overview
 
 | Folder                 | Purpose                                                                                           |
@@ -168,42 +170,8 @@ To keep the codebase maintainable and consistent, please follow the conventions 
 
 ### Styling Guidelines
 
-- Use [PatternFly](https://www.patternfly.org/) components and utility classes whenever possible.
-
-  - ✅ Example (good):
-    ```tsx
-    <Button variant="primary" onClick={handleSubmit}>
-      Submit
-    </Button>
-    ```
-  - ❌ Avoid custom-styled buttons like:
-    ```tsx
-    <button style={{ backgroundColor: 'blue', color: 'white' }}>Submit</button>
-    ```
-
-- Avoid adding custom CSS unless strictly necessary.
-
-- If custom styles are required:
-
-  - ✅ **Prefer class-based styling** over inline styles:
-    ```tsx
-    <div className="action-menu-container">Content</div>
-    ```
-    ```css
-    .action-menu-container {
-      display: flex;
-      justify-content: flex-end;
-    }
-    ```
-  - ❌ Avoid:
-
-    ```tsx
-    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>Content</div>
-    ```
-
-- ✅ **Scope styles locally and place them alongside the component**:
-  - Place styles in a local SCSS module file (e.g. `MyComponent.scss`) in the same folder as the component.
-  - Use clear, prefixed class names following the [BEM naming convention](https://getbem.com/naming/) to avoid conflicts and maintain modularity.
+- Follow the [PatternFly styling decision order](./docs/guidelines/patternfly-guidelines.md#scss-conventions): use components and props, layouts, utilities, and documented variables before custom SCSS.
+- Add custom SCSS only for a confirmed gap after checking existing shared components and all relevant PatternFly v6 documentation. When needed, co-locate the `.scss` file with its component and use BEM names and PatternFly semantic tokens. See [best practices](./docs/best-practices.md#when-custom-css-is-acceptable) for the exceptions and inline-style rule.
 
 ### Import Guidelines
 
