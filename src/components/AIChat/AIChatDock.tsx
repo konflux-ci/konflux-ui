@@ -20,17 +20,7 @@ const AIChatDockContent: React.FC = () => {
   const [isVisible, toggle] = useToggle();
   const { initError, isInitializing, retryInit } = useAIChatInit();
   const { sendError, clearSendError, sendMessage } = useAIChatSend();
-  const {
-    activeConversationId,
-    conversations,
-    conversationError,
-    hasNoSearchResults,
-    isLoadingConversations,
-    refreshConversations,
-    startNewChat,
-    selectConversation,
-    filterConversations,
-  } = useAIChatConversations();
+  const history = useAIChatConversations();
   const isInProgress = useInProgress();
 
   const handleToggle = React.useCallback(() => {
@@ -43,7 +33,7 @@ const AIChatDockContent: React.FC = () => {
     toggle();
   }, [clearSendError, initError, isVisible, retryInit, toggle]);
 
-  const chatError = sendError ?? initError ?? conversationError;
+  const chatError = sendError ?? initError ?? history.conversationError;
   const isSendDisabled = isInProgress || !!initError || isInitializing;
 
   return (
@@ -54,22 +44,14 @@ const AIChatDockContent: React.FC = () => {
           <AIChatPanel isVisible={isVisible}>
             <AIChatHistoryNav
               displayMode={KONFLUX_AI_DISPLAY_MODE}
-              activeConversationId={activeConversationId}
-              conversations={conversations}
-              conversationError={conversationError}
-              hasNoSearchResults={hasNoSearchResults}
-              isLoadingConversations={isLoadingConversations}
-              refreshConversations={refreshConversations}
-              startNewChat={startNewChat}
-              selectConversation={selectConversation}
-              filterConversations={filterConversations}
+              history={history}
               onCloseChat={toggle}
             >
               <AIChatMessageList isInitializing={isInitializing} chatError={chatError} />
               <AIChatFooter
                 isSendDisabled={isSendDisabled}
                 onSend={(message) => {
-                  void sendMessage(message).then(() => refreshConversations());
+                  void sendMessage(message);
                 }}
               />
             </AIChatHistoryNav>

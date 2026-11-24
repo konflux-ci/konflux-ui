@@ -21,7 +21,6 @@ jest.mock('~/monitoring/logger', () => ({
 describe('useAIChatConversationActions', () => {
   const createNewConversation = jest.fn();
   const setActiveConversation = jest.fn();
-  const setConversationError = jest.fn();
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -31,8 +30,7 @@ describe('useAIChatConversationActions', () => {
     mockUseSetActiveConversation.mockReturnValue(setActiveConversation);
   });
 
-  const renderActions = () =>
-    renderHook(() => useAIChatConversationActions({ setConversationError }));
+  const renderActions = () => renderHook(() => useAIChatConversationActions());
 
   it('starts a new chat on the created conversation', async () => {
     const { result } = renderActions();
@@ -45,7 +43,7 @@ describe('useAIChatConversationActions', () => {
     expect(started).toBe(true);
     expect(createNewConversation).toHaveBeenCalledTimes(1);
     expect(setActiveConversation).toHaveBeenCalledWith('fresh-chat');
-    expect(setConversationError).toHaveBeenCalledWith(undefined);
+    expect(result.current.conversationError).toBeUndefined();
   });
 
   it('reports a new-chat failure without exposing the raw error', async () => {
@@ -59,7 +57,7 @@ describe('useAIChatConversationActions', () => {
 
     expect(started).toBe(false);
     expect(setActiveConversation).not.toHaveBeenCalled();
-    expect(setConversationError).toHaveBeenLastCalledWith(KONFLUX_AI_ERROR_NOT_FOUND);
+    expect(result.current.conversationError).toBe(KONFLUX_AI_ERROR_NOT_FOUND);
     expect(mockLoggerError).toHaveBeenCalledWith(
       'Failed to start new Lightspeed chat',
       expect.any(AIClientError),
@@ -75,7 +73,7 @@ describe('useAIChatConversationActions', () => {
     });
 
     expect(setActiveConversation).toHaveBeenCalledWith('older');
-    expect(setConversationError).toHaveBeenCalledWith(undefined);
+    expect(result.current.conversationError).toBeUndefined();
   });
 
   it('reports a selection failure without exposing the raw error', async () => {
@@ -86,7 +84,7 @@ describe('useAIChatConversationActions', () => {
       await result.current.selectConversation('older');
     });
 
-    expect(setConversationError).toHaveBeenLastCalledWith(KONFLUX_AI_ERROR_UNAVAILABLE);
+    expect(result.current.conversationError).toBe(KONFLUX_AI_ERROR_UNAVAILABLE);
     expect(mockLoggerError).toHaveBeenCalledWith(
       'Failed to load Lightspeed conversation',
       expect.any(Error),

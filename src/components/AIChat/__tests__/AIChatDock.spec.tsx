@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { act, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import AIChatDock from '~/components/AIChat/AIChatDock';
 import { KONFLUX_AI_ERROR_UNAVAILABLE } from '~/components/AIChat/const';
@@ -8,7 +8,6 @@ const mockUseAIChatInit = jest.fn();
 const mockUseAIChatSend = jest.fn();
 const mockUseInProgress = jest.fn();
 const mockAIChatFooter = jest.fn();
-const mockRefreshConversations = jest.fn();
 const mockUseAIChatConversations = jest.fn();
 
 jest.mock('@redhat-cloud-services/ai-react-state', () => ({
@@ -73,7 +72,7 @@ describe('AIChatDock', () => {
       conversationError: undefined,
       hasNoSearchResults: false,
       isLoadingConversations: false,
-      refreshConversations: mockRefreshConversations,
+      refreshConversations: jest.fn(),
       startNewChat: jest.fn(),
       selectConversation: jest.fn(),
       filterConversations: jest.fn(),
@@ -150,33 +149,6 @@ describe('AIChatDock', () => {
     );
   });
 
-  it('refreshes conversation history after a message is sent', async () => {
-    const sendMessage = jest.fn().mockResolvedValue(undefined);
-    mockUseAIChatInit.mockReturnValue({
-      initError: undefined,
-      isInitializing: false,
-      retryInit,
-    });
-    mockUseAIChatSend.mockReturnValue({
-      sendError: undefined,
-      clearSendError,
-      sendMessage,
-    });
-
-    render(<AIChatDock />);
-
-    const { onSend } = mockAIChatFooter.mock.lastCall?.[0] as {
-      onSend: (message: string) => Promise<void>;
-    };
-
-    await act(async () => {
-      await onSend('hello');
-    });
-
-    expect(sendMessage).toHaveBeenCalledWith('hello');
-    expect(mockRefreshConversations).toHaveBeenCalledTimes(1);
-  });
-
   it('shows a conversation error in the chat panel', () => {
     mockUseAIChatInit.mockReturnValue({
       initError: undefined,
@@ -189,7 +161,7 @@ describe('AIChatDock', () => {
       conversationError: KONFLUX_AI_ERROR_UNAVAILABLE,
       hasNoSearchResults: false,
       isLoadingConversations: false,
-      refreshConversations: mockRefreshConversations,
+      refreshConversations: jest.fn(),
       startNewChat: jest.fn(),
       selectConversation: jest.fn(),
       filterConversations: jest.fn(),

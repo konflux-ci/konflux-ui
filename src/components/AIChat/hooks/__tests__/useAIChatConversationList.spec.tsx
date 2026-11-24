@@ -68,7 +68,6 @@ const conversations: ConversationDetails[] = [
 
 describe('useAIChatConversationList', () => {
   const getConversations = jest.fn();
-  const setConversationError = jest.fn();
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -76,8 +75,7 @@ describe('useAIChatConversationList', () => {
     mockUseClient.mockReturnValue({ getConversations });
   });
 
-  const renderList = () =>
-    renderHook(() => useAIChatConversationList({ setConversationError }));
+  const renderList = () => renderHook(() => useAIChatConversationList());
 
   it('loads history newest first and skips conversations without a timestamp', async () => {
     const { result } = renderList();
@@ -91,7 +89,7 @@ describe('useAIChatConversationList', () => {
       { id: 'older', text: 'Pipeline failure' },
     ]);
     expect(result.current.hasNoSearchResults).toBe(false);
-    expect(setConversationError).toHaveBeenCalledWith(undefined);
+    expect(result.current.conversationError).toBeUndefined();
   });
 
   it('filters loaded conversations and reports an empty search', async () => {
@@ -152,7 +150,7 @@ describe('useAIChatConversationList', () => {
       { id: 'older', text: 'Pipeline failure' },
     ]);
     expect(result.current.isLoadingConversations).toBe(false);
-    expect(setConversationError).toHaveBeenLastCalledWith(KONFLUX_AI_ERROR_UNAVAILABLE);
+    expect(result.current.conversationError).toBe(KONFLUX_AI_ERROR_UNAVAILABLE);
     expect(mockLoggerError).toHaveBeenCalledWith(
       'Failed to load Lightspeed conversations',
       expect.any(Error),
@@ -189,5 +187,65 @@ describe('useAIChatConversationList', () => {
 
     expect(result.current.isLoadingConversations).toBe(false);
     expect(result.current.conversations).toEqual([{ id: 'older', text: 'Pipeline failure' }]);
+  });
+
+  it('ignores a stale refresh after a newer refresh starts', async () => {
+    let resolveFirst: (value: { conversations: ConversationDetails[] }) => void = () => {
+      throw new Error('first refresh was not started');
+    };
+    let resolveSecond: (value: { conversations: ConversationDetails[] }) => void = () => {
+      throw new Error('second refresh was not started');
+    };
+    getConversations
+      .mockReturnValueOnce(
+        new Promise((resolve) => {
+          resolveFirst = resolve;
+        }),
+      )
+      .mockReturnValueOnce(
+        new Promise((resolve) => {
+          resolveSecond = resolve;
+        }),
+      );
+
+    const { result } = renderList();
+
+    let firstRefresh: Promise<void> = Promise.resolve();
+    let secondRefresh: Promise<void> = Promise.resolve();
+    act(() => {
+      firstRefresh = result.current.refreshConversations();
+    });
+    act(() => {
+      secondRefresh = result.current.refreshConversations();
+    });
+
+    await act(async () => {
+      resolveFirst({
+        conversations: [
+          wireConversation({
+            id: 'stale',
+            createdAt: '2026-01-01T00:00:00.000Z',
+            lastMessageAt: '2026-01-01T00:00:00.000Z',
+            messageCount: 1,
+            topicSummary: 'Stale',
+          }),
+        ],
+      });
+      await firstRefresh;
+    });
+
+    expect(result.current.conversations).toEqual([]);
+    expect(result.current.isLoadingConversations).toBe(true);
+
+    await act(async () => {
+      resolveSecond({ conversations });
+      await secondRefresh;
+    });
+
+    expect(result.current.conversations).toEqual([
+      { id: 'newer', text: untitledNewer },
+      { id: 'older', text: 'Pipeline failure' },
+    ]);
+    expect(result.current.isLoadingConversations).toBe(false);
   });
 });

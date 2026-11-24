@@ -10,6 +10,7 @@ import {
   KONFLUX_AI_HISTORY_NO_RESULTS_TITLE,
   KONFLUX_AI_HISTORY_SEARCH_PLACEHOLDER,
 } from '~/components/AIChat/const';
+import type { UseAIChatConversationsResult } from '~/components/AIChat/hooks/useAIChatConversations';
 
 jest.mock('@patternfly/chatbot/dist/dynamic/ChatbotConversationHistoryNav', () => ({
   __esModule: true,
@@ -79,30 +80,40 @@ jest.mock('~/components/AIChat/components/AIChatHeader', () => ({
 
 const conversations: Conversation[] = [{ id: 'older', text: 'Pipeline failure' }];
 
+const createHistory = (
+  overrides: Partial<UseAIChatConversationsResult> = {},
+): UseAIChatConversationsResult => ({
+  activeConversationId: null,
+  conversations,
+  hasNoSearchResults: false,
+  isLoadingConversations: false,
+  refreshConversations: jest.fn(),
+  startNewChat: jest.fn(),
+  selectConversation: jest.fn(),
+  filterConversations: jest.fn(),
+  ...overrides,
+});
+
 const renderHistoryNav = (
-  overrides: Partial<React.ComponentProps<typeof AIChatHistoryNav>> = {},
+  overrides: {
+    history?: Partial<UseAIChatConversationsResult>;
+    onCloseChat?: jest.Mock;
+  } = {},
 ) => {
-  const props = {
-    displayMode: 'default' as ChatbotDisplayMode,
-    activeConversationId: null,
-    conversations,
-    hasNoSearchResults: false,
-    isLoadingConversations: false,
-    refreshConversations: jest.fn(),
-    startNewChat: jest.fn(),
-    selectConversation: jest.fn(),
-    filterConversations: jest.fn(),
-    onCloseChat: jest.fn(),
-    ...overrides,
-  };
+  const history = createHistory(overrides.history);
+  const onCloseChat = overrides.onCloseChat ?? jest.fn();
 
   render(
-    <AIChatHistoryNav {...props}>
+    <AIChatHistoryNav
+      displayMode={'default' as ChatbotDisplayMode}
+      history={history}
+      onCloseChat={onCloseChat}
+    >
       <p>Chat messages</p>
     </AIChatHistoryNav>,
   );
 
-  return props;
+  return { history, onCloseChat };
 };
 
 describe('AIChatHistoryNav', () => {
@@ -120,31 +131,33 @@ describe('AIChatHistoryNav', () => {
 
   it('filters conversations from the search field', async () => {
     const user = userEvent.setup();
-    const props = renderHistoryNav();
+    const { history } = renderHistoryNav();
 
     await user.type(
       screen.getByRole('textbox', { name: KONFLUX_AI_HISTORY_SEARCH_PLACEHOLDER }),
       'pipe',
     );
 
-    expect(props.filterConversations).toHaveBeenLastCalledWith('pipe');
+    expect(history.filterConversations).toHaveBeenLastCalledWith('pipe');
   });
 
   it('shows a loading state while conversations are refreshing', () => {
-    renderHistoryNav({ isLoadingConversations: true });
+    renderHistoryNav({ history: { isLoadingConversations: true } });
 
     expect(screen.getByText('Loading conversations')).toBeInTheDocument();
   });
 
   it('shows a conversation error in the history drawer', () => {
-    renderHistoryNav({ conversationError: 'Konflux AI is temporarily unavailable.' });
+    renderHistoryNav({
+      history: { conversationError: 'Konflux AI is temporarily unavailable.' },
+    });
 
     expect(screen.getByText(KONFLUX_AI_ERROR_TITLE)).toBeInTheDocument();
     expect(screen.getByText('Konflux AI is temporarily unavailable.')).toBeInTheDocument();
   });
 
   it('shows the empty search state and renders the chat inside the drawer', () => {
-    renderHistoryNav({ hasNoSearchResults: true });
+    renderHistoryNav({ history: { hasNoSearchResults: true } });
 
     expect(screen.getByText(KONFLUX_AI_HISTORY_NO_RESULTS_TITLE)).toBeInTheDocument();
     expect(screen.getByText(KONFLUX_AI_HISTORY_NO_RESULTS_BODY)).toBeInTheDocument();
@@ -153,10 +166,10 @@ describe('AIChatHistoryNav', () => {
 
   it('closes the chat from the header', async () => {
     const user = userEvent.setup();
-    const props = renderHistoryNav();
+    const { onCloseChat } = renderHistoryNav();
 
     await user.click(screen.getByRole('button', { name: 'Close chat' }));
 
-    expect(props.onCloseChat).toHaveBeenCalledTimes(1);
+    expect(onCloseChat).toHaveBeenCalledTimes(1);
   });
 });

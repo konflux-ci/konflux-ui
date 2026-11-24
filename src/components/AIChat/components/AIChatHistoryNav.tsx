@@ -1,6 +1,5 @@
 import * as React from 'react';
 import type { ChatbotDisplayMode } from '@patternfly/chatbot/dist/dynamic/Chatbot';
-import type { Conversation } from '@patternfly/chatbot/dist/dynamic/ChatbotConversationHistoryNav';
 import ChatbotConversationHistoryNav from '@patternfly/chatbot/dist/dynamic/ChatbotConversationHistoryNav';
 import { AIChatHeader } from '~/components/AIChat/components/AIChatHeader';
 import {
@@ -9,37 +8,33 @@ import {
   KONFLUX_AI_HISTORY_NO_RESULTS_TITLE,
   KONFLUX_AI_HISTORY_SEARCH_PLACEHOLDER,
 } from '~/components/AIChat/const';
+import type { UseAIChatConversationsResult } from '~/components/AIChat/hooks/useAIChatConversations';
 import { useAIChatHistoryDrawer } from '~/components/AIChat/hooks/useAIChatHistoryDrawer';
 
 type AIChatHistoryNavProps = {
   displayMode: ChatbotDisplayMode;
-  activeConversationId: string | null;
-  conversations: Conversation[];
-  conversationError?: string;
-  hasNoSearchResults: boolean;
-  isLoadingConversations: boolean;
-  refreshConversations: () => Promise<void>;
-  startNewChat: () => Promise<boolean>;
-  selectConversation: (conversationId: string) => Promise<void>;
-  filterConversations: (searchValue: string) => void;
+  history: UseAIChatConversationsResult;
   onCloseChat: () => void;
   children: React.ReactNode;
 };
 
 export const AIChatHistoryNav: React.FC<AIChatHistoryNavProps> = ({
   displayMode,
-  activeConversationId,
-  conversations,
-  conversationError,
-  hasNoSearchResults,
-  isLoadingConversations,
-  refreshConversations,
-  startNewChat,
-  selectConversation,
-  filterConversations,
+  history,
   onCloseChat,
   children,
 }) => {
+  const {
+    activeConversationId,
+    conversations,
+    conversationError,
+    hasNoSearchResults,
+    isLoadingConversations,
+    refreshConversations,
+    startNewChat,
+    selectConversation,
+    filterConversations,
+  } = history;
   const {
     isDrawerOpen,
     setIsDrawerOpen,

@@ -9,15 +9,14 @@ import {
   reportConversationError,
 } from '~/components/AIChat/conversation-errors';
 
-type UseAIChatConversationActionsOptions = {
-  setConversationError: React.Dispatch<React.SetStateAction<string | undefined>>;
-};
-
-export const useAIChatConversationActions = ({
-  setConversationError,
-}: UseAIChatConversationActionsOptions) => {
+export const useAIChatConversationActions = () => {
+  const [conversationError, setConversationError] = React.useState<string>();
   const createNewConversation = useCreateNewConversation();
   const setActiveConversation = useSetActiveConversation();
+
+  const clearConversationError = React.useCallback(() => {
+    setConversationError(undefined);
+  }, []);
 
   const startNewChat = React.useCallback(async (): Promise<boolean> => {
     setConversationError(undefined);
@@ -31,7 +30,7 @@ export const useAIChatConversationActions = ({
       setConversationError(getConversationErrorMessage(error));
       return false;
     }
-  }, [createNewConversation, setActiveConversation, setConversationError]);
+  }, [createNewConversation, setActiveConversation]);
 
   const selectConversation = React.useCallback(
     async (conversationId: string) => {
@@ -46,10 +45,12 @@ export const useAIChatConversationActions = ({
         setConversationError(getConversationErrorMessage(error));
       }
     },
-    [setActiveConversation, setConversationError],
+    [setActiveConversation],
   );
 
   return {
+    conversationError,
+    clearConversationError,
     startNewChat,
     selectConversation,
   };

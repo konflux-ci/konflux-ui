@@ -4,7 +4,7 @@ import { useAIChatActiveConversationId } from '~/components/AIChat/hooks/useAICh
 import { useAIChatConversationActions } from '~/components/AIChat/hooks/useAIChatConversationActions';
 import { useAIChatConversationList } from '~/components/AIChat/hooks/useAIChatConversationList';
 
-type UseAIChatConversationsResult = {
+export type UseAIChatConversationsResult = {
   activeConversationId: string | null;
   conversations: Conversation[];
   conversationError?: string;
@@ -17,23 +17,45 @@ type UseAIChatConversationsResult = {
 };
 
 export const useAIChatConversations = (): UseAIChatConversationsResult => {
-  const [conversationError, setConversationError] = React.useState<string>();
   const activeConversationId = useAIChatActiveConversationId();
   const {
     conversations,
+    conversationError: listError,
     hasNoSearchResults,
     isLoadingConversations,
-    refreshConversations,
+    clearConversationError: clearListError,
+    refreshConversations: refreshConversationList,
     filterConversations,
-  } = useAIChatConversationList({ setConversationError });
-  const { startNewChat, selectConversation } = useAIChatConversationActions({
-    setConversationError,
-  });
+  } = useAIChatConversationList();
+  const {
+    conversationError: actionError,
+    clearConversationError: clearActionError,
+    startNewChat: startConversationChat,
+    selectConversation: selectActiveConversation,
+  } = useAIChatConversationActions();
+
+  const refreshConversations = React.useCallback(async () => {
+    clearActionError();
+    await refreshConversationList();
+  }, [clearActionError, refreshConversationList]);
+
+  const startNewChat = React.useCallback(async (): Promise<boolean> => {
+    clearListError();
+    return startConversationChat();
+  }, [clearListError, startConversationChat]);
+
+  const selectConversation = React.useCallback(
+    async (conversationId: string) => {
+      clearListError();
+      await selectActiveConversation(conversationId);
+    },
+    [clearListError, selectActiveConversation],
+  );
 
   return {
     activeConversationId,
     conversations,
-    conversationError,
+    conversationError: actionError ?? listError,
     hasNoSearchResults,
     isLoadingConversations,
     refreshConversations,
