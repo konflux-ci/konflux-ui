@@ -1,12 +1,13 @@
 import '@testing-library/jest-dom';
 import { screen, act, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { mockSnapshot, mockSnapshots } from '~/__data__/mock-snapshots';
+import { PipelineRunEventType, PipelineRunLabel } from '~/consts/pipelinerun';
 import { useK8sAndKarchResources } from '~/hooks/useK8sAndKarchResources';
 import { ResourceSource } from '~/types/k8s';
 import { setupVirtualizerMock } from '~/unit-test-utils';
-import { mockSnapshots } from '../../../../__data__/mock-snapshots';
-import { mockUseNamespaceHook } from '../../../../unit-test-utils/mock-namespace';
-import { createUseParamsMock, renderWithQueryClientAndRouter } from '../../../../utils/test-utils';
+import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
+import { createUseParamsMock, renderWithQueryClientAndRouter } from '~/utils/test-utils';
 import SnapshotsListView from '../SnapshotsListView';
 
 jest.useFakeTimers();
@@ -23,7 +24,7 @@ jest.mock('react-i18next', () => ({
   useTranslation: jest.fn(() => ({ t: (x) => x })),
 }));
 
-jest.mock('../../../../hooks/useK8sAndKarchResources', () => ({
+jest.mock('~/hooks/useK8sAndKarchResources', () => ({
   useK8sAndKarchResources: jest.fn(),
 }));
 
@@ -165,5 +166,105 @@ describe('SnapshotsListView - Column Headers', () => {
     await waitFor(() => {
       expect(screen.getByTestId('multi-select-filter-filterBy')).toBeInTheDocument();
     });
+  });
+
+  it('should hide pull request snapshots when "Hide Pull Request Snapshots" filter is active', async () => {
+    jest.useRealTimers();
+
+    const pushSnapshot = {
+      ...mockSnapshot,
+      metadata: {
+        ...mockSnapshot.metadata,
+        name: 'push-snapshot',
+        uid: 'uid-push',
+        labels: {
+          ...mockSnapshot.metadata.labels,
+          [PipelineRunLabel.TEST_COMMIT_EVENT_TYPE_LABEL]: PipelineRunEventType.PUSH,
+        },
+      },
+    };
+    const prSnapshot = {
+      ...mockSnapshot,
+      metadata: {
+        ...mockSnapshot.metadata,
+        name: 'pr-snapshot',
+        uid: 'uid-pr',
+        labels: {
+          ...mockSnapshot.metadata.labels,
+          [PipelineRunLabel.TEST_COMMIT_EVENT_TYPE_LABEL]: PipelineRunEventType.PULL,
+        },
+      },
+    };
+
+    useMockSnapshots.mockReturnValue({
+      data: [pushSnapshot, prSnapshot],
+      getSource: () => ResourceSource.Cluster,
+      isLoading: false,
+      hasError: false,
+    });
+
+    renderWithQueryClientAndRouter(createWrappedComponent());
+
+    expect(screen.getByText('push-snapshot')).toBeInTheDocument();
+    expect(screen.getByText('pr-snapshot')).toBeInTheDocument();
+
+    const user = userEvent.setup();
+    await user.click(screen.getByTestId('multi-select-filter-filterBy'));
+    await user.click(screen.getByText('Hide Pull Request Snapshots'));
+
+    await waitFor(() => {
+      expect(screen.queryByText('pr-snapshot')).not.toBeInTheDocument();
+    });
+    expect(screen.getByText('push-snapshot')).toBeInTheDocument();
+  });
+
+  it('should hide GitLab merge request snapshots when "Hide Pull Request Snapshots" filter is active', async () => {
+    jest.useRealTimers();
+
+    const pushSnapshot = {
+      ...mockSnapshot,
+      metadata: {
+        ...mockSnapshot.metadata,
+        name: 'push-snapshot',
+        uid: 'uid-push',
+        labels: {
+          ...mockSnapshot.metadata.labels,
+          [PipelineRunLabel.TEST_COMMIT_EVENT_TYPE_LABEL]: PipelineRunEventType.PUSH,
+        },
+      },
+    };
+    const mrSnapshot = {
+      ...mockSnapshot,
+      metadata: {
+        ...mockSnapshot.metadata,
+        name: 'mr-snapshot',
+        uid: 'uid-mr',
+        labels: {
+          ...mockSnapshot.metadata.labels,
+          [PipelineRunLabel.TEST_COMMIT_EVENT_TYPE_LABEL]: PipelineRunEventType.MERGE_REQUEST,
+        },
+      },
+    };
+
+    useMockSnapshots.mockReturnValue({
+      data: [pushSnapshot, mrSnapshot],
+      getSource: () => ResourceSource.Cluster,
+      isLoading: false,
+      hasError: false,
+    });
+
+    renderWithQueryClientAndRouter(createWrappedComponent());
+
+    expect(screen.getByText('push-snapshot')).toBeInTheDocument();
+    expect(screen.getByText('mr-snapshot')).toBeInTheDocument();
+
+    const user = userEvent.setup();
+    await user.click(screen.getByTestId('multi-select-filter-filterBy'));
+    await user.click(screen.getByText('Hide Pull Request Snapshots'));
+
+    await waitFor(() => {
+      expect(screen.queryByText('mr-snapshot')).not.toBeInTheDocument();
+    });
+    expect(screen.getByText('push-snapshot')).toBeInTheDocument();
   });
 });

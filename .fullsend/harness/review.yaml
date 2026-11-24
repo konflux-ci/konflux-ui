@@ -2,3 +2,9 @@ base: https://raw.githubusercontent.com/fullsend-ai/agents/62f25ace461b9c11a712b
 
 skills:
   - skills/review
+
+env:
+  runner:
+    REVIEW_FINDING_SEVERITY_THRESHOLD: 'medium'
+  sandbox:
+    REVIEW_FINDING_SEVERITY_THRESHOLD: 'medium'
