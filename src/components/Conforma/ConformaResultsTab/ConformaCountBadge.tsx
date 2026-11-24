@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Label } from '@patternfly/react-core';
-import { RULE_STATUS_CONFIG } from '~/components/Conforma/utils';
+import { RULE_STATUS_CONFIG_BADGE } from '~/components/Conforma/utils';
 import { CONFORMA_RESULT_STATUS } from '~/types/conforma';
 
 type ConformaCountBadgeProps = {
@@ -13,7 +13,7 @@ export const ConformaCountBadge: React.FC<ConformaCountBadgeProps> = ({ count, t
     return <span>0</span>;
   }
 
-  const { Icon, labelColor } = RULE_STATUS_CONFIG[type];
+  const { Icon, labelColor } = RULE_STATUS_CONFIG_BADGE[type];
 
   return (
     <Label
