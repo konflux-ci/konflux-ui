@@ -32,6 +32,7 @@ export const createDetailsPageActions = (
     label: action.label,
     isDisabled: action.disabled,
     disabledTooltip: action.disabledTooltip,
+    ...(action.tooltip ? { tooltipProps: { content: action.tooltip } } : {}),
     onClick: () => {
       if (action.disabled) {
         return;

@@ -77,19 +77,15 @@ const mockSecurityAndRoxctlPipelineRun: PipelineRunKind = {
 };
 
 const mockUsePipelineRunV2 = jest.fn();
-const mockUsePipelinererunAction = jest.fn();
-const mockUseAccessReviewForModel = jest.fn();
+const mockUsePipelineRunDetailsPageActions = jest.fn();
 
 jest.mock('../../../../hooks/usePipelineRunsV2', () => ({
   usePipelineRunV2: (...args: unknown[]) => mockUsePipelineRunV2(...args),
 }));
 
 jest.mock('../../PipelineRunListView/pipelinerun-actions', () => ({
-  usePipelinererunAction: (...args: unknown[]) => mockUsePipelinererunAction(...args),
-}));
-
-jest.mock('../../../../utils/rbac', () => ({
-  useAccessReviewForModel: (...args: unknown[]) => mockUseAccessReviewForModel(...args),
+  usePipelineRunDetailsPageActions: (...args: unknown[]) =>
+    mockUsePipelineRunDetailsPageActions(...args),
 }));
 
 jest.mock('~/utils/common-utils', () => {
@@ -124,14 +120,16 @@ describe('PipelineRunDetailsView', () => {
     jest.clearAllMocks();
     useNamespaceMock.mockReturnValue(mockNamespace);
     useParamsMock.mockReturnValue({ pipelineRunName: mockPipelineRunName });
-    mockUsePipelinererunAction.mockReturnValue({
-      cta: jest.fn(),
-      isDisabled: false,
-      disabledTooltip: '',
-      key: 'rerun',
-      label: 'Rerun',
-    });
-    mockUseAccessReviewForModel.mockReturnValue([true, true]);
+    mockUsePipelineRunDetailsPageActions.mockReturnValue([
+      { key: 'rerun', label: 'Rerun', isDisabled: false, onClick: jest.fn() },
+      { key: 'pipelinerun-stop', label: 'Stop', isDisabled: true, onClick: jest.fn() },
+      { key: 'pipelinerun-cancel', label: 'Cancel', isDisabled: true, onClick: jest.fn() },
+      {
+        key: 'download-pipelinerun-yaml',
+        label: 'Download YAML',
+        onClick: jest.fn(() => downloadYamlMock(mockPipelineRun)),
+      },
+    ]);
   });
 
   it('should render spinner when loading pipeline run', () => {
@@ -286,14 +284,6 @@ describe('PipelineRunDetailsView', () => {
     expect(securityTabIndex).toBeGreaterThanOrEqual(0);
     expect(vulnerabilitiesTabIndex).toBeGreaterThanOrEqual(0);
     expect(securityTabIndex).toBeLessThan(vulnerabilitiesTabIndex);
-  });
-
-  it('should check access review for PipelineRunModel', () => {
-    mockUsePipelineRunV2.mockReturnValue(mockPipelineRunStates.loaded(mockPipelineRun));
-
-    routerRenderer(<PipelineRunDetailsView />);
-
-    expect(mockUseAccessReviewForModel).toHaveBeenCalled();
   });
 
   it('should render DetailsPage with pipeline run data', () => {

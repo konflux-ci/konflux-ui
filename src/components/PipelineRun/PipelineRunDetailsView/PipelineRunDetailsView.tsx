@@ -3,14 +3,12 @@ import { useParams, useLocation } from 'react-router-dom';
 import { Bullseye, Spinner } from '@patternfly/react-core';
 import { useApplicationBreadcrumbs } from '~/components/Applications/breadcrumbs/breadcrumb-utils';
 import { DetailsPage } from '~/components/DetailsPage';
-import { createDetailsPageAction } from '~/components/DetailsPage/utils';
-import { usePipelinererunAction } from '~/components/PipelineRun/PipelineRunListView/pipelinerun-actions';
+import { usePipelineRunDetailsPageActions } from '~/components/PipelineRun/PipelineRunListView/pipelinerun-actions';
 import { StatusIconWithTextLabel } from '~/components/topology/StatusIcon';
 import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { CONFORMA_TASK, ROXCTL_SCAN_TASK } from '~/consts/security';
 import { usePipelineRunV2 } from '~/hooks/usePipelineRunsV2';
 import { useStatusOnFavicon } from '~/hooks/useStatusOnFavicon';
-import { PipelineRunModel } from '~/models';
 import {
   INTEGRATION_TEST_PIPELINE_LIST_PATH,
   PIPELINE_RUNS_DETAILS_PATH,
@@ -19,12 +17,8 @@ import {
 } from '~/routes/paths';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
-import { downloadYamlAction } from '~/utils/common-utils';
 import { isResourceEnterpriseContract } from '~/utils/conforma-utils';
-import { pipelineRunCancel, pipelineRunStop } from '~/utils/pipeline-actions';
 import { isTaskRunInPipelineRun, pipelineRunStatus } from '~/utils/pipeline-utils';
-import { isCancellableStatus } from '~/utils/plr-status-config';
-import { useAccessReviewForModel } from '~/utils/rbac';
 
 export const PipelineRunDetailsView: React.FC = () => {
   const { pipelineRunName } = useParams();
@@ -35,9 +29,7 @@ export const PipelineRunDetailsView: React.FC = () => {
   const applicationBreadcrumbs = useApplicationBreadcrumbs();
 
   const [pipelineRun, loaded, error] = usePipelineRunV2(namespace, pipelineRunName);
-  const { cta, isDisabled, disabledTooltip, key, label } = usePipelinererunAction(pipelineRun);
-
-  const [canPatchPipeline] = useAccessReviewForModel(PipelineRunModel, 'patch');
+  const actions = usePipelineRunDetailsPageActions(pipelineRun);
 
   const plrStatus = React.useMemo(
     () => (loaded && pipelineRun && !error ? pipelineRunStatus(pipelineRun) : null),
@@ -125,38 +117,7 @@ export const PipelineRunDetailsView: React.FC = () => {
           {plrStatus ? <StatusIconWithTextLabel status={plrStatus} /> : null}
         </>
       }
-      actions={[
-        {
-          key,
-          label,
-          isDisabled,
-          disabledTooltip,
-          onClick: cta,
-        },
-        {
-          key: 'stop',
-          label: 'Stop',
-          tooltipProps: {
-            content: 'Let the running tasks complete, then execute finally tasks',
-          },
-          isDisabled: !(plrStatus && plrStatus === 'Running') || !canPatchPipeline,
-          disabledTooltip: !canPatchPipeline ? "You don't have access to stop a build" : undefined,
-          onClick: () => pipelineRunStop(pipelineRun),
-        },
-        {
-          key: 'cancel',
-          label: 'Cancel',
-          tooltipProps: {
-            content: 'Cancel this pipeline run',
-          },
-          isDisabled: !isCancellableStatus(pipelineRun) || !canPatchPipeline,
-          disabledTooltip: !canPatchPipeline
-            ? "You don't have access to cancel a build"
-            : undefined,
-          onClick: () => pipelineRunCancel(pipelineRun),
-        },
-        createDetailsPageAction(downloadYamlAction(pipelineRun)),
-      ]}
+      actions={actions}
       baseURL={PIPELINE_RUNS_DETAILS_PATH.createPath({
         workspaceName: namespace,
         applicationName,

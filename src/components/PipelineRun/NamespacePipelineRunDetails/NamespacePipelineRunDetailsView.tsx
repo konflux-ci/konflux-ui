@@ -1,23 +1,18 @@
 import { Navigate, useLocation, useParams } from 'react-router-dom';
 import { Bullseye, Spinner } from '@patternfly/react-core';
 import { DetailsPage } from '~/components/DetailsPage';
-import { usePipelinererunAction } from '~/components/PipelineRun/PipelineRunListView/pipelinerun-actions';
+import { usePipelineRunDetailsPageActions } from '~/components/PipelineRun/PipelineRunListView/pipelinerun-actions';
 import { StatusIconWithTextLabel } from '~/components/topology/StatusIcon';
-import { PipelineRunLabel, runStatus } from '~/consts/pipelinerun';
+import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { CONFORMA_TASK, ROXCTL_SCAN_TASK } from '~/consts/security';
 import { usePipelineRunV2 } from '~/hooks/usePipelineRunsV2';
 import { useStatusOnFavicon } from '~/hooks/useStatusOnFavicon';
-import { PipelineRunModel } from '~/models';
 import { NAMESPACE_PIPELINE_RUN_DETAILS_PATH } from '~/routes/paths';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
-import { downloadYamlAction } from '~/utils/common-utils';
 import { isResourceEnterpriseContract } from '~/utils/conforma-utils';
-import { pipelineRunCancel, pipelineRunStop } from '~/utils/pipeline-actions';
 import { getPipelineRunBreadcrumbs, getPipelineRunDetailsPath } from '~/utils/pipeline-run-routes';
 import { isTaskRunInPipelineRun, pipelineRunStatus } from '~/utils/pipeline-utils';
-import { isCancellableStatus } from '~/utils/plr-status-config';
-import { useAccessReviewForModel } from '~/utils/rbac';
 
 const NamespacePipelineRunDetailsView = () => {
   const { pipelineRunName } = useParams();
@@ -29,8 +24,7 @@ const NamespacePipelineRunDetailsView = () => {
     pipelineRunName,
   });
   const breadcrumbs = run ? getPipelineRunBreadcrumbs(run) : undefined;
-  const rerun = usePipelinererunAction(run, breadcrumbs?.[2]?.path ?? baseURL);
-  const [canPatch] = useAccessReviewForModel(PipelineRunModel, 'patch');
+  const actions = usePipelineRunDetailsPageActions(run, breadcrumbs?.[2]?.path ?? baseURL);
   const status = loaded && run && !error ? pipelineRunStatus(run) : null;
   useStatusOnFavicon(status);
 
@@ -74,30 +68,7 @@ const NamespacePipelineRunDetailsView = () => {
           ? [{ key: 'vulnerabilities', label: 'Vulnerabilities' }]
           : []),
       ]}
-      actions={[
-        {
-          key: rerun.key,
-          label: rerun.label,
-          isDisabled: rerun.isDisabled,
-          disabledTooltip: rerun.disabledTooltip,
-          onClick: rerun.cta,
-        },
-        {
-          key: 'stop',
-          label: 'Stop',
-          isDisabled: status !== runStatus.Running || !canPatch,
-          disabledTooltip: !canPatch ? "You don't have access to stop a build" : undefined,
-          onClick: () => pipelineRunStop(run),
-        },
-        {
-          key: 'cancel',
-          label: 'Cancel',
-          isDisabled: !isCancellableStatus(run) || !canPatch,
-          disabledTooltip: !canPatch ? "You don't have access to cancel a build" : undefined,
-          onClick: () => pipelineRunCancel(run),
-        },
-        { key: 'download', label: 'Download YAML', onClick: downloadYamlAction(run).cta },
-      ]}
+      actions={actions}
     />
   );
 };
