@@ -26,7 +26,10 @@ export const getCommitSha = (pipelineRun: PipelineRunKind) =>
   pipelineRun?.metadata.annotations?.[PipelineRunLabel.COMMIT_ANNOTATION] ||
   pipelineRun?.metadata?.annotations?.[PipelineRunLabel.TEST_SERVICE_COMMIT];
 
-export const createCommitObjectFromPLR = (plr: PipelineRunKind): Commit => {
+export const createCommitObjectFromPLR = (
+  plr: PipelineRunKind,
+  componentLabel: PipelineRunLabel = PipelineRunLabel.COMPONENT,
+): Commit => {
   if (!plr || !getCommitSha(plr)) {
     return null;
   }
@@ -38,7 +41,7 @@ export const createCommitObjectFromPLR = (plr: PipelineRunKind): Commit => {
     plr.metadata.annotations?.[PipelineRunLabel.TEST_COMMIT_USER_LABEL];
   const creationTime = plr.metadata.creationTimestamp;
   const application = plr.metadata.labels?.[PipelineRunLabel.APPLICATION];
-  const component = plr.metadata.labels?.[PipelineRunLabel.COMPONENT] ?? '';
+  const component = plr.metadata.labels?.[componentLabel] ?? '';
   const repoName =
     plr.metadata.labels?.[PipelineRunLabel.COMMIT_REPO_URL_LABEL] ||
     plr.metadata.labels?.[PipelineRunLabel.TEST_REPOSITORY_NAME] ||
@@ -94,10 +97,14 @@ export const createCommitObjectFromPLR = (plr: PipelineRunKind): Commit => {
   };
 };
 
-const updateCommitObject = (plr: PipelineRunKind, commit: Commit): Commit => {
+const updateCommitObject = (
+  plr: PipelineRunKind,
+  commit: Commit,
+  componentLabel: PipelineRunLabel,
+): Commit => {
   const newCommit = commit;
   const creationTime = plr.metadata.creationTimestamp;
-  const component = plr.metadata.labels?.[PipelineRunLabel.COMPONENT] ?? '';
+  const component = plr.metadata.labels?.[componentLabel] ?? '';
 
   if (new Date(newCommit.creationTime).getTime() > new Date(creationTime).getTime()) {
     newCommit.creationTime = creationTime;
@@ -112,16 +119,24 @@ const updateCommitObject = (plr: PipelineRunKind, commit: Commit): Commit => {
   return newCommit;
 };
 
-export const getCommitsFromPLRs = (plrList: PipelineRunKind[], limit?: number): Commit[] => {
+export const getCommitsFromPLRs = (
+  plrList: PipelineRunKind[],
+  limit?: number,
+  componentLabel: PipelineRunLabel = PipelineRunLabel.COMPONENT,
+): Commit[] => {
   const commits: Commit[] = [];
   plrList.forEach((plr) => {
     const commitSHA = getCommitSha(plr);
     if (commitSHA) {
       const existingCommitIndex = commits.findIndex((commit) => commit.sha === commitSHA);
       if (existingCommitIndex > -1) {
-        commits[existingCommitIndex] = updateCommitObject(plr, commits[existingCommitIndex]);
+        commits[existingCommitIndex] = updateCommitObject(
+          plr,
+          commits[existingCommitIndex],
+          componentLabel,
+        );
       } else {
-        commits.push(createCommitObjectFromPLR(plr));
+        commits.push(createCommitObjectFromPLR(plr, componentLabel));
       }
     }
   });

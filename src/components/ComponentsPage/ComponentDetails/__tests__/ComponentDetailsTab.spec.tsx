@@ -9,6 +9,7 @@ import {
   mockUseNamespaceHook,
   renderWithQueryClientAndRouter,
 } from '~/unit-test-utils';
+import { NEW_COMPONENT_PIPELINE_RUN_LABELS } from '~/utils/pipeline-run-labels';
 
 jest.mock('~/hooks/useComponentsV2', () => ({ useComponentV2: jest.fn() }));
 jest.mock('~/hooks/useLatestPushBuildPipeline', () => ({
@@ -82,7 +83,7 @@ describe('new-model ComponentDetailsTab', () => {
         kind: 'PipelineRun',
         metadata: {
           name: 'stable-build',
-          labels: { [PipelineRunLabel.COMPONENT_VERSION]: 'stable' },
+          annotations: { [PipelineRunLabel.V2_COMPONENT_VERSION]: 'stable' },
         },
         spec: {},
       },
@@ -93,6 +94,8 @@ describe('new-model ComponentDetailsTab', () => {
     expect(useLatestSuccessfulBuildPipelineRunForComponentV2).toHaveBeenCalledWith(
       'test-ns',
       'frontend',
+      undefined,
+      NEW_COMPONENT_PIPELINE_RUN_LABELS,
     );
     expect(screen.getByText('stable-pipeline')).toBeInTheDocument();
     expect(screen.queryByText('next-pipeline')).not.toBeInTheDocument();
@@ -111,7 +114,7 @@ describe('new-model ComponentDetailsTab', () => {
         kind: 'PipelineRun',
         metadata: {
           name: 'removed-build',
-          labels: { [PipelineRunLabel.COMPONENT_VERSION]: 'removed' },
+          annotations: { [PipelineRunLabel.V2_COMPONENT_VERSION]: 'removed' },
         },
         spec: {},
       },

@@ -1,11 +1,12 @@
 import * as React from 'react';
-import {
-  PUSH_BUILD_EVENT_TYPES,
-  PipelineRunLabel,
-  PipelineRunType,
-  runStatus,
-} from '~/consts/pipelinerun';
+import { PUSH_BUILD_EVENT_TYPES, PipelineRunLabel, runStatus } from '~/consts/pipelinerun';
 import { PipelineRunKind } from '~/types';
+import {
+  APPLICATION_PIPELINE_RUN_LABELS,
+  PipelineRunLabelConfig,
+  getPipelineRunSelector,
+  matchesPipelineRunVersion,
+} from '~/utils/pipeline-run-labels';
 import { pipelineRunStatus } from '~/utils/pipeline-utils';
 import { usePipelineRunsV2 } from './usePipelineRunsV2';
 
@@ -13,45 +14,46 @@ export const useLatestBuildPipelineRunForComponentV2 = (
   namespace: string,
   componentName: string,
   version?: string,
+  labels: PipelineRunLabelConfig = APPLICATION_PIPELINE_RUN_LABELS,
 ): [PipelineRunKind, boolean, unknown] => {
   const result = usePipelineRunsV2(
     namespace,
     React.useMemo(
       () => ({
         selector: {
-          matchLabels: {
-            [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.BUILD,
-            [PipelineRunLabel.COMPONENT]: componentName,
-            ...(version && { [PipelineRunLabel.COMPONENT_VERSION]: version }),
-          },
+          matchLabels: getPipelineRunSelector(componentName, labels, version),
         },
-        limit: 1,
+        ...(version && !labels.versionSelector ? {} : { limit: 1 }),
       }),
-      [componentName, version],
+      [componentName, labels, version],
     ),
   ) as unknown as [PipelineRunKind[], boolean, unknown];
 
-  return React.useMemo(() => [result[0]?.[0], result[1], result[2]], [result]);
+  return React.useMemo(
+    () => [
+      result[0]?.find((pipeline) => matchesPipelineRunVersion(pipeline, version, labels)),
+      result[1],
+      result[2],
+    ],
+    [result, labels, version],
+  );
 };
 
 export const useLatestSuccessfulBuildPipelineRunForComponentV2 = (
   namespace: string,
   componentName: string,
   version?: string,
+  labels: PipelineRunLabelConfig = APPLICATION_PIPELINE_RUN_LABELS,
 ): [PipelineRunKind, boolean, unknown] => {
   const [pipelines, loaded, error, getNextPage, nextPageProps] = usePipelineRunsV2(
     namespace,
     React.useMemo(
       () => ({
         selector: {
-          matchLabels: {
-            [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.BUILD,
-            [PipelineRunLabel.COMPONENT]: componentName,
-            ...(version && { [PipelineRunLabel.COMPONENT_VERSION]: version }),
-          },
+          matchLabels: getPipelineRunSelector(componentName, labels, version),
         },
       }),
-      [componentName, version],
+      [componentName, labels, version],
     ),
   );
 
@@ -59,8 +61,12 @@ export const useLatestSuccessfulBuildPipelineRunForComponentV2 = (
     () =>
       loaded &&
       !error &&
-      pipelines?.find((pipeline) => pipelineRunStatus(pipeline) === runStatus.Succeeded),
-    [error, loaded, pipelines],
+      pipelines?.find(
+        (pipeline) =>
+          matchesPipelineRunVersion(pipeline, version, labels) &&
+          pipelineRunStatus(pipeline) === runStatus.Succeeded,
+      ),
+    [error, loaded, pipelines, labels, version],
   );
 
   const hasNextPage = nextPageProps?.hasNextPage ?? false;
@@ -80,17 +86,14 @@ export const useLatestPushBuildPipelineRunForComponentV2 = (
   namespace: string,
   componentName: string,
   version?: string,
+  labels: PipelineRunLabelConfig = APPLICATION_PIPELINE_RUN_LABELS,
 ): [PipelineRunKind, boolean, unknown] => {
-  const result = usePipelineRunsV2(
+  const [pipelines, loaded, error, getNextPage, nextPageProps] = usePipelineRunsV2(
     namespace,
     React.useMemo(
       () => ({
         selector: {
-          matchLabels: {
-            [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.BUILD,
-            [PipelineRunLabel.COMPONENT]: componentName,
-            ...(version && { [PipelineRunLabel.COMPONENT_VERSION]: version }),
-          },
+          matchLabels: getPipelineRunSelector(componentName, labels, version),
           matchExpressions: [
             {
               key: PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL,
@@ -99,11 +102,26 @@ export const useLatestPushBuildPipelineRunForComponentV2 = (
             },
           ],
         },
-        limit: 1,
+        ...(version && !labels.versionSelector ? {} : { limit: 1 }),
       }),
-      [componentName, version],
+      [componentName, labels, version],
     ),
   );
 
-  return [result[0]?.[0], result[1], result[2]];
+  const latestPushBuild = React.useMemo(
+    () => pipelines?.find((pipeline) => matchesPipelineRunVersion(pipeline, version, labels)),
+    [pipelines, labels, version],
+  );
+  const hasNextPage = nextPageProps?.hasNextPage ?? false;
+  const isFetchingNextPage = nextPageProps?.isFetchingNextPage ?? false;
+  React.useEffect(() => {
+    if (loaded && !error && !latestPushBuild && hasNextPage && !isFetchingNextPage && getNextPage) {
+      getNextPage();
+    }
+  }, [loaded, error, latestPushBuild, hasNextPage, isFetchingNextPage, getNextPage]);
+
+  const searchComplete =
+    loaded && (!!error || !!latestPushBuild || (!hasNextPage && !isFetchingNextPage));
+
+  return [latestPushBuild, searchComplete, error];
 };

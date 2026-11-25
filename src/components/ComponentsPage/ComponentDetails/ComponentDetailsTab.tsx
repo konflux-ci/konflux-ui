@@ -5,23 +5,28 @@ import ComponentBuildSettings from '~/components/ComponentsPage/ComponentDetails
 import ComponentSourceDetails from '~/components/ComponentsPage/ComponentDetails/ComponentSourceDetails';
 import ComponentSuccessfulBuild from '~/components/ComponentsPage/ComponentDetails/ComponentSuccessfulBuild';
 import { DetailsSection } from '~/components/DetailsPage';
-import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { useComponentV2 } from '~/hooks/useComponentsV2';
 import { useLatestSuccessfulBuildPipelineRunForComponentV2 } from '~/hooks/useLatestPushBuildPipeline';
 import { RouterParams } from '~/routes/utils';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { ComponentKind } from '~/types';
+import {
+  getPipelineRunLabel,
+  NEW_COMPONENT_PIPELINE_RUN_LABELS,
+} from '~/utils/pipeline-run-labels';
 import { getComponentVersion } from '~/utils/version-utils';
 
 const ComponentOverview: React.FC<{ component: ComponentKind }> = ({ component }) => {
   const [pipelineRun, loaded, error] = useLatestSuccessfulBuildPipelineRunForComponentV2(
     component.metadata.namespace,
     component.metadata.name,
+    undefined,
+    NEW_COMPONENT_PIPELINE_RUN_LABELS,
   );
   const buildVersion =
-    !error && loaded
-      ? pipelineRun?.metadata.labels?.[PipelineRunLabel.COMPONENT_VERSION]
+    !error && loaded && pipelineRun
+      ? getPipelineRunLabel(pipelineRun, 'componentVersion', NEW_COMPONENT_PIPELINE_RUN_LABELS)
       : undefined;
   const version = buildVersion ? getComponentVersion(component, buildVersion) : undefined;
   return (

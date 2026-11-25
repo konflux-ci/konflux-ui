@@ -3,11 +3,14 @@ import { Link } from 'react-router-dom';
 import { Alert, Flex, FlexItem, Skeleton } from '@patternfly/react-core';
 import { COMPONENT_VERSION_DETAILS_PATH } from '@routes/paths';
 import CommitLabel from '~/components/Commits/commit-label/CommitLabel';
-import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { useLatestPushBuildPipelineRunForComponentV2 } from '~/hooks/useLatestPushBuildPipeline';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { getCommitsFromPLRs } from '~/utils/commits-utils';
+import {
+  getPipelineRunLabel,
+  NEW_COMPONENT_PIPELINE_RUN_LABELS,
+} from '~/utils/pipeline-run-labels';
 import PipelineRunStatus from '../PipelineRun/PipelineRunStatus';
 
 import './LatestPushBuildSection.scss';
@@ -24,10 +27,19 @@ const LatestPushBuildSection: React.FC<LatestPushBuildSectionProps> = ({
   const namespace = useNamespace();
 
   const [pipelineRun, pipelineRunLoaded, pipelineRunError] =
-    useLatestPushBuildPipelineRunForComponentV2(namespace, componentName, version);
+    useLatestPushBuildPipelineRunForComponentV2(
+      namespace,
+      componentName,
+      version,
+      NEW_COMPONENT_PIPELINE_RUN_LABELS,
+    );
 
   const commit = React.useMemo(
-    () => ((pipelineRunLoaded && pipelineRun && getCommitsFromPLRs([pipelineRun], 1)) || [])[0],
+    () =>
+      ((pipelineRunLoaded &&
+        pipelineRun &&
+        getCommitsFromPLRs([pipelineRun], 1, NEW_COMPONENT_PIPELINE_RUN_LABELS.component)) ||
+        [])[0],
     [pipelineRunLoaded, pipelineRun],
   );
 
@@ -44,7 +56,8 @@ const LatestPushBuildSection: React.FC<LatestPushBuildSectionProps> = ({
   }
 
   const actualVersion =
-    version ?? pipelineRun?.metadata?.labels?.[PipelineRunLabel.COMPONENT_VERSION];
+    version ??
+    getPipelineRunLabel(pipelineRun, 'componentVersion', NEW_COMPONENT_PIPELINE_RUN_LABELS);
 
   return (
     <Flex direction={{ default: 'column' }} gap={{ default: 'gapSm' }}>

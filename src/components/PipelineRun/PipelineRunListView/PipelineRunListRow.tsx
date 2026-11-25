@@ -14,11 +14,7 @@ import {
 } from '~/consts/pipelinerun';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useKarchScanResults } from '~/hooks/useScanResults';
-import {
-  PIPELINE_RUNS_DETAILS_PATH,
-  COMPONENT_DETAILS_PATH,
-  SNAPSHOT_DETAILS_PATH,
-} from '~/routes/paths';
+import { COMPONENT_DETAILS_PATH, SNAPSHOT_DETAILS_PATH } from '~/routes/paths';
 import ActionMenu from '~/shared/components/action-menu/ActionMenu';
 import { Duration } from '~/shared/components/duration';
 import { RowFunctionArgs, TableData } from '~/shared/components/table';
@@ -28,6 +24,12 @@ import { PipelineRunKind, TaskRunKind } from '~/types';
 import { ReleaseKind, ReleasePlanKind } from '~/types/coreBuildService';
 import { createCommitObjectFromPLR } from '~/utils/commits-utils';
 import { getEventTypeLabel } from '~/utils/pipeline-run-filter-utils';
+import {
+  APPLICATION_PIPELINE_RUN_LABELS,
+  getPipelineRunLabel,
+  PipelineRunLabelConfig,
+} from '~/utils/pipeline-run-labels';
+import { getPipelineRunDetailsPath } from '~/utils/pipeline-run-routes';
 import { pipelineRunStatus } from '~/utils/pipeline-utils';
 import { ScanResults } from '~/utils/scan/scan-utils';
 import { usePipelinerunActionsLazy } from './pipelinerun-actions';
@@ -45,6 +47,8 @@ type PipelineRunListRowProps = RowFunctionArgs<
     release?: ReleaseKind;
     releaseName?: string;
     integrationTestName?: string;
+    pipelineRunLabels?: PipelineRunLabelConfig;
+    componentLink?: (component: string) => string;
   }
 >;
 
@@ -108,9 +112,12 @@ const usePipelineRunScanResults = (
   ]);
 };
 
-const shouldShowScanResults = (pipelineRun: PipelineRunKind): boolean => {
+const shouldShowScanResults = (
+  pipelineRun: PipelineRunKind,
+  labels: PipelineRunLabelConfig = APPLICATION_PIPELINE_RUN_LABELS,
+): boolean => {
   return (
-    pipelineRun.metadata.labels?.[PipelineRunLabel.PIPELINE_TYPE] === PipelineRunType.BUILD &&
+    getPipelineRunLabel(pipelineRun, 'pipelineType', labels) === PipelineRunType.BUILD &&
     !UNFINISHED_PLR_STATUSES.includes(pipelineRunStatus(pipelineRun)) &&
     pipelineRun.status?.completionTime !== undefined
   );
@@ -155,8 +162,16 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
   const capitalize = (label: string) => {
     return label && label.charAt(0).toUpperCase() + label.slice(1);
   };
-  const { releaseName, integrationTestName, releasePlan, release } = customData || {};
-  const shouldShowScan = shouldShowScanResults(obj);
+  const {
+    releaseName,
+    integrationTestName,
+    releasePlan,
+    release,
+    pipelineRunLabels,
+    componentLink,
+  } = customData || {};
+  const labels = pipelineRunLabels ?? APPLICATION_PIPELINE_RUN_LABELS;
+  const shouldShowScan = shouldShowScanResults(obj, labels);
   const { scanResults, scanLoaded, scanError } = usePipelineRunScanResults(
     obj,
     shouldShowScan,
@@ -169,9 +184,18 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
   if (!obj.metadata?.labels) {
     obj.metadata.labels = {};
   }
-  const labels = obj.metadata.labels;
-  const applicationName = labels?.[PipelineRunLabel.APPLICATION];
-  const commit = createCommitObjectFromPLR(obj);
+  const commit = createCommitObjectFromPLR(obj, labels.component);
+  const componentName = getPipelineRunLabel(obj, 'component', labels);
+  const componentPath = componentName
+    ? (componentLink?.(componentName) ??
+      (obj.metadata?.labels[PipelineRunLabel.APPLICATION]
+        ? COMPONENT_DETAILS_PATH.createPath({
+            workspaceName: namespace,
+            applicationName: obj.metadata.labels[PipelineRunLabel.APPLICATION],
+            componentName,
+          })
+        : undefined))
+    : undefined;
 
   const queryString = releaseName
     ? `?releaseName=${encodeURIComponent(releaseName)}`
@@ -182,14 +206,7 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
   return (
     <>
       <TableData className={pipelineRunTableColumnClasses.name}>
-        <Link
-          to={`${PIPELINE_RUNS_DETAILS_PATH.createPath({
-            workspaceName: namespace,
-            applicationName,
-            pipelineRunName: obj.metadata?.name,
-          })}${queryString}`}
-          title={obj.metadata?.name}
-        >
+        <Link to={`${getPipelineRunDetailsPath(obj)}${queryString}`} title={obj.metadata?.name}>
           {isFinished && <PipelineRunAttestation pipelineRun={obj} />}
           {obj.metadata?.name}
         </Link>
@@ -242,7 +259,7 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
         />
       ) : null}
       <TableData className={pipelineRunTableColumnClasses.type}>
-        {capitalize(obj.metadata?.labels[PipelineRunLabel.PIPELINE_TYPE])}
+        {capitalize(getPipelineRunLabel(obj, 'pipelineType', labels))}
       </TableData>
 
       {showSnapshot ? (
@@ -265,19 +282,11 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
       ) : null}
       {showComponent ? (
         <TableData className={pipelineRunTableColumnClasses.component}>
-          {obj.metadata?.labels[PipelineRunLabel.COMPONENT] ? (
-            obj.metadata?.labels[PipelineRunLabel.APPLICATION] ? (
-              <Link
-                to={COMPONENT_DETAILS_PATH.createPath({
-                  workspaceName: namespace,
-                  applicationName: obj.metadata?.labels[PipelineRunLabel.APPLICATION],
-                  componentName: obj.metadata?.labels[PipelineRunLabel.COMPONENT],
-                })}
-              >
-                {obj.metadata?.labels[PipelineRunLabel.COMPONENT]}
-              </Link>
+          {componentName ? (
+            componentPath ? (
+              <Link to={componentPath}>{componentName}</Link>
             ) : (
-              obj.metadata?.labels[PipelineRunLabel.COMPONENT]
+              componentName
             )
           ) : (
             '-'
@@ -342,8 +351,16 @@ const DynamicPipelineRunListRow: React.FC<
   const capitalize = (label: string) => {
     return label && label.charAt(0).toUpperCase() + label.slice(1);
   };
-  const { releaseName, integrationTestName, releasePlan, release } = customData || {};
-  const shouldShowScan = shouldShowScanResults(obj);
+  const {
+    releaseName,
+    integrationTestName,
+    releasePlan,
+    release,
+    pipelineRunLabels,
+    componentLink,
+  } = customData || {};
+  const labels = pipelineRunLabels ?? APPLICATION_PIPELINE_RUN_LABELS;
+  const shouldShowScan = shouldShowScanResults(obj, labels);
   const { scanResults, scanLoaded, scanError } = usePipelineRunScanResults(
     obj,
     shouldShowScan,
@@ -356,9 +373,18 @@ const DynamicPipelineRunListRow: React.FC<
   if (!obj.metadata?.labels) {
     obj.metadata.labels = {};
   }
-  const labels = obj.metadata.labels;
-  const applicationName = labels?.[PipelineRunLabel.APPLICATION];
-  const commit = createCommitObjectFromPLR(obj);
+  const commit = createCommitObjectFromPLR(obj, labels.component);
+  const componentName = getPipelineRunLabel(obj, 'component', labels);
+  const componentPath = componentName
+    ? (componentLink?.(componentName) ??
+      (obj.metadata?.labels[PipelineRunLabel.APPLICATION]
+        ? COMPONENT_DETAILS_PATH.createPath({
+            workspaceName: namespace,
+            applicationName: obj.metadata.labels[PipelineRunLabel.APPLICATION],
+            componentName,
+          })
+        : undefined))
+    : undefined;
 
   const queryString = releaseName
     ? `?releaseName=${encodeURIComponent(releaseName)}`
@@ -370,14 +396,7 @@ const DynamicPipelineRunListRow: React.FC<
     <>
       {visibleColumns.has('name') && (
         <TableData className={dynamicClasses.name}>
-          <Link
-            to={`${PIPELINE_RUNS_DETAILS_PATH.createPath({
-              workspaceName: namespace,
-              applicationName,
-              pipelineRunName: obj.metadata?.name,
-            })}${queryString}`}
-            title={obj.metadata?.name}
-          >
+          <Link to={`${getPipelineRunDetailsPath(obj)}${queryString}`} title={obj.metadata?.name}>
             {isFinished && <PipelineRunAttestation pipelineRun={obj} />}
             {obj.metadata?.name}
           </Link>
@@ -435,7 +454,7 @@ const DynamicPipelineRunListRow: React.FC<
       )}
       {visibleColumns.has('type') && (
         <TableData className={dynamicClasses.type}>
-          {capitalize(obj.metadata?.labels[PipelineRunLabel.PIPELINE_TYPE])}
+          {capitalize(getPipelineRunLabel(obj, 'pipelineType', labels))}
         </TableData>
       )}
 
@@ -461,19 +480,11 @@ const DynamicPipelineRunListRow: React.FC<
       )}
       {visibleColumns.has('component') && (
         <TableData className={dynamicClasses.component}>
-          {obj.metadata?.labels[PipelineRunLabel.COMPONENT] ? (
-            obj.metadata?.labels[PipelineRunLabel.APPLICATION] ? (
-              <Link
-                to={COMPONENT_DETAILS_PATH.createPath({
-                  workspaceName: namespace,
-                  applicationName: obj.metadata?.labels[PipelineRunLabel.APPLICATION],
-                  componentName: obj.metadata?.labels[PipelineRunLabel.COMPONENT],
-                })}
-              >
-                {obj.metadata?.labels[PipelineRunLabel.COMPONENT]}
-              </Link>
+          {componentName ? (
+            componentPath ? (
+              <Link to={componentPath}>{componentName}</Link>
             ) : (
-              obj.metadata?.labels[PipelineRunLabel.COMPONENT]
+              componentName
             )
           ) : (
             '-'

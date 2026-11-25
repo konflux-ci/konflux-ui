@@ -9,6 +9,7 @@ import {
   mockUseNamespaceHook,
   renderWithQueryClientAndRouter,
 } from '~/unit-test-utils';
+import { NEW_COMPONENT_PIPELINE_RUN_LABELS } from '~/utils/pipeline-run-labels';
 
 jest.mock('~/hooks/useComponentsV2', () => ({ useComponentV2: jest.fn() }));
 jest.mock('~/hooks/useLatestPushBuildPipeline', () => ({
@@ -49,7 +50,10 @@ const run = {
   apiVersion: 'tekton.dev/v1',
   kind: 'PipelineRun',
   spec: {},
-  metadata: { name: 'stable-build', labels: { [PipelineRunLabel.COMPONENT_VERSION]: 'stable' } },
+  metadata: {
+    name: 'stable-build',
+    annotations: { [PipelineRunLabel.V2_COMPONENT_VERSION]: 'stable' },
+  },
   status: {
     pipelineSpec: { tasks: [] },
     results: [{ name: 'IMAGE_URL', value: 'quay.io/org/frontend:stable' }],
@@ -83,6 +87,7 @@ describe('ComponentVersionDetailsTab', () => {
       'test-ns',
       'frontend',
       'stable',
+      NEW_COMPONENT_PIPELINE_RUN_LABELS,
     );
     expect(screen.getByText('Registry Login Information')).toBeInTheDocument();
     expect(screen.queryByText(/Nudg/i)).not.toBeInTheDocument();
@@ -107,6 +112,7 @@ describe('ComponentVersionDetailsTab', () => {
       'test-ns',
       'frontend',
       'next',
+      NEW_COMPONENT_PIPELINE_RUN_LABELS,
     );
   });
 

@@ -1,5 +1,9 @@
-import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { PipelineRunKind } from '~/types';
+import {
+  APPLICATION_PIPELINE_RUN_LABELS,
+  getPipelineRunLabel,
+  PipelineRunLabelConfig,
+} from '~/utils/pipeline-run-labels';
 import { pipelineRunStatus } from '~/utils/pipeline-utils';
 import { textMatch } from '~/utils/text-filter-utils';
 
@@ -15,19 +19,20 @@ export const filterPipelineRuns = (
   filters: PipelineRunsFilterState,
   customFilter?: (plr: PipelineRunKind) => boolean,
   componentName?: string,
+  labels: PipelineRunLabelConfig = APPLICATION_PIPELINE_RUN_LABELS,
 ): PipelineRunKind[] => {
   const { name, status, type, version } = filters;
 
   return pipelineRuns
     .filter((plr) => {
-      const runType = plr?.metadata.labels[PipelineRunLabel.PIPELINE_TYPE];
+      const runType = getPipelineRunLabel(plr, 'pipelineType', labels);
       return (
         textMatch(plr.metadata.name, name) &&
         (!componentName ||
-          textMatch(plr.metadata.labels?.[PipelineRunLabel.COMPONENT], componentName)) &&
+          textMatch(getPipelineRunLabel(plr, 'component', labels), componentName)) &&
         (!status?.length || status.includes(pipelineRunStatus(plr))) &&
         (!type?.length || type.includes(runType)) &&
-        (!version || textMatch(plr?.metadata.labels[PipelineRunLabel.COMPONENT_VERSION], version))
+        (!version || textMatch(getPipelineRunLabel(plr, 'componentVersion', labels), version))
       );
     })
     .filter((plr) => !customFilter || customFilter(plr));

@@ -15,7 +15,6 @@ import { NAMESPACE_PIPELINE_RUN_DETAILS_PATH } from '@routes/paths';
 import CommitLabel from '~/components/Commits/commit-label/CommitLabel';
 import { DetailsSection } from '~/components/DetailsPage';
 import ScanDescriptionListGroup from '~/components/PipelineRun/PipelineRunDetailsView/tabs/ScanDescriptionListGroup';
-import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { useImageProxy } from '~/hooks/useImageProxy';
 import { useImageRepository } from '~/hooks/useImageRepository';
 import { useTaskRunsForPipelineRuns } from '~/hooks/useTaskRunsV2';
@@ -25,14 +24,18 @@ import { getErrorState } from '~/shared/utils/error-utils';
 import { ComponentKind, ImageRepositoryVisibility, PipelineRunKind } from '~/types';
 import { createCommitObjectFromPLR } from '~/utils/commits-utils';
 import { getImageUrlForVisibility } from '~/utils/component-utils';
+import {
+  getPipelineRunLabel,
+  NEW_COMPONENT_PIPELINE_RUN_LABELS,
+} from '~/utils/pipeline-run-labels';
 import { getPipelineRunStatusResults, SBOMResultKeys } from '~/utils/pipeline-utils';
 
 const IMAGE_URL_RESULT = 'IMAGE_URL';
 
-const SelectedBuild: React.FC<{ component: ComponentKind; pipelineRun: PipelineRunKind }> = ({
-  component,
-  pipelineRun,
-}) => {
+const SelectedBuild: React.FC<{
+  component: ComponentKind;
+  pipelineRun: PipelineRunKind;
+}> = ({ component, pipelineRun }) => {
   const namespace = component.metadata.namespace;
   const [taskRuns, tasksLoaded, tasksError] = useTaskRunsForPipelineRuns(
     namespace,
@@ -64,9 +67,16 @@ const SelectedBuild: React.FC<{ component: ComponentKind; pipelineRun: PipelineR
     isImageControllerEnabled &&
     ((!repositoryLoaded && !repositoryError) ||
       (visibility === ImageRepositoryVisibility.private && !proxyLoaded && !proxyError));
-  const commit = createCommitObjectFromPLR(pipelineRun);
+  const commit = createCommitObjectFromPLR(
+    pipelineRun,
+    NEW_COMPONENT_PIPELINE_RUN_LABELS.component,
+  );
   const routeParams = { workspaceName: namespace, pipelineRunName: pipelineRun.metadata.name };
-  const version = pipelineRun.metadata.labels?.[PipelineRunLabel.COMPONENT_VERSION];
+  const version = getPipelineRunLabel(
+    pipelineRun,
+    'componentVersion',
+    NEW_COMPONENT_PIPELINE_RUN_LABELS,
+  );
 
   return (
     <Grid hasGutter>

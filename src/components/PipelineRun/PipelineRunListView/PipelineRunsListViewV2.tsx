@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { Bullseye, Flex, Spinner, Stack } from '@patternfly/react-core';
+import { COMPONENT_DETAILS_V2_PATH } from '@routes/paths';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import PipelineRunsFilterToolbar from '~/components/Filter/toolbars/PipelineRunsFilterToolbar';
 import { createFilterObj } from '~/components/Filter/utils/filter-utils';
@@ -8,7 +9,7 @@ import {
   PipelineRunsFilterState,
 } from '~/components/Filter/utils/pipelineruns-filter-utils';
 import { SESSION_STORAGE_KEYS, TEXT_SEARCH_TYPES } from '~/consts/constants';
-import { useComponent } from '~/hooks/useComponents';
+import { useComponentV2 } from '~/hooks/useComponentsV2';
 import { useVisibleColumns } from '~/hooks/useVisibleColumns';
 import { getErrorState } from '~/shared/utils/error-utils';
 import {
@@ -17,7 +18,6 @@ import {
   NON_HIDABLE_PIPELINE_RUN_COLUMNS,
   PipelineRunColumnKeys,
 } from '../../../consts/pipeline';
-import { PipelineRunLabel } from '../../../consts/pipelinerun';
 import { usePipelineRunsV2 } from '../../../hooks/usePipelineRunsV2';
 import { usePLRVulnerabilities } from '../../../hooks/useScanResults';
 import { Table, useDeepCompareMemoize } from '../../../shared';
@@ -26,6 +26,11 @@ import ColumnManagement from '../../../shared/components/table/ColumnManagement'
 import { useNamespace } from '../../../shared/providers/Namespace';
 import { PipelineRunKind } from '../../../types';
 import { statuses } from '../../../utils/commits-utils';
+import {
+  getPipelineRunSelector,
+  getPipelineRunLabel,
+  NEW_COMPONENT_PIPELINE_RUN_LABELS,
+} from '../../../utils/pipeline-run-labels';
 import { pipelineRunStatus } from '../../../utils/pipeline-utils';
 import { pipelineRunTypes } from '../../../utils/pipelinerun-utils';
 import PipelineRunEmptyStateV2 from '../PipelineRunEmptyStateV2';
@@ -63,7 +68,7 @@ const PipelineRunsListViewV2: React.FC<React.PropsWithChildren<PipelineRunsListV
   );
   const [isColumnManagementOpen, setIsColumnManagementOpen] = React.useState(false);
 
-  const [component, compLoaded, compError] = useComponent(namespace, componentName, true);
+  const [component, compLoaded, compError] = useComponentV2(namespace, componentName, true);
 
   const [pipelineRuns, plrLoaded, plrError, getNextPage, { isFetchingNextPage, hasNextPage }] =
     usePipelineRunsV2(
@@ -73,15 +78,14 @@ const PipelineRunsListViewV2: React.FC<React.PropsWithChildren<PipelineRunsListV
           selector: {
             filterByCreationTimestampAfter: component?.metadata?.creationTimestamp,
             filterByName: nameFilter || undefined,
-            matchLabels: {
-              [PipelineRunLabel.COMPONENT]: componentName,
-              ...(versionName && {
-                [PipelineRunLabel.COMPONENT_VERSION]: versionName,
-              }),
-            },
+            matchLabels: getPipelineRunSelector(
+              componentName,
+              NEW_COMPONENT_PIPELINE_RUN_LABELS,
+              versionFilter,
+            ),
           },
         }),
-        [component?.metadata?.creationTimestamp, componentName, nameFilter, versionName],
+        [component?.metadata?.creationTimestamp, componentName, nameFilter, versionFilter],
       ),
     );
 
@@ -102,7 +106,7 @@ const PipelineRunsListViewV2: React.FC<React.PropsWithChildren<PipelineRunsListV
     () =>
       createFilterObj(
         sortedPipelineRuns,
-        (plr) => plr?.metadata.labels[PipelineRunLabel.PIPELINE_TYPE],
+        (plr) => getPipelineRunLabel(plr, 'pipelineType', NEW_COMPONENT_PIPELINE_RUN_LABELS),
         pipelineRunTypes,
         pipelineRunTypes.reduce(
           (acc, type) => {
@@ -116,8 +120,15 @@ const PipelineRunsListViewV2: React.FC<React.PropsWithChildren<PipelineRunsListV
   );
 
   const filteredPLRs = React.useMemo(
-    () => filterPipelineRuns(sortedPipelineRuns, filters, undefined, componentName),
-    [sortedPipelineRuns, filters, componentName],
+    () =>
+      filterPipelineRuns(
+        sortedPipelineRuns,
+        { ...filters, version: versionFilter || versionName },
+        undefined,
+        componentName,
+        NEW_COMPONENT_PIPELINE_RUN_LABELS,
+      ),
+    [sortedPipelineRuns, filters, componentName, versionName, versionFilter],
   );
 
   const vulnerabilities = usePLRVulnerabilities(nameFilter ? filteredPLRs : sortedPipelineRuns);
@@ -172,7 +183,15 @@ const PipelineRunsListViewV2: React.FC<React.PropsWithChildren<PipelineRunsListV
           <PipelineRunListRowWithColumns
             obj={props.obj as PipelineRunKind}
             columns={props.columns || []}
-            customData={vulnerabilities}
+            customData={{
+              ...vulnerabilities,
+              pipelineRunLabels: NEW_COMPONENT_PIPELINE_RUN_LABELS,
+              componentLink: (name: string) =>
+                COMPONENT_DETAILS_V2_PATH.createPath({
+                  workspaceName: namespace,
+                  componentName: name,
+                }),
+            }}
             index={props.index}
             visibleColumns={visibleColumns}
           />
