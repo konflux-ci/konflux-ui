@@ -75,12 +75,14 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
 
   const finalFilteredSnapshots = React.useMemo(() => {
     return textFiltered.filter((s) => {
-      if (
-        filterValues.filterBy.includes(FILTER_BY_VALUES.SHOW_MERGED_ONLY) &&
-        s.metadata.labels?.[PipelineRunLabel.TEST_COMMIT_EVENT_TYPE_LABEL] ===
-          PipelineRunEventType.PULL
-      ) {
-        return false;
+      if (filterValues.filterBy.includes(FILTER_BY_VALUES.SHOW_MERGED_ONLY)) {
+        const eventType = s.metadata.labels?.[PipelineRunLabel.TEST_COMMIT_EVENT_TYPE_LABEL];
+        if (
+          eventType === PipelineRunEventType.PULL ||
+          eventType === PipelineRunEventType.MERGE_REQUEST
+        ) {
+          return false;
+        }
       }
       return true;
     });
