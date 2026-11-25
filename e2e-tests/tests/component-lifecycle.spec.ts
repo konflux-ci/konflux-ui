@@ -3,6 +3,17 @@ import { actions } from '../support/pageObjects/global-po';
 import { ApplicationDetailPage } from '../support/pages/ApplicationDetailPage';
 import { ComponentDetailsPage } from '../support/pages/ComponentDetailsPage';
 import { ComponentPage } from '../support/pages/ComponentsPage';
+<<<<<<< HEAD:e2e-tests/tests/component-lifecycle.spec.ts
+=======
+import {
+  ContrastSwitcher,
+  Contrasts,
+  HelpMenu,
+  ThemeSwitcher,
+  Themes,
+} from '../support/pages/PageHeader';
+import { SecretsPage } from '../support/pages/SecretsPage';
+>>>>>>> 6d0ddee1 (chore(KFLUXUI-1739): let AI write test):e2e-tests/tests/basic-happy-path.spec.ts
 import { ComponentsTabPage } from '../support/pages/tabs/ComponentsTabPage';
 import { IntegrationTestsTabPage } from '../support/pages/tabs/IntegrationTestsTabPage';
 import { DetailsTab, PipelinerunsTabPage } from '../support/pages/tabs/PipelinerunsTabPage';
