@@ -118,7 +118,7 @@ For security-sensitive resources like Secrets, where transferring `data` or `str
 
 **How it works:**
 
-1. **Custom Accept header** -- `SECRET_TABLE_K8S_FETCH_OPTIONS` sets `Accept: application/json;as=Table;v=v1;g=meta.k8s.io`, which tells the API server to return a `meta.k8s.io/v1 Table` instead of the full resource JSON. The Table response includes `metadata` and printed columns (Name, Type, etc.) but omits `data`/`stringData`.
+1. **Custom Accept header** -- `SECRET_TABLE_FETCH_OPTIONS` sets `Accept: application/json;as=Table;v=v1;g=meta.k8s.io`, which tells the API server to return a `meta.k8s.io/v1 Table` instead of the full resource JSON. The Table response includes `metadata` and printed columns (Name, Type, etc.) but omits `data`/`stringData`. `SECRET_TABLE_K8S_FETCH_OPTIONS` wraps this inside `{ requestInit: ... }` for use in `createQueryKeys` / `fetchK8sSecretTableList` contexts — do **not** pass it as `useK8sWatchResource`'s 4th argument or the header will be double-nested.
 
 2. **Separate React Query cache key** -- A `K8S_QUERY_KEY_SECRET_TABLE` suffix (`'secret-table-format'`) is appended to the standard query key so Table-format queries never share cache entries with full-JSON queries. This prevents a full secret fetch from polluting the metadata-only cache or vice versa.
 
@@ -136,7 +136,7 @@ const [secrets, loaded, error] = useSecrets(namespace, false, {
 const [secret, loaded, error] = useSecretMetadata(namespace, secretName);
 ```
 
-`useSecrets` (with `metadataOnly: true`) calls `useK8sWatchResource` with overridden `queryKey`, `queryFn`, and `select` options. `useSecretMetadata` overrides `queryKey` and `select` but relies on the default query function — the Table content negotiation is handled by passing `SECRET_TABLE_K8S_FETCH_OPTIONS` as the fetch options (4th) argument. Both hooks disable watch.
+`useSecrets` (with `metadataOnly: true`) calls `useK8sWatchResource` with overridden `queryKey`, `queryFn`, and `select` options. `useSecretMetadata` overrides `queryKey` and `select` but relies on the default query function — the Table content negotiation is handled by passing `SECRET_TABLE_FETCH_OPTIONS` as the fetch options (4th) argument. Both hooks disable watch. **Note:** `SECRET_TABLE_K8S_FETCH_OPTIONS` must NOT be used as the 4th argument — it wraps the fetch options in `{ requestInit: ... }`, which causes double-nesting when `useK8sWatchResource` wraps it again.
 
 **Prefetch query builder:**
 
@@ -154,7 +154,7 @@ await K8sQuerySecretListTableItems(namespace);
 | File                                      | Purpose                                                                                                                                  |
 | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
 | `src/k8s/consts/k8s-accept.ts`            | `K8S_ACCEPT_TABLE` header value, `K8S_QUERY_KEY_SECRET_TABLE` cache key suffix                                                           |
-| `src/utils/secrets/secret-table-utils.ts` | `SECRET_TABLE_K8S_FETCH_OPTIONS`, `parseSecretTableToSecretKinds`, `selectSecretList`, `selectSecretMetadata`, `fetchK8sSecretTableList` |
+| `src/utils/secrets/secret-table-utils.ts` | `SECRET_TABLE_FETCH_OPTIONS` (raw fetch options for `useK8sWatchResource` 4th arg), `SECRET_TABLE_K8S_FETCH_OPTIONS` (wrapped for query-fn paths), `parseSecretTableToSecretKinds`, `selectSecretList`, `selectSecretMetadata`, `fetchK8sSecretTableList` |
 | `src/utils/secrets/secret-table-query.ts` | `createSecretListTableQueryOptions`, `K8sQuerySecretListTableItems` (prefetch)                                                           |
 | `src/hooks/useSecrets.ts`                 | `useSecrets` with `metadataOnly` option                                                                                                  |
 | `src/hooks/useSecretMetadata.ts`          | `useSecretMetadata` single-resource hook                                                                                                 |
