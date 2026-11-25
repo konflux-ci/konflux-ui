@@ -30,7 +30,7 @@ const ComponentDetailsView: React.FC = () => {
   const namespace = useNamespace();
   const [component, loaded, componentError] = useComponentV2(namespace, componentName);
 
-  const componentActions = useComponentV2Actions(component?.metadata?.name);
+  const componentActions = useComponentV2Actions(component);
   const actions = React.useMemo(
     () => createDetailsPageActions(componentActions, navigate),
     [componentActions, navigate],

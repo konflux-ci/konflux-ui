@@ -33,7 +33,7 @@ const ComponentVersionDetailsView: React.FC = () => {
   const namespace = useNamespace();
   const [component, loaded, componentError] = useComponentV2(namespace, componentName);
 
-  const versionActions = useComponentV2Actions(componentName, versionRevision);
+  const versionActions = useComponentV2Actions(component, versionRevision);
   const actions = React.useMemo(
     () => createDetailsPageActions(versionActions, navigate),
     [versionActions, navigate],

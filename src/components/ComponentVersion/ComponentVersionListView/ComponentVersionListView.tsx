@@ -56,8 +56,8 @@ const ComponentVersionListView: React.FC<
   const defaultPipeline = component?.spec?.['default-build-pipeline'];
 
   const customData = React.useMemo<VersionListRowCustomData>(
-    () => ({ repoUrl, defaultPipeline, componentName }),
-    [repoUrl, defaultPipeline, componentName],
+    () => ({ repoUrl, defaultPipeline, componentName, component }),
+    [repoUrl, defaultPipeline, componentName, component],
   );
 
   const Header = React.useMemo(

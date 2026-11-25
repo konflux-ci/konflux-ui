@@ -62,6 +62,7 @@ const ComponentGroupComponentsList: React.FC = () => {
       return {
         componentName: ref.name,
         namespace,
+        component: componentsMap.get(ref.name),
         kind: ref.kind,
         gitUrl: isComponentGroup ? undefined : componentsMap.get(ref.name)?.spec.source?.url,
         imageUrl: isComponentGroup ? undefined : latestCandidate?.lastPromotedImage,

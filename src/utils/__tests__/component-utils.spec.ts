@@ -24,7 +24,6 @@ import {
 import { createK8sUtilMock } from '../test-utils';
 
 const k8sPatchResourceMock = createK8sUtilMock('K8sQueryPatchResource');
-const k8sGetResourceMock = createK8sUtilMock('K8sGetResource');
 
 describe('component-utils', () => {
   it('should detect pac enabled state', () => {
@@ -470,13 +469,13 @@ describe('getPipelineName', () => {
 });
 
 describe('startNewBuildV2', () => {
-  it('should trigger a single-version build via trigger-push-build and keep existing actions', async () => {
-    k8sGetResourceMock.mockReturnValue({
-      metadata: { name: 'comp', namespace: 'test-ns' },
-      spec: { actions: { 'create-pipeline-configuration-pr': { 'all-versions': true } } },
-    });
+  const component = {
+    metadata: { name: 'comp', namespace: 'test-ns' },
+    spec: { actions: { 'create-pipeline-configuration-pr': { 'all-versions': true } } },
+  } as ComponentKind;
 
-    await startNewBuildV2('test-ns', 'comp', ['v1']);
+  it('should trigger a single-version build via trigger-push-build and keep existing actions', async () => {
+    await startNewBuildV2(component, ['v1']);
 
     expect(k8sPatchResourceMock).toHaveBeenCalledWith({
       model: ComponentModelV2,
@@ -495,12 +494,9 @@ describe('startNewBuildV2', () => {
   });
 
   it('should trigger a multi-version build via trigger-push-builds', async () => {
-    k8sGetResourceMock.mockReturnValue({
-      metadata: { name: 'comp', namespace: 'test-ns' },
-      spec: {},
-    });
+    const componentWithoutActions = { ...component, spec: {} } as ComponentKind;
 
-    await startNewBuildV2('test-ns', 'comp', ['v1', 'v2']);
+    await startNewBuildV2(componentWithoutActions, ['v1', 'v2']);
 
     expect(k8sPatchResourceMock).toHaveBeenCalledWith({
       model: ComponentModelV2,
@@ -512,12 +508,12 @@ describe('startNewBuildV2', () => {
   });
 
   it('should replace stale trigger keys from previous build requests', async () => {
-    k8sGetResourceMock.mockReturnValue({
-      metadata: { name: 'comp', namespace: 'test-ns' },
+    const componentWithStaleActions = {
+      ...component,
       spec: { actions: { 'trigger-push-builds': ['old-v1', 'old-v2'] } },
-    });
+    } as ComponentKind;
 
-    await startNewBuildV2('test-ns', 'comp', ['v1']);
+    await startNewBuildV2(componentWithStaleActions, ['v1']);
 
     expect(k8sPatchResourceMock).toHaveBeenCalledWith({
       model: ComponentModelV2,
@@ -527,12 +523,10 @@ describe('startNewBuildV2', () => {
   });
 
   it('should do nothing when no versions are given', async () => {
-    k8sGetResourceMock.mockClear();
     k8sPatchResourceMock.mockClear();
 
-    await startNewBuildV2('test-ns', 'comp', []);
+    await startNewBuildV2(component, []);
 
-    expect(k8sGetResourceMock).not.toHaveBeenCalled();
     expect(k8sPatchResourceMock).not.toHaveBeenCalled();
   });
 });

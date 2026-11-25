@@ -91,7 +91,7 @@ describe('StartNewBuildModal', () => {
     const user = await selectVersions('v1', 'v2');
     await user.click(screen.getByRole('button', { name: 'Start build' }));
 
-    expect(startNewBuildV2).toHaveBeenCalledWith('test-namespace', 'test-component', ['v1', 'v2']);
+    expect(startNewBuildV2).toHaveBeenCalledWith(mockComponent, ['v1', 'v2']);
     expect(onClose).toHaveBeenCalled();
   });
 
@@ -103,7 +103,7 @@ describe('StartNewBuildModal', () => {
     await user.click(screen.getByRole('button', { name: 'Close v1' }));
     await user.click(screen.getByRole('button', { name: 'Start build' }));
 
-    expect(startNewBuildV2).toHaveBeenCalledWith('test-namespace', 'test-component', ['v2']);
+    expect(startNewBuildV2).toHaveBeenCalledWith(mockComponent, ['v2']);
   });
 
   it('should show an error and keep the modal open when the build request fails', async () => {

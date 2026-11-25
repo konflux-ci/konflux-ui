@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { K8sGetResource, K8sQueryPatchResource } from '../k8s';
+import { K8sQueryPatchResource } from '../k8s';
 import { ComponentModel, ComponentModelV2, ImageRepositoryModel } from '../models';
 import {
   ComponentBuildPipeline,
@@ -149,19 +149,10 @@ export const disablePAC = (component: ComponentKind) =>
 
 // Start builds for the given versions via the new component model's spec.actions.
 // The component is fetched first so existing action keys are preserved in the patch.
-export const startNewBuildV2 = async (
-  namespace: string,
-  componentName: string,
-  versions: string[],
-) => {
+export const startNewBuildV2 = (component: ComponentKind, versions: string[]) => {
   if (!versions.length) {
     return;
   }
-
-  const component = await K8sGetResource<ComponentKind>({
-    model: ComponentModelV2,
-    queryOptions: { name: componentName, ns: namespace },
-  });
 
   const actions: ComponentActions = { ...(component.spec?.actions ?? {}) };
   delete actions['trigger-push-build'];
@@ -174,7 +165,10 @@ export const startNewBuildV2 = async (
 
   return K8sQueryPatchResource({
     model: ComponentModelV2,
-    queryOptions: { name: componentName, ns: namespace },
+    queryOptions: {
+      name: component.metadata?.name,
+      ns: component.metadata?.namespace,
+    },
     patches: [{ op: 'add', path: '/spec/actions', value: actions }],
   });
 };

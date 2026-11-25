@@ -1,12 +1,17 @@
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { COMPONENT_LINKED_SECRETS_V2_PATH } from '~/routes/paths';
+import { ComponentKind } from '~/types';
 import { renderWithQueryClientAndRouter } from '~/unit-test-utils/rendering-utils';
 import { startNewBuildV2 } from '~/utils/component-utils';
 import { useAccessReviewForModel } from '~/utils/rbac';
 import ComponentActionsCell from '../ComponentActionsCell';
 
 const showModalMock = jest.fn();
+const component = {
+  metadata: { name: 'comp', namespace: 'test-namespace' },
+  spec: {},
+} as ComponentKind;
 
 jest.mock('~/shared/providers/Namespace/useNamespaceInfo', () => ({
   useNamespace: () => 'test-namespace',
@@ -37,17 +42,17 @@ describe('ComponentActionsCell', () => {
 
   it('should start a build for the single version when a version is given', async () => {
     (startNewBuildV2 as jest.Mock).mockResolvedValue(undefined);
-    renderWithQueryClientAndRouter(<ComponentActionsCell componentName="comp" version="v1" />);
+    renderWithQueryClientAndRouter(<ComponentActionsCell component={component} version="v1" />);
 
     await openMenuAndClick(userEvent.setup(), 'Start new build');
 
-    expect(startNewBuildV2).toHaveBeenCalledWith('test-namespace', 'comp', ['v1']);
+    expect(startNewBuildV2).toHaveBeenCalledWith(component, ['v1']);
     expect(showModalMock).not.toHaveBeenCalled();
   });
 
   it('should show an error modal when the direct build fails', async () => {
     (startNewBuildV2 as jest.Mock).mockRejectedValue(new Error('boom'));
-    renderWithQueryClientAndRouter(<ComponentActionsCell componentName="comp" version="v1" />);
+    renderWithQueryClientAndRouter(<ComponentActionsCell component={component} version="v1" />);
 
     await openMenuAndClick(userEvent.setup(), 'Start new build');
 
@@ -59,7 +64,7 @@ describe('ComponentActionsCell', () => {
   });
 
   it('should open the version picker modal when no version is given', async () => {
-    renderWithQueryClientAndRouter(<ComponentActionsCell componentName="comp" />);
+    renderWithQueryClientAndRouter(<ComponentActionsCell component={component} />);
 
     await openMenuAndClick(userEvent.setup(), 'Start new build');
 
@@ -69,7 +74,7 @@ describe('ComponentActionsCell', () => {
 
   it('should disable the start build action without patch permission', async () => {
     (useAccessReviewForModel as jest.Mock).mockImplementation(() => [false, true]);
-    renderWithQueryClientAndRouter(<ComponentActionsCell componentName="comp" version="v1" />);
+    renderWithQueryClientAndRouter(<ComponentActionsCell component={component} version="v1" />);
 
     const user = userEvent.setup();
     await user.click(screen.getByTestId('kebab-button'));
@@ -92,7 +97,7 @@ describe('ComponentActionsCell', () => {
   });
 
   it('should navigate to linked secrets when manage linked secrets is clicked', async () => {
-    renderWithQueryClientAndRouter(<ComponentActionsCell componentName="comp" />);
+    renderWithQueryClientAndRouter(<ComponentActionsCell component={component} />);
 
     await openMenuAndClick(userEvent.setup(), 'Manage linked secrets');
 
@@ -106,12 +111,12 @@ describe('ComponentActionsCell', () => {
 
   it('should use the provided label for the actions menu, falling back to the component name', () => {
     const { unmount } = renderWithQueryClientAndRouter(
-      <ComponentActionsCell componentName="comp" version="v1" label="Actions for v1" />,
+      <ComponentActionsCell component={component} version="v1" label="Actions for v1" />,
     );
     expect(screen.getByTestId('kebab-button')).toHaveAttribute('aria-label', 'Actions for v1');
     unmount();
 
-    renderWithQueryClientAndRouter(<ComponentActionsCell componentName="comp" version="v1" />);
+    renderWithQueryClientAndRouter(<ComponentActionsCell component={component} version="v1" />);
     expect(screen.getByTestId('kebab-button')).toHaveAttribute('aria-label', 'Actions for comp');
   });
 
@@ -119,7 +124,7 @@ describe('ComponentActionsCell', () => {
     (useAccessReviewForModel as jest.Mock)
       .mockReturnValueOnce([false, true]) // ServiceAccountModel patch
       .mockReturnValueOnce([true, true]); // ComponentModelV2 patch
-    renderWithQueryClientAndRouter(<ComponentActionsCell componentName="comp" />);
+    renderWithQueryClientAndRouter(<ComponentActionsCell component={component} />);
 
     const user = userEvent.setup();
     await user.click(screen.getByTestId('kebab-button'));

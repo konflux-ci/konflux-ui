@@ -53,7 +53,8 @@ export const StartNewBuildModal: React.FC<React.PropsWithChildren<StartNewBuildM
     setSubmitError(undefined);
     setIsSubmitting(true);
     try {
-      await startNewBuildV2(namespace, componentName, selected);
+      if (!component) return;
+      await startNewBuildV2(component, selected);
       onClose?.();
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : 'Failed to start build');

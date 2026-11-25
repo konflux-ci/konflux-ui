@@ -6,7 +6,7 @@ import { TableData } from '~/shared';
 import ExternalLink from '~/shared/components/links/ExternalLink';
 import { RowFunctionArgs } from '~/shared/components/table/VirtualBody';
 import { useNamespace } from '~/shared/providers/Namespace';
-import { ComponentBuildPipeline, ComponentVersion } from '~/types/component';
+import { ComponentBuildPipeline, ComponentKind, ComponentVersion } from '~/types/component';
 import { getPipelineName } from '~/utils/component-utils';
 import { createBranchUrl } from '~/utils/git-utils';
 import { versionTableColumnClasses } from './ComponentVersionListHeader';
@@ -15,13 +15,14 @@ export type VersionListRowCustomData = {
   repoUrl?: string;
   defaultPipeline?: ComponentBuildPipeline;
   componentName: string;
+  component?: ComponentKind;
 };
 
 export const ComponentVersionListRow: React.FC<
   RowFunctionArgs<ComponentVersion, VersionListRowCustomData>
 > = ({ obj, customData }) => {
   const namespace = useNamespace();
-  const { repoUrl, defaultPipeline, componentName } = customData;
+  const { repoUrl, defaultPipeline, componentName, component } = customData ?? {};
   const branchUrl = createBranchUrl(repoUrl, obj.revision);
   const pipelineName = getPipelineName(obj['build-pipeline'], defaultPipeline);
 
@@ -44,7 +45,7 @@ export const ComponentVersionListRow: React.FC<
       <TableData className={versionTableColumnClasses.pipeline}>{pipelineName}</TableData>
       <TableData className={versionTableColumnClasses.kebab}>
         <ComponentActionsCell
-          componentName={componentName}
+          component={component}
           version={obj.name}
           label={`Actions for ${obj.name}`}
         />
