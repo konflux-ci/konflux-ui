@@ -120,20 +120,24 @@ const CommitsListViewV2: React.FC<React.PropsWithChildren<CommitsListViewPropsV2
 
   const commitPipelineRunMap = React.useMemo<Record<string, PipelineRunKind[]>>(
     () =>
-      (pipelineRuns ?? []).reduce(
-        (acc, plr) => {
-          const sha = getCommitSha(plr);
-          if (sha) {
-            if (!acc[sha]) {
-              acc[sha] = [];
+      (pipelineRuns ?? [])
+        .filter((plr) =>
+          matchesPipelineRunVersion(plr, versionName, NEW_COMPONENT_PIPELINE_RUN_LABELS),
+        )
+        .reduce(
+          (acc, plr) => {
+            const sha = getCommitSha(plr);
+            if (sha) {
+              if (!acc[sha]) {
+                acc[sha] = [];
+              }
+              acc[sha].push(plr);
             }
-            acc[sha].push(plr);
-          }
-          return acc;
-        },
-        {} as Record<string, PipelineRunKind[]>,
-      ),
-    [pipelineRuns],
+            return acc;
+          },
+          {} as Record<string, PipelineRunKind[]>,
+        ),
+    [pipelineRuns, versionName],
   );
 
   const commitStatusMap = React.useMemo<Record<string, runStatus>>(

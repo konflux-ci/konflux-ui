@@ -29,6 +29,7 @@ import { statuses } from '../../../utils/commits-utils';
 import {
   getPipelineRunSelector,
   getPipelineRunLabel,
+  matchesPipelineRunVersion,
   NEW_COMPONENT_PIPELINE_RUN_LABELS,
 } from '../../../utils/pipeline-run-labels';
 import { pipelineRunStatus } from '../../../utils/pipeline-utils';
@@ -123,13 +124,15 @@ const PipelineRunsListViewV2: React.FC<React.PropsWithChildren<PipelineRunsListV
     () =>
       filterPipelineRuns(
         sortedPipelineRuns,
-        { ...filters, version: versionFilter || versionName },
-        undefined,
+        { ...filters, version: versionFilter },
+        (plr) => matchesPipelineRunVersion(plr, versionName, NEW_COMPONENT_PIPELINE_RUN_LABELS),
         componentName,
         NEW_COMPONENT_PIPELINE_RUN_LABELS,
       ),
     [sortedPipelineRuns, filters, componentName, versionName, versionFilter],
   );
+
+  // TODO: continue loading archive pages when a version has no matching runs.
 
   const vulnerabilities = usePLRVulnerabilities(nameFilter ? filteredPLRs : sortedPipelineRuns);
 

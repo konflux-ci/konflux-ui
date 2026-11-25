@@ -499,7 +499,7 @@ describe('PipelineRunsListViewV2', () => {
     expect(getNextPage).not.toHaveBeenCalled();
   });
 
-  it('should filter by version using search dropdown on fixed-version pages', async () => {
+  it('should keep the route version boundary when using the version search', async () => {
     const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
 
     const view = renderWithQueryClient(<TestedComponentV2 versionName="main" />);
@@ -521,8 +521,9 @@ describe('PipelineRunsListViewV2', () => {
     view.rerender(<TestedComponentV2 versionName="main" />);
 
     await waitFor(() => {
-      expect(screen.queryByText('basic-node-js-second')).toBeInTheDocument();
+      expect(screen.queryByText('No results found')).toBeInTheDocument();
       expect(screen.queryByText('basic-node-js-first')).not.toBeInTheDocument();
+      expect(screen.queryByText('basic-node-js-second')).not.toBeInTheDocument();
     });
   });
 });
