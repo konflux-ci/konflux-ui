@@ -356,8 +356,8 @@ __metadata:
   linkType: hard
 
 "@cypress/code-coverage@npm:^4.0.3":
-  version: 4.0.3
-  resolution: "@cypress/code-coverage@npm:4.0.3"
+  version: 4.1.3
+  resolution: "@cypress/code-coverage@npm:4.1.3"
   dependencies:
     "@cypress/webpack-preprocessor": "npm:^6.0.0"
     chalk: "npm:4.1.2"
@@ -374,7 +374,7 @@ __metadata:
     babel-loader: ^8.3 || ^9 || ^10
     cypress: ">=15.10.0"
     webpack: ^4 || ^5
-  checksum: 10/f364c111e302b943a6e38571838c521a4fddba17a5bce01ff6be4b05a798b7d2df69757c94738a0786ddb34634be3247de5998cce4b692fa717a47a656fe5d45
+  checksum: 10/06466ee01ef893cc31a38126583ef5c7a9d9813a9bf02ff3a815698ef843c67fad0d549d31a059e6fd0aca17fb92c0405ead5b56f5fe4135c3d1162168e22a14
   languageName: node
   linkType: hard
 
@@ -1323,8 +1323,8 @@ __metadata:
   linkType: hard
 
 "cypress@npm:^15.20.0":
-  version: 15.21.1
-  resolution: "cypress@npm:15.21.1"
+  version: 15.21.2
+  resolution: "cypress@npm:15.21.2"
   dependencies:
     "@cypress/request": "npm:^4.0.0"
     "@cypress/xvfb": "npm:^1.2.4"
@@ -1367,7 +1367,7 @@ __metadata:
     yauzl: "npm:^3.3.1"
   bin:
     cypress: bin/cypress
-  checksum: 10/71b14a52c989484608e2d70bd9c442432f32a811df83ce4193283a506493f547e8340770db79e20cb5889c60c0ec9ef7288a862b290c59219c7d8db27e987661
+  checksum: 10/56cec3797a8ea75fc0e01346d11c6fe7b7ff14e424994e0bd63568ff3b94406fa4d369e399df557927d488bc5806fb5fb5ec7aa9c88b225ce103a4795ac67bc0
   languageName: node
   linkType: hard
 

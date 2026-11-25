@@ -10,3 +10,5 @@ export const linkedSecretsListViewLoader = createLoaderWithAccessCheck(
   },
   { model: ServiceAccountModel, verb: 'patch' },
 );
+
+export { LinkedSecretsListView } from './LinkedSecretsListView';

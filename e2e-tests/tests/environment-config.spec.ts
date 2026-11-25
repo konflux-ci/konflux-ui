@@ -198,8 +198,16 @@ describe('Environment Configuration Tests', () => {
     const secretValue = 'myvalue';
 
     after(() => {
-      // Note: during the deletion, the secret is already filtered in input field
-      // no need to search again - re-searching makes a test flaky.
+      // navigate to secrets page before deleting the secret, in case the test
+      // failed before reaching the secrets page
+      cy.location('pathname').then((pathname) => {
+        if (!pathname.replace(/\/$/, '').endsWith('/secrets')) {
+          Common.navigateTo(NavItem.secrets);
+        }
+      });
+      Common.waitForLoad();
+      // deleteSecret handles filtering internally (clears the name input
+      // and types the secret name before locating the row).
       SecretsPage.deleteSecret(secretName);
     });
 

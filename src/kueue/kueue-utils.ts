@@ -1,5 +1,9 @@
+import { runStatus } from '~/consts/pipelinerun';
 import { PipelineRunModel } from '~/models/pipelineruns';
+import type { PipelineRunKind } from '~/types';
 import type { KueuePendingWorkloadKind, KueueQueuePosition } from '~/types/kueue';
+import { PLRStatus } from '~/utils/plr-status-config';
+import { KUEUE_QUEUE_NAME_LABEL } from './const';
 
 /**
  * Finds the PipelineRun owner reference for a pending workload, matching by
@@ -37,3 +41,13 @@ export const getKueueQueuePositionForPipelineRun = (
     priority: workload.priority,
   };
 };
+
+/**
+ * Whether the Kueue queue wait info (position, priority, time waiting) should be shown for
+ * a PipelineRun. Requires the flag, the Kueue queue-name label, and a derived `Queued`
+ * status; the label check excludes PAC-only queued runs.
+ */
+export const isKueueQueueWaitVisible = (pipelineRun: PipelineRunKind, isFlagOn: boolean): boolean =>
+  isFlagOn &&
+  pipelineRun.metadata?.labels?.[KUEUE_QUEUE_NAME_LABEL] !== undefined &&
+  PLRStatus.registry.deriveStatus(pipelineRun) === runStatus.Queued;
