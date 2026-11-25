@@ -26,6 +26,7 @@ Use these links to find guidance for the work at hand. Read only the relevant do
 | [Saved views](./guidelines/saved-views.md) | Bookmarking filter and column settings or adding sidebar navigation |
 | [Hooks and data fetching](./guidelines/hooks-and-data-fetching.md) | Using K8s hooks, React Query, RBAC, or state management |
 | [Guided tours](./guidelines/guided-tours.md) | Adding interactive walkthrough steps or registration |
+| [Toast notifications](./guidelines/toast-notifications.md) | Showing operation progress or result feedback with `useToast` |
 | [Feature flags](./feature-flags.md) | Defining flags, persistence, URL grammar, or lifecycle |
 | [Feature flag conditions](./conditions.md) | Defining `allOf`/`anyOf` guards or registering conditions |
 | [Analytics](./analytics.md) | Using Segment events, code generation, or obfuscation |

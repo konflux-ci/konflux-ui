@@ -1,12 +1,10 @@
 import React from 'react';
 import { AlertGroup } from '@patternfly/react-core';
+import { ToastItem } from './ToastItem';
 import type { ToastApi, ToastId, ToastOptions, ToastRecord, ToastVariant } from './types';
 import './ToastProvider.scss';
 
 const ToastContext = React.createContext<ToastApi | null>(null);
-const ToastItem = React.lazy(() =>
-  import('./ToastItem').then(({ ToastItem: Component }) => ({ default: Component })),
-);
 
 const defaultTimeoutForVariant: Record<ToastVariant, number | false> = {
   info: false,
@@ -15,9 +13,9 @@ const defaultTimeoutForVariant: Record<ToastVariant, number | false> = {
   danger: false,
 };
 
-const validateOptions = (options: Partial<ToastOptions>) => {
+const validateOptions = (options: Partial<ToastOptions>, requireTitle = false) => {
   if (
-    options.title !== undefined &&
+    (requireTitle || options.title !== undefined) &&
     (typeof options.title !== 'string' || options.title.trim().length === 0)
   ) {
     throw new Error('Toast title must be a non-empty string');
@@ -84,10 +82,7 @@ export const ToastProvider: React.FC<React.PropsWithChildren> = ({ children }) =
 
   const addToast = React.useCallback(
     (options: ToastOptions): ToastId => {
-      validateOptions(options);
-      if (typeof options.title !== 'string' || options.title.trim().length === 0) {
-        throw new Error('Toast title must be a non-empty string');
-      }
+      validateOptions(options, true);
       const id = `${providerId}-${nextToastId.current++}`;
       const toast = normalizeToast(id, options);
       if (!isActive.current) return id;
@@ -136,9 +131,7 @@ export const ToastProvider: React.FC<React.PropsWithChildren> = ({ children }) =
       {children}
       <AlertGroup aria-label="Notifications" className="toast-alert-group" isLiveRegion isToast>
         {[...toasts].reverse().map((toast) => (
-          <React.Suspense fallback={null} key={toast.id}>
-            <ToastItem onRemove={removeToast} toast={toast} />
-          </React.Suspense>
+          <ToastItem key={toast.id} onRemove={removeToast} toast={toast} />
         ))}
       </AlertGroup>
     </ToastContext.Provider>

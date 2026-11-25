@@ -24,7 +24,7 @@ Options:
 type ToastOptions = {
   title: string;
   variant?: 'info' | 'success' | 'warning' | 'danger';
-  description?: React.ReactNode;
+  description?: React.ReactNode | null;
   percentage?: number | null;
   timeout?: number | false;
   isDismissible?: boolean;

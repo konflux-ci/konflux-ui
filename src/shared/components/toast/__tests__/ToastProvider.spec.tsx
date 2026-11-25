@@ -133,6 +133,15 @@ const ToastActions = () => {
         Make timed toast persistent
       </button>
       <button
+        onClick={() => {
+          if (timedId.current) {
+            toast.updateToast(timedId.current, { variant: 'danger', isDismissible: false });
+          }
+        }}
+      >
+        Make timed toast danger
+      </button>
+      <button
         onClick={() =>
           toast.addToast({ title: 'Pending toast', timeout: false, isDismissible: false })
         }
@@ -488,6 +497,11 @@ describe('ToastProvider', () => {
         'Toast timeout must be false or a positive finite number',
       );
     }
+    for (const timeout of [-1, 0, Number.NaN, Number.POSITIVE_INFINITY]) {
+      expect(() => result.current.updateToast(id, { timeout })).toThrow(
+        'Toast timeout must be false or a positive finite number',
+      );
+    }
     expect(() => result.current.updateToast('missing', { percentage: 101 })).not.toThrow();
     expect(screen.getByText('Validated toast')).toBeInTheDocument();
   });
@@ -562,6 +576,22 @@ describe('ToastProvider lifetimes', () => {
     });
 
     expect(screen.getByText('Timed toast')).toBeInTheDocument();
+  });
+
+  it('enforces the danger policy when a timed toast is updated to danger', async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    renderToastActions();
+    await user.click(screen.getByRole('button', { name: 'Add timed toast' }));
+    await user.click(screen.getByRole('button', { name: 'Make timed toast danger' }));
+
+    act(() => {
+      jest.advanceTimersByTime(2000);
+    });
+
+    expect(screen.getByText('Timed toast')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Dismiss notification: Timed toast' }),
+    ).toBeInTheDocument();
   });
 
   it('pauses while hovered and resumes with the remaining time', async () => {
