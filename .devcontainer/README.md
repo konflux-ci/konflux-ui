@@ -65,7 +65,7 @@ While this documentation highlights the installation process for VS Code and oth
 ## What's Included
 
 - **Node.js 24**: Fedora 44 `nodejs24` package (`/usr/bin/node` → `node-24`)
-- **Yarn Berry (4.12.0)**: Committed release at `.yarn/releases/yarn-4.12.0.cjs` (see `yarnPath` in `.yarnrc.yml`); no Corepack or global Yarn install
+- **Yarn Berry**: Committed release under `.yarn/releases/` (see `yarnPath` in `.yarnrc.yml`); no Corepack or global Yarn install
 - **VS Code Extensions**: Pre-configured with useful extensions for React/TypeScript development
 - **Development Tools**: ESLint, Prettier, Stylelint, and more
 
