@@ -11,7 +11,6 @@ import { useVirtualization } from './hooks/useVirtualization';
 import { TableBody } from './TableBody';
 import { TableHeader } from './TableHeader';
 import { type TableProps } from './types';
-import './TableV2.scss';
 
 type CompoundExpandedState = Record<string, string>;
 
@@ -153,11 +152,7 @@ export const Table = <TData,>({
   if (enableRowSelection) visibleColumnCount += 1;
 
   return (
-    <div
-      data-test={dataTest}
-      ref={tableRef}
-      className={hasCompoundExpansion ? 'table-v2--compound-expansion' : undefined}
-    >
+    <div data-test={dataTest} ref={tableRef}>
       <PfTable
         aria-label={ariaLabel}
         variant="compact"
