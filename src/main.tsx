@@ -1,6 +1,7 @@
 // Sentry must be initialized before any other imports that trigger createBrowserRouter.
 // This side-effect import calls initMonitoring() synchronously.
 import './instrument';
+import '~/guided-tours';
 
 import React from 'react';
 import { RouterProvider } from 'react-router-dom';

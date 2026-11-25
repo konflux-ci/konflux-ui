@@ -3,9 +3,12 @@ import userEvent from '@testing-library/user-event';
 import { SortDropdown } from '~/shared/components/TableV2/SortDropdown';
 import { type ColumnDefinition } from '~/shared/components/TableV2/types';
 import { useLocalStorage } from '~/shared/hooks/useLocalStorage';
+import { useSessionStorage } from '~/shared/hooks/useSessionStorage';
 
 jest.mock('~/shared/hooks/useLocalStorage');
+jest.mock('~/shared/hooks/useSessionStorage');
 const mockUseLocalStorage = jest.mocked(useLocalStorage);
+const mockUseSessionStorage = jest.mocked(useSessionStorage);
 
 interface TestRow {
   name: string;
@@ -30,11 +33,20 @@ const clickToggle = async (user: ReturnType<typeof userEvent.setup>) => {
 
 describe('SortDropdown', () => {
   let mockSetValue: jest.Mock;
+  let mockSetSortValue: jest.Mock;
+  let mockRemoveSortValue: jest.Mock;
 
   beforeEach(() => {
     jest.clearAllMocks();
     mockSetValue = jest.fn();
-    mockUseLocalStorage.mockReturnValue([undefined, mockSetValue, jest.fn()]);
+    mockSetSortValue = jest.fn();
+    mockRemoveSortValue = jest.fn();
+    mockUseLocalStorage.mockReturnValue([
+      { visibleColumns: ['name', 'status', 'id'], columnOrder: ['name', 'status', 'id'] },
+      mockSetValue,
+      jest.fn(),
+    ]);
+    mockUseSessionStorage.mockReturnValue([undefined, mockSetSortValue, mockRemoveSortValue]);
   });
 
   it('renders the sort toggle button', () => {
@@ -80,40 +92,47 @@ describe('SortDropdown', () => {
     await clickToggle(user);
     await user.click(screen.getByText('Name'));
 
-    expect(mockSetValue).toHaveBeenCalledWith(expect.objectContaining({ sortColumn: 'name' }));
+    expect(mockSetSortValue).toHaveBeenCalledWith(expect.objectContaining({ sortColumn: 'name' }));
+  });
+
+  it('clears the active sort column and direction when deselected', async () => {
+    const user = userEvent.setup();
+    mockUseSessionStorage.mockReturnValue([
+      { sortColumn: 'name', sortDirection: 'desc' },
+      mockSetSortValue,
+      mockRemoveSortValue,
+    ]);
+    renderSortDropdown();
+
+    await clickToggle(user);
+    await user.click(screen.getByText('Name'));
+
+    expect(mockRemoveSortValue).toHaveBeenCalled();
   });
 
   it('updates sort direction when a direction option is selected', async () => {
     const user = userEvent.setup();
     // Start with a persisted sort state
-    mockUseLocalStorage.mockReturnValue([
-      {
-        visibleColumns: ['name', 'status', 'id'],
-        columnOrder: ['name', 'status', 'id'],
-        sortColumn: 'name',
-        sortDirection: 'asc',
-      },
-      mockSetValue,
-      jest.fn(),
+    mockUseSessionStorage.mockReturnValue([
+      { sortColumn: 'name', sortDirection: 'asc' },
+      mockSetSortValue,
+      mockRemoveSortValue,
     ]);
     renderSortDropdown();
 
     await clickToggle(user);
     await user.click(screen.getByText('Descending'));
 
-    expect(mockSetValue).toHaveBeenCalledWith(expect.objectContaining({ sortDirection: 'desc' }));
+    expect(mockSetSortValue).toHaveBeenCalledWith(
+      expect.objectContaining({ sortDirection: 'desc' }),
+    );
   });
 
   it('renders toggle button when sort is active', () => {
-    mockUseLocalStorage.mockReturnValue([
-      {
-        visibleColumns: ['name', 'status', 'id'],
-        columnOrder: ['name', 'status', 'id'],
-        sortColumn: 'name',
-        sortDirection: 'asc',
-      },
-      mockSetValue,
-      jest.fn(),
+    mockUseSessionStorage.mockReturnValue([
+      { sortColumn: 'name', sortDirection: 'asc' },
+      mockSetSortValue,
+      mockRemoveSortValue,
     ]);
     renderSortDropdown();
 
@@ -121,15 +140,10 @@ describe('SortDropdown', () => {
   });
 
   it('shows descending icon when sort direction is desc', () => {
-    mockUseLocalStorage.mockReturnValue([
-      {
-        visibleColumns: ['name', 'status', 'id'],
-        columnOrder: ['name', 'status', 'id'],
-        sortColumn: 'name',
-        sortDirection: 'desc',
-      },
-      mockSetValue,
-      jest.fn(),
+    mockUseSessionStorage.mockReturnValue([
+      { sortColumn: 'name', sortDirection: 'desc' },
+      mockSetSortValue,
+      mockRemoveSortValue,
     ]);
     renderSortDropdown();
 
@@ -138,15 +152,10 @@ describe('SortDropdown', () => {
   });
 
   it('shows ascending icon when sort direction is asc', () => {
-    mockUseLocalStorage.mockReturnValue([
-      {
-        visibleColumns: ['name', 'status', 'id'],
-        columnOrder: ['name', 'status', 'id'],
-        sortColumn: 'name',
-        sortDirection: 'asc',
-      },
-      mockSetValue,
-      jest.fn(),
+    mockUseSessionStorage.mockReturnValue([
+      { sortColumn: 'name', sortDirection: 'asc' },
+      mockSetSortValue,
+      mockRemoveSortValue,
     ]);
     renderSortDropdown();
 

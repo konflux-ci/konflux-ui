@@ -10,7 +10,7 @@ import type { ColumnDefinition } from './types';
 export interface SortDropdownProps<TData> {
   /** Column definitions — only columns with `sortable: true` appear in the dropdown. */
   columns: ColumnDefinition<TData>[];
-  /** LocalStorage key for persisting column/sort state. */
+  /** Shared key for column layout in localStorage and sort state in sessionStorage. */
   columnStateKey: string;
   /** Tour anchor attribute passed through to the root element. */
   'data-tour'?: string;
@@ -21,7 +21,7 @@ export interface SortDropdownProps<TData> {
  *
  * Renders two option groups: "Sort by" (one option per sortable column) and
  * "Direction" (Ascending / Descending). Uses `useColumnState` to read and
- * write sort state, sharing persistence with the Table component.
+ * write sort state, sharing sessionStorage with the Table component.
  *
  * @typeParam TData - The row data type
  */
@@ -66,10 +66,11 @@ export const SortDropdown = <TData,>({
 
   const handleSelect = (value: string) => {
     if (sortableColumnIds.has(value)) {
+      const isSelected = columnState.sortColumn === value;
       setColumnState({
         ...columnState,
-        sortColumn: value,
-        sortDirection: columnState.sortDirection ?? 'asc',
+        sortColumn: isSelected ? undefined : value,
+        sortDirection: isSelected ? undefined : (columnState.sortDirection ?? 'asc'),
       });
     } else {
       setColumnState({ ...columnState, sortDirection: value as 'asc' | 'desc' });
