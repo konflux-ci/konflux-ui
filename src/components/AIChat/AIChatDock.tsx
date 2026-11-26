@@ -8,6 +8,7 @@ import { AIChatToggle } from '~/components/AIChat/components/AIChatToggle';
 import { useAIChatInit } from '~/components/AIChat/hooks/useAIChatInit';
 import { useAIChatSend } from '~/components/AIChat/hooks/useAIChatSend';
 import { getLightspeedClient } from '~/lightspeed/lightspeedClient';
+import { Portal } from '~/shared/components/Portal/Portal';
 import { useToggle } from '~/shared/hooks/useToggle';
 
 import '@patternfly/chatbot/dist/css/main.css';
@@ -33,19 +34,23 @@ const AIChatDockContent: React.FC = () => {
   const isSendDisabled = isInProgress || !!initError || isInitializing;
 
   return (
-    <div className="ai-chat" data-test="ai-chat-dock">
-      <AIChatToggle isVisible={isVisible} onToggle={handleToggle} />
-      <AIChatPanel isVisible={isVisible}>
-        <AIChatHeader onClose={toggle} />
-        <AIChatMessageList isInitializing={isInitializing} chatError={chatError} />
-        <AIChatFooter
-          isSendDisabled={isSendDisabled}
-          onSend={(message) => {
-            void sendMessage(message);
-          }}
-        />
-      </AIChatPanel>
-    </div>
+    <Portal>
+      <aside aria-label="AI Chat">
+        <div className="ai-chat" data-test="ai-chat-dock">
+          <AIChatToggle isVisible={isVisible} onToggle={handleToggle} />
+          <AIChatPanel isVisible={isVisible}>
+            <AIChatHeader onClose={toggle} />
+            <AIChatMessageList isInitializing={isInitializing} chatError={chatError} />
+            <AIChatFooter
+              isSendDisabled={isSendDisabled}
+              onSend={(message) => {
+                void sendMessage(message);
+              }}
+            />
+          </AIChatPanel>
+        </div>
+      </aside>
+    </Portal>
   );
 };
 
