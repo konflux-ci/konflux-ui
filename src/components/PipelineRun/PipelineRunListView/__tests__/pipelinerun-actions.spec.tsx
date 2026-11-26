@@ -1735,7 +1735,7 @@ describe('usePipelineRunDetailsPageActions', () => {
         label: 'Cancel',
       }),
     );
-    // Download YAML is last (or after view vulnerabilities)
+    // Download YAML is last
     const downloadAction = actions.find((a) => a.label === 'Download YAML');
     expect(downloadAction).toBeDefined();
     // All actions should have onClick

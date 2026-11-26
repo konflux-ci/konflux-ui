@@ -474,7 +474,6 @@ export const usePipelineRunDetailsPageActions = (
   const navigate = useNavigate();
   const rerun = usePipelinererunAction(pipelineRun, redirectPath);
   const [canPatchPipelineRun] = useAccessReviewForModel(PipelineRunModel, 'patch');
-  const viewVulnerabilitiesActions = useViewVulnerabilitiesAction(pipelineRun);
 
   const sharedActions: Action[] = [
     {
@@ -485,8 +484,7 @@ export const usePipelineRunDetailsPageActions = (
       cta: rerun.cta,
     },
     ...buildStopCancelActions(pipelineRun, canPatchPipelineRun),
-    ...viewVulnerabilitiesActions,
-    downloadYamlAction(pipelineRun),
+    ...(pipelineRun ? [downloadYamlAction(pipelineRun)] : []),
   ];
 
   return createDetailsPageActions(sharedActions, navigate);
