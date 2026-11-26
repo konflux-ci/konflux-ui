@@ -475,5 +475,10 @@ export const usePipelinerunActionsLazy = (
   ];
   const downloadYamlHook = useDownloadYamlActionLazy(pipelineRun);
 
-  return composeLazyActions(rerunHook, stopCancelHook, viewVulnerabilitiesActions, downloadYamlHook);
+  return composeLazyActions(
+    rerunHook,
+    stopCancelHook,
+    viewVulnerabilitiesActions,
+    downloadYamlHook,
+  );
 };

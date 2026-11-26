@@ -24,20 +24,25 @@ Scan conversation history, any invocation arguments, and session context (errors
 Do NOT call any Jira create tool until all required fields are collected and confirmed.
 
 ### Step 1 — Determine issue type
+
 If obvious from context or the way the skill was invoked, set type silently. Otherwise ask.
 
 ### Step 2 — Collect title
+
 Propose a title formatted per conventions.md (`[Area] imperative summary`). Ask for approval.
 
 ### Step 3 — Collect description
+
 Use the template from conventions.md for the issue type. Pre-fill from context. Ask only for missing sections. See fill-in guidance below.
 
 ### Step 4 — Collect optional fields
+
 - Component / Labels: ask if configured in conventions.md, skip if marked "skip"
 - Priority: suggest based on conventions.md defaults, let user confirm or override
 - Parent: use if provided in context/args. Ask only if user mentions a parent but didn't give the key. Do NOT ask unprompted.
 
 ### Step 5 — Show and confirm (MANDATORY GATE)
+
 Render the draft, then ask for confirmation. Do NOT call the create tool until the user explicitly confirms.
 
 ```
@@ -73,39 +78,45 @@ jira_create_issue(
 ```
 
 **If MCP NOT available:** Render the same draft format from Step 5 with a note:
+
 > Jira MCP server is not configured. Create this ticket manually at \<Jira URL from conventions.md\>.
 > To enable, configure the `atlassian` MCP server with `pipx run mcp-atlassian --env-file <path>` and reload or restart the active agent host.
 
 ### Step 7 — Post-creation
+
 Report ticket key and URL. If conventions.md has a PR linking rule and there's a current PR, offer to add it as a comment.
 
 ## Fill-in Guidance
 
 ### Bug
-| Section | Guidance |
-|---------|----------|
-| Description of problem | What is broken, where, for whom |
-| How reproducible | Always / Sometimes / One-time |
-| Steps to Reproduce | Numbered steps a stranger could follow, minimum 3. Include preconditions |
-| Actual results | Include error messages, console output |
-| Expected results | Be concrete |
-| Is this a customer issue | Yes or No |
-| Logs/screenshots | Raw errors in fenced code blocks |
+
+| Section                  | Guidance                                                                 |
+| ------------------------ | ------------------------------------------------------------------------ |
+| Description of problem   | What is broken, where, for whom                                          |
+| How reproducible         | Always / Sometimes / One-time                                            |
+| Steps to Reproduce       | Numbered steps a stranger could follow, minimum 3. Include preconditions |
+| Actual results           | Include error messages, console output                                   |
+| Expected results         | Be concrete                                                              |
+| Is this a customer issue | Yes or No                                                                |
+| Logs/screenshots         | Raw errors in fenced code blocks                                         |
 
 ### Task
-| Section | Guidance |
-|---------|----------|
+
+| Section     | Guidance                                                                                          |
+| ----------- | ------------------------------------------------------------------------------------------------- |
 | Description | 3-7 actionable bullet points covering scope, approach, edge cases. Not a restatement of the title |
 
 ### Story
-| Section | Guidance |
-|---------|----------|
+
+| Section             | Guidance                                                                                 |
+| ------------------- | ---------------------------------------------------------------------------------------- |
 | Acceptance Criteria | 3-7 testable criteria using "As a \<user\>, I can \<action\> so that \<outcome\>" format |
-| Notes | Developer notes, design doc links, API specs. Optional — skip if nothing to add |
+| Notes               | Developer notes, design doc links, API specs. Optional — skip if nothing to add          |
 
 ## Anti-patterns
 
 Reject these before confirming:
+
 1. **Vague titles** — "Fix the bug" is bad. "[LogViewer] Fix log line duplication when switching tabs" is good.
 2. **Bugs without repro steps** — all Steps to Reproduce fields must be filled.
 3. **Task descriptions restating the title** — bullets must add detail beyond the summary.
@@ -124,6 +135,7 @@ Reject these before confirming:
 **User:** "Use numbered pagination with a default page size of 20. The API already supports limit/offset."
 
 **Draft:**
+
 ```
 ## Ticket Draft
 
@@ -142,6 +154,7 @@ Reject these before confirming:
 ```
 
 **Tool call after confirmation:**
+
 ```python
 jira_create_issue(
     project_key="KFLUXUI",
@@ -165,6 +178,7 @@ jira_create_issue(
 **User:** "Succeeded, Failed, Running, and Pending. Mockup: https://figma.com/file/abc123"
 
 **Draft:**
+
 ```
 ## Ticket Draft
 
@@ -190,6 +204,7 @@ jira_create_issue(
 ```
 
 **Tool call after confirmation:**
+
 ```python
 jira_create_issue(
     project_key="KFLUXUI",

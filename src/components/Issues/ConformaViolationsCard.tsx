@@ -106,7 +106,10 @@ export const ConformaViolationsCard: React.FC = () => {
           </Flex>
         ) : (
           <>
-            <Flex alignItems={{ default: 'alignItemsCenter' }} spaceItems={{ default: 'spaceItemsSm' }}>
+            <Flex
+              alignItems={{ default: 'alignItemsCenter' }}
+              spaceItems={{ default: 'spaceItemsSm' }}
+            >
               {hasViolations ? (
                 <>
                   <FlexItem>
@@ -117,8 +120,10 @@ export const ConformaViolationsCard: React.FC = () => {
                       <strong>{totalViolations}</strong>{' '}
                       {totalViolations === 1 ? 'policy violation' : 'policy violations'}
                       {totalWarnings > 0 && (
-                        <>, <strong>{totalWarnings}</strong>{' '}
-                        {totalWarnings === 1 ? 'warning' : 'warnings'}</>
+                        <>
+                          , <strong>{totalWarnings}</strong>{' '}
+                          {totalWarnings === 1 ? 'warning' : 'warnings'}
+                        </>
                       )}
                     </Content>
                   </FlexItem>
