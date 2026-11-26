@@ -48,7 +48,7 @@ Use `timeout: false` for pending operations. Info/success/warning may override t
 
 A content update keeps the existing countdown. An explicit timeout update starts a full new duration, even when its numeric value is unchanged; false cancels expiry. Changing variant retains stored lifetime settings except for danger's required policy. When changing a persistent toast into success in place, explicitly set its timeout.
 
-Hovering or focusing inside the toast pauses its remaining time. Countdown resumes only when neither applies. Provider teardown cancels timers and clears records; ordinary route changes do not. Refresh/tab closure does not restore toasts or resume jobs.
+Hovering or focusing inside the toast pauses its remaining time. Countdown resumes only when neither applies. Provider teardown cancels timers and makes old callbacks inert; ordinary route changes do not. Refresh/tab closure does not restore toasts or resume jobs.
 
 Each toast uses one timer controller with PatternFly Alert timeout disabled. Resetting a timer must not remount focused content, and stale timer callbacks must not remove refreshed records.
 

@@ -386,12 +386,18 @@ describe('ToastProvider', () => {
         <CaptureApi />
       </ToastProvider>,
     );
+    let liveId = '';
+    act(() => {
+      liveId = oldApi?.addToast({ title: 'Live toast' }) ?? '';
+    });
     view.unmount();
 
     act(() => {
-      oldApi?.addToast({ title: 'Stale toast' });
-      oldApi?.updateToast('stale-id', { title: 'Still stale' });
-      oldApi?.removeToast('stale-id');
+      const staleId = oldApi?.addToast({ title: 'Stale toast' }) ?? '';
+      expect(() => oldApi?.updateToast(liveId, { timeout: -1 })).not.toThrow();
+      expect(() => oldApi?.updateToast(staleId, { timeout: -1 })).not.toThrow();
+      oldApi?.removeToast(liveId);
+      oldApi?.removeToast(staleId);
     });
 
     render(

@@ -67,13 +67,24 @@ export const useToast = (): ToastApi => {
 export const ToastProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
   const [toasts, setToasts] = React.useState<ToastRecord[]>([]);
   const toastRecords = React.useRef(new Map<ToastId, ToastRecord>());
+  const isActive = React.useRef(true);
   const providerId = React.useId();
   const nextToastId = React.useRef(0);
+
+  // Layout effects replay before child passive effects under StrictMode, so consumers'
+  // effect setup and cleanup always see an active provider; only a real unmount stays inactive.
+  React.useLayoutEffect(() => {
+    isActive.current = true;
+    return () => {
+      isActive.current = false;
+    };
+  }, []);
 
   const addToast = React.useCallback(
     (options: ToastOptions): ToastId => {
       validateOptions(options, true);
       const id = `${providerId}-${nextToastId.current++}`;
+      if (!isActive.current) return id;
       const toast = normalizeToast(id, options);
       toastRecords.current.set(id, toast);
       setToasts(Array.from(toastRecords.current.values()));
@@ -84,7 +95,7 @@ export const ToastProvider: React.FC<React.PropsWithChildren> = ({ children }) =
 
   const updateToast = React.useCallback((id: ToastId, patch: Partial<ToastOptions>): void => {
     const existing = toastRecords.current.get(id);
-    if (!existing) return;
+    if (!existing || !isActive.current) return;
 
     validateOptions(patch);
     const update = Object.fromEntries(
