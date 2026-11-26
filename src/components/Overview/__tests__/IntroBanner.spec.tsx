@@ -10,7 +10,7 @@ describe('IntroBanner', () => {
   it('should render the intro banner with correct title and description', () => {
     routerRenderer(<IntroBanner />);
 
-    expect(screen.getByText('Get started with Konflux')).toBeInTheDocument();
+    expect(screen.getByText('Get started with Konflux! This is a test!')).toBeInTheDocument();
     expect(
       screen.getByText(
         'Konflux makes it easy to securely build, test and release your software projects to a wide variety of targets.',
