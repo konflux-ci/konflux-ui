@@ -10,14 +10,6 @@ Proposed
 
 [ADR 0071](https://github.com/konflux-ci/architecture/blob/main/ADR/0071-konflux-labels-annotations-finalizers.md) replaces `appstudio.*` labels, annotations, and finalizers with `konflux-ci.dev` equivalents. [ADR 0056](https://github.com/konflux-ci/architecture/blob/main/ADR/0056-revised-component-model.md) introduces a second Component model (`konflux-ci.dev/v1alpha1`, see `src/models/component-v2.ts`) that coexists with the legacy `appstudio.redhat.com/v1alpha1` model. The UI must read and query both metadata families for an extended transition.
 
-Upstream state at the time of writing:
-
-| Service | State |
-| --- | --- |
-| build-service | Separate controllers per Component model. The new controller writes `build.konflux-ci.dev/component` and `pipelines.konflux-ci.dev/type` as labels, and `build.konflux-ci.dev/version` as an **annotation**. |
-| integration-service | `pkg/keys` already implements old/new key pairs, new-key-preferred reads, style detection, and dual-list queries with UID deduplication. Snapshot creation still mostly writes legacy labels. |
-| release-service | Not migrated. Still uses `appstudio.openshift.io/*` and `release.appstudio.openshift.io/*` labels and the legacy release finalizer. |
-
 Current UI behaviour:
 
 - Label keys are raw constants (`PipelineRunLabel` in `src/consts/pipelinerun.ts`) read directly by hooks, filters, rows, and utilities.
@@ -92,7 +84,7 @@ type PipelineRunQuery = {
 ```
 
 - `in` is an exact match and can become a label selector expression.
-- `contains` is a case-insensitive substring match (today's `textMatch` behaviour, for example the version filter). Kubernetes selectors cannot express it, so it is always a client filter for Kubernetes/KubeArchive and a CEL `.contains()` for Tekton Results.
+- `contains` is a case-insensitive substring match (today's `textMatch` behaviour, for example the version filter). Kubernetes selectors cannot express it, so it is always a client filter for Kubernetes/KubeArchive. CEL `.contains()` is case-sensitive, so the Tekton Results adapter must normalise case on both operands (for example `lowerAscii()` on the field and a lower-cased literal) to keep the same semantics; if the Tekton Results CEL environment does not support that normalisation, `contains` stays a client filter for Tekton Results too.
 - The query covers **metadata conditions only**. Existing non-metadata selector extensions (`filterByName`, `filterByCreationTimestampAfter`, `filterByCommit`) are passed through unchanged alongside the generated selector, so constraints such as excluding archived runs of a previously deleted component with the same name keep working.
 
 ### 4. Backend query plans
@@ -115,7 +107,7 @@ type PipelineRunK8sQueryPlan = {
 3. returns one selector for a style-scoped query;
 4. returns one selector per style for a mixed query (see below).
 
-**Tekton Results:** `toPipelineRunTektonResultsFilter(query)` produces CEL from the same query. Labels and annotations can both be pushed down, and old/new bindings can be OR-ed in one expression, reusing the existing `AND` / `OR` / `IN` helpers in `src/utils/tekton-results.ts`.
+**Tekton Results:** `toPipelineRunTektonResultsFilter(query)` produces CEL from the same query. Labels and annotations can both be pushed down, and old/new bindings can be OR-ed in one expression, reusing the existing `AND` / `OR` / `EQ` / `NEQ` / `IN` / `CONTAINS` helpers in `src/utils/tekton-results.ts`. Those helpers wrap values in double quotes without escaping, so before label or annotation bindings use them, every interpolated value must be escaped as a CEL string literal (at minimum backslashes and double quotes); otherwise a value containing `"` produces invalid CEL or injects extra clauses.
 
 Example — new Component model, filtering by component and version:
 
@@ -192,7 +184,6 @@ The upstream fix is to make `build.konflux-ci.dev/version` (or an equivalent) a 
 - **Full immediate cross-resource refactor (mandatory view models for all resources, generic query AST, `usePipelineRunsV2` rewrite)** — the eventual direction, but too large to review and verify in one change and blocked on upstream services that have not migrated. Rejected for now; the phased path keeps it reachable.
 - **Global `selectorSafe` flag on bindings** — rejected because selector safety depends on the backend (Kubernetes vs Tekton Results CEL).
 - **Feature-flag-driven metadata selection** — rejected; couples data contracts to user-visible gating and breaks when both models coexist.
-- **Server-side normalised API / BFF** — best long-term end state (stable DTOs, no compatibility code in the browser) but requires a new API surface and cross-team work. Out of scope; this layer is designed so it can be replaced by such an API later.
 
 ## Consequences
 
@@ -201,15 +192,12 @@ The upstream fix is to make `build.konflux-ci.dev/version` (or an equivalent) a 
 - Annotation-backed fields are explicit client filters, so pagination cost is visible and testable instead of hidden.
 - Tekton Results and Kubernetes backends share one query model; Tekton Results can serve mixed queries in one request.
 - Cost: an initial module plus contract tests, and a per-view migration in later phases. Client-side filtering for `componentVersion` on Kubernetes/KubeArchive remains until build-service makes version a label.
-- Open questions: whether build-service will move `build.konflux-ci.dev/version` to a label; when integration-service and release-service ship new Snapshot and Release metadata; which views genuinely need mixed lists.
+- Open questions: whether build-service will move `build.konflux-ci.dev/version` to a label (tracked in [build-service#812](https://github.com/konflux-ci/build-service/issues/812)); when integration-service and release-service ship new Snapshot and Release metadata; which views genuinely need mixed lists.
 
 ## Links
 
 - [ADR 0071 — Replace Appstudio Labels, Annotations, and Finalizers with Konflux equivalents](https://github.com/konflux-ci/architecture/blob/main/ADR/0071-konflux-labels-annotations-finalizers.md)
 - [ADR 0056 — Revised Component Model](https://github.com/konflux-ci/architecture/blob/main/ADR/0056-revised-component-model.md)
 - [konflux-ui PR #1836](https://github.com/konflux-ci/konflux-ui/pull/1836)
-- [integration-service `pkg/keys`](https://github.com/konflux-ci/integration-service/tree/main/pkg/keys)
-- [Kubernetes labels and selectors](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/)
-- [Kubernetes annotations](https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/)
 - [KubeArchive integration](../kubearchive.md)
 - [Filter system](../guidelines/filter-system.md)
