@@ -394,6 +394,7 @@ describe('ToastProvider', () => {
 
     act(() => {
       const staleId = oldApi?.addToast({ title: 'Stale toast' }) ?? '';
+      expect(() => oldApi?.addToast({ title: '' })).not.toThrow();
       expect(() => oldApi?.updateToast(liveId, { timeout: -1 })).not.toThrow();
       expect(() => oldApi?.updateToast(staleId, { timeout: -1 })).not.toThrow();
       oldApi?.removeToast(liveId);

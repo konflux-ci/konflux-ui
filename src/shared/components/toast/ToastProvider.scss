@@ -2,7 +2,6 @@
   max-height: calc(100vh - var(--pf-t--global--spacer--md) * 2);
   overflow-y: auto;
   overflow-x: hidden;
-  padding: var(--pf-t--global--spacer--md);
   pointer-events: none;
   width: min(100vw, 36rem);
 }

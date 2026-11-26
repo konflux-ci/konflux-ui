@@ -82,9 +82,9 @@ export const ToastProvider: React.FC<React.PropsWithChildren> = ({ children }) =
 
   const addToast = React.useCallback(
     (options: ToastOptions): ToastId => {
-      validateOptions(options, true);
       const id = `${providerId}-${nextToastId.current++}`;
       if (!isActive.current) return id;
+      validateOptions(options, true);
       const toast = normalizeToast(id, options);
       toastRecords.current.set(id, toast);
       setToasts(Array.from(toastRecords.current.values()));
@@ -127,7 +127,12 @@ export const ToastProvider: React.FC<React.PropsWithChildren> = ({ children }) =
   return (
     <ToastContext.Provider value={value}>
       {children}
-      <AlertGroup aria-label="Notifications" className="toast-alert-group" isLiveRegion isToast>
+      <AlertGroup
+        aria-label="Notifications"
+        className="toast-alert-group pf-v6-u-p-md"
+        isLiveRegion
+        isToast
+      >
         {[...toasts].reverse().map((toast) => (
           <ToastItem key={toast.id} onRemove={removeToast} toast={toast} />
         ))}
