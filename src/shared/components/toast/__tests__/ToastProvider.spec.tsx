@@ -345,6 +345,36 @@ describe('ToastProvider', () => {
     expect(screen.getByText('First toast')).toBeInTheDocument();
   });
 
+  it('keeps a toast added from a child effect removable under StrictMode replay', async () => {
+    const user = userEvent.setup();
+    const EffectToast = () => {
+      const { addToast, removeToast } = useToast();
+      const toastId = React.useRef('');
+
+      React.useEffect(() => {
+        const id = addToast({ title: 'Effect toast' });
+        toastId.current = id;
+        return () => removeToast(id);
+      }, [addToast, removeToast]);
+
+      return <button onClick={() => removeToast(toastId.current)}>Remove effect toast</button>;
+    };
+
+    render(
+      <React.StrictMode>
+        <ToastProvider>
+          <EffectToast />
+        </ToastProvider>
+      </React.StrictMode>,
+    );
+
+    expect(screen.getAllByText('Effect toast')).toHaveLength(1);
+
+    await user.click(screen.getByRole('button', { name: 'Remove effect toast' }));
+
+    expect(screen.queryByText('Effect toast')).not.toBeInTheDocument();
+  });
+
   it('makes callbacks from a torn-down provider inert', () => {
     let oldApi: ToastApi | undefined;
     const CaptureApi = () => {

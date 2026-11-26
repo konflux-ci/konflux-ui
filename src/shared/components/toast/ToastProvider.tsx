@@ -67,26 +67,14 @@ export const useToast = (): ToastApi => {
 export const ToastProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
   const [toasts, setToasts] = React.useState<ToastRecord[]>([]);
   const toastRecords = React.useRef(new Map<ToastId, ToastRecord>());
-  const isActive = React.useRef(true);
   const providerId = React.useId();
   const nextToastId = React.useRef(0);
-
-  React.useEffect(() => {
-    isActive.current = true;
-    const records = toastRecords.current;
-    return () => {
-      isActive.current = false;
-      records.clear();
-    };
-  }, []);
 
   const addToast = React.useCallback(
     (options: ToastOptions): ToastId => {
       validateOptions(options, true);
       const id = `${providerId}-${nextToastId.current++}`;
       const toast = normalizeToast(id, options);
-      if (!isActive.current) return id;
-
       toastRecords.current.set(id, toast);
       setToasts(Array.from(toastRecords.current.values()));
       return id;
@@ -95,7 +83,6 @@ export const ToastProvider: React.FC<React.PropsWithChildren> = ({ children }) =
   );
 
   const updateToast = React.useCallback((id: ToastId, patch: Partial<ToastOptions>): void => {
-    if (!isActive.current) return;
     const existing = toastRecords.current.get(id);
     if (!existing) return;
 
@@ -116,7 +103,7 @@ export const ToastProvider: React.FC<React.PropsWithChildren> = ({ children }) =
   }, []);
 
   const removeToast = React.useCallback((id: ToastId): void => {
-    if (!isActive.current || !toastRecords.current.has(id)) return;
+    if (!toastRecords.current.has(id)) return;
     toastRecords.current.delete(id);
     setToasts(Array.from(toastRecords.current.values()));
   }, []);
