@@ -1,17 +1,23 @@
 import ActionMenu from '~/shared/components/action-menu/ActionMenu';
+import { ComponentKind } from '~/types';
 import { useComponentV2Actions } from './component-v2-actions';
 
 type ComponentActionsCellProps = {
-  componentName?: string;
+  component?: ComponentKind;
+  version?: string;
   label?: string;
 };
 
-const ComponentActionsCell: React.FC<ComponentActionsCellProps> = ({ componentName, label }) => {
-  const actions = useComponentV2Actions(componentName);
+const ComponentActionsCell: React.FC<ComponentActionsCellProps> = ({
+  component,
+  version,
+  label,
+}) => {
+  const actions = useComponentV2Actions(component, version);
   return (
     <ActionMenu
       actions={actions}
-      label={label ?? (componentName ? `Actions for ${componentName}` : undefined)}
+      label={label ?? (component ? `Actions for ${component.metadata?.name}` : undefined)}
     />
   );
 };

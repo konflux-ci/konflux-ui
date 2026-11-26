@@ -85,6 +85,6 @@ export const componentsTableColumns: ColumnDefinition<ComponentKind>[] = [
     id: 'actions',
     header: ' ',
     accessorFn: () => null,
-    cell: (info) => <ComponentActionsCell componentName={info.row.original.metadata?.name} />,
+    cell: (info) => <ComponentActionsCell component={info.row.original} />,
   },
 ];

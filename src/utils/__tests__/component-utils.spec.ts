@@ -4,13 +4,14 @@ import {
   mockPrivateImageRepository,
   mockPublicImageRepository,
 } from '~/__data__/image-repository-data';
-import { ComponentModel, ImageRepositoryModel } from '~/models';
+import { ComponentModel, ComponentModelV2, ImageRepositoryModel } from '~/models';
 import { ComponentKind, ImageRepositoryVisibility } from '~/types';
 import {
   isPACEnabled,
   useComponentBuildStatus,
   BUILD_STATUS_ANNOTATION,
   startNewBuild,
+  startNewBuildV2,
   BUILD_REQUEST_ANNOTATION,
   BuildRequest,
   getLastestImage,
@@ -464,5 +465,68 @@ describe('getPipelineName', () => {
 
   it('should return "-" when definition has no name fields', () => {
     expect(getPipelineName({ 'pull-and-push': {} }, undefined)).toBe('-');
+  });
+});
+
+describe('startNewBuildV2', () => {
+  const component = {
+    metadata: { name: 'comp', namespace: 'test-ns' },
+    spec: { actions: { 'create-pipeline-configuration-pr': { 'all-versions': true } } },
+  } as ComponentKind;
+
+  it('should trigger a single-version build via trigger-push-build and keep existing actions', async () => {
+    await startNewBuildV2(component, ['v1']);
+
+    expect(k8sPatchResourceMock).toHaveBeenCalledWith({
+      model: ComponentModelV2,
+      queryOptions: { name: 'comp', ns: 'test-ns' },
+      patches: [
+        {
+          op: 'add',
+          path: '/spec/actions',
+          value: {
+            'create-pipeline-configuration-pr': { 'all-versions': true },
+            'trigger-push-build': 'v1',
+          },
+        },
+      ],
+    });
+  });
+
+  it('should trigger a multi-version build via trigger-push-builds', async () => {
+    const componentWithoutActions = { ...component, spec: {} } as ComponentKind;
+
+    await startNewBuildV2(componentWithoutActions, ['v1', 'v2']);
+
+    expect(k8sPatchResourceMock).toHaveBeenCalledWith({
+      model: ComponentModelV2,
+      queryOptions: { name: 'comp', ns: 'test-ns' },
+      patches: [
+        { op: 'add', path: '/spec/actions', value: { 'trigger-push-builds': ['v1', 'v2'] } },
+      ],
+    });
+  });
+
+  it('should replace stale trigger keys from previous build requests', async () => {
+    const componentWithStaleActions = {
+      ...component,
+      spec: { actions: { 'trigger-push-builds': ['old-v1', 'old-v2'] } },
+    } as ComponentKind;
+
+    await startNewBuildV2(componentWithStaleActions, ['v1']);
+
+    expect(k8sPatchResourceMock).toHaveBeenCalledWith({
+      model: ComponentModelV2,
+      queryOptions: { name: 'comp', ns: 'test-ns' },
+      patches: [{ op: 'add', path: '/spec/actions', value: { 'trigger-push-build': 'v1' } }],
+    });
+  });
+
+  it('should do nothing when no versions are given', async () => {
+    k8sPatchResourceMock.mockClear();
+
+    await startNewBuildV2(component, []);
+
+    expect(k8sPatchResourceMock).not.toHaveBeenCalled();
   });
 });
