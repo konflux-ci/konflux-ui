@@ -9,14 +9,29 @@ import {
   mockUseNamespaceHook,
   renderWithQueryClientAndRouter,
 } from '~/unit-test-utils';
-import { useAccessReviewForModel } from '~/utils/rbac';
 import NamespacePipelineRunDetailsView from '../NamespacePipelineRunDetailsView';
 
 jest.mock('~/hooks/usePipelineRunsV2', () => ({ usePipelineRunV2: jest.fn() }));
-jest.mock('~/utils/rbac', () => ({ useAccessReviewForModel: jest.fn() }));
 jest.mock('~/hooks/useStatusOnFavicon', () => ({ useStatusOnFavicon: jest.fn() }));
 jest.mock('~/components/PipelineRun/PipelineRunListView/pipelinerun-actions', () => ({
-  usePipelinererunAction: () => ({ key: 'rerun', label: 'Rerun', isDisabled: true }),
+  usePipelineRunDetailsPageActions: () => [
+    { key: 'rerun', label: 'Rerun', isDisabled: true, onClick: jest.fn() },
+    {
+      key: 'pipelinerun-stop',
+      label: 'Stop',
+      isDisabled: true,
+      disabledTooltip: "You don't have access to stop this pipeline",
+      onClick: jest.fn(),
+    },
+    {
+      key: 'pipelinerun-cancel',
+      label: 'Cancel',
+      isDisabled: true,
+      disabledTooltip: "You don't have access to cancel this pipeline",
+      onClick: jest.fn(),
+    },
+    { key: 'download-pipelinerun-yaml', label: 'Download YAML', onClick: jest.fn() },
+  ],
 }));
 
 describe('NamespacePipelineRunDetailsView', () => {
@@ -34,7 +49,6 @@ describe('NamespacePipelineRunDetailsView', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     jest.mocked(usePipelineRunV2).mockReturnValue([run, true, undefined]);
-    jest.mocked(useAccessReviewForModel).mockReturnValue([false, true]);
     window.history.replaceState({}, '', '/ns/team/pipelineruns/build-1');
   });
 

@@ -2,6 +2,7 @@ import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { TrackEvents } from '~/analytics';
 import { useTrackAnalyticsEvent } from '~/analytics/hooks';
+import { createDetailsPageActions } from '~/components/DetailsPage/utils';
 import { useViewVulnerabilitiesAction } from '~/components/PipelineRun/PipelineRunListView/useViewVulnerabilitiesAction';
 import { useSnapshot } from '~/hooks/useSnapshots';
 import { PIPELINE_RUNS_LIST_PATH } from '~/routes/paths';
@@ -25,6 +26,7 @@ import { pipelineRunCancel, pipelineRunStop } from '../../../utils/pipeline-acti
 import { pipelineRunStatus } from '../../../utils/pipeline-utils';
 import { isCancellableStatus } from '../../../utils/plr-status-config';
 import { useAccessReviewForModel } from '../../../utils/rbac';
+import type { Action as DetailsPageAction } from '../../DetailsPage/types';
 
 export const BUILD_REQUEST_LABEL = 'test.appstudio.openshift.io/run';
 const PIPELINE_RUN_CANCELLING_MESSAGE = 'Cannot rerun while the pipeline run is being cancelled';
@@ -207,6 +209,33 @@ export const usePipelinererunAction = (
   ]);
 };
 
+/** Shared stop/cancel action definitions used by list and details views. */
+export const buildStopCancelActions = (
+  pipelineRun: PipelineRunKind,
+  canPatch: boolean,
+): Action[] => {
+  const status = pipelineRunStatus(pipelineRun);
+  const isRunning = status === runStatus.Running;
+  return [
+    {
+      cta: () => pipelineRunStop(pipelineRun),
+      id: 'pipelinerun-stop',
+      label: 'Stop',
+      tooltip: 'Let the running tasks complete, then execute "finally" tasks',
+      disabled: !isRunning || !canPatch,
+      disabledTooltip: !canPatch ? "You don't have access to stop this pipeline" : undefined,
+    },
+    {
+      cta: () => pipelineRunCancel(pipelineRun),
+      id: 'pipelinerun-cancel',
+      label: 'Cancel',
+      tooltip: 'Cancel this pipeline run',
+      disabled: !isCancellableStatus(pipelineRun) || !canPatch,
+      disabledTooltip: !canPatch ? "You don't have access to cancel this pipeline" : undefined,
+    },
+  ];
+};
+
 /**
  * @deprecated use usePipelinerunActionsLazy instead
  */
@@ -223,26 +252,7 @@ export const usePipelinerunActions = (pipelineRun: PipelineRunKind): Action[] =>
       disabledTooltip,
       cta,
     },
-    {
-      cta: () => pipelineRunStop(pipelineRun),
-      id: 'pipelinerun-stop',
-      label: 'Stop',
-      tooltip: 'Let the running tasks complete, then execute "finally" tasks',
-      disabled: !(pipelineRunStatus(pipelineRun) === runStatus.Running) || !canPatchPipelineRun,
-      disabledTooltip: !canPatchPipelineRun
-        ? "You don't have access to stop this pipeline"
-        : undefined,
-    },
-    {
-      cta: () => pipelineRunCancel(pipelineRun),
-      id: 'pipelinerun-cancel',
-      label: 'Cancel',
-      tooltip: 'Cancel this pipeline run',
-      disabled: !isCancellableStatus(pipelineRun) || !canPatchPipelineRun,
-      disabledTooltip: !canPatchPipelineRun
-        ? "You don't have access to cancel this pipeline"
-        : undefined,
-    },
+    ...buildStopCancelActions(pipelineRun, canPatchPipelineRun),
   ];
 };
 
@@ -429,29 +439,7 @@ export const useStopCancelActionsLazy = (
   const [canPatchPipelineRun] = useAccessReviewForModel(PipelineRunModel, 'patch');
 
   return useLazyActionMenu({
-    buildActions: () => {
-      const canPatch = canPatchPipelineRun;
-      const status = pipelineRunStatus(pipelineRun);
-      const isRunning = status === runStatus.Running;
-      return [
-        {
-          cta: () => pipelineRunStop(pipelineRun),
-          id: 'pipelinerun-stop',
-          label: 'Stop',
-          tooltip: 'Let the running tasks complete, then execute "finally" tasks',
-          disabled: !isRunning || !canPatch,
-          disabledTooltip: !canPatch ? "You don't have access to stop this pipeline" : undefined,
-        },
-        {
-          cta: () => pipelineRunCancel(pipelineRun),
-          id: 'pipelinerun-cancel',
-          label: 'Cancel',
-          tooltip: 'Cancel this pipeline run',
-          disabled: !isCancellableStatus(pipelineRun) || !canPatch,
-          disabledTooltip: !canPatch ? "You don't have access to cancel this pipeline" : undefined,
-        },
-      ];
-    },
+    buildActions: () => buildStopCancelActions(pipelineRun, canPatchPipelineRun),
   });
 };
 
@@ -476,4 +464,28 @@ export const usePipelinerunActionsLazy = (
   const downloadYamlHook = useDownloadYamlActionLazy(pipelineRun);
 
   return composeLazyActions(rerunHook, stopCancelHook, viewVulnerabilitiesActions, downloadYamlHook);
+};
+
+/** Returns all PipelineRun actions converted to the DetailsPage action shape. */
+export const usePipelineRunDetailsPageActions = (
+  pipelineRun: PipelineRunKind,
+  redirectPath?: string,
+): DetailsPageAction[] => {
+  const navigate = useNavigate();
+  const rerun = usePipelinererunAction(pipelineRun, redirectPath);
+  const [canPatchPipelineRun] = useAccessReviewForModel(PipelineRunModel, 'patch');
+
+  const sharedActions: Action[] = [
+    {
+      id: rerun.key,
+      label: rerun.label,
+      disabled: rerun.isDisabled,
+      disabledTooltip: rerun.disabledTooltip ?? undefined,
+      cta: rerun.cta,
+    },
+    ...buildStopCancelActions(pipelineRun, canPatchPipelineRun),
+    ...(pipelineRun ? [downloadYamlAction(pipelineRun)] : []),
+  ];
+
+  return createDetailsPageActions(sharedActions, navigate);
 };

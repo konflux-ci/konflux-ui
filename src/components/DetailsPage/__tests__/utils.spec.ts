@@ -65,4 +65,19 @@ describe('createDetailsPageActions', () => {
 
     expect(navigate).not.toHaveBeenCalled();
   });
+
+  it('maps tooltip to tooltipProps', () => {
+    const [action] = createDetailsPageActions(
+      [{ ...baseAction, tooltip: 'Helpful tooltip' }],
+      jest.fn(),
+    );
+
+    expect(action.tooltipProps).toEqual({ content: 'Helpful tooltip' });
+  });
+
+  it('does not set tooltipProps when tooltip is absent', () => {
+    const [action] = createDetailsPageActions([baseAction], jest.fn());
+
+    expect(action.tooltipProps).toBeUndefined();
+  });
 });

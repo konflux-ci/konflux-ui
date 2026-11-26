@@ -13,10 +13,12 @@ import { useAccessReviewForModel } from '../../../../utils/rbac';
 import { createK8sWatchResourceMock } from '../../../../utils/test-utils';
 import { mockComponent } from '../../../Components/ComponentDetails/__data__/mockComponentDetails';
 import {
+  buildStopCancelActions,
   useDownloadYamlActionLazy,
   usePipelinererunAction,
   usePipelinerunActions,
   usePipelinerunActionsLazy,
+  usePipelineRunDetailsPageActions,
   useRerunActionLazy,
   useStopCancelActionsLazy,
 } from '../pipelinerun-actions';
@@ -1585,6 +1587,205 @@ describe('useRerunActionLazy', () => {
         model: expect.any(Object),
         queryOptions: { ns: 'test-ns', name: 'test-component' },
       });
+    });
+  });
+});
+
+describe('buildStopCancelActions', () => {
+  it('should return enabled Stop and Cancel for a running pipelinerun with patch access', () => {
+    const pipelineRun = {
+      metadata: {
+        labels: {
+          'pipelines.appstudio.openshift.io/type': 'build',
+          [PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL]: PipelineRunEventType.PUSH,
+        },
+      },
+      status: { conditions: [{ type: 'Succeeded', status: runStatus.Running }] },
+    } as unknown as PipelineRunKind;
+
+    const actions = buildStopCancelActions(pipelineRun, true);
+
+    expect(actions).toHaveLength(2);
+    expect(actions[0]).toEqual(
+      expect.objectContaining({
+        id: 'pipelinerun-stop',
+        label: 'Stop',
+        disabled: false,
+        disabledTooltip: undefined,
+      }),
+    );
+    expect(actions[1]).toEqual(
+      expect.objectContaining({
+        id: 'pipelinerun-cancel',
+        label: 'Cancel',
+        disabled: false,
+        disabledTooltip: undefined,
+      }),
+    );
+  });
+
+  it('should disable Stop and Cancel when user lacks patch permission', () => {
+    const pipelineRun = {
+      metadata: {
+        labels: {
+          'pipelines.appstudio.openshift.io/type': 'build',
+          [PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL]: PipelineRunEventType.PUSH,
+        },
+      },
+      status: { conditions: [{ type: 'Succeeded', status: runStatus.Running }] },
+    } as unknown as PipelineRunKind;
+
+    const actions = buildStopCancelActions(pipelineRun, false);
+
+    expect(actions[0]).toEqual(
+      expect.objectContaining({
+        label: 'Stop',
+        disabled: true,
+        disabledTooltip: "You don't have access to stop this pipeline",
+      }),
+    );
+    expect(actions[1]).toEqual(
+      expect.objectContaining({
+        label: 'Cancel',
+        disabled: true,
+        disabledTooltip: "You don't have access to cancel this pipeline",
+      }),
+    );
+  });
+
+  it('should disable Stop for non-running pipeline but enable Cancel for cancellable status', () => {
+    const pendingPipelineRun = testPipelineRuns[DataState.PIPELINE_RUN_PENDING];
+    const pipelineRun = {
+      metadata: {
+        labels: {
+          'pipelines.appstudio.openshift.io/type': 'build',
+          [PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL]: PipelineRunEventType.PUSH,
+        },
+      },
+      spec: pendingPipelineRun.spec,
+      status: pendingPipelineRun.status,
+    } as unknown as PipelineRunKind;
+
+    const actions = buildStopCancelActions(pipelineRun, true);
+
+    expect(actions[0]).toEqual(
+      expect.objectContaining({
+        label: 'Stop',
+        disabled: true,
+      }),
+    );
+    expect(actions[1]).toEqual(
+      expect.objectContaining({
+        label: 'Cancel',
+        disabled: false,
+      }),
+    );
+  });
+});
+
+describe('usePipelineRunDetailsPageActions', () => {
+  let navigateMock: jest.Mock;
+
+  beforeEach(() => {
+    navigateMock = jest.fn();
+    useNavigateMock.mockImplementation(() => navigateMock);
+    useAccessReviewForModelMock.mockReturnValue([true, true]);
+    useComponentMock.mockReturnValue([mockComponent, true]);
+    mockUseSnapshots.mockReturnValue([{ metadata: { name: 'snp1' } }, true]);
+    mockUseLocation.mockReturnValue({
+      pathname: '/ns/test-ns',
+      search: '',
+      hash: '',
+      state: {},
+      key: 'test',
+    });
+  });
+
+  it('should return DetailsPage-shaped actions with key, label, onClick', () => {
+    const pipelineRun = {
+      metadata: {
+        labels: {
+          'pipelines.appstudio.openshift.io/type': 'build',
+          [PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL]: PipelineRunEventType.PUSH,
+        },
+      },
+      status: { conditions: [{ type: 'Succeeded', status: runStatus.Running }] },
+    } as unknown as PipelineRunKind;
+
+    const { result } = renderHook(() => usePipelineRunDetailsPageActions(pipelineRun));
+
+    const actions = result.current;
+    // Should have at least: Rerun, Stop, Cancel, Download YAML
+    expect(actions.length).toBeGreaterThanOrEqual(4);
+    expect(actions[0]).toEqual(
+      expect.objectContaining({
+        key: 'rerun',
+        label: 'Rerun',
+      }),
+    );
+    expect(actions[1]).toEqual(
+      expect.objectContaining({
+        key: 'pipelinerun-stop',
+        label: 'Stop',
+      }),
+    );
+    expect(actions[2]).toEqual(
+      expect.objectContaining({
+        key: 'pipelinerun-cancel',
+        label: 'Cancel',
+      }),
+    );
+    // Download YAML is last
+    const downloadAction = actions.find((a) => a.label === 'Download YAML');
+    expect(downloadAction).toBeDefined();
+    // All actions should have onClick
+    for (const action of actions) {
+      expect(typeof action.onClick).toBe('function');
+    }
+  });
+
+  it('should disable stop/cancel when user lacks patch permission', () => {
+    useAccessReviewForModelMock.mockReturnValue([false, true]);
+    const pipelineRun = {
+      metadata: {
+        labels: {
+          'pipelines.appstudio.openshift.io/type': 'build',
+          [PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL]: PipelineRunEventType.PUSH,
+        },
+      },
+      status: { conditions: [{ type: 'Succeeded', status: runStatus.Running }] },
+    } as unknown as PipelineRunKind;
+
+    const { result } = renderHook(() => usePipelineRunDetailsPageActions(pipelineRun));
+
+    const actions = result.current;
+    const stopAction = actions.find((a) => a.key === 'pipelinerun-stop');
+    const cancelAction = actions.find((a) => a.key === 'pipelinerun-cancel');
+    expect(stopAction?.isDisabled).toBe(true);
+    expect(cancelAction?.isDisabled).toBe(true);
+  });
+
+  it('should map tooltip to tooltipProps for stop and cancel actions', () => {
+    const pipelineRun = {
+      metadata: {
+        labels: {
+          'pipelines.appstudio.openshift.io/type': 'build',
+          [PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL]: PipelineRunEventType.PUSH,
+        },
+      },
+      status: { conditions: [{ type: 'Succeeded', status: runStatus.Running }] },
+    } as unknown as PipelineRunKind;
+
+    const { result } = renderHook(() => usePipelineRunDetailsPageActions(pipelineRun));
+
+    const actions = result.current;
+    const stopAction = actions.find((a) => a.key === 'pipelinerun-stop');
+    const cancelAction = actions.find((a) => a.key === 'pipelinerun-cancel');
+    expect(stopAction?.tooltipProps).toEqual({
+      content: 'Let the running tasks complete, then execute "finally" tasks',
+    });
+    expect(cancelAction?.tooltipProps).toEqual({
+      content: 'Cancel this pipeline run',
     });
   });
 });
