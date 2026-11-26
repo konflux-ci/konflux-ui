@@ -372,6 +372,8 @@ describe('PipelineRunsListViewV2', () => {
         }),
       }),
     );
+    const [, options] = usePipelineRunsV2Mock.mock.calls[0];
+    expect(options.selector.matchLabels).not.toHaveProperty(PipelineRunLabel.V2_PIPELINE_TYPE);
   });
 
   it('should not include component version label in selector for the new component model', () => {
@@ -450,6 +452,23 @@ describe('PipelineRunsListViewV2', () => {
     await waitFor(() => {
       expect(screen.queryByText('basic-node-js-second')).toBeInTheDocument();
       expect(screen.queryByText('basic-node-js-first')).not.toBeInTheDocument();
+    });
+  });
+
+  it('should show TEST runs when the type filter selects TEST', async () => {
+    const view = renderWithQueryClient(<TestedComponentV2 />);
+
+    const typeFilter = screen.getByRole('button', { name: /type filter menu/i });
+    fireEvent.click(typeFilter);
+
+    const testOption = screen.getByLabelText(/test/i, { selector: 'input' });
+    fireEvent.click(testOption);
+
+    view.rerender(<TestedComponentV2 />);
+
+    await waitFor(() => {
+      expect(screen.queryByText('basic-node-js-first')).toBeInTheDocument();
+      expect(screen.queryByText('basic-node-js-second')).not.toBeInTheDocument();
     });
   });
 

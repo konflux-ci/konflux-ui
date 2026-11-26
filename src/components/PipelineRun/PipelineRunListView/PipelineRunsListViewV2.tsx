@@ -27,7 +27,7 @@ import { useNamespace } from '../../../shared/providers/Namespace';
 import { PipelineRunKind } from '../../../types';
 import { statuses } from '../../../utils/commits-utils';
 import {
-  getPipelineRunSelector,
+  getPipelineRunComponentSelector,
   getPipelineRunLabel,
   matchesPipelineRunVersion,
   NEW_COMPONENT_PIPELINE_RUN_LABELS,
@@ -79,14 +79,13 @@ const PipelineRunsListViewV2: React.FC<React.PropsWithChildren<PipelineRunsListV
           selector: {
             filterByCreationTimestampAfter: component?.metadata?.creationTimestamp,
             filterByName: nameFilter || undefined,
-            matchLabels: getPipelineRunSelector(
+            matchLabels: getPipelineRunComponentSelector(
               componentName,
               NEW_COMPONENT_PIPELINE_RUN_LABELS,
-              versionFilter,
             ),
           },
         }),
-        [component?.metadata?.creationTimestamp, componentName, nameFilter, versionFilter],
+        [component?.metadata?.creationTimestamp, componentName, nameFilter],
       ),
     );
 
