@@ -75,10 +75,13 @@ describe('LatestPushBuildSection', () => {
     expect(screen.getByText('Unable to load pipeline run')).toBeInTheDocument();
   });
 
-  it('should render an info alert when no build pipeline exists', () => {
+  it('should render a plain inline alert when no build pipeline exists', () => {
     useLatestBuildMock.mockReturnValue([undefined, true, undefined]);
     renderWithQueryClientAndRouter(<LatestPushBuildSection componentName={'my-component'} />);
-    expect(screen.getByText('No build pipeline available')).toBeInTheDocument();
+    const alert = screen.getByText('No build pipeline available').closest('.pf-v6-c-alert');
+    expect(alert).toBeInTheDocument();
+    expect(alert).toHaveClass('pf-m-inline');
+    expect(alert).toHaveClass('pf-m-plain');
   });
 
   it('should render commit info and pipeline run on success', () => {

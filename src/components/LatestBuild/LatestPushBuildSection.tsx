@@ -40,7 +40,7 @@ const LatestPushBuildSection: React.FC<LatestPushBuildSectionProps> = ({
   }
 
   if (!pipelineRun) {
-    return <Alert variant="info" isInline title="No build pipeline available" />;
+    return <Alert variant="info" isInline isPlain title="No build pipeline available" />;
   }
 
   const actualVersion =
