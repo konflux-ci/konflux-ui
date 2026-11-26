@@ -75,6 +75,9 @@ export interface ColumnDefinition<TData, TValue = unknown> {
    */
   cell?: (info: CellContext<TData, TValue>) => ReactNode;
 
+  /** Renders compound expanded content below the row when this cell is clicked. */
+  expandedContent?: (row: TData) => ReactNode;
+
   /**
    * Flex proportion for column width. Columns share available space in
    * proportion to their `size` values (default: 1). A column with `size: 3`

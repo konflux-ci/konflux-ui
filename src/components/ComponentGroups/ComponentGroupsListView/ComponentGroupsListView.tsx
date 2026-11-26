@@ -1,3 +1,4 @@
+import React from 'react';
 import { PageSection } from '@patternfly/react-core';
 import PageLayout from '~/components/PageLayout/PageLayout';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
@@ -19,6 +20,11 @@ export const ComponentGroupsListView: React.FC = () => {
   const { clientFilterValues, clearAll, isFiltered } = useFilterState(componentGroupsFilterConfig);
 
   const { filteredData } = useFilteredData(componentGroupsFilterConfig, groups, clientFilterValues);
+
+  const columns = React.useMemo(
+    () => componentGroupsTableColumns({ namespace, allGroups: groups }),
+    [namespace, groups],
+  );
 
   if (error) {
     return getErrorState(error, loaded, 'component groups');
@@ -49,7 +55,7 @@ export const ComponentGroupsListView: React.FC = () => {
         >
           <Table
             data={filteredData}
-            columns={componentGroupsTableColumns}
+            columns={columns}
             getRowId={(row) => row.metadata?.name ?? '-'}
             aria-label="Component groups list"
             enableSorting

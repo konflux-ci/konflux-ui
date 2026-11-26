@@ -4,6 +4,8 @@ import {
   getLatestPromotedBuild,
   getComponentGroupVersionMap,
   filterPipelineRunsByComponentVersions,
+  getComponentsAndGroupsCount,
+  getComponentsAndGroupsCountString,
 } from '~/utils/component-group-utils';
 
 const build = (overrides: Partial<ComponentState>): ComponentState => ({
@@ -174,4 +176,99 @@ describe('component group pipeline run filtering', () => {
       ).toEqual([matching]);
     },
   );
+});
+
+describe('getComponentsAndGroupsCount', () => {
+  it('should count only components when no groups are present', () => {
+    const components: ComponentReference[] = [
+      { name: 'frontend', kind: 'component' },
+      { name: 'backend' }, // No kind = component
+    ];
+
+    expect(getComponentsAndGroupsCount(components)).toEqual({
+      components: 2,
+      groups: 0,
+    });
+  });
+
+  it('should count only groups when no components are present', () => {
+    const components: ComponentReference[] = [
+      { name: 'group1', kind: 'componentGroup' },
+      { name: 'group2', kind: 'componentGroup' }, // Case insensitive
+    ];
+
+    expect(getComponentsAndGroupsCount(components)).toEqual({
+      components: 0,
+      groups: 2,
+    });
+  });
+
+  it('should count both components and groups', () => {
+    const components: ComponentReference[] = [
+      { name: 'frontend' },
+      { name: 'backend', kind: 'component' },
+      { name: 'nested-group', kind: 'componentGroup' },
+      { name: 'api' },
+      { name: 'another-group', kind: 'componentGroup' },
+    ];
+
+    expect(getComponentsAndGroupsCount(components)).toEqual({
+      components: 3,
+      groups: 2,
+    });
+  });
+
+  it('should return zero for empty array', () => {
+    expect(getComponentsAndGroupsCount([])).toEqual({
+      components: 0,
+      groups: 0,
+    });
+  });
+});
+
+describe('getComponentsAndGroupsCountString', () => {
+  it('should return "1 Component" for single component', () => {
+    const components: ComponentReference[] = [{ name: 'frontend' }];
+    expect(getComponentsAndGroupsCountString(components)).toBe('1 Component');
+  });
+
+  it('should return "2 Components" for multiple components', () => {
+    const components: ComponentReference[] = [{ name: 'frontend' }, { name: 'backend' }];
+    expect(getComponentsAndGroupsCountString(components)).toBe('2 Components');
+  });
+
+  it('should return "1 Group" for single group', () => {
+    const components: ComponentReference[] = [{ name: 'group1', kind: 'componentGroup' }];
+    expect(getComponentsAndGroupsCountString(components)).toBe('1 Group');
+  });
+
+  it('should return "2 Groups" for multiple groups', () => {
+    const components: ComponentReference[] = [
+      { name: 'group1', kind: 'componentGroup' },
+      { name: 'group2', kind: 'componentGroup' },
+    ];
+    expect(getComponentsAndGroupsCountString(components)).toBe('2 Groups');
+  });
+
+  it('should return "X Components and Y Groups" for mixed content', () => {
+    const components: ComponentReference[] = [
+      { name: 'frontend' },
+      { name: 'backend' },
+      { name: 'group1', kind: 'componentGroup' },
+    ];
+    expect(getComponentsAndGroupsCountString(components)).toBe('2 Components and 1 Group');
+  });
+
+  it('should return "X Components and Y Groups" with plural forms', () => {
+    const components: ComponentReference[] = [
+      { name: 'frontend' },
+      { name: 'group1', kind: 'componentGroup' },
+      { name: 'group2', kind: 'componentGroup' },
+    ];
+    expect(getComponentsAndGroupsCountString(components)).toBe('1 Component and 2 Groups');
+  });
+
+  it('should return "-" for empty array', () => {
+    expect(getComponentsAndGroupsCountString([])).toBe('-');
+  });
 });

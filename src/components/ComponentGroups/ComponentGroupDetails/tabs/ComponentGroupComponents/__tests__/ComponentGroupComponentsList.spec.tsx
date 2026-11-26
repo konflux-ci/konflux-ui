@@ -198,22 +198,51 @@ describe('ComponentGroupComponentsList', () => {
     );
   });
 
-  it('should not show references missing from the new Component API', () => {
+  it('should show all references from the group spec, even if some are missing from Component API', () => {
+    // Only frontend is returned from the API, but all 3 should show in the table
     useComponentsByNameMock.mockReturnValue([[mockComponents[0]], true, undefined]);
     renderWithQueryClient(<TestedComponent />);
-    expect(screen.getAllByTestId('component-name')).toHaveLength(1);
-    expect(screen.getByTestId('component-name')).toHaveTextContent('frontend');
+
+    const componentLinks = screen.getAllByTestId('component-name');
+    expect(componentLinks).toHaveLength(3);
+    expect(componentLinks[0]).toHaveTextContent('frontend');
+    expect(componentLinks[1]).toHaveTextContent('backend');
+    expect(componentLinks[2]).toHaveTextContent('docs');
   });
 
-  it('should not treat nested group references as components', () => {
+  it('should show nested group references with Component Group type', () => {
     useComponentGroupMock.mockReturnValue([
-      { ...group, spec: { components: [{ name: 'frontend', kind: 'componentGroup' }] } },
+      {
+        ...group,
+        spec: { components: [{ name: 'frontend', kind: 'componentGroup' }] },
+      },
       true,
       undefined,
     ]);
     renderWithQueryClient(<TestedComponent />);
+
+    // Should not try to fetch component groups from the Component API
     expect(useComponentsByNameMock).toHaveBeenCalledWith('test-ns', [], true);
-    expect(screen.queryByTestId('component-name')).not.toBeInTheDocument();
+
+    // Should show the group in the table
+    const componentLink = screen.getByTestId('component-name');
+    expect(componentLink).toBeInTheDocument();
+    expect(componentLink).toHaveTextContent('frontend');
+    // Link should go to the group details page
+    expect(componentLink).toHaveAttribute('href', '/ns/test-ns/groups/frontend');
+
+    // Should show "Group" type label
+    expect(screen.getByText('Group')).toBeInTheDocument();
+
+    // Version and Latest build columns should show "-" for component groups
+    const cells = screen.getAllByRole('cell');
+    const versionCell = cells.find((cell) => cell.getAttribute('data-label') === 'Version');
+    const latestBuildCell = cells.find(
+      (cell) => cell.getAttribute('data-label') === 'Latest build',
+    );
+    expect(versionCell).toHaveTextContent('-');
+    expect(latestBuildCell).toHaveTextContent('-');
+    expect(screen.queryByTestId('latest-push-build')).not.toBeInTheDocument();
   });
 
   it('should filter group components by name from the URL', async () => {
@@ -225,5 +254,56 @@ describe('ComponentGroupComponentsList', () => {
 
     expect(screen.getAllByTestId('component-name')).toHaveLength(1);
     expect(screen.queryByText('frontend')).not.toBeInTheDocument();
+  });
+
+  it('should render mixed components and groups with correct version and build columns', () => {
+    useComponentGroupMock.mockReturnValue([
+      {
+        ...group,
+        spec: {
+          components: [
+            { name: 'frontend', componentVersion: { name: 'frontend', version: 'main' } },
+            { name: 'nested-group', kind: 'componentGroup' },
+            { name: 'backend', componentVersion: { name: 'backend', version: 'release' } },
+          ],
+        },
+      },
+      true,
+      undefined,
+    ]);
+    renderWithQueryClient(<TestedComponent />);
+
+    // Should fetch only the components (not groups) from Component API
+    expect(useComponentsByNameMock).toHaveBeenCalledWith('test-ns', ['frontend', 'backend'], true);
+
+    const componentLinks = screen.getAllByTestId('component-name');
+    expect(componentLinks).toHaveLength(3);
+    expect(componentLinks[0]).toHaveTextContent('frontend');
+    expect(componentLinks[1]).toHaveTextContent('nested-group');
+    expect(componentLinks[2]).toHaveTextContent('backend');
+
+    // Group link should go to group details
+    expect(componentLinks[1]).toHaveAttribute('href', '/ns/test-ns/groups/nested-group');
+
+    // Component links should go to component details
+    expect(componentLinks[0]).toHaveAttribute('href', '/ns/test-ns/components/frontend');
+    expect(componentLinks[2]).toHaveAttribute('href', '/ns/test-ns/components/backend');
+
+    // Components should show version and builds
+    const latestBuilds = screen.getAllByTestId('latest-push-build');
+    expect(latestBuilds).toHaveLength(2);
+    expect(latestBuilds[0]).toHaveTextContent('frontend/main');
+    expect(latestBuilds[1]).toHaveTextContent('backend/release');
+
+    // Group row should show "-" for version and latest build
+    const cells = screen.getAllByRole('cell');
+    const versionCells = cells.filter((cell) => cell.getAttribute('data-label') === 'Version');
+    const latestBuildCells = cells.filter(
+      (cell) => cell.getAttribute('data-label') === 'Latest build',
+    );
+
+    // Second row (index 1) is the group
+    expect(versionCells[1]).toHaveTextContent('-');
+    expect(latestBuildCells[1]).toHaveTextContent('-');
   });
 });
