@@ -11,6 +11,7 @@ import { RouterParams } from '~/routes/utils';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { ComponentKind, ComponentVersion } from '~/types';
+import { NEW_COMPONENT_PIPELINE_RUN_LABELS } from '~/utils/pipeline-run-labels';
 import { getComponentVersion } from '~/utils/version-utils';
 
 const VersionOverview: React.FC<{ component: ComponentKind; version: ComponentVersion }> = ({
@@ -21,6 +22,7 @@ const VersionOverview: React.FC<{ component: ComponentKind; version: ComponentVe
     component.metadata.namespace,
     component.metadata.name,
     version.name,
+    NEW_COMPONENT_PIPELINE_RUN_LABELS,
   );
   return (
     <>

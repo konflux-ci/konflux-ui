@@ -1,6 +1,7 @@
 import { renderHook } from '@testing-library/react';
 import { PUSH_BUILD_EVENT_TYPES, PipelineRunLabel, PipelineRunType } from '~/consts/pipelinerun';
 import { PipelineRunKind } from '~/types';
+import { NEW_COMPONENT_PIPELINE_RUN_LABELS } from '~/utils/pipeline-run-labels';
 import {
   useLatestBuildPipelineRunForComponentV2,
   useLatestPushBuildPipelineRunForComponentV2,
@@ -21,6 +22,14 @@ const createPipelineRun = (name: string, status: 'True' | 'False'): PipelineRunK
       conditions: [{ type: 'Succeeded', status }],
     },
   }) as unknown as PipelineRunKind;
+
+const withVersionAnnotation = (pipelineRun: PipelineRunKind, version: string) => ({
+  ...pipelineRun,
+  metadata: {
+    ...pipelineRun.metadata,
+    annotations: { [PipelineRunLabel.V2_COMPONENT_VERSION]: version },
+  },
+});
 
 describe('component build pipeline hooks', () => {
   beforeEach(() => {
@@ -162,6 +171,33 @@ describe('component build pipeline hooks', () => {
         ],
       },
       limit: 1,
+    });
+  });
+
+  it('should use new component labels and match an annotation-only version', () => {
+    const pipelineRun = withVersionAnnotation(
+      createPipelineRun('component-main-build', 'True'),
+      'main',
+    );
+    usePipelineRunsV2Mock.mockReturnValue([[pipelineRun], true, undefined, undefined, undefined]);
+
+    const { result } = renderHook(() =>
+      useLatestBuildPipelineRunForComponentV2(
+        'test-ns',
+        'component',
+        'main',
+        NEW_COMPONENT_PIPELINE_RUN_LABELS,
+      ),
+    );
+
+    expect(result.current).toEqual([pipelineRun, true, undefined]);
+    expect(usePipelineRunsV2Mock).toHaveBeenCalledWith('test-ns', {
+      selector: {
+        matchLabels: {
+          [PipelineRunLabel.V2_PIPELINE_TYPE]: PipelineRunType.BUILD,
+          [PipelineRunLabel.V2_COMPONENT]: 'component',
+        },
+      },
     });
   });
 });

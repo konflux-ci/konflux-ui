@@ -5,6 +5,7 @@ import { PipelineRunKind } from '~/types';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { renderWithQueryClientAndRouter } from '~/unit-test-utils/rendering-utils';
 import { getCommitsFromPLRs } from '~/utils/commits-utils';
+import { NEW_COMPONENT_PIPELINE_RUN_LABELS } from '~/utils/pipeline-run-labels';
 import LatestPushBuildSection from '../LatestPushBuildSection';
 
 jest.mock('~/hooks/useLatestPushBuildPipeline', () => ({
@@ -37,9 +38,8 @@ const mockPipelineRun = {
     name: 'my-component-on-push-abc123',
     namespace: 'test-ns',
     uid: 'plr-uid',
-    labels: {
-      [PipelineRunLabel.COMPONENT_VERSION]: 'nice',
-    },
+    labels: {},
+    annotations: { [PipelineRunLabel.V2_COMPONENT_VERSION]: 'nice' },
   },
   status: {
     conditions: [{ type: 'Succeeded', status: 'True' }],
@@ -134,7 +134,12 @@ describe('LatestPushBuildSection', () => {
   it('should pass component name to the hook', () => {
     useLatestBuildMock.mockReturnValue([undefined, true, undefined]);
     renderWithQueryClientAndRouter(<LatestPushBuildSection componentName={'my-component'} />);
-    expect(useLatestBuildMock).toHaveBeenCalledWith('test-ns', 'my-component', undefined);
+    expect(useLatestBuildMock).toHaveBeenCalledWith(
+      'test-ns',
+      'my-component',
+      undefined,
+      NEW_COMPONENT_PIPELINE_RUN_LABELS,
+    );
   });
 
   it('should pass version to the hook when provided', () => {
@@ -142,6 +147,11 @@ describe('LatestPushBuildSection', () => {
     renderWithQueryClientAndRouter(
       <LatestPushBuildSection componentName={'my-component'} version="ver-1.0" />,
     );
-    expect(useLatestBuildMock).toHaveBeenCalledWith('test-ns', 'my-component', 'ver-1.0');
+    expect(useLatestBuildMock).toHaveBeenCalledWith(
+      'test-ns',
+      'my-component',
+      'ver-1.0',
+      NEW_COMPONENT_PIPELINE_RUN_LABELS,
+    );
   });
 });

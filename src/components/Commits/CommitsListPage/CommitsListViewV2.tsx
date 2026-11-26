@@ -1,17 +1,13 @@
 import * as React from 'react';
 import { Bullseye, Flex, Spinner, Stack } from '@patternfly/react-core';
 import { SortByDirection } from '@patternfly/react-table';
+import { COMPONENT_DETAILS_V2_PATH } from '@routes/paths';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import PipelineRunsFilterToolbar from '~/components/Filter/toolbars/PipelineRunsFilterToolbar';
 import { createFilterObj } from '~/components/Filter/utils/filter-utils';
 import { SESSION_STORAGE_KEYS, TEXT_SEARCH_TYPES } from '~/consts/constants';
-import {
-  PipelineRunLabel,
-  PipelineRunType,
-  RUN_STATUS_PRIORITY,
-  runStatus,
-} from '~/consts/pipelinerun';
-import { useComponent } from '~/hooks/useComponents';
+import { PipelineRunType, RUN_STATUS_PRIORITY, runStatus } from '~/consts/pipelinerun';
+import { useComponentV2 } from '~/hooks/useComponentsV2';
 import { usePipelineRunsV2 } from '~/hooks/usePipelineRunsV2';
 import { useSortedResources } from '~/hooks/useSortedResources';
 import { useVisibleColumns } from '~/hooks/useVisibleColumns';
@@ -22,6 +18,12 @@ import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { Commit, PipelineRunKind } from '~/types';
 import { getCommitsFromPLRs, getCommitSha, statuses } from '~/utils/commits-utils';
+import {
+  getPipelineRunComponentSelector,
+  NEW_COMPONENT_PIPELINE_RUN_LABELS,
+  getPipelineRunLabel,
+  matchesPipelineRunVersion,
+} from '~/utils/pipeline-run-labels';
 import { textMatch } from '~/utils/text-filter-utils';
 import { getCommitStatusFromPipelineRuns } from '../commit-status';
 import CommitsEmptyStateV2 from '../CommitsEmptyStateV2';
@@ -45,7 +47,7 @@ const CommitsListViewV2: React.FC<React.PropsWithChildren<CommitsListViewPropsV2
   versionName,
 }) => {
   const namespace = useNamespace();
-  const [component, compLoaded, compError] = useComponent(namespace, componentName, true);
+  const [component, compLoaded, compError] = useComponentV2(namespace, componentName, true);
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
 
   const [visibleColumns, setVisibleColumns] = useVisibleColumns(
@@ -81,13 +83,13 @@ const CommitsListViewV2: React.FC<React.PropsWithChildren<CommitsListViewPropsV2
         () => ({
           selector: {
             filterByCreationTimestampAfter: component?.metadata?.creationTimestamp,
-            matchLabels: {
-              [PipelineRunLabel.COMPONENT]: componentName,
-              ...(versionName ? { [PipelineRunLabel.COMPONENT_VERSION]: versionName } : {}),
-            },
+            matchLabels: getPipelineRunComponentSelector(
+              componentName,
+              NEW_COMPONENT_PIPELINE_RUN_LABELS,
+            ),
           },
         }),
-        [component?.metadata?.creationTimestamp, componentName, versionName],
+        [component?.metadata?.creationTimestamp, componentName],
       ),
     );
 
@@ -95,32 +97,47 @@ const CommitsListViewV2: React.FC<React.PropsWithChildren<CommitsListViewPropsV2
   const buildPipelineRuns = React.useMemo(() => {
     return (
       pipelineRuns?.filter(
-        (plr) => plr.metadata?.labels?.[PipelineRunLabel.PIPELINE_TYPE] === PipelineRunType.BUILD,
+        (plr) =>
+          getPipelineRunLabel(plr, 'pipelineType', NEW_COMPONENT_PIPELINE_RUN_LABELS) ===
+            PipelineRunType.BUILD &&
+          matchesPipelineRunVersion(plr, versionName, NEW_COMPONENT_PIPELINE_RUN_LABELS),
       ) || []
     );
-  }, [pipelineRuns]);
+  }, [pipelineRuns, versionName]);
 
   const commits = React.useMemo(
-    () => (plrLoaded && buildPipelineRuns && getCommitsFromPLRs(buildPipelineRuns)) || [],
+    () =>
+      (plrLoaded &&
+        buildPipelineRuns &&
+        getCommitsFromPLRs(
+          buildPipelineRuns,
+          undefined,
+          NEW_COMPONENT_PIPELINE_RUN_LABELS.component,
+        )) ||
+      [],
     [plrLoaded, buildPipelineRuns],
   );
 
   const commitPipelineRunMap = React.useMemo<Record<string, PipelineRunKind[]>>(
     () =>
-      (pipelineRuns ?? []).reduce(
-        (acc, plr) => {
-          const sha = getCommitSha(plr);
-          if (sha) {
-            if (!acc[sha]) {
-              acc[sha] = [];
+      (pipelineRuns ?? [])
+        .filter((plr) =>
+          matchesPipelineRunVersion(plr, versionName, NEW_COMPONENT_PIPELINE_RUN_LABELS),
+        )
+        .reduce(
+          (acc, plr) => {
+            const sha = getCommitSha(plr);
+            if (sha) {
+              if (!acc[sha]) {
+                acc[sha] = [];
+              }
+              acc[sha].push(plr);
             }
-            acc[sha].push(plr);
-          }
-          return acc;
-        },
-        {} as Record<string, PipelineRunKind[]>,
-      ),
-    [pipelineRuns],
+            return acc;
+          },
+          {} as Record<string, PipelineRunKind[]>,
+        ),
+    [pipelineRuns, versionName],
   );
 
   const commitStatusMap = React.useMemo<Record<string, runStatus>>(
@@ -258,6 +275,12 @@ const CommitsListViewV2: React.FC<React.PropsWithChildren<CommitsListViewPropsV2
               obj={props.obj as Commit}
               visibleColumns={visibleColumns}
               status={commitStatusMap[commit.sha] || runStatus.Unknown}
+              componentLink={(componentLabel) =>
+                COMPONENT_DETAILS_V2_PATH.createPath({
+                  workspaceName: namespace,
+                  componentName: componentLabel.trim(),
+                })
+              }
             />
           );
         }}

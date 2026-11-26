@@ -28,11 +28,11 @@ const run = {
     name: 'stable-build',
     namespace: 'test-ns',
     labels: {
-      [PipelineRunLabel.COMPONENT_VERSION]: 'stable',
+      [PipelineRunLabel.V2_COMPONENT]: 'frontend',
       [PipelineRunLabel.COMMIT_LABEL]: 'abcdef123456',
-      [PipelineRunLabel.COMPONENT]: 'frontend',
     },
     annotations: {
+      [PipelineRunLabel.V2_COMPONENT_VERSION]: 'stable',
       [PipelineRunLabel.COMMIT_URL_ANNOTATION]: 'https://github.com/org/repo/commit/abcdef123456',
       [PipelineRunLabel.COMMIT_SHA_TITLE_ANNOTATION]: 'Fix stable release',
     },

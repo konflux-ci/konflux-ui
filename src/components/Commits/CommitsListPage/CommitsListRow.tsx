@@ -28,12 +28,14 @@ interface CommitsListRowProps {
   obj: Commit;
   visibleColumns?: Set<CommitColumnKeys>;
   status: runStatus;
+  componentLink?: (component: string) => string;
 }
 
 const CommitsListRow: React.FC<React.PropsWithChildren<CommitsListRowProps>> = ({
   obj,
   visibleColumns,
   status,
+  componentLink,
 }) => {
   const actions = useCommitActions(obj);
   const namespace = useNamespace();
@@ -51,22 +53,26 @@ const CommitsListRow: React.FC<React.PropsWithChildren<CommitsListRowProps>> = (
     (component: string) => (
       <Link
         key={component}
-        to={COMPONENT_DETAILS_PATH.createPath({
-          workspaceName: namespace,
-          applicationName: obj.application,
-          componentName: component.trim(),
-        })}
+        to={
+          componentLink?.(component) ??
+          COMPONENT_DETAILS_PATH.createPath({
+            workspaceName: namespace,
+            applicationName: obj.application,
+            componentName: component.trim(),
+          })
+        }
       >
         {component.trim()}
       </Link>
     ),
-    [namespace, obj.application],
+    [componentLink, namespace, obj.application],
   );
 
   const columnComponents = {
     name: (
       <TableData key="name" className={columnClasses.name}>
         <CommitIcon isPR={obj.isPullRequest} className="sha-title-icon" />
+        {/* // TODO: Add CommitDetailsV2 navigation for commits in the new component model */}
         <Link
           to={COMMIT_DETAILS_PATH.createPath({
             workspaceName: namespace,

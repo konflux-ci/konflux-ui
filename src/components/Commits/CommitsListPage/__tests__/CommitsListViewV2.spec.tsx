@@ -5,7 +5,7 @@ import { pipelineWithCommits } from '~/components/Commits/__data__/pipeline-with
 import { FilterContext, FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { TEXT_SEARCH_TYPES } from '~/consts/constants';
 import { PipelineRunLabel, PipelineRunType, runStatus } from '~/consts/pipelinerun';
-import { useComponent } from '~/hooks/useComponents';
+import { useComponentV2 } from '~/hooks/useComponentsV2';
 import { usePipelineRunsV2 } from '~/hooks/usePipelineRunsV2';
 import * as dateTime from '~/shared/components/timestamp/datetime';
 import { PipelineRunKind } from '~/types';
@@ -80,8 +80,8 @@ jest.mock('~/utils/rbac', () => ({
   useAccessReviewForModel: jest.fn(() => [true, true]),
 }));
 
-jest.mock('~/hooks/useComponents', () => ({
-  useComponent: jest.fn(),
+jest.mock('~/hooks/useComponentsV2', () => ({
+  useComponentV2: jest.fn(),
 }));
 
 jest.mock('~/hooks/usePipelineRunsV2', () => ({
@@ -92,7 +92,7 @@ jest.mock('~/hooks/useScanResults', () => ({
   usePLRVulnerabilities: jest.fn(() => ({})),
 }));
 
-const useComponentMock = useComponent as jest.Mock;
+const useComponentMock = useComponentV2 as jest.Mock;
 const useNamespaceMock = mockUseNamespaceHook('test-ns');
 const usePipelineRunsV2Mock = usePipelineRunsV2 as jest.Mock;
 
@@ -102,8 +102,13 @@ const withBuildLabels = (plr: PipelineRunKind): PipelineRunKind => ({
     ...plr.metadata,
     labels: {
       ...plr.metadata.labels,
-      [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.BUILD,
-      [PipelineRunLabel.COMPONENT_VERSION]: 'main',
+      [PipelineRunLabel.V2_PIPELINE_TYPE]: PipelineRunType.BUILD,
+      [PipelineRunLabel.V2_COMPONENT]:
+        plr.metadata.labels?.[PipelineRunLabel.COMPONENT] ?? 'sample-component',
+    },
+    annotations: {
+      ...plr.metadata.annotations,
+      [PipelineRunLabel.V2_COMPONENT_VERSION]: 'main',
     },
   },
 });
@@ -113,7 +118,7 @@ const buildPipelineRuns = [
   withBuildLabels(pipelineWithCommits[2]),
 ];
 
-const commits = getCommitsFromPLRs(buildPipelineRuns);
+const commits = getCommitsFromPLRs(buildPipelineRuns, undefined, PipelineRunLabel.V2_COMPONENT);
 
 const mockComponentWithVersions = {
   metadata: { name: 'sample-component', creationTimestamp: '2022-01-01T00:00:00Z' },
@@ -172,11 +177,14 @@ describe('CommitsListViewV2', () => {
   });
 
   it('renders correct commit data', () => {
-    const { getByText, queryByText, container } = renderWithQueryClient(
-      <CommitsListRow obj={commits[0]} status={runStatus.Pending} />,
+    const { getByText, container } = renderWithQueryClient(
+      <CommitsListRow
+        obj={commits[0]}
+        status={runStatus.Pending}
+        componentLink={(component) => `/components/${component}`}
+      />,
     );
     const expectedDate = dateTime.dateTimeFormatter.format(new Date(commits[0].creationTime));
-    expect(queryByText('commit1')).toBeInTheDocument();
     expect(getByText('#11 test-title')).toBeInTheDocument();
     expect(container).toHaveTextContent(expectedDate.toString());
     expect(getByText('branch_1')).toBeInTheDocument();
@@ -316,14 +324,14 @@ describe('CommitsListViewV2', () => {
       expect.objectContaining({
         selector: expect.objectContaining({
           matchLabels: expect.objectContaining({
-            'appstudio.openshift.io/component': 'sample-component',
+            [PipelineRunLabel.V2_COMPONENT]: 'sample-component',
           }),
         }),
       }),
     );
   });
 
-  it('should include version label in selector when versionName is provided', () => {
+  it('should not include the version label in the selector for the new component model', () => {
     renderWithQueryClient(<CommitsListV2 versionName="main" />);
 
     expect(usePipelineRunsV2Mock).toHaveBeenCalledWith(
@@ -331,7 +339,7 @@ describe('CommitsListViewV2', () => {
       expect.objectContaining({
         selector: expect.objectContaining({
           matchLabels: expect.objectContaining({
-            [PipelineRunLabel.COMPONENT_VERSION]: 'main',
+            [PipelineRunLabel.V2_COMPONENT]: 'sample-component',
           }),
         }),
       }),
@@ -358,7 +366,7 @@ describe('CommitsListViewV2', () => {
         ...plr.metadata,
         labels: {
           ...plr.metadata.labels,
-          [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.TEST,
+          [PipelineRunLabel.V2_PIPELINE_TYPE]: PipelineRunType.TEST,
         },
       },
     })) as PipelineRunKind[];
@@ -476,7 +484,7 @@ describe('CommitsListViewV2', () => {
           name: 'non-build-run',
           labels: {
             ...buildPipelineRuns[0].metadata.labels,
-            [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.TEST,
+            [PipelineRunLabel.V2_PIPELINE_TYPE]: PipelineRunType.TEST,
           },
         },
       },
