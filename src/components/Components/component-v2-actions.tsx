@@ -39,7 +39,7 @@ export const useComponentV2Actions = (component?: ComponentKind, version?: strin
                 }),
               ),
             )
-        : () => showModal(createStartNewBuildModalLauncher(componentName ?? '')),
+        : () => showModal(createStartNewBuildModalLauncher(componentName)),
       id: `start-new-build-${componentName?.toLowerCase()}`,
       label: 'Start new build',
       disabled: !canStartBuild,

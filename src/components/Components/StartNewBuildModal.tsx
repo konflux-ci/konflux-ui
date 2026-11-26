@@ -9,14 +9,12 @@ import {
   FlexItem,
   Label,
   LabelGroup,
-  MenuList,
-  MenuItem,
   ModalVariant,
   Spinner,
 } from '@patternfly/react-core';
 import { CubesIcon } from '@patternfly/react-icons/dist/esm/icons/cubes-icon';
 import { useComponentV2 } from '~/hooks/useComponentsV2';
-import SelectComponentsDropdown from '~/shared/components/component-select-menu/SelectComponnetsDropdown';
+import { SelectDropdown } from '~/shared/components/Filter/controls/SelectDropdown';
 import { ComponentProps, createModalLauncher } from '~/shared/components/modal/createModalLauncher';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
@@ -88,23 +86,14 @@ export const StartNewBuildModal: React.FC<React.PropsWithChildren<StartNewBuildM
       <FlexItem>Select the versions to build:</FlexItem>
       <FlexItem>
         <div data-test="start-build-version-select">
-          <SelectComponentsDropdown
+          <SelectDropdown
             toggleText={selected.length ? `${selected.length} selected` : 'Select versions'}
+            options={versionNames.map((version) => ({ value: version, label: version }))}
+            selected={selected}
             onSelect={toggleVersion}
-          >
-            <MenuList>
-              {versionNames.map((version) => (
-                <MenuItem
-                  key={version}
-                  itemId={version}
-                  hasCheckbox
-                  isSelected={selected.includes(version)}
-                >
-                  {version}
-                </MenuItem>
-              ))}
-            </MenuList>
-          </SelectComponentsDropdown>
+            hasCheckbox
+            multiple
+          />
         </div>
       </FlexItem>
       {selected.length > 0 && (
