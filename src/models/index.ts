@@ -26,4 +26,5 @@ export * from './role-binding';
 export * from './config-map';
 export * from './image-repository';
 export * from './namespace';
+export * from './nudge-config';
 export * from './kueue';

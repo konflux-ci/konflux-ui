@@ -4,6 +4,7 @@ import ComponentRegistryLogin from '~/components/Components/ComponentDetails/tab
 import ComponentBuildSettings from '~/components/ComponentsPage/ComponentDetails/ComponentBuildSettings';
 import ComponentSourceDetails from '~/components/ComponentsPage/ComponentDetails/ComponentSourceDetails';
 import ComponentSuccessfulBuild from '~/components/ComponentsPage/ComponentDetails/ComponentSuccessfulBuild';
+import NudgingSection from '~/components/ComponentVersion/Nudging/NudgingSection';
 import { DetailsSection } from '~/components/DetailsPage';
 import { useComponentV2 } from '~/hooks/useComponentsV2';
 import { useLatestSuccessfulBuildPipelineRunForComponentV2 } from '~/hooks/useLatestPushBuildPipeline';
@@ -34,6 +35,10 @@ const VersionOverview: React.FC<{ component: ComponentKind; version: ComponentVe
       <ComponentBuildSettings component={component} version={version} />
       <DetailsSection title="Registry Login Information">
         <ComponentRegistryLogin />
+      </DetailsSection>
+      <DetailsSection title="Nudging relationships">
+        <NudgingSection component={component} direction="outgoing" />
+        <NudgingSection component={component} direction="incoming" />
       </DetailsSection>
     </>
   );
