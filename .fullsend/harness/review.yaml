@@ -1,4 +1,4 @@
-base: https://raw.githubusercontent.com/fullsend-ai/agents/27399d0707897bb705e544588df8ecccfc8f9b43/harness/review.yaml#sha256=3992c18ce6efa2a9590afccb61b90ec4c3bb5428727254bafe0cde262c53bfcb # v0.50.0
+base: https://raw.githubusercontent.com/fullsend-ai/agents/62f25ace461b9c11a712bf5762f6e881892e4b74/harness/review.yaml#sha256=3ec465a6cf4ecbb033bd3cae842934deb16546b325ef031512c009b17da68fed # v0.56.1
 
 skills:
   - skills/review
