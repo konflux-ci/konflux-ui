@@ -73,4 +73,14 @@ export class LatestCommitsTabPage {
       .scrollIntoView()
       .should('be.visible');
   }
+
+  checkCommitRow(commitTitle: string, componentName: string, commitStatus: RegExp, commitSha: string, publicRepo: string) {
+    this.waitForCommitInList(commitTitle);
+    this.verifyLatestCommits([
+      { name: commitTitle, component: componentName, status: commitStatus },
+    ]);
+    this.clickOnCommit(commitTitle);
+    this.verifyCommitsPageTitleAndStatus(commitTitle, commitStatus);
+    this.verifyCommitID(commitSha, publicRepo);
+  }
 }

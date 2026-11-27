@@ -259,13 +259,7 @@ describe('Component Lifecycle Tests', () => {
 
       cy.log('Verify commit from application Activity → Latest commits');
       Applications.goToLatestCommitsTab();
-      latestCommitsTabPage.waitForCommitInList(commitTitle);
-      latestCommitsTabPage.verifyLatestCommits([
-        { name: commitTitle, component: componentName, status: commitStatus },
-      ]);
-      latestCommitsTabPage.clickOnCommit(commitTitle);
-      latestCommitsTabPage.verifyCommitsPageTitleAndStatus(commitTitle, commitStatus);
-      latestCommitsTabPage.verifyCommitID(commitSha, publicRepo);
+      latestCommitsTabPage.checkCommitRow(commitTitle, componentName, commitStatus, commitSha, publicRepo)
       UIhelper.verifyLabelAndValue('Branch', 'main');
       UIhelper.verifyLabelAndValue('Component', componentName);
       latestCommitsTabPage.verifyNodesOnCommitOverview(['commit', `${componentName}-build`]);
@@ -275,13 +269,7 @@ describe('Component Lifecycle Tests', () => {
       Applications.goToComponentsTab();
       ComponentsTabPage.openComponent(componentName);
       ComponentDetailsPage.goToCommitsTab();
-      latestCommitsTabPage.waitForCommitInList(commitTitle);
-      latestCommitsTabPage.verifyLatestCommits([
-        { name: commitTitle, component: componentName, status: commitStatus },
-      ]);
-      latestCommitsTabPage.clickOnCommit(commitTitle);
-      latestCommitsTabPage.verifyCommitsPageTitleAndStatus(commitTitle, commitStatus);
-      latestCommitsTabPage.verifyCommitID(commitSha, publicRepo);
+      latestCommitsTabPage.checkCommitRow(commitTitle, componentName, commitStatus, commitSha, publicRepo)
     });
   });
 

@@ -16,8 +16,8 @@ export class ComponentDetailsPage {
   }
 
   static goToCommitsTab() {
-    cy.get(activityTabPO.clickTab, { timeout: 30000 }).click();
-    cy.get(compActivityCommitsTabPO.clickTab, { timeout: 30000 }).click();
+    cy.get(activityTabPO.clickTab, { timeout: 10000 }).click();
+    cy.get(compActivityCommitsTabPO.clickTab, { timeout: 10000 }).click();
     Common.waitForLoad();
   }
 
