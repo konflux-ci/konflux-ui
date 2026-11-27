@@ -296,8 +296,6 @@ spec:
           value: https://github.com/$(tasks.test-metadata.results.git-org)/$(tasks.test-metadata.results.git-repo)
         - name: pipeline-run-name
           value: $(context.pipelineRun.name)
-        - name: job-url
-          value: '$(params.konflux-url)/ns/$(context.pipelineRun.namespace)/applications/konflux-ui/pipelineruns/$(context.pipelineRun.name)'
   finally:
     - name: deprovision-kind-cluster
       when:
@@ -376,7 +374,9 @@ spec:
             value: tasks/slack-webhook-notification/0.1/slack-webhook-notification.yaml
       params:
         - name: message
-          value: '$(tasks.run-e2e-konflux-ui.results.slack-message)'
+          value: >-
+            KONFLUX: $(tasks.status) - $(params.job-type) - $(context.pipelineRun.name)
+            $(params.konflux-url)/ns/$(context.pipelineRun.namespace)/applications/konflux-ui/pipelineruns/$(context.pipelineRun.name)
         - name: secret-name
           value: $(params.slack-credentials-secret)
         - name: key-name
