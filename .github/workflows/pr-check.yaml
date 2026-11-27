@@ -2,7 +2,7 @@ name: PR Check Test
 
 # Runs from the default branch, so a fork cannot change who is allowed to start E2E.
 # A repository member's own pull request starts E2E from PR Check Prepare.
-# Everyone else needs a member to comment /ok-to-test on the current commit.
+# Everyone else needs a member to comment `/ok-to-test <full-sha>` for the current head.
 on:
   workflow_run:
     workflows: ["PR Check Prepare"]
@@ -78,7 +78,10 @@ jobs:
           }
 
           if [[ "$EVENT_NAME" == "issue_comment" ]]; then
-            command=$(printf '%s\n' "$COMMENT_BODY" | head -n 1 | tr -d '\r' | awk '{print $1}')
+            first_line=$(printf '%s\n' "$COMMENT_BODY" | head -n 1 | tr -d '\r')
+            command=$(printf '%s\n' "$first_line" | awk '{print $1}')
+            approved_sha=$(printf '%s\n' "$first_line" | awk '{print $2}')
+            extra=$(printf '%s\n' "$first_line" | awk '{print $3}')
             if [[ "$command" != "/ok-to-test" ]]; then
               echo "Ignoring a comment that does not start with /ok-to-test."
               finish
@@ -86,16 +89,30 @@ jobs:
 
             pr_number="$ISSUE_NUMBER"
             pr_json=$(gh pr view "$pr_number" --repo "$REPO" --json headRefOid,author)
-            head_sha=$(echo "$pr_json" | jq -r .headRefOid)
+            head_now=$(echo "$pr_json" | jq -r .headRefOid | tr '[:upper:]' '[:lower:]')
             author=$(echo "$pr_json" | jq -r .author.login)
 
             if ! has_write_access "$COMMENTER"; then
-              gh pr comment "$pr_number" --repo "$REPO" --body "E2E was not started. @${COMMENTER} does not have write access. A repository member with write access must comment \`/ok-to-test\` after reviewing the current commit."
+              gh pr comment "$pr_number" --repo "$REPO" --body "E2E was not started. @${COMMENTER} does not have write access. A repository member with write access must comment \`/ok-to-test <full-sha>\` after reviewing that commit."
               echo "Rejected /ok-to-test from ${COMMENTER} on ${author}'s pull request."
               finish
             fi
 
-            gh label create "ok-to-test" --repo "$REPO" --color "0E8A16" --description "E2E approved for the current commit" >/dev/null 2>&1 || true
+            if [[ ! "$approved_sha" =~ ^[0-9a-fA-F]{40}$ || -n "$extra" ]]; then
+              gh pr comment "$pr_number" --repo "$REPO" --body "E2E was not started. Comment \`/ok-to-test ${head_now}\` to approve that commit. The SHA must be the full 40-character head, not a shorter id."
+              echo "Rejected /ok-to-test because the SHA was missing or not a full commit id."
+              finish
+            fi
+
+            approved_sha=$(printf '%s' "$approved_sha" | tr '[:upper:]' '[:lower:]')
+            if [[ "$approved_sha" != "$head_now" ]]; then
+              gh pr comment "$pr_number" --repo "$REPO" --body "E2E was not started. \`${approved_sha}\` is not the current head \`${head_now}\`. Comment \`/ok-to-test ${head_now}\` to approve the current commit. The previous SHA was not replaced."
+              echo "Rejected /ok-to-test for ${approved_sha}. Current head is ${head_now}."
+              finish
+            fi
+
+            head_sha="$approved_sha"
+            gh label create "ok-to-test" --repo "$REPO" --color "0E8A16" --description "E2E approved for one commit" >/dev/null 2>&1 || true
             gh pr edit "$pr_number" --repo "$REPO" --add-label "ok-to-test"
             gh pr comment "$pr_number" --repo "$REPO" --body "E2E started for \`${head_sha}\` by @${COMMENTER}. ${GITHUB_SERVER_URL}/${REPO}/actions/runs/${GITHUB_RUN_ID}"
             run_e2e=true
@@ -115,7 +132,13 @@ jobs:
           fi
 
           author=$(gh pr view "$pr_number" --repo "$REPO" --json author --jq .author.login)
-          head_sha="$WORKFLOW_HEAD_SHA"
+          head_now=$(gh pr view "$pr_number" --repo "$REPO" --json headRefOid --jq .headRefOid | tr '[:upper:]' '[:lower:]')
+          pinned_sha=$(printf '%s' "$WORKFLOW_HEAD_SHA" | tr '[:upper:]' '[:lower:]')
+          if [[ "$head_now" != "$pinned_sha" ]]; then
+            echo "Pull request head is ${head_now}. This run is for ${pinned_sha}, so it will not test the new commit."
+            finish
+          fi
+          head_sha="$pinned_sha"
 
           if is_trusted_bot "$author" || has_write_access "$author"; then
             if [[ "$PREPARE_ACTION" == "edited" ]]; then
@@ -129,7 +152,7 @@ jobs:
 
           if pr_has_ok_to_test; then
             gh pr edit "$pr_number" --repo "$REPO" --remove-label "ok-to-test"
-            echo "Removed ok-to-test. ${author} needs a new /ok-to-test comment from a repository member."
+            echo "Removed ok-to-test. ${author} needs a new /ok-to-test <full-sha> comment from a repository member."
           else
             echo "E2E was not started for ${author}."
           fi
@@ -160,10 +183,20 @@ jobs:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       JOB_TYPE: 'on-pr'
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Checkout the approved commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: ${{ github.repository }}
-          ref: refs/pull/${{ needs.check-org-membership.outputs.pr_number }}/head
+          ref: ${{ needs.check-org-membership.outputs.head_sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Checkout trusted workflow files
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ github.sha }}
+          path: trusted
           persist-credentials: false
 
       - name: Confirm the approved commit
@@ -174,9 +207,19 @@ jobs:
           APPROVED_SHA: ${{ needs.check-org-membership.outputs.head_sha }}
         run: |
           set -euo pipefail
+          # This step only reads the pull request. Drop job secrets before that.
+          unset CYPRESS_GH_TOKEN GH_APP_ID GH_APP_PRIVATE_KEY GH_APP_WEBHOOK_SECRET \
+            QUAY_TEST_ORG QUAY_TOKEN_TEST SMEE_URL CYPRESS_USERNAME CYPRESS_PASSWORD \
+            CYPRESS_PROJECT_ID CYPRESS_RECORD_KEY CODECOV_TOKEN
           actual=$(git rev-parse HEAD)
           if [[ "$actual" != "$APPROVED_SHA" ]]; then
             echo "Refusing to test ${actual}. The approved commit is ${APPROVED_SHA}."
+            exit 1
+          fi
+
+          head_now=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json headRefOid --jq .headRefOid | tr '[:upper:]' '[:lower:]')
+          if [[ "$head_now" != "$APPROVED_SHA" ]]; then
+            echo "Pull request head is ${head_now}. Approval was for ${APPROVED_SHA}, so this run will not test the new commit."
             exit 1
           fi
 
@@ -260,7 +303,7 @@ jobs:
 
       - name: Deploy konflux-ci
         id: pr-check-action
-        uses: ./.github/actions/konflux-ui-deploy-test
+        uses: ./trusted/.github/actions/konflux-ui-deploy-test
         with:
           job-type: ${{ env.JOB_TYPE }}
 
@@ -272,22 +315,59 @@ jobs:
           kubectl describe nodes
 
       - name: Konflux-ui e2e test
-        uses: ./.github/actions/konflux-ui-e2e-test
+        uses: ./trusted/.github/actions/konflux-ui-e2e-test
+        with:
+          send-report: 'false'
+
+      - name: Restore trusted workflow files
+        if: ${{ always() }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ github.sha }}
+          path: trusted
+          clean: true
+          persist-credentials: false
+
+      - name: Upload e2e coverage to Codecov
+        if: ${{ success() && env.CODECOV_TOKEN != '' }}
+        env:
+          APPROVED_SHA: ${{ needs.check-org-membership.outputs.head_sha }}
+        run: |
+          set -euo pipefail
+          actual=$(git rev-parse HEAD)
+          if [[ "$actual" != "$APPROVED_SHA" ]]; then
+            echo "Refusing to upload coverage from ${actual}. The approved commit is ${APPROVED_SHA}."
+            exit 1
+          fi
+          "$GITHUB_WORKSPACE/trusted/pr_check.sh" upload-coverage
 
       - name: Disc space stats after e2e test
         if: ${{ always() }}
         run: |
+          unset CYPRESS_GH_TOKEN GH_APP_ID GH_APP_PRIVATE_KEY GH_APP_WEBHOOK_SECRET \
+            QUAY_TEST_ORG QUAY_TOKEN_TEST SMEE_URL CYPRESS_USERNAME CYPRESS_PASSWORD \
+            CYPRESS_PROJECT_ID CYPRESS_RECORD_KEY CODECOV_TOKEN
           set -x
           df -h --total
-          free -m 
+          free -m
           kubectl describe nodes
           # This finds the top 10 largest directories on the root partition
           du -h / --max-depth=2 2>/dev/null | sort -hr | head -n 10
 
-      - name: Upload e2e coverage to Codecov
-        if: ${{ always() && env.CODECOV_TOKEN != '' }}
-        run: ./pr_check.sh upload-coverage
-
       - name: Generate error logs
         if: ${{ always() }}
-        uses: ./.github/actions/generate-error-logs
+        uses: ./trusted/.github/actions/generate-error-logs
+        env:
+          CYPRESS_GH_TOKEN: ""
+          GH_APP_ID: ""
+          GH_APP_PRIVATE_KEY: ""
+          GH_APP_WEBHOOK_SECRET: ""
+          QUAY_TEST_ORG: ""
+          QUAY_TOKEN_TEST: ""
+          SMEE_URL: ""
+          CYPRESS_USERNAME: ""
+          CYPRESS_PASSWORD: ""
+          CYPRESS_PROJECT_ID: ""
+          CYPRESS_RECORD_KEY: ""
+          CODECOV_TOKEN: ""

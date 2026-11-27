@@ -73,15 +73,15 @@ We welcome contributions of all kinds! Follow these steps to get started:
    - Please tag at least one or two active maintainers who are responsible for reviewing PRs.
    - You can also tag the [konflux-ui team](https://github.com/orgs/konflux-ci/teams/konflux-ui) for broader visibility if needed.
    - If you’re unsure who to tag, check recent contributors.
-   - The reviewer reviews the code, including `pr_check.sh`, `.github/actions/`, and Dockerfiles. Those files run with CI secrets during E2E.
-   - Contributors without write access do not run E2E until a reviewer with write access comments `/ok-to-test` on the pull request. That runs E2E for the current commit. A new push needs a new comment.
+   - The reviewer reviews the code, including `pr_check.sh` and Dockerfiles. Those files from the approved commit run with CI secrets. The workflow actions come from the default branch.
+   - Contributors without write access do not run E2E until a reviewer with write access comments `/ok-to-test` followed by the full 40-character commit SHA. The SHA must be the pull request head. A newer commit is not approved by the old comment.
    - Authors who already have write access run E2E when they open or update the pull request.
 
 9. Once your PR is ready:
 
    - ✅ Ensure tests pass and all required checks are green.
 
-   > Tip: A repository member can comment `/ok-to-test` to run E2E again for the current commit.
+   > Tip: A repository member can comment `/ok-to-test` and the full commit SHA to run E2E for that commit.
    - ✅ Get at least **2 approvals** from reviewers.
    - ✅ Make sure there are no pending **requested changes**.
 

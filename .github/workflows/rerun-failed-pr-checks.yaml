@@ -17,8 +17,8 @@ jobs:
           REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
-          # Rerun a failed test of a known commit. A /ok-to-test rerun would read the
-          # pull request head again, so those runs are left alone.
+          # Rerun a failed test of a known commit. A /ok-to-test run is pinned to the
+          # SHA in that comment, so it is left alone instead of following a newer head.
           cutoff="$(date -u -d '1 day ago' +%Y-%m-%dT%H:%M:%SZ)"
           runs=$(gh api "repos/${REPO}/actions/workflows/pr-check.yaml/runs?status=completed&per_page=100" \
             --jq '[.workflow_runs[]

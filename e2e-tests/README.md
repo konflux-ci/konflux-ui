@@ -181,12 +181,12 @@ Test automation allows us to test early in the process and discover bugs before 
 
 ### PR checks
 
-Cypress E2E tests run on pull requests using a [GitHub Action](https://github.com/konflux-ci/konflux-ui/blob/main/.github/workflows/pr-check.yaml). Authors with write access start E2E by opening or updating the pull request. Other contributors need a repository member with write access to comment `/ok-to-test`. That comment tests the current commit only.
+Cypress E2E tests run on pull requests using a [GitHub Action](https://github.com/konflux-ci/konflux-ui/blob/main/.github/workflows/pr-check.yaml). Authors with write access start E2E by opening or updating the pull request. Other contributors need a repository member with write access to comment `/ok-to-test` and the full 40-character SHA of the current head. If the head changes, that comment does not approve the new commit.
 
-The job installs Konflux from a main branch and Konflux UI from a PR. It runs tests, gathers logs, and allows users to download them directly from the GitHub Action Summary page. A repository member can run the job again by commenting `/ok-to-test`.
+The job installs Konflux from a main branch and Konflux UI from a PR. It runs tests, gathers logs, and allows users to download them directly from the GitHub Action Summary page. A repository member can run the job again by commenting `/ok-to-test` with the current full SHA.
 
 > [!IMPORTANT]
-> Changes to `pr-check.yaml` in a pull request do not change the workflow that decides whether E2E may run. That file is taken from the default branch. Test a change to it on a fork of the repository before merging.
+> Changes to `pr-check.yaml` in a pull request do not change the workflow that decides whether E2E may run. That file is taken from the default branch. The deploy, test, and log actions used by the job come from the default branch too. The approved commit supplies `pr_check.sh`, the Dockerfiles, and the tests. Test a workflow change on a fork of the repository before merging.
 
 The workflow is separated into the actions files within `.github/actions` directory. Each action is a composite action, which makes it reusable across multiple workflows. This way it's also visible as separated steps and is easier for debugging.
 
