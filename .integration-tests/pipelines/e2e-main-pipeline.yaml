@@ -42,6 +42,10 @@ spec:
       description: 'Secret name containing Slack credentials'
       default: 'slack-credentials'
       type: string
+    - name: konflux-url
+      description: 'Konflux UI base URL for pipeline run links in Slack notifications'
+      default: 'https://konflux-ui.apps.stone-prd-rh01.pg1f.p1.openshiftapps.com'
+      type: string
     - name: oci-credentials-secret
       description: 'Secret containing OCI registry credentials (oci-storage-dockerconfigjson key)'
       default: 'quay-repo'
@@ -363,17 +367,17 @@ spec:
         resolver: git
         params:
           - name: url
-            value: https://github.com/konflux-ci/konflux-ui
+            value: https://github.com/konflux-ci/tekton-integration-catalog.git
           - name: revision
             value: main
           - name: pathInRepo
-            value: .integration-tests/tasks/send-slack-notification.yaml
+            value: tasks/slack-webhook-notification/0.1/slack-webhook-notification.yaml
       params:
-        - name: pipeline-aggregate-status
-          value: '$(tasks.status)'
-        - name: test-name
-          value: '$(context.pipelineRun.name)'
-        - name: job-type
-          value: '$(params.job-type)'
-        - name: slack-credentials-secret
+        - name: message
+          value: >-
+            KONFLUX: $(tasks.status) - $(params.job-type) - $(context.pipelineRun.name)
+            $(params.konflux-url)/ns/$(context.pipelineRun.namespace)/applications/konflux-ui/pipelineruns/$(context.pipelineRun.name)
+        - name: secret-name
           value: $(params.slack-credentials-secret)
+        - name: key-name
+          value: webhook-url
