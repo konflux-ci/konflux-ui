@@ -17,14 +17,15 @@ jobs:
           REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
-          # Use head_branch to identify runs; pull_requests can be empty for pull_request_target from forks
+          # Rerun a failed test of a known commit. A /ok-to-test run is pinned to the
+          # SHA in that comment, so it is left alone instead of following a newer head.
           cutoff="$(date -u -d '1 day ago' +%Y-%m-%dT%H:%M:%SZ)"
           runs=$(gh api "repos/${REPO}/actions/workflows/pr-check.yaml/runs?status=completed&per_page=100" \
             --jq '[.workflow_runs[]
-              | select(.event == "pull_request_target")
+              | select(.event == "workflow_run")
               | select(.created_at >= "'"$cutoff"'")
-              | select(.head_branch != null and .head_branch != "")
-              | {branch: .head_branch, id: .id, created_at: .created_at, conclusion: .conclusion}]
+              | select(.head_sha != null and .head_sha != "")
+              | {branch: .head_sha, id: .id, created_at: .created_at, conclusion: .conclusion}]
               | sort_by(.branch, .created_at)
               | group_by(.branch)
               | map(last)

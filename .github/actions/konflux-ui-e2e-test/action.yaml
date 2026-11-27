@@ -1,5 +1,10 @@
 name: 'Run Konflux UI E2E tests'
 description: 'Executes E2E tests for Konflux UI using Cypress'
+inputs:
+  send-report:
+    description: 'Send the periodic Slack report after the test'
+    required: false
+    default: 'true'
 
 runs:
   using: "composite"
@@ -18,7 +23,7 @@ runs:
       shell: bash
 
     - name: Report job result to Slack
-      if: ${{ always() }}
+      if: ${{ always() && inputs.send-report == 'true' }}
       run: |
         if [[ ${{ env.JOB_TYPE }} == 'periodic'* ]]; then
           ./pr_check.sh send-report ${{ steps.e2e.outcome }}

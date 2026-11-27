@@ -11,7 +11,7 @@ describe('Overview', () => {
     renderWithQueryClientAndRouter(<Overview />);
 
     // Check for IntroBanner content
-    expect(screen.getByText('Get started with Konflux')).toBeInTheDocument();
+    expect(screen.getByText('Get started with Konflux! This is a test!')).toBeInTheDocument();
 
     // Check for InfoBanner content
     expect(screen.getByText('Build artifacts of all kinds from source')).toBeInTheDocument();
@@ -24,14 +24,14 @@ describe('Overview', () => {
     renderWithQueryClientAndRouter(<Overview />);
 
     // Check for content presence instead of CSS classes
-    expect(screen.getByText('Get started with Konflux')).toBeInTheDocument();
+    expect(screen.getByText('Get started with Konflux! This is a test!')).toBeInTheDocument();
   });
 
   it('should have proper structure with PageSection components', () => {
     renderWithQueryClientAndRouter(<Overview />);
 
     // Check for real component content instead of CSS classes
-    expect(screen.getByText('Get started with Konflux')).toBeInTheDocument();
+    expect(screen.getByText('Get started with Konflux! This is a test!')).toBeInTheDocument();
     expect(screen.getByText('Build artifacts of all kinds from source')).toBeInTheDocument();
     expect(screen.getByTestId('about-section-title')).toBeInTheDocument();
   });

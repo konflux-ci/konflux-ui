@@ -1,0 +1,19 @@
+name: PR Check Prepare
+
+# Tells the E2E workflow that a pull request changed. This file has no secrets.
+# run-name is the pull request action (opened, synchronize, reopened, or edited).
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+
+run-name: ${{ github.event.action }}
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Record the pull request
+        run: echo "Pull request ${{ github.event.pull_request.number }} (${{ github.event.action }})"
