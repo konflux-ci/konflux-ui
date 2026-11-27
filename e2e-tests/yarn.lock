@@ -1310,15 +1310,16 @@ __metadata:
   linkType: hard
 
 "cypress-terminal-report@npm:^7.3.0":
-  version: 7.3.3
-  resolution: "cypress-terminal-report@npm:7.3.3"
+  version: 7.5.0
+  resolution: "cypress-terminal-report@npm:7.5.0"
   dependencies:
     chalk: "npm:^4.0.0"
     compare-versions: "npm:^6.1.1"
+    flatted: "npm:^3.4.4"
     superstruct: "npm:0.14.2"
   peerDependencies:
     cypress: ">=10.0.0"
-  checksum: 10/5c8a9a64f39bec3befc96d84d8c424d1786bd48daeae541b67698c9a95a7d25036466859c8a754e69f7cedf21d68780a67e6b6aecf09cb49e921771e66e87fdc
+  checksum: 10/ee99119ef802c662c106180c121967c3b1f7f57b61b3b14e06bd2a3b0b71771688085292e02f629c975250e8e9bce32bf3ec6ae4c3e5745be04b4822abe5b774
   languageName: node
   linkType: hard
 
@@ -1840,6 +1841,13 @@ __metadata:
     locate-path: "npm:^5.0.0"
     path-exists: "npm:^4.0.0"
   checksum: 10/4c172680e8f8c1f78839486e14a43ef82e9decd0e74145f40707cc42e7420506d5ec92d9a11c22bd2c48fb0c384ea05dd30e10dd152fefeec6f2f75282a8b844
+  languageName: node
+  linkType: hard
+
+"flatted@npm:^3.4.4":
+  version: 3.4.4
+  resolution: "flatted@npm:3.4.4"
+  checksum: 10/5a6682ab87ed15e125419c61352c4bef26f310adceece03eae5f22c119d64ed47bfc0ee1948a77d0122559eaa86395ea06ef45b59bfe3db4fb13fb4cdff876de
   languageName: node
   linkType: hard
 
