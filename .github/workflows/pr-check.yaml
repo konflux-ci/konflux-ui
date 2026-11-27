@@ -1,105 +1,149 @@
 name: PR Check Test
 
+# Runs from the default branch, so a fork cannot change who is allowed to start E2E.
+# A repository member's own pull request starts E2E from PR Check Prepare.
+# Everyone else needs a member to comment /ok-to-test on the current commit.
 on:
-  pull_request_target:
-    types: [opened, synchronize, reopened, labeled, unlabeled]
-  merge_group:
-    types: [checks_requested]
+  workflow_run:
+    workflows: ["PR Check Prepare"]
+    types: [completed]
+  issue_comment:
+    types: [created]
 
-# Cancel in-progress runs when new commits are pushed
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: pr-check-${{ github.event.issue.number || github.event.workflow_run.pull_requests[0].number || github.event.workflow_run.head_sha }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
-  check-ok-to-test-label:
-    if: ${{ github.event_name != 'merge_group' }}
+  check-org-membership:
+    if: >-
+      (github.event_name == 'workflow_run' && github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'success') ||
+      (github.event_name == 'issue_comment' && github.event.issue.pull_request && startsWith(github.event.comment.body, '/ok-to-test'))
     runs-on: ubuntu-latest
     permissions:
+      contents: read
       pull-requests: write
+    outputs:
+      run_e2e: ${{ steps.gate.outputs.run_e2e }}
+      pr_number: ${{ steps.gate.outputs.pr_number }}
+      head_sha: ${{ steps.gate.outputs.head_sha }}
     steps:
-      - name: Check for "ok-to-test" label on synchronize event type
-        id: check-ok-to-test-on-synchronize
+      - name: Decide whether E2E may run
+        id: gate
         env:
-          GITHUB_TOKEN: ${{ github.token }}
-          EVENT_ACTION: ${{ github.event.action }}
-          PR_NUMBER: ${{ github.event.number }}
+          GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
+          EVENT_NAME: ${{ github.event_name }}
+          COMMENT_BODY: ${{ github.event.comment.body }}
+          COMMENTER: ${{ github.event.comment.user.login }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          WORKFLOW_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          WORKFLOW_PR_NUMBER: ${{ github.event.workflow_run.pull_requests[0].number }}
+          PREPARE_ACTION: ${{ github.event.workflow_run.display_title }}
         run: |
-          if [[ "$EVENT_ACTION" == "synchronize" ]]; then
-            gh pr edit "$PR_NUMBER" --repo "$REPO" --remove-label "ok-to-test"
-          fi
-  check-org-membership:
-    needs: check-ok-to-test-label
-    if: ${{ github.event_name != 'merge_group' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checking rights to run a PR checks
-        run: |
-          if [ "${{ github.event_name }}" != 'pull_request_target' ]; then
-            echo "The workflow is not triggered from PR, but ${{ github.event_name }} - skipping further checks."
-            exit 0
-          fi
+          set -euo pipefail
 
-          WHITELISTED_BOTS=("red-hat-konflux[bot]" "konflux-ci-coder[bot]" "fullsend-ai-coder[bot]")
-          REQUIRED_LABEL_NAME="ok-to-test"
+          run_e2e=false
+          pr_number=""
+          head_sha=""
 
-          ORG="${{ github.repository_owner }}"
-          PR_AUTHOR=$(jq --raw-output .pull_request.user.login $GITHUB_EVENT_PATH)
-          PR_LABELS=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json labels --jq '.labels[].name')
-
-          for BOT in "${WHITELISTED_BOTS[@]}"; do
-            if [ "$PR_AUTHOR" == "$BOT" ]; then
-              echo "PR author is $BOT, skipping further checks."
-              exit 0
+          # Triage and read are not enough. Approval requires admin, maintain, or write.
+          has_write_access() {
+            local user="$1"
+            local role
+            if ! role=$(gh api "repos/${REPO}/collaborators/${user}/permission" --jq .role_name 2>/dev/null); then
+              return 1
             fi
-          done
+            [[ "$role" == "admin" || "$role" == "maintain" || "$role" == "write" ]]
+          }
 
-          if [[ "$PR_LABELS" == *$REQUIRED_LABEL_NAME* ]]; then
-            echo "PR has '$REQUIRED_LABEL_NAME' label, skipping further checks."
+          is_trusted_bot() {
+            [[ "$1" == "red-hat-konflux[bot]" || "$1" == "konflux-ci-coder[bot]" || "$1" == "fullsend-ai-coder[bot]" ]]
+          }
+
+          pr_has_ok_to_test() {
+            local found
+            found=$(gh pr view "$pr_number" --repo "$REPO" --json labels --jq 'any(.labels[]; .name == "ok-to-test")')
+            [[ "$found" == "true" ]]
+          }
+
+          finish() {
+            echo "run_e2e=${run_e2e}" >> "$GITHUB_OUTPUT"
+            echo "pr_number=${pr_number}" >> "$GITHUB_OUTPUT"
+            echo "head_sha=${head_sha}" >> "$GITHUB_OUTPUT"
             exit 0
+          }
+
+          if [[ "$EVENT_NAME" == "issue_comment" ]]; then
+            command=$(printf '%s\n' "$COMMENT_BODY" | head -n 1 | tr -d '\r' | awk '{print $1}')
+            if [[ "$command" != "/ok-to-test" ]]; then
+              echo "Ignoring a comment that does not start with /ok-to-test."
+              finish
+            fi
+
+            pr_number="$ISSUE_NUMBER"
+            pr_json=$(gh pr view "$pr_number" --repo "$REPO" --json headRefOid,author)
+            head_sha=$(echo "$pr_json" | jq -r .headRefOid)
+            author=$(echo "$pr_json" | jq -r .author.login)
+
+            if ! has_write_access "$COMMENTER"; then
+              gh pr comment "$pr_number" --repo "$REPO" --body "E2E was not started. @${COMMENTER} does not have write access. A repository member with write access must comment \`/ok-to-test\` after reviewing the current commit."
+              echo "Rejected /ok-to-test from ${COMMENTER} on ${author}'s pull request."
+              finish
+            fi
+
+            gh label create "ok-to-test" --repo "$REPO" --color "0E8A16" --description "E2E approved for the current commit" >/dev/null 2>&1 || true
+            gh pr edit "$pr_number" --repo "$REPO" --add-label "ok-to-test"
+            gh pr comment "$pr_number" --repo "$REPO" --body "E2E started for \`${head_sha}\` by @${COMMENTER}. ${GITHUB_SERVER_URL}/${REPO}/actions/runs/${GITHUB_RUN_ID}"
+            run_e2e=true
+            echo "${COMMENTER} approved E2E for ${author} at ${head_sha}."
+            finish
           fi
 
-          ALLOWED_USERS=("Katka92" "rrosatti" "janaki29" "sahil143" "testcara" "milantaky" "StanislavJochman" "JoaoPedroPP" "abhinandan13jan" "marcin-michal")
-          for author in "${ALLOWED_USERS[@]}"; do
-            if [[ "$author" == "$PR_AUTHOR" ]]; then
-              echo "PR author is in ALLOWED_USERS list. Running E2E tests."
-              exit 0
+          # Automatic path for authors who already have write access.
+          if [[ -n "$WORKFLOW_PR_NUMBER" ]]; then
+            pr_number="$WORKFLOW_PR_NUMBER"
+          else
+            pr_number=$(gh api "repos/${REPO}/commits/${WORKFLOW_HEAD_SHA}/pulls" --jq '[.[] | select(.state == "open")] | .[0].number // empty' || true)
+          fi
+          if [[ -z "$pr_number" ]]; then
+            echo "No open pull request for ${WORKFLOW_HEAD_SHA}."
+            finish
+          fi
+
+          author=$(gh pr view "$pr_number" --repo "$REPO" --json author --jq .author.login)
+          head_sha="$WORKFLOW_HEAD_SHA"
+
+          if is_trusted_bot "$author" || has_write_access "$author"; then
+            if [[ "$PREPARE_ACTION" == "edited" ]]; then
+              echo "Edit from ${author}. Not starting E2E."
+              finish
             fi
-          done
+            run_e2e=true
+            echo "Author ${author} can run E2E without /ok-to-test."
+            finish
+          fi
 
-          ERROR_SUMMARY=$(cat <<EOF
-
-          ### ❌ Cannot run E2E tests - at least one of the following conditions must be met:
-          * PR author is a whitelisted bot (${WHITELISTED_BOTS[*]})
-          * PR has label '$REQUIRED_LABEL_NAME'
-          * PR author is a konflux-ui developer (listed in ALLOWED_USERS in this script)
-          EOF
-          )
-          echo "$ERROR_SUMMARY" >> $GITHUB_STEP_SUMMARY
-          echo "$ERROR_SUMMARY"
-
-          exit 1
-        env:
-          GITHUB_TOKEN: ${{ secrets.HAC_TEST_GH_TOKEN }}
-          PR_NUMBER: ${{ github.event.number }}
-          REPO: ${{ github.repository }}
+          if pr_has_ok_to_test; then
+            gh pr edit "$pr_number" --repo "$REPO" --remove-label "ok-to-test"
+            echo "Removed ok-to-test. ${author} needs a new /ok-to-test comment from a repository member."
+          else
+            echo "E2E was not started for ${author}."
+          fi
+          finish
 
   deploy-konfux-ui:
     needs: check-org-membership
+    if: ${{ needs.check-org-membership.outputs.run_e2e == 'true' }}
     runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: read
+      pull-requests: read
     env:
-      TARGET_BRANCH: ${{ github.base_ref }}
-      SOURCE_BRANCH: ${{ github.head_ref }}
-      PR_NUMBER: ${{ github.event.number }}
-      HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-      FORKED_REPO_URL: ${{ github.event.pull_request.head.repo.clone_url }}
-      BASE_REPO_URL: ${{ github.event.pull_request.base.repo.clone_url }}
-      # Cypress Cloud commit info
-      COMMIT_INFO_SHA: ${{ github.event.pull_request.head.sha }}
-      COMMIT_INFO_BRANCH: ${{ github.event.pull_request.head.ref }}
-      COMMIT_INFO_MESSAGE: ${{ github.event.pull_request.title }}
-      COMMIT_INFO_AUTHOR: ${{ github.event.pull_request.user.login }}
       # secrets
       CYPRESS_GH_TOKEN: ${{ secrets.HAC_TEST_GH_TOKEN }}
       GH_APP_ID: ${{ secrets.GH_APP_ID }}
@@ -119,8 +163,40 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: ${{ github.repository }}
-          ref: '${{ github.event.pull_request.head.sha }}'
-          allow-unsafe-pr-checkout: true
+          ref: refs/pull/${{ needs.check-org-membership.outputs.pr_number }}/head
+          persist-credentials: false
+
+      - name: Confirm the approved commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ needs.check-org-membership.outputs.pr_number }}
+          APPROVED_SHA: ${{ needs.check-org-membership.outputs.head_sha }}
+        run: |
+          set -euo pipefail
+          actual=$(git rev-parse HEAD)
+          if [[ "$actual" != "$APPROVED_SHA" ]]; then
+            echo "Refusing to test ${actual}. The approved commit is ${APPROVED_SHA}."
+            exit 1
+          fi
+
+          json=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json title,author,headRefName,baseRefName,headRepository,headRepositoryOwner)
+          owner=$(echo "$json" | jq -r .headRepositoryOwner.login)
+          name=$(echo "$json" | jq -r .headRepository.name)
+          {
+            echo "HEAD_SHA=${APPROVED_SHA}"
+            echo "PR_NUMBER=${PR_NUMBER}"
+            echo "SOURCE_BRANCH=$(echo "$json" | jq -r .headRefName)"
+            echo "TARGET_BRANCH=$(echo "$json" | jq -r .baseRefName)"
+            echo "COMMIT_INFO_SHA=${APPROVED_SHA}"
+            echo "COMMIT_INFO_BRANCH=$(echo "$json" | jq -r .headRefName)"
+            echo "COMMIT_INFO_AUTHOR=$(echo "$json" | jq -r .author.login)"
+            echo "FORKED_REPO_URL=https://github.com/${owner}/${name}.git"
+            echo "BASE_REPO_URL=https://github.com/${REPO}.git"
+            echo "COMMIT_INFO_MESSAGE<<ENDOFTITLE"
+            echo "$(echo "$json" | jq -r .title)"
+            echo "ENDOFTITLE"
+          } >> "$GITHUB_ENV"
 
       - name: Enable Corepack 📦
         run: corepack enable

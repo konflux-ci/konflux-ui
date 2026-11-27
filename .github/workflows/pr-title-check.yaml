@@ -1,18 +1,20 @@
 name: PR Title Check
 
+# Runs from the default branch after PR Check Prepare, including for fork pull
+# requests. A fork cannot turn this check off or post the comment itself.
 on:
-  pull_request_target:
-    types: [opened, edited, reopened]
+  workflow_run:
+    workflows: ["PR Check Prepare"]
+    types: [completed]
 
 jobs:
   check-pr-title:
     if: >-
-      github.actor != 'red-hat-konflux[bot]' &&
-      (github.event.action == 'opened' ||
-      github.event.action == 'reopened' ||
-      (github.event.action == 'edited' && github.event.changes.title))
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     permissions:
+      checks: write
       pull-requests: write
     steps:
       - name: Validate PR title
@@ -20,15 +22,57 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const title = context.payload.pull_request.title;
+            const sha = context.payload.workflow_run.head_sha;
+            const { data: pulls } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: sha,
+            });
+            const pullRequest = pulls.find((pull) => pull.state === 'open');
+            if (!pullRequest) {
+              core.info(`No open pull request for ${sha}.`);
+              return;
+            }
+            if (pullRequest.user.login === 'red-hat-konflux[bot]') {
+              core.info('Skipping title check for red-hat-konflux[bot].');
+              return;
+            }
 
-            // Pattern: type(TICKET-ID): summary
-            // type: feat, fix, chore, refactor, docs, test, ci, build, perf, style, revert
-            // TICKET-ID: JIRA (KFLUXUI-123, KONFLUX-456) or GitHub issue (#123)
+            const title = pullRequest.title;
             const pattern = /^(feat|fix|chore|refactor|docs|test|ci|build|perf|style|revert)\(([A-Z]+-\d+|#\d+)\): .+$/;
+            const valid = pattern.test(title);
 
-            if (pattern.test(title)) {
-              console.log(`PR title is valid: "${title}"`);
+            await github.rest.checks.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              name: 'PR Title Check',
+              head_sha: sha,
+              status: 'completed',
+              conclusion: valid ? 'success' : 'failure',
+              output: {
+                title: valid ? 'PR title is valid' : 'PR title check failed',
+                summary: valid
+                  ? title
+                  : 'The title must match `type(ticket): summary`.',
+              },
+            });
+
+            if (valid) {
+              core.info(`PR title is valid: "${title}"`);
+              return;
+            }
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pullRequest.number,
+              per_page: 100,
+            });
+            const alreadyReported = comments.some(
+              (comment) => comment.body.includes('PR Title Check Failed') && comment.body.includes(title),
+            );
+            if (alreadyReported) {
+              core.info(`PR title "${title}" does not match the required format.`);
               return;
             }
 
@@ -50,14 +94,16 @@ jobs:
               `- \`fix(KONFLUX-456): resolve alignment issue in table header\``,
               `- \`chore(#42): update CI pipeline configuration\``,
               ``,
-              `Please update the PR title and the check will re-run automatically.`,
+              `Current title: \`${title}\``,
+              ``,
+              `Please update the PR title and the check will run again.`,
             ].join('\n');
 
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: context.payload.pull_request.number,
+              issue_number: pullRequest.number,
               body,
             });
 
-            core.setFailed(`PR title "${title}" does not match the required format.`);
+            core.info(`PR title "${title}" does not match the required format.`);

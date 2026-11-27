@@ -181,20 +181,12 @@ Test automation allows us to test early in the process and discover bugs before 
 
 ### PR checks
 
-Cypress E2E tests run on pull requests using a [GitHub Action](https://github.com/konflux-ci/konflux-ui/blob/main/.github/workflows/pr-check.yaml). To be able to run the PR check job, you have to be a public member of `konflux-ci` organization.
+Cypress E2E tests run on pull requests using a [GitHub Action](https://github.com/konflux-ci/konflux-ui/blob/main/.github/workflows/pr-check.yaml). Authors with write access start E2E by opening or updating the pull request. Other contributors need a repository member with write access to comment `/ok-to-test`. That comment tests the current commit only.
 
-The job installs Konflux from a main branch and Konflux UI from a PR. It runs tests, gathers logs, and allows users to download them directly from the GitHub Action Summary page. Retriggering the job is possible either by pushing a commit to the branch or trigger it directly in the GitHub Action Summary page by `Re-run jobs` button.
+The job installs Konflux from a main branch and Konflux UI from a PR. It runs tests, gathers logs, and allows users to download them directly from the GitHub Action Summary page. A repository member can run the job again by commenting `/ok-to-test`.
 
 > [!IMPORTANT]
-> The direct changes in the GitHub Action file `pr-check.yaml` won't be executed in a PR - that's intended due to security reasons. If you do change in this file, you should test it in your fork.
->
-> This feature is caused by a trigger which is set as:
->
-> ```
-> on:
->   pull_request_target:
->     types: [opened, synchronize, reopened, labeled]
-> ```
+> Changes to `pr-check.yaml` in a pull request do not change the workflow that decides whether E2E may run. That file is taken from the default branch. Test a change to it on a fork of the repository before merging.
 
 The workflow is separated into the actions files within `.github/actions` directory. Each action is a composite action, which makes it reusable across multiple workflows. This way it's also visible as separated steps and is easier for debugging.
 
