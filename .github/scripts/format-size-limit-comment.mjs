@@ -62,13 +62,29 @@ try {
 const maxBytes = report.maxBytes ?? DEFAULT_MAX_BYTES;
 const chunks = Array.isArray(report.chunks) ? report.chunks : [];
 const overall = report.overall;
+/** @type {{ name?: string; reason?: string }[]} */
+const configFailures = Array.isArray(report.configFailures) ? report.configFailures : [];
+const missingChunks = chunks.filter((chunk) => chunk.delta === null);
+const reason = overall?.reason ?? '';
+const incomplete =
+  missingChunks.length > 0 ||
+  configFailures.length > 0 ||
+  /cannot compute total|missing on base|missing on PR|removed or renamed|duplicated/.test(reason);
 
-const chunkBreakdown = chunks
+const measuredBreakdown = chunks
   .filter((chunk) => chunk.delta !== null)
   .map((chunk) => {
     const deltaLabel = formatSignedDelta(chunk.delta);
     return `- **\`${chunk.name}\`**: ${deltaLabel} vs base (base **${formatBytes(chunk.baseSize)}**, PR **${formatBytes(chunk.prSize)}**)`;
   })
+  .join('\n');
+
+const missingBreakdown = missingChunks
+  .map((chunk) => `- **\`${chunk.name}\`**: ${chunk.reason ?? 'missing from base or PR output'}`)
+  .join('\n');
+
+const configBreakdown = configFailures
+  .map((failure) => `- **\`${failure.name ?? 'unknown'}\`**: ${failure.reason ?? 'invalid check'}`)
   .join('\n');
 
 const overallSection =
@@ -78,20 +94,7 @@ const overallSection =
       ? `- **Overall**: ${formatSignedDelta(overall.delta)} vs base (base **${formatBytes(overall.baseSize)}**, PR **${formatBytes(overall.prSize)}**); limit **${formatMaxGrowth(maxBytes)}** total across all chunks`
       : '_Overall totals missing from report — see JSON below._';
 
-const body = [
-  '<!-- size-limit-budget -->',
-  '### Bundle size growth limit exceeded',
-  '',
-  `Total gzip size across all measured chunks may grow by at most **${formatMaxGrowth(maxBytes)}** compared to the PR base branch.`,
-  '',
-  overallSection,
-  '',
-  '**Per-chunk breakdown:**',
-  '',
-  chunkBreakdown.length > 0 ? chunkBreakdown : '_No comparable chunks in report._',
-  '',
-  'Shrink the change, split it across PRs, or discuss an exception with maintainers if the growth is intentional.',
-  '',
+const details = [
   '<details><summary>bundle size delta report</summary>',
   '',
   '```json',
@@ -101,6 +104,41 @@ const body = [
   '</details>',
   '',
   `See [docs/bundle-size-budgets.md](${docsUrl}) for how chunks are measured.`,
-].join('\n');
+];
+
+const body = incomplete
+  ? [
+      '<!-- size-limit-budget -->',
+      '### Bundle size comparison incomplete',
+      '',
+      missingChunks.length > 0
+        ? 'Totals cannot be computed because at least one expected chunk is missing from the base or PR measurement.'
+        : 'The chunk list does not match, so this run is not a bundle growth result.',
+      '',
+      overallSection,
+      '',
+      '**Missing chunks:**',
+      '',
+      missingBreakdown.length > 0 ? missingBreakdown : '_No missing chunks._',
+      ...(configBreakdown.length > 0 ? ['', '**Config:**', '', configBreakdown] : []),
+      '',
+      ...details,
+    ].join('\n')
+  : [
+      '<!-- size-limit-budget -->',
+      '### Bundle size growth limit exceeded',
+      '',
+      `Total gzip size across all measured chunks may grow by at most **${formatMaxGrowth(maxBytes)}** compared to the PR base branch.`,
+      '',
+      overallSection,
+      '',
+      '**Per-chunk breakdown:**',
+      '',
+      measuredBreakdown.length > 0 ? measuredBreakdown : '_No comparable chunks in report._',
+      '',
+      'Shrink the change, split it across PRs, or discuss an exception with maintainers if the growth is intentional.',
+      '',
+      ...details,
+    ].join('\n');
 
 process.stdout.write(body);

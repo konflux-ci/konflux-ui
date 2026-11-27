@@ -23,6 +23,7 @@ node_modules
 .npm/
 dist
 dist-ssr
+.size-limit.ci.json
 *.local
 *.local.*
 *.tsbuildinfo

@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 /**
  * Compares size-limit --json output from base and PR builds.
- * Fails when total gzip growth across all chunks exceeds --max-bytes (default 2048) vs base.
+ * Fails when a check is missing, removed, renamed, or duplicated, when a PR chunk
+ * exceeds its absolute ceiling, or when total gzip growth exceeds --max-bytes (default 2048).
  *
  * Usage:
- *   node compare-bundle-delta.mjs base.json pr.json [--max-bytes 2048] [--output report.json]
+ *   node compare-bundle-delta.mjs base.json pr.json [--config compare.json] [--base-config base.json] [--pr-config pr.json] [--max-bytes 2048] [--output report.json]
  */
 
 import { appendFileSync, readFileSync, writeFileSync } from 'node:fs';
@@ -16,6 +17,9 @@ function parseArgs(argv) {
   const positional = [];
   let maxBytes = DEFAULT_MAX_BYTES;
   let outputPath;
+  let configPath;
+  let baseConfigPath;
+  let prConfigPath;
 
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
@@ -27,11 +31,13 @@ function parseArgs(argv) {
       }
       maxBytes = value;
     } else if (arg === '--output') {
-      outputPath = argv[++i];
-      if (!outputPath || outputPath.startsWith('-')) {
-        console.error('--output requires a file path');
-        process.exit(2);
-      }
+      outputPath = readOptionValue(arg, argv[++i]);
+    } else if (arg === '--config') {
+      configPath = readOptionValue(arg, argv[++i]);
+    } else if (arg === '--base-config') {
+      baseConfigPath = readOptionValue(arg, argv[++i]);
+    } else if (arg === '--pr-config') {
+      prConfigPath = readOptionValue(arg, argv[++i]);
     } else if (arg.startsWith('-')) {
       console.error(`Unknown option: ${arg}`);
       process.exit(2);
@@ -42,12 +48,29 @@ function parseArgs(argv) {
 
   if (positional.length !== 2) {
     console.error(
-      'Usage: node compare-bundle-delta.mjs <base.json> <pr.json> [--max-bytes 2048] [--output report.json]',
+      'Usage: node compare-bundle-delta.mjs <base.json> <pr.json> [--config compare.json] [--base-config base.json] [--pr-config pr.json] [--max-bytes 2048] [--output report.json]',
     );
     process.exit(2);
   }
 
-  return { basePath: positional[0], prPath: positional[1], maxBytes, outputPath };
+  return {
+    basePath: positional[0],
+    prPath: positional[1],
+    maxBytes,
+    outputPath,
+    configPath,
+    baseConfigPath,
+    prConfigPath,
+  };
+}
+
+/** @param {string} flag @param {string | undefined} value */
+function readOptionValue(flag, value) {
+  if (!value || value.startsWith('-')) {
+    console.error(`${flag} requires a file path`);
+    process.exit(2);
+  }
+  return value;
 }
 
 /** @param {string} filePath */
@@ -65,18 +88,39 @@ function readSizeLimitJson(filePath) {
   }
 }
 
-/** @param {{ name?: string; size?: number }[]} checks */
+/** @param {{ name?: string; size?: number; passed?: boolean; sizeLimit?: number }[]} checks */
 function checksByName(checks) {
-  /** @type {Map<string, number>} */
+  /** @type {Map<string, { name?: string; size: number; passed?: boolean; sizeLimit?: number }>} */
   const map = new Map();
+  /** @type {string[]} */
+  const duplicates = [];
   for (const check of checks) {
     if (!check.name || typeof check.size !== 'number') {
       console.error('Invalid size-limit entry: each item must have a name and numeric size');
       process.exit(2);
     }
-    map.set(check.name, check.size);
+    if (map.has(check.name)) duplicates.push(check.name);
+    map.set(check.name, check);
   }
-  return map;
+  return { map, duplicates };
+}
+
+/** @param {string} filePath */
+function readNamedConfig(filePath) {
+  const entries = readSizeLimitJson(filePath);
+  /** @type {Map<string, { name?: string }>} */
+  const map = new Map();
+  /** @type {string[]} */
+  const duplicates = [];
+  for (const entry of entries) {
+    if (!entry || typeof entry.name !== 'string' || entry.name === '') {
+      console.error(`${filePath}: each check needs a name`);
+      process.exit(2);
+    }
+    if (map.has(entry.name)) duplicates.push(entry.name);
+    map.set(entry.name, entry);
+  }
+  return { map, duplicates };
 }
 
 /** Gzip sizes use decimal kB (1000 B = 1 kB), matching size-limit output. */
@@ -145,8 +189,27 @@ function ciLogGapLine() {
   return process.env.GITHUB_ACTIONS ? '\u200b' : '';
 }
 
-/** @param {ChunkResult[]} chunks @param {OverallResult} overall @param {number} maxBytes */
-function formatCiReport(chunks, overall, maxBytes) {
+/** @param {{ name: string; reason: string }[]} configFailures @param {{ name: string; size: number; sizeLimit: number | null }[]} absoluteFailures */
+function formatFailureLines(configFailures, absoluteFailures) {
+  const lines = [];
+  if (configFailures.length > 0) {
+    lines.push(ciLogGapLine(), 'config');
+    for (const failure of configFailures) {
+      lines.push(`${failure.name}: ${failure.reason}`);
+    }
+  }
+  if (absoluteFailures.length > 0) {
+    lines.push(ciLogGapLine(), 'absolute ceiling');
+    for (const failure of absoluteFailures) {
+      const limit = failure.sizeLimit == null ? '—' : formatKb(failure.sizeLimit);
+      lines.push(`${failure.name}: ${formatKb(failure.size)} > ${limit}`);
+    }
+  }
+  return lines;
+}
+
+/** @param {ChunkResult[]} chunks @param {OverallResult} overall @param {number} maxBytes @param {{ name: string; reason: string }[]} configFailures @param {{ name: string; size: number; sizeLimit: number | null }[]} absoluteFailures */
+function formatCiReport(chunks, overall, maxBytes, configFailures, absoluteFailures) {
   const lines = [
     'Bundle gzip comparison (vs PR base branch)',
     `Max allowed total growth (all chunks): ${formatMaxGrowth(maxBytes)}`,
@@ -168,9 +231,10 @@ function formatCiReport(chunks, overall, maxBytes) {
   }
 
   lines.push('overall (all chunks)');
-  if (overall.reason) {
+  const incomplete = chunks.some((chunk) => chunk.delta === null);
+  if (incomplete) {
     lines.push('Base branch : —');
-    lines.push(`This branch : — ${overall.reason}`);
+    lines.push(`This branch : — ${overall.reason ?? ''}`.trimEnd());
   } else {
     lines.push(`Base branch : ${formatKb(overall.baseSize)}`);
     lines.push(
@@ -178,11 +242,19 @@ function formatCiReport(chunks, overall, maxBytes) {
     );
   }
 
+  lines.push(...formatFailureLines(configFailures, absoluteFailures));
   return lines.join('\n').trimEnd();
 }
 
-/** @param {ChunkResult[]} chunks @param {OverallResult} overall @param {number} maxBytes @param {boolean} passed */
-function formatStepSummaryMarkdown(chunks, overall, maxBytes, passed) {
+/** @param {ChunkResult[]} chunks @param {OverallResult} overall @param {number} maxBytes @param {boolean} passed @param {{ name: string; reason: string }[]} configFailures @param {{ name: string; size: number; sizeLimit: number | null }[]} absoluteFailures */
+function formatStepSummaryMarkdown(
+  chunks,
+  overall,
+  maxBytes,
+  passed,
+  configFailures,
+  absoluteFailures,
+) {
   const title = passed ? '### Bundle size (within limit)' : '### Bundle size (limit exceeded)';
   const rows = chunks
     .map((chunk) => {
@@ -194,8 +266,9 @@ function formatStepSummaryMarkdown(chunks, overall, maxBytes, passed) {
     .join('\n');
 
   const overallStatus = passed ? '✅' : '❌';
-  const overallRow = overall.reason
-    ? `| **Overall** | — | — | ${overall.reason} |`
+  const incomplete = chunks.some((chunk) => chunk.delta === null);
+  const overallRow = incomplete
+    ? `| **Overall** | — | — | ${overall.reason ?? 'n/a'} |`
     : `| **Overall** | ${formatKb(overall.baseSize)} | ${formatKb(overall.prSize)} | ${overallStatus} ${formatDeltaParenthetical(overall.delta)} |`;
 
   return [
@@ -207,24 +280,56 @@ function formatStepSummaryMarkdown(chunks, overall, maxBytes, passed) {
     '| --- | --- | --- | --- |',
     rows,
     overallRow,
+    ...formatFailureLines(configFailures, absoluteFailures),
     '',
   ].join('\n');
 }
 
-const { basePath, prPath, maxBytes, outputPath } = parseArgs(process.argv.slice(2));
+const { basePath, prPath, maxBytes, outputPath, configPath, baseConfigPath, prConfigPath } =
+  parseArgs(process.argv.slice(2));
 const baseChecks = readSizeLimitJson(basePath);
 const prChecks = readSizeLimitJson(prPath);
-const baseByName = checksByName(baseChecks);
-const prByName = checksByName(prChecks);
+const { map: baseByName, duplicates: baseResultDuplicates } = checksByName(baseChecks);
+const { map: prByName, duplicates: prResultDuplicates } = checksByName(prChecks);
 
-const names = [...new Set([...prByName.keys(), ...baseByName.keys()])];
+/** @type {{ name: string; reason: string }[]} */
+const configFailures = [];
+for (const name of [...new Set([...baseResultDuplicates, ...prResultDuplicates])]) {
+  configFailures.push({ name, reason: 'duplicated in size-limit output' });
+}
+
+if (baseConfigPath && prConfigPath) {
+  const baseConfig = readNamedConfig(baseConfigPath);
+  const prConfig = readNamedConfig(prConfigPath);
+  for (const name of baseConfig.duplicates) {
+    configFailures.push({ name, reason: 'duplicated in base .size-limit.json' });
+  }
+  for (const name of prConfig.duplicates) {
+    configFailures.push({ name, reason: 'duplicated in PR .size-limit.json' });
+  }
+  for (const name of baseConfig.map.keys()) {
+    if (!prConfig.map.has(name)) {
+      configFailures.push({ name, reason: 'removed or renamed in PR .size-limit.json' });
+    }
+  }
+}
+
+const comparisonConfig = configPath ? readNamedConfig(configPath) : undefined;
+if (comparisonConfig) {
+  for (const name of comparisonConfig.duplicates) {
+    configFailures.push({ name, reason: 'duplicated in comparison config' });
+  }
+}
+const names = comparisonConfig
+  ? [...comparisonConfig.map.keys()]
+  : [...new Set([...prByName.keys(), ...baseByName.keys()])];
 
 /** @type {ChunkResult[]} */
 const chunks = [];
 
 for (const name of names) {
-  const baseSize = baseByName.get(name);
-  const prSize = prByName.get(name);
+  const baseSize = baseByName.get(name)?.size;
+  const prSize = prByName.get(name)?.size;
 
   if (baseSize === undefined || prSize === undefined) {
     const reason =
@@ -252,33 +357,68 @@ for (const name of names) {
 }
 
 const overallBase = computeOverall(chunks);
+
+/** @type {{ name: string; size: number; sizeLimit: number | null }[]} */
+const absoluteFailures = [];
+for (const check of prByName.values()) {
+  const overLimit =
+    check.passed === false || (typeof check.sizeLimit === 'number' && check.size > check.sizeLimit);
+  if (!overLimit || !check.name) continue;
+  absoluteFailures.push({
+    name: check.name,
+    size: check.size,
+    sizeLimit: typeof check.sizeLimit === 'number' ? check.sizeLimit : null,
+  });
+}
+
+const relativePassed = !overallBase.reason && overallBase.delta <= maxBytes;
+const passed = relativePassed && configFailures.length === 0 && absoluteFailures.length === 0;
 /** @type {OverallResult} */
 const overall = {
   ...overallBase,
-  passed: overallBase.reason ? false : overallBase.delta <= maxBytes,
+  passed,
 };
+const failureNotes = [];
+if (configFailures.length > 0) {
+  failureNotes.push(
+    configFailures.map((failure) => `${failure.name}: ${failure.reason}`).join('; '),
+  );
+}
+if (overallBase.reason) failureNotes.push(overallBase.reason);
+if (absoluteFailures.length > 0) {
+  failureNotes.push(
+    `absolute ceiling exceeded: ${absoluteFailures
+      .map(
+        (failure) =>
+          `${failure.name} ${formatKb(failure.size)} > ${failure.sizeLimit == null ? 'limit' : formatKb(failure.sizeLimit)}`,
+      )
+      .join('; ')}`,
+  );
+}
+if (!overallBase.reason && overallBase.delta > maxBytes) {
+  failureNotes.push(
+    `total growth ${formatDeltaParenthetical(overallBase.delta)} exceeds max ${formatMaxGrowth(maxBytes)} (base ${formatKb(overallBase.baseSize)}, PR ${formatKb(overallBase.prSize)})`,
+  );
+}
+if (failureNotes.length > 0) overall.reason = failureNotes.join('; ');
 
-const passed = overall.passed;
-const report = { maxBytes, passed, overall, chunks };
+const report = { maxBytes, passed, overall, chunks, configFailures, absoluteFailures };
 if (outputPath) {
   writeFileSync(outputPath, `${JSON.stringify(report, null, 2)}\n`);
 }
 
-const ciReport = formatCiReport(chunks, overall, maxBytes);
+const ciReport = formatCiReport(chunks, overall, maxBytes, configFailures, absoluteFailures);
 console.log(ciReport);
 
 const summaryPath = process.env.GITHUB_STEP_SUMMARY;
 if (summaryPath) {
-  appendFileSync(summaryPath, `${formatStepSummaryMarkdown(chunks, overall, maxBytes, passed)}\n`);
+  appendFileSync(
+    summaryPath,
+    `${formatStepSummaryMarkdown(chunks, overall, maxBytes, passed, configFailures, absoluteFailures)}\n`,
+  );
 }
 
 if (!passed) {
-  if (overall.reason) {
-    console.error(`Failed: ${overall.reason}`);
-  } else {
-    console.error(
-      `Failed: total growth ${formatDeltaParenthetical(overall.delta)} exceeds max ${formatMaxGrowth(maxBytes)} (base ${formatKb(overall.baseSize)}, PR ${formatKb(overall.prSize)}).`,
-    );
-  }
+  console.error(`Failed: ${overall.reason}`);
   process.exit(1);
 }

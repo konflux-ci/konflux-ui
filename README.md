@@ -137,8 +137,11 @@ Example field to merge into the current `info.json`:
 In the project directory, you can run:
 
 - `yarn build`: Builds the app for production using webpack with the production configuration file.
-- `yarn size-limit`: Reports gzip sizes for production chunks (see `.size-limit.json`). CI compares total gzip vs the PR base branch (max +2 kB across all chunks). Run `yarn build` first. See [docs/bundle-size-budgets.md](docs/bundle-size-budgets.md).
-- `yarn start`: Runs the app in development mode. Opens the app in your default browser.
+- `yarn size-limit`: Reports gzip sizes for production chunks (see `.size-limit.json`). CI fails when a chunk exceeds its ceiling or total gzip grows by more than 2 kB versus the PR base. Run `yarn build` first. See [docs/bundle-size-budgets.md](docs/bundle-size-budgets.md).
+- `yarn start`: Runs the app in development mode with server-side Dex CLI authentication. Opens the app in your default browser.
+- `yarn test:dev-auth`: Tests the local CLI authentication helpers with Node's test runner.
+- `yarn lint:dev-auth`: Lints the Node helpers and their tests.
+- `yarn format:dev-auth`: Checks formatting of the Node helpers and their tests.
 - `yarn test`: Runs unit tests using jest.
 - `yarn coverage`: Runs the test suite with coverage report.
 - `yarn lint`: Runs both TypeScript and SASS linting.

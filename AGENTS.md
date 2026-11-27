@@ -17,7 +17,7 @@
 | Dev auth format   | `yarn format:dev-auth`               |
 | Dev auth tests    | `yarn test:dev-auth`                 |
 
-CI runs three parallel jobs on Node 24: **lint** (`yarn lint` -> `yarn lint:restricted-imports` -> `yarn type-checks`), **Bundle size comparison** (build PR + base, total gzip growth ≤ 2 kB vs base), and **test** (`yarn test`).
+CI runs three parallel jobs on Node 24: **lint** (`yarn lint`, `yarn lint:dev-auth`, `yarn format:dev-auth`, `yarn lint:restricted-imports`, and `yarn type-checks`), **Bundle size comparison** (build PR + base; per-chunk ceilings and total gzip growth ≤ 2 kB vs base), and **test** (`yarn test` and `yarn test:dev-auth`).
 
 ## Setup
 

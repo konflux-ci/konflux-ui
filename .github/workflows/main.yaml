@@ -8,8 +8,6 @@ on:
       - main
   merge_group:
     types: [checks_requested]
-  # Triggers the workflow on manual dispatch
-  workflow_dispatch:
 
 # Cancel in-progress runs when new commits are pushed
 concurrency:
@@ -58,13 +56,12 @@ jobs:
       - name: Type Checking
         run: yarn type-checks
 
-  # Production bundle gzip — fails PRs when total measured gzip grows more than 2 kB vs base branch
+  # Production bundle gzip — fails when a chunk exceeds its ceiling or total gzip grows more than 2 kB vs base
   size-limit:
     name: Bundle size comparison
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      actions: write
     env:
       BUNDLE_MAX_GROWTH_BYTES: 2048
       BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
@@ -73,7 +70,7 @@ jobs:
       - name: Checkout PR merge commit 🛎️
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.event_name == 'merge_group' && github.event.merge_group.head_sha || github.event_name == 'pull_request' && format('refs/pull/{0}/merge', github.event.pull_request.number) || github.sha }}
+          ref: ${{ github.event_name == 'merge_group' && github.event.merge_group.head_sha || format('refs/pull/{0}/merge', github.event.pull_request.number) }}
           persist-credentials: false
 
       - name: Enable Corepack 📦
@@ -88,49 +85,65 @@ jobs:
       - name: Install Dependencies 🥁
         run: yarn install --immutable
 
-      - name: Build and measure PR bundle
-        run: |
-          cp .github/scripts/compare-bundle-delta.mjs "${RUNNER_TEMP}/compare-bundle-delta.mjs"
-          # Keep PR chunk definitions for both builds; config paths are resolved relative to the config file (repo root, not RUNNER_TEMP).
-          cp .size-limit.json "${RUNNER_TEMP}/size-limit.pr.json"
-          rm -rf dist
-          yarn build
-          yarn size-limit --json > "${RUNNER_TEMP}/pr-size-limit.json"
+      - name: Test bundle size scripts
+        run: node --test .github/scripts/bundle-size-scripts.test.mjs
 
-      - name: Fetch base commit
-        if: env.BASE_SHA != ''
+      - name: Write comparison config
         env:
           GH_TOKEN: ${{ github.token }}
           REPOSITORY: ${{ github.repository }}
           SERVER_URL: ${{ github.server_url }}
         run: |
+          cp .github/scripts/compare-bundle-delta.mjs "${RUNNER_TEMP}/compare-bundle-delta.mjs"
+          cp .github/scripts/merge-size-limit-config.mjs "${RUNNER_TEMP}/merge-size-limit-config.mjs"
+          cp .size-limit.json "${RUNNER_TEMP}/size-limit.pr.json"
           auth_header="$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
           git -c http.extraheader="AUTHORIZATION: basic ${auth_header}" fetch --no-tags "${SERVER_URL}/${REPOSITORY}.git" "${BASE_SHA}"
-          git checkout --force FETCH_HEAD
+          git show "FETCH_HEAD:.size-limit.json" > "${RUNNER_TEMP}/size-limit.base.json"
+          node "${RUNNER_TEMP}/merge-size-limit-config.mjs" \
+            "${RUNNER_TEMP}/size-limit.base.json" \
+            "${RUNNER_TEMP}/size-limit.pr.json" \
+            "${RUNNER_TEMP}/size-limit.compare.json"
+          cp "${RUNNER_TEMP}/size-limit.compare.json" .size-limit.ci.json
+
+      - name: Build and measure PR bundle
+        run: |
+          rm -rf dist
+          yarn build
+          set +e
+          yarn size-limit --config .size-limit.ci.json --json > "${RUNNER_TEMP}/pr-size-limit.json"
+          status=$?
+          set -e
+          if [ ! -s "${RUNNER_TEMP}/pr-size-limit.json" ]; then
+            exit "$status"
+          fi
 
       - name: Build and measure base branch bundle
-        if: env.BASE_SHA != ''
         run: |
+          git checkout --force FETCH_HEAD
           yarn install --immutable
           rm -rf dist
           yarn build
-          cp "${RUNNER_TEMP}/size-limit.pr.json" .size-limit.ci.json
+          cp "${RUNNER_TEMP}/size-limit.compare.json" .size-limit.ci.json
+          set +e
           yarn size-limit --config .size-limit.ci.json --json > "${RUNNER_TEMP}/base-size-limit.json"
+          status=$?
+          set -e
+          if [ ! -s "${RUNNER_TEMP}/base-size-limit.json" ]; then
+            exit "$status"
+          fi
 
       - name: Compare bundle growth vs base
         id: size-limit
-        if: env.BASE_SHA != ''
         run: |
           node "${RUNNER_TEMP}/compare-bundle-delta.mjs" \
             "${RUNNER_TEMP}/base-size-limit.json" \
             "${RUNNER_TEMP}/pr-size-limit.json" \
+            --config "${RUNNER_TEMP}/size-limit.compare.json" \
+            --base-config "${RUNNER_TEMP}/size-limit.base.json" \
+            --pr-config "${RUNNER_TEMP}/size-limit.pr.json" \
             --max-bytes "${BUNDLE_MAX_GROWTH_BYTES}" \
             --output bundle-size-delta.json
-
-      - name: Bundle growth check skipped
-        if: env.BASE_SHA == ''
-        run: |
-          echo "::warning::Bundle growth comparison runs only for pull_request and merge_group events."
 
       - name: Upload bundle size results
         if: failure() && steps.size-limit.outcome == 'failure'
