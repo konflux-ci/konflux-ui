@@ -5,6 +5,7 @@ import { ComponentDetailsPage } from '../support/pages/ComponentDetailsPage';
 import { ComponentPage } from '../support/pages/ComponentsPage';
 import { ComponentsTabPage } from '../support/pages/tabs/ComponentsTabPage';
 import { IntegrationTestsTabPage } from '../support/pages/tabs/IntegrationTestsTabPage';
+import { LatestCommitsTabPage } from '../support/pages/tabs/LatestCommitsTabPage';
 import { DetailsTab, PipelinerunsTabPage } from '../support/pages/tabs/PipelinerunsTabPage';
 import { APIHelper } from '../utils/APIHelper';
 import { Applications } from '../utils/Applications';
@@ -17,6 +18,7 @@ describe('Component Lifecycle Tests', () => {
   const applicationDetailPage = new ApplicationDetailPage();
   const integrationTestsTab = new IntegrationTestsTabPage();
   const componentPage = new ComponentPage();
+  const latestCommitsTabPage = new LatestCommitsTabPage();
 
   const sourceOwner = Cypress.expose('SOURCE_REPO_OWNER');
   const sourceRepo = Cypress.expose('SOURCE_REPO_NAME');
@@ -231,6 +233,43 @@ describe('Component Lifecycle Tests', () => {
 
       cy.log('Verifying vulnerability scan details for on-push pipeline run');
       PipelinerunsTabPage.verifyVulnerabilityScanDetails(`${componentName}-on-push`);
+    });
+  });
+
+  describe('Explore Commits Tab', () => {
+    // Commit status rolls up all related PLRs (on-push, cancelled on-pull, EC).
+    // On local/PR runs EC may Fail and on-pull is Cancelled, so Succeeded is not guaranteed.
+    const commitStatus = /(Succeeded|Failed|Cancelled)/;
+
+    after(() => {
+      cy.get('body').then(($body) => {
+        if ($body.find('nav[data-ouia-component-type="PF6/Breadcrumb"]').length > 0) {
+          Applications.clickBreadcrumbLink(applicationName);
+        } else {
+          Common.navigateTo(NavItem.applications);
+          Applications.filterApplication(applicationName);
+          UIhelper.clickRowCellInTable('Application List', applicationName, applicationName);
+        }
+      });
+    });
+
+    it('Verify commits from Activity tabs', () => {
+      const commitTitle = 'firstCommit';
+      const commitSha = Cypress.expose(`${commitTitle}_SHA`) as string;
+
+      cy.log('Verify commit from application Activity → Latest commits');
+      Applications.goToLatestCommitsTab();
+      latestCommitsTabPage.checkCommitRow(commitTitle, componentName, commitStatus, commitSha, publicRepo)
+      UIhelper.verifyLabelAndValue('Branch', 'main');
+      UIhelper.verifyLabelAndValue('Component', componentName);
+      latestCommitsTabPage.verifyNodesOnCommitOverview(['commit', `${componentName}-build`]);
+
+      cy.log('Verify commit from component Activity → Commits');
+      Applications.clickBreadcrumbLink(applicationName);
+      Applications.goToComponentsTab();
+      ComponentsTabPage.openComponent(componentName);
+      ComponentDetailsPage.goToCommitsTab();
+      latestCommitsTabPage.checkCommitRow(commitTitle, componentName, commitStatus, commitSha, publicRepo)
     });
   });
 
