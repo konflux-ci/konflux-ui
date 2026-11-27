@@ -35,7 +35,7 @@ const IntroBanner: React.FC = () => {
         >
           <CardTitle>
             <Title headingLevel="h1" size="2xl">
-              Get started with Konflux
+              Get started with Konflux! This is a test!
             </Title>
           </CardTitle>
           <CardBody>
