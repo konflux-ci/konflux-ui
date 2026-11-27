@@ -1,0 +1,14 @@
+.testgraph-visualization {
+  margin-bottom: var(--pf-t--global--spacer--md);
+
+  &__graph {
+    overflow: auto;
+  }
+
+  &__graph-container {
+    align-self: flex-start;
+    max-width: 100%;
+    overflow: auto;
+    border-radius: 1.5rem;
+  }
+}

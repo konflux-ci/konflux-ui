@@ -18,6 +18,7 @@ import {
   usePipelinerunActions,
   usePipelinerunActionsLazy,
   useRerunActionLazy,
+  useStopCancelActionsLazy,
 } from '../pipelinerun-actions';
 
 jest.mock('../../../../utils/rbac', () => ({
@@ -260,6 +261,66 @@ describe('usePipelinerunActions', () => {
         label: 'Cancel',
         disabled: true,
         disabledTooltip: undefined,
+      }),
+    );
+  });
+
+  it('should enable Cancel but disable Stop for Pending PipelineRuns', () => {
+    const pendingPipelineRun = testPipelineRuns[DataState.PIPELINE_RUN_PENDING];
+    const { result } = renderHook(() =>
+      usePipelinerunActions({
+        metadata: {
+          labels: {
+            'pipelines.appstudio.openshift.io/type': 'build',
+            [PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL]: PipelineRunEventType.PUSH,
+          },
+        },
+        spec: pendingPipelineRun.spec,
+        status: pendingPipelineRun.status,
+      } as unknown as PipelineRunKind),
+    );
+    const actions = result.current;
+
+    expect(actions[1]).toEqual(
+      expect.objectContaining({
+        label: 'Stop',
+        disabled: true,
+      }),
+    );
+    expect(actions[2]).toEqual(
+      expect.objectContaining({
+        label: 'Cancel',
+        disabled: false,
+      }),
+    );
+  });
+
+  it('should enable Cancel but disable Stop for Queued PipelineRuns', () => {
+    const queuedPipelineRun = testPipelineRuns[DataState.PIPELINE_RUN_QUEUED_PAC];
+    const { result } = renderHook(() =>
+      usePipelinerunActions({
+        metadata: {
+          labels: {
+            'pipelines.appstudio.openshift.io/type': 'build',
+            [PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL]: PipelineRunEventType.PUSH,
+          },
+        },
+        spec: queuedPipelineRun.spec,
+        status: queuedPipelineRun.status,
+      } as unknown as PipelineRunKind),
+    );
+    const actions = result.current;
+
+    expect(actions[1]).toEqual(
+      expect.objectContaining({
+        label: 'Stop',
+        disabled: true,
+      }),
+    );
+    expect(actions[2]).toEqual(
+      expect.objectContaining({
+        label: 'Cancel',
+        disabled: false,
       }),
     );
   });
@@ -1163,6 +1224,82 @@ describe('usePipelinererunAction', () => {
       await result.current.cta();
       expect(navigateMock).toHaveBeenCalled();
     });
+  });
+});
+
+describe('useStopCancelActionsLazy', () => {
+  beforeEach(() => {
+    useAccessReviewForModelMock.mockReturnValue([true, true]);
+  });
+
+  it('should enable Cancel but disable Stop for Pending PipelineRuns', () => {
+    const pendingPipelineRun = testPipelineRuns[DataState.PIPELINE_RUN_PENDING];
+    const { result } = renderHook(() =>
+      useStopCancelActionsLazy({
+        metadata: {
+          labels: {
+            'pipelines.appstudio.openshift.io/type': 'build',
+            [PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL]: PipelineRunEventType.PUSH,
+          },
+        },
+        spec: pendingPipelineRun.spec,
+        status: pendingPipelineRun.status,
+      } as unknown as PipelineRunKind),
+    );
+
+    // Open the lazy menu to trigger action building
+    act(() => {
+      result.current[1](true);
+    });
+
+    const actions = result.current[0];
+    expect(actions[0]).toEqual(
+      expect.objectContaining({
+        label: 'Stop',
+        disabled: true,
+      }),
+    );
+    expect(actions[1]).toEqual(
+      expect.objectContaining({
+        label: 'Cancel',
+        disabled: false,
+      }),
+    );
+  });
+
+  it('should enable Cancel but disable Stop for Queued PipelineRuns', () => {
+    const queuedPipelineRun = testPipelineRuns[DataState.PIPELINE_RUN_QUEUED_PAC];
+    const { result } = renderHook(() =>
+      useStopCancelActionsLazy({
+        metadata: {
+          labels: {
+            'pipelines.appstudio.openshift.io/type': 'build',
+            [PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL]: PipelineRunEventType.PUSH,
+          },
+        },
+        spec: queuedPipelineRun.spec,
+        status: queuedPipelineRun.status,
+      } as unknown as PipelineRunKind),
+    );
+
+    // Open the lazy menu to trigger action building
+    act(() => {
+      result.current[1](true);
+    });
+
+    const actions = result.current[0];
+    expect(actions[0]).toEqual(
+      expect.objectContaining({
+        label: 'Stop',
+        disabled: true,
+      }),
+    );
+    expect(actions[1]).toEqual(
+      expect.objectContaining({
+        label: 'Cancel',
+        disabled: false,
+      }),
+    );
   });
 });
 

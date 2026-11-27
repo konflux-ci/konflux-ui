@@ -6,6 +6,7 @@ import { useK8sAndKarchResources } from '~/hooks/useK8sAndKarchResources';
 import { createUseParamsMock, renderWithQueryClientAndRouter } from '~/utils/test-utils';
 import { mockSnapshots } from '../../../../__data__/mock-snapshots';
 import { mockUseNamespaceHook } from '../../../../unit-test-utils/mock-namespace';
+import { SNAPSHOTS_LIST_COLUMN_STATE_KEY } from '../snapshots-table-config';
 import { SnapshotsListViewTab } from '../SnapshotsTab';
 
 jest.useFakeTimers();
@@ -57,6 +58,8 @@ describe('SnapshotsListViewTab', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     jest.clearAllTimers();
+    window.localStorage.removeItem(SNAPSHOTS_LIST_COLUMN_STATE_KEY);
+    window.sessionStorage.removeItem(SNAPSHOTS_LIST_COLUMN_STATE_KEY);
     mockUseNamespaceHook('test-namespace');
     useMockSnapshots.mockReturnValue({
       data: mockSnapshots,
@@ -132,6 +135,84 @@ describe('SnapshotsListViewTab', () => {
     });
 
     expect(screen.getByText('my-app-snapshot-1')).toBeInTheDocument();
+  });
+
+  it('sorts snapshots and restores their input order when the sort is cleared', async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    createUseParamsMock({ applicationName: 'test-app' });
+
+    const [snapshot] = mockSnapshots;
+    const snapshots = [
+      {
+        ...snapshot,
+        metadata: {
+          ...snapshot.metadata,
+          name: 'b-snapshot',
+          uid: 'b-snapshot-uid',
+          creationTimestamp: '2023-01-02T10:00:00Z',
+        },
+      },
+      {
+        ...snapshot,
+        metadata: {
+          ...snapshot.metadata,
+          name: 'a-snapshot',
+          uid: 'a-snapshot-uid',
+          creationTimestamp: '2023-01-01T10:00:00Z',
+        },
+      },
+      {
+        ...snapshot,
+        metadata: {
+          ...snapshot.metadata,
+          name: 'c-snapshot',
+          uid: 'c-snapshot-uid',
+          creationTimestamp: '2023-01-03T10:00:00Z',
+        },
+      },
+    ];
+    useMockSnapshots.mockReturnValue({
+      data: snapshots,
+      isLoading: false,
+      clusterError: undefined,
+      archiveError: undefined,
+      hasError: false,
+    });
+
+    renderWithQueryClientAndRouter(<SnapshotsListViewTab />);
+
+    expect(screen.getByTestId('sort-dropdown')).toBeInTheDocument();
+
+    const getSnapshotNames = () =>
+      screen.getAllByText(/^(a|b|c)-snapshot$/).map((link) => link.textContent);
+
+    await screen.findByText('b-snapshot');
+    expect(getSnapshotNames()).toEqual(['b-snapshot', 'a-snapshot', 'c-snapshot']);
+
+    await user.click(screen.getByTestId('sort-dropdown'));
+    await user.click(screen.getByRole('option', { name: 'Name' }));
+    expect(getSnapshotNames()).toEqual(['a-snapshot', 'b-snapshot', 'c-snapshot']);
+    expect(
+      JSON.parse(window.sessionStorage.getItem(SNAPSHOTS_LIST_COLUMN_STATE_KEY) ?? '{}'),
+    ).toEqual({
+      sortColumn: 'name',
+      sortDirection: 'asc',
+    });
+    expect(
+      JSON.parse(window.localStorage.getItem(SNAPSHOTS_LIST_COLUMN_STATE_KEY) ?? '{}'),
+    ).not.toHaveProperty('sortColumn');
+
+    await user.click(screen.getByRole('option', { name: 'Descending' }));
+    expect(getSnapshotNames()).toEqual(['c-snapshot', 'b-snapshot', 'a-snapshot']);
+
+    await user.click(screen.getByRole('option', { name: 'Name' }));
+    expect(getSnapshotNames()).toEqual(['b-snapshot', 'a-snapshot', 'c-snapshot']);
+    expect(window.sessionStorage.getItem(SNAPSHOTS_LIST_COLUMN_STATE_KEY)).toBeNull();
+
+    await user.click(screen.getByRole('option', { name: 'Created at' }));
+    expect(getSnapshotNames()).toEqual(['a-snapshot', 'b-snapshot', 'c-snapshot']);
+    await user.click(screen.getByRole('option', { name: 'Descending' }));
+    expect(getSnapshotNames()).toEqual(['c-snapshot', 'b-snapshot', 'a-snapshot']);
   });
 
   it('should display the filtered empty state when no results match the filter by commit message', async () => {

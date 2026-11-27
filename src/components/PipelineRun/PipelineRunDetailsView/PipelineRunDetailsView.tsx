@@ -23,6 +23,7 @@ import { downloadYamlAction } from '~/utils/common-utils';
 import { isResourceEnterpriseContract } from '~/utils/conforma-utils';
 import { pipelineRunCancel, pipelineRunStop } from '~/utils/pipeline-actions';
 import { isTaskRunInPipelineRun, pipelineRunStatus } from '~/utils/pipeline-utils';
+import { isCancellableStatus } from '~/utils/plr-status-config';
 import { useAccessReviewForModel } from '~/utils/rbac';
 
 export const PipelineRunDetailsView: React.FC = () => {
@@ -146,9 +147,9 @@ export const PipelineRunDetailsView: React.FC = () => {
           key: 'cancel',
           label: 'Cancel',
           tooltipProps: {
-            content: 'Interrupt any executing non finally tasks, then execute finally tasks',
+            content: 'Cancel this pipeline run',
           },
-          isDisabled: !(plrStatus && plrStatus === 'Running') || !canPatchPipeline,
+          isDisabled: !isCancellableStatus(pipelineRun) || !canPatchPipeline,
           disabledTooltip: !canPatchPipeline
             ? "You don't have access to cancel a build"
             : undefined,

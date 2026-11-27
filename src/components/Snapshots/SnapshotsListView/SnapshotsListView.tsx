@@ -11,7 +11,7 @@ import AppEmptyState from '~/shared/components/empty-state/AppEmptyState';
 import FilteredEmptyState from '~/shared/components/empty-state/FilteredEmptyState';
 import { useFilterState, useFilteredData, FilterToolbar } from '~/shared/components/Filter';
 import ListLayout from '~/shared/components/list-layout/ListLayout';
-import { Table, TableContainer } from '~/shared/components/TableV2';
+import { SortDropdown, Table, TableContainer } from '~/shared/components/TableV2';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { Snapshot } from '~/types/coreBuildService';
@@ -75,12 +75,14 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
 
   const finalFilteredSnapshots = React.useMemo(() => {
     return textFiltered.filter((s) => {
-      if (
-        filterValues.filterBy.includes(FILTER_BY_VALUES.SHOW_MERGED_ONLY) &&
-        s.metadata.labels?.[PipelineRunLabel.TEST_COMMIT_EVENT_TYPE_LABEL] ===
-          PipelineRunEventType.PULL
-      ) {
-        return false;
+      if (filterValues.filterBy.includes(FILTER_BY_VALUES.SHOW_MERGED_ONLY)) {
+        const eventType = s.metadata.labels?.[PipelineRunLabel.TEST_COMMIT_EVENT_TYPE_LABEL];
+        if (
+          eventType === PipelineRunEventType.PULL ||
+          eventType === PipelineRunEventType.MERGE_REQUEST
+        ) {
+          return false;
+        }
       }
       return true;
     });
@@ -137,6 +139,11 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
         toolbar={
           isFiltered || (snapshots ?? []).length > 0 ? (
             <FilterToolbar configs={filterConfigs} options={filterOptions}>
+              <SortDropdown
+                columns={SNAPSHOTS_LIST_COLUMNS}
+                columnStateKey={columnStateKey}
+                data-tour="snapshots-list-sort-dropdown"
+              />
               <ColumnManagement<Snapshot>
                 columns={SNAPSHOTS_LIST_COLUMNS}
                 columnStateKey={columnStateKey}

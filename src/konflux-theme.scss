@@ -56,6 +56,15 @@ html.pf-v6-theme-dark {
     --pf-v6-c-toggle-group__button--hover--after--BorderWidth: 0;
   }
 
+  .pf-v6-c-table__compound-expansion-toggle {
+    --pf-v6-c-table__compound-expansion-toggle__button--Color: var(
+      --pf-t--global--text--color--link--default
+    );
+    --pf-v6-c-table__compound-expansion-toggle__button--hover--Color: var(
+      --pf-t--global--text--color--link--hover
+    );
+  }
+
   // experimental theme not used anywhere yet, for future use
   &:where(.pf-v6-theme-glass) {
     --pf-t--global--background--image--glass: url(./assets/theme/global-background.svg);

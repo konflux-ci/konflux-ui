@@ -11,7 +11,9 @@ If you find a bug or want to request a feature, feel free to open an issue as we
 
 ## Quick Start
 
-**Prerequisites:** Node.js >= 24
+**Prerequisites:** Node.js >= 24, Corepack, `kubectl`, and the
+[kubelogin oidc-login plugin](https://github.com/int128/kubelogin) version 1.36.4 or newer
+on `PATH`. See [local CLI authentication](docs/local-cli-auth.md) for certificate trust and login requirements.
 
 Clone the repository, then run a single setup command (enables Corepack, installs dependencies, and starts the dev server):
 
@@ -24,7 +26,10 @@ Equivalent: `./setup.sh`
 
 ## Setting up development environment
 
-This project contains a DevContainer which has all dependencies for developing Konflux UI pre-installed. You can find out more information for how to configure your environment to use the DevContainer in the included [README.md](.devcontainer/README.md).
+This project includes a DevContainer for developing Konflux UI. Check that `kubectl`
+and kubelogin 1.36.4 or newer are available inside the container, and install them if
+absent before running `yarn start`. See the [DevContainer README](.devcontainer/README.md)
+for configuration instructions.
 
 ### Manual installation
 
@@ -33,7 +38,8 @@ If you do not want to or cannot use the DevContainer, you can also setup the rep
 **Prerequisites:**
 
 - Node.js version >= 24
-- Corepack enabled (included with Node.js 24+)
+- Corepack enabled
+- `kubectl` and the [kubelogin oidc-login plugin](https://github.com/int128/kubelogin) version 1.36.4 or newer on `PATH`
 
 > **Note:** This project uses [Yarn Berry (v4.x)](https://yarnpkg.com/) as the package manager. The correct Yarn version is automatically managed via the `packageManager` field in `package.json` and Corepack.
 
@@ -60,60 +66,51 @@ A step by step series of examples that tell you how to get a development environ
    yarn start
    ```
 
+### Local UI authentication
+
+`yarn start` authenticates through the configured deployment's public Dex `cli` client.
+The local Node server obtains ID tokens with kubelogin, and webpack's development
+server attaches them to upstream API and WebSocket requests. The UI runs at
+`https://localhost:8080`; the default `.env` targets staging.
+
+See [local CLI authentication](docs/local-cli-auth.md) for certificate trust, first login,
+refresh, logout, and staging validation instructions.
+
+If a system `yarn` wrapper keeps using an older Node.js after switching versions, run
+the checked-in Yarn release with Node.js 24 directly:
+
+```bash
+nvm use 24
+node .yarn/releases/yarn-4.12.0.cjs start
+```
+
 ## Running with Konflux-ci
 
-By default, the UI uses the stage cluster for API calls. However, if you want to run the UI with a local Konflux deployment, follow the steps below.
+The default `.env` targets staging. To connect to a local Konflux deployment:
 
-1. Follow the guide at https://konflux-ci.dev/konflux-ci/docs/installation/install-local/ to deploy Konflux locally
+1. Follow the [local installation guide](https://konflux-ci.dev/konflux-ci/docs/installation/install-local/)
+   to deploy Konflux.
+2. Ensure that deployment's Dex issuer exposes a public client named `cli`, supports
+   authorization code login with PKCE S256, and accepts kubelogin's loopback callback
+   on port 8000 or 18000. The issuer must be available at `/idp/` on the configured
+   upstream origin.
+3. Set all four targets in `.env` to the same hostname and effective port, matching
+   the configured Dex issuer. The default Kind deployment advertises
+   `https://localhost:9443/idp/`, so use `localhost` even if `127.0.0.1` reaches the same
+   server:
 
-2. Once you have Konflux deployed, make the following changes to your .env file:
+   ```dotenv
+   AUTH_URL=https://localhost:9443/
+   REGISTRATION_URL=https://localhost:9443/
+   PROXY_URL=https://localhost:9443/
+   PROXY_WEBSOCKET_URL=wss://localhost:9443/
+   ```
 
-```diff
-# .env
-
-+ AUTH_URL=https://127.0.0.1:9443/
-+ REGISTRATION_URL=https://127.0.0.1:9443/
-+ PROXY_URL=https://127.0.0.1:9443/
-+ PROXY_WEBSOCKET_URL=wss://127.0.0.1:9443
-- AUTH_URL= https://konflux-ui.apps.stone-stg-rh01.l2vh.p1.openshiftapps.com/
-- REGISTRATION_URL=https://konflux-ui.apps.stone-stg-rh01.l2vh.p1.openshiftapps.com/
-- PROXY_URL=https://konflux-ui.apps.stone-stg-rh01.l2vh.p1.openshiftapps.com/
-- PROXY_WEBSOCKET_URL=wss://konflux-ui.apps.stone-stg-rh01.l2vh.p1.openshiftapps.com/
-```
-
-3. Update your webpack.dev.config.js file with the following changes:
-
-```diff
-@@ webpack.dev.config.js:14 @@
-    historyApiFallback: true,
-    hot: true,
-    server: 'https',
-    proxy: [
-      {
-+        context: (path) => path.includes('/oauth2/') || path.includes('/idp/'),
--        context: (path) => path.includes('/oauth2/'),
-        target: process.env.AUTH_URL,
-        secure: false,
-        changeOrigin: true,
-+        autoRewrite: true,
--        autoRewrite: false,
-        toProxy: true,
-        headers: {
-          'X-Forwarded-Host': `localhost:${DEV_SERVER_PORT}`,
-        },
-        onProxyRes: (proxyRes) => {
-          const location = proxyRes.headers['location'];
-          if (location) {
-            proxyRes.headers['location'] = location.replace(
-+              'localhost:9443',
-+              `localhost:${DEV_SERVER_PORT}`,
--              'konflux-ui.apps.stone-stg-rh01.l2vh.p1.openshiftapps.com%2Foauth2',
--              `localhost:${DEV_SERVER_PORT}/oauth2`,
-            );
-          }
-        },
-
-```
+4. Configure certificate trust for the upstream deployment. The local Node server
+   verifies upstream TLS, so supply its CA with `NODE_EXTRA_CA_CERTS=/path/to/ca.pem`
+   if needed. Kubelogin must also trust the issuer's CA through its system trust
+   store. See [certificate configuration](docs/local-cli-auth.md#configure-targets-and-certificates).
+5. Run `yarn start` and sign in at `https://localhost:8080`.
 
 ### Copy login command on a local cluster
 
@@ -141,7 +138,10 @@ In the project directory, you can run:
 
 - `yarn build`: Builds the app for production using webpack with the production configuration file.
 - `yarn size-limit`: Checks production bundle sizes against the gzip budgets in `.size-limit.json`. Run `yarn build` first. See [docs/bundle-size-budgets.md](docs/bundle-size-budgets.md).
-- `yarn start`: Runs the app in development mode. Opens the app in your default browser.
+- `yarn start`: Runs the app in development mode with server-side Dex CLI authentication. Opens the app in your default browser.
+- `yarn test:dev-auth`: Tests the local CLI authentication helpers with Node's test runner.
+- `yarn lint:dev-auth`: Lints the Node helpers and their tests.
+- `yarn format:dev-auth`: Checks formatting of the Node helpers and their tests.
 - `yarn test`: Runs unit tests using jest.
 - `yarn coverage`: Runs the test suite with coverage report.
 - `yarn lint`: Runs both TypeScript and SASS linting.
