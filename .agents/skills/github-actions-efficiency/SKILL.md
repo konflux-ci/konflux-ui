@@ -12,7 +12,7 @@ description: Use when auditing GitHub Actions for wasted CI minutes, runtime, or
 Current repository guidance expects these CI checks on Node 24:
 
 - **Lint:** `yarn lint`, `yarn lint:restricted-imports`, and `yarn type-checks`
-- **Size limit:** `yarn build` and `yarn size-limit`
+- **Bundle size:** build the PR and the base; per-chunk ceilings and total gzip growth ≤ 2 kB versus the base
 - **Tests:** Coverage-enabled Jest shards `1/2` and `2/2` in `.github/workflows/main.yaml`. The workflow runs `yarn test --maxWorkers=2 --coverage --silent --ci --verbose=false --shard=${{ matrix.shard }}/2`.
 
 Before proposing workflow changes, confirm the current workflows and required checks. Preserve this validation coverage and the documented Node 24 runtime unless maintainers update the policy. Recheck this baseline against the workflow files before relying on it.
