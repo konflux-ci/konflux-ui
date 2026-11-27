@@ -459,7 +459,7 @@ When modifying an existing file that contains `console.*` statements, replace th
 ### E2E Tests
 
 - Framework: **Cypress** (in `e2e-tests/` directory, separate `package.json`).
-- E2E tests run in CI with the `ok-to-test` label.
+- E2E tests run in CI for authors with write access. Other contributors need a repository member with write access to comment `/ok-to-test` and the full commit SHA of the current head. A different SHA is rejected.
 - Page objects live in `e2e-tests/support/pageObjects/`.
 - Utility functions live in `e2e-tests/utils/`.
 

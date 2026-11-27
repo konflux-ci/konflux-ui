@@ -7,6 +7,10 @@ runs:
       if: ${{ !cancelled() }}
       run: |
         set -euo pipefail
+        # Cleanup runs after a failed test. Do not keep the job secrets for it.
+        unset CYPRESS_GH_TOKEN GH_APP_ID GH_APP_PRIVATE_KEY GH_APP_WEBHOOK_SECRET \
+          QUAY_TEST_ORG QUAY_TOKEN_TEST SMEE_URL CYPRESS_USERNAME CYPRESS_PASSWORD \
+          CYPRESS_PROJECT_ID CYPRESS_RECORD_KEY CODECOV_TOKEN
         : Generate error logs
         # This file is not present for periodic-stage jobs as we don't deploy Konflux
         if [ -f ./konflux-ci/generate-err-logs.sh ]; then
@@ -17,6 +21,9 @@ runs:
     - name: Copy UI E2E test logs
       if: ${{ !cancelled() }}
       run: |
+        unset CYPRESS_GH_TOKEN GH_APP_ID GH_APP_PRIVATE_KEY GH_APP_WEBHOOK_SECRET \
+          QUAY_TEST_ORG QUAY_TOKEN_TEST SMEE_URL CYPRESS_USERNAME CYPRESS_PASSWORD \
+          CYPRESS_PROJECT_ID CYPRESS_RECORD_KEY CODECOV_TOKEN
         mkdir -p logs
         if [ -d artifacts ]; then cp -r artifacts/* logs/ || true; fi
       shell: bash
