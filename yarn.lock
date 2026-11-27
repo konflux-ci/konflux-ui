@@ -20024,9 +20024,9 @@ __metadata:
   linkType: hard
 
 "strip-json-comments@npm:^5.0.1":
-  version: 5.0.3
-  resolution: "strip-json-comments@npm:5.0.3"
-  checksum: 10/3ccbf26f278220f785e4b71f8a719a6a063d72558cc63cb450924254af258a4f4c008b8c9b055373a680dc7bd525be9e543ad742c177f8a7667e0b726258e0e4
+  version: 5.1.0
+  resolution: "strip-json-comments@npm:5.1.0"
+  checksum: 10/a02e5f6ec015a34d9d177c68641ef68b7c7caa7fb516bc2443a488864cb8703dbb204e2e867d489d9080d9a937910c17110167469d280fe3cabaf031cac7e560
   languageName: node
   linkType: hard
 
