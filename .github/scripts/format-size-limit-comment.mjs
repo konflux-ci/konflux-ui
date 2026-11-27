@@ -49,7 +49,7 @@ const raw = readFileSync(resultsPath, 'utf8').trim();
  *   maxBytes?: number;
  *   passed?: boolean;
  *   overall?: { baseSize: number; prSize: number; delta: number; passed?: boolean; reason?: string };
- *   chunks?: { name: string; baseSize: number | null; prSize: number | null; delta: number | null; reason?: string }[];
+ *   chunks?: { name: string; baseSize: number | null; prSize: number | null; delta: number | null; sizeLimit?: number | null; reason?: string }[];
  * }} */
 let report;
 try {
@@ -82,6 +82,16 @@ const measuredBreakdown = chunks
 const missingBreakdown = missingChunks
   .map((chunk) => `- **\`${chunk.name}\`**: ${chunk.reason ?? 'missing from base or PR output'}`)
   .join('\n');
+
+const sizeLimitLines = chunks
+  .filter((chunk) => typeof chunk.sizeLimit === 'number')
+  .map((chunk) => {
+    const sizeLabel = chunk.prSize == null ? '—' : formatBytes(chunk.prSize);
+    return `- **\`${chunk.name}\`**: limit **${formatBytes(chunk.sizeLimit)}** / this branch **${sizeLabel}**`;
+  });
+
+const sizeLimitSection =
+  sizeLimitLines.length > 0 ? ['**Per-chunk ceilings:**', '', ...sizeLimitLines, ''] : [];
 
 const configBreakdown = configFailures
   .map((failure) => `- **\`${failure.name ?? 'unknown'}\`**: ${failure.reason ?? 'invalid check'}`)
@@ -122,6 +132,7 @@ const body = incomplete
       missingBreakdown.length > 0 ? missingBreakdown : '_No missing chunks._',
       ...(configBreakdown.length > 0 ? ['', '**Config:**', '', configBreakdown] : []),
       '',
+      ...sizeLimitSection,
       ...details,
     ].join('\n')
   : [
@@ -136,6 +147,7 @@ const body = incomplete
       '',
       measuredBreakdown.length > 0 ? measuredBreakdown : '_No comparable chunks in report._',
       '',
+      ...sizeLimitSection,
       'Shrink the change, split it across PRs, or discuss an exception with maintainers if the growth is intentional.',
       '',
       ...details,

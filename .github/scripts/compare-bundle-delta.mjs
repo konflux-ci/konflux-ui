@@ -152,7 +152,7 @@ function formatMaxGrowth(maxBytes) {
   return formatKb(maxBytes);
 }
 
-/** @typedef {{ name: string; baseSize: number | null; prSize: number | null; delta: number | null; reason?: string }} ChunkResult */
+/** @typedef {{ name: string; baseSize: number | null; prSize: number | null; delta: number | null; sizeLimit: number | null; reason?: string }} ChunkResult */
 
 /** @typedef {{ baseSize: number; prSize: number; delta: number; passed: boolean; reason?: string }} OverallResult */
 
@@ -208,8 +208,8 @@ function formatFailureLines(configFailures, absoluteFailures) {
   return lines;
 }
 
-/** @param {ChunkResult[]} chunks @param {OverallResult} overall @param {number} maxBytes @param {{ name: string; reason: string }[]} configFailures @param {{ name: string; size: number; sizeLimit: number | null }[]} absoluteFailures */
-function formatCiReport(chunks, overall, maxBytes, configFailures, absoluteFailures) {
+/** @param {ChunkResult[]} chunks @param {OverallResult} overall @param {number} maxBytes @param {{ name: string; reason: string }[]} configFailures @param {{ name: string; size: number; sizeLimit: number | null }[]} absoluteFailures @param {string[]} failureNotes */
+function formatCiReport(chunks, overall, maxBytes, configFailures, absoluteFailures, failureNotes) {
   const lines = [
     'Bundle gzip comparison (vs PR base branch)',
     `Max allowed total growth (all chunks): ${formatMaxGrowth(maxBytes)}`,
@@ -242,8 +242,48 @@ function formatCiReport(chunks, overall, maxBytes, configFailures, absoluteFailu
     );
   }
 
-  lines.push(...formatFailureLines(configFailures, absoluteFailures));
+  lines.push(
+    ...formatSizeLimitLines(chunks),
+    ...formatFailureLines(configFailures, absoluteFailures),
+  );
+  // Same stream as the report. GitHub Actions shows stderr out of order with stdout.
+  if (failureNotes.length > 0) {
+    lines.push(ciLogGapLine(), 'Failed');
+    lines.push(...failureNotes);
+  }
   return lines.join('\n').trimEnd();
+}
+
+/** @param {ChunkResult[]} chunks */
+function formatSizeLimitLines(chunks) {
+  const lines = [ciLogGapLine(), 'Bundle gzip size limit (per-chunk ceiling)', ciLogGapLine()];
+
+  for (const chunk of chunks) {
+    lines.push(chunk.name);
+    lines.push(`Size limit  : ${chunk.sizeLimit == null ? '—' : formatKb(chunk.sizeLimit)}`);
+    lines.push(`This branch : ${chunk.prSize == null ? '—' : formatKb(chunk.prSize)}`);
+    lines.push(ciLogGapLine());
+  }
+
+  lines.push('overall (all chunks)');
+  const incomplete = chunks.some((chunk) => chunk.prSize == null || chunk.sizeLimit == null);
+  if (incomplete) {
+    lines.push('Size limit  : —');
+    lines.push('This branch : —');
+  } else {
+    let prSize = 0;
+    let limitSize = 0;
+    for (const chunk of chunks) {
+      prSize += chunk.prSize ?? 0;
+      limitSize += chunk.sizeLimit ?? 0;
+    }
+    lines.push(`Size limit  : ${formatKb(limitSize)}`);
+    lines.push(
+      `This branch : ${formatKb(prSize)}${prSize > limitSize ? ` ${formatDeltaParenthetical(prSize - limitSize)} over` : ''}`,
+    );
+  }
+
+  return lines;
 }
 
 /** @param {ChunkResult[]} chunks @param {OverallResult} overall @param {number} maxBytes @param {boolean} passed @param {{ name: string; reason: string }[]} configFailures @param {{ name: string; size: number; sizeLimit: number | null }[]} absoluteFailures */
@@ -271,6 +311,23 @@ function formatStepSummaryMarkdown(
     ? `| **Overall** | — | — | ${overall.reason ?? 'n/a'} |`
     : `| **Overall** | ${formatKb(overall.baseSize)} | ${formatKb(overall.prSize)} | ${overallStatus} ${formatDeltaParenthetical(overall.delta)} |`;
 
+  const sizeLimitIncomplete = chunks.some(
+    (chunk) => chunk.prSize == null || chunk.sizeLimit == null,
+  );
+  let sizeLimitOverallRow;
+  if (sizeLimitIncomplete) {
+    sizeLimitOverallRow = '| **Overall** | — | — |';
+  } else {
+    let prTotal = 0;
+    let limitTotal = 0;
+    for (const chunk of chunks) {
+      prTotal += chunk.prSize ?? 0;
+      limitTotal += chunk.sizeLimit ?? 0;
+    }
+    const sizeStatus = prTotal > limitTotal ? '❌' : '✅';
+    sizeLimitOverallRow = `| **Overall** | ${formatKb(limitTotal)} | ${sizeStatus} ${formatKb(prTotal)} |`;
+  }
+
   return [
     title,
     '',
@@ -280,6 +337,16 @@ function formatStepSummaryMarkdown(
     '| --- | --- | --- | --- |',
     rows,
     overallRow,
+    '',
+    '### Bundle gzip size limit (per-chunk ceiling)',
+    '',
+    '| Chunk | Limit | This branch |',
+    '| --- | --- | --- |',
+    ...chunks.map(
+      (chunk) =>
+        `| ${chunk.name} | ${chunk.sizeLimit == null ? '—' : formatKb(chunk.sizeLimit)} | ${chunk.prSize == null ? '—' : formatKb(chunk.prSize)} |`,
+    ),
+    sizeLimitOverallRow,
     ...formatFailureLines(configFailures, absoluteFailures),
     '',
   ].join('\n');
@@ -327,9 +394,17 @@ const names = comparisonConfig
 /** @type {ChunkResult[]} */
 const chunks = [];
 
+/** @param {{ sizeLimit?: number } | undefined} check */
+function sizeLimitBytes(check) {
+  return typeof check?.sizeLimit === 'number' ? check.sizeLimit : null;
+}
+
 for (const name of names) {
-  const baseSize = baseByName.get(name)?.size;
-  const prSize = prByName.get(name)?.size;
+  const baseCheck = baseByName.get(name);
+  const prCheck = prByName.get(name);
+  const baseSize = baseCheck?.size;
+  const prSize = prCheck?.size;
+  const sizeLimit = sizeLimitBytes(prCheck) ?? sizeLimitBytes(baseCheck);
 
   if (baseSize === undefined || prSize === undefined) {
     const reason =
@@ -343,6 +418,7 @@ for (const name of names) {
       baseSize: baseSize ?? null,
       prSize: prSize ?? null,
       delta: null,
+      sizeLimit,
       reason,
     });
     continue;
@@ -353,6 +429,7 @@ for (const name of names) {
     baseSize,
     prSize,
     delta: prSize - baseSize,
+    sizeLimit,
   });
 }
 
@@ -407,7 +484,14 @@ if (outputPath) {
   writeFileSync(outputPath, `${JSON.stringify(report, null, 2)}\n`);
 }
 
-const ciReport = formatCiReport(chunks, overall, maxBytes, configFailures, absoluteFailures);
+const ciReport = formatCiReport(
+  chunks,
+  overall,
+  maxBytes,
+  configFailures,
+  absoluteFailures,
+  failureNotes,
+);
 console.log(ciReport);
 
 const summaryPath = process.env.GITHUB_STEP_SUMMARY;
@@ -419,6 +503,5 @@ if (summaryPath) {
 }
 
 if (!passed) {
-  console.error(`Failed: ${overall.reason}`);
   process.exit(1);
 }

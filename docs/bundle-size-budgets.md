@@ -1,6 +1,6 @@
 # Bundle Size Budgets
 
-Production bundle sizes are enforced in CI via [size-limit](https://github.com/ai/size-limit). A PR fails the **Bundle size comparison** job when either gate fails:
+Production bundle sizes are enforced in CI via [size-limit](https://github.com/ai/size-limit). A PR fails the **Bundle size** job when either gate fails:
 
 - a chunk's gzip size is over its `limit` in [`.size-limit.json`](../.size-limit.json)
 - **total** gzip size across all chunks grows by more than **2 kB** versus the pull request base (`pull_request.base.sha`)
@@ -30,11 +30,16 @@ The `route-chunks` entry covers named route chunks (via `webpackChunkName`) and 
 
 ## Local verification
 
+Use Node.js 24. On Node.js 20, `yarn size-limit` exits before it measures anything.
+
+Commit or stash local changes before `git checkout origin/main`. That checkout replaces tracked files in the worktree.
+
 Compare two builds manually using a **clean `dist/`** for each side ( `dist/` is gitignored, so checking out `main` without deleting it reuses the previous branch’s artifacts and produces bogus deltas):
 
 Size Limit resolves `path` globs relative to the config file. Keep that file at the repository root so it measures this repo's `dist/`, not `/tmp/dist`.
 
 ```bash
+nvm use 24
 cp .size-limit.json /tmp/size-limit.pr.json
 git fetch origin main
 git show origin/main:.size-limit.json > /tmp/size-limit.base.json
@@ -46,6 +51,7 @@ yarn build
 yarn size-limit --config .size-limit.local.json --json > /tmp/pr-size-limit.json
 
 # Base branch (same machine). Keep .size-limit.local.json at the repo root.
+# Commit or stash first. This checkout replaces tracked files.
 git checkout origin/main
 yarn install --immutable
 rm -rf dist

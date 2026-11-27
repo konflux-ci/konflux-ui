@@ -41,7 +41,12 @@ test('2049 bytes of total growth fails', () => {
   const pr = writeJson(dir, 'pr.json', [check('main', 3049)]);
   const result = run(compareScript, [base, pr, '--max-bytes', '2048']);
   assert.equal(result.status, 1);
-  assert.match(`${result.stdout}\n${result.stderr}`, /exceeds max/);
+  assert.match(result.stdout, /exceeds max/);
+  assert.doesNotMatch(result.stderr, /exceeds max/);
+  assert.match(
+    result.stdout,
+    /Bundle gzip size limit[\s\S]*\nFailed\ntotal growth [^\n]+exceeds max[^\n]*\n?$/,
+  );
 });
 
 test('a chunk missing from one output fails', () => {
@@ -123,13 +128,16 @@ test('formatter describes growth that exceeded the limit', () => {
     maxBytes: 2048,
     passed: false,
     overall: { baseSize: 1000, prSize: 4000, delta: 3000, passed: false },
-    chunks: [{ name: 'main', baseSize: 1000, prSize: 4000, delta: 3000 }],
+    chunks: [{ name: 'main', baseSize: 1000, prSize: 4000, delta: 3000, sizeLimit: 282000 }],
     configFailures: [],
     absoluteFailures: [],
   });
   const result = run(formatScript, [report]);
   assert.equal(result.status, 0, result.stderr);
   assert.match(result.stdout, /### Bundle size growth limit exceeded/);
+  assert.match(result.stdout, /Per-chunk ceilings/);
+  assert.match(result.stdout, /282 kB/);
+  assert.match(result.stdout, /Per-chunk breakdown/);
   assert.match(result.stdout, /Shrink the change/);
   assert.doesNotMatch(result.stdout, /comparison incomplete/);
 });

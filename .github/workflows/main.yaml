@@ -58,7 +58,7 @@ jobs:
 
   # Production bundle gzip — fails when a chunk exceeds its ceiling or total gzip grows more than 2 kB vs base
   size-limit:
-    name: Bundle size comparison
+    name: Bundle size
     runs-on: ubuntu-latest
     permissions:
       contents: read
