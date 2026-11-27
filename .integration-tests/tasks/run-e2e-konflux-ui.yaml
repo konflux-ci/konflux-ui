@@ -75,6 +75,17 @@ spec:
     - name: pipeline-run-name
       type: string
       description: 'Integration pipeline run name; used to locate the Kind kubeconfig secret.'
+    - name: job-url
+      type: string
+      default: ''
+      description: >-
+        PipelineRun URL for Slack notifications (periodics only). Empty for
+        pr-check; compose-slack-message writes an empty slack-message result.
+  results:
+    - name: slack-message
+      description: >-
+        Composed Slack notification for periodics. Empty for pr-check. Consumed
+        by the catalog slack-webhook-notification finally task.
   volumes:
     # Enlarge /dev/shm for Cypress/Chrome; default container shm (~64MB) causes flaky browser crashes
     - name: dshm
@@ -440,6 +451,49 @@ spec:
         fi
 
         echo "✅ Coverage uploaded to Codecov"
+
+    - name: compose-slack-message
+      image: registry.access.redhat.com/ubi9/ubi-minimal@sha256:08d4c70f1baf6537a0728656cf7942d561e74a35916509d205b6519861266352
+      onError: continue
+      computeResources:
+        requests:
+          memory: 32Mi
+          cpu: 10m
+        limits:
+          memory: 64Mi
+      env:
+        - name: JOB_TYPE
+          value: $(params.job-type)
+        - name: TEST_NAME
+          value: $(params.pipeline-run-name)
+        - name: JOB_URL
+          value: $(params.job-url)
+      script: |
+        #!/usr/bin/env bash
+        set -euo pipefail
+
+        RESULT_PATH="$(results.slack-message.path)"
+
+        case "${JOB_TYPE}" in
+          periodic-local|periodic-stage) ;;
+          *)
+            echo "Skipping Slack message compose for job-type=${JOB_TYPE}"
+            : > "${RESULT_PATH}"
+            exit 0
+            ;;
+        esac
+
+        TEST_EXIT="$(cat /artifacts/test-exit-code 2>/dev/null || echo 1)"
+        if [[ "${TEST_EXIT}" == "0" ]]; then
+          EMOJI=":white_check_mark:"
+        else
+          EMOJI=":x:"
+        fi
+
+        REPORT_DATE=$(date '+%b %-d')
+        MESSAGE="KONFLUX: ${EMOJI} Report ${REPORT_DATE}: ${JOB_TYPE} - ${TEST_NAME} ${JOB_URL}"
+        echo "Composed Slack message: ${MESSAGE}"
+        printf '%s' "${MESSAGE}" > "${RESULT_PATH}"
 
     - name: secure-push-oci
       ref:
