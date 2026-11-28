@@ -5009,15 +5009,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@storybook/addon-webpack5-compiler-swc@npm:4.0.3":
-  version: 4.0.3
-  resolution: "@storybook/addon-webpack5-compiler-swc@npm:4.0.3"
+"@storybook/addon-webpack5-compiler-swc@npm:4.0.6":
+  version: 4.0.6
+  resolution: "@storybook/addon-webpack5-compiler-swc@npm:4.0.6"
   dependencies:
     "@swc/core": "npm:^1.13.5"
     swc-loader: "npm:^0.2.6"
   peerDependencies:
-    storybook: ^9.0.0 || ^10.0.0-0 || ^10.1.0-0 || ^10.2.0-0 || ^10.3.0-0 || ^10.4.0-0
-  checksum: 10/3c062c08254cf896030dded773e5f80e9471733a6b3c3d6afa467ff59fe991a06a52155b3ae9936f741beb9bacfd8f11ff908e38dc6ee31955db628e67260486
+    storybook: ^0.0.0-0 || ^9.0.0 || ^10.0.0-0 || ^10.1.0-0 || ^10.2.0-0 || ^10.3.0-0 || ^10.4.0-0 || ^10.5.0-0 || ^10.6.0-0 || ^11.0.0-0
+  checksum: 10/338f22a64911939aed9522e74745041a58a62e492b9de5cde4390af783b3ec17a05858c5056b7246c902dbcb55a20abfe51276f5e25a22defd702adc5596cf49
   languageName: node
   linkType: hard
 
@@ -14725,7 +14725,7 @@ __metadata:
     "@sentry/react": "npm:^10.38.0"
     "@size-limit/file": "npm:^13.0.3"
     "@storybook/addon-a11y": "npm:10.6.7"
-    "@storybook/addon-webpack5-compiler-swc": "npm:4.0.3"
+    "@storybook/addon-webpack5-compiler-swc": "npm:4.0.6"
     "@storybook/react": "npm:10.6.7"
     "@storybook/react-webpack5": "npm:10.6.7"
     "@storybook/test-runner": "npm:0.24.5"
